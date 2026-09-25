@@ -58,6 +58,12 @@ export const emailMessageType = pgEnum("email_message_type", [
   // they choose (confirmed, waiting, owing the declaration, or all three). The words travel in the
   // payload; the registrant's language reads first. No token, no attachment.
   "ORGANIZER_MESSAGE",
+  // "Ești deja înscris(ă) — vrei să înscrii pe altcineva cu aceeași adresă?" (§389): the public
+  // form was sent again for an event, with an address that already holds a registration there and
+  // a different runner's name. Nothing is created; this goes to the address, with a single-use
+  // link to the form for the other person (the address fixed) — or, at the club's limit of
+  // registrations per address, the sentence that says so and no link.
+  "REGISTER_ANOTHER_PERSON",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

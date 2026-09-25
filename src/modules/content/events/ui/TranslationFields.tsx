@@ -364,7 +364,7 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
 }
 
 /**
- * The club's discount on an external event's own fee (`DECISIONS.md` §389): one short line per
+ * The club's discount on an external event's own fee (`DECISIONS.md` §390): one short line per
  * language, inside the cost card, shown only on an `EXTERNAL`-registration, `PAID` event
  * (`CostFields`). Never required — the organizer sets the price; the club only ever knows the
  * discount, if there is one.

@@ -1,5 +1,5 @@
 {
-  "id": "55c848cd-4fc4-4cf9-8f77-f384e803f453",
+  "id": "b0ecf846-743e-4569-97bc-2b45a23fd616",
   "prevId": "2e54a874-71bf-4cbe-b888-40f46ef7a80c",
   "version": "7",
   "dialect": "postgresql",
@@ -907,12 +907,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "discount_note": {
-          "name": "discount_note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -3070,6 +3064,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "name_key": {
+          "name": "name_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "first_name": {
           "name": "first_name",
           "type": "text",
@@ -3363,6 +3363,33 @@
         }
       },
       "indexes": {
+        "registrations_event_participant_name_unique": {
+          "name": "registrations_event_participant_name_unique",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "name_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "registrations_race_participant_active_unique": {
           "name": "registrations_race_participant_active_unique",
           "columns": [
@@ -3778,7 +3805,8 @@
         "MANAGE_REGISTRATION",
         "WAITLIST_OFFER",
         "MANAGE_PROFILE",
-        "LIST_CONSENT"
+        "LIST_CONSENT",
+        "REGISTER_ANOTHER_PERSON"
       ]
     },
     "public.email_message_type": {
@@ -3805,7 +3833,8 @@
         "CLUB_CONFIRMATION_NOTICE",
         "EVENT_UPDATE_NOTICE",
         "EVENT_CANCELLED",
-        "ORGANIZER_MESSAGE"
+        "ORGANIZER_MESSAGE",
+        "REGISTER_ANOTHER_PERSON"
       ]
     },
     "public.email_outbox_status": {

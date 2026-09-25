@@ -522,7 +522,7 @@ export default async function EventFacts({
     });
     if (event.costType) {
       // The word stays the closed set's own — "Cu taxă" — but on an `EXTERNAL`-registration paid
-      // event a screen reader is told the fee goes to the organizer, never to the club (§389).
+      // event a screen reader is told the fee goes to the organizer, never to the club (§390).
       cardPills.push({
         glyph: `cost:${event.costType}`,
         label: t(`costValues.${event.costType}`),
@@ -660,7 +660,7 @@ export default async function EventFacts({
     */
     if (event.costType === "PAID" && costPaidToExternalOrganizer(event)) {
       // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-      // form, not the club's (`DECISIONS.md` §389): the hero says so plainly, the same wording
+      // form, not the club's (`DECISIONS.md` §390): the hero says so plainly, the same wording
       // the page's cost row uses, and never links `costUrl` — the club's own address is not where
       // this fee goes. The club's own discount, if any, follows on its own piece.
       route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal")));
@@ -872,7 +872,7 @@ export default async function EventFacts({
   const costExtras: ReactNode[] = [];
   let costPill: Pill | null = null;
   // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-  // form, not the club's (`DECISIONS.md` §389): the pill says so plainly ("Cu taxă, la
+  // form, not the club's (`DECISIONS.md` §390): the pill says so plainly ("Cu taxă, la
   // organizator") rather than reading like a club fee, and the club's own discount, if any,
   // follows it with the tag glyph (§112).
   const externalPaid = costPaidToExternalOrganizer(event);

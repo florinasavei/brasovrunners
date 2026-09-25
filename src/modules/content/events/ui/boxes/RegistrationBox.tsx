@@ -110,7 +110,7 @@ export default async function RegistrationBox({
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
   locale: string;
-  /** Every language's row, for the discount note's own strip inside the cost card (`DECISIONS.md` §389). */
+  /** Every language's row, for the discount note's own strip inside the cost card (`DECISIONS.md` §390). */
   languages: readonly LanguageEntry[];
 }) {
   const t = await getTranslations("Admin");
@@ -124,12 +124,12 @@ export default async function RegistrationBox({
   // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind
   // that has one (§343) — what the page will say, on the box's closed line.
   const costAmount = event?.costType === "PAID" || event?.costType === "DONATION" ? (event.costAmount ?? "").trim() : "";
-  // "cu reducere" (`DECISIONS.md` §389): the closed cost line names the club's discount when the
+  // "cu reducere" (`DECISIONS.md` §390): the closed cost line names the club's discount when the
   // event is `EXTERNAL` + `PAID` and at least one language carries a note — read off the strip's
   // own rows, never a query of its own.
   const hasDiscountNote = languages.some((entry) => isWrittenText(entry.translation.discountNote));
   const discounted = event ? costPaidToExternalOrganizer(event) && hasDiscountNote : false;
-  // Whether the note may be typed at all right now (`DECISIONS.md` §389): the event's stored
+  // Whether the note may be typed at all right now (`DECISIONS.md` §390): the event's stored
   // mode and cost, not the live select — a reader without `mayEditSettings` cannot change either,
   // and one with it sees the same strip inside `CostFields`, which does watch the live select.
   const discountNoteApplies = event !== null && costPaidToExternalOrganizer(event);
@@ -211,7 +211,7 @@ export default async function RegistrationBox({
           <SettingsReadOnly />
           {/* A words-only reader (Redactor, §103) still owns the club's discount note on an
               EXTERNAL + PAID event, even without the settings rights the rest of this box needs
-              (`DECISIONS.md` §389). */}
+              (`DECISIONS.md` §390). */}
           {discountNoteApplies && discountNotePanels}
         </Stack>
       ) : (

@@ -509,8 +509,15 @@
     {
       "idx": 72,
       "version": "7",
-      "when": 1790316553796,
-      "tag": "0072_discount_note",
+      "when": 1790318267639,
+      "tag": "0072_family_registration",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1790319267639,
+      "tag": "0073_discount_note",
       "breakpoints": true
     }
   ]

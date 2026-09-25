@@ -8,6 +8,10 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
+import { getDb } from "@/db/client";
+import { countForm } from "@/i18n/count-form";
+import { readAddressCap } from "@/modules/registrations/address-cap";
+import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
 import { fillIn } from "@/shared/forms/fill-in";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
@@ -18,8 +22,11 @@ type Props = { params: Promise<{ locale: string }> };
 
 export const dynamic = "force-dynamic";
 
-/** `roles`: whose section this is; the signed-in role's come first and open (§103). */
-type GuideSection = { title: string; who: string; steps: string[]; roles: StaffRole[] };
+/**
+ * `roles`: whose section this is; the signed-in role's come first and open (§103). `key`: the one
+ * section this page adds to, "family" (§389) — a last line while the flow is not switched on yet.
+ */
+type GuideSection = { title: string; who: string; steps: string[]; roles: StaffRole[]; key?: string };
 
 /**
  * The platform, explained to the people who use it (BR-REQ-060-01 criterion 6): the volunteer
@@ -46,7 +53,17 @@ export default async function GuidePage({ params }: Props) {
     into the catalogue's raw lines here, since `t.raw` hands the sentences over unformatted.
   */
   const words = deadlineWords(locale, await deadlinesForThisRequest());
-  const values = { confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon };
+  /*
+    "A family on one address" (§389) states the club's limit per address as the setting says it —
+    never a literal — and says, while the schema still keeps one registration per address
+    (`family-gate.ts`), that the flow is not switched on yet.
+  */
+  const db = getDb();
+  const [{ cap }, familyOpen] = await Promise.all([readAddressCap(db), familyRegistrationOpen(db)]);
+  const people = t(`emails.addressCap.people.${countForm(cap.registrationsPerAddress, locale)}`, { count: cap.registrationsPerAddress });
+  const values = { confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon, people };
+  const stepsOf = (section: GuideSection) =>
+    section.key === "family" && !familyOpen ? [...section.steps, t("guide.familyPending")] : section.steps;
 
   return (
     <Stack spacing={3}>
@@ -73,7 +90,7 @@ export default async function GuidePage({ params }: Props) {
             </Typography>
           </Typography>
           <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-            {section.steps.map((step, stepIndex) => (
+            {stepsOf(section).map((step, stepIndex) => (
               <Typography component="li" variant="body1" key={stepIndex}>
                 {fillIn(step, values)}
               </Typography>

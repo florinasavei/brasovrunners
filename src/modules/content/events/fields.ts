@@ -146,7 +146,7 @@ export const translationFieldsSchema = z
     seoTitle: optionalText(200).optional(),
     seoDescription: optionalText(320).optional(),
     /**
-     * The club's discount on an external event's own fee (`DECISIONS.md` §389): shown, and
+     * The club's discount on an external event's own fee (`DECISIONS.md` §390): shown, and
      * postable, only on an `EXTERNAL`-registration, `PAID` event — the box is hidden otherwise
      * (`RegistrationBox`), and the service clears the column when the mode or cost type stops
      * needing it, whatever this caller posted. Optional in the input like `checklist`; both

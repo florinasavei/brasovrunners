@@ -301,7 +301,7 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
-    // The club's discount on an external event's own fee (`DECISIONS.md` §389), posted from the
+    // The club's discount on an external event's own fee (`DECISIONS.md` §390), posted from the
     // cost card's own strip (`RegistrationBox`), which now renders for a words-only reader too
     // (no settings rights) as well as inside the settings editor's `CostFields`. Read only when
     // the box was actually posted, the way `reminderHoursBefore` above is — an absent box (a

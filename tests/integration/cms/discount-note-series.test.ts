@@ -8,7 +8,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * The club's discount on an external event's own fee travels the way its cost does
- * (`DECISIONS.md` §389): a series held at a discount is held at it every date, and a duplicate
+ * (`DECISIONS.md` §390): a series held at a discount is held at it every date, and a duplicate
  * carries it too — the same rule `headlamp.test.ts` proves for `headlampRequired`.
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
@@ -75,7 +75,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }, 
   ...changes,
 });
 
-describe("the discount note, on a series and a duplicate (§389)", () => {
+describe("the discount note, on a series and a duplicate (§390)", () => {
   it("is written on create, for an EXTERNAL + PAID event, in both languages", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const rows = await translationsOf(source.id);
@@ -160,7 +160,7 @@ describe("the discount note, on a series and a duplicate (§389)", () => {
     }
   });
 
-  it("a settings-only save (no text posted) clears the note too, once the mode no longer needs it (§389)", async () => {
+  it("a settings-only save (no text posted) clears the note too, once the mode no longer needs it (§390)", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const before = await translationsOf(source.id);
     expect(before.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");

@@ -8,7 +8,7 @@ import type { GlyphName } from "./glyphs";
  * never shown, while the visible word stays the closed set's own — the listing card's cost pill
  * on an `EXTERNAL`-registration `PAID` event still reads "Cu taxă" so every card's pill says the
  * same short word, and a screen reader alone is told the fee goes to the organizer (`DECISIONS.md`
- * §389). Content, not an `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it
+ * §390). Content, not an `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it
  * is not clickable, and ARIA 1.2 does not allow naming a generic element, so the extra words have
  * to be in the chip's own text (visually hidden) rather than on the attribute.
  */

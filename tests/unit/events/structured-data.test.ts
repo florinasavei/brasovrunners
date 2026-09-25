@@ -221,7 +221,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(parsed(sportsEventJsonLd(baseEvent({ costUrl: donationUrl } as Partial<PublicEvent>), URL, "Brașov Runners")).potentialAction).toBeUndefined();
   });
 
-  it("offers the organizer's own registration link on an EXTERNAL-registration PAID event, never cost_url (§389)", () => {
+  it("offers the organizer's own registration link on an EXTERNAL-registration PAID event, never cost_url (§390)", () => {
     const externalUrl = "https://alt-club.ro/inscriere";
     const clubCostUrl = "https://revolut.me/brasovrunners";
     const external = parsed(
