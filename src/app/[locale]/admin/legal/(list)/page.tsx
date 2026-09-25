@@ -13,6 +13,7 @@ import { getDb } from "@/db/client";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import Panel from "@/shared/ui/Panel";
 import { env } from "@/shared/config/env";
 import { approvePlatformTemplatesAction } from "../actions";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -370,6 +371,19 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           ))}
         </Box>
       </Stack>
+
+      {/*
+        The rule this section lives by, folded shut by default (§336) — it explains, it does not
+        warn, so nothing opens it by itself. Shown only here, below the page's own heading and
+        alerts rather than above them (only this page has a use for it; §336 review).
+      */}
+      <Box sx={{ mb: 1 }}>
+        <Panel id="legal-versions" title={t("legalNotice.title")} collapsible>
+          <Typography variant="body2" color="text.secondary">
+            {t("legalNotice.body")}
+          </Typography>
+        </Panel>
+      </Box>
 
       {mayCreate && (
         <Box>

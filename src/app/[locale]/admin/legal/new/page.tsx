@@ -19,6 +19,7 @@ import LegalDocumentForm, {
   type LegalDocumentFormValues,
 } from "@/modules/legal-documents/ui/LegalDocumentForm";
 import { requireStaffRole } from "@/modules/staff-identity/session";
+import { isUuid } from "@/shared/ids";
 import { createLegalVersionAction } from "../actions";
 
 type Props = {
@@ -69,7 +70,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
    * version; the key is then locked, because a privacy notice's successor is a privacy notice.
    * A `from` that resolves to nothing — deleted, mistyped — is the empty form, not an error.
    */
-  const source = from ? await findVersionWithTranslations(getDb(), from) : undefined;
+  const source = from && isUuid(from) ? await findVersionWithTranslations(getDb(), from) : undefined;
   // `?template=<key>` starts from the platform's own text (§95): the club reads, fills its
   // four facts and approves, rather than drafting a privacy notice from nothing.
   const fromTemplate = template && isLegalDocumentKey(template) ? LEGAL_TEMPLATES[template] : undefined;

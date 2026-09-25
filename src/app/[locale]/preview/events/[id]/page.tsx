@@ -25,6 +25,7 @@ import EventDescription from "@/modules/events/ui/EventDescription";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { isUuid } from "@/shared/ids";
 import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -68,6 +69,8 @@ export default async function PreviewEventPage({ params }: Props) {
     if (isDevStaffSwitcherEnabled()) redirect(getPathname({ locale, href: "/sign-in" }));
     notFound();
   }
+
+  if (!isUuid(id)) notFound();
 
   const record = await findTranslationForPreview(getDb(), id, locale);
   if (!record) notFound();

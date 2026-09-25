@@ -362,7 +362,7 @@ const isBlankCoHostRow = (row: CoHostRowInput) =>
 /**
  * The partners, as the editor posts them (§168, extended by §344 into a card of links each).
  *
- * Every refusal names the partner **and** the link, both as the editor numbered them — the
+ * Every refusal says which partner **and** which link, both as the editor numbered them — the
  * posted index, before the spare lines are dropped — so "Partenerul 2, linkul 3" is the second
  * card and its third link row on the screen, and the summary's link lands on that exact box
  * (`form-names.ts`). A card with a link and no name is refused rather than dropped: somebody

@@ -21,6 +21,7 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import PrintButton from "@/shared/ui/PrintButton";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -52,6 +53,8 @@ export default async function EmergencySheetPage({ params }: Props) {
 
   const actor = await requireStaff();
   if (!canReadRegistrations(actor.role)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
 
   const db = getDb();
   let rows;

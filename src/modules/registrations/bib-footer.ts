@@ -167,7 +167,7 @@ export function bibFooterWidth(text: string): number {
  * The footer as the lines both renderers draw: one line when it fits, two when it does not, and
  * the second cut with an ellipsis when even two are not enough.
  *
- * The first line takes as many whole pieces as fit, so a partner's name or the mailbox is never
+ * The first line takes as many whole pieces as fit, so the name of a partner or the mailbox is never
  * split between two lines; only a single piece wider than a line by itself is broken, between
  * words (or, for a word wider than a line, between characters). The second line takes the rest,
  * and when the rest is too long it keeps as much as fits with "…" after it — a footer never
