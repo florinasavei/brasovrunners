@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, lte, ne, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -6,8 +6,14 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
-import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { DEADLINE_RULES, type Deadlines, EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { DomainError } from "@/shared/errors/domain-error";
+import {
+  AUTOMATIC_SEND_KEYS,
+  isDeclarationLastCallDue,
+  isEventReminderDue,
+  isParticipationConfirmationDue,
+} from "./domain/automatic-sends";
 import { enqueueEmail } from "./outbox";
 
 /**
@@ -17,24 +23,123 @@ import { enqueueEmail } from "./outbox";
  * Neither moves a registration. Both go through the outbox with the idempotency discipline of
  * §16.1 — one key per registration per message — so a job that runs twice, or an organizer who
  * presses twice, produces one email.
+ *
+ * **When** each automatic one is due is not decided here but in `domain/automatic-sends.ts`
+ * (§NNN): the job asks those functions "is it due now?", and the forecast on `/admin/emails`
+ * (`forecast.ts`) asks the same functions "when?", over the same candidates selected below.
  */
+
+const HOUR = 60 * 60_000;
+
+/** The longest lead any event can have (§377): the club's ceiling or the column's CHECK, whichever is larger. */
+const LONGEST_REMINDER_HOURS = Math.max(DEADLINE_RULES.reminderHours.max, EVENT_REMINDER_MAX_HOURS);
 
 /**
- * The reminder lead of each event, in SQL (§377): the event's own hours
- * (`events.reminder_hours_before`) or, when the organizer left it "as usual", the club's — zero
- * from either is no reminder. Measured on the event's own instant.
+ * The instants a selection is for: the job asks at one instant (`from` = `until` = its `now`);
+ * the forecast asks for every instant up to its horizon.
  */
-function reminderLeadSql(clubHours: number) {
-  return sql<number>`coalesce(${events.reminderHoursBefore}, ${clubHours})`;
+export type SelectionSpan = { from: Date; until: Date };
+
+/**
+ * The reminder's candidates (§81): every confirmed registration of a scheduled event with internal
+ * registration that starts after `from` and early enough that its longest possible lead reaches
+ * `until`. State only; whether the reminder is due at an instant is `isEventReminderDue`.
+ */
+export async function selectReminderCandidates<T extends Record<string, unknown>>(db: Database<T>, span: SelectionSpan) {
+  return db
+    .select({
+      registrationId: registrations.id,
+      participantId: registrations.participantId,
+      locale: registrations.locale,
+      recipientEmail: participants.deliveryEmail,
+      eventId: events.id,
+      startsAt: events.startsAt,
+      reminderHoursBefore: events.reminderHoursBefore,
+      confirmedAt: registrations.confirmedAt,
+      // Sent to exactly like a real one (§12.6); the forecast only labels it (§30).
+      kind: registrations.kind,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .where(
+      and(
+        eq(registrations.status, "CONFIRMED"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.registrationMode, "INTERNAL"),
+        gt(events.startsAt, span.from),
+        lte(events.startsAt, new Date(span.until.getTime() + LONGEST_REMINDER_HOURS * HOUR)),
+      ),
+    );
 }
 
-/** The event starts inside its own reminder window, and has one at all. */
-function insideReminderWindow(now: Date, clubHours: number) {
-  const lead = reminderLeadSql(clubHours);
-  return and(
-    sql`${lead} > 0`,
-    sql`${events.startsAt} <= ${now.toISOString()}::timestamptz + make_interval(hours => ${lead})`,
-  );
+/**
+ * The candidates of the two declaration emails the job sends on its own — the participation
+ * confirmation (§104) and the last call to sign (§160): every registration still owing its
+ * signature at a scheduled event with internal registration that starts after `from`. Few rows by
+ * nature; the timing is `isParticipationConfirmationDue` and `isDeclarationLastCallDue`.
+ */
+export async function selectDeclarationCandidates<T extends Record<string, unknown>>(db: Database<T>, span: Pick<SelectionSpan, "from">) {
+  return db
+    .select({
+      registrationId: registrations.id,
+      participantId: registrations.participantId,
+      locale: registrations.locale,
+      recipientEmail: participants.deliveryEmail,
+      holdExpiresAt: registrations.holdExpiresAt,
+      kind: registrations.kind,
+      eventId: events.id,
+      startsAt: events.startsAt,
+      reminderHoursBefore: events.reminderHoursBefore,
+      confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .where(
+      and(
+        eq(registrations.status, "PENDING_DECLARATION"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.registrationMode, "INTERNAL"),
+        gt(events.startsAt, span.from),
+      ),
+    );
+}
+
+/**
+ * "Confirm your participation" (`DECISIONS.md` §104): when an event's window opens, every
+ * registration still waiting for its signature gets the declaration email again, once — the
+ * link the first one carried is still valid until the deadline, but a week has passed and the
+ * message is the reminder. The key holds across every run that sees the event inside the
+ * window; a hold that lapses at the deadline is the maintenance job's ordinary work.
+ */
+export async function queueParticipationConfirmations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<number> {
+  // Only the holds the window gave, inside the window (`isParticipationConfirmationDue`): the
+  // club's hold (§377) taken inside the window is a person signing right now.
+  const waiting = (await selectDeclarationCandidates(db, { from: now })).filter((row) => isParticipationConfirmationDue(row, now));
+  if (waiting.length === 0) return 0;
+
+  let queued = 0;
+  await db.transaction(async (tx) => {
+    for (const row of waiting) {
+      const inserted = await enqueueEmail(tx, {
+        participantId: row.participantId,
+        registrationId: row.registrationId,
+        messageType: "COMPLETE_DECLARATION",
+        locale: row.locale,
+        recipientEmail: row.recipientEmail,
+        payload: {},
+        idempotencyKey: AUTOMATIC_SEND_KEYS.participation(row.registrationId),
+        now,
+      });
+      if (inserted) queued += 1;
+    }
+  });
+  return queued;
 }
 
 /**
@@ -48,115 +153,38 @@ function insideReminderWindow(now: Date, clubHours: number) {
  * Confirmed only: a waiting-list entry has nothing to be reminded of, and a registration that
  * still owes its declaration gets its own email from `queueDeclarationReminders` below, in
  * the same reminder lead (§160, §377). Scheduled events only: a cancelled or completed event reminds
- * nobody. Test registrations are included — they behave as real ones everywhere (§12.6) and
- * their addresses go nowhere. The number returned counts both messages.
+ * nobody. Not to somebody confirmed in the last day (§126): the confirmation they just got
+ * carries the same facts, the QR and the number. Test registrations are included — they behave
+ * as real ones everywhere (§12.6) and their addresses go nowhere. The number returned counts both
+ * messages.
  */
-/**
- * "Confirm your participation" (`DECISIONS.md` §104): when an event's window opens, every
- * registration still waiting for its signature gets the declaration email again, once — the
- * link the first one carried is still valid until the deadline, but a week has passed and the
- * message is the reminder. The key holds across every run that sees the event inside the
- * window; a hold that lapses at the deadline is the maintenance job's ordinary work.
- */
-export async function queueParticipationConfirmations<T extends Record<string, unknown>>(
-  db: Database<T>,
-  now: Date,
-): Promise<number> {
-  const day = 24 * 60 * 60_000;
-  const rows = await db
-    .select({
-      registrationId: registrations.id,
-      participantId: registrations.participantId,
-      locale: registrations.locale,
-      recipientEmail: participants.deliveryEmail,
-      holdExpiresAt: registrations.holdExpiresAt,
-    })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .where(
-      and(
-        eq(registrations.status, "PENDING_DECLARATION"),
-        eq(events.eventStatus, "SCHEDULED"),
-        eq(events.registrationMode, "INTERNAL"),
-        gt(events.startsAt, now),
-        // The window is open: the start is within `opens` days, and the deadline is ahead.
-        sql`${events.confirmationOpensDaysBefore} > ${events.confirmationDeadlineDaysBefore}`,
-        sql`${events.startsAt} <= ${now.toISOString()}::timestamptz + make_interval(days => ${events.confirmationOpensDaysBefore})`,
-        sql`${events.startsAt} > ${now.toISOString()}::timestamptz + make_interval(days => ${events.confirmationDeadlineDaysBefore})`,
-      ),
-    );
-  // Only the holds the window gave: the club's hold (§377) taken inside the window is a person
-  // signing right now, not somebody to remind a week later.
-  const waiting = rows.filter((row) => row.holdExpiresAt && row.holdExpiresAt.getTime() - now.getTime() > day);
-  if (waiting.length === 0) return 0;
-
-  let queued = 0;
-  await db.transaction(async (tx) => {
-    for (const row of waiting) {
-      const inserted = await enqueueEmail(tx, {
-        participantId: row.participantId,
-        registrationId: row.registrationId,
-        messageType: "COMPLETE_DECLARATION",
-        locale: row.locale,
-        recipientEmail: row.recipientEmail,
-        payload: {},
-        idempotencyKey: `registration:${row.registrationId}:confirm-participation`,
-        now,
-      });
-      if (inserted) queued += 1;
-    }
-  });
-  return queued;
-}
-
 export async function queueEventReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
   /** The club's deadlines, read once by the run (§377): the reminder lead of an event left "as usual". */
   deadlines: Pick<Deadlines, "reminderHours">,
 ): Promise<number> {
-  const rows = await db
-    .select({
-      registrationId: registrations.id,
-      participantId: registrations.participantId,
-      locale: registrations.locale,
-      recipientEmail: participants.deliveryEmail,
-    })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .where(
-      and(
-        eq(registrations.status, "CONFIRMED"),
-        eq(events.eventStatus, "SCHEDULED"),
-        eq(events.registrationMode, "INTERNAL"),
-        gt(events.startsAt, now),
-        insideReminderWindow(now, deadlines.reminderHours),
-        // Not to somebody confirmed in the last day (§126): the confirmation they just got
-        // carries the same facts, the QR and the number; a second copy is the mail people
-        // learn to ignore. Never confirmed on the row (older rows) counts as long ago.
-        sql`(${registrations.confirmedAt} IS NULL OR ${registrations.confirmedAt} < ${new Date(now.getTime() - 24 * 60 * 60_000)})`,
-      ),
-    );
+  const rows = (await selectReminderCandidates(db, { from: now, until: now })).filter((row) => isEventReminderDue(row, now, deadlines));
 
   let queued = 0;
-  await db.transaction(async (tx) => {
-    for (const row of rows) {
-      const inserted = await enqueueEmail(tx, {
-        participantId: row.participantId,
-        registrationId: row.registrationId,
-        messageType: "EVENT_REMINDER",
-        locale: row.locale,
-        recipientEmail: row.recipientEmail,
-        payload: {},
-        // One per registration, ever: the second run in the window finds this key and inserts nothing.
-        idempotencyKey: `registration:${row.registrationId}:reminder`,
-        now,
-      });
-      if (inserted) queued += 1;
-    }
-  });
+  if (rows.length > 0) {
+    await db.transaction(async (tx) => {
+      for (const row of rows) {
+        const inserted = await enqueueEmail(tx, {
+          participantId: row.participantId,
+          registrationId: row.registrationId,
+          messageType: "EVENT_REMINDER",
+          locale: row.locale,
+          recipientEmail: row.recipientEmail,
+          payload: {},
+          // One per registration, ever: the second run in the window finds this key and inserts nothing.
+          idempotencyKey: AUTOMATIC_SEND_KEYS.reminder(row.registrationId),
+          now,
+        });
+        if (inserted) queued += 1;
+      }
+    });
+  }
   return queued + (await queueDeclarationReminders(db, now, deadlines));
 }
 
@@ -181,25 +209,7 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
   now: Date,
   deadlines: Pick<Deadlines, "reminderHours">,
 ): Promise<number> {
-  const rows = await db
-    .select({
-      registrationId: registrations.id,
-      participantId: registrations.participantId,
-      locale: registrations.locale,
-      recipientEmail: participants.deliveryEmail,
-    })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .where(
-      and(
-        eq(registrations.status, "PENDING_DECLARATION"),
-        eq(events.eventStatus, "SCHEDULED"),
-        eq(events.registrationMode, "INTERNAL"),
-        gt(events.startsAt, now),
-        insideReminderWindow(now, deadlines.reminderHours),
-      ),
-    );
+  const rows = (await selectDeclarationCandidates(db, { from: now })).filter((row) => isDeclarationLastCallDue(row, now, deadlines));
   if (rows.length === 0) return 0;
 
   let queued = 0;
@@ -212,7 +222,7 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
         locale: row.locale,
         recipientEmail: row.recipientEmail,
         payload: {},
-        idempotencyKey: `registration:${row.registrationId}:sign-reminder`,
+        idempotencyKey: AUTOMATIC_SEND_KEYS.lastCall(row.registrationId),
         now,
       });
       if (inserted) queued += 1;

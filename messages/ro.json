@@ -2784,6 +2784,43 @@
         "saved": "Termenele au fost salvate; se aplică de acum înainte.",
         "readOnly": "Termenele le schimbă Administratorul; tu vezi valorile în vigoare."
       },
+      "forecast": {
+        "title": "Următoarele emailuri automate",
+        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc.",
+        "aside": {
+          "one": "1 trimitere în următoarele {days} zile",
+          "few": "{count} trimiteri în următoarele {days} zile",
+          "other": "{count} de trimiteri în următoarele {days} zile"
+        },
+        "empty": "Nimic în următoarele {days} zile: nicio înscriere nu așteaptă un email automat.",
+        "nextRun": "la următoarea rulare a jobului",
+        "recipients": {
+          "one": "1 destinatar acum",
+          "few": "{count} destinatari acum",
+          "other": "{count} de destinatari acum"
+        },
+        "tests": {
+          "one": "și o înscriere de test",
+          "few": "și {count} înscrieri de test",
+          "other": "și {count} de înscrieri de test"
+        },
+        "sends": {
+          "reminder": "reminderul dinaintea startului, către cei confirmați",
+          "lastCall": "ultimul apel la semnat, către cei care nu au semnat încă",
+          "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
+          "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
+          "bibs": "se închid înscrierile; numerele de concurs devin finale",
+          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului"
+        },
+        "zone": "ora din {zone}",
+        "untitled": "(eveniment fără titlu)",
+        "untitledOther": "(eveniment fără titlu) — {title} ({locale})",
+        "clubCopy": {
+          "none": "Copie club: niciuna. Clubul nu primește copii ale emailurilor către participanți.",
+          "some": "Copie club: fiecare email de mai sus pleacă și, separat, cu „[Copie club]” în subiect, la {addresses}. Nu și pentru înscrierile de test și nici pentru „Înscrierile s-au deschis”, care nu ține de o înscriere.",
+          "link": "Schimbă în „Copiile clubului”"
+        }
+      },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici."
     },
     "guide": {

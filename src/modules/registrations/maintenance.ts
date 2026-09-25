@@ -6,6 +6,7 @@ import { readDeadlinesForRun } from "@/modules/deadlines/deadlines";
 import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import { registrationHasClosed } from "@/modules/events/domain/registration-window";
+import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { settleBibNumbers, type SettledBib } from "./bibs";
 import { queueRegistrationOpenedMessages } from "./interest";
@@ -170,7 +171,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
           locale: row.locale,
           recipientEmail: row.recipientEmail,
           payload: { bibNumber: row.bibNumber },
-          idempotencyKey: `registration:${row.registrationId}:bib-settled`,
+          idempotencyKey: AUTOMATIC_SEND_KEYS.bibs(row.registrationId),
           now,
         });
         if (inserted) bibsSettled += 1;
