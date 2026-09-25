@@ -424,12 +424,12 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   event: EventForRegistration,
   now: Date,
   /**
-   * The club's deadlines (§NNN), when the caller has them — every path in this file does, and so
-   * does the editor's capacity raise, which reads them before its transaction locks the event. The
-   * maintenance job leaves it out and it is read here: from the instance's minute-long memo, which
-   * the job has just refreshed at the start of its run.
+   * The club's deadlines (§NNN), required: every caller reads them before its transaction and
+   * passes them in — each path in this file, the editor's capacity raise before it locks the event,
+   * and the maintenance job once per run through `readDeadlinesForRun`. Nothing is read here, so
+   * no offer can be dated from a memo older than the caller's own reading.
    */
-  settings?: Deadlines,
+  settings: Deadlines,
 ): Promise<number> {
   /*
     A cancelled event's queue stands still (§331). Nobody is offered a place in a race that will
@@ -455,15 +455,13 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   let offers = 0;
   const candidates = await repo.lockOldestWaitlisted(db, event.id, availablePlaces);
   if (candidates.length === 0) return 0;
-  // Read once for the whole batch, and only when somebody is actually offered a place.
-  const offerSettings = settings ?? (await currentDeadlines(db));
   for (const candidate of candidates) {
     const holdExpiresAt = computeWaitlistOfferExpiry({
       now,
       registrationClosesAt: event.registrationClosesAt,
       eventStartsAt: event.startsAt,
       // The club's offer window (§NNN) at the moment the offer is made; an offer already out keeps its own.
-      deadlines: offerSettings,
+      deadlines: settings,
     });
 
     const offered = await repo.transitionRegistration(db, {

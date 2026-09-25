@@ -1,4 +1,6 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { DEADLINE_MERGE_FIELDS, deadlineMergeValues } from "../domain/merge-fields";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -24,9 +26,6 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
  * beside a text that serves every event, and an example naming the club reads as a value the
  * text may carry. The two dates are written by the helper that writes the real ones (§349).
  */
-import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
-import { DEADLINE_MERGE_FIELDS, deadlineMergeValues } from "../domain/merge-fields";
-
 export type TokenLocale = "ro" | "en";
 
 export type DeclarationToken = {

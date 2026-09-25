@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { EMAIL_COPY_PLACEHOLDERS, emailCopySchema } from "@/modules/notifications/domain/email-copy";
 import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { EMAIL_SAMPLE, emailSampleValueOf } from "@/modules/notifications/domain/email-sample";
+import { emailFieldLegend } from "@/modules/notifications/email-copy-fields";
 
 /**
  * §NNN — the emails say the club's numbers. Each half of a bilingual message words the deadlines
@@ -75,5 +78,29 @@ describe("§NNN the emails word the club's deadlines", () => {
     const en = buildTemplateContent("VERIFY_REGISTRATION_EMAIL", "en", { ...base, timings }, "https://example.test/x", copy);
     expect(en.subject).toBe("Confirm within 12 hours");
     expect(text(en)).toContain("A place is held one hour; an offer stands 6 hours; the reminder goes 3 days before.");
+  });
+});
+
+describe("§NNN the deadline fields in the sample and the legend (merged with §373)", () => {
+  it("gives each deadline field a sample value in both languages, from the defaults through the words helper", () => {
+    expect(EMAIL_SAMPLE.ro).toMatchObject({ confirmationHours: "48 de ore", holdMinutes: "30 de minute", offerHours: "24 de ore", reminderHours: "2 zile" });
+    expect(EMAIL_SAMPLE.en).toMatchObject({ confirmationHours: "48 hours", holdMinutes: "30 minutes", offerHours: "24 hours", reminderHours: "2 days" });
+    // What the legend and the guard read is the sample's own value.
+    expect(emailSampleValueOf("holdMinutes", "ro")).toBe("30 de minute");
+    expect(emailSampleValueOf("reminderHours", "en")).toBe("2 days");
+  });
+
+  it("shows, beside each deadline field, the setting in force the preview prints — the sample's without one", () => {
+    const row = (entries: ReturnType<typeof emailFieldLegend>, name: string) => entries.find((entry) => entry.name === name)?.example;
+    const inForce = emailFieldLegend("VERIFY_REGISTRATION_EMAIL", "ro", { ...DEFAULT_DEADLINES, confirmationHours: 36, holdMinutes: 90, offerHours: 12, reminderHours: 0 });
+    expect(row(inForce, "confirmationHours")).toBe("36 de ore");
+    expect(row(inForce, "holdMinutes")).toBe("90 de minute");
+    expect(row(inForce, "offerHours")).toBe("12 ore");
+    expect(row(inForce, "reminderHours")).toBe("");
+    // Every other row keeps the sample's value.
+    expect(row(inForce, "eventTitle")).toBe(EMAIL_SAMPLE.ro.eventTitle);
+    const sample = emailFieldLegend("VERIFY_REGISTRATION_EMAIL", "en");
+    expect(row(sample, "confirmationHours")).toBe("48 hours");
+    expect(row(sample, "reminderHours")).toBe("2 days");
   });
 });

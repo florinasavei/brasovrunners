@@ -2625,8 +2625,44 @@
         "subject": "Subject",
         "paragraphs": "Paragraphs",
         "paragraphsHelp": "A blank line between paragraphs. **Bold** is written between two asterisks.",
-        "placeholders": "You may use: {list}. A field this message does not carry is left empty. The race number, the desk code, “what to bring”, the hold's deadline, the signing time, the date, the place and the reminder's lead (none when the event sends no reminder) can be missing: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The preview above has every field. The four deadlines (confirmationHours, holdMinutes, offerHours, reminderHours) come with their unit, from “Deadlines” — “48 hours”, for instance — so do not add “hours” after them.",
-        "placeholdersUsed": "The platform's text for this message uses: {used}. You may also use: {others}. A field this message does not carry is left empty. The race number, the desk code, “what to bring”, the hold's deadline, the signing time, the date, the place and the reminder's lead (none when the event sends no reminder) can be missing: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The preview above has every field. The four deadlines (confirmationHours, holdMinutes, offerHours, reminderHours) come with their unit, from “Deadlines” — “48 hours”, for instance — so do not add “hours” after them.",
+        "legend": {
+          "title": "The fields you can use",
+          "intro": "Write them exactly like this, braces and all — each is replaced when the message is sent, for every participant. A field this message does not have stays empty — or, where its row says so, its paragraph is not sent.",
+          "missing": "The ones marked “may be missing” are not in every send: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The example beside a field is the value it gets in the preview above.",
+          "usedMark": "used in the platform's text",
+          "mayBeMissing": "may be missing",
+          "notFilled": "not filled in this message",
+          "notFilledDropped": "not filled in this message, so a paragraph with only this field is not sent",
+          "count": {
+            "one": "{count} field",
+            "few": "{count} fields",
+            "other": "{count} fields"
+          },
+          "used": {
+            "one": "{count} field used here",
+            "few": "{count} fields used here",
+            "other": "{count} fields used here"
+          },
+          "noneUsed": "none used here",
+          "fields": {
+            "participantName": "The participant's name as registered; in the team invitation, the colleague's name",
+            "eventTitle": "The event's title, in this text's language",
+            "eventLocationName": "The meeting point, by its name in this text's language; while it is not announced, the sentence that says so",
+            "eventStartsAtFormatted": "The start's date and time, in the event's time zone, written in this text's language",
+            "bibNumber": "The race number (possibly the provisional one, until registration closes)",
+            "checkinCode": "The desk code the participant collects their number with",
+            "currentStatus": "The registration's status when the message is sent",
+            "holdExpiresAtFormatted": "Until when the place is held, while that deadline is ahead",
+            "signedAtFormatted": "When the declaration was signed",
+            "eventChecklist": "What to bring — the event's line, in this text's language",
+            "staffRole": "The invited colleague's role on the team",
+            "inviterName": "Who invited them to the team",
+            "confirmationHours": "How long the link that confirms the address lives, from “Deadlines” — the unit comes with it, so do not add “hours” after it",
+            "holdMinutes": "How long a place is held while the declaration is signed, from “Deadlines”, with its unit",
+            "offerHours": "How long a waiting-list offer stays open, from “Deadlines”, with its unit",
+            "reminderHours": "How long before the start the reminder goes — this event's own, else the club's from “Deadlines” — with its unit; none when the event sends no reminder"
+          }
+        },
         "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the platform's: they carry tokens and files, not words.",
         "samplesTitle": "The saved text holds sample values, not fields",
         "samplePairWhere": "“{value}” — {where}; in its place: {replacement}",

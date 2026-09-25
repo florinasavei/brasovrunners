@@ -427,7 +427,44 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
   eventId: string,
   locale: Locale,
 ) {
-  const rows = await db
+  return eventNotificationDetailsIn(await findEventNotificationRows(db, eventId), locale);
+}
+
+/**
+ * One language's row of `findEventNotificationRows`, or the first there is when it has none —
+ * carrying `locationNames`, the place's name in every language the event has, for the half of a
+ * bilingual message written in the other one (§362, `renderBilingual`): the English half names
+ * the English place, read by the same rule — and withheld the same way while the place is to be
+ * announced (§328).
+ */
+export function eventNotificationDetailsIn<R extends { locale: Locale; locationName: string | null }>(
+  rows: readonly R[],
+  locale: Locale,
+) {
+  const row = rows.find((candidate) => candidate.locale === locale) ?? rows[0];
+  if (!row) return undefined;
+  const locationNames: Partial<Record<Locale, string | null>> = Object.fromEntries(
+    rows.map((candidate) => [candidate.locale, candidate.locationName]),
+  );
+  return { ...row, locationNames };
+}
+
+export type EventNotificationRow = Awaited<ReturnType<typeof findEventNotificationRows>>[number];
+
+/**
+ * Every language's row of what an email needs about one event, in one query — the same query
+ * `findEventNotificationDetails` always ran, which already read each translation and kept one.
+ *
+ * The send path keeps them all (§373, email follow-up): each half of the bilingual message reads
+ * its own language's title, "what to bring" and name for the place, so the English half of a
+ * Romanian registrant's message is English (`notifications/render.ts`, read once per event per
+ * batch).
+ */
+export async function findEventNotificationRows<T extends Record<string, unknown>>(
+  db: GenericDatabase<T>,
+  eventId: string,
+) {
+  return db
     .select({
       locale: eventTranslations.locale,
       title: eventTranslations.title,
@@ -464,16 +501,6 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
     .where(eq(eventTranslations.eventId, eventId));
-
-  const row = rows.find((candidate) => candidate.locale === locale) ?? rows[0];
-  if (!row) return undefined;
-  /*
-    The place in every language the event has, for the half of a bilingual message written in the
-    other one (§362, `renderBilingual`): the English half names the English place, read by the same
-    rule — and withheld the same way while the place is to be announced (§328).
-  */
-  const locationNames: Partial<Record<Locale, string | null>> = Object.fromEntries(rows.map((candidate) => [candidate.locale, candidate.locationName]));
-  return { ...row, locationNames };
 }
 
 /** One published event by its locale-scoped slug, or undefined when it should 404. */

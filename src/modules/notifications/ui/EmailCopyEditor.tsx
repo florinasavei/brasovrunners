@@ -10,11 +10,13 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import type { Locale } from "@/i18n/routing";
-import { EMAIL_COPY_PLACEHOLDERS, type EmailCopyEntry, type EmailCopyPlaceholder } from "@/modules/notifications/domain/email-copy";
+import type { EmailCopyEntry, EmailCopyPlaceholder } from "@/modules/notifications/domain/email-copy";
 import { emailDocFromParagraphs } from "@/modules/notifications/domain/email-rich-text";
 import type { EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import type { EmailCopyPrefill } from "@/modules/notifications/email-copy-fields";
+import EmailFieldLegend from "@/modules/notifications/ui/EmailFieldLegend";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -32,10 +34,10 @@ type Props = {
    * written as placeholders, never the preview's sample values (§359, `email-copy-fields.ts`).
    */
   shipped: EmailCopyPrefill;
-  /** The fields the platform's text for this message uses, said first under the box (§359). */
-  used: readonly EmailCopyPlaceholder[];
   /** The sample values the club's saved words still hold (§359); empty when there are none. */
   samples: readonly EmailSampleHit[];
+  /** The club's deadlines in force (§NNN): the legend's four deadline rows show what the preview prints. */
+  deadlines?: Deadlines;
 };
 
 /**
@@ -58,16 +60,16 @@ type Props = {
  * hidden input still carries the document it was given, so a save writes the words back
  * unchanged rather than blanking a message.
  *
- * The placeholders are listed under the box, this message's own first, because a field nobody can
- * see the name of is a field nobody uses. What is *not* editable is said there too — the button,
- * the QR and the links are the message's machinery (`domain/email-copy.ts` argues why).
+ * The fields are a legend under the box (`EmailFieldLegend`, §373 email follow-up): one row each,
+ * this message's own first, with what each becomes and the preview's value for it — because a
+ * field nobody can see the name of is a field nobody uses. What is *not* editable is said under it
+ * — the button, the QR and the links are the message's machinery (`domain/email-copy.ts` argues why).
  */
-export default async function EmailCopyEditor({ locale, emailLocale, messageType, written, shipped, used, samples }: Props) {
+export default async function EmailCopyEditor({ locale, emailLocale, messageType, written, shipped, samples, deadlines }: Props) {
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Admin.richText");
   const current = written ?? shipped;
   const field = (name: EmailCopyPlaceholder) => `{${name}}`;
-  const others = EMAIL_COPY_PLACEHOLDERS.filter((name) => !used.includes(name));
 
   /*
     Each sample value once, with the boxes it is in and what goes in its place — a field, or for the
@@ -144,11 +146,8 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.paragraphsHelp")}
         </Typography>
-        <Typography variant="caption" color="text.secondary" data-testid="email-copy-placeholders">
-          {used.length > 0
-            ? t("emails.copy.placeholdersUsed", { used: used.map(field).join(", "), others: others.map(field).join(", ") })
-            : t("emails.copy.placeholders", { list: EMAIL_COPY_PLACEHOLDERS.map(field).join(", ") })}
-        </Typography>
+        {/* The fields, as the declaration's editor lists its tokens (§373, email follow-up): a named card, closed. */}
+        <EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} deadlines={deadlines} />
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.machinery")}
         </Typography>

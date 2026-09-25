@@ -189,7 +189,7 @@ describe("§NNN the reminder lead, the event's or the club's", () => {
     // "Se apropie", not "peste 3 zile": a runner confirmed after the lead opened gets this nearer
     // the start than the lead says (§357, which landed on qa beside this branch).
     expect(message.text).toContain("Crosul se apropie.");
-    expect(message.text).toContain("Crosul is coming up.");
+    expect(message.text).toContain("The cross is coming up.");
     expect(message.text).not.toContain("3 zile");
     expect(message.text).not.toContain("3 days");
 
@@ -197,7 +197,7 @@ describe("§NNN the reminder lead, the event's or the club's", () => {
     await db.update(events).set({ reminderHoursBefore: 0 }).where(eq(events.id, own.id));
     const resent = await renderOutboxMessage(row, db, NOW);
     expect(resent.text).toContain("Crosul se apropie.");
-    expect(resent.text).toContain("Crosul is coming up.");
+    expect(resent.text).toContain("The cross is coming up.");
   });
 
   describe("in the editor", () => {

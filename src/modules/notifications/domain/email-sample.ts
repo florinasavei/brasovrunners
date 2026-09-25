@@ -1,8 +1,11 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
+import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { EmailCopyPlaceholder } from "./email-copy";
+import { registrationStatusWords } from "./registration-status-words";
 
 /**
  * The made-up runner at the made-up event every preview on `/admin/emails` is rendered with
@@ -25,9 +28,50 @@ import type { EmailCopyPlaceholder } from "./email-copy";
 /** The sample event's start — Sunday 4 October 2026, 09:00 in Brașov. */
 export const EMAIL_SAMPLE_STARTS_AT = new Date("2026-10-04T06:00:00Z");
 
+/**
+ * Until when the sample runner's place is held — Friday 2 October 2026, 18:30 in Brașov (§104).
+ * Before §373 (email follow-up) the sample had none, so the declaration's preview left out the
+ * sentence that names it and a `{holdExpiresAtFormatted}` the club wrote previewed as nothing.
+ */
+export const EMAIL_SAMPLE_HOLD_EXPIRES_AT = new Date("2026-10-02T15:30:00Z");
+
+/** When the sample runner signed the declaration — Monday 28 September 2026, 19:42 in Brașov (§95). */
+export const EMAIL_SAMPLE_SIGNED_AT = new Date("2026-09-28T16:42:00Z");
+
+/**
+ * One of the sample's moments as a message writes it inside a sentence (§349), through the same
+ * `formatDay` call the send path makes (`render.ts`, `formatInSentence`): "duminică, 4 oct. 2026,
+ * 09:00", "Sunday, 4 Oct 2026, 09:00".
+ */
+function sampleMoment(at: Date, locale: EmailLocale): string {
+  return formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
+}
+
 /** The sample start as a message writes it inside a sentence (§349): "duminică, 4 oct. 2026, 09:00". */
 export function emailSampleWhen(locale: EmailLocale): string {
-  return formatDay(EMAIL_SAMPLE_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
+  return sampleMoment(EMAIL_SAMPLE_STARTS_AT, locale);
+}
+
+/** The four deadline fields of the closed set (§NNN). */
+export type EmailSampleDeadlines = Pick<EmailSampleValues, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours">;
+
+/**
+ * The club's deadlines as the four fields' values, in one language (§NNN) — through the branch's one
+ * words helper (`deadlineWords`), which says each duration exactly as `templates.ts` fills the field
+ * at send time: "48 de ore", "30 de minute", "24 de ore", "2 zile". Empty for a reminder the club
+ * does not send, as the message leaves it (a paragraph with only it is then not sent).
+ *
+ * The sample reads the defaults, the numbers an unset "Termene" has; the page's legend reads the
+ * setting in force, so its example is the one the preview above it prints (`emailFieldLegend`).
+ */
+export function emailSampleDeadlines(locale: EmailLocale, deadlines: Deadlines = DEFAULT_DEADLINES): EmailSampleDeadlines {
+  const words = deadlineWords(locale, deadlines);
+  return {
+    confirmationHours: words.confirmation,
+    holdMinutes: words.hold,
+    offerHours: words.offer,
+    reminderHours: words.reminder ?? "",
+  };
 }
 
 export type EmailSampleValues = {
@@ -39,6 +83,14 @@ export type EmailSampleValues = {
   checkinCode: string;
   bibNumber: number;
   eventChecklist: string;
+  /** The hold's deadline and the time of signing (§104, §95), so every field of the set has a sample value (§373). */
+  holdExpiresAtFormatted: string;
+  signedAtFormatted: string;
+  /** The club's deadlines as words (§NNN), from `DEFAULT_DEADLINES` (`emailSampleDeadlines`). */
+  confirmationHours: string;
+  holdMinutes: string;
+  offerHours: string;
+  reminderHours: string;
   /**
    * The staff invitation (§141): a made-up colleague, added by a made-up administrator — a name
    * nobody at the club has, so it is refused in every message, as the runner's is (§359).
@@ -64,10 +116,13 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     eventTitle: "Crosul de toamnă",
     eventLocationName: "Stația de telecabină Tâmpa",
     eventStartsAtFormatted: emailSampleWhen("ro"),
-    currentStatus: "confirmată",
+    currentStatus: registrationStatusWords("CONFIRMED", "ro"),
     checkinCode: "EXAMPL",
     bibNumber: 42,
     eventChecklist: "Apă, o haină de ploaie, bună dispoziție",
+    holdExpiresAtFormatted: sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "ro"),
+    signedAtFormatted: sampleMoment(EMAIL_SAMPLE_SIGNED_AT, "ro"),
+    ...emailSampleDeadlines("ro"),
     staffRole: "Organizator",
     inviterName: "Ion Exemplu",
     staffEmail: "ana.popescu@example.org",
@@ -85,10 +140,13 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     eventTitle: "The autumn cross",
     eventLocationName: "Tâmpa cable-car station",
     eventStartsAtFormatted: emailSampleWhen("en"),
-    currentStatus: "confirmed",
+    currentStatus: registrationStatusWords("CONFIRMED", "en"),
     checkinCode: "EXAMPL",
     bibNumber: 42,
     eventChecklist: "Water, a rain jacket, good spirits",
+    holdExpiresAtFormatted: sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "en"),
+    signedAtFormatted: sampleMoment(EMAIL_SAMPLE_SIGNED_AT, "en"),
+    ...emailSampleDeadlines("en"),
     staffRole: "Organizator",
     inviterName: "Ion Exemplu",
     staffEmail: "ana.popescu@example.org",
@@ -120,25 +178,13 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
  */
 export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
 
-/** The sample's value for a field of the closed set, in one language, or `undefined` for those the sample has none of. */
-export function emailSampleValueOf(name: EmailCopyPlaceholder, locale: EmailLocale): string | undefined {
+/**
+ * The sample's value for a field of the closed set, in one language — every field has one since
+ * §373 (email follow-up), so the preview and the legend under the editor show each of them.
+ */
+export function emailSampleValueOf(name: EmailCopyPlaceholder, locale: EmailLocale): string {
   const sample = EMAIL_SAMPLE[locale];
-  switch (name) {
-    case "bibNumber":
-      return String(sample.bibNumber);
-    case "holdExpiresAtFormatted":
-    case "signedAtFormatted":
-      return undefined;
-    // The club's deadlines (§NNN) are not sample values: the preview fills them from "Termene",
-    // the setting in force, so there is no made-up value of theirs for a saved text to carry.
-    case "confirmationHours":
-    case "holdMinutes":
-    case "offerHours":
-    case "reminderHours":
-      return undefined;
-    default:
-      return sample[name];
-  }
+  return name === "bibNumber" ? String(sample.bibNumber) : sample[name];
 }
 
 /**
@@ -186,15 +232,19 @@ export const EMAIL_SAMPLE_LITERALS: readonly EmailSampleLiteral[] = dedupe([
     ...EMAIL_SAMPLE_FORMER_WHEN[locale].map((value): EmailSampleLiteral => ({ value, placeholder: "eventStartsAtFormatted" })),
     { value: EMAIL_SAMPLE[locale].checkinCode, placeholder: "checkinCode" },
     { value: EMAIL_SAMPLE[locale].eventChecklist, placeholder: "eventChecklist" },
+    // Every value added to the sample is one the guard refuses (the note at the top of this file).
+    { value: EMAIL_SAMPLE[locale].holdExpiresAtFormatted, placeholder: "holdExpiresAtFormatted" },
+    { value: EMAIL_SAMPLE[locale].signedAtFormatted, placeholder: "signedAtFormatted" },
     { value: EMAIL_SAMPLE[locale].staffRole, placeholder: "staffRole", only: ["STAFF_INVITATION"] },
     { value: EMAIL_SAMPLE[locale].inviterName, placeholder: "inviterName" },
   ]),
 ]);
 
+/** The same value twice — "Ana Popescu" in both languages — is looked for once. Exact, as the match is. */
 function dedupe(literals: EmailSampleLiteral[]): EmailSampleLiteral[] {
   const seen = new Set<string>();
   return literals.filter((literal) => {
-    const key = literal.value.toLocaleLowerCase("ro-RO");
+    const key = literal.value.normalize("NFC");
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -206,13 +256,42 @@ function escapeRegExp(text: string): string {
 }
 
 /**
- * The value as a whole word: not inside a longer one ("Organizatorii" is not the role, "EXAMPLE" is
- * not the check-in code). A value of several words is matched whatever its case, since a sentence
- * may start with it; a single word keeps its case, so "exemplu" and "example" are never the code.
+ * What a word is made of, in any script: a letter — "ă", "â", "î", "ș" and "ț" are letters (`\p{L}`)
+ * — a combining mark, which is how a letter typed as a base letter plus an accent carries it
+ * (`\p{M}`), a digit, or an underscore.
+ */
+const WORD_CHARACTER = String.raw`[\p{L}\p{M}\p{N}_]`;
+
+/**
+ * A hyphen between two word characters makes them one word: "cross-country", "Popescu-Ionescu",
+ * "dându-i". An apostrophe does not — "The autumn cross's route" still names the sample's title.
+ */
+const HYPHEN = String.raw`[\-‐‑]`;
+
+/**
+ * The value as a whole word or phrase, on both sides, and exactly as the sample writes it (§373,
+ * email follow-up; the re-review's nit: a value of several words matched whatever its case, and a
+ * hyphen ended a word, so "the autumn cross-country season" was refused as the sample's title).
+ *
+ * - **Both sides**: not after a word character or a word character and a hyphen, not before a word
+ *   character or a hyphen and a word character. "Organizatorii" is not the role, "EXAMPLE" is not
+ *   the check-in code, "Ana Popescu-Ionescu" is not the sample runner, "The autumn cross-country"
+ *   is not the sample's title.
+ * - **Case-sensitive, every value**: what the old starting text carried is the sample's value
+ *   verbatim — the templates set it in as it is, capital and all — so a case-blind match only adds
+ *   ordinary prose: "ne vedem la crosul de toamnă", "the autumn cross". Decided per value in
+ *   `tests/unit/notifications/email-sample-guard.test.ts`: the runner, the title, the place, the
+ *   checklist, the dates, the code, the inviter and the address are refused as the sample writes
+ *   them, anywhere; the role only inside the invitation (`only`); a real place written as the
+ *   sample writes it ("Stația de telecabină Tâmpa") is refused too and named with its field, which
+ *   is what an event held there puts in its place anyway.
+ * - **Canonical Unicode**: the text and the value are compared composed (NFC), so an "ă" typed as
+ *   "a" and a breve is the same letter.
  */
 function patternOf(value: string): RegExp {
-  const flags = /\s/.test(value) ? "giu" : "gu";
-  return new RegExp(`(?<![\\p{L}\\p{N}_])${escapeRegExp(value)}(?![\\p{L}\\p{N}_])`, flags);
+  const before = `(?<!${WORD_CHARACTER})(?<!${WORD_CHARACTER}${HYPHEN})`;
+  const after = `(?!${WORD_CHARACTER})(?!${HYPHEN}${WORD_CHARACTER})`;
+  return new RegExp(`${before}${escapeRegExp(value.normalize("NFC"))}${after}`, "gu");
 }
 
 const PATTERNS = new Map(EMAIL_SAMPLE_LITERALS.map((literal) => [literal, patternOf(literal.value)]));
@@ -223,11 +302,12 @@ function appliesTo(literal: EmailSampleLiteral, messageType: EmailMessageType): 
 
 /** The sample values in one piece of text, in the order of the list above. */
 export function emailSampleLiteralsIn(text: string, messageType: EmailMessageType): EmailSampleLiteral[] {
+  const composed = text.normalize("NFC");
   return EMAIL_SAMPLE_LITERALS.filter((literal) => {
     if (!appliesTo(literal, messageType)) return false;
     const pattern = PATTERNS.get(literal) as RegExp;
     pattern.lastIndex = 0;
-    return pattern.test(text);
+    return pattern.test(composed);
   });
 }
 
@@ -238,7 +318,8 @@ export function emailSampleReplacementOf(literal: EmailSampleLiteral, locale: Em
 
 /** Every sample value in a piece of text, rewritten to its field (§359 "Înlocuiește cu câmpurile"). */
 export function replaceEmailSampleLiterals(text: string, messageType: EmailMessageType, locale: EmailLocale): string {
-  let out = text;
+  // Composed, as the search is: a value found is a value replaced (`patternOf`).
+  let out = text.normalize("NFC");
   for (const literal of EMAIL_SAMPLE_LITERALS) {
     if (!appliesTo(literal, messageType)) continue;
     const pattern = PATTERNS.get(literal) as RegExp;

@@ -12,8 +12,7 @@ import { renderBilingual } from "@/modules/notifications/templates";
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
-  emailSampleData,
-  placeholdersUsedBy,
+  emailSampleFor,
   sampleLanguagesOf,
   sampleValuesIn,
 } from "@/modules/notifications/email-copy-fields";
@@ -163,13 +162,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
   const emailsPath = getPathname({ locale, href: "/admin/emails" });
-  /*
-    The sample the previews are rendered with (§91) — one constant, `domain/email-sample.ts`, which
-    is also what the save refuses to store (§359), so the preview and the guard cannot drift.
-  */
-  const sample = emailSampleData(emailLocale);
   // The club's deadlines (§NNN), as the outbox gives every message: the numbers the words say.
-  sample.timings = {
+  const timings = {
     confirmationHours: deadlines.deadlines.confirmationHours,
     holdMinutes: deadlines.deadlines.holdMinutes,
     offerHours: deadlines.deadlines.offerHours,
@@ -181,6 +175,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const mayWrite = canEditTexts(staff.role);
 
   const cards = types.map((messageType) => {
+    /*
+      The sample the preview is rendered with (§91) — one constant, `domain/email-sample.ts`, which
+      is also what the save refuses to store (§359), so the preview and the guard cannot drift. Each
+      half in its own language's sample, and without the fields this message never carries (§373,
+      email follow-up: the legend under the editor dims them, and the preview says the same).
+    */
+    const sample = emailSampleFor(messageType, emailLocale);
+    // The club's deadlines in force (§NNN), which the send gives every message as numbers.
+    sample.timings = timings;
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is
     // what a participant will actually receive rather than what the platform ships.
@@ -314,8 +317,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                 /* The platform's own words with the fields in them, never the preview's sample
                    values (§359): what the box starts from while the club has written nothing. */
                 shipped={emailCopyPrefill(messageType, emailLocale)}
-                used={placeholdersUsedBy(messageType, emailLocale)}
                 samples={samples}
+                // The deadlines the preview above prints (§NNN), for the legend's four rows.
+                deadlines={deadlines.deadlines}
               />
             ) : undefined,
           };

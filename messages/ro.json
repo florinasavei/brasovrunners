@@ -2625,8 +2625,44 @@
         "subject": "Subiect",
         "paragraphs": "Paragrafe",
         "paragraphsHelp": "Un rând gol între paragrafe. **Îngroșat** se scrie între două steluțe.",
-        "placeholders": "Poți folosi: {list}. Un câmp pe care mesajul nu îl are rămâne gol. Numărul de concurs, codul de la masă, „ce să aduci”, termenul locului, ora semnării, data, locul și cât înainte pleacă reminderul (nimic când evenimentul nu trimite reminder) pot lipsi: un paragraf care numește doar dintre acestea și nu are niciunul nu se trimite deloc — de aceea fiecare stă în paragraful lui. Previzualizarea de mai sus are toate câmpurile. Cele patru termene (confirmationHours, holdMinutes, offerHours, reminderHours) se scriu cu unitatea cu tot, din „Termene” — de exemplu „48 de ore” —, deci nu mai adăuga „ore” după ele.",
-        "placeholdersUsed": "Textul platformei pentru acest mesaj folosește: {used}. Mai poți folosi: {others}. Un câmp pe care mesajul nu îl are rămâne gol. Numărul de concurs, codul de la masă, „ce să aduci”, termenul locului, ora semnării, data, locul și cât înainte pleacă reminderul (nimic când evenimentul nu trimite reminder) pot lipsi: un paragraf care numește doar dintre acestea și nu are niciunul nu se trimite deloc — de aceea fiecare stă în paragraful lui. Previzualizarea de mai sus are toate câmpurile. Cele patru termene (confirmationHours, holdMinutes, offerHours, reminderHours) se scriu cu unitatea cu tot, din „Termene” — de exemplu „48 de ore” —, deci nu mai adăuga „ore” după ele.",
+        "legend": {
+          "title": "Câmpurile pe care le poți folosi",
+          "intro": "Le scrii exact așa, cu acolade — se înlocuiesc la trimitere, pentru fiecare participant. Un câmp pe care mesajul acesta nu îl are rămâne gol — sau, unde rândul lui o spune, paragraful cu el nu se trimite.",
+          "missing": "Cele marcate „poate lipsi” nu sunt în fiecare trimitere: un paragraf care numește doar dintre ele și nu are niciunul nu se trimite deloc — de aceea fiecare stă în paragraful lui. Exemplul de lângă un câmp e valoarea pe care o primește în previzualizarea de mai sus.",
+          "usedMark": "folosit în textul platformei",
+          "mayBeMissing": "poate lipsi",
+          "notFilled": "nu se completează în acest mesaj",
+          "notFilledDropped": "nu se completează în acest mesaj, deci un paragraf doar cu el nu se trimite",
+          "count": {
+            "one": "{count} câmp",
+            "few": "{count} câmpuri",
+            "other": "{count} de câmpuri"
+          },
+          "used": {
+            "one": "{count} câmp folosit aici",
+            "few": "{count} câmpuri folosite aici",
+            "other": "{count} de câmpuri folosite aici"
+          },
+          "noneUsed": "niciunul folosit aici",
+          "fields": {
+            "participantName": "Numele participantului, cum s-a înscris; în invitația în echipă, numele colegului",
+            "eventTitle": "Titlul evenimentului, în limba acestui text",
+            "eventLocationName": "Locul de întâlnire, cu numele din limba acestui text; cât timp nu e anunțat, fraza care spune asta",
+            "eventStartsAtFormatted": "Data și ora startului, în fusul evenimentului, scrise în limba acestui text",
+            "bibNumber": "Numărul de concurs (poate fi cel provizoriu, până se închid înscrierile)",
+            "checkinCode": "Codul de la masă, cu care participantul își ridică numărul",
+            "currentStatus": "Starea înscrierii în momentul trimiterii",
+            "holdExpiresAtFormatted": "Până când îi e ținut locul, cât timp termenul nu a trecut",
+            "signedAtFormatted": "Când a semnat declarația",
+            "eventChecklist": "Ce să aducă — rândul scris la eveniment, în limba acestui text",
+            "staffRole": "Rolul colegului invitat în echipă",
+            "inviterName": "Cine l-a invitat în echipă",
+            "confirmationHours": "Cât e valabil linkul care confirmă adresa, din „Termene” — unitatea vine cu el, deci nu mai adăuga „ore” după el",
+            "holdMinutes": "Cât e ținut locul cât timp se semnează declarația, din „Termene”, cu unitatea cu tot",
+            "offerHours": "Cât rămâne deschisă o ofertă de pe lista de așteptare, din „Termene”, cu unitatea cu tot",
+            "reminderHours": "Cu cât înainte de start pleacă reminderul — al evenimentului, altfel al clubului din „Termene” — cu unitatea cu tot; nimic când evenimentul nu trimite reminder"
+          }
+        },
         "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân ale platformei: ele duc token-uri și fișiere, nu cuvinte.",
         "samplesTitle": "Textul salvat conține valori de exemplu, nu câmpuri",
         "samplePairWhere": "„{value}” — {where}; în locul ei: {replacement}",
