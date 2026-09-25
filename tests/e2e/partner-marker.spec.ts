@@ -142,7 +142,9 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(partnerCard).toContainText("Organizăm împreună");
     await expect(partnerCard.getByRole("link", { name: `Înscriere la ${partner}` })).toBeVisible();
     const [cardBox, ddBox] = await Promise.all([partnerCard.boundingBox(), partnerCard.locator("xpath=ancestor::dd[1]").boundingBox()]);
-    expect(cardBox && ddBox && cardBox.x + cardBox.width).toBeLessThanOrEqual((ddBox?.x ?? 0) + (ddBox?.width ?? 0) + 0.5);
+    expect(cardBox, "the partner card has a box").not.toBeNull();
+    expect(ddBox, "the partner card's <dd> has a box").not.toBeNull();
+    expect(cardBox!.x + cardBox!.width).toBeLessThanOrEqual(ddBox!.x + ddBox!.width + 0.5);
 
     await page.goto(`/en/events/${englishSlug}`);
     await expect(page.getByTestId("overline-partner")).toContainText("Partnered event");

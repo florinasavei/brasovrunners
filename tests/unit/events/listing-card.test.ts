@@ -348,6 +348,22 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(source).toContain("flexShrink: 0");
   });
 
+  it("gives a race card's «when» row a four-pixel gap, and every other card row its six (§NNN)", async () => {
+    // With the times' digits bold, a race's second line — the two named times — measured 226.83
+    // pixels against 226 at 320 on the widest weekday and wrapped to a third line; two pixels
+    // fewer each side of the separator win it back. Only that row: a series' breakpoint was
+    // measured with the six-pixel gap.
+    const raceHtml = await single({ raceStartsAt: new Date("2026-09-27T06:00:00Z") });
+    const raceRow = [...fact(raceHtml, "when").matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(raceRow, "the race row's own emotion class").toBeTruthy();
+    expect(rulesFor(raceHtml, raceRow!)).toContain("column-gap:4px");
+
+    const plainHtml = await single();
+    const plainRow = [...fact(plainHtml, "when").matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(plainRow, "the plain row's own emotion class").toBeTruthy();
+    expect(rulesFor(plainHtml, plainRow!)).toContain("column-gap:6px");
+  });
+
   it("wraps the when line rather than clip it, for a date more than a year out that keeps its year (a review, 2026-09-24)", async () => {
     // More than 365 days ahead of `NOW`: the card keeps the year («Sâmbătă, 26 sept. 2027 · 08:00»)
     // and, kept whole under `nowrap`, would run past the card's width and be cut by its own

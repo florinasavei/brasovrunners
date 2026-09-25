@@ -88,6 +88,23 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 } as const;
 
 /**
+ * The gap between a race card's «when» pieces, and before each separator, on the card row only
+ * (§375 amended, §NNN): four pixels where every other row keeps six. A race's row wraps by
+ * design (`flow`, below), the date on the first line and the two named times on the second —
+ * and with those times' digits bold (`whenPieces`' `boldTime`), the second line measured, in
+ * headless Chromium on the built listing at 320 pixels in Romanian on the widest weekday
+ * ("Duminică, 27 sept." alone on the first line), 226.83 pixels for
+ * "[clock] întâlnire la 08:00 · start la 09:00" against the 226 the card leaves the row: it
+ * wrapped once more, to three lines, and a runner read the start time on a line of its own.
+ * Two pixels fewer each side of the separator give back four: re-measured 2026-09-25, the line is
+ * now 222.83 pixels at 320 in Romanian (215.14 in English), two lines in all; from 360 up the
+ * date and the gathering time share the first line and the start time takes the second, in both
+ * languages, at 360, 390 and 412. The series row and `WHEN_LEAD_HIDDEN_BELOW_376` are untouched —
+ * they never wrap, and their breakpoint was measured with the six-pixel gap.
+ */
+const RACE_ROW_GAP = 0.5;
+
+/**
  * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
  * page and the cards read alike. Its label wraps rather than ending in an ellipsis: MUI cuts a
  * chip's label to one line, and a club's own amount ("50 lei la înscriere, 70 lei în ziua
@@ -274,7 +291,13 @@ export default async function EventFacts({
      before the number, so bolding the plain-time key would bold that word too; `gatheringAtBold`
      / `raceStartAtBold` wrap only `{time}` in `<strong>`, so the launch race's card matches the
      weekly-run cards without the word going bold with it. `ical.ts`'s calendar description
-     keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line. */
+     keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line.
+
+     The bold digits cost a race's card width (§NNN): its second line, the two named times, grew
+     to 226.83 pixels at 320 in Romanian on the widest weekday against the row's 226, and wrapped
+     to a third line. The card's race row takes a four-pixel gap instead of six for it
+     (`RACE_ROW_GAP`, above, with the measurement before and after); the lead's breakpoint and
+     the series row keep theirs. */
   const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX, boldTime = false): ReactNode[] => {
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
@@ -425,8 +448,8 @@ export default async function EventFacts({
     reader still reads it; the date's year is swapped with `display` instead, two renderings of
     which one shows.
   */
-  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean }) => (
-    <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
+  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean; tight?: boolean }) => (
+    <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: card?.tight ? RACE_ROW_GAP : 0.75, minWidth: 0 }}>
       {card?.lead && (
         <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, ...WHEN_LEAD_HIDDEN_BELOW_376 }}>
           {card.lead}
@@ -436,7 +459,7 @@ export default async function EventFacts({
         <span key={index} style={card ? { whiteSpace: "nowrap", flexShrink: 0 } : undefined}>
           {item}
           {index < items.length - 1 && (
-            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", ml: 0.75 }}>
+            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75 }}>
               ·
             </Box>
           )}
@@ -570,7 +593,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) }))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort), tight: !!event.raceStartsAt }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (

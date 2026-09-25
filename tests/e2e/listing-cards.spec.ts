@@ -531,7 +531,11 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     try {
       const sunday = await publishSeries(page, created, widestDay(new Date(today.getTime() + DAY), 0, 1));
       const wednesday = await publishSeries(page, created, widestDay(new Date(today.getTime() + DAY), 3, 1));
-      const race = await publishOneOff(page, created, "race", new Date(today.getTime() + 9 * DAY));
+      // On the widest Romanian weekday with a two-digit day, so the date stands alone on the first
+      // line and the two bold times share the second — the case that measured 226.83 pixels
+      // against 226 at 320 before the race row's tighter gap (§NNN), every run rather than one
+      // week in seven.
+      const race = await publishOneOff(page, created, "race", widestDay(new Date(today.getTime() + 9 * DAY), 0, 1));
       const yearOutDay = widestDay(new Date(today.getTime() + 380 * DAY), 0, 1);
       const yearOut = await publishOneOff(page, created, "yearOut", yearOutDay);
       const pastDay = widestDay(new Date(today.getTime() - 2 * DAY), 0, -1);
