@@ -95,7 +95,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
 
   test("AND across groups; an address from before the panel still means what it meant", async ({ page }) => {
     // A group run AND hard: the intervals only, no hero (the race is neither).
-    await page.goto("/ro/evenimente?type=GROUP_RUN&difficulty=HARD");
+    await page.goto("/ro/evenimente?type=GROUP_RUN&difficulty=VERY_HARD");
     await expect(heading(page, INTERVALS)).toBeAttached();
     await expect(heading(page, TRAIL_RUN)).toHaveCount(0);
     await expect(heading(page, RACE)).toHaveCount(0);
