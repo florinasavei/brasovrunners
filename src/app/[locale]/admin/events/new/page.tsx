@@ -29,7 +29,7 @@ import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
-import { listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
@@ -121,7 +121,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
     },
     languages: Object.fromEntries(routing.locales.map((contentLocale) => [contentLocale, tSite(`languageName.${contentLocale}`)])),
   };
-  const box = { event: null, mayEditSettings: true } as const;
+  // Which group-run declarations the club has approved (§393): the route card's checkbox asks.
+  const box = { event: null, mayEditSettings: true, groupRunDeclarations: await groupRunDeclarationsInForce(getDb(), new Date()) } as const;
   /*
     "Creează și publică" puts an event on the site in one press (§384): it asks first, as the
     editor's "Publică" does. The plain create makes a draft nobody sees and asks nothing — the
@@ -214,7 +215,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <PlaceBox {...box} languages={languages} />
               <ProgrammeBox {...box} languages={languages} />
               <RulesBox languages={languages} />
-              <RegistrationBox {...box} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
+              <RegistrationBox {...box} declarations={declarations} locale={locale} clubDeadlines={deadlines} languages={languages} />
 
               <EditorGroup label={t("editor.groups.details")} />
               <CoHostsBox {...box} locale={locale} />

@@ -19,21 +19,14 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | The backoffice time field: a native HH:MM 24-hour input instead of the MUI wheel picker (the date picker stays) | `fix/time-field-native` | queued |
 | «Împreună cu» on the event page as a collapsible block with the partner cards inside | `feat/partners-fold` | queued |
 | Create and publish offered the same way on every new event, whatever its type or series | `fix/create-publish-consistent` | queued |
-| The confirmed email (and the reminder, the participation confirmation) carry the event's facts: when, where, programme, route, cost, links — one shared block | `feat/confirmation-email-details` | queued |
-| The public participant list shows each person's state (confirmed · awaiting confirmation · waiting list), gated on the privacy notice in force | `feat/public-list-states` | queued |
-| Editor small: «Ce înseamnă fiecare tip?» as a compact help fold, cost «Gratuit» by default, a robot glyph on the series line, the email legend with an «i» | `fix/editor-small-2026-09-25` | queued |
-| /admin/tasks gains the tab «Aplicația» rendering docs/QUEUE.md | `feat/tasks-queue-tab` | queued |
 | The YouTube player: a poster from the club's store before the click, mute and volume after it | `feat/youtube-poster-volume` | queued |
 | The event editor mirrors the page: one card per section in page order, a page map, numbered titles with «apare pe pagină» | `feat/editor-page-flow` | queued |
-| «Eveniment de noapte» computed from the start time and the sunset at the club's city, per date; the headlamp checkbox becomes an override | `feat/night-event-from-sunset` | queued |
-| The money side of an external event: a bilingual discount note, «la organizator» cost wording, the ics cost line, JSON-LD offers | `feat/external-discount-note` | queued |
-| An optional self-declaration for group runs (asfalt, trail), signed on the site and emailed to the club (migration) | `feat/group-run-declaration` | queued; the trail one on by default (Salvamont) |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready item shipped in `BR-V1.95` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.96` |
 
 ## Next, queued
 
@@ -69,6 +62,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.96` | the confirmed email's facts block (§392) · the optional group-run declaration, asphalt and trail, migration `0074` (§393) · night events from civil dusk, migration `0076` (§394) · the external discount note, migration `0075` (§395) · the public list's states behind the notice (§396) · the editor's help fold, free by default, the robot glyph (§398) · «Aplicația» on /admin/tasks renders docs/QUEUE.md (§397) |
 | `BR-V1.95` | the partner marker is Material's Handshake glyph again, in each surface's own ink (§391) |
 | `BR-V1.94` | the family flow is open: the contract migration `0073` drops the old one-registration-per-address index; the notice template says whose data and whose inbox (§390) |
 | `BR-V1.93` | a family on one address through the inbox, the club's limit per address, each person confirms and signs alone — dormant until `BR-V1.94`'s contract migration; migration `0072` (§389) · the share picture's button says «Descarcă poza» |

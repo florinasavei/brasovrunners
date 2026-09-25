@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import {
   legalDocumentNumbering,
   legalDocumentTranslations,
@@ -9,9 +10,9 @@ import {
 } from "@/db/schema/legal-documents";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
-import type { Locale } from "@/i18n/routing";
+import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { asksForMinorSignature } from "./domain/merge-fields";
+import { asksForMinorSignature, describesListStates } from "./domain/merge-fields";
 
 /**
  * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
@@ -106,6 +107,22 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
   return document ? asksForMinorSignature(document.body) : false;
 }
 
+/**
+ * Whether the club has an approved group-run declaration in force for each surface (§393) — what
+ * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked.
+ * Asked in Romanian: both languages are required before a version can be approved (§46).
+ */
+export async function groupRunDeclarationsInForce<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<Record<"ASPHALT" | "TRAIL", boolean>> {
+  const [asphalt, trail] = await Promise.all([
+    findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_ASPHALT", "ro", now),
+    findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", now),
+  ]);
+  return { ASPHALT: asphalt !== undefined, TRAIL: trail !== undefined };
+}
+
 /** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */
 export async function declarationAsksMinorToSignByLocale<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -113,6 +130,20 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 ): Promise<Record<Locale, boolean>> {
   const [ro, en] = await Promise.all([declarationAsksMinorToSign(db, "ro", now), declarationAsksMinorToSign(db, "en", now)]);
   return { ro, en };
+}
+
+/**
+ * Whether the privacy notice in force describes the public list's states (§396,
+ * `describesListStates`) — in **every** language, because the list is one list: a runner who
+ * registered in English was told what the English notice says, and a state shown beside their
+ * name must be one that notice describes. False while no notice is approved, as it must be.
+ *
+ * For the backoffice (`/admin/legal`, `/admin/tasks`); a public page asks the same question
+ * through the public cache (`public-cache/reads.ts#cachedListStatesDisclosed`).
+ */
+export async function noticeDescribesListStates<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
 }
 
 /**
@@ -390,7 +421,12 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       withdrawnAt: legalDocuments.withdrawnAt,
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
-      acceptanceCount: sql<number>`(select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})`,
+      // Every signature against this version: a race's acceptances, and a group run's optional
+      // self-declarations (§393) — both are somebody relying on these exact words.
+      acceptanceCount: sql<number>`(
+        (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
+      )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, and only for the notice key, because that is the only
       // shape this reference has: there is no id to join on.

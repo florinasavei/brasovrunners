@@ -20,12 +20,15 @@ import {
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
+import { clubNightEvent } from "@/modules/events/night-event";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
 import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
+import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
+import { findSignedGroupRunDeclaration, groupRunDeclarationIdOf } from "@/modules/group-run-declarations/repository";
 import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
@@ -36,6 +39,7 @@ import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
+import type { EmailEventFacts } from "./domain/event-facts";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
 /**
@@ -143,6 +147,11 @@ async function renderRow(
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
+
+  // A group run's self-declaration (§393) is about no registration: its own, shorter path.
+  if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
+    return renderGroupRunDeclarationRow(row, db, now, eventRows);
+  }
 
   /*
     The club's copy of a participant's message (§320; `enqueueClubCopies` in `outbox.ts`).
@@ -339,9 +348,33 @@ async function renderRow(
     const routeSection = hasRouteDescription(eventDetails.routeDescriptionJson);
     if (partitionEventLinks(eventDetails.links, routeSection).other.length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
   }
-  // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words —
-  // and in the update notice when the programme is what changed (§331).
-  if ((row.messageType === "EVENT_REMINDER" || updateChanges.includes("programme")) && eventDetails) {
+  /*
+    The event's facts block (§392): each half in its own language, from its own row — its place's
+    name, its page and that page's sections — with the event's own facts (the start, the address,
+    the route, the cost, the programme's rows) shared. The template draws it on the three messages
+    that carry it; the rows here are read once per event per batch already.
+  */
+  if (eventDetails) {
+    data.eventFacts = emailEventFacts(eventDetails, data.eventUrl ?? null);
+    if (otherDetails) {
+      const otherUrl = otherDetails.slug
+        ? `${env.APP_BASE_URL}${getPathname({ locale: otherLocale(locale), href: { pathname: "/events/[slug]", params: { slug: otherDetails.slug } } })}`
+        : null;
+      data.eventFactsOther = emailEventFacts(otherDetails, otherUrl);
+    }
+  }
+  // A night event (§394, the question §382 left open): the reminder says the sunset and to bring a
+  // light — only when this date, the one being reminded of, is one; the same function as the pill.
+  if (row.messageType === "EVENT_REMINDER" && eventDetails) {
+    const night = clubNightEvent(eventDetails);
+    if (night.night) {
+      data.nightEventSunset = night.sunset ?? "";
+      data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
+    }
+  }
+  // The programme's rows in the update notice when the programme is what changed (§331), each half
+  // of the bilingual mail in its own words; the reminder carries them in the facts block (§392).
+  if (updateChanges.includes("programme") && eventDetails) {
     const items = readScheduleItems(eventDetails.scheduleItems);
     if (items.length > 0) {
       const other = locale === "ro" ? "en" : "ro";
@@ -630,6 +663,74 @@ async function renderRow(
 }
 
 /**
+ * A group run's optional self-declaration (§393): the signer's copy or the club's archive copy.
+ *
+ * About a declaration row, not a registration: no participant, no token, no manage link — there is
+ * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95): whole on
+ * the signer's copy, the identity document masked on the club's (§320). A row whose declaration is
+ * gone (erased, or swept seven days after the run) cannot be rendered, and says so: a failed render
+ * is final (`AGENTS.md` §16.1), which is right — there is nothing left to send.
+ */
+async function renderGroupRunDeclarationRow(
+  row: OutboxRow,
+  db: RendererDb,
+  now: Date,
+  eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+): Promise<OutgoingEmail> {
+  const locale = row.locale as Locale;
+  const archive = row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE";
+  const id = groupRunDeclarationIdOf(row.payloadJson);
+  const signed = id ? await findSignedGroupRunDeclaration(db, id) : undefined;
+  if (!signed) throw new Error("the group-run declaration this message is about no longer exists");
+
+  const eventTexts = await eventRows(db, signed.eventId);
+  const eventDetails = eventNotificationDetailsIn(eventTexts, locale);
+  const otherDetails = eventTexts.find((candidate) => candidate.locale === otherLocale(locale) && candidate.locale !== eventDetails?.locale);
+  const placeLater = eventDetails?.locationToBeAnnounced === true;
+  const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+
+  const data: TemplateData = {
+    participantName: signed.typedName,
+    eventTitle: eventDetails?.title,
+    eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
+    eventLocationNameOther: placeLater ? placeToBeAnnouncedWords(otherLocale(locale)) : (eventDetails?.locationNames[otherLocale(locale)] ?? undefined),
+    eventStartsAtFormatted: formatEventStart(eventDetails, locale),
+    eventStartsAtFormattedOther: formatEventStart(eventDetails, otherLocale(locale)),
+    signedAtFormatted: formatInSentence(signed.acceptedAt, zone, locale),
+    signedAtFormattedOther: formatInSentence(signed.acceptedAt, zone, otherLocale(locale)),
+    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    eventUrl: eventDetails?.slug
+      ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
+      : undefined,
+    eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
+    contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
+  };
+  if (otherDetails) {
+    data.eventTitleOther = otherDetails.title;
+    if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
+  }
+
+  const pdf = await renderGroupRunDeclarationPdf(db, signed, archive ? "club" : "participant", now);
+  // The archive copy's own copies (§244), read from the payload as the race's archive reads them.
+  const payload = (archive ? (row.payloadJson ?? {}) : {}) as { cc?: unknown; bcc?: unknown };
+  const addresses = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "") : [];
+
+  return buildOutgoingEmail({
+    to: row.recipientEmail,
+    locale,
+    idempotencyKey: row.idempotencyKey,
+    messageType: row.messageType,
+    data,
+    actionUrl: undefined,
+    attachments: pdf ? [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }] : undefined,
+    overrides: await readEmailCopyForSending(db, now),
+    cc: addresses(payload.cc),
+    bcc: addresses(payload.bcc),
+  });
+}
+
+/**
  * "duminică, 11 oct. 2026, 09:00" / "Sunday, 11 Oct 2026, 09:00", in the event's zone (§349).
  *
  * In the language's own case: nearly every template sets it inside a sentence ("programat
@@ -643,6 +744,45 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
+}
+
+/**
+ * One language's row of the event as the facts block reads it (§392): the anchors of that
+ * language's page by the page's own rules — `#route` only with a route description in that
+ * language (§387), `#links` only when the page's own split leaves "Linkuri și fișiere" something
+ * to show (`partitionEventLinks`, the rule `EventLinks` draws by).
+ */
+function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
+  const routeSection = hasRouteDescription(row.routeDescriptionJson);
+  return {
+    startsAt: row.startsAt,
+    raceStartsAt: row.raceStartsAt,
+    timezone: row.timezone,
+    locationToBeAnnounced: row.locationToBeAnnounced,
+    locationName: row.locationName,
+    locationAddress: row.locationAddress,
+    mapUrl: row.mapUrl,
+    scheduleItems: row.scheduleItems,
+    surface: row.surface,
+    difficulty: row.difficulty,
+    distanceMeters: row.distanceMeters,
+    elevationGainMeters: row.elevationGainMeters,
+    type: row.type,
+    endsAt: row.endsAt,
+    nightOverride: row.nightOverride,
+    registrationMode: row.registrationMode,
+    routeUrl: row.routeUrl,
+    stravaEventUrl: row.stravaEventUrl,
+    facebookEventUrl: row.facebookEventUrl,
+    costType: row.costType,
+    costAmount: row.costAmount,
+    costUrl: row.costUrl,
+    pageUrl,
+    hasRules: row.hasRules === true,
+    hasSchedule: row.hasSchedule === true,
+    hasRouteDescription: routeSection,
+    hasOtherLinks: partitionEventLinks(row.links, routeSection).other.length > 0,
+  };
 }
 
 function otherLocale(locale: Locale): Locale {

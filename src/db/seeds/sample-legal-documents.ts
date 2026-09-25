@@ -5,6 +5,7 @@ import {
   type LegalDocumentTranslationInput,
 } from "@/modules/legal-documents/domain/content-hash";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import {
   findLatestVersion,
   insertLegalDocumentVersion,
@@ -94,7 +95,7 @@ function sample(key: LegalDocumentKey, locale: "ro" | "en"): LegalDocumentTransl
 export const SAMPLE_DOCUMENTS: ReadonlyArray<{
   key: LegalDocumentKey;
   translations: LegalDocumentTranslationInput[];
-}> = (["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key) => ({
+}> = LEGAL_DOCUMENT_KEYS.map((key) => ({
   key,
   translations: [sample(key, "ro"), sample(key, "en")],
 }));

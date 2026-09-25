@@ -42,6 +42,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SaveIcon from "@mui/icons-material/Save";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StarIcon from "@mui/icons-material/Star";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
@@ -107,6 +108,11 @@ export type ActionIconName =
   | "repeat"
   | "repeatStop"
   | "cover"
+  // The robot that keeps a series going on its own (§398; the owner, on the events list's "Se
+  // reînnoiește automat" line: "aici am nevoie de o iconiță gen «robot» ca să știu că se
+  // reînnoiește automat"). Never `repeat` — that glyph is the action of repeating one event, and
+  // this marks the platform doing it unattended.
+  | "renew"
   // Removing. Deleting is the bin; erasing — the verb that cannot be undone and takes the
   // declaration with it — is the bin with the cross, so the two never look alike in one menu.
   // Cancelling a registration keeps the row, and is a different shape again.
@@ -179,6 +185,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   repeat: EventRepeatIcon,
   repeatStop: EventBusyIcon,
   cover: StarIcon,
+  renew: SmartToyIcon,
 
   delete: DeleteIcon,
   erase: DeleteForeverIcon,

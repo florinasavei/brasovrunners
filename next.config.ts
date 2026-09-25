@@ -125,6 +125,8 @@ const nextConfig: NextConfig = {
     "/api/admin/legal/**": ["./src/theme/pdf/*"],
     // `/devs/docs/<name>` reads the repository's Markdown at runtime (`modules/diagnostics/repo-docs.ts`).
     "/[locale]/devs/docs/**": ["./*.md", "./docs/*.md"],
+    // `/admin/tasks`'s "Aplicația" / "The app" panel reads `docs/QUEUE.md` the same way (§397).
+    "/[locale]/admin/tasks/**": ["./docs/QUEUE.md"],
   },
 
   // `next dev` otherwise appends a block to AGENTS.md and re-adds it on every run.

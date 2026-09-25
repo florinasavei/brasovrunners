@@ -434,6 +434,8 @@ export function canManageStaff(role: StaffRole): boolean {
  *     registrations  canReadRegistrations     `admin/registrations/page.tsx` — the verbs on it
  *                                             ask `canManageRegistrations` one by one (§289)
  *     pages          isEditorial              `admin/pages/page.tsx`
+ *     tasks          canManageRegistrations   `admin/tasks/page.tsx` — or `canSeeDiagnostics`,
+ *                    or canSeeDiagnostics      for the «Aplicația» panel alone (§397)
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
  *     staff          canManageStaff           `admin/staff/page.tsx`
@@ -500,8 +502,12 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // Who signed up, for the roles that may read it (§289). Every verb on that screen asks
     // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
     ...(canReadRegistrations(role) ? (["registrations"] as const) : []),
-    // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
-    ...(canManageRegistrations(role) ? (["tasks"] as const) : []),
+    // What the *club* still owes, for the role that answers for it (BR-REQ-060-01) — and, since
+    // 2026-09-25, the «Aplicația» panel of the same screen for a Tehnic, who reads none of the
+    // rest of it (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`, `DECISIONS.md`
+    // §397). Written out rather than imported, because that module reads `canManageRegistrations`
+    // and `canSeeDiagnostics` from this one.
+    ...(canManageRegistrations(role) || canSeeDiagnostics(role) ? (["tasks"] as const) : []),
     // The legal texts are readable by the roles that must know what the club published; only
     // the Administrator writes one (§46, §181, §203).
     ...(canReadContent(role) ? (["legal"] as const) : []),

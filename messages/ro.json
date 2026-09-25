@@ -140,8 +140,17 @@
     "elevation": "Diferență de nivel",
     "elevationM": "{m} m diferență de nivel",
     "elevationShort": "{m} m D+",
-    "headlamp": "Frontală",
-    "headlampRequired": "Frontală necesară",
+    "night": {
+      "pill": "Eveniment de noapte",
+      "runPill": "Alergare de noapte",
+      "tooltip": "Apusul la {time} — ia o frontală",
+      "tooltipEnd": "Apusul la {time}, sfârșitul la {end} — ia o frontală",
+      "tooltipEndProgramme": "Apusul la {time}, ultimul punct din program la {end} — ia o frontală",
+      "calendar": "Eveniment de noapte — apusul la {time}",
+      "ics": "Eveniment de noapte — apusul la {time}, ia o frontală",
+      "calendarRun": "Alergare de noapte — apusul la {time}",
+      "icsRun": "Alergare de noapte — apusul la {time}, ia o frontală"
+    },
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -186,7 +195,25 @@
       "columnClub": "Club",
       "previous": "← Pagina anterioară",
       "next": "Pagina următoare →",
-      "pageOf": "Pagina {page} din {pages}"
+      "pageOf": "Pagina {page} din {pages}",
+      "states": {
+        "confirmed": "Confirmat",
+        "pending": "Înscris, în așteptarea confirmării",
+        "waitlisted": "Pe lista de așteptare"
+      },
+      "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
+      "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "othersLead": "Apar cu numele și:",
+      "pendingCount": {
+        "one": "{count} înscris în așteptarea confirmării",
+        "few": "{count} înscriși în așteptarea confirmării",
+        "other": "{count} de înscriși în așteptarea confirmării"
+      },
+      "waitlistedCount": {
+        "one": "{count} pe lista de așteptare",
+        "few": "{count} pe lista de așteptare",
+        "other": "{count} pe lista de așteptare"
+      }
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -242,6 +269,10 @@
     },
     "costPaidAmount": "Taxă: {amount}",
     "costPaidWhere": "plata pe {host}",
+    "costPaidExternal": "Cu taxă, la organizator",
+    "costPaidExternalAmount": "Cu taxă, la organizator: {amount}",
+    "costPaidExternalSrSuffix": "plătit la organizator, nu la club",
+    "costPaidExternalLine": "Cost: {amount}, la organizator",
     "costDonation": "Donație: pe {host}",
     "costDonateOn": "Donează pe {host}",
     "costDonationSuggested": "sugerat {amount}",
@@ -268,6 +299,8 @@
     },
     "route": "Traseu",
     "routeSection": "Traseul",
+    "linksLabel": "Linkuri",
+    "pageLabel": "Pagina evenimentului",
     "age": "Vârstă",
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",
@@ -296,6 +329,37 @@
       "rules": "Regulament",
       "programme": "Program",
       "checklist": "Ce să aduci"
+    },
+    "groupRunDeclaration": {
+      "heading": "Declarație pe propria răspundere (opțional)",
+      "button": "Semnează declarația pe propria răspundere",
+      "line": "Dacă vrei, semnează declarația pe propria răspundere pentru această alergare; o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
+      "page": {
+        "back": "Înapoi la {event}",
+        "title": "Declarație pe propria răspundere",
+        "intro": "Pentru alergarea de grup {event}. Este opțională și nu te înscrie nicăieri: citește textul, completează mai jos și semnează.",
+        "doneTitle": "Declarația a fost semnată",
+        "done": "Ți-am trimis-o pe email, în PDF. La alergare vii ca de obicei.",
+        "closed": "Declarația nu se mai poate semna pentru această alergare.",
+        "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
+        "refusedTitle": "Declarația nu a fost semnată",
+        "refusedNothingRecorded": "Nu s-a înregistrat nimic. Completează căsuțele de mai jos și semnează din nou:",
+        "fields": {
+          "idDocument": "Act de identitate (seria și numărul)",
+          "email": "Adresa de email",
+          "accepted": "Am împlinit 18 ani, am citit declarația și o semnez",
+          "typedName": "Semnătura: numele tău complet",
+          "captcha": "Verificarea anti-bot"
+        },
+        "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copia clubului apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
+        "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
+        "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
+        "adultsOnly": "Declarația este pentru adulți: o semnezi doar dacă ai împlinit 18 ani, și nu o semnezi în numele unui minor.",
+        "accept": "Am împlinit 18 ani, am citit declarația de mai sus și o semnez pe propria răspundere",
+        "typedNameHelp": "Scrie numele tău complet. Apare ca o semnătură.",
+        "captcha": "Verificarea anti-bot nu a trecut. Încearcă din nou.",
+        "action": "Semnează declarația"
+      }
     }
   },
   "Admin": {
@@ -608,7 +672,8 @@
       "bulkEraseConfirmHelp": "Exact numărul de înscrieri bifate — altfel nu se șterge nimic.",
       "bulkEraseAction": "Șterge definitiv",
       "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse.",
-      "filtersNone": "niciun filtru · toate înscrierile"
+      "filtersNone": "niciun filtru · toate înscrierile",
+      "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -875,6 +940,9 @@
       "costDonationUrlHelp": "Obligatoriu. Linkul unde se face donația, pe alt site. Trebuie să înceapă cu https://.",
       "costDonationAmount": "Suma sugerată (opțional)",
       "costDonationAmountHelp": "De exemplu „50 lei”.",
+      "discountNote": "Reducerea clubului",
+      "discountNoteHelp": "Ce reducere au membrii și cum o folosesc — codul, până când",
+      "discountSummary": "cu reducere",
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
@@ -928,8 +996,21 @@
       "distanceMeters": "Distanță",
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
-      "headlampRequired": "Necesită frontală",
-      "headlampRequiredHelp": "Se arată pe card, pe pagina evenimentului și în calendar.",
+      "night": {
+        "label": "Eveniment de noapte",
+        "auto": "Automat (după apus)",
+        "yes": "Da",
+        "no": "Nu",
+        "autoLine": "Automat: pe {day}, apusul e la {time} — {verdict}",
+        "autoLineNoTime": "Automat: pe {day}, apusul e la {time} — alege ora startului",
+        "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
+        "verdictNight": "eveniment de noapte",
+        "verdictDay": "nu e eveniment de noapte",
+        "endLine": "Startul e înainte de amurg, dar alergarea ține până la {end} și prinde întunericul — tot eveniment de noapte.",
+        "endLineProgramme": "Startul e înainte de amurg, dar programul zilei ține până la {end} (ultimul punct) și prinde întunericul — tot eveniment de noapte.",
+        "series": "Într-o serie, fiecare dată urmează apusul zilei ei: datele de iarnă sunt de noapte, cele de vară nu.",
+        "help": "Automat: e de noapte când vreo parte a evenimentului, de la start până la sfârșit, cade după amurg (soarele la 6° sub orizont) sau înainte de zori. Sfârșitul vine din „Durata” sau, fără ea, din ultimul punct din programul zilei. Se arată pe card, pe pagina evenimentului, în calendar și în emailul de reamintire."
+      },
       "registrationSection": "Înscriere",
       "registrationMode": "Modul de înscriere",
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
@@ -946,7 +1027,7 @@
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
-      "participantListHelp": "Publică numele și clubul participanților confirmați care au bifat „Vreau să apar pe lista de participanți”; ceilalți participanți confirmați apar ca „Participant (nume ascuns)”, fără niciun detaliu despre ei, iar lista spune câți sunt confirmați în total. Nu se publică adrese de e-mail și nimic despre înscrierile neconfirmate. Este o divulgare de date cu caracter personal: nota de confidențialitate aprobată trebuie să o descrie înainte ca opțiunea să fie bifată, iar salvarea este refuzată cât timp nu există o notă de confidențialitate aprobată și în vigoare.",
+      "participantListHelp": "Publică numele și clubul participanților confirmați care au bifat „Vreau să apar pe lista de participanți”; ceilalți participanți confirmați apar ca „Participant (nume ascuns)”, fără niciun detaliu despre ei, iar lista spune câți sunt confirmați în total. Nu se publică adrese de e-mail. Când nota de confidențialitate în vigoare descrie stadiile, lista arată lângă fiecare nume stadiul înscrierii și îi cuprinde și pe cei care au bifat și nu au confirmat încă, apoi lista de așteptare; o înscriere anulată sau expirată nu apare niciodată. Este o divulgare de date cu caracter personal: nota de confidențialitate aprobată trebuie să o descrie înainte ca opțiunea să fie bifată, iar salvarea este refuzată cât timp nu există o notă de confidențialitate aprobată și în vigoare.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -1445,7 +1526,10 @@
             "route": "traseu",
             "km": "{km} km",
             "elevation": "+{m} m",
-            "headlamp": "frontală",
+            "night": "de noapte",
+            "nightAuto": "de noapte (automat)",
+            "day": "de zi",
+            "dayAuto": "de zi (automat)",
             "described": "cu descriere",
             "describedOneLanguage": "descriere într-o singură limbă"
           },
@@ -1483,6 +1567,12 @@
         "tab": "identic cu româna",
         "listTitle": "De verificat: textul în engleză e identic cu cel în română (nu blochează publicarea)",
         "partner": "Partenerul {p}"
+      },
+      "groupRunDeclaration": {
+        "label": "Declarație opțională pe propria răspundere",
+        "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
+        "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
       }
     },
     "preview": {
@@ -1599,11 +1689,13 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Cele trei texte pe care le acceptă participantul. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
+      "intro": "Cele trei texte pe care le acceptă participantul la înscriere, și cele două declarații opționale ale alergărilor de grup. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
-        "EVENT_DECLARATION": "Declarația pe proprie răspundere: sănătate, riscuri, actul de identitate. Se semnează când se confirmă locul."
+        "EVENT_DECLARATION": "Declarația pe proprie răspundere: sănătate, riscuri, actul de identitate. Se semnează când se confirmă locul.",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt: trafic, ritmul grupului, întunericul. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm).",
+        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe trail: teren, animale sălbatice și câini, vreme și întuneric, echipament propriu cu frontală. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm)."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă, alege documentul, lipește textul aprobat în ambele limbi, salvează ciorna, citește-o, aprob-o.",
@@ -1618,7 +1710,9 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni de concurs",
-        "EVENT_DECLARATION": "Declarația participantului"
+        "EVENT_DECLARATION": "Declarație pe propria răspundere (concurs)",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
+        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -1717,7 +1811,8 @@
         "confirmationHours": "Cât e valabil linkul de confirmare a adresei, din „Termene”",
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
-        "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul"
+        "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
+        "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -1764,7 +1859,8 @@
         "imageInvalid": "Adresa trebuie să înceapă cu https://",
         "undo": "Înapoi",
         "redo": "Înainte"
-      }
+      },
+      "listStatesMissing": "Nota de confidențialitate în vigoare nu descrie încă stadiile de pe lista publică de participanți, așa că lista arată doar numele participanților confirmați. Ca lista să arate și stadiul fiecăruia — „Înscris, în așteptarea confirmării”, „Pe lista de așteptare” — aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -1779,7 +1875,12 @@
         "todo": "De făcut",
         "botCheck": "Anti-robot",
         "costs": "Costuri",
-        "system": "Sistem"
+        "system": "Sistem",
+        "app": "Aplicația"
+      },
+      "app": {
+        "lead": "Coada de lucru a platformei, din depozit — ce se construiește, ce e gata, ce urmează",
+        "missing": "Documentul nu este în această versiune a aplicației."
       },
       "neonPlan": {
         "title": "Planul Neon (baza de date)",
@@ -2066,6 +2167,16 @@
             "În fila Costuri, deschide „Limitele bazei de date”: citește cifrele chiar de la Neon pentru mărimea calculului și limita perioadei, și scrie ambele înapoi la Neon cu cheia pe care /devs o folosește deja (SETUP.md §33).",
             "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele. Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
             "Verifică: după salvare, cifrele de deasupra formularului sunt ce ține Neon acum, niciodată ce a fost trimis. Rândul devine verde sub 80% din limită, și roșu la sau peste ea."
+          ]
+        },
+        "listStatesNotice": {
+          "title": "Nota de confidențialitate: stadiile de pe lista publică",
+          "todo": "Nota în vigoare nu descrie încă stadiile de pe lista publică de participanți, așa că lista arată doar numele participanților confirmați. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare nu apar, iar lângă nume nu scrie nimic, până când clubul aprobă o notă care le descrie.",
+          "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea despre lista publică descrie stadiile.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
+            "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
           ]
         }
       },
@@ -2624,6 +2735,8 @@
         "EVENT_UPDATE_NOTICE": "Detalii actualizate (loc, oră, program)",
         "EVENT_CANCELLED": "Eveniment anulat",
         "ORGANIZER_MESSAGE": "Mesaj de la organizatori",
+        "GROUP_RUN_DECLARATION_SIGNED": "Declarația semnată la o alergare de grup (PDF atașat)",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Copia clubului: declarație la o alergare de grup (PDF atașat)",
         "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă"
       },
       "when": {
@@ -2648,6 +2761,8 @@
         "EVENT_UPDATE_NOTICE": "Doar când un organizator bifează „Anunță participanții despre schimbare” la salvarea evenimentului, și doar dacă s-a schimbat locul, data și ora sau programul, ori dacă a scris un mesaj. Câte un email fiecărei înscrieri active (în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată), în limba ei; locul și ora sunt cele de la trimitere. Fără token: butonul duce la pagina evenimentului. Nebifat, nu pleacă nimic.",
         "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune.",
         "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului.",
+        "GROUP_RUN_DECLARATION_SIGNED": "Imediat după ce cineva semnează declarația opțională pe pagina unei alergări de grup, către adresa pe care a dat-o. Cu declarația în PDF, întreagă; fără token și fără link de acțiune — nu există o înscriere de gestionat.",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Odată cu declarația semnată la o alergare de grup, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici). Fără link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
         "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link."
       },
       "whenShort": {
@@ -2672,6 +2787,8 @@
         "EVENT_UPDATE_NOTICE": "doar când un organizator anunță o schimbare",
         "EVENT_CANCELLED": "la anularea evenimentului, dacă e bifat",
         "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj",
+        "GROUP_RUN_DECLARATION_SIGNED": "după semnarea declarației la o alergare de grup",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "odată cu declarația de la o alergare de grup, către arhivă",
         "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană"
       },
       "clubNotices": {
@@ -3169,6 +3286,20 @@
       "historyWhen": "Trimis {date} de {sender}",
       "historyNoSender": "un cont șters",
       "historyTest": "înscrieri de test: {test}"
+    },
+    "groupRunDeclarations": {
+      "title": "Declarații semnate (alergare de grup)",
+      "count": "Semnate: {count}",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Actul de identitate și adresa de email sunt în PDF. Platforma șterge declarațiile la {days} după alergare.",
+      "none": "Nicio declarație semnată încă.",
+      "signedAt": "semnată {when}",
+      "pdf": "PDF",
+      "reason": "Motivul ștergerii",
+      "reasonHelp": "Rămâne în jurnalul clubului, cu numele tău. Nu scrie numele persoanei.",
+      "erase": "Șterge declarația",
+      "eraseTitle": "Ștergi declarația?",
+      "eraseBody": "Declarația și mesajele despre ea se șterg definitiv. În jurnal rămân numele tău și motivul, nu și al celui care a semnat.",
+      "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul."
     }
   },
   "NotFound": {
@@ -3447,6 +3578,7 @@
     "phoneValid": "Arată bine. Îl salvăm ca",
     "botCheckWait": "Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
+    "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
       "title": "Înscrii o altă persoană cu aceeași adresă",
       "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
@@ -3667,7 +3799,8 @@
       "status": "Stare",
       "general": "General",
       "email": "Emailuri",
-      "botCheck": "Anti-robot"
+      "botCheck": "Anti-robot",
+      "app": "Aplicația"
     },
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
@@ -4141,7 +4274,8 @@
       "deadlines": "Termene salvate.",
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
-      "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
+      "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
+      "groupRunDeclarationErased": "Declarația a fost ștearsă."
     }
   }
 }
