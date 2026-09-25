@@ -1,5 +1,5 @@
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
-import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { daysPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
@@ -85,6 +85,29 @@ export function deadlineMergeValues(
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
+ * The public list's ceiling (§NNN, the counsel review of 2026-09-25): a list the club leaves on
+ * must not keep names public until the three-year deletion, so the privacy notice promises it
+ * closes by itself at most this long after the event — §4 ("cel mult {{publicListPeriod}} după
+ * eveniment, apoi lista se închide singură") and §7. A period, never a number written into the
+ * approved text (§357): the field carries the whole phrase, unit included, like `{{holdMinutes}}`
+ * — "30 de zile", "30 days" — so the Romanian agrees with any value (`daysPhrase`).
+ *
+ * TODO(legal-code): the value is the club's "Termene" setting `publicListDays` (default 30,
+ * Administrator-only, audited, §377) and the list itself closes at request time once it has run
+ * out (`StartList.tsx`, the `?lista` path). Until that ships every caller fills the default below,
+ * which is the number the setting starts from — the pages then pass the setting's value instead.
+ */
+export const PUBLIC_LIST_PERIOD_MERGE_FIELD = "publicListPeriod";
+
+/** The setting's starting value, in days after the event (TODO(legal-code): read from "Termene"). */
+export const DEFAULT_PUBLIC_LIST_DAYS = 30;
+
+/** The notice's `{{publicListPeriod}}`, in one language: "30 de zile", "30 days". */
+export function publicListPeriodMergeValues(locale: string, days: number = DEFAULT_PUBLIC_LIST_DAYS): { publicListPeriod: string } {
+  return { publicListPeriod: daysPhrase(locale, days) };
+}
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -120,6 +143,7 @@ export const MERGE_FIELDS = [
   "signedAt",
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
+  PUBLIC_LIST_PERIOD_MERGE_FIELD,
 ] as const;
 
 /**

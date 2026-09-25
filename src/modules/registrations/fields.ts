@@ -135,9 +135,11 @@ const submissionFields = z.object({
   /**
    * "I declare I am medically fit to take part" (§171).
    *
-   * Required on the public form and nowhere else. It is a statement about oneself, not health
-   * data — which is why it can be insisted on where `healthNotes` cannot — and it is the thing
-   * the medical block was always trying to ask before the free-text box buried it. A
+   * Required on the public form and nowhere else. A statement of fitness, treated as data
+   * concerning health and kept under art. 9(2)(f) GDPR as evidence (§NNN, amending §171; the
+   * privacy notice's §2 says so) — required because it rests on no consent, which is why it can be
+   * insisted on where `healthNotes` cannot — and it is the thing the medical block was always
+   * trying to ask before the free-text box buried it. A
    * registration an organizer takes over the telephone, or a walk-in at the desk, makes it on
    * paper instead, so the staff schema relaxes it below.
    */

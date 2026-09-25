@@ -23,7 +23,7 @@ import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadl
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
-import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, publicListPeriodMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
@@ -377,6 +377,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
               ...listStatesMergeValues(locale),
+              // The public list's ceiling, should the declaration name it (§NNN) — as the PDF fills it.
+              ...publicListPeriodMergeValues(locale),
             }}
           />
 
@@ -449,6 +451,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   (BR-REQ-033-02 criterion 6). */}
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
+              {/* The box names the liability paragraph, so its limits are accepted expressly (§NNN, Civil Code art. 1203). */}
               <CheckboxField name="accepted" required defaultChecked={draft?.accepted === "on"}>
                 {t("declare.accept")}
               </CheckboxField>
@@ -477,6 +480,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               */}
               {minorName === null ? (
                 <>
+                  {/*
+                    An adult signs for themselves (§NNN, Civil Code art. 1309): since a family
+                    registers on one address (§389), whoever holds the inbox holds this link, so the
+                    page says whose signature it wants. Not for a minor — the parent signs there,
+                    and the box below already says so.
+                  */}
+                  {signsForMinor === null && expectedName !== null && (
+                    <Typography>{t("declare.signPersonally", { participant: expectedName })}</Typography>
+                  )}
                   {needsDocuments && (
                     <IdDocumentFields
                       name="idDocument"

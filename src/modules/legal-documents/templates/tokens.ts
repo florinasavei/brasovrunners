@@ -1,7 +1,13 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
-import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD } from "../domain/merge-fields";
+import {
+  DEADLINE_MERGE_FIELDS,
+  deadlineMergeValues,
+  LIST_STATES_MERGE_FIELD,
+  PUBLIC_LIST_PERIOD_MERGE_FIELD,
+  publicListPeriodMergeValues,
+} from "../domain/merge-fields";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -91,6 +97,12 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_STATES_MERGE_FIELD}}}`,
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
+  },
+  // The public list's ceiling after the event (§NNN): a period with its unit, like the deadlines.
+  {
+    token: `{{${PUBLIC_LIST_PERIOD_MERGE_FIELD}}}`,
+    messageKey: PUBLIC_LIST_PERIOD_MERGE_FIELD,
+    example: inBoth((locale) => publicListPeriodMergeValues(locale).publicListPeriod),
   },
 ];
 

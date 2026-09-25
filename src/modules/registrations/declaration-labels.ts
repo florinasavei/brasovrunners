@@ -8,11 +8,12 @@ import type { DeclarationLabels } from "./signed-declaration";
  * than `next-intl`, like the email templates: the outbox worker renders the PDF outside any
  * request, where there is no locale context to ask.
  */
-const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "signedByLink" | "signedOnPaper"> & {
+const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "signedByLink" | "signedOnPaper" | "idDocumentsNotice"> & {
   generatedOn: string;
   page: string;
   signedByLink: string;
   signedOnPaper: string;
+  idDocumentsNotice: string;
 }> = {
   ro: {
     // The club's name in the PDF's footer and metadata is the platform's constant (§215), not a literal (§357).
@@ -30,9 +31,11 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     generatedOn: "Generat pe {date}",
     page: "Pagina {n} din {total}",
     signedByLink:
-      "Semnat electronic pe {when}, din linkul trimis pe adresa de email confirmată a participantului: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
+      "Semnat electronic pe {when}, din linkul unic trimis pe adresa de email a înscrierii: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
     signedOnPaper: "Semnat pe hârtie, la masa de înscrieri; înregistrat de {who} pe {when}. Originalul semnat este păstrat de club.",
     attesterRemoved: "un membru al echipei (cont șters)",
+    // The event's bundle, while it carries whole identity documents (§NNN; privacy notice §7).
+    idDocumentsNotice: "Conține seria și numărul actelor de identitate — ștergeți fișierul în cel mult șapte zile de la eveniment.",
   },
   en: {
     organization: CLUB_NAME,
@@ -47,9 +50,10 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     generatedOn: "Generated on {date}",
     page: "Page {n} of {total}",
     signedByLink:
-      "Signed electronically on {when}, from the link sent to the participant's confirmed email address: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
+      "Signed electronically on {when}, from the single-use link sent to the registration's email address: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
     signedOnPaper: "Signed on paper at the registration desk; recorded by {who} on {when}. The club keeps the signed original.",
     attesterRemoved: "a team member (account removed)",
+    idDocumentsNotice: "Contains identity document numbers — delete this file within seven days of the event.",
   },
 };
 
@@ -72,6 +76,7 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
     signedByLink: (when) => words.signedByLink.replace("{when}", when),
     signedOnPaper: (who, when) => words.signedOnPaper.replace("{who}", who).replace("{when}", when),
     attesterRemoved: words.attesterRemoved,
+    idDocumentsNotice: words.idDocumentsNotice,
   };
 }
 

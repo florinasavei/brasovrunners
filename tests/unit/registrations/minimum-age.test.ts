@@ -313,8 +313,15 @@ describe("§329 the platform's legal templates leave the number to the event", (
         // No number of the template's own but the guardian's eighteen. The privacy notice's
         // paragraph also cites its legal bases since the GDPR rewrite (§323) — "art. 8 GDPR",
         // "art. 6(1)(b)" — which are articles, not ages, so they are set aside before the check.
-        const withoutCitations = sentence!.replace(/\bart\.\s*\d+(\(\d+\))*(\([a-z]\))?/g, "");
-        expect(withoutCitations.replace(/\b18\b/g, "")).not.toMatch(/\d/);
+        // Since the counsel review (§NNN) it also cites the Civil Code the Romanian way — "art. 41
+        // alin. (2)" — and states the Code's own threshold of fourteen (art. 41, 43: the parent acts
+        // for a child under 14 and approves the acts of one aged 14 to 18). That is the law's age,
+        // the same for every event, not a minimum of the template's. A cross-reference to another
+        // section of the notice ("secțiunea 4") is a heading's number, not an age either.
+        const withoutCitations = sentence!
+          .replace(/\bart\.\s*\d+(\(\d+\))*(\([a-z]\))?(\s*alin\.\s*\(\d+\))?/g, "")
+          .replace(/\b(?:secțiunea|section)\s+\d+/g, "");
+        expect(withoutCitations.replace(/\b1[48]\b/g, "")).not.toMatch(/\d/);
       });
     }
   }

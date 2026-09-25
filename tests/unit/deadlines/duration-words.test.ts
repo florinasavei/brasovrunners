@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { deadlineMergeValues, isMergeField, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
+import {
+  DEFAULT_PUBLIC_LIST_DAYS,
+  deadlineMergeValues,
+  isMergeField,
+  mergeText,
+  mergeTextSegments,
+  publicListPeriodMergeValues,
+} from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 // The notice also names the public list's states since §396, filled from the catalogue as the page fills it.
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
@@ -115,7 +122,7 @@ describe("§377 the deadlines as legal merge fields", () => {
   it("the platform's privacy notice, merged with a default of no reminder, names a reminder only where the event sends one, in either language", () => {
     const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
-      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, off), ...listStatesMergeValues(locale) })).join(" ");
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, off), ...listStatesMergeValues(locale), ...publicListPeriodMergeValues(locale) })).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder before the start where the event sends one" : "un memento înainte de start, dacă evenimentul trimite unul");
       expect(all).not.toMatch(/\b0 (de )?ore\b|\b0 hours\b/);
       expect(all).not.toContain("…………");
@@ -124,9 +131,39 @@ describe("§377 the deadlines as legal merge fields", () => {
 
   it("the platform's privacy notice, merged with the club's default lead, names it hedged for the event's own choice, in either language", () => {
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
-      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, DEFAULT_DEADLINES), ...listStatesMergeValues(locale) })).join(" ");
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, DEFAULT_DEADLINES), ...listStatesMergeValues(locale), ...publicListPeriodMergeValues(locale) })).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder 2 days before (or as the event chooses)" : "un memento cu 2 zile înainte (sau cât alege evenimentul)");
       expect(all).not.toContain("…………");
+    }
+  });
+});
+
+/**
+ * §NNN — the counsel review of 2026-09-25: a public list left on must not keep names public until
+ * the three-year deletion, so the privacy notice promises it closes by itself at most
+ * `{{publicListPeriod}}` after the event (§4, §7). A period, never a number in the approved text
+ * (§357), with its unit, in words that agree with any value, like the deadlines above.
+ */
+describe("§NNN the public list's ceiling as a legal merge field", () => {
+  it("is a merge field, filled with a period of days in each language", () => {
+    expect(isMergeField("publicListPeriod")).toBe(true);
+    expect(publicListPeriodMergeValues("ro")).toEqual({ publicListPeriod: daysPhrase("ro", DEFAULT_PUBLIC_LIST_DAYS) });
+    expect(publicListPeriodMergeValues("ro", 30).publicListPeriod).toBe("30 de zile");
+    expect(publicListPeriodMergeValues("en", 30).publicListPeriod).toBe("30 days");
+    expect(publicListPeriodMergeValues("ro", 1).publicListPeriod).toBe("o zi");
+    expect(publicListPeriodMergeValues("ro", 14).publicListPeriod).toBe("2 săptămâni");
+  });
+
+  it("is named twice in the platform's notice, §4 and §7, and merges without a blank or a written number", () => {
+    for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
+      const paragraphs = body.sections.flatMap((section) => section.paragraphs);
+      expect(paragraphs.filter((paragraph) => paragraph.includes("{{publicListPeriod}}")).length, locale).toBe(2);
+      const all = paragraphs
+        .map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, DEFAULT_DEADLINES), ...listStatesMergeValues(locale), ...publicListPeriodMergeValues(locale, 45) }))
+        .join(" ");
+      expect(all).toContain(locale === "en" ? "at most 45 days after the event" : "cel mult 45 de zile după eveniment");
+      expect(all).not.toContain("…………");
+      expect(all).not.toContain("{{publicListPeriod}}");
     }
   });
 });

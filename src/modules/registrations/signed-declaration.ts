@@ -9,7 +9,7 @@ import type { Locale } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { asksForMinorSignature, deadlineMergeValues, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForMinorSignature, deadlineMergeValues, publicListPeriodMergeValues, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { listStatesMergeValues } from "./list-state-words";
@@ -170,6 +170,8 @@ export type DeclarationLabels = DeclarationPdfInput["labels"] & {
   signedByLink: (when: string) => string;
   signedOnPaper: (who: string, when: string) => string;
   attesterRemoved: string;
+  /** The bundle's footer while it carries identity documents (§NNN): delete it within seven days. */
+  idDocumentsNotice?: string;
 };
 
 
@@ -196,6 +198,8 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
       ...listStatesMergeValues(locale),
+      // The public list's ceiling (§NNN), a general merge field like the one above.
+      ...publicListPeriodMergeValues(locale),
     },
     title: event.title,
     timezone: event.timezone,
@@ -302,7 +306,8 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
     if (entry) entries.push(entry);
   }
   onCount?.(entries.length);
-  return renderDeclarationPdf({ entries, locale, generatedAt: now, labels });
+  // The whole identity documents are in this file (§320), so every page says when to delete it (§NNN).
+  return renderDeclarationPdf({ entries, locale, generatedAt: now, labels, idDocumentsNotice: labels.idDocumentsNotice });
 }
 
 /**

@@ -1817,7 +1817,8 @@
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
-        "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names"
+        "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
+        "publicListPeriod": "Privacy notice only: the longest the public list stays open after the event, with its unit; after that the list closes by itself"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3619,7 +3620,8 @@
     },
     "declare": {
       "title": "Event declaration",
-      "accept": "I have read and accept the declaration above",
+      "accept": "I have read and accept the declaration above, including, expressly, the limitation of the organiser's liability to the extent the law allows.",
+      "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",
       "privacyLink": "Privacy notice",
