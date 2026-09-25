@@ -599,6 +599,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       { key: "90", minutes: 90, ro: "90 de minute", en: "90 minutes" },
       { key: "91", minutes: 91, ro: "91 de minute", en: "91 minutes" },
       { key: "120", minutes: 120, ro: "2 ore", en: "2 hours" },
+      { key: "180", minutes: 180, ro: "3 ore", en: "3 hours" },
     ];
 
     for (const { key, minutes, ro, en } of cases) {
@@ -614,6 +615,20 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       expect(message.text).not.toContain("o oră"); // never rounds 90 or 91 minutes up to a full hour
       expect(message.text).not.toContain("one hour");
     }
+  });
+
+  it("§NNN a span with extra seconds is floored, never rounded up — 90 minutes 40 seconds still reads 90", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const cappedDeadline = new Date(NOW.getTime() + 90 * 60_000 + 40_000);
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt: NOW })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-90-40"), db, NOW);
+    expect(message.text).toContain("(ai la dispoziție 90 de minute)");
+    expect(message.text).toContain("(you have 90 minutes)");
   });
 
   it("§NNN an offer capped at the event's own start reads «până la start» / \"by the start\" (§407)", async () => {

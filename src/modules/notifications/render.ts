@@ -351,11 +351,12 @@ async function renderRow(
       the setting in force now: whole hours only when the span is exactly that many, minutes
       otherwise (`minutesPhrase`, `timingWords`) — so a 20-minute offer never says "o oră" and a
       1 h 31 min one never says "2 ore" either; the stated length never claims more than the real
-      span. Without an `offerCreatedAt` (a row from before this column, or a test fixture) the
+      span, so it is floored, never rounded — 90 minutes 40 seconds still reads "90 de minute",
+      not 91. Without an `offerCreatedAt` (a row from before this column, or a test fixture) the
       club's current setting is kept, as before.
     */
     if (row.messageType === "WAITLIST_SPOT_OFFER" && registration.offerCreatedAt && data.timings) {
-      const offerMinutes = Math.max(1, Math.round((holdEndsAt.getTime() - registration.offerCreatedAt.getTime()) / 60_000));
+      const offerMinutes = Math.max(1, Math.floor((holdEndsAt.getTime() - registration.offerCreatedAt.getTime()) / 60_000));
       data.timings = { ...data.timings, offerMinutes };
     }
   }
