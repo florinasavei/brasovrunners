@@ -375,6 +375,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
   return {
     type: fields.type,
     surface: fields.surface,
+    difficulty: fields.difficulty,
     eventStatus: fields.eventStatus,
     timezone: fields.timezone,
     startsAt: times.startsAt,

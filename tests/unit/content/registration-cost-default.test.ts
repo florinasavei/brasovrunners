@@ -195,3 +195,142 @@ describe("§NNN a create that never opens the cost box saves FREE, and reads bac
     expect(row.costType).toBe("PAID");
   });
 });
+
+/**
+ * §NNN — a regression test: `eventColumnsFrom` (the one place create and save both build the
+ * `events` columns through) dropped `difficulty: fields.difficulty` while adding the cost-type
+ * default above it, so a create silently stored `null` and a save never changed a difficulty
+ * the club picked, though nothing refused it — the column is nullable, so typecheck stayed
+ * clean and nothing else caught it. This proves both paths read HARD back.
+ */
+describe("§NNN a picked difficulty survives create and save", () => {
+  let db: TestDatabase;
+  let close: () => Promise<void>;
+  let admin: StaffUser;
+
+  beforeAll(async () => {
+    ({ db, close } = await createTestDatabase());
+  });
+  afterAll(async () => close());
+
+  beforeEach(async () => {
+    await resetTables(db);
+    [admin] = await db
+      .insert(staffUsers)
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .returning();
+  });
+
+  it("a create posting HARD stores and reads back HARD", async () => {
+    const created = await createEvent(db, {
+      actor: admin,
+      fields: {
+        type: "GROUP_RUN",
+        eventStatus: "SCHEDULED",
+        timezone: "Europe/Bucharest",
+        startsAtWallTime: "2026-10-18T18:00",
+        endsAtWallTime: "",
+        raceStartsAtWallTime: "",
+        locationName: "Parcul Tractorul",
+        locationAddress: "",
+        surface: null,
+        difficulty: "HARD",
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: "NONE",
+        participantListVisibility: "HIDDEN",
+        capacity: "",
+        registrationOpensAtWallTime: "",
+        registrationClosesAtWallTime: "",
+        declarationDocumentId: "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        costAmount: "",
+        costUrl: "",
+        translations: {
+          ro: { slug: "traseu-dificil", title: "Traseu dificil", excerpt: "Kilometri împreună." },
+          en: { slug: "hard-trail", title: "Hard trail", excerpt: "Kilometres together." },
+        },
+      },
+    });
+
+    const [row] = await db.select().from(events).where(eq(events.id, created.id));
+    expect(row.difficulty).toBe("HARD");
+  });
+
+  it("a save posting HARD stores and reads back HARD", async () => {
+    const created = await createEvent(db, {
+      actor: admin,
+      fields: {
+        type: "GROUP_RUN",
+        eventStatus: "SCHEDULED",
+        timezone: "Europe/Bucharest",
+        startsAtWallTime: "2026-10-18T18:00",
+        endsAtWallTime: "",
+        raceStartsAtWallTime: "",
+        locationName: "Parcul Tractorul",
+        locationAddress: "",
+        surface: null,
+        difficulty: null,
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: "NONE",
+        participantListVisibility: "HIDDEN",
+        capacity: "",
+        registrationOpensAtWallTime: "",
+        registrationClosesAtWallTime: "",
+        declarationDocumentId: "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        costAmount: "",
+        costUrl: "",
+        translations: {
+          ro: { slug: "traseu-usor", title: "Traseu ușor", excerpt: "Kilometri împreună." },
+          en: { slug: "easy-trail", title: "Easy trail", excerpt: "Kilometres together." },
+        },
+      },
+    });
+
+    const saved = await saveEventFields(db, {
+      actor: admin,
+      eventId: created.id,
+      expectedVersion: created.version,
+      fields: {
+        type: "GROUP_RUN",
+        eventStatus: "SCHEDULED",
+        timezone: "Europe/Bucharest",
+        startsAtWallTime: "2026-10-18T18:00",
+        endsAtWallTime: "",
+        raceStartsAtWallTime: "",
+        locationName: "Parcul Tractorul",
+        locationAddress: "",
+        surface: null,
+        difficulty: "HARD",
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: "NONE",
+        participantListVisibility: "HIDDEN",
+        capacity: "",
+        registrationOpensAtWallTime: "",
+        registrationClosesAtWallTime: "",
+        declarationDocumentId: "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        costAmount: "",
+        costUrl: "",
+      },
+    });
+
+    const [row] = await db.select().from(events).where(eq(events.id, saved.id));
+    expect(row.difficulty).toBe("HARD");
+  });
+});
