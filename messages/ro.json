@@ -249,6 +249,12 @@
       "opensOn": "Înscrierile se deschid pe {date}.",
       "opensOnShort": "Înscrierile se deschid pe {date}",
       "openUntilShort": "Înscrieri deschise până pe {date}",
+      "freeOf": {
+        "one": "{count} loc liber din {places}",
+        "few": "{count} locuri libere din {places}",
+        "other": "{count} de locuri libere din {places}"
+      },
+      "cardWaitlist": "Lista de așteptare",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",

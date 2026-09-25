@@ -249,6 +249,12 @@
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
       "openUntilShort": "Registration open until {date}",
+      "freeOf": {
+        "one": "{count} place left out of {places}",
+        "few": "{count} places left out of {places}",
+        "other": "{count} places left out of {places}"
+      },
+      "cardWaitlist": "Waiting list",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
