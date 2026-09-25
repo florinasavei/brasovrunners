@@ -59,6 +59,7 @@ function pageSequence(): PageSectionId[] {
     ['key: "route"', "course"],
     ['key: "cost"', "cost"],
     ['key: "age"', "registration"],
+    // No longer a row of the facts (§401): the partners section, a fold after the <dl> closes.
     ['data-testid="partners-fold"', "coHosts"],
   ];
   const at = (source: string, needle: string) => {

@@ -1330,16 +1330,21 @@
         "preview": "Previzualizare:"
       },
       "risk": {
-        "chip": {
+        "when": "Cei înscriși la această dată ({date}) rămân înscriși dacă o schimbi; reamintirea dinaintea startului, fereastra de confirmare și intrarea din calendar urmează data nouă. Ca să afle, bifează „Anunță participanții” la Salvare.",
+        "place": "Cei înscriși știu locul „{place}”. Dacă îl schimbi, bifează „Anunță participanții” la Salvare.",
+        "programme": "Reamintirea dinaintea startului repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
+        "registration": "Înscrierile făcute rămân. Locurile adăugate se oferă listei de așteptare la salvare, în ordine.",
+        "status": "Anularea oprește înscrierile și, dacă lași bifa, îi anunță pe cei înscriși cu motivul scris aici."
+      },
+      "registered": {
+        "count": {
           "one": "{count} înscris",
           "few": "{count} înscriși",
           "other": "{count} de înscriși"
         },
-        "when": "Înscrieri la această dată: {count}, pentru {date}. O dată nouă nu le anulează înscrierea; reamintirea dinaintea startului, fereastra de confirmare și intrarea din calendar o urmează. Ca să afle, bifează „Anunță participanții” la Salvare.",
-        "place": "Înscrieri: {count}, care știu locul „{place}”. Dacă îl schimbi, bifează „Anunță participanții” la Salvare.",
-        "programme": "Reamintirea dinaintea startului repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
-        "registration": "Înscrierile făcute rămân. Locurile adăugate se oferă listei de așteptare la salvare, în ordine.",
-        "status": "Anularea oprește înscrierile și, dacă lași bifa, îi anunță pe cei înscriși ({count}) cu motivul scris aici."
+        "reach": "o schimbare în cardurile cu margine portocalie ajunge la ei",
+        "cards": "Cardurile cu margine portocalie, unde o schimbare ajunge la cei înscriși:",
+        "view": "Vezi înscrierile"
       },
       "boxes": {
         "summaryLabel": "Rezumat",

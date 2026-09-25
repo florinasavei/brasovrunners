@@ -51,10 +51,9 @@ export default async function WhenBox({ event, mayEditSettings, risk, heading, i
       aside={whenSummary(words, event, locale)}
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
       {risk && event && (
-        <RiskLine>{t("editor.risk.when", { count: risk.count, date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
+        <RiskLine>{t("editor.risk.when", { date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
       )}
       {mayEditSettings ? (
         <Stack spacing={2}>

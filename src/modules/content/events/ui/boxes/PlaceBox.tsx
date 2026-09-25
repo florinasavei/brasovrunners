@@ -57,9 +57,8 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
       }
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
-      {risk && place && <RiskLine>{t("editor.risk.place", { count: risk.count, place })}</RiskLine>}
+      {risk && place && <RiskLine>{t("editor.risk.place", { place })}</RiskLine>}
       {mayEditSettings ? (
         /* The switch and the two names are the island; their constraints are read here, off the
            schema, and handed to it as data — it only takes `required` away while the switch is on. */

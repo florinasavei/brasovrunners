@@ -93,9 +93,20 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(field("notice.noteRo")).toBeVisible();
     await expect(field("notice.noteEn")).toBeVisible();
 
-    // A new meeting point, in the Locul box — amber now, with the one registration on its chip.
+    // The count, said once (§NNN): one line under the page map, linking to this event's list —
+    // and on no card's heading, where it used to repeat as a chip on each of five.
+    const registeredLine = page.getByTestId("registered-line");
+    await expect(registeredLine).toHaveCount(1);
+    await expect(registeredLine.getByTestId("registered-count")).toHaveText("1 înscris");
+    await expect(registeredLine).toContainText("o schimbare în cardurile cu margine portocalie ajunge la ei");
+    const toList = registeredLine.getByRole("link", { name: "Vezi înscrierile" });
+    await expect(toList).toHaveAttribute("href", new RegExp(`/ro/admin/registrations\\?eventId=${eventId}$`));
+    expect((await toList.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.locator("#event-save-form summary").filter({ hasText: /\b1 înscris\b/ })).toHaveCount(0);
+
+    // A new meeting point, in the Locul box — amber now, its sentence saying what a change does.
     const place = await openEditorBox(page, "Locul");
-    await expect(place.getByTestId("risk-line")).toContainText("Înscrieri: 1");
+    await expect(place.getByTestId("risk-line")).toContainText("Cei înscriși știu locul");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
     // The English box has a name of its own, so it keeps it until it is told (§362) — and says so,
     // under the box. The copy button never writes over a name that is there: it is off.

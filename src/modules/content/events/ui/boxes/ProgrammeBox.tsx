@@ -49,7 +49,6 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
       title={heading ?? t("editor.boxes.programme.title")}
       aside={programmeSummary(words, event, hasProgramme(initialType), languages.map((entry) => entry.translation), locale)}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
       <Stack spacing={2}>
         <OnlyForType type={turnUpTypes} selectName="event.type" initialType={initialType}>
