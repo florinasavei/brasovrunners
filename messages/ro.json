@@ -3372,7 +3372,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF, niciun act de identitate. Platforma șterge declarațiile la {days} după alergare.",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Platforma șterge declarațiile la {days} după alergare.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when}",
       "pdf": "PDF",

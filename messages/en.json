@@ -3372,7 +3372,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF, no identity document. The platform deletes the declarations {days} after the run.",
+      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform deletes the declarations {days} after the run.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when}",
       "pdf": "PDF",
