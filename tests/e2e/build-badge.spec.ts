@@ -156,6 +156,37 @@ test.describe("the build badge", () => {
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
 
+  test("is a small outlined chip inside a 44px box, and the chip itself is the staff entrance", async ({ page }, testInfo) => {
+    // §NNN, the owner, 2026-09-25: "Version must be within a chip." Both projects: the phone's
+    // copy in the opened fold, the desktop's pinned to the bar's corner.
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    const mobile = testInfo.project.name === "mobile";
+    if (mobile) await openTheFold(page);
+    const badge = mobile ? panelBadge(page) : pinnedBadge(page);
+    const chip = badge.getByTestId("build-badge-chip");
+    await expect(chip).toBeVisible();
+    await expect(chip).toHaveClass(/MuiChip-outlined/);
+    await expect(chip).toHaveClass(/MuiChip-sizeSmall/);
+    // The same words as the stamp always had, and the exact build in the box's title.
+    await expect(chip).toHaveText(/app-ver/);
+    await expect(badge).toHaveAttribute("title", /BR-V\d+\.\d+|dev/);
+    // The chip is the 24px you see; the box around it is the 44px a thumb hits (criterion 6).
+    const box = await badge.boundingBox();
+    const drawn = await chip.boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(43.5);
+    expect(drawn!.height).toBeLessThan(box!.height);
+    expect(drawn!.x + drawn!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    // Muted ink: `text.secondary`, never the primary text colour.
+    const colours = await chip.evaluate((el) => ({ chip: getComputedStyle(el).color, body: getComputedStyle(document.body).color }));
+    expect(colours.chip).not.toBe(colours.body);
+
+    // A single press on the chip does nothing; a double-click on it opens sign-in.
+    await chip.click();
+    await expect(page).toHaveURL(/\/ro\/evenimente$/);
+    await chip.dblclick();
+    await expect(page).toHaveURL(/\/ro\/autentificare$/);
+  });
+
   test("does nothing on a single tap", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
@@ -206,8 +237,8 @@ test.describe("the build badge", () => {
     const footer = page.getByRole("contentinfo");
     await expect(footer.getByRole("link", { name: /echipă|staff/i })).toHaveCount(0);
     // The two public legal routes are still there — AGENTS.md §9.2 requires them linked from the
-    // footer. The privacy notice is on the bar itself since §323 (a question mark on a phone and
-    // "GDPR" from `sm` since §378, named for the notice at every width); the terms are behind the
+    // footer. The privacy notice is on the bar itself since §323 (the word "GDPR" at every width
+    // since §NNN, named for the notice at every width); the terms are behind the
     // summary, which names them, and a closed <details> hides its content from the
     // accessibility tree, so open it first.
     await expect(footer.getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true })).toBeVisible();
@@ -231,8 +262,8 @@ test.describe("the build badge", () => {
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
     // it; it is in the fold below `md` (§365) and pinned beside the row from `md` (§372), and
-    // the link is on the bar's one row, on screen at every scroll position — a question mark on a
-    // phone, named for the notice (§378). The privacy notice is on the bar since §323, so nothing has
+    // the link is on the bar's one row, on screen at every scroll position — the word "GDPR",
+    // named for the notice (§378, §NNN). The privacy notice is on the bar since §323, so nothing has
     // to be opened to reach it.
     await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);
