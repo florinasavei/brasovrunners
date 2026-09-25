@@ -13,6 +13,8 @@ import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { env } from "@/shared/config/env";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import { weatherWords } from "@/modules/weather/words";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -42,7 +44,16 @@ export type TemplateContent = {
    * point — and the links that go with it (the map, the Strava event). On the confirmation
    * and the reminder; text-first, so the plain-text body reads the same.
    */
-  facts?: { line: string; links: { label: string; url: string }[] };
+  facts?: {
+    line: string;
+    links: { label: string; url: string }[];
+    /**
+     * The forecast for the start, on the reminder only (§NNN): «Vremea la start: Parțial noros,
+     * 14 °C, …», under the bold line and before the links — plain, not bold: it is a forecast,
+     * not a fact of the event.
+     */
+    weather?: string;
+  };
   /** Present only when the message carries an action link. */
   action?: { label: string; url: string };
   /** Further links after the action — the signed declaration as a PDF (§95). */
@@ -86,7 +97,12 @@ export function renderContent(
     content.greeting,
     "",
     ...(content.facts
-      ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
+      ? [
+          content.facts.line,
+          ...(content.facts.weather ? [content.facts.weather] : []),
+          ...content.facts.links.map((link) => `${link.label}: ${link.url}`),
+          "",
+        ]
       : []),
     // The plain-text half drops the bold and underline markers rather than printing them (§189,
     // §309); a block the club wrote carries its own lines, already stripped of formatting.
@@ -128,7 +144,7 @@ export function renderContent(
     ...(content.facts
       ? [
           paragraph(
-            `<strong>${escapeHtml(content.facts.line)}</strong>${content.facts.links
+            `<strong>${escapeHtml(content.facts.line)}</strong>${content.facts.weather ? `<br>${escapeHtml(content.facts.weather)}` : ""}${content.facts.links
               .map((link) => `<br><a href="${link.url}" style="color:${COLOR.blueInk}">${escapeHtml(link.label)}</a>`)
               .join("")}`,
           ),
@@ -377,6 +393,12 @@ export type TemplateData = {
   eventScheduleUrl?: string;
   /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§332); on the confirmation and the reminder. */
   eventLinksUrl?: string;
+  /**
+   * The forecast for the start (§NNN), on the reminder only: the hour's numbers and its kind, which
+   * each half of the bilingual message words in its own language (`weatherWords`). Absent beyond
+   * seven days and whenever Open-Meteo did not answer — the line is then simply not there.
+   */
+  eventWeather?: WeatherReading;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
@@ -547,6 +569,21 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
     ...(d.eventStravaEventUrl ? [{ label: labels.strava, url: d.eventStravaEventUrl }] : []),
   ];
   return { line, links };
+}
+
+/**
+ * The reminder's forecast line under its facts (§NNN), in this half's language — the same pieces
+ * the event page's «Vremea» row says. Only on the reminder, the message a runner opens the day
+ * before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
+ */
+function withWeather(
+  facts: TemplateContent["facts"],
+  messageType: EmailMessageType,
+  weather: WeatherReading | undefined,
+  locale: EmailLocale,
+): TemplateContent["facts"] {
+  if (!facts || !weather || messageType !== "EVENT_REMINDER") return facts;
+  return { ...facts, weather: weatherWords(weather, locale).line };
 }
 
 /**
@@ -1333,7 +1370,7 @@ export function buildTemplateContent(
     // either word finds every copy whichever language the runner chose (§96).
     subject: clubCopy ? `${copy.clubCopy.subject}${subject}` : subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
-    facts: entry.facts?.(data),
+    facts: withWeather(entry.facts?.(data), messageType, data.eventWeather, locale),
     /*
       The re-send says it is one (§235).
 

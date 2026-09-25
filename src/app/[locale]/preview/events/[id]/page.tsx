@@ -27,6 +27,7 @@ import EventDescription from "@/modules/events/ui/EventDescription";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { weatherForEvent } from "@/modules/weather/source";
 import { isUuid } from "@/shared/ids";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -153,6 +154,8 @@ export default async function PreviewEventPage({ params }: Props) {
   };
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
+  // The forecast the public page will show (§NNN): a draft within seven days of its start reads it too.
+  const weather = await weatherForEvent(preview, now);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -184,7 +187,7 @@ export default async function PreviewEventPage({ params }: Props) {
       <EventDescription bodyJson={preview.bodyJson} excerptJson={preview.excerptJson} excerpt={preview.excerpt} />
 
       <Divider sx={{ my: 3 }} />
-      <EventFacts event={preview} now={now} stacked />
+      <EventFacts event={preview} now={now} stacked weather={weather} />
 
       {/* The route section (§387), then the links (§332), before the programme as on the public
           page, in the public words — the GPX and the map in the route section when there is one. */}

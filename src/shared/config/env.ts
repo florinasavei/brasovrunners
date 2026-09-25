@@ -111,6 +111,17 @@ export const envSchema = z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
+    /**
+     * The weather forecast's stand-in (§NNN): `playwright.config.ts`'s `webServer` sets it, so
+     * the end-to-end suite's server answers every forecast with the same fixed hour and never
+     * reaches Open-Meteo — a suite must not call a real third party, and a real forecast would
+     * change what the page says from one run to the next. Ignored on production
+     * (`WEATHER_SOURCE`, below).
+     */
+    E2E_WEATHER_STUB: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
     // project id is under the Vercel project's Settings → General; the team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),
@@ -457,6 +468,21 @@ export const envSchema = z
        * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
        * needs both, and either one missing shows the club's address instead.
        */
+      /**
+       * Where the weather forecast comes from (§NNN). Derived, never set: `stub` for the
+       * end-to-end suite's server (`E2E_WEATHER_STUB`, whatever its APP_ENV — CI runs the suite
+       * under `test`), a fixed forecast with no request; `off` in the unit and integration tests
+       * (APP_ENV=test), which never open a socket — a test that wants a forecast hands one in;
+       * `open-meteo` everywhere else, a local `yarn dev` included, since the API is public and
+       * keyless. Production is always `open-meteo`: a stray flag there would print an invented
+       * forecast to every visitor.
+       */
+      WEATHER_SOURCE:
+        value.E2E_WEATHER_STUB && value.APP_ENV !== "production"
+          ? ("stub" as const)
+          : value.APP_ENV === "test"
+            ? ("off" as const)
+            : ("open-meteo" as const),
       CONTACT_FORM_MODE:
         value.APP_ENV === "local" || value.APP_ENV === "test"
           ? ("capture" as const)

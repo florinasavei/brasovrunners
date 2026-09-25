@@ -44,6 +44,7 @@ import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInt
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { weatherForEvent } from "@/modules/weather/source";
 import { env } from "@/shared/config/env";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -162,6 +163,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   // asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in.
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
+  // The forecast for the start (§NNN): read on the server, from Open-Meteo through the data cache,
+  // only within seven days of it; null — and no row — otherwise or when the service did not answer.
+  const weather = await weatherForEvent(event, now);
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <JsonLd
@@ -239,7 +243,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <Divider sx={{ my: { xs: DENSITY.sectionGap, sm: 3 } }} />
       {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
-      <EventFacts event={event} now={now} stacked />
+      <EventFacts event={event} now={now} stacked weather={weather} />
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />

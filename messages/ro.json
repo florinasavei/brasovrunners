@@ -3673,6 +3673,14 @@
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "weather": {
+      "title": "Prognoza vremii",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
+      "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
+      "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
+      "stub": "prognoza de test (E2E_WEATHER_STUB) — aceeași oră fixă, fără nicio cerere către Open-Meteo.",
+      "off": "oprită în acest mediu."
+    },
     "schema": "Schema bazei de date",
     "overall": {
       "ok": "Totul este configurat coerent.",
@@ -3972,6 +3980,32 @@
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou"
+  },
+  "Weather": {
+    "label": "Vremea",
+    "temperature": "{degrees} °C",
+    "rain": "{percent}% șanse de ploaie",
+    "wind": "vânt {speed} km/h",
+    "source": "Open-Meteo",
+    "credit": "Prognoză: {source}",
+    "reminderLine": "Vremea la start: {summary} (prognoză {source})",
+    "codes": {
+      "clear": "Senin",
+      "mainlyClear": "Predominant senin",
+      "partlyCloudy": "Parțial noros",
+      "overcast": "Înnorat",
+      "fog": "Ceață",
+      "drizzle": "Burniță",
+      "freezingDrizzle": "Burniță care îngheață",
+      "rain": "Ploaie",
+      "heavyRain": "Ploaie puternică",
+      "freezingRain": "Ploaie care îngheață",
+      "snow": "Ninsoare",
+      "showers": "Averse",
+      "snowShowers": "Averse de ninsoare",
+      "thunderstorm": "Furtună",
+      "thunderstormHail": "Furtună cu grindină"
+    }
   },
   "Feedback": {
     "close": "Închide",

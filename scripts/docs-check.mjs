@@ -299,6 +299,10 @@ const PROVIDER_HOSTS = [
   "challenges.cloudflare.com",
   // Google's SMTP submission host, the default of CONTACT_SMTP_HOST (§149): Google's own, fixed, and overridable by the variable.
   "smtp.gmail.com",
+  // Open-Meteo's forecast API, asked by the server only, and its site, which the forecast's
+  // credit links to (§NNN, the weather on the event page): public, keyless, fixed, theirs.
+  "api.open-meteo.com",
+  "open-meteo.com",
 ];
 
 async function checkHostnameLiterals() {
