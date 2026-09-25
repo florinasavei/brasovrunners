@@ -8,7 +8,7 @@ const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /**
  * A box (or card) of the event editor by its title (§350): the `<details>` whose own summary's
  * heading begins with it. "Begins", because the heading carries the box's closed line after the
- * title — "Locul Parcul Titulescu · hartă" — and its "23 înscriși" chip.
+ * title — "Locul Parcul Titulescu · hartă".
  *
  * A card that writes a section of the public page carries the section's number before its title
  * (§NNN: "4 · Data și ora — apare pe pagină"), so the title may follow "N · " and nothing else: a

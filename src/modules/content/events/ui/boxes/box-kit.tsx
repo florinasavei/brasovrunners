@@ -2,7 +2,6 @@ import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
-import { countForm } from "@/i18n/count-form";
 import { routing } from "@/i18n/routing";
 import type { EditableEvent } from "../../repository";
 import type { SummaryWords } from "../box-summaries";
@@ -72,11 +71,15 @@ export async function cardGapWords(): Promise<CardGapWords> {
 }
 
 /**
- * "23 înscriși", and the box's own sentence about what a change does to them — only on the
- * editor, only with at least one real registration (a test row is counted nowhere the club looks,
- * `AGENTS.md` §12.6).
+ * A box whose change reaches people who registered: its amber outline and its own sentence about
+ * what a change does to them — only on the editor, only with at least one real registration (a
+ * test row is counted nowhere the club looks, `AGENTS.md` §12.6).
+ *
+ * The number itself is said once, on the line under the page map (`RegisteredLine`, §NNN; the
+ * owner: "informația «3 înscriși» se repetă de prea multe ori pe fiecare card"), never on a box:
+ * the outline is the mark, the line is the count.
  */
-export type RiskMark = { count: number; chip: string };
+export type RiskMark = { count: number };
 
 /** One language of a per-language box: the text, whether the reader may write it, its name. */
 export type LanguageEntry = { translation: TranslationDraft; mayEdit: boolean; label: string };
@@ -92,10 +95,8 @@ export async function summaryWords(): Promise<{ words: SummaryWords }> {
 }
 
 /** The risk mark for a count of real registrations, or null when there are none. */
-export async function riskMark(count: number, locale: string): Promise<RiskMark | null> {
-  if (count <= 0) return null;
-  const t = await getTranslations("Admin");
-  return { count, chip: t(`editor.risk.chip.${countForm(count, locale)}`, { count }) };
+export function riskMark(count: number): RiskMark | null {
+  return count > 0 ? { count } : null;
 }
 
 /** The first line inside a box that reaches people: what a change here does to them. */

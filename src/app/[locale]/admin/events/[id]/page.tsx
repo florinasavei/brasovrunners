@@ -36,6 +36,7 @@ import { IdenticalTextsList, RevealLink } from "@/modules/content/events/ui/Miss
 import { pageFlow } from "@/modules/content/events/ui/page-flow";
 import { PublishCheckProvider, PublishGapsSummary, PublishGateButton } from "@/modules/content/events/ui/PublishCheck";
 import SectionMap from "@/modules/content/events/ui/SectionMap";
+import RegisteredLine from "@/modules/content/events/ui/RegisteredLine";
 import { EventNoticeUpdateFields } from "@/modules/content/events/ui/EventNoticeFields";
 import RecurrenceSeriesPanel from "@/modules/content/events/ui/RecurrenceSeriesPanel";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
@@ -250,7 +251,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     test: await countTestRegistrationsForEvent(db, event.id),
   };
   const realCount = registered.total - registered.test;
-  const risk = await riskMark(realCount, locale);
+  const risk = riskMark(realCount);
 
   /** Romanian first, then English — `routing.locales` order, the order the club works in. */
   const orderedTranslations = routing.locales
@@ -720,9 +721,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 </Panel>
               )}
 
-              {/* S3 — the page, top to bottom (§NNN): a chip per section, each opening its card. */}
+              {/* S3 — the page, top to bottom (§NNN): a chip per section, each opening its card —
+                  and under it, once, how many are registered (§NNN): the amber outline on a card
+                  says a change there reaches them; the number is said here, not on every card. */}
               <Panel static id="box-map" title={flow.label}>
-                <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
+                <Stack spacing={1.5}>
+                  <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
+                  <RegisteredLine
+                    count={realCount}
+                    locale={locale}
+                    registrationsHref={canReadRegistrations(staffUser.role) ? `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}` : null}
+                  />
+                </Stack>
               </Panel>
             </>
           }

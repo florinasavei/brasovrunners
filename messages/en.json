@@ -1317,16 +1317,21 @@
         "preview": "Preview:"
       },
       "risk": {
-        "chip": {
+        "when": "Those registered for this date ({date}) stay registered if you change it; the reminder before the start, the confirmation window and the calendar entry follow the new date. To tell them, tick “Tell the participants” under Save.",
+        "place": "Those registered know the place “{place}”. If you change it, tick “Tell the participants” under Save.",
+        "programme": "The reminder before the start repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
+        "registration": "Registrations already made stay. Places added are offered to the waiting list on save, in order.",
+        "status": "Cancelling stops registration and, if you leave the box ticked, tells those registered with the reason written here."
+      },
+      "registered": {
+        "count": {
           "one": "{count} registered",
           "few": "{count} registered",
           "other": "{count} registered"
         },
-        "when": "Registrations for this date: {count}, for {date}. A new date does not cancel them; the reminder before the start, the confirmation window and the calendar entry follow it. To tell them, tick “Tell the participants” under Save.",
-        "place": "Registrations: {count}, who know the place “{place}”. If you change it, tick “Tell the participants” under Save.",
-        "programme": "The reminder before the start repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
-        "registration": "Registrations already made stay. Places added are offered to the waiting list on save, in order.",
-        "status": "Cancelling stops registration and, if you leave the box ticked, tells those registered ({count}) with the reason written here."
+        "reach": "a change in the cards with an orange edge reaches them",
+        "cards": "The cards with an orange edge, where a change reaches those registered:",
+        "view": "See the registrations"
       },
       "boxes": {
         "summaryLabel": "Summary",

@@ -28,7 +28,8 @@ type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never }
  * scheduled event's status is drawn nowhere; a cancelled or finished one is a notice over the
  * title, which the status box still says on its closed line). It was card 1.1 inside "Ce fel de
  * eveniment" (§358); it moved whole — its fields, its names, its id — and, as one of the five boxes
- * whose change reaches people, it wears their count itself.
+ * whose change reaches people, it wears the amber outline (the count is said once, under the page
+ * map, §NNN).
  *
  * **On the create page it is read-only**: "Programat", and one line saying the status can be
  * changed once the event exists. The page posts a hidden `SCHEDULED` beside it — this card posts
@@ -41,7 +42,7 @@ type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never }
  * what a cancellation does to them.
  *
  * For a role that may only read the settings, the box is its heading and its line — the status,
- * and the amber count when people are registered — and nothing to open: the type's box says that
+ * and the amber outline when people are registered — and nothing to open: the type's box says that
  * the settings are not theirs (§358).
  */
 export default async function StatusBox({ event, mayEditSettings, risk, notice, heading }: StatusBoxProps) {
@@ -51,7 +52,6 @@ export default async function StatusBox({ event, mayEditSettings, risk, notice, 
     title: heading ?? t("editor.boxes.status.title"),
     aside: EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"],
     tone: risk ? "risk" : "default",
-    badge: risk?.chip,
   } as const;
   if (!mayEditSettings) return <Panel {...card} />;
 
@@ -69,7 +69,7 @@ export default async function StatusBox({ event, mayEditSettings, risk, notice, 
 
   return (
     <Panel collapsible {...card}>
-      {risk && <RiskLine>{t("editor.risk.status", { count: risk.count })}</RiskLine>}
+      {risk && <RiskLine>{t("editor.risk.status")}</RiskLine>}
       <Stack spacing={2}>
         <RecallField
           select

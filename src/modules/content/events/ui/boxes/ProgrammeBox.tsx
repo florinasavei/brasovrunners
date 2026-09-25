@@ -46,7 +46,6 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
       title={heading ?? t("editor.boxes.programme.title")}
       aside={programmeSummary(words, event, hasProgramme(initialType), languages.map((entry) => entry.translation), locale)}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
       {risk && <RiskLine>{t("editor.risk.programme")}</RiskLine>}
       <Stack spacing={2}>

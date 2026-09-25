@@ -20,7 +20,8 @@ import type { FoldNode } from "@/shared/ui/fold";
  *
  * What §358 settled and still holds is kept here: the create page's status is read-only
  * ("Programat", nothing posted); a role that may only read the settings sees each box as its
- * heading and its line; the status box wears the count of the people a change reaches; a refusal
+ * heading and its line; the status box wears the amber outline of a box whose change reaches people
+ * (the count itself is said once, under the page map, §NNN); a refusal
  * opens the box it names — one fold now, not two.
  *
  * The boxes are async Server Components; each is awaited into the element tree it hands React and
@@ -86,8 +87,8 @@ const EVENT = {
 /** The same event with its link's label in Romanian only — what the next save refuses (§354). */
 const ONE_LANGUAGE_LABEL = { ...EVENT, links: [{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: null }] } as unknown as EditableEvent;
 
-/** "23 înscriși": the mark a box that reaches people wears (§350). */
-const RISK: RiskMark = { count: 23, chip: "23 înscriși" };
+/** 23 real registrations: the amber outline a box that reaches people wears (§350, §NNN). */
+const RISK: RiskMark = { count: 23 };
 
 const NOTICE = {
   labels: {
@@ -216,17 +217,15 @@ describe("§NNN the first box is the type alone, and the three cards are boxes o
 });
 
 describe("§NNN with people registered, the status box says so itself", () => {
-  it("wears the count and its sentence on the status box, and neither on the type, the course or the links", async () => {
+  it("wears the outline and its sentence on the status box, never the count, and neither on the type, the course or the links", async () => {
     const drawn = await boxes(EVENT, { risk: RISK });
-    expect(summaryOf(drawn.status)).toContain("23 înscriși");
     expect(drawn.status).toContain('data-testid="risk-line"');
-    for (const key of ["kind", "course", "links"] as const) {
-      expect(drawn[key], key).not.toContain("23 înscriși");
-      expect(drawn[key], key).not.toContain('data-testid="risk-line"');
-    }
+    // The number is said once, under the page map (§NNN) — on no box, shut or open.
+    for (const key of ["kind", "status", "course", "links"] as const) expect(drawn[key], key).not.toMatch(/\b23\b/);
+    for (const key of ["kind", "course", "links"] as const) expect(drawn[key], key).not.toContain('data-testid="risk-line"');
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     expect(status).toContain('tone: risk ? "risk" : "default"');
-    expect(status).toContain("badge: risk?.chip");
+    expect(status).not.toContain("badge");
     // The type's warning about switching to a group run still speaks of the registered.
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain('t("editor.boxes.kind.groupRunWarning", { count: registered })');
   });
@@ -256,8 +255,9 @@ describe("§358 a role that may only read the settings", () => {
       expect(section, id).toContain(line);
       expect(section.replace(/<h2[\s\S]*<\/h2>/, ""), id).toBe("");
     }
-    // The status box still wears the count; nothing is posted or offered.
-    expect(drawn.status).toContain("23 înscriși");
+    // The status box wears the amber outline and no number — the page's one line says it (§NNN);
+    // nothing is posted or offered.
+    expect(drawn.status).not.toMatch(/\b23\b/);
     expect(Object.values(drawn).join("")).not.toMatch(/name="event\./);
   });
 });

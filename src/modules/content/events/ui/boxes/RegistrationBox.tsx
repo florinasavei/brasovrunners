@@ -213,7 +213,6 @@ export default async function RegistrationBox({
       aside={summary}
       openWhen={{ attention: needsDeclaration }}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
