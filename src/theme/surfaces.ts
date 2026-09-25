@@ -94,6 +94,24 @@ export const headingRule = {
  */
 const SPECIAL_WASH = "color-mix(in srgb, var(--mui-palette-secondary-main) 4%, transparent)";
 
+/**
+ * A partner's own card on the event page (`DECISIONS.md` §344, §352 amended — the owner, of
+ * the shared race with the Brașov Running Festival, 2026-09-25: "The partner card should have
+ * a border and a gray background so it stands out"). Outlined, with a wash behind it rather
+ * than the page's own background, so the card the club shares its event with reads as its own
+ * box among the page's plain rows.
+ *
+ * `action.hover` rather than a literal gray: MUI's own "something sits here" tint, already
+ * tuned against both schemes' text (`theme.ts`'s palettes), so light and dark each get a wash
+ * that reads as gray without a second value to keep in step with the brand.
+ */
+export const partnerCardSurface = {
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 2,
+  bgcolor: "action.hover",
+} as const;
+
 export const specialCard = {
   borderColor: "secondary.main",
   /*

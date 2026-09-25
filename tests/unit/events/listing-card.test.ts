@@ -311,6 +311,30 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(text(when)).toContain("10:00");
   });
 
+  it("gives the time the date's own weight on the card's «when» row (§375 amended — the owner, 2026-09-25: \"The time can be bolded here as well\")", async () => {
+    // Two `<strong>`s on the row: the date, as it always was, and now the time beside it.
+    const single1 = fact(await single(), "when");
+    const strongs1 = [...single1.matchAll(/<strong>([\s\S]*?)<\/strong>/g)].map((match) => text(match[1] ?? ""));
+    expect(strongs1).toHaveLength(2);
+    expect(strongs1[0]).toContain("Duminică, 27 sept. 2026");
+    expect(strongs1[1]).toBe("10:00");
+
+    // The series card's own row carries the same bold time, the lead in front unaffected.
+    const repeated1 = fact(await repeated(), "when");
+    const strongs2 = [...repeated1.matchAll(/<strong>([\s\S]*?)<\/strong>/g)].map((match) => text(match[1] ?? ""));
+    expect(strongs2[strongs2.length - 1]).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it("leaves a race's two named times unbolded — they carry a word before the number, not a bare time (§375 amended)", async () => {
+    const html = await single({ raceStartsAt: new Date("2026-09-27T06:00:00Z") });
+    const when = fact(html, "when");
+    // Still one bold piece — the date — never the "gather at"/"start at" sentences.
+    const strongs = [...when.matchAll(/<strong>([\s\S]*?)<\/strong>/g)];
+    expect(strongs).toHaveLength(1);
+    expect(text(when)).toContain("10:00");
+    expect(text(when)).toContain("09:00");
+  });
+
   it("never wraps the when line onto a second line, except a race's two named times (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", () => {
     // `flow`'s row is `nowrap` only for a card, and only while it is not a race's two named
     // times (`card.wrap`, which stays `wrap` so a race's start time cannot be clipped, §366

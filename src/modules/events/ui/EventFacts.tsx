@@ -14,6 +14,7 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
+import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
@@ -261,8 +262,15 @@ export default async function EventFacts({
      lone time ("începe la 09:00") only because the page had put it on a bullet of its own; the
      page's "când" is one line again (§356), so the name went with the bullet. The times are led
      by a clock (§366), once — before the first, so a race's two read as one group — in the size
-     of the glyphs around it: the row glyph's on the page and the cards, the hero's own there. */
-  const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX): ReactNode[] => {
+     of the glyphs around it: the row glyph's on the page and the cards, the hero's own there.
+
+     `boldTime` (§375 amended — the owner, 2026-09-25, of the listing card's row: "The time can
+     be bolded here as well") gives the bare time the date's own weight, `<strong>` like `day`
+     above, on the compact card row only — the card's own caller passes it, the page's and the
+     hero's do not. It bolds the plain time alone, never a race's two named times
+     ("gather at 08:00", "start at 09:00"): those sentences carry a word before the number, and
+     bolding the whole phrase would bold that word too, which nobody asked for. */
+  const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX, boldTime = false): ReactNode[] => {
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
     if (event.raceStartsAt) {
@@ -279,7 +287,7 @@ export default async function EventFacts({
       day,
       <>
         {clock}
-        {time(event.startsAt)}
+        {boldTime ? <strong>{time(event.startsAt)}</strong> : time(event.startsAt)}
       </>,
     ];
   };
@@ -552,7 +560,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) }))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (
@@ -853,6 +861,15 @@ export default async function EventFacts({
     Held with other organizations (§121, §168), each its own card of links (§344, §352) — last,
     after the short facts a runner scans first, because a partner's card is the tallest thing in
     the block; spaced one under another, never bulleted.
+
+    Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the shared
+    race with the Brașov Running Festival: "The partner card should have a border and a gray
+    background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) — the card sits on
+    the page's own background otherwise, and a border with no fill read as one more row among the
+    page's plain facts. The box is a `<div>`, never a MUI `Paper`, because `partnerFacts` returns
+    inline content built to sit inside a `<dd>`; the surface is the same border, radius and wash
+    every outlined box on the site already uses (`CalendarSection`), only bordering a block wide
+    enough to keep the marker, the name, the description and the links clear of its edge.
   */
   if (coHosts.length > 0) {
     rows.push({
@@ -862,7 +879,9 @@ export default async function EventFacts({
       value: (
         <Box sx={{ display: "grid", rowGap: 1.5, justifyItems: "start" }}>
           {coHosts.map((host, index) => (
-            <div key={index}>{links ? partnerFacts(host) : host.name}</div>
+            <Box key={index} data-testid="partner-card" sx={{ ...partnerCardSurface, p: 2, maxWidth: "100%" }}>
+              {links ? partnerFacts(host) : host.name}
+            </Box>
           ))}
         </Box>
       ),

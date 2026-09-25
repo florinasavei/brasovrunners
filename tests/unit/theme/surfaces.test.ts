@@ -35,4 +35,11 @@ describe("DECISIONS.md §272 a shared surface style crosses to a client componen
     expect(surfaces.specialCard.backgroundImage).toContain("var(--mui-palette-secondary-main)");
     expect(surfaces.specialCard.borderColor).toBe("secondary.main");
   });
+
+  /** §344 amended — the partner card's border and gray background, from theme tokens only. */
+  it("keeps the partner card's border and wash as theme tokens, never a literal colour", () => {
+    expect(surfaces.partnerCardSurface.borderColor).toBe("divider");
+    expect(surfaces.partnerCardSurface.bgcolor).toBe("action.hover");
+    expect(surfaces.partnerCardSurface.border).toBe(1);
+  });
 });
