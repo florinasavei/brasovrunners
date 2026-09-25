@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
+import { DIFFICULTY_LEVELS } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
@@ -115,7 +116,7 @@ export default async function CourseBox({
             defaultValue={event?.difficulty ?? ""}
             options={[
               { value: "", label: t("editor.notStated") },
-              ...(["EASY", "MODERATE", "HARD"] as const).map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
+              ...DIFFICULTY_LEVELS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
             ]}
             sx={{ flex: 1 }}
           />

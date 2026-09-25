@@ -13,10 +13,10 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import type { EventForecast } from "@/modules/weather/domain/forecast";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
-import { weatherWords } from "@/modules/weather/words";
+import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
@@ -105,6 +105,40 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 const RACE_ROW_GAP = 0.5;
 
 /**
+ * The event page's hours from the start (§416): a row of small outlined cells, each as wide as a
+ * third of the answer's column and never narrower than 72 pixels — three of them and their two gaps
+ * are 232 pixels, inside the 260 a 320-pixel phone leaves the answer under its label — and never
+ * wider than 112, so on a desktop they read as a strip and not as three stretched boxes. Wrapping
+ * is allowed, never needed at three.
+ */
+const WEATHER_HOURS_SX = { listStyle: "none", p: 0, m: 0, mt: 1, mb: 0.5, display: "flex", flexWrap: "wrap", gap: 1 } as const;
+const WEATHER_HOUR_SX = {
+  position: "relative",
+  flex: "1 1 0",
+  minWidth: "72px",
+  maxWidth: "112px",
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 2,
+  px: 1,
+  py: 0.75,
+  textAlign: "center",
+} as const;
+
+/** Read by a screen reader, never seen: an hour's word beside its glyph (`GlyphChip`'s technique, strings for the sizes). */
+const SR_ONLY_SX = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+} as const;
+
+/**
  * The facts of an event, grouped by the question they answer.
  *
  * Nine labelled rows — date, gathering time, race start, meeting point, distance, climb,
@@ -144,11 +178,14 @@ export default async function EventFacts({
   now: Date;
   variant?: "full" | "compact";
   /**
-   * The forecast for the start (§402), read by the page (`weatherForEvent`) — null beyond seven
-   * days, for an event not going ahead, and whenever Open-Meteo did not answer. The event page and
-   * its preview only (`stacked`); the cards and the hero never show it.
+   * The forecast for the start (§402), read by the caller (`forecastForEvent`) at the event's own
+   * place (§416) — null beyond seven days, for an event not going ahead, and whenever Open-Meteo
+   * did not answer. The event page and its preview (`stacked`) draw the start hour with its details
+   * and the hours after it; the listing's featured hero (the default form) one line of it (§416 —
+   * the owner: "aș vrea să văd vremea și pe cardul principal"). The compact card never reads it:
+   * its glyph and degrees are the card's own chip (`CardWeather`).
    */
-  weather?: WeatherReading | null;
+  weather?: EventForecast | null;
   /**
    * The card's words in front of the date, on the date's own line: a series card's "Următoarea:"
    * (§113, §366), so "Următoarea: Luni, 28 sept. 2026 · 18:30" is one line rather than a label on a
@@ -623,8 +660,8 @@ export default async function EventFacts({
        D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
        elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
        beside the event's type already says it, so difficulty leads here, before distance and
-       elevation. Difficulty carries its own glyph (§399: a scale of dumbbells, one through three
-       lit, replacing §112's phone-signal bars); distance and elevation do not, on the hero as
+       elevation. Difficulty carries its own glyph (§412: a gauge, its needle at one of five
+       positions, replacing §399's scale of weights); distance and elevation do not, on the hero as
        before. */
     const route: ReactNode[] = [];
     if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
@@ -707,13 +744,29 @@ export default async function EventFacts({
     };
 
     // The clock in the hero's own glyph size, like the calendar and the pin beside it (§366).
-    const lines: Array<{ label: string; icon: Glyph; value: ReactNode[] }> = [
+    const lines: Array<{ label: string; icon: Glyph; value: ReactNode[]; testId?: string }> = [
       { label: t("when"), icon: CalendarMonthIcon, value: whenPieces(HERO_GLYPH_SX) },
     ];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
     // Held with other organizations (§121, §168).
     if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: GLYPHS.partner, value: [coHostSentence()] });
     if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
+    /*
+      The weather at the start, on the hero too (§416; the owner, 2026-09-25: "aș vrea să văd vremea
+      și pe cardul principal"): «Vremea» with the forecast's own glyph, then the pieces the page's
+      first line says — the word, the degrees, the chance of rain, the wind — and the credit
+      Open-Meteo's licence asks for as the last piece, a link like the others here. The start
+      hour's details and the hours after it stay the page's: the hero is a summary with a button.
+    */
+    if (weather) {
+      const words = weatherWords(weather.start, locale);
+      lines.push({
+        label: words.label,
+        icon: WEATHER_GLYPH[weather.start.glyph],
+        value: [words.summary, ...words.details, links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit],
+        testId: "hero-weather",
+      });
+    }
     if (state === "NOT_APPLICABLE" && mentionsRegistration) {
       lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });
     }
@@ -737,7 +790,7 @@ export default async function EventFacts({
               {glyph(line.icon)}
               {line.label}
             </Typography>
-            <Typography component="dd" variant="body1" sx={{ m: 0 }}>
+            <Typography component="dd" variant="body1" sx={{ m: 0 }} data-testid={line.testId}>
               {pieces(line.value)}
             </Typography>
           </Fragment>
@@ -929,19 +982,63 @@ export default async function EventFacts({
     own. Only when the page read a forecast: within seven days of the start and when the service
     answered; otherwise the row is not there at all, never a sentence saying it is missing. After
     the short facts and before the partners, whose cards stay last (§356).
+
+    Since §416 (the owner, 2026-09-25: "la vreme aș vrea să văd exact pe locația selectată, să văd
+    mai multe date"), three things more, in reading order under that first line:
+    - the start hour's details in the smaller grey type of a second line — how warm it feels, how
+      much falls, the gusts, the humidity, the UV index — each only when the hour has it;
+    - the hours from the start, three of them (`WEATHER_BLOCK_HOURS`), as a row of small outlined
+      cells — the hour on the event's clock, its glyph (its word for a screen reader), the degrees
+      and the chance of rain — an ordered list, so a screen reader hears "list, 3 items";
+    - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», before the credit.
   */
   if (weather) {
-    const words = weatherWords(weather, locale);
+    const words = weatherWords(weather.start, locale);
+    const list = weatherListWords(locale);
+    const hours = weather.hours.map((hour) => ({ hour, words: weatherWords(hour, locale) }));
     rows.push({
       key: "weather",
       label: words.label,
-      icon: WEATHER_GLYPH[weather.glyph],
+      icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
           {flow([words.summary, ...words.details])}
-          <Typography component="div" variant="body2" color="text.secondary">
+          {words.extras.length > 0 && (
+            <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-details">
+              {flow(words.extras)}
+            </Typography>
+          )}
+          {hours.length > 1 && (
+            <Box component="ol" aria-label={list.hours} data-testid="weather-hours" sx={WEATHER_HOURS_SX}>
+              {hours.map(({ hour, words: hourWords }) => {
+                const HourGlyph = WEATHER_GLYPH[hour.glyph];
+                return (
+                  <Box component="li" key={hour.hourAt} data-testid="weather-hour" sx={WEATHER_HOUR_SX}>
+                    <Typography component="div" variant="body2" color="text.secondary">
+                      {time(new Date(hour.hourAt))}
+                    </Typography>
+                    <HourGlyph aria-hidden="true" sx={{ fontSize: 20, color: "text.secondary", display: "block", mx: "auto", my: 0.25 }} />
+                    <Box component="span" sx={SR_ONLY_SX}>
+                      {hourWords.summary}
+                    </Box>
+                    {hourWords.temperature && (
+                      <Typography component="div" variant="body2" sx={{ fontWeight: 600 }}>
+                        {hourWords.temperature}
+                      </Typography>
+                    )}
+                    {hourWords.rainShort && (
+                      <Typography component="div" variant="caption" color="text.secondary">
+                        {hourWords.rainShort}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+          <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-credit">
             {/* The ten pixels above given back, the ten below kept: the next row's label may sit nearer than that (§366). */}
-            {links ? outLink(OPEN_METEO_SITE, words.credit, undefined, "above") : words.credit}
+            {flow([forecastPlaceWords(weather.place, locale), links ? outLink(OPEN_METEO_SITE, words.credit, undefined, "above") : words.credit])}
           </Typography>
         </Box>
       ),

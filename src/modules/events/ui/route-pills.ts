@@ -110,9 +110,9 @@ export function routePillParts(
 
 /**
  * "Eveniment de noapte" / "Night event" (§394): the headlamp's glyph, the words, and the tooltip
- * "Începe la 19:00, apusul la 16:36 — ia o frontală" (§404: the start named first) — or null on a date that is not one. The answer is this row's
- * own date's (`clubNightEvent`): a series' dates are rows of their own, so the listing's one line
- * for a series, which draws its next date, says the next date's answer.
+ * "Soarele apune la 16:36" — the sunset alone (§415) — or null on a date that is not one. The
+ * answer is this row's own date's (`clubNightEvent`): a series' dates are rows of their own, so
+ * the listing's one line for a series, which draws its next date, says the next date's answer.
  */
 export function nightPill(
   event: Pick<RouteFactsSource, "type" | "nightOverride" | "startsAt" | "endsAt" | "scheduleItems" | "timezone">,
@@ -123,10 +123,7 @@ export function nightPill(
   // «Alergare de noapte» on a group run — the owner calls a run a run, not an "event" — and
   // «Eveniment de noapte» on every other type (§394).
   const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
-  // The end is only named when the start alone would not have been dark (§394): a run that
-  // starts in daylight and finishes after dusk — with its time, and in the words of where it
-  // came from (the event's own end, or the day's last programme row).
-  // Every time named (§404): the start first, then the sunset, then the end when it is the reason.
+  // The tooltip names the sunset alone (§415).
   const tooltip = nightTooltip(facts, t);
   return {
     glyph: "headlamp",

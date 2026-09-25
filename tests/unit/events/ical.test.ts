@@ -234,7 +234,7 @@ describe("the calendar file", () => {
     const bare = calendarDescription({ ...event, excerpt: null, scheduleJson: null, locationName: null }, labelsRo);
     expect(bare).toBe("Pagina evenimentului: https://example.test/ro/evenimente/crosul-aniversar");
     // A difficulty alone is a facts line of one word; a cost left unstated is not "free"; no gun time, no times line.
-    expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).toContain("\n\nAvansat\n\n");
+    expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).toContain("\n\nGreu\n\n");
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("Gratuit");
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("întâlnire");
   });

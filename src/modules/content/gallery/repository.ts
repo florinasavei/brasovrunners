@@ -36,6 +36,13 @@ export type PublicAlbumSummary = {
   updatedAt: Date;
   photoCount: number;
   coverThumbUrl: string | null;
+  /**
+   * The cover's master and size, for its `srcset` (§414): the listing draws a cover across a
+   * phone, which is wider than the thumbnail it used to be given.
+   */
+  coverWebUrl: string | null;
+  coverWidth: number | null;
+  coverHeight: number | null;
 };
 
 function urlsFor(keyPrefix: string) {
@@ -43,7 +50,18 @@ function urlsFor(keyPrefix: string) {
   return { webUrl: storage.publicUrl(objectKey(keyPrefix, "web")), thumbUrl: storage.publicUrl(objectKey(keyPrefix, "thumb")) };
 }
 
-const cover = { keyPrefix: mediaAssets.keyPrefix };
+/** The cover's two addresses and its size, or nulls for an album without one. */
+function coverOf(row: { coverKeyPrefix: string | null; coverWidth: number | null; coverHeight: number | null }) {
+  const urls = row.coverKeyPrefix ? urlsFor(row.coverKeyPrefix) : null;
+  return {
+    coverThumbUrl: urls?.thumbUrl ?? null,
+    coverWebUrl: urls?.webUrl ?? null,
+    coverWidth: urls ? row.coverWidth : null,
+    coverHeight: urls ? row.coverHeight : null,
+  };
+}
+
+const cover = { keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height };
 
 export async function listPublishedAlbums<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -58,6 +76,8 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
       takenOn: galleryAlbums.takenOn,
       updatedAt: galleryAlbums.updatedAt,
       coverKeyPrefix: cover.keyPrefix,
+      coverWidth: cover.width,
+      coverHeight: cover.height,
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,
     })
     .from(galleryAlbums)
@@ -77,7 +97,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     takenOn: row.takenOn,
     updatedAt: row.updatedAt,
     photoCount: Number(row.photoCount),
-    coverThumbUrl: row.coverKeyPrefix ? urlsFor(row.coverKeyPrefix).thumbUrl : null,
+    ...coverOf(row),
   }));
 }
 
@@ -102,6 +122,8 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
       updatedAt: galleryAlbums.updatedAt,
       eventId: galleryAlbums.eventId,
       coverKeyPrefix: cover.keyPrefix,
+      coverWidth: cover.width,
+      coverHeight: cover.height,
     })
     .from(galleryAlbums)
     .innerJoin(
@@ -134,7 +156,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
     takenOn: row.takenOn,
     updatedAt: row.updatedAt,
     photoCount: photos.length,
-    coverThumbUrl: row.coverKeyPrefix ? urlsFor(row.coverKeyPrefix).thumbUrl : null,
+    ...coverOf(row),
     photos,
     event,
   };

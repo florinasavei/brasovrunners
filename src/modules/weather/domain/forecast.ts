@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ForecastPlaceSource } from "./place";
 import { GLYPH_BY_KIND, weatherKind, type WeatherGlyphName, type WeatherKind } from "./wmo";
 
 /**
@@ -39,7 +40,29 @@ export type WeatherReading = {
   precipitationProbability: number | null;
   /** Wind at ten metres in km/h; null when the hour has none. */
   windKmh: number | null;
+  /*
+    The details the event page adds under the start hour (§416, amending §402; the owner: "să văd
+    mai multe date") — what a runner dresses and packs by, beyond the word and the degrees. Each
+    null when the hour has none; the reminder and the cards never read them.
+  */
+  /** How warm it feels, wind and humidity counted (Open-Meteo's `apparent_temperature`), °C. */
+  feelsLikeC: number | null;
+  /** How much falls in the hour, mm — the chance says whether, this says how much. */
+  precipitationMm: number | null;
+  /** The strongest gusts at ten metres in the hour, km/h — what a ridge run on Tâmpa meets. */
+  gustKmh: number | null;
+  /** Relative humidity at two metres, percent. */
+  humidity: number | null;
+  /** The UV index — a long summer morning's sunburn. */
+  uvIndex: number | null;
 };
+
+/**
+ * An event's forecast as the page draws it (§416): the start's hour with its details, the hours
+ * after it (`pickHours`, the start's first), and which place it was asked for — the page says
+ * "for the event's place" or "for Brașov". The listing reads `start` alone.
+ */
+export type EventForecast = { start: WeatherReading; hours: WeatherReading[]; place: ForecastPlaceSource };
 
 /**
  * The forecast as it is kept: every hour of the answer, column by column, the way Open-Meteo
@@ -54,15 +77,25 @@ export type HourlyForecast = {
   precipitationProbability: (number | null)[];
   weatherCode: (number | null)[];
   windKmh: (number | null)[];
+  feelsLikeC: (number | null)[];
+  precipitationMm: (number | null)[];
+  gustKmh: (number | null)[];
+  humidity: (number | null)[];
+  uvIndex: (number | null)[];
 };
 
 const column = z.array(z.number().nullable());
 
 /**
  * Open-Meteo's answer to `hourly=temperature_2m,precipitation_probability,weather_code,
- * wind_speed_10m&timeformat=unixtime`: the hours as Unix seconds and one array per variable, the
+ * wind_speed_10m,…&timeformat=unixtime`: the hours as Unix seconds and one array per variable, the
  * same length. Anything else — an error object, a missing column, arrays that disagree — is not a
  * forecast, and reads as a failure (`null` further up), never as a partial one.
+ *
+ * The page's details (§416) are asked for in the same request, but an answer without one of them
+ * is still a forecast: the word, the degrees, the rain and the wind are what §402 shows, and a
+ * detail Open-Meteo stopped sending is a detail the page leaves out, never a forecast it hides.
+ * When a detail's column is there, it must be as long as the others, like every column.
  */
 const openMeteoAnswer = z.object({
   hourly: z.object({
@@ -71,6 +104,11 @@ const openMeteoAnswer = z.object({
     precipitation_probability: column,
     weather_code: column,
     wind_speed_10m: column,
+    apparent_temperature: column.optional(),
+    precipitation: column.optional(),
+    wind_gusts_10m: column.optional(),
+    relative_humidity_2m: column.optional(),
+    uv_index: column.optional(),
   }),
 });
 
@@ -81,8 +119,10 @@ export function parseOpenMeteo(body: unknown, fetchedAt: number): HourlyForecast
   const hourly = parsed.data.hourly;
   const length = hourly.time.length;
   if (length === 0) return null;
-  const columns = [hourly.temperature_2m, hourly.precipitation_probability, hourly.weather_code, hourly.wind_speed_10m];
+  const details = [hourly.apparent_temperature, hourly.precipitation, hourly.wind_gusts_10m, hourly.relative_humidity_2m, hourly.uv_index];
+  const columns = [hourly.temperature_2m, hourly.precipitation_probability, hourly.weather_code, hourly.wind_speed_10m, ...details.filter((values) => values !== undefined)];
   if (columns.some((values) => values.length !== length)) return null;
+  const orNulls = (values: (number | null)[] | undefined) => values ?? hourly.time.map(() => null);
   return {
     fetchedAt,
     time: hourly.time.map((seconds) => seconds * 1000),
@@ -90,6 +130,11 @@ export function parseOpenMeteo(body: unknown, fetchedAt: number): HourlyForecast
     precipitationProbability: hourly.precipitation_probability,
     weatherCode: hourly.weather_code,
     windKmh: hourly.wind_speed_10m,
+    feelsLikeC: orNulls(hourly.apparent_temperature),
+    precipitationMm: orNulls(hourly.precipitation),
+    gustKmh: orNulls(hourly.wind_gusts_10m),
+    humidity: orNulls(hourly.relative_humidity_2m),
+    uvIndex: orNulls(hourly.uv_index),
   };
 }
 
@@ -110,13 +155,20 @@ export function withinWeatherWindow(startAt: Date, now: Date): boolean {
  * code has no word (`weatherKind`).
  */
 export function pickHour(forecast: HourlyForecast, startAt: Date): WeatherReading | null {
-  const hourAt = Math.round(startAt.getTime() / HOUR_MS) * HOUR_MS;
+  return readingAt(forecast, Math.round(startAt.getTime() / HOUR_MS) * HOUR_MS);
+}
+
+/** The reading for one exact hour of the answer, or null — `pickHour`'s rule without the rounding. */
+function readingAt(forecast: HourlyForecast, hourAt: number): WeatherReading | null {
   const index = forecast.time.indexOf(hourAt);
   if (index < 0) return null;
   const code = forecast.weatherCode[index];
   if (code === null || code === undefined) return null;
   const kind = weatherKind(code);
   if (!kind) return null;
+  // The cache key's version keeps an entry written before the details out (`source.ts`); a column
+  // missing all the same reads as "no detail", never as a thrown page.
+  const detail = (values: (number | null)[] | undefined) => values?.[index] ?? null;
   return {
     hourAt,
     code,
@@ -125,7 +177,36 @@ export function pickHour(forecast: HourlyForecast, startAt: Date): WeatherReadin
     temperatureC: forecast.temperatureC[index] ?? null,
     precipitationProbability: forecast.precipitationProbability[index] ?? null,
     windKmh: forecast.windKmh[index] ?? null,
+    feelsLikeC: detail(forecast.feelsLikeC),
+    precipitationMm: detail(forecast.precipitationMm),
+    gustKmh: detail(forecast.gustKmh),
+    humidity: detail(forecast.humidity),
+    uvIndex: detail(forecast.uvIndex),
   };
+}
+
+/**
+ * How many hours the event page shows, from the start's own (§416): the start and the two after
+ * it — the hour a group run or a 10 km race is out on the course, and what the sky does while
+ * they are. Three, because a fourth does not fit a 320-pixel phone beside the others as a row, and
+ * a run's weather after the second hour is the long run's, not the club's usual evening.
+ */
+export const WEATHER_BLOCK_HOURS = 3;
+
+/**
+ * The start's hour and the ones after it, up to `WEATHER_BLOCK_HOURS`, each through `pickHour`'s
+ * rule — an hour the answer lacks, or whose code has no word, is left out rather than drawn empty.
+ * Empty when the start's own hour has no reading: the block is the start's first.
+ */
+export function pickHours(forecast: HourlyForecast, startAt: Date, count: number = WEATHER_BLOCK_HOURS): WeatherReading[] {
+  const first = pickHour(forecast, startAt);
+  if (!first) return [];
+  const hours = [first];
+  for (let step = 1; step < count; step += 1) {
+    const reading = readingAt(forecast, first.hourAt + step * HOUR_MS);
+    if (reading) hours.push(reading);
+  }
+  return hours;
 }
 
 /**

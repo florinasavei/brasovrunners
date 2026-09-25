@@ -387,9 +387,9 @@ describe("BR-REQ-052-02 the race start and the gathering", () => {
 /**
  * BR-REQ-052-02 criterion 2 and BR-REQ-011-01 criterion 7 — the meeting point on a map.
  *
- * The link is whatever the organizer pasted. No `geo`: the coordinates it was built from left
- * with migration `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be
- * wrong, which is worse than no pin.
+ * The link is whatever the organizer pasted. No guessed `geo`: the coordinates it was built from
+ * left with migration `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be
+ * wrong, which is worse than no pin — `geo` is published only from the event's own point (§416).
  */
 describe("BR-REQ-052-02 the meeting point as a map link", () => {
   it("publishes neither a map nor a guessed pin when the club has pasted no link", () => {
@@ -402,6 +402,18 @@ describe("BR-REQ-052-02 the meeting point as a map link", () => {
     const mapUrl = "https://maps.example.test/place/parcul-tractorul";
     const block = parsed(sportsEventJsonLd(baseEvent({ mapUrl }), URL, "Brașov Runners"));
     expect(block.location.hasMap).toBe(mapUrl);
+    // A venue's page carries no pin, so no `geo` is claimed from it.
+    expect(block.location.geo).toBeUndefined();
+  });
+
+  // §416: `geo` from the event's own point — the pin its map link carries, else the typed «Coordonate».
+  it("publishes `geo` from the map link's pin, or the typed pair, and never the club's fallback", () => {
+    const pinned = parsed(sportsEventJsonLd(baseEvent({ mapUrl: "https://maps.example.test/?q=45.6384,25.5921" }), URL, "Brașov Runners"));
+    expect(pinned.location.geo).toEqual({ "@type": "GeoCoordinates", latitude: 45.6384, longitude: 25.5921 });
+    const typed = parsed(sportsEventJsonLd(baseEvent({ latitude: 45.61, longitude: 25.6 }), URL, "Brașov Runners"));
+    expect(typed.location.geo).toEqual({ "@type": "GeoCoordinates", latitude: 45.61, longitude: 25.6 });
+    const later = parsed(sportsEventJsonLd(baseEvent({ locationToBeAnnounced: true, latitude: 45.61, longitude: 25.6 }), URL, "Brașov Runners"));
+    expect(later.location.geo).toBeUndefined();
   });
 
   // `DECISIONS.md` §155: the two cards the page draws are the result's pictures; none is claimed when none is given.
