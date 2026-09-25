@@ -168,11 +168,8 @@
     "night": {
       "pill": "Night event",
       "runPill": "Night run",
-      "tooltip": "Starts at {start}, sunset at {sunset} — bring a headlamp",
-      "tooltipEnd": "Starts at {start}, sunset at {sunset}, ends at {end} — bring a headlamp",
-      "tooltipEndProgramme": "Starts at {start}, sunset at {sunset}, the programme's last row at {end} — bring a headlamp",
-      "tooltipAfter": "Starts at {start}, after the {sunset} sunset — bring a headlamp",
-      "tooltipDawn": "Starts at {start}, before sunrise at {sunrise} — bring a headlamp",
+      "tooltip": "The sun sets at {sunset}",
+      "tooltipDawn": "The sun rises at {sunrise}",
       "times": "starts at {start}, sunset at {sunset}",
       "timesEnd": "starts at {start}, sunset at {sunset}, ends at {end}",
       "timesEndProgramme": "starts at {start}, sunset at {sunset}, the programme's last row at {end}",

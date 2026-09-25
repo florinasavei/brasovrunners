@@ -123,8 +123,9 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
-    // The start named first, then the sunset (§404): the sunset is never read as the start.
-    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 19:00, după apusul de la 16:\d\d — ia o frontală$/);
+    // The tooltip says only the sunset (§NNN): the owner, 2026-09-25, "pe tooltip trebuie doar să
+    // zic când apune soarele" — §404's start/end shapes stay on the calendar entry and the .ics.
+    await expect(page.getByRole("tooltip")).toHaveText(/^Soarele apune la 16:\d\d$/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
@@ -133,7 +134,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(englishPill).toHaveCount(1);
     await expect(englishPill.locator(TORCH)).toHaveCount(1);
     await englishPill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 19:00, after the 16:\d\d sunset — bring a headlamp$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^The sun sets at 16:\d\d$/);
     await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
   });
 
@@ -207,10 +208,10 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await pill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 16:00, apusul la 16:\d\d, se termină la 17:30 — ia o frontală$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^Soarele apune la 16:\d\d$/);
     await page.goto(`/en/events/${englishSlug}`);
     const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
     await englishPill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 16:00, sunset at 16:\d\d, ends at 17:30 — bring a headlamp$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^The sun sets at 16:\d\d$/);
   });
 });
