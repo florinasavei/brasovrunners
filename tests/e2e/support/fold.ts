@@ -73,3 +73,23 @@ export async function openFold(fold: Locator) {
   if ((await fold.getAttribute("open")) === null) await fold.locator(":scope > summary").press("Enter");
   await expect(fold).toHaveAttribute("open", "");
 }
+
+/**
+ * A card on the public events listing, found by its heading text, with the "other events" fold
+ * around it (§89, `[data-testid="other-events"]`) opened first if it is closed.
+ *
+ * That fold starts open only when there are four or fewer other events (`app/[locale]/events/
+ * page.tsx`, `open={cards.length <= 4}`) and closed on a phone otherwise — a seeded database
+ * that has grown past four leaves it closed, and a spec that looked for a card by text alone
+ * (§375's own family, §401's partners fold) found nothing there and failed, flakily, only once
+ * enough sample events had accumulated. `difficulty-scale.spec.ts` used to look up the card
+ * directly; this is that lookup, made to open the fold first.
+ *
+ * A listing with no featured event has no fold at all — every card sits in a plain `<ul>` — so
+ * this is a no-op there.
+ */
+export async function cardOnListing(page: Page, heading: string | RegExp): Promise<Locator> {
+  const fold = page.getByTestId("other-events");
+  if ((await fold.count()) > 0) await openFold(fold);
+  return page.locator("li", { hasText: heading }).first();
+}

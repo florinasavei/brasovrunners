@@ -55,7 +55,12 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     await page.goto("/ro/admin/checkin");
     await expect(page.getByRole("tab", { name: "De făcut" })).toBeVisible();
     await page.getByRole("tab", { name: "De făcut" }).click();
-    await expect(page).toHaveURL(/\/admin\/tasks$/);
+    // `waitForURL` first, then the pathname on its own — `toHaveURL`'s regex matched a
+    // transient URL mid-navigation on a shared machine (the query settling a beat after the
+    // path), and a `$`-anchored regex is exact about a trailing query string that arrives on
+    // its own tick. The pathname is the only thing this assertion is actually about.
+    await page.waitForURL((url) => url.pathname === "/ro/admin/tasks");
+    expect(new URL(page.url()).pathname).toBe("/ro/admin/tasks");
     await expect(page.locator("#main").getByRole("heading", { name: "The work queue" })).toBeVisible();
   });
 
