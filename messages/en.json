@@ -50,7 +50,8 @@
     "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
       "label": "Event type",
-      "all": "All"
+      "all": "All",
+      "partner": "Partnership"
     },
     "calendar": {
       "previous": "Previous month",
@@ -307,7 +308,12 @@
     "video": {
       "open": "Watch the event film",
       "title": "Event film (YouTube)",
-      "notice": "The player is YouTube's and loads only when you open it."
+      "notice": "The player is YouTube's and loads only when you open it.",
+      "play": "Play the film",
+      "playNamed": "Play the film: {name}",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "volume": "Volume"
     },
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
@@ -413,9 +419,8 @@
       "datePlaceholder": "YYYY-MM-DD",
       "dateTyped": "The date, like 2026-11-21: year, month, day.",
       "dateIncomplete": "Fill in the whole date: day, month and year.",
-      "timePlaceholder": "hh:mm",
       "timeTyped": "The time on the 24-hour clock, like 09:30 or 19:00.",
-      "timeIncomplete": "Fill in the whole time: hours and minutes."
+      "clearTime": "Clear the time"
     },
     "nav": {
       "events": "Events",
@@ -2450,6 +2455,10 @@
       "youtubeInvalid": "Not a YouTube address. Copy the link from the browser bar or from “Share” (youtube.com/watch?v=… or youtu.be/…).",
       "youtubeCaption": "Caption (under the film)",
       "youtubeRemove": "Remove the film",
+      "youtubePoster": "Choose a poster",
+      "youtubePosterUploading": "Uploading…",
+      "youtubePosterFailed": "The poster could not be uploaded; try again.",
+      "youtubePosterUseYoutube": "Use YouTube's own thumbnail",
       "imageAlign": "Where it sits in the text",
       "imageAlignBlock": "In the flow",
       "imageAlignLeft": "Left",
@@ -3855,6 +3864,15 @@
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",
     "runtime": "State right now",
     "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
+    "weather": {
+      "title": "Weather forecast",
+      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast.",
+      "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
+      "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
+      "stale": "Open-Meteo (public, keyless) — last answer at {when}, too old to show. The pages and the reminders show no weather until it answers.",
+      "stub": "the test forecast (E2E_WEATHER_STUB) — the same fixed hour, and no request to Open-Meteo.",
+      "off": "off in this environment."
+    },
     "schema": "Database schema",
     "overall": {
       "ok": "Everything is coherently configured.",
@@ -4154,6 +4172,31 @@
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
     "capacityUnknown": "We cannot check how many places are left right now.",
     "capacityRetry": "Try again"
+  },
+  "Weather": {
+    "label": "Weather",
+    "temperature": "{degrees} °C",
+    "rain": "{percent}% chance of rain",
+    "wind": "wind {speed} km/h",
+    "source": "Open-Meteo",
+    "credit": "Forecast: {source}",
+    "codes": {
+      "clear": "Clear",
+      "mainlyClear": "Mostly clear",
+      "partlyCloudy": "Partly cloudy",
+      "overcast": "Overcast",
+      "fog": "Fog",
+      "drizzle": "Drizzle",
+      "freezingDrizzle": "Freezing drizzle",
+      "rain": "Rain",
+      "heavyRain": "Heavy rain",
+      "freezingRain": "Freezing rain",
+      "snow": "Snow",
+      "showers": "Showers",
+      "snowShowers": "Snow showers",
+      "thunderstorm": "Thunderstorm",
+      "thunderstormHail": "Thunderstorm with hail"
+    }
   },
   "Feedback": {
     "close": "Close",

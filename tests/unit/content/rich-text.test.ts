@@ -62,7 +62,14 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
       // reads as the full-width band it was, and the markup it renders is unchanged.
       expect(parsed.content?.[0]).toEqual({
         type: "youtube",
-        attrs: { videoId: "dQw4w9WgXcQ", caption: "Startul din 2025", widthPercent: 100, align: "block" },
+        attrs: {
+          videoId: "dQw4w9WgXcQ",
+          caption: "Startul din 2025",
+          widthPercent: 100,
+          align: "block",
+          poster: null,
+          posterSource: null,
+        },
       });
       expect(parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ" } })).content?.[0]).toMatchObject({ attrs: { caption: "" } });
       expect(richTextToPlainText(parsed)).toBe("Startul din 2025");
@@ -87,6 +94,16 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
           JSON.stringify(attrs),
         ).toThrow();
       }
+    });
+
+    it("keeps a stored poster address, and defaults it to null (`DECISIONS.md` §403)", () => {
+      const withPoster = parseRichText(
+        doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", poster: "https://media.example.test/yt-dQw4w9WgXcQ/web.webp" } }),
+      );
+      expect(withPoster.content?.[0]).toMatchObject({ attrs: { poster: "https://media.example.test/yt-dQw4w9WgXcQ/web.webp" } });
+      expect(
+        parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ" } })).content?.[0],
+      ).toMatchObject({ attrs: { poster: null } });
     });
 
     it("refuses anything but an eleven-character id", () => {

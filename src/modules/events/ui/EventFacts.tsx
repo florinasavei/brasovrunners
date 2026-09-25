@@ -12,6 +12,11 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
+import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
+import { weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
@@ -137,10 +142,17 @@ export default async function EventFacts({
   links = true,
   stacked = false,
   whenLead,
+  weather = null,
 }: {
   event: PublicEvent;
   now: Date;
   variant?: "full" | "compact";
+  /**
+   * The forecast for the start (§402), read by the page (`weatherForEvent`) — null beyond seven
+   * days, for an event not going ahead, and whenever Open-Meteo did not answer. The event page and
+   * its preview only (`stacked`); the cards and the hero never show it.
+   */
+  weather?: WeatherReading | null;
   /**
    * The card's words in front of the date, on the date's own line: a series card's "Următoarea:"
    * (§113, §366), so "Următoarea: Luni, 28 sept. 2026 · 18:30" is one line rather than a label on a
@@ -622,8 +634,9 @@ export default async function EventFacts({
        D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
        elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
        beside the event's type already says it, so difficulty leads here, before distance and
-       elevation. Difficulty carries its own glyph (§112: bars for how hard); distance and elevation
-       do not, on the hero as before. */
+       elevation. Difficulty carries its own glyph (§399: a scale of dumbbells, one through three
+       lit, replacing §112's phone-signal bars); distance and elevation do not, on the hero as
+       before. */
     const route: ReactNode[] = [];
     if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
     if (distance !== null) {
@@ -920,39 +933,109 @@ export default async function EventFacts({
   }
 
   /*
-    Held with other organizations (§121, §168), each its own card of links (§344, §352) — last,
-    after the short facts a runner scans first, because a partner's card is the tallest thing in
-    the block; spaced one under another, never bulleted.
-
-    Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the shared
-    race with the Brașov Running Festival: "The partner card should have a border and a gray
-    background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) — the card sits on
-    the page's own background otherwise, and a border with no fill read as one more row among the
-    page's plain facts. The box is a `<div>`, never a MUI `Paper`, because `partnerFacts` returns
-    inline content built to sit inside a `<dd>`; the surface shares its border and radius with
-    every outlined box on the site already (`CalendarSection`, which does not share its wash),
-    and its wash — `action.selected`, stronger than a mere hover tint — with `CalendarEventChip`
-    and `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name, the
-    description and the links clear of its edge.
+    The weather at the start (§402; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
+    pe ceva API"): «Vremea» with the forecast's own glyph in the row glyph's place — the sun, a
+    cloud, a raindrop — then its word, the temperature, the chance of rain and the wind, as one
+    flowing line like «Când», and under it the credit Open-Meteo's licence asks for, a link of its
+    own. Only when the page read a forecast: within seven days of the start and when the service
+    answered; otherwise the row is not there at all, never a sentence saying it is missing. After
+    the short facts and before the partners, whose cards stay last (§356).
   */
-  if (coHosts.length > 0) {
+  if (weather) {
+    const words = weatherWords(weather, locale);
     rows.push({
-      key: "coHost",
-      label: t("coHost"),
-      icon: GLYPHS.partner,
+      key: "weather",
+      label: words.label,
+      icon: WEATHER_GLYPH[weather.glyph],
       value: (
-        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start" }}>
+        <Box data-testid="event-weather">
+          {flow([words.summary, ...words.details])}
+          <Typography component="div" variant="body2" color="text.secondary">
+            {/* The ten pixels above given back, the ten below kept: the next row's label may sit nearer than that (§366). */}
+            {links ? outLink(OPEN_METEO_SITE, words.credit, undefined, "above") : words.credit}
+          </Typography>
+        </Box>
+      ),
+    });
+  }
+
+  /*
+    Held with other organizations (§121, §168, §344, §352) — no longer a row of the facts list.
+    A partner's card is the tallest thing in the block, and stacked among the short lines a
+    reader scans first it read as one more fact; the owner, 2026-09-25: "this should be block,
+    and collapsible" (§401). It is now `partnersSection`, below, a `<section id="partners">` of
+    its own after the `<dl>` closes, never a `dt`/`dd` pair.
+  */
+  const partnersSection = coHosts.length > 0 ? (
+    <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+      {/*
+        A native `<details>`, no script needed (§401): closed by default on a phone, where a
+        partner's card is the tallest thing on the page and a runner came for the race, not the
+        partnership. From `sm` up there is room for it beside the rest of the facts, so — the
+        same device the listing's "other events" fold already uses (`DECISIONS.md` §89, §167,
+        `app/[locale]/events/page.tsx`) — the details-content is forced visible, the marker
+        hides and the summary stops acting as a control (`pointerEvents: "none"`). Unlike the
+        listing's fold, this one carries no `open` attribute, so where a browser has no
+        `::details-content` (older Safari/Firefox) forcing it open would hide the partner
+        entirely; `@supports selector(::details-content)` (§376 fix round) keeps that whole
+        behaviour — the forced-open styling and the summary going inert — behind the same
+        feature test the CSS itself needs, so an unsupporting browser keeps a working,
+        clickable summary instead of a dead line over a hidden card. The summary itself
+        carries the 44-pixel tap target (`DISCLOSURE_SUMMARY_SX`) for the phone it does act
+        as a control on.
+      */}
+      <Box
+        component="details"
+        data-testid="partners-fold"
+        sx={{
+          "@supports selector(::details-content)": {
+            "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
+          },
+        }}
+      >
+        <Typography
+          component="summary"
+          variant="body1"
+          sx={{
+            ...DISCLOSURE_SUMMARY_SX,
+            fontWeight: 600,
+            cursor: "pointer",
+            "@supports selector(::details-content)": {
+              cursor: { xs: "pointer", sm: "default" },
+              "&::before": { display: { xs: "block", sm: "none" } },
+              pointerEvents: { xs: "auto", sm: "none" },
+            },
+          }}
+        >
+          <GLYPHS.partner aria-hidden="true" sx={ROW_ICON_SX} />
+          {t("coHost")} {coHosts.map((host) => host.name).join(" · ")}
+        </Typography>
+        {/*
+          Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the
+          shared race with the Brașov Running Festival: "The partner card should have a border
+          and a gray background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) —
+          the card sits on the page's own background otherwise, and a border with no fill read as
+          one more row among the page's plain facts. The box is a `<div>`, never a MUI `Paper`,
+          because `partnerFacts` returns inline content built to sit inside a `<dd>` everywhere
+          else it is used; the surface shares its border and radius with every outlined box on
+          the site already (`CalendarSection`, which does not share its wash), and its wash —
+          `action.selected`, stronger than a mere hover tint — with `CalendarEventChip` and
+          `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name,
+          the description and the links clear of its edge. Unchanged from §344/§352.
+        */}
+        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start", pt: 1.5 }}>
           {coHosts.map((host, index) => (
             <Box key={index} data-testid="partner-card" sx={{ ...partnerCardSurface, p: 2, maxWidth: "100%" }}>
               {links ? partnerFacts(host) : host.name}
             </Box>
           ))}
         </Box>
-      ),
-    });
-  }
+      </Box>
+    </Box>
+  ) : null;
 
   return (
+    <>
     <Box
       component="dl"
       data-testid="event-facts"
@@ -990,5 +1073,7 @@ export default async function EventFacts({
         </Fragment>
       ))}
     </Box>
+    {partnersSection}
+    </>
   );
 }
