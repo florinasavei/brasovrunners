@@ -300,6 +300,37 @@
       "rules": "Rules",
       "programme": "Programme",
       "checklist": "What to bring"
+    },
+    "groupRunDeclaration": {
+      "heading": "Self-declaration (optional)",
+      "button": "Sign the self-declaration",
+      "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
+      "page": {
+        "back": "Back to {event}",
+        "title": "Self-declaration",
+        "intro": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
+        "doneTitle": "The declaration is signed",
+        "done": "We have emailed it to you as a PDF. Come to the run as usual.",
+        "closed": "The declaration can no longer be signed for this run.",
+        "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
+        "refusedTitle": "The declaration was not signed",
+        "refusedNothingRecorded": "Nothing was recorded. Fill in the boxes below and sign again:",
+        "fields": {
+          "idDocument": "Identity document (series and number)",
+          "email": "Email address",
+          "accepted": "I am 18 or older, I have read the declaration and I sign it",
+          "typedName": "Signature: your full name",
+          "captcha": "The anti-bot check"
+        },
+        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the club's copy it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
+        "emailHelp": "We send the signed declaration here, as a PDF.",
+        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
+        "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
+        "accept": "I am 18 or older, I have read the declaration above and sign it on my own responsibility",
+        "typedNameHelp": "Type your full name. It appears as a signature.",
+        "captcha": "The anti-bot check did not pass. Please try again.",
+        "action": "Sign the declaration"
+      }
     }
   },
   "Admin": {
@@ -1490,6 +1521,12 @@
         "tab": "same as Romanian",
         "listTitle": "To check: the English text is identical to the Romanian one (does not block publication)",
         "partner": "Partner {p}"
+      },
+      "groupRunDeclaration": {
+        "label": "Optional self-declaration",
+        "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
+        "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
+        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
       }
     },
     "preview": {
@@ -1606,11 +1643,13 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The three texts a participant accepts. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "intro": "The three texts a participant accepts at registration, and the two optional declarations of the group runs. An approved version never changes (people signed exactly that text); a correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
-        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed."
+        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed.",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt: traffic, the group's pace, the dark. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept).",
+        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail: terrain, wild animals and dogs, weather and the dark, one's own equipment with a headlamp. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept)."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",
@@ -1625,7 +1664,9 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Racing TOS",
-        "EVENT_DECLARATION": "Participant declaration"
+        "EVENT_DECLARATION": "Self-declaration (race)",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
+        "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -2631,6 +2672,8 @@
         "EVENT_UPDATE_NOTICE": "Updated details (place, time, programme)",
         "EVENT_CANCELLED": "Event cancelled",
         "ORGANIZER_MESSAGE": "Message from the organizers",
+        "GROUP_RUN_DECLARATION_SIGNED": "The declaration signed on a group run (PDF attached)",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "The club's copy: a group run declaration (PDF attached)",
         "REGISTER_ANOTHER_PERSON": "Registering another person with the same address"
       },
       "when": {
@@ -2655,6 +2698,8 @@
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
         "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link.",
         "ORGANIZER_MESSAGE": "Only when an organizer writes and sends a message from the event's page → “Send a message to participants” — bad weather or a last-minute change, for instance. The subject and the text are written for each send, in Romanian and English; the preview here uses a sample text. To the group chosen — confirmed, on the waiting list, with the declaration unsigned, or all — each in their own language. No token and no attachment: the button leads to the event's page.",
+        "GROUP_RUN_DECLARATION_SIGNED": "Right after somebody signs the optional declaration on a group run's page, to the address they gave. With the declaration as a PDF, whole; no token and no action link — there is no registration to manage.",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Together with a declaration signed on a group run, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, if none is set here). No action link; in the attached PDF the identity document's series and number are masked.",
         "REGISTER_ANOTHER_PERSON": "When the public form is sent again with an address already registered for the event and another name. No registration is created, and the screen shows the same “check your email” as always. The address gets a single-use link, valid for {confirmation}, to the form with the address fixed — or, if it already has {people}, only the sentence that says so, with no link."
       },
       "whenShort": {
@@ -2679,6 +2724,8 @@
         "EVENT_UPDATE_NOTICE": "only when an organizer announces a change",
         "EVENT_CANCELLED": "when the event is cancelled, if ticked",
         "ORGANIZER_MESSAGE": "only when an organizer writes a message",
+        "GROUP_RUN_DECLARATION_SIGNED": "after a group run declaration is signed",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "with a group run declaration, to the archive",
         "REGISTER_ANOTHER_PERSON": "when the form is sent again for another person"
       },
       "clubNotices": {
@@ -2925,7 +2972,7 @@
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
-        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration.",
+        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
         "field": "Registrations per address (per event)",
         "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
         "value": "One address may register at most {people} for an event.",
@@ -3176,6 +3223,20 @@
       "historyWhen": "Sent {date} by {sender}",
       "historyNoSender": "a removed account",
       "historyTest": "test registrations: {test}"
+    },
+    "groupRunDeclarations": {
+      "title": "Signed declarations (group run)",
+      "count": "Signed: {count}",
+      "help": "Who signed the optional declaration on the run's page, and when. The identity document and the email address are in the PDF. The platform deletes the declarations {days} after the run.",
+      "none": "No declaration signed yet.",
+      "signedAt": "signed {when}",
+      "pdf": "PDF",
+      "reason": "Why it is erased",
+      "reasonHelp": "It stays in the club's log, with your name. Do not write the person's name.",
+      "erase": "Erase the declaration",
+      "eraseTitle": "Erase the declaration?",
+      "eraseBody": "The declaration and the messages about it are deleted for good. The log keeps your name and the reason, never the signer's.",
+      "erased": "The declaration was erased. The log keeps your name and the reason."
     }
   },
   "NotFound": {
@@ -4148,7 +4209,8 @@
       "deadlines": "Deadlines saved.",
       "addressCap": "Limit per address saved.",
       "neonLimits": "The Neon limits were saved.",
-      "neonLimitsSame": "The limits were already these; nothing changed."
+      "neonLimitsSame": "The limits were already these; nothing changed.",
+      "groupRunDeclarationErased": "The declaration was erased."
     }
   }
 }

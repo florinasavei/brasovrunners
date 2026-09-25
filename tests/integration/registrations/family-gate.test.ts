@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -12,10 +12,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §389 — the family flow switches itself on with the schema (`family-gate.ts`).
  *
- * Migration `0072` adds the new key beside the one-registration-per-address constraint; the old
- * constraint is dropped by a contract migration of its own in a later release (AGENTS.md §7.6).
- * Until then a second row on an address would be refused by the database, so the flow must behave
- * exactly as before and never offer a link it cannot honour. These tests run on today's schema.
+ * Migration `0072` added the new key beside the one-registration-per-address constraint; migration
+ * `0073` is the contract release that drops the old constraint (AGENTS.md §7.6), and this database
+ * — created fresh through every migration — carries it gone from the start: the flow is open by
+ * default. The second `describe` below restores the legacy constraint for the length of each test,
+ * the way it stood before `0073`, to prove the gate still reads the schema rather than a flag and
+ * that the pre-family behaviour it guarded still works if that constraint were ever back.
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
 const EMAIL = "familia.pop@example.ro";
@@ -74,9 +76,29 @@ const submission = (firstName: string, at: Date = NOW) => ({
   renderedAt: new Date(at.getTime() - 30_000).toISOString(),
 });
 
-describe("§389 before the contract release: one registration per address, as before", () => {
-  it("says the flow is closed while the old constraint stands", async () => {
-    expect(await familyRegistrationOpen(db)).toBe(false);
+describe("§NNN after the contract migration: the flow is open by default", () => {
+  it("says the flow is open now that migration 0073 has dropped the constraint", async () => {
+    expect(await familyRegistrationOpen(db)).toBe(true);
+  });
+
+  it("closes again if the legacy constraint is ever restored, and reopens once it is gone", async () => {
+    await db.execute(sql`ALTER TABLE registrations ADD CONSTRAINT registrations_event_participant_unique UNIQUE (event_id, participant_id)`);
+    try {
+      expect(await familyRegistrationOpen(db)).toBe(false);
+    } finally {
+      await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_event_participant_unique`);
+    }
+    expect(await familyRegistrationOpen(db)).toBe(true);
+  });
+});
+
+describe("§NNN if the legacy constraint were ever restored: one registration per address, as before 0073", () => {
+  beforeEach(async () => {
+    await db.execute(sql`ALTER TABLE registrations ADD CONSTRAINT registrations_event_participant_unique UNIQUE (event_id, participant_id)`);
+  });
+
+  afterEach(async () => {
+    await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_event_participant_unique`);
   });
 
   it("another name on a registered address is today's re-send of the one registration, and no link is offered", async () => {
@@ -114,16 +136,5 @@ describe("§389 before the contract release: one registration per address, as be
     expect(await db.select().from(registrations)).toHaveLength(1);
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
     expect(token.usedAt).toBeNull();
-  });
-
-  it("opens by itself once the contract migration has dropped the constraint", async () => {
-    await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique`);
-    try {
-      expect(await familyRegistrationOpen(db)).toBe(true);
-    } finally {
-      // The next test file on this worker gets its own database; this one is left as it was found.
-      await db.execute(sql`ALTER TABLE registrations ADD CONSTRAINT registrations_event_participant_unique UNIQUE (event_id, participant_id)`);
-    }
-    expect(await familyRegistrationOpen(db)).toBe(false);
   });
 });

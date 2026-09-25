@@ -300,6 +300,37 @@
       "rules": "Regulament",
       "programme": "Program",
       "checklist": "Ce să aduci"
+    },
+    "groupRunDeclaration": {
+      "heading": "Declarație pe propria răspundere (opțional)",
+      "button": "Semnează declarația pe propria răspundere",
+      "line": "Dacă vrei, semnează declarația pe propria răspundere pentru această alergare; o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
+      "page": {
+        "back": "Înapoi la {event}",
+        "title": "Declarație pe propria răspundere",
+        "intro": "Pentru alergarea de grup {event}. Este opțională și nu te înscrie nicăieri: citește textul, completează mai jos și semnează.",
+        "doneTitle": "Declarația a fost semnată",
+        "done": "Ți-am trimis-o pe email, în PDF. La alergare vii ca de obicei.",
+        "closed": "Declarația nu se mai poate semna pentru această alergare.",
+        "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
+        "refusedTitle": "Declarația nu a fost semnată",
+        "refusedNothingRecorded": "Nu s-a înregistrat nimic. Completează căsuțele de mai jos și semnează din nou:",
+        "fields": {
+          "idDocument": "Act de identitate (seria și numărul)",
+          "email": "Adresa de email",
+          "accepted": "Am împlinit 18 ani, am citit declarația și o semnez",
+          "typedName": "Semnătura: numele tău complet",
+          "captcha": "Verificarea anti-bot"
+        },
+        "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copia clubului apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
+        "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
+        "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
+        "adultsOnly": "Declarația este pentru adulți: o semnezi doar dacă ai împlinit 18 ani, și nu o semnezi în numele unui minor.",
+        "accept": "Am împlinit 18 ani, am citit declarația de mai sus și o semnez pe propria răspundere",
+        "typedNameHelp": "Scrie numele tău complet. Apare ca o semnătură.",
+        "captcha": "Verificarea anti-bot nu a trecut. Încearcă din nou.",
+        "action": "Semnează declarația"
+      }
     }
   },
   "Admin": {
@@ -1490,6 +1521,12 @@
         "tab": "identic cu româna",
         "listTitle": "De verificat: textul în engleză e identic cu cel în română (nu blochează publicarea)",
         "partner": "Partenerul {p}"
+      },
+      "groupRunDeclaration": {
+        "label": "Declarație opțională pe propria răspundere",
+        "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
+        "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
       }
     },
     "preview": {
@@ -1606,11 +1643,13 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Cele trei texte pe care le acceptă participantul. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
+      "intro": "Cele trei texte pe care le acceptă participantul la înscriere, și cele două declarații opționale ale alergărilor de grup. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
-        "EVENT_DECLARATION": "Declarația pe proprie răspundere: sănătate, riscuri, actul de identitate. Se semnează când se confirmă locul."
+        "EVENT_DECLARATION": "Declarația pe proprie răspundere: sănătate, riscuri, actul de identitate. Se semnează când se confirmă locul.",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt: trafic, ritmul grupului, întunericul. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm).",
+        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe trail: teren, animale sălbatice și câini, vreme și întuneric, echipament propriu cu frontală. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm)."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă, alege documentul, lipește textul aprobat în ambele limbi, salvează ciorna, citește-o, aprob-o.",
@@ -1625,7 +1664,9 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni de concurs",
-        "EVENT_DECLARATION": "Declarația participantului"
+        "EVENT_DECLARATION": "Declarație pe propria răspundere (concurs)",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
+        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -2631,6 +2672,8 @@
         "EVENT_UPDATE_NOTICE": "Detalii actualizate (loc, oră, program)",
         "EVENT_CANCELLED": "Eveniment anulat",
         "ORGANIZER_MESSAGE": "Mesaj de la organizatori",
+        "GROUP_RUN_DECLARATION_SIGNED": "Declarația semnată la o alergare de grup (PDF atașat)",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Copia clubului: declarație la o alergare de grup (PDF atașat)",
         "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă"
       },
       "when": {
@@ -2655,6 +2698,8 @@
         "EVENT_UPDATE_NOTICE": "Doar când un organizator bifează „Anunță participanții despre schimbare” la salvarea evenimentului, și doar dacă s-a schimbat locul, data și ora sau programul, ori dacă a scris un mesaj. Câte un email fiecărei înscrieri active (în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată), în limba ei; locul și ora sunt cele de la trimitere. Fără token: butonul duce la pagina evenimentului. Nebifat, nu pleacă nimic.",
         "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune.",
         "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului.",
+        "GROUP_RUN_DECLARATION_SIGNED": "Imediat după ce cineva semnează declarația opțională pe pagina unei alergări de grup, către adresa pe care a dat-o. Cu declarația în PDF, întreagă; fără token și fără link de acțiune — nu există o înscriere de gestionat.",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Odată cu declarația semnată la o alergare de grup, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici). Fără link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
         "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link."
       },
       "whenShort": {
@@ -2679,6 +2724,8 @@
         "EVENT_UPDATE_NOTICE": "doar când un organizator anunță o schimbare",
         "EVENT_CANCELLED": "la anularea evenimentului, dacă e bifat",
         "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj",
+        "GROUP_RUN_DECLARATION_SIGNED": "după semnarea declarației la o alergare de grup",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "odată cu declarația de la o alergare de grup, către arhivă",
         "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană"
       },
       "clubNotices": {
@@ -2925,7 +2972,7 @@
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
-        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea.",
+        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
         "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
         "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
         "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
@@ -3176,6 +3223,20 @@
       "historyWhen": "Trimis {date} de {sender}",
       "historyNoSender": "un cont șters",
       "historyTest": "înscrieri de test: {test}"
+    },
+    "groupRunDeclarations": {
+      "title": "Declarații semnate (alergare de grup)",
+      "count": "Semnate: {count}",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Actul de identitate și adresa de email sunt în PDF. Platforma șterge declarațiile la {days} după alergare.",
+      "none": "Nicio declarație semnată încă.",
+      "signedAt": "semnată {when}",
+      "pdf": "PDF",
+      "reason": "Motivul ștergerii",
+      "reasonHelp": "Rămâne în jurnalul clubului, cu numele tău. Nu scrie numele persoanei.",
+      "erase": "Șterge declarația",
+      "eraseTitle": "Ștergi declarația?",
+      "eraseBody": "Declarația și mesajele despre ea se șterg definitiv. În jurnal rămân numele tău și motivul, nu și al celui care a semnat.",
+      "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul."
     }
   },
   "NotFound": {
@@ -4148,7 +4209,8 @@
       "deadlines": "Termene salvate.",
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
-      "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
+      "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
+      "groupRunDeclarationErased": "Declarația a fost ștearsă."
     }
   }
 }

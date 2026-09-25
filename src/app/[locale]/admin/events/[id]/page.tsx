@@ -42,7 +42,7 @@ import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
 import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
 import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   allowedTransitions,
@@ -78,6 +78,10 @@ import { countBibs } from "@/modules/registrations/bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
+import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
+import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
+import { showsGroupRunDeclarationsFold } from "@/modules/group-run-declarations/domain";
+import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   addTestRegistrationsAction,
@@ -85,6 +89,7 @@ import {
   assignBibNumbersAction,
   sendEventThanksAction,
   duplicateEventAction,
+  eraseGroupRunDeclarationAction,
   repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
@@ -355,7 +360,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     identical: t("editor.identical.warning"),
   };
   const notice = { labels: noticeLabels, offerNotice: internal, maxLength: EVENT_NOTICE_TEXT_MAX };
-  const box = { event, mayEditSettings: maySaveSettings } as const;
+  /*
+    The run's signed self-declarations (§NNN), read only for a role that may read who registered
+    (§289) and only on a group run that offers one or already has some: null draws nothing.
+  */
+  const groupRunDeclarationRows =
+    canReadRegistrations(staffUser.role) && event.type === "GROUP_RUN"
+      ? await listGroupRunDeclarations(db, event.id).then((rows) =>
+          showsGroupRunDeclarationsFold(offeredGroupRunDeclarationKey(event), rows.length) ? rows : null,
+        )
+      : null;
+  // Which group-run declarations the club has approved (§NNN): the route card's checkbox asks.
+  const box = { event, mayEditSettings: maySaveSettings, groupRunDeclarations: await groupRunDeclarationsInForce(db, now) } as const;
   const heading = orderedTranslations[0]?.title || t("editor.untitled");
   const thanksDue = canManageRegistrations(staffUser.role) && internal && event.eventStatus !== "CANCELLED" && event.startsAt.getTime() <= now.getTime();
   // The thank-you's recipients, counted with the send's own condition (§384): the dialog says
@@ -508,6 +524,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           {saved === "repeatPublishOn" && <Alert severity="success">{t("editor.repeatPublishStarted")}</Alert>}
           {saved === "repeatPublishOff" && <Alert severity="success">{t("editor.repeatPublishStopped")}</Alert>}
           {saved === "interestRemoved" && <Alert severity="success">{t("queue.interestRemoved")}</Alert>}
+          {/* A group run's self-declaration erased (§NNN): the trail names who and why. */}
+          {saved === "groupRunDeclarationErased" && (
+            <Alert severity="success" data-testid="group-run-declaration-erased">
+              {t("groupRunDeclarations.erased")}
+            </Alert>
+          )}
           {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
           {saved === "eventSeries" && (
             <Alert severity="success">
@@ -530,7 +552,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped"].includes(saved) &&
+            !["bibsAssigned", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -796,6 +818,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           }
           below={
             <Stack spacing={2}>
+              {/* A group run's optional self-declarations (§NNN): who signed and when, for the Organizer
+                  and the Administrator only (§289, BR-REQ-060-01); the erase is the Administrator's. */}
+              {groupRunDeclarationRows && (
+                <GroupRunDeclarationsPanel
+                  eventId={event.id}
+                  locale={locale}
+                  timeZone={event.timezone}
+                  rows={groupRunDeclarationRows}
+                  mayErase={canManageRegistrations(staffUser.role)}
+                  eraseAction={eraseGroupRunDeclarationAction}
+                />
+              )}
               {/* 16 — who registered, and what to do with them now: operations, never "Salvează".
                   Organizer and up read (§289); the verbs inside ask for the Administrator. */}
               {canReadRegistrations(staffUser.role) && internal && (

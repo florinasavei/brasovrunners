@@ -48,8 +48,10 @@ type EventInput = Parameters<typeof submitRegistration>[1];
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
-  // The contract release (§389): one address may now carry several runners at an event.
-  await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique`);
+  // The contract release (§NNN): one address may now carry several runners at an event. Migration
+  // 0073 already drops the constraint on a fresh database; `IF EXISTS` keeps this working the day
+  // this file is run before 0073 lands, too.
+  await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_event_participant_unique`);
 });
 afterAll(async () => close());
 beforeEach(async () => {

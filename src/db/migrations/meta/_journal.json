@@ -516,8 +516,22 @@
     {
       "idx": 73,
       "version": "7",
-      "when": 1790319267639,
-      "tag": "0073_discount_note",
+      "when": 1790323182150,
+      "tag": "0073_drop_registration_participant_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1790328114560,
+      "tag": "0074_group_run_declaration",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1790331942109,
+      "tag": "0075_discount_note",
       "breakpoints": true
     }
   ]

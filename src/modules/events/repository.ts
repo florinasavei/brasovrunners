@@ -96,6 +96,8 @@ const PUBLIC_COLUMNS = {
   elevationGainMeters: events.elevationGainMeters,
   // Bring a headlamp (§382): a pill on the card and the page, a line in the calendar entry.
   headlampRequired: events.headlampRequired,
+  // The group run's optional self-declaration (§NNN): the button under the route's pills.
+  offersGroupRunDeclaration: events.offersGroupRunDeclaration,
   registrationMode: events.registrationMode,
   registrationOpensAt: events.registrationOpensAt,
   registrationClosesAt: events.registrationClosesAt,

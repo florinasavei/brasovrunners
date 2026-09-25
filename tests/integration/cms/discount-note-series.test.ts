@@ -286,4 +286,31 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     expect(after.find((r) => r.locale === "ro")?.discountNote).toBeNull();
     expect(after.find((r) => r.locale === "en")?.discountNote).toBeNull();
   });
+
+  it("a settings-only series save with scope 'all' still clears a sibling's note when the saved date's own note was already null (§NNN)", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
+    expect(dates.length).toBeGreaterThan(0);
+
+    // The source's own note is already gone — out of sync with its sibling, as a stale row from
+    // before this fix could be — so the diff `applyToSeries` builds from `translationsBefore` and
+    // `translationsAfter` finds nothing to carry on `discountNote`. Only the unconditional clear
+    // this round adds reaches the sibling, which still carries its note.
+    await db.update(eventTranslations).set({ discountNote: null }).where(eq(eventTranslations.eventId, source.id));
+    const untouchedSibling = dates[0]!;
+    const siblingBefore = await translationsOf(untouchedSibling.id);
+    expect(siblingBefore.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+
+    const row = await reloadEvent(source.id);
+    const form = settingsOnlyForm(source.id, row.version, { costType: "FREE", costAmount: "" });
+    form.set("scope", "all");
+    await postSave(form);
+
+    for (const date of dates) {
+      const rows = await translationsOf(date.id);
+      expect(rows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+      expect(rows.find((r) => r.locale === "en")?.discountNote).toBeNull();
+    }
+  });
 });

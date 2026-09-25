@@ -26,6 +26,8 @@ import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
+import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
+import { findSignedGroupRunDeclaration, groupRunDeclarationIdOf } from "@/modules/group-run-declarations/repository";
 import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
@@ -143,6 +145,11 @@ async function renderRow(
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
+
+  // A group run's self-declaration (§NNN) is about no registration: its own, shorter path.
+  if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
+    return renderGroupRunDeclarationRow(row, db, now, eventRows);
+  }
 
   /*
     The club's copy of a participant's message (§320; `enqueueClubCopies` in `outbox.ts`).
@@ -623,6 +630,74 @@ async function renderRow(
     attachments: clubCopy ? undefined : attachments,
     // The club's own words, when it has written any (§247). Memoized for half a minute, so a
     // batch of twenty reads the setting once rather than twenty times.
+    overrides: await readEmailCopyForSending(db, now),
+    cc: addresses(payload.cc),
+    bcc: addresses(payload.bcc),
+  });
+}
+
+/**
+ * A group run's optional self-declaration (§NNN): the signer's copy or the club's archive copy.
+ *
+ * About a declaration row, not a registration: no participant, no token, no manage link — there is
+ * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95): whole on
+ * the signer's copy, the identity document masked on the club's (§320). A row whose declaration is
+ * gone (erased, or swept seven days after the run) cannot be rendered, and says so: a failed render
+ * is final (`AGENTS.md` §16.1), which is right — there is nothing left to send.
+ */
+async function renderGroupRunDeclarationRow(
+  row: OutboxRow,
+  db: RendererDb,
+  now: Date,
+  eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+): Promise<OutgoingEmail> {
+  const locale = row.locale as Locale;
+  const archive = row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE";
+  const id = groupRunDeclarationIdOf(row.payloadJson);
+  const signed = id ? await findSignedGroupRunDeclaration(db, id) : undefined;
+  if (!signed) throw new Error("the group-run declaration this message is about no longer exists");
+
+  const eventTexts = await eventRows(db, signed.eventId);
+  const eventDetails = eventNotificationDetailsIn(eventTexts, locale);
+  const otherDetails = eventTexts.find((candidate) => candidate.locale === otherLocale(locale) && candidate.locale !== eventDetails?.locale);
+  const placeLater = eventDetails?.locationToBeAnnounced === true;
+  const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+
+  const data: TemplateData = {
+    participantName: signed.typedName,
+    eventTitle: eventDetails?.title,
+    eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
+    eventLocationNameOther: placeLater ? placeToBeAnnouncedWords(otherLocale(locale)) : (eventDetails?.locationNames[otherLocale(locale)] ?? undefined),
+    eventStartsAtFormatted: formatEventStart(eventDetails, locale),
+    eventStartsAtFormattedOther: formatEventStart(eventDetails, otherLocale(locale)),
+    signedAtFormatted: formatInSentence(signed.acceptedAt, zone, locale),
+    signedAtFormattedOther: formatInSentence(signed.acceptedAt, zone, otherLocale(locale)),
+    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    eventUrl: eventDetails?.slug
+      ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
+      : undefined,
+    eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
+    contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
+  };
+  if (otherDetails) {
+    data.eventTitleOther = otherDetails.title;
+    if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
+  }
+
+  const pdf = await renderGroupRunDeclarationPdf(db, signed, archive ? "club" : "participant", now);
+  // The archive copy's own copies (§244), read from the payload as the race's archive reads them.
+  const payload = (archive ? (row.payloadJson ?? {}) : {}) as { cc?: unknown; bcc?: unknown };
+  const addresses = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "") : [];
+
+  return buildOutgoingEmail({
+    to: row.recipientEmail,
+    locale,
+    idempotencyKey: row.idempotencyKey,
+    messageType: row.messageType,
+    data,
+    actionUrl: undefined,
+    attachments: pdf ? [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }] : undefined,
     overrides: await readEmailCopyForSending(db, now),
     cc: addresses(payload.cc),
     bcc: addresses(payload.bcc),

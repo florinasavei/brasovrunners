@@ -1,5 +1,5 @@
 {
-  "id": "d38dc075-2698-446e-923f-47f92fbc983a",
+  "id": "13af554c-5549-41a8-9c23-10c8502b1b71",
   "prevId": "b0ecf846-743e-4569-97bc-2b45a23fd616",
   "version": "7",
   "dialect": "postgresql",
@@ -907,12 +907,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "discount_note": {
-          "name": "discount_note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -3648,14 +3642,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "checkin_code"
-          ]
-        },
-        "registrations_event_participant_unique": {
-          "name": "registrations_event_participant_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "event_id",
-            "participant_id"
           ]
         }
       },
