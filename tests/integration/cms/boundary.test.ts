@@ -219,6 +219,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/devs/theme",
       "/events",
       "/events/[slug]",
+      // A group run's optional self-declaration (§NNN): signed, never edited here.
+      "/events/[slug]/declaration",
       "/events/[slug]/register",
       "/gallery",
       "/gallery/[slug]",

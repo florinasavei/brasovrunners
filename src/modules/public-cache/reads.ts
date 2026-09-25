@@ -383,7 +383,7 @@ export async function cachedDeadlines(): Promise<Deadlines> {
 // --- The language switch ----------------------------------------------------------------------
 
 /** The routes whose other-language address only the database knows: a slug per language. */
-const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/gallery/[slug]", "/pages/[slug]"]);
+const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/events/[slug]/declaration", "/gallery/[slug]", "/pages/[slug]"]);
 
 /**
  * Where the language switcher lands (`resolveLocaleSwitch`), cached per address.

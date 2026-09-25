@@ -58,6 +58,14 @@ export const emailMessageType = pgEnum("email_message_type", [
   // they choose (confirmed, waiting, owing the declaration, or all three). The words travel in the
   // payload; the registrant's language reads first. No token, no attachment.
   "ORGANIZER_MESSAGE",
+  // The optional self-declaration signed on a group run's page (§NNN): the signer's copy, with the
+  // PDF. No registration and no participant behind it — the declaration's own row, by id in the
+  // payload. No token: there is nothing to manage.
+  "GROUP_RUN_DECLARATION_SIGNED",
+  // The club's archive copy of the same declaration (§NNN, as §99 for the race's): to the
+  // declarations mailbox, the identity document masked (§320). Its own type, as §99 decided for
+  // the race's archive copy: "the club's copy" is a type the emails page lists by name.
+  "GROUP_RUN_DECLARATION_ARCHIVE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

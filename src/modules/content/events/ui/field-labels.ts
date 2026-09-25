@@ -71,6 +71,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
     "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
     "event.headlampRequired": inBox("course", t("editor.headlampRequired")),
+    "event.offersGroupRunDeclaration": inBox("course", t("editor.groupRunDeclaration.label")),
     "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
     "event.featured": inBox("promotion", t("editor.featured")),

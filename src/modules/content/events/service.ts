@@ -29,6 +29,7 @@ import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -418,6 +419,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     headlampRequired: fields.headlampRequired,
+    // Only a group run on asphalt or trail has a self-declaration to offer (§NNN): anything else
+    // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
+    // turn-up type's registration block.
+    offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
@@ -1408,6 +1413,9 @@ const SERIES_COLUMNS = [
   // A fact of the route like the two above (§382): "from this date" carries it from the first
   // dark Wednesday of October, and "from this date" again takes it off in spring.
   "headlampRequired",
+  // The self-declaration offered on the run's page (§NNN), like the headlamp: "from this date"
+  // carries it to every later Tâmpa run of the series.
+  "offersGroupRunDeclaration",
   "registrationMode",
   "capacity",
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
@@ -2180,6 +2188,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The headlamp travels with the route (§382): a copy of an evening run, and every date a
     // series makes from it, is as dark at its start as the source.
     headlampRequired: source.headlampRequired,
+    // The self-declaration travels with the route too (§NNN): a copy of the trail run, and every
+    // date a series makes from it, offers the same declaration.
+    offersGroupRunDeclaration: source.offersGroupRunDeclaration,
     featured: false,
     // Nor the special mark (§168): it says something about one edition — the anniversary, the
     // Wednesday another club's race passes through — and the copy is a different one.

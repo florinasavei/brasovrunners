@@ -13,6 +13,7 @@ import {
   legalDocuments,
 } from "@/db/schema/legal-documents";
 import { galleryAlbums, galleryAlbumTranslations, galleryItems, mediaAssets } from "@/db/schema/gallery";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -34,6 +35,7 @@ const schema = {
   legalDocumentTranslations,
   registrations,
   declarationAcceptances,
+  groupRunDeclarations,
   jobRuns,
   rateLimitBuckets,
   platformSettings,
@@ -85,6 +87,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   forgetCachedDeadlines();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
+  // A group run's self-declarations (§NNN) reference the event and the legal version: before both.
+  await db.delete(groupRunDeclarations);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
   // The gallery: items, then albums (which the cover references), then the assets.

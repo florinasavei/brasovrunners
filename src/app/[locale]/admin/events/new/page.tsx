@@ -29,7 +29,7 @@ import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
-import { listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -119,7 +119,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
     },
     languages: Object.fromEntries(routing.locales.map((contentLocale) => [contentLocale, tSite(`languageName.${contentLocale}`)])),
   };
-  const box = { event: null, mayEditSettings: true } as const;
+  // Which group-run declarations the club has approved (§NNN): the route card's checkbox asks.
+  const box = { event: null, mayEditSettings: true, groupRunDeclarations: await groupRunDeclarationsInForce(getDb(), new Date()) } as const;
 
   return (
     <Stack spacing={3}>

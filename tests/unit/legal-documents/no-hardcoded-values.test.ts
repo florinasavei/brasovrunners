@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
@@ -33,7 +34,8 @@ import { CLUB_NAME, WORDMARK } from "@/theme/brand";
  * the platform's own fixed periods (48 hours, 30 minutes, three years…), which are the same for
  * every event because the code makes them so.
  */
-const KEYS: readonly LegalDocumentKey[] = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"];
+// Every key, the group runs' two declarations included (§NNN).
+const KEYS: readonly LegalDocumentKey[] = LEGAL_DOCUMENT_KEYS;
 
 const texts = (body: LegalDocumentBody) => body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]);
 

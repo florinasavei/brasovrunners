@@ -9,6 +9,7 @@ import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
+import GroupRunDeclarationField from "../GroupRunDeclarationField";
 import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
@@ -20,7 +21,7 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
  * For a role that may only read the settings, the card is its heading and its line and nothing to
  * open: the first box says once that the settings are not theirs (§358).
  */
-export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
+export default async function CourseBox({ event, mayEditSettings, groupRunDeclarations }: BoxProps) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const { words } = await summaryWords();
@@ -84,6 +85,24 @@ export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
           </CheckboxField>
           <BoxNote>{t("editor.headlampRequiredHelp")}</BoxNote>
         </Box>
+        {/* "Declarație opțională pe propria răspundere" (§NNN): a group run on asphalt or trail may
+            offer its surface's self-declaration — on by default for trail, the mountain rescue asks
+            for it on the Tâmpa run. An island: it follows the type and surface selects above. */}
+        <GroupRunDeclarationField
+          initialType={event?.type ?? "GROUP_RUN"}
+          initialSurface={event?.surface ?? ""}
+          initialChecked={event?.offersGroupRunDeclaration ?? false}
+          approved={groupRunDeclarations ?? { ASPHALT: false, TRAIL: false }}
+          words={{
+            label: t("editor.groupRunDeclaration.label"),
+            help: t("editor.groupRunDeclaration.help"),
+            notGroupSurface: t("editor.groupRunDeclaration.notGroupSurface"),
+            missing: {
+              ASPHALT: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_ASPHALT") }),
+              TRAIL: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_TRAIL") }),
+            },
+          }}
+        />
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}

@@ -70,6 +70,9 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],
   EVENT_UPDATE_NOTICE: ["eventTitle"],
   EVENT_CANCELLED: ["eventTitle", "eventStartsAtFormatted"],
+  // A group run's self-declaration (§NNN): the signer's copy and the club's.
+  GROUP_RUN_DECLARATION_SIGNED: ["eventTitle", "signedAtFormatted"],
+  GROUP_RUN_DECLARATION_ARCHIVE: ["participantName", "eventTitle", "signedAtFormatted"],
 };
 
 /**

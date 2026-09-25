@@ -14,11 +14,20 @@ import {
 import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
-/** The three legal document families of AGENTS.md §12.5. One versioning mechanism serves all three. */
+/**
+ * The legal document families of AGENTS.md §12.5. One versioning mechanism serves all of them.
+ *
+ * `EVENT_DECLARATION` is the race's declaration, the one a registration cannot be confirmed
+ * without (BR-REQ-053-01). The two group-run declarations (§NNN) are optional self-declarations
+ * a runner may sign on a group run's page, one per surface: the Tâmpa trail run and the asphalt
+ * runs carry different risks. They gate nothing — no registration, no place.
+ */
 export const legalDocumentKey = pgEnum("legal_document_key", [
   "PRIVACY_NOTICE",
   "TERMS",
   "EVENT_DECLARATION",
+  "GROUP_RUN_DECLARATION_ASPHALT",
+  "GROUP_RUN_DECLARATION_TRAIL",
 ]);
 
 export type LegalDocumentKey = (typeof legalDocumentKey.enumValues)[number];
