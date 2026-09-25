@@ -8,7 +8,7 @@ import Slider from "@mui/material/Slider";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * The only client island of the video facade (`DECISIONS.md` §NNN, found by re-review):
+ * The only client island of the video facade (`DECISIONS.md` §403, found by re-review):
  * `VideoFacade` itself is a Server Component now — a `<details>`/`<summary>` with the poster and
  * the iframe already in its server-rendered HTML — so the play control works with no JavaScript
  * at all, a native disclosure the browser handles on its own. This bar is the one piece that
@@ -21,7 +21,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const YOUTUBE_ORIGIN = "https://www.youtube-nocookie.com";
 const CONTROL_SIZE = 44;
 /**
- * The IFrame API's handshake (`DECISIONS.md` §NNN): an embedded player posts nothing to its
+ * The IFrame API's handshake (`DECISIONS.md` §403): an embedded player posts nothing to its
  * parent — no `onReady`, no `infoDelivery` — until the parent has sent it `listening`, which is
  * what YouTube's own `iframe_api` script does on the iframe's `load` and then every 250 ms until
  * the player answers. Without it every command below would wait in the queue for an answer that

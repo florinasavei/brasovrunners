@@ -148,7 +148,7 @@ export default async function EventFacts({
   now: Date;
   variant?: "full" | "compact";
   /**
-   * The forecast for the start (§NNN), read by the page (`weatherForEvent`) — null beyond seven
+   * The forecast for the start (§402), read by the page (`weatherForEvent`) — null beyond seven
    * days, for an event not going ahead, and whenever Open-Meteo did not answer. The event page and
    * its preview only (`stacked`); the cards and the hero never show it.
    */
@@ -634,7 +634,7 @@ export default async function EventFacts({
        D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
        elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
        beside the event's type already says it, so difficulty leads here, before distance and
-       elevation. Difficulty carries its own glyph (§NNN: a scale of dumbbells, one through three
+       elevation. Difficulty carries its own glyph (§399: a scale of dumbbells, one through three
        lit, replacing §112's phone-signal bars); distance and elevation do not, on the hero as
        before. */
     const route: ReactNode[] = [];
@@ -933,7 +933,7 @@ export default async function EventFacts({
   }
 
   /*
-    The weather at the start (§NNN; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
+    The weather at the start (§402; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
     pe ceva API"): «Vremea» with the forecast's own glyph in the row glyph's place — the sun, a
     cloud, a raindrop — then its word, the temperature, the chance of rain and the wind, as one
     flowing line like «Când», and under it the credit Open-Meteo's licence asks for, a link of its
@@ -963,13 +963,13 @@ export default async function EventFacts({
     Held with other organizations (§121, §168, §344, §352) — no longer a row of the facts list.
     A partner's card is the tallest thing in the block, and stacked among the short lines a
     reader scans first it read as one more fact; the owner, 2026-09-25: "this should be block,
-    and collapsible" (§NNN). It is now `partnersSection`, below, a `<section id="partners">` of
+    and collapsible" (§401). It is now `partnersSection`, below, a `<section id="partners">` of
     its own after the `<dl>` closes, never a `dt`/`dd` pair.
   */
   const partnersSection = coHosts.length > 0 ? (
     <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
       {/*
-        A native `<details>`, no script needed (§NNN): closed by default on a phone, where a
+        A native `<details>`, no script needed (§401): closed by default on a phone, where a
         partner's card is the tallest thing on the page and a runner came for the race, not the
         partnership. From `sm` up there is room for it beside the rest of the facts, so — the
         same device the listing's "other events" fold already uses (`DECISIONS.md` §89, §167,

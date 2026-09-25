@@ -43,7 +43,7 @@ export function isYoutubeLink(url: string | null | undefined): boolean {
 
 /**
  * The address the iframe loads: the id, and nothing the organizer typed — plus `enablejsapi=1`
- * and `origin`, so the mute/volume bar (`VideoFacade`, `DECISIONS.md` §NNN) can talk to the
+ * and `origin`, so the mute/volume bar (`VideoFacade`, `DECISIONS.md` §403) can talk to the
  * embedded player through the IFrame API's postMessage protocol once it is on the page. No
  * `iframe_api` script is ever loaded — the origin is enough for the player to accept commands
  * posted to it, which is the whole of what `enablejsapi` is for.

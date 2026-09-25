@@ -40,7 +40,7 @@ export type Glyph = ComponentType<SvgIconProps>;
  * being tried); "other event" is a group of people; an external event opens elsewhere;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
  * mixed the fork in the path; difficulty is a scale of dumbbells, one through three of them lit
- * (§NNN; the owner, 2026-09-25, of the phone-signal bars this replaces: "I want also for the
+ * (§399; the owner, 2026-09-25, of the phone-signal bars this replaces: "I want also for the
  * difficulty to have a better icon system, like weights or something" — drawn in `DifficultyIcon.tsx`);
  * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
  * platform takes none of the three itself.

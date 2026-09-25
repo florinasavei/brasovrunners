@@ -1,5 +1,5 @@
 /**
- * The WMO weather interpretation codes Open-Meteo answers with (§NNN), as a word and a glyph.
+ * The WMO weather interpretation codes Open-Meteo answers with (§402), as a word and a glyph.
  *
  * Open-Meteo's `weather_code` is the WMO 4677 subset its documentation lists: 0 clear, 1–3 cloud
  * cover, 45/48 fog, 51–57 drizzle, 61–67 rain, 71–77 snow, 80–82 rain showers, 85–86 snow

@@ -5,10 +5,10 @@ import VideoVolumeBar from "./VideoVolumeBar";
 
 /**
  * A YouTube film: the club's own poster before the click, the player and a volume bar after it
- * (`DECISIONS.md` §NNN). Shared by `EventVideo` and `RichTextVideo` — one component, so the
+ * (`DECISIONS.md` §403). Shared by `EventVideo` and `RichTextVideo` — one component, so the
  * event page and an editorial body behave identically and carry the same words.
  *
- * ## A Server Component (found by re-review, `DECISIONS.md` §NNN)
+ * ## A Server Component (found by re-review, `DECISIONS.md` §403)
  *
  * The whole disclosure — the poster, the play control and the iframe — is a native
  * `<details>`/`<summary>`, rendered here on the server. **This is why the play control works
@@ -65,7 +65,7 @@ export default function VideoFacade({
         sx={{
           "& summary::-webkit-details-marker": { display: "none" },
           // Open, the film takes the poster's place rather than sitting under it: one 16∶9 box,
-          // never the poster and the player stacked (`DECISIONS.md` §NNN).
+          // never the poster and the player stacked (`DECISIONS.md` §403).
           "&[open] > summary": { display: "none" },
         }}
       >

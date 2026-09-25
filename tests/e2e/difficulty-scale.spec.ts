@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * `DECISIONS.md` §NNN — the difficulty as a scale of dumbbells (the owner, 2026-09-25: "I want
+ * `DECISIONS.md` §399 — the difficulty as a scale of dumbbells (the owner, 2026-09-25: "I want
  * also for the difficulty to have a better icon system, like weights or something"), replacing
  * the phone-signal bars §112 first chose. One glyph, drawn by `DifficultyIcon.tsx` and shared
  * through `RoutePills` (§388) by every surface: the event page's pill, the listing card's, and
@@ -27,7 +27,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * "no sideways scroll", true of the old, narrower icon too and so never actually exercised the
  * wider one), and its measured pixel width is attached to the test report and printed at both.
  */
-test.describe("BR-REQ-041-01 the difficulty scale (§NNN)", () => {
+test.describe("BR-REQ-041-01 the difficulty scale (§399)", () => {
   test("the event page's route row keeps the word beside the scale, two of three dumbbells lit", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
     const traseu = page.getByTestId("event-facts").locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");

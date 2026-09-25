@@ -157,7 +157,7 @@ export default async function PreviewEventPage({ params }: Props) {
   };
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
-  // The forecast the public page will show (§NNN): a draft within seven days of its start reads it too.
+  // The forecast the public page will show (§402): a draft within seven days of its start reads it too.
   const weather = await weatherForEvent(preview, now);
 
   return (

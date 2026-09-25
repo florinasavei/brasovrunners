@@ -15,7 +15,7 @@ import { EVENT_TYPES, type EventType } from "./event-type";
 
 /**
  * The little the listing needs of an event to divide it up — plus whatever `readCoHosts`
- * needs to say whether it carries a partner (§344, amended §NNN — the owner, 22:15,
+ * needs to say whether it carries a partner (§344, amended §401 — the owner, 22:15,
  * 2026-09-25: "I want to see that «colaboration» event in the filters as well").
  */
 export type ListedEvent = { id: string; featured: boolean; type: string } & CoHostSource;
@@ -39,7 +39,7 @@ export type ListedEvent = { id: string; featured: boolean; type: string } & CoHo
  * ordinary card under the "no upcoming events" notice, which is what the page did before the
  * split and what the caller must keep asking for by passing the flag.
  *
- * `partner` is AND-combined with `type`, the same way it narrows the calendar (§NNN): both
+ * `partner` is AND-combined with `type`, the same way it narrows the calendar (§401): both
  * conditions must hold, never either. It never touches the hero either, for the same reason
  * `type` does not — the club's next race stays the club's answer to "what is next" whether or
  * not it happens to carry a partner.
@@ -77,7 +77,7 @@ export function presentEventTypes(events: readonly ListedEvent[], type?: EventTy
 
 /**
  * Whether the "Colaborare" / "Partnership" chip is worth offering (§133's rule, extended
- * §NNN): the club has a partnered event among what the page shows, or the address already
+ * §401): the club has a partnered event among what the page shows, or the address already
  * narrows by it — so a filtered page can still say what it is filtered by even where it now
  * matches nothing, exactly as a kind chip does (`presentEventTypes`, above).
  */
@@ -103,7 +103,7 @@ export function partnerFilterOffered(events: readonly CoHostSource[], partner: b
  * grid's contents while the key stood still, so the previous kind's grid stayed on screen for
  * the whole round-trip. The layout is dropped in the year view, where it has no meaning.
  *
- * `partner` joined the key for the same reason `type` is in it (§NNN): the calendar page reads
+ * `partner` joined the key for the same reason `type` is in it (§401): the calendar page reads
  * it off the address like `type` and narrows its rows the same way (`calendar/page.tsx`).
  */
 export function calendarBoundaryKey(

@@ -180,7 +180,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const emailHealth = await checkEmailHealth(db, now);
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
-  // The weather forecast's service and its last answer (§NNN): the cached entry the pages read, so no extra request inside the hour.
+  // The weather forecast's service and its last answer (§402): the cached entry the pages read, so no extra request inside the hour.
   const weather = await readWeatherStatus();
   /**
    * The Neon plan, and the month read against it: Free's ceilings and the red past eighty
@@ -813,7 +813,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
               })}
             </Typography>
             {/*
-              The weather on the event page and in the reminder (§NNN): Open-Meteo, public and keyless,
+              The weather on the event page and in the reminder (§402): Open-Meteo, public and keyless,
               so nothing to configure — only whether it answered. Amber when it did not, never red:
               a page without a forecast is a working page, and `/api/health` does not read it.
             */}

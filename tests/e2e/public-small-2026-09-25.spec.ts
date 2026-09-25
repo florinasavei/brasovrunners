@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * Three small things on the public site the owner asked for, 2026-09-25 (`DECISIONS.md` §NNN):
+ * Three small things on the public site the owner asked for, 2026-09-25 (`DECISIONS.md` §401):
  * of the event page's «Împreună cu» row, "this should be block, and collapsible"; of the
  * listing, "filters still need to be a bit above the grid" and, 22:15, "I want to see that
  * «colaboration» event in the filters as well".

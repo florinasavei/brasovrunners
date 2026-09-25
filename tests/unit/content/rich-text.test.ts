@@ -96,7 +96,7 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
       }
     });
 
-    it("keeps a stored poster address, and defaults it to null (`DECISIONS.md` §NNN)", () => {
+    it("keeps a stored poster address, and defaults it to null (`DECISIONS.md` §403)", () => {
       const withPoster = parseRichText(
         doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", poster: "https://media.example.test/yt-dQw4w9WgXcQ/web.webp" } }),
       );

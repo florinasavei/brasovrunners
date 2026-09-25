@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — the difficulty as a scale of dumbbells (the owner, 2026-09-25: "I want
+ * `DECISIONS.md` §399 — the difficulty as a scale of dumbbells (the owner, 2026-09-25: "I want
  * also for the difficulty to have a better icon system, like weights or something"), replacing
  * the phone-signal bars §112 first chose.
  *
@@ -25,7 +25,7 @@ function counts(html: string) {
   };
 }
 
-describe("§NNN DifficultyIcon — a scale of dumbbells, one through three lit", () => {
+describe("§399 DifficultyIcon — a scale of dumbbells, one through three lit", () => {
   it("EASY lights one dumbbell of three", () => {
     const html = renderToStaticMarkup(createElement(EASY_DIFFICULTY_ICON));
     expect(counts(html)).toEqual({ on: 1, off: 2 });

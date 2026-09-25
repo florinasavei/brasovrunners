@@ -96,7 +96,7 @@ export async function createPage<T extends Record<string, unknown>>(
 
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
-  // A film in the body gets the club's own copy of its thumbnail (`DECISIONS.md` §NNN), before
+  // A film in the body gets the club's own copy of its thumbnail (`DECISIONS.md` §403), before
   // the transaction opens (a network fetch, never a DB write).
   for (const locale of routing.locales) {
     fields.translations[locale].body = await attachYoutubePosters(db, fields.translations[locale].body);

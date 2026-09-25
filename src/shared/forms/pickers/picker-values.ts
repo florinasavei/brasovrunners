@@ -12,7 +12,7 @@ import { isDateValue } from "./wall-values";
  * zone the form also posts, exactly as before the pickers (`events/domain/zoned-time.ts`).
  *
  * The time half no longer goes through here: `TimeField` is the platform's own `<input
- * type="time">` since §NNN (amending §345), which reads and posts `HH:mm` directly with no
+ * type="time">` since §400 (amending §345), which reads and posts `HH:mm` directly with no
  * picker value to convert.
  *
  * What cannot be posted is posted as "": an empty box, or one half typed. The box itself says so

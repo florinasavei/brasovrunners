@@ -78,7 +78,7 @@ const PUBLIC_COLUMNS = {
   routeUrl: events.routeUrl,
   // A YouTube link, embedded from its id (BR-REQ-011-01 criterion 9).
   videoUrl: events.videoUrl,
-  // The club's own copy of that film's thumbnail (`DECISIONS.md` §NNN): fetched once at save
+  // The club's own copy of that film's thumbnail (`DECISIONS.md` §403): fetched once at save
   // time and stored under the event's prefix, so the facade shows this address rather than
   // asking YouTube's image host before the visitor presses play. Null until a fetch has
   // succeeded for the video currently stored.

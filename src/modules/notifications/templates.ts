@@ -409,7 +409,7 @@ export type TemplateData = {
   /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§332); on the confirmation and the reminder. */
   eventLinksUrl?: string;
   /**
-   * The forecast for the start (§NNN), on the reminder only: the hour's numbers and its kind, which
+   * The forecast for the start (§402), on the reminder only: the hour's numbers and its kind, which
    * each half of the bilingual message words in its own language (`weatherWords`). Absent beyond
    * seven days and whenever Open-Meteo did not answer — the facts block's «Vremea» row is then simply not there.
    */
@@ -1433,7 +1433,7 @@ export function buildTemplateContent(
     is the participant's own).
   */
   /*
-    The reminder's forecast (§NNN) is a row of that block, in this half's words — the pieces the
+    The reminder's forecast (§402) is a row of that block, in this half's words — the pieces the
     event page's «Vremea» row says. Only on the reminder, the message a runner opens the day
     before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
   */

@@ -3,7 +3,7 @@ import { GLYPH_BY_KIND, weatherKind, type WeatherGlyphName, type WeatherKind } f
 
 /**
  * The hourly forecast, read and picked — pure, so the page, the reminder and the tests read one
- * rule (§NNN; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat pe ceva API — API
+ * rule (§402; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat pe ceva API — API
  * gratis evident").
  */
 

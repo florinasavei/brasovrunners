@@ -35,7 +35,7 @@ const TOUCH_INTERVAL_HOURS = 1;
 
 /**
  * `key_prefix` as a `LIKE` needle, with `_` escaped so it is never read as a single-character
- * wildcard (found by re-review, `DECISIONS.md` §NNN). Every prefix used to be a UUID, which
+ * wildcard (found by re-review, `DECISIONS.md` §403). Every prefix used to be a UUID, which
  * cannot contain one — a poster's is `yt-<videoId>` (`modules/media/video-poster.ts`), and a
  * YouTube video id may carry an underscore, which without escaping matches any character there
  * and over-retains an orphan poster the sweep should have taken.
@@ -59,7 +59,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${pageTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\')
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
-  -- An event's own film poster (DECISIONS.md §NNN): the address is stored on the event row
+  -- An event's own film poster (DECISIONS.md §403): the address is stored on the event row
   -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
   -- the same substring check every other body uses.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.videoPosterUrl} LIKE ${keyPrefixNeedle} ESCAPE '\\')

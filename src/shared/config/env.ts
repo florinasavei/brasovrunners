@@ -113,7 +113,7 @@ export const envSchema = z
       .optional()
       .transform((value) => value === "true" || value === "1"),
     /**
-     * The weather forecast's stand-in (§NNN): `playwright.config.ts`'s `webServer` sets it, so
+     * The weather forecast's stand-in (§402): `playwright.config.ts`'s `webServer` sets it, so
      * the end-to-end suite's server answers every forecast with the same fixed hour and never
      * reaches Open-Meteo — a suite must not call a real third party, and a real forecast would
      * change what the page says from one run to the next. Ignored on production
@@ -125,7 +125,7 @@ export const envSchema = z
       .transform((value) => value === "true" || value === "1"),
     /**
      * `playwright.config.ts`'s `webServer` alone, never a developer's own shell (found by
-     * re-review, `DECISIONS.md` §NNN): a page or event save fetches a YouTube film's poster
+     * re-review, `DECISIONS.md` §403): a page or event save fetches a YouTube film's poster
      * from `i.ytimg.com` once, server-side (`modules/media/video-poster.ts`) — a real third
      * party a CI runner may have no route to, which otherwise leaves the end-to-end suite
      * either hanging on the fetch's own timeout or asserting a poster that never arrived. This
@@ -515,7 +515,7 @@ export const envSchema = z
             ? ("smtp" as const)
             : ("off" as const),
       /**
-       * Where the weather forecast comes from (§NNN). Derived, never set: `stub` for the
+       * Where the weather forecast comes from (§402). Derived, never set: `stub` for the
        * end-to-end suite's server (`E2E_WEATHER_STUB`, whatever its APP_ENV — CI runs the suite
        * under `test`), a fixed forecast with no request; `off` in the unit and integration tests
        * (APP_ENV=test), which never open a socket — a test that wants a forecast hands one in;

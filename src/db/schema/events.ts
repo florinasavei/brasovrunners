@@ -224,7 +224,7 @@ export const events = pgTable(
     videoUrl: text("video_url"),
 
     /**
-     * The club's own copy of that film's thumbnail (`DECISIONS.md` §NNN, AGENTS.md §17): the
+     * The club's own copy of that film's thumbnail (`DECISIONS.md` §403, AGENTS.md §17): the
      * address `modules/media/video-poster.ts` stored it at, fetched from YouTube once when
      * `video_url` was saved and never asked of Google again — the facade the visitor sees
      * shows this address, not `i.ytimg.com`, keeping §69/§110's rule that nothing but the

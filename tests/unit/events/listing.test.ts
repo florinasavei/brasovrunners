@@ -78,7 +78,7 @@ describe("listingSections divides the listing the way it always did", () => {
     expect(listingSections(rows, undefined, true).featured?.id).toBe("a");
   });
 
-  // §133, extended §NNN — the owner, 22:15, 2026-09-25: "I want to see that «colaboration»
+  // §133, extended §401 — the owner, 22:15, 2026-09-25: "I want to see that «colaboration»
   // event in the filters as well".
   it("narrows by partner, AND-combined with the kind, and never touches the hero", () => {
     const rows = [
@@ -182,7 +182,7 @@ describe("calendarBoundaryKey asks for the skeleton exactly when the query chang
     expect(calendarBoundaryKey({ kind: "month", month: { year: 2026, month: 1 } }, "grid")).toContain("2026-01");
   });
 
-  // §133, extended §NNN. The month view is narrowed by the partner filter the same way, so a
+  // §133, extended §401. The month view is narrowed by the partner filter the same way, so a
   // toggle of it (never left stale by §166/§167's own bug for the kind filter) needs a new key.
   it("changes with the partner filter, and stays put when it does not", () => {
     expect(calendarBoundaryKey(october, "grid")).not.toBe(calendarBoundaryKey(october, "grid", undefined, true));

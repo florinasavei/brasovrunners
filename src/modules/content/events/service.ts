@@ -773,7 +773,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
-  // No poster fetch here, ever (`DECISIONS.md` §NNN): this runs inside the whole-event save's
+  // No poster fetch here, ever (`DECISIONS.md` §403): this runs inside the whole-event save's
   // transaction, behind `lockEventForCapacity`. Every caller attaches the posters to what it
   // posts first, with `attachPostersToPostedTexts`, before any transaction opens; a film whose
   // fetch failed there stays without a poster until the next save.
@@ -849,7 +849,7 @@ const RICH_TEXT_BOXES = ["body", "rules", "schedule", "routeDescription", "excer
 type PosterOptions = { now?: Date; fetchImpl?: typeof fetch };
 
 /**
- * Every film in one language's posted boxes gets the club's own poster (`DECISIONS.md` §NNN),
+ * Every film in one language's posted boxes gets the club's own poster (`DECISIONS.md` §403),
  * before any transaction opens: `attachYoutubePosters` may make up to three sequential requests
  * to `i.ytimg.com` per film, a `sharp` encode and an R2 put, and none of that belongs behind
  * `lockEventForCapacity`, the lock every registration waits on.
@@ -1413,7 +1413,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
   // Outside the transaction below: this is a network fetch to YouTube, never something that
-  // should hold the event's row lock or the capacity check open (`DECISIONS.md` §NNN).
+  // should hold the event's row lock or the capacity check open (`DECISIONS.md` §403).
   const posterColumns = await resolveEventVideoPoster(db, {
     nextVideoUrl: fields.videoUrl,
     currentVideoUrl: current.videoUrl,
@@ -1942,7 +1942,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     : {};
   /*
     Every translation's YouTube posters, fetched before the transaction opens (`DECISIONS.md`
-    §NNN): `applyTranslationSave` runs inside the transaction below, behind `lockEventForCapacity`
+    §403): `applyTranslationSave` runs inside the transaction below, behind `lockEventForCapacity`
     — the serialization point every registration takes — and fetches nothing itself. Who may
     write each text is asked first, so nobody's save fetches a poster for a text it may not change.
   */
@@ -2154,7 +2154,7 @@ type PreparedEventCreate = {
  * every YouTube poster fetch (the event's own `video_url` and any film pasted into a body) — run
  * once, before any transaction opens.
  *
- * Split out of `createEvent` (found by re-review, `DECISIONS.md` §NNN): `createEventAndPublish`
+ * Split out of `createEvent` (found by re-review, `DECISIONS.md` §403): `createEventAndPublish`
  * used to call `createEvent(tx, …)` from *inside* its own transaction, so this exact same fetch
  * work ran while that outer transaction — and, once publication runs, the event row's own lock —
  * was open. This function takes a plain, non-transactional `db` handle so a caller can never make
@@ -2173,7 +2173,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
   // A film pasted straight into any of a new event's five rich texts, in either language, gets
-  // the club's own poster too (`DECISIONS.md` §NNN), before any transaction opens.
+  // the club's own poster too (`DECISIONS.md` §403), before any transaction opens.
   const posterOptions = { now, fetchImpl: input.fetchImpl };
   parsed.translations.ro = await attachPostersToParsedTexts(db, parsed.translations.ro, posterOptions);
   parsed.translations.en = await attachPostersToParsedTexts(db, parsed.translations.en, posterOptions);
@@ -2312,7 +2312,7 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
   input: CreateEventInput & { publish: boolean; repeat?: NewEventRepeatRule | null },
 ): Promise<CreateAndPublishResult> {
   const now = input.now ?? new Date();
-  // Every YouTube poster fetch, before any transaction opens (`DECISIONS.md` §NNN, found by
+  // Every YouTube poster fetch, before any transaction opens (`DECISIONS.md` §403, found by
   // re-review): this used to run inside `createEvent(tx, …)`, itself called from inside this
   // function's own transaction, so the fetches ran with the transaction — and, once
   // `publishNewEvent` moves the row through its transitions, that row's own lock — already open.

@@ -581,7 +581,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
   ("2027-09-30").
 
   The time box no longer has a format of its own to assert display-wise: a native
-  `<input type="time">` shows whatever the browser's own locale draws (§NNN amending §345,
+  `<input type="time">` shows whatever the browser's own locale draws (§400 amending §345,
   documented trade-off), so what this proves for the time is only what it has ever guaranteed —
   the *posted* value stays `HH:mm` on the 24-hour clock, never AM/PM, whatever the box shows.
 */

@@ -271,7 +271,7 @@ function RichTextEditorIsland({
     youtubeInvalid: string;
     youtubeCaption: string;
     youtubeRemove: string;
-    /** The club's own poster choice (§NNN, "să pot pune thumbnail"): pick, replace, or fall back to YouTube's own. */
+    /** The club's own poster choice (§403, "să pot pune thumbnail"): pick, replace, or fall back to YouTube's own. */
     youtubePoster: string;
     youtubePosterUploading: string;
     youtubePosterFailed: string;
@@ -534,7 +534,7 @@ function RichTextEditorIsland({
   };
 
   /**
-   * The club's own poster for the selected film (§NNN, "să pot pune thumbnail"): the same
+   * The club's own poster for the selected film (§403, "să pot pune thumbnail"): the same
    * shrink-and-upload `insertImage` uses, written to the *selected* youtube node's `poster`
    * rather than inserted as a picture of its own. `posterSource: "club"` is what keeps
    * `attachYoutubePosters` from ever replacing it with YouTube's own thumbnail on a later save.
@@ -1488,7 +1488,7 @@ function RichTextEditorIsland({
               </ToggleButtonGroup>
             </Box>
             {/*
-              The club's own poster (§NNN, "să pot pune thumbnail"): the same upload `insertImage`
+              The club's own poster (§403, "să pot pune thumbnail"): the same upload `insertImage`
               uses, written to this node's `poster` rather than inserted as a picture of its own.
               "Use YouTube's" only shows once a club poster is picked — it clears `posterSource`
               so `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
@@ -1707,7 +1707,7 @@ const YoutubeNode = Node.create({
       // The defaults emit nothing: a film stored before §266 keeps its exact JSON.
       widthPercent: { default: 100 },
       align: { default: "block" },
-      // The club's own poster (§NNN) — declared here so it survives the editor's round trip
+      // The club's own poster (§403) — declared here so it survives the editor's round trip
       // (`getJSON`/`setContent`) instead of being dropped as an attribute Tiptap never heard of.
       poster: { default: null },
       posterSource: { default: null },

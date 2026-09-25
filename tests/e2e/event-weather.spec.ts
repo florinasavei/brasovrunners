@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Vremea» / «Weather» on the event page, within seven days of the start.
+ * BR-REQ-011-01 (§402) — «Vremea» / «Weather» on the event page, within seven days of the start.
  * A new criterion of that requirement, as the partner marker and the headlamp pill each got theirs
- * (criteria 18–19, 23); `docs:land` adds it alongside `DECISIONS.md` §NNN.
+ * (criteria 18–19, 23); `docs:land` adds it alongside `DECISIONS.md` §402.
  *
  * The suite's server answers every forecast with one fixed hour (`E2E_WEATHER_STUB`, set by
  * `playwright.config.ts`): partly cloudy, 14 °C, a 20% chance of rain, an 11 km/h wind — and never
@@ -29,7 +29,7 @@ const SOON =
 const row = (page: Page, label: string) =>
   page.locator('[data-testid="event-facts"] dt').filter({ hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
 
-test.describe("BR-REQ-011-01 the weather at the start (§NNN)", () => {
+test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
   test("the Romanian page says the forecast for a start within seven days, and credits Open-Meteo", async ({ page }) => {
     await page.goto(SOON.ro);
     const weather = row(page, "Vremea");

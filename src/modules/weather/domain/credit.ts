@@ -1,5 +1,5 @@
 /**
- * Open-Meteo's addresses, held in this one module (§NNN): its own site, which the forecast's credit
+ * Open-Meteo's addresses, held in this one module (§402): its own site, which the forecast's credit
  * links to — its data is published under CC BY 4.0, whose one condition is that the source is
  * named, on the page as a link, in the reminder as a word — and its forecast API, which the server
  * asks (`source.ts`). The site is the one literal, a third party's fixed host listed in

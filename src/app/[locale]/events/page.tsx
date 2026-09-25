@@ -104,7 +104,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
   // The layout the month links keep (§137); `ListingLead` passes it to the filter's own links.
   const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
-  // The "Colaborare" / "Partnership" filter (§133, §NNN), AND-combined with `type`: the owner,
+  // The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`: the owner,
   // 22:15, 2026-09-25: "I want to see that «colaboration» event in the filters as well".
   const partner = (Array.isArray(partnerParam) ? partnerParam[0] : partnerParam) === "1";
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -202,7 +202,7 @@ async function ListingLead({
 }: {
   listing: Promise<Resilient<Listing>>;
   type?: EventType;
-  /** The "Colaborare" / "Partnership" filter (§133, §NNN), AND-combined with `type`. */
+  /** The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`. */
   partner: boolean;
   layout: CalendarLayout;
   locale: "ro" | "en";
@@ -220,7 +220,7 @@ async function ListingLead({
   // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
   // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
   const presentTypes = presentEventTypes(events, type);
-  // Same rule, for "Colaborare" (§NNN): offered only while a partnered event is among what the
+  // Same rule, for "Colaborare" (§401): offered only while a partnered event is among what the
   // page shows, or the address already narrows by it. Read off what the filter can actually
   // narrow — the list, not the hero, which the filter never touches (§376 fix round finding 7):
   // offering the chip on the hero's partner alone would empty the grid on a press.
@@ -242,12 +242,12 @@ async function ListingLead({
       {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} />}
 
       {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133),
-          plus "Colaborare" / "Partnership" (§NNN, the owner, 22:15, 2026-09-25) when the club has
+          plus "Colaborare" / "Partnership" (§401, the owner, 22:15, 2026-09-25) when the club has
           a partnered event to show — AND-combined with the kind above it, its own state in the
           address (`?partner=1`), never replacing the kind's own chip row. Fewer than two kinds
           and no partnered event is nothing to filter.
 
-          The gap under this row and above the grid (§NNN — the owner: "filters still need to be
+          The gap under this row and above the grid (§401 — the owner: "filters still need to be
           a bit above the grid") is `DENSITY.sectionGap`, one density-token step: measured on the
           built listing at 320/360/390/412 and desktop, 0px before this change at every width
           (the filter row carried no `mb` and the grid no `mt`), 16px on a phone and 24px from
@@ -401,7 +401,7 @@ async function ListingBody({
 }: {
   listing: Promise<Resilient<Listing>>;
   type?: EventType;
-  /** The "Colaborare" / "Partnership" filter (§133, §NNN), AND-combined with `type`. */
+  /** The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`. */
   partner: boolean;
   now: Date;
 }) {

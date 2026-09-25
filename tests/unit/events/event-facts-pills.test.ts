@@ -115,7 +115,7 @@ function chips(fragment: string) {
 }
 
 describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)", () => {
-  it("in this order: when, where, the route, the cost, the age — the partners no longer among them (§NNN)", async () => {
+  it("in this order: when, where, the route, the cost, the age — the partners no longer among them (§401)", async () => {
     // The partners moved out of the `<dl>` into their own collapsible `<section id="partners">`
     // (the owner, 2026-09-25: "this should be block, and collapsible") — so the row order below
     // them is unchanged, and "Împreună cu" is no longer one of these rows at all.
@@ -168,7 +168,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     expect(new Set(glyphClasses).size).toBe(1);
     expect(route.dd).toContain('data-testid="StraightenIcon"');
     expect(route.dd).toContain('data-testid="TrendingUpIcon"');
-    // "Ușor" (EASY) is one dumbbell lit, two faint (`DifficultyIcon.tsx`, §NNN).
+    // "Ușor" (EASY) is one dumbbell lit, two faint (`DifficultyIcon.tsx`, §399).
     expect((route.dd.match(/data-testid="difficulty-dumbbell-on"/g) ?? []).length).toBe(1);
     expect((route.dd.match(/data-testid="difficulty-dumbbell-off"/g) ?? []).length).toBe(2);
   });
@@ -304,7 +304,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
     // Every `<dl>` row draws its glyph the same way — one shared shape, so each row's own rule
     // is checked rather than one shared class name, but every rule carries the same twenty
     // pixels, colour and alignment. The partners' own glyph sits in its section's `<summary>`
-    // now (§NNN), not in a `<dt>`, but it is `ROW_ICON_SX` too, so it is checked the same way.
+    // now (§401), not in a `<dt>`, but it is `ROW_ICON_SX` too, so it is checked the same way.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
     const glyphs = rows(html).map((r) => /<svg\b[^>]*>/.exec(r.dt)?.[0] ?? "");
     expect(glyphs).toHaveLength(5);

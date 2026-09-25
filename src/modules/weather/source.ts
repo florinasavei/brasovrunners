@@ -13,7 +13,7 @@ import {
 } from "./domain/forecast";
 
 /**
- * The weather at an event's start, from Open-Meteo (§NNN; the owner, 2026-09-25: "vreau să afișez
+ * The weather at an event's start, from Open-Meteo (§402; the owner, 2026-09-25: "vreau să afișez
  * și starea vremii bazat pe ceva API — API gratis evident").
  *
  * **Why Open-Meteo.** Free, keyless and without an account: nothing to sign up for, no secret on
@@ -270,7 +270,7 @@ export async function weatherForEvent(
 }
 
 /**
- * What the system panel says about the service (§NNN): the source, and its last answer — when it
+ * What the system panel says about the service (§402): the source, and its last answer — when it
  * was read and how many hours it holds — or why there is none. Reads the same cached entry the
  * pages read, so opening the panel costs no request inside the hour. An answer past
  * `MAX_FORECAST_AGE_MS` is asked again as the pages ask it; one that still reads older than that

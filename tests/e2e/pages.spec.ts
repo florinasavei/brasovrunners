@@ -48,7 +48,7 @@ async function writeBody(
 /**
  * A stand-in for YouTube's embedded player, served at the embed's own address by `page.route` —
  * this suite never reaches YouTube — and faithful to the one rule of the IFrame API's
- * `postMessage` protocol the volume bar depends on (`DECISIONS.md` §NNN): the player posts
+ * `postMessage` protocol the volume bar depends on (`DECISIONS.md` §403): the player posts
  * nothing to its parent, not `onReady`, not `infoDelivery`, until the parent has sent it
  * `listening`. It then answers every command with its state, as the real player does.
  */
@@ -153,7 +153,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // beneath it is text — the editor's output rendered through the §11.3 allowlist.
     await expect(page.getByRole("heading", { name: "Cine suntem" })).toBeVisible();
     await expect(page.getByText("Un club de alergare din Brașov.")).toBeVisible();
-    // The film: a poster facade, nothing fetched from YouTube on load (§69, §110, §NNN) — a
+    // The film: a poster facade, nothing fetched from YouTube on load (§69, §110, §403) — a
     // native `<details>`/`<summary>` disclosure (found by re-review): the iframe is already in
     // the page's HTML, but a closed `<details>` hides its contents exactly like `display: none`,
     // so it is not visible and — in every evergreen browser — nothing inside it is fetched
@@ -174,7 +174,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // Open, the film takes the poster's place: the summary is gone, not stacked above the player.
     await expect(playButton).toBeHidden();
 
-    // The bar: mute toggles `aria-pressed` (`DECISIONS.md` §NNN), and — found by re-review — it
+    // The bar: mute toggles `aria-pressed` (`DECISIONS.md` §403), and — found by re-review — it
     // never overlaps the player's own controls, which is exactly where an earlier version laid
     // it: a normal-flow row under the 16∶9 box, not a strip absolutely positioned over its bottom.
     const muteButton = page.getByRole("button", { name: "Fără sunet" });

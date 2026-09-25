@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — the facade's promise before the click, and the shape of the address it
+ * `DECISIONS.md` §403 — the facade's promise before the click, and the shape of the address it
  * mounts after. `VideoFacade` is a Server Component now (found by re-review): the disclosure —
  * poster, play control, iframe — is a native `<details>`/`<summary>`, so `renderToStaticMarkup`
  * is exactly the HTML a browser with no JavaScript at all receives and can already open. The
@@ -35,7 +35,7 @@ const { youtubeEmbedUrl } = await import("@/modules/events/domain/video");
 
 const LABELS = { play: "Redă filmul", mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" };
 
-describe("§NNN VideoFacade — a native disclosure, server-rendered", () => {
+describe("§403 VideoFacade — a native disclosure, server-rendered", () => {
   it("carries no image-host address for the poster, whether or not one is stored — the iframe's own address is real from the first paint, deferred by the closed <details>", () => {
     for (const posterUrl of [null, "https://media.example.test/yt-dQw4w9WgXcQ/web.webp"]) {
       const html = renderToStaticMarkup(
@@ -113,7 +113,7 @@ describe("§NNN VideoFacade — a native disclosure, server-rendered", () => {
   });
 });
 
-describe("§NNN the embed address after the click", () => {
+describe("§403 the embed address after the click", () => {
   it("is built from the id and the deployment's origin alone, on the no-cookie host, with the js api enabled", () => {
     const src = youtubeEmbedUrl("dQw4w9WgXcQ", "https://app.example.test");
     expect(src.startsWith("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?")).toBe(true);
@@ -123,7 +123,7 @@ describe("§NNN the embed address after the click", () => {
   });
 });
 
-describe("§NNN VideoVolumeBar — its aria markup at rest (found by re-review: this had no unit test)", () => {
+describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: this had no unit test)", () => {
   it("starts unmuted: the mute button's own label, aria-pressed false, and the slider's own label", () => {
     const html = renderToStaticMarkup(
       createElement(VideoVolumeBar, { frameId: "video-frame-1", labels: { mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" } }),

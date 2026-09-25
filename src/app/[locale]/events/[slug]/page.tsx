@@ -164,7 +164,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   // asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in.
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
-  // The forecast for the start (§NNN): read on the server, from Open-Meteo through the data cache,
+  // The forecast for the start (§402): read on the server, from Open-Meteo through the data cache,
   // only within seven days of it; null — and no row — otherwise or when the service did not answer.
   const weather = await weatherForEvent(event, now);
   return (

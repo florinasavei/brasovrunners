@@ -30,7 +30,7 @@ export type TimeFieldProps = {
 
 /**
  * A time of day in the backoffice: the platform's own `<input type="time">`, always *posting*
- * `HH:mm` on the 24-hour clock (`DECISIONS.md` §345, amended by §NNN; the owner, 2026-09-25, of
+ * `HH:mm` on the 24-hour clock (`DECISIONS.md` §345, amended by §400; the owner, 2026-09-25, of
  * the MUI wheel picker: "I simply hate this time picker"). The browser may *show* a 12-hour
  * clock face with its own AM/PM in some locales, exactly as §303 found before the pickers went
  * in, but the value this box carries and posts never changes shape, and a phone gets its own OS

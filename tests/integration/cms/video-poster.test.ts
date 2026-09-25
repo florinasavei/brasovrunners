@@ -26,7 +26,7 @@ import { runRegistrationMaintenance } from "@/modules/registrations/maintenance"
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN: a YouTube poster is fetched once, by the server, and stored in the
+ * `DECISIONS.md` §403: a YouTube poster is fetched once, by the server, and stored in the
  * club's own bucket — so the facade a visitor's browser renders never asks `i.ytimg.com`
  * before the click (§69/§110). Save → poster stored → read model, and the orphan sweep counts
  * it, exactly as it counts any other picture (AGENTS.md §17).
@@ -56,7 +56,7 @@ const fetchAlwaysFails: typeof fetch = vi.fn(async () => {
   throw new Error("network is down");
 }) as unknown as typeof fetch;
 
-describe("§NNN the club's own copy of a YouTube poster", () => {
+describe("§403 the club's own copy of a YouTube poster", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -282,7 +282,7 @@ describe("§NNN the club's own copy of a YouTube poster", () => {
       expect(rows).toHaveLength(0);
     });
 
-    it("sweeps a poster whose id carries an underscore even though a look-alike address elsewhere differs only in that one character (found by re-review, `DECISIONS.md` §NNN)", async () => {
+    it("sweeps a poster whose id carries an underscore even though a look-alike address elsewhere differs only in that one character (found by re-review, `DECISIONS.md` §403)", async () => {
       const bytes = await JPEG();
       const t0 = new Date("2026-09-01T10:00:00Z");
       // A YouTube id may itself carry `_`, unlike the UUIDs every other `key_prefix` used to be.
@@ -416,7 +416,7 @@ describe("§NNN the club's own copy of a YouTube poster", () => {
     });
 
     /**
-     * No poster fetch ever runs inside a transaction, on any entry point (`DECISIONS.md` §NNN).
+     * No poster fetch ever runs inside a transaction, on any entry point (`DECISIONS.md` §403).
      *
      * The proof is recorded, never thrown: `db.transaction` is wrapped to count how many are open,
      * and every call to the global `fetch` — the one every poster fetch reaches when no

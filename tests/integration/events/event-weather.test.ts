@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Vremea» on the event page: the page reads the forecast
+ * BR-REQ-011-01 (§402) — «Vremea» on the event page: the page reads the forecast
  * (`weatherForEvent`, Open-Meteo answered here by a stub `fetch`) and the facts draw it as a row,
  * glyph, word, temperature, chance of rain and wind, with the credit under it. Absent beyond
  * seven days and absent when the service fails — never a sentence about a missing forecast.
@@ -118,10 +118,10 @@ function rows(html: string) {
   }));
 }
 
-describe("BR-REQ-011-01 the event page's «Vremea» row (§NNN)", () => {
+describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
   it("draws the forecast for the start, after the short facts and before the partners", async () => {
     const html = await page();
-    expect(rows(html).map((row) => row.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vremea", "Împreună cu"]);
+    expect(rows(html).map((row) => row.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vremea"]);
     const weather = rows(html).find((row) => row.label === "Vremea");
     expect(text(weather?.dd ?? "")).toContain("Furtună");
     expect(text(weather?.dd ?? "")).toContain("16 °C");
@@ -155,8 +155,8 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§NNN)", () => {
   });
 
   it("is absent — no row, no sentence — when Open-Meteo fails", async () => {
-    const html = await page({}, failing);
-    expect(rows(html).map((row) => row.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Împreună cu"]);
+    const html = await page({}, failing); // the partners are a section of their own since §401, not a facts row
+    expect(rows(html).map((row) => row.label)).toEqual(["Când", "Unde", "Traseu", "Cost"]);
     expect(text(html)).not.toContain("Open-Meteo");
   });
 

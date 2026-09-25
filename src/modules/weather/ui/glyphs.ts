@@ -12,7 +12,7 @@ import type { Glyph } from "@/modules/events/ui/glyphs";
 import type { WeatherGlyphName } from "../domain/wmo";
 
 /**
- * The forecast's glyph by name (§NNN), one file per glyph from `@mui/icons-material` (§90), never
+ * The forecast's glyph by name (§402), one file per glyph from `@mui/icons-material` (§90), never
  * the barrel. The domain says a name (`wmo.ts`), so the reminder — which draws no icon — and the
  * page read one table; only a Server Component turns the name into an icon, and it never hands
  * the icon to a client component (§370).

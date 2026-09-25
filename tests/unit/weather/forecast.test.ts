@@ -30,7 +30,7 @@ import { OPEN_METEO_API, OPEN_METEO_SITE } from "@/modules/weather/domain/credit
 import { env, envSchema } from "@/shared/config/env";
 
 /**
- * §NNN — the weather at an event's start, from Open-Meteo: the WMO code map, the hour a start
+ * §402 — the weather at an event's start, from Open-Meteo: the WMO code map, the hour a start
  * reads, the seven-day window, every failure read as no forecast, and the words in both
  * languages. No test here opens a socket: every request goes through a `fetch` handed in.
  */
@@ -68,7 +68,7 @@ function forecast(): HourlyForecast {
   return parsed;
 }
 
-describe("§NNN the WMO weather codes, in words and glyphs", () => {
+describe("§402 the WMO weather codes, in words and glyphs", () => {
   it("names every code Open-Meteo documents, and nothing else", () => {
     const documented = [0, 1, 2, 3, 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99];
     for (const code of documented) expect(weatherKind(code), `code ${code}`).not.toBeNull();
@@ -97,7 +97,7 @@ describe("§NNN the WMO weather codes, in words and glyphs", () => {
   });
 });
 
-describe("§NNN the hour a start reads", () => {
+describe("§402 the hour a start reads", () => {
   it("reads the hour nearest the start: 08:00 its own, 08:20 the 08:00 hour, 08:30 the 09:00 one", () => {
     const hours = forecast();
     expect(pickHour(hours, START)?.hourAt).toBe(START.getTime());
@@ -138,7 +138,7 @@ describe("§NNN the hour a start reads", () => {
   });
 });
 
-describe("§NNN the seven days a forecast is shown for", () => {
+describe("§402 the seven days a forecast is shown for", () => {
   it("is ahead of now and no more than seven days away", () => {
     expect(WEATHER_WINDOW_DAYS).toBe(7);
     expect(withinWeatherWindow(START, NOW)).toBe(true);
@@ -162,7 +162,7 @@ describe("§NNN the seven days a forecast is shown for", () => {
   });
 });
 
-describe("§NNN the request, and every failure read as no forecast", () => {
+describe("§402 the request, and every failure read as no forecast", () => {
   it("asks Open-Meteo's forecast for the club's place, hourly, in Unix time and km/h", async () => {
     const fetchImpl = json(answer());
     await fetchOpenMeteo(fetchImpl, () => NOW.getTime());
@@ -228,7 +228,7 @@ describe("§NNN the request, and every failure read as no forecast", () => {
   });
 });
 
-describe("§NNN a cached answer too old to trust", () => {
+describe("§402 a cached answer too old to trust", () => {
   it("bounds the age at twice the cache's own step", () => {
     expect(MAX_FORECAST_AGE_MS).toBe(2 * WEATHER_CACHE_SECONDS * 1000);
   });
@@ -278,7 +278,7 @@ describe("§NNN a cached answer too old to trust", () => {
   });
 });
 
-describe("§NNN the place is the club's own", () => {
+describe("§402 the place is the club's own", () => {
   it("asks for `CLUB_COORDINATES`, the place the night-event decision reads (§394)", () => {
     const url = new URL(openMeteoUrl());
     expect(Number(url.searchParams.get("latitude"))).toBe(env.CLUB_COORDINATES.latitude);
@@ -292,7 +292,7 @@ describe("§NNN the place is the club's own", () => {
   });
 });
 
-describe("§NNN where the forecast comes from, by environment", () => {
+describe("§402 where the forecast comes from, by environment", () => {
   it("is off in the tests, the stub for the end-to-end server, and Open-Meteo everywhere else", () => {
     expect(envSchema.parse({ APP_ENV: "test" }).WEATHER_SOURCE).toBe("off");
     expect(envSchema.parse({ APP_ENV: "test", E2E_WEATHER_STUB: "true" }).WEATHER_SOURCE).toBe("stub");
@@ -306,7 +306,7 @@ describe("§NNN where the forecast comes from, by environment", () => {
   });
 });
 
-describe("§NNN the forecast in words, in both languages", () => {
+describe("§402 the forecast in words, in both languages", () => {
   const reading = { hourAt: START.getTime(), code: 2, kind: "partlyCloudy", glyph: "partlyCloudy", temperatureC: 13.6, precipitationProbability: 20, windKmh: 11.4 } as const;
 
   it("says the kind, whole degrees, the chance of rain and the wind in Romanian", () => {

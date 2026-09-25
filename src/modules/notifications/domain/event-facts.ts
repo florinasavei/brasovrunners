@@ -87,7 +87,7 @@ function eventWords(locale: Locale): Translate {
 }
 
 /**
- * The forecast's row, already in this half's words (`weatherWords`): the reminder passes it (§NNN),
+ * The forecast's row, already in this half's words (`weatherWords`): the reminder passes it (§402),
  * the confirmation and the declaration request never do — a forecast read weeks before race day
  * would be out of date by then.
  */
@@ -106,7 +106,7 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
     : [time(details.startsAt)];
   rows.push({ label: t("when"), lines: [[{ text: day }, ...times.map((text) => ({ text }))]] });
 
-  // Vremea: the forecast at the start, right under «Când», the hour it is for (§NNN), and the credit its licence asks for, as a word.
+  // Vremea: the forecast at the start, right under «Când», the hour it is for (§402), and the credit its licence asks for, as a word.
   if (weather) rows.push({ label: weather.label, lines: [[{ text: [weather.summary, ...weather.details].join(", ") }], [{ text: weather.credit }]] });
 
   // Unde: the page's sentence while the place is to be announced (§328), and nothing else.

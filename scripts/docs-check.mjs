@@ -300,7 +300,7 @@ const PROVIDER_HOSTS = [
   // Google's SMTP submission host, the default of CONTACT_SMTP_HOST (§149): Google's own, fixed, and overridable by the variable.
   "smtp.gmail.com",
   // Open-Meteo's site, which the forecast's credit links to; the server asks its `api.` subdomain,
-  // derived from it (§NNN, the weather on the event page): public, keyless, fixed, theirs.
+  // derived from it (§402, the weather on the event page): public, keyless, fixed, theirs.
   "open-meteo.com",
 ];
 

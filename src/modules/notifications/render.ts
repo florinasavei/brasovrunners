@@ -384,7 +384,7 @@ async function renderRow(
     }
   }
   /*
-    The forecast for the start on the reminder (§NNN), read at send time — the reminder goes out a
+    The forecast for the start on the reminder (§402), read at send time — the reminder goes out a
     day or two before, inside the seven days a forecast is shown for — through the same cached
     request the event page makes. Each half words it in its own language (`templates.ts`). Nothing
     when Open-Meteo did not answer within its three seconds: the reminder goes out without the line,

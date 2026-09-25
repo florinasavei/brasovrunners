@@ -132,7 +132,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/sign-in/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The listing.
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2.5, xsBefore: 2.5 },
-  // Filter row: `mt` above it (unchanged), plus three more below it (§NNN — the owner:
+  // Filter row: `mt` above it (unchanged), plus three more below it (§401 — the owner:
   // "filters still need to be a bit above the grid"), one on each of `ListingBody`'s three
   // return shapes so the grid, the empty notice and the "Alte evenimente" fold each keep the
   // same gap under the row whichever one follows it — the filter row carried no `mb` and the
@@ -159,7 +159,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "mb", step: "gapXs", sm: 0, xsBefore: 1 },
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
-  // The partners section (§NNN — "this should be block, and collapsible"): its own gap under
+  // The partners section (§401 — "this should be block, and collapsible"): its own gap under
   // the `<dl>`, new rather than converted — a section that did not exist before this change.
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },

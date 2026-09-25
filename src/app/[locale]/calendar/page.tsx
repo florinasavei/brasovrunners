@@ -80,7 +80,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
   const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
-  // The "Colaborare" / "Partnership" filter (§133, §NNN), AND-combined with `type`, kept the
+  // The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`, kept the
   // same way through the month's own links.
   const partner = (Array.isArray(partnerParam) ? partnerParam[0] : partnerParam) === "1";
   const query: Record<string, string> = {

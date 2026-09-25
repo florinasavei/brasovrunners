@@ -103,7 +103,7 @@ export default defineConfig({
        */
       E2E_DISABLE_NEON: "true",
       /**
-       * The weather forecast (§NNN) the same way: the suite's server answers every forecast with
+       * The weather forecast (§402) the same way: the suite's server answers every forecast with
        * one fixed hour (`weather/source.ts`, `stubForecast`) and never reaches Open-Meteo, so a
        * spec can read the row's words and a run does not depend on somebody else's API.
        */

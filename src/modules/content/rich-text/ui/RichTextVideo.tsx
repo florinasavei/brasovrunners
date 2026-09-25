@@ -8,7 +8,7 @@ import VideoFacade from "@/shared/ui/VideoFacade";
 import { imageFigureSx } from "./image-layout";
 
 /**
- * A YouTube film inside an editorial body (`DECISIONS.md` §110, §266, §NNN).
+ * A YouTube film inside an editorial body (`DECISIONS.md` §110, §266, §403).
  *
  * ## It is a figure in the text, sized like a picture
  *

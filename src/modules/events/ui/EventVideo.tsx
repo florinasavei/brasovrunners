@@ -8,7 +8,7 @@ import VideoFacade from "@/shared/ui/VideoFacade";
 
 /**
  * Last year's film on the event page (BR-REQ-011-01 criterion 9), smarter since `DECISIONS.md`
- * §NNN: a real poster before the click, mute and a volume bar after it — `VideoFacade`, shared
+ * §403: a real poster before the click, mute and a volume bar after it — `VideoFacade`, shared
  * with the editorial body's own film (`RichTextVideo`).
  *
  * `posterUrl` is this site's own stored copy of the thumbnail (`videoPosterUrl`, fetched once
@@ -25,7 +25,7 @@ export default async function EventVideo({
 }: {
   videoUrl: string | null;
   posterUrl: string | null;
-  /** Read into the play button's accessible name (§NNN, found by re-review): several films on
+  /** Read into the play button's accessible name (§403, found by re-review): several films on
    *  one page used to share the one generic "Play the film" label. */
   eventTitle?: string;
 }) {

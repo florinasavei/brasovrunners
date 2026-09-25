@@ -4,7 +4,7 @@ import ro from "../../../messages/ro.json";
 import type { WeatherReading } from "./domain/forecast";
 
 /**
- * A forecast in words, in one language (§NNN) — the page's row and the reminder's row say the
+ * A forecast in words, in one language (§402) — the page's row and the reminder's row say the
  * same pieces in the same order, from the `Weather` catalogue in both languages.
  *
  * `createTranslator`, not a request's `getTranslations`, because the reminder is rendered by the

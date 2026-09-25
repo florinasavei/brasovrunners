@@ -7,7 +7,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-080-01 (§NNN) — the reminder carries the forecast for the start as a «Vremea» row of its
+ * BR-REQ-080-01 (§402) — the reminder carries the forecast for the start as a «Vremea» row of its
  * facts block (§392), right under «Când», each half of the bilingual message in its own words, read
  * at send time through the same request the event page makes; no row when Open-Meteo fails, and
  * none on any other message.
@@ -47,7 +47,7 @@ vi.mock("@/modules/weather/source", async (importOriginal) => {
 
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
 
-describe("BR-REQ-080-01 the reminder's forecast line (§NNN)", () => {
+describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let participantId: string;

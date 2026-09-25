@@ -7,7 +7,7 @@ import { bodyImageSrc, getStorage, objectKey } from "./storage";
 
 /**
  * A YouTube film's poster, fetched once and kept in the club's own store
- * (`DECISIONS.md` §NNN, AGENTS.md §17, `DECISIONS.md` §69/§110's "nothing is fetched from
+ * (`DECISIONS.md` §403, AGENTS.md §17, `DECISIONS.md` §69/§110's "nothing is fetched from
  * Google until the reader presses" rule).
  *
  * The *server* fetches YouTube's own thumbnail — a request from this application to
@@ -44,7 +44,7 @@ export function posterUrlFor(videoId: string): string {
 type FetchImage = typeof fetch;
 
 /**
- * How long a single quality is given to answer, however this runs (`DECISIONS.md` §NNN, found by
+ * How long a single quality is given to answer, however this runs (`DECISIONS.md` §403, found by
  * re-review): up to three qualities are tried in sequence, so with no timeout a hanging
  * `i.ytimg.com` could keep a save waiting for minutes — worse, one running inside a transaction
  * would outlive the pool's 30-second `idle_in_transaction_session_timeout` (`src/db/client.ts`)
@@ -54,7 +54,7 @@ const POSTER_FETCH_TIMEOUT_MS = 3000;
 
 /**
  * A fixture poster, built once in-process with `sharp` — never a request anywhere — for
- * `E2E_STUB_YOUTUBE_POSTER` (`shared/config/env.ts`, found by re-review, `DECISIONS.md` §NNN):
+ * `E2E_STUB_YOUTUBE_POSTER` (`shared/config/env.ts`, found by re-review, `DECISIONS.md` §403):
  * the end-to-end suite's own server otherwise makes a real request to `i.ytimg.com` on every
  * save that carries a film, which a CI runner with no route to it turns into either the full
  * fetch timeout on every quality tried or a poster that never arrives — a real dependency the
@@ -212,7 +212,7 @@ type RichTextLike = { type: "doc"; content?: Array<YoutubeBlockLike | OtherBlock
 
 /**
  * Every `youtube` block in a body whose `poster` is not already set gets one fetched
- * (`DECISIONS.md` §NNN) — a body may embed the same film the event's `video_url` does, or
+ * (`DECISIONS.md` §403) — a body may embed the same film the event's `video_url` does, or
  * several different films, and each is stored once and keyed by its own video id. A block
  * whose fetch fails is left exactly as parsed (`poster: null`), and `RichTextVideo` falls back
  * to the text facade for that one film — never a broken image, and never a reason to refuse
@@ -255,7 +255,7 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
  *   row already has a YouTube `video_url` and no poster yet — an event saved before this feature
  *   existed, or whose one fetch failed, gets one more try on its next ordinary save, rather than
  *   keeping the blank rectangle forever because nothing ever posts `videoUrl` again to give
- *   `nextVideoUrl` a value (found by re-review, `DECISIONS.md` §NNN).
+ *   `nextVideoUrl` a value (found by re-review, `DECISIONS.md` §403).
  * - Cleared to null: the poster is cleared with it — there is no film to show a poster for.
  * - A link that is not a YouTube link: untouched; the column already means nothing for it.
  * - A YouTube link: a poster is fetched (or reused) for its id. Success stores the new

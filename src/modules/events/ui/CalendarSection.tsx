@@ -55,7 +55,7 @@ export default async function CalendarSection({
   layout: CalendarLayout;
   /** The type filter the address carries, so the month's own links keep it. */
   type?: EventType;
-  /** The "Colaborare" / "Partnership" filter the address carries (§133, §NNN), AND-combined with `type`. */
+  /** The "Colaborare" / "Partnership" filter the address carries (§133, §401), AND-combined with `type`. */
   partner?: boolean;
   query: Record<string, string>;
   now: Date;
