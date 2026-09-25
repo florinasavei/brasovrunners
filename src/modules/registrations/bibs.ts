@@ -252,6 +252,19 @@ export type SettledBib = {
 };
 
 /**
+ * Who a close numbers — and so who is sent "here is your race number" — at one event: a real
+ * registration still holding a place with no final number. The settle and the forecast on
+ * `/admin/emails` (§383) read the same condition.
+ */
+export function awaitingSettledNumber() {
+  return and(
+    eq(registrations.kind, "REAL"),
+    isNull(registrations.bibNumber),
+    inArray(registrations.status, [...PLACE_HOLDING_STATUSES]),
+  );
+}
+
+/**
  * Turn the provisional sequence into the final one, once, when registration closes
  * (`DECISIONS.md` §214).
  *
@@ -300,14 +313,7 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .where(
-      and(
-        eq(registrations.eventId, input.eventId),
-        eq(registrations.kind, "REAL"),
-        isNull(registrations.bibNumber),
-        inArray(registrations.status, [...PLACE_HOLDING_STATUSES]),
-      ),
-    )
+    .where(and(eq(registrations.eventId, input.eventId), awaitingSettledNumber()))
     // Registration order, by the number they were already shown; the id breaks a tie, and a
     // row with no provisional number at all (given a place before this existed) goes last.
     .orderBy(

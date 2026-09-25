@@ -15,7 +15,7 @@ import type { Locale } from "@/i18n/routing";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
-import { computeOccupied } from "./domain/capacity";
+import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
 import { allowedFromStatuses, holdsAPlace, PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
@@ -611,7 +611,9 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
     event.capacity === null
       ? Number.POSITIVE_INFINITY
       : Math.max(event.capacity - computeOccupied(await countOccupied(db, event.id, now)), 0);
-  const wanted = Math.min(lapsed.length, Math.max(waiting - free, 0));
+  // Shared with the forecast (`notifications/domain/automatic-sends.ts` and `forecast.ts`), so
+  // the page never promises a last call the job is about to release out from under it.
+  const wanted = wantedLapsedHoldReleases({ lapsed: lapsed.length, waiting, free });
   return lapsed.slice(0, wanted).map((row) => row.id);
 }
 

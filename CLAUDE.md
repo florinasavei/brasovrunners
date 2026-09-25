@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.89-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.90-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.89-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.90-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -268,6 +268,9 @@ sections and in `CHANGELOG.md`.
   public page — the listing 118 px shorter at 360 px, an event page about 50 — with a test that holds every changed site to its desktop value (§380) · the partner card is an outlined, tinted surface in both schemes and the listing card's time is bold like its date, a race's two times included (§381).
 - **Batch 13 (2026-09-25, `BR-V1.89`):** "Necesită frontală" — a per-event headlamp mark: a checkbox in the editor's "Traseul" card (a series carries it by scope), a
   headlamp pill after elevation on the card, the hero and the event page, a line in the calendar entry's tooltip and the `.ics`; migration `0070` (§382).
+- **Batch 14 (2026-09-25, `BR-V1.90`):** "Următoarele emailuri automate" on `/admin/emails` — every email the platform will send on its
+  own in the next fourteen days, from the jobs' own formula (one pure module both the jobs and the panel call), with the recipients
+  the job would pick now and the "Copie club" line (§383).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
