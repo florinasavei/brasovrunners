@@ -43,9 +43,9 @@ export async function signGroupRunDeclarationAction(form: FormData): Promise<voi
   const verdict = (await botCheckIsOn(getDb(), new Date())) ? await verifyTurnstile(text(form, TURNSTILE_FIELD), remoteIp) : "not_configured";
   if (verdict === "failed") await refuse(["captcha"]);
 
-  // The language the declaration is signed in (§97): the kind of document is written in it too.
-  const preferred = text(form, "preferredLocale");
-  const signingLocale: Locale = preferred === "en" || preferred === "ro" ? preferred : locale;
+  // The language the declaration is signed in: the page's, the one whose text was read (§57). The
+  // other language is the header's switch, which reloads the page with that language's text first.
+  const signingLocale: Locale = locale;
   const t = await getTranslations({ locale: signingLocale, namespace: "Registrations" });
   // The series as a series (§95): a shape the browser's own pattern already asked for. A series
   // past that check that is not one is posted as missing, which the service names on its box.

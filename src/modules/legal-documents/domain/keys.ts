@@ -5,7 +5,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
  * registration rests on (BR-REQ-053-01), then the group runs' two optional self-declarations.
  *
  * Written out here rather than read off the enum, so a client component (the legal editor's
- * select) can import the list without the database schema; `tests/unit/legal-documents/keys.test.ts`
+ * select) can import the list without the database schema; `tests/unit/legal-documents/group-run-declaration.test.ts`
  * holds it equal to the enum, value for value and in order.
  */
 export const LEGAL_DOCUMENT_KEYS = [

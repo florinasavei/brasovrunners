@@ -299,7 +299,7 @@
     },
     "groupRunDeclaration": {
       "button": "Sign the self-declaration",
-      "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club keeps it for {days} after the event.",
+      "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
       "page": {
         "back": "Back to {event}",
         "title": "Self-declaration",
@@ -313,19 +313,15 @@
         "fields": {
           "idDocument": "Identity document (series and number)",
           "email": "Email address",
-          "preferredLocale": "Language of the declaration and the email",
-          "accepted": "I have read the declaration and I sign it",
+          "accepted": "I am 18 or older, I have read the declaration and I sign it",
           "typedName": "Signature: your full name",
           "captcha": "The anti-bot check"
         },
         "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the club's copy it is masked, and the platform deletes it seven days after the run. We keep no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
-        "preferredLocaleHelp": "The declaration is signed in the language chosen, and the PDF and the email are in it too.",
-        "languages": {
-          "ro": "Română",
-          "en": "English"
-        },
-        "accept": "I have read the declaration above and sign it on my own responsibility",
+        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
+        "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
+        "accept": "I am 18 or older, I have read the declaration above and sign it on my own responsibility",
         "typedNameHelp": "Type your full name. It appears as a signature.",
         "captcha": "The anti-bot check did not pass. Please try again.",
         "action": "Sign the declaration"
@@ -1520,7 +1516,7 @@
         "label": "Optional self-declaration",
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
-        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), then tick it here."
+        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
       }
     },
     "preview": {
@@ -1642,8 +1638,8 @@
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
         "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed.",
-        "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt: traffic, the group's pace, the dark. Signed, if the runner wishes, on the run's page; it is a condition of nothing.",
-        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail: terrain, wild animals and dogs, weather and the dark, one's own equipment with a headlamp. Signed, if the runner wishes, on the run's page; it is a condition of nothing."
+        "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt: traffic, the group's pace, the dark. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept).",
+        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail: terrain, wild animals and dogs, weather and the dark, one's own equipment with a headlamp. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept)."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",

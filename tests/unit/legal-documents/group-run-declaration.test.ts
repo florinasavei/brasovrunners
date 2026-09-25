@@ -156,6 +156,32 @@ describe("§NNN the two templates", () => {
       expect(TEXTS[surface].en.join(" ")).toMatch(/deletes it seven days after the run/);
     }
   });
+
+  it("is an adult's: the signer declares in the first sentence that they are 18 or older, and the page's consent box says it too", () => {
+    for (const surface of ["asphalt", "trail"] as const) {
+      expect(TEXTS[surface].ro[0]).toMatch(/declar pe propria răspundere că am împlinit 18 ani/);
+      expect(TEXTS[surface].en[0]).toMatch(/declare on my own responsibility that I am 18 or older/);
+    }
+    expect(ro.Event.groupRunDeclaration.page.accept).toMatch(/^Am împlinit 18 ani/);
+    expect(en.Event.groupRunDeclaration.page.accept).toMatch(/^I am 18 or older/);
+    expect(ro.Event.groupRunDeclaration.page.adultsOnly).toMatch(/18 ani/);
+    expect(en.Event.groupRunDeclaration.page.adultsOnly).toMatch(/18 or older/);
+  });
+});
+
+describe("§NNN the public offer line states the retention truthfully", () => {
+  it("says the club's platform deletes it, not that the club keeps it (the archive copy is the privacy notice's three years)", () => {
+    expect(ro.Event.groupRunDeclaration.line).toMatch(/platforma clubului o șterge la \{days\} după alergare/);
+    expect(en.Event.groupRunDeclaration.line).toMatch(/the club's platform deletes it \{days\} after the run/);
+    expect(ro.Event.groupRunDeclaration.line).not.toMatch(/păstrează/);
+    expect(en.Event.groupRunDeclaration.line).not.toMatch(/keeps/);
+  });
+
+  it("offers no language select: the signature is in the page's language, the text that was read (§57)", () => {
+    expect(ro.Event.groupRunDeclaration.page.fields).not.toHaveProperty("preferredLocale");
+    expect(en.Event.groupRunDeclaration.page.fields).not.toHaveProperty("preferredLocale");
+    expect(parseGroupRunInvalid("preferredLocale")).toEqual([]);
+  });
 });
 
 describe("§NNN the sample seed (§29)", () => {

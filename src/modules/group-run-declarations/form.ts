@@ -3,7 +3,7 @@
  * (`?invalid=typedName,email`), and in the order the summary lists them (§47). Names only, never a
  * value (§14.5).
  */
-export const GROUP_RUN_FORM_FIELDS = ["idDocument", "email", "preferredLocale", "accepted", "typedName", "captcha"] as const;
+export const GROUP_RUN_FORM_FIELDS = ["idDocument", "email", "accepted", "typedName", "captcha"] as const;
 export type GroupRunFormField = (typeof GROUP_RUN_FORM_FIELDS)[number];
 
 /** The refused boxes the address names, known ones only, in the form's order. */
@@ -17,7 +17,7 @@ export function parseGroupRunInvalid(value: string | undefined): GroupRunFormFie
  * the version's id and hash, never the honeypot. The document's series and the address ride along
  * sealed for ten minutes on the signer's own browser, a smaller exposure than retyping costs.
  */
-export const GROUP_RUN_DRAFT_FIELDS = ["accepted", "idDocumentType", "idDocument", "email", "preferredLocale", "typedName"] as const;
+export const GROUP_RUN_DRAFT_FIELDS = ["accepted", "idDocumentType", "idDocument", "email", "typedName"] as const;
 
 export function groupRunDraftOf(form: FormData): Record<string, string> {
   const draft: Record<string, string> = {};

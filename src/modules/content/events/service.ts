@@ -30,6 +30,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
+import { deleteGroupRunDeclarationMessagesOfEvent } from "@/modules/group-run-declarations/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -2634,9 +2635,12 @@ export async function deleteEvent<T extends Record<string, unknown>>(
     await removeTestRegistrations(db, input.actor, input.eventId);
   }
 
-  // `event_translations` cascades from the event; nothing else references an event with no
-  // registrations against it.
-  await db.delete(events).where(eq(events.id, input.eventId));
+  // `event_translations` cascades from the event, and so do a group run's self-declarations
+  // (§NNN) — whose outbox rows go first, in the same transaction, since nothing could render them.
+  await db.transaction(async (tx) => {
+    await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
+    await tx.delete(events).where(eq(events.id, input.eventId));
+  });
   revalidatePublicContent("events");
 }
 
@@ -2742,7 +2746,10 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
     // `event_translations` and `registration_interests` cascade; a gallery album's `event_id`
     // and a later edition's `repeat_of` are set to null. The registrations are gone above,
-    // which is the only reference that would have refused this.
+    // which is the only reference that would have refused this. A group run's self-declarations
+    // cascade too (§NNN); their outbox rows carry the signer's address and could never render
+    // without them, so they go first.
+    await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));
 
     return { registrationsErased };

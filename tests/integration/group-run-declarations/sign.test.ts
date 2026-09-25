@@ -6,6 +6,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { deleteEvent, hardDeleteEvent } from "@/modules/content/events/service";
 import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
@@ -300,6 +301,32 @@ describe("§NNN erasing one (§67, §88)", () => {
     await db.delete(groupRunDeclarations);
     await expect(renderOutboxMessage(claimed(message), db, NOW)).rejects.toThrow(/no longer exists/);
     expect(await findSignedGroupRunDeclaration(db, signed.id)).toBeUndefined();
+  });
+
+  it("takes the declarations' messages with the event when the event itself is deleted or erased, and no other message", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const actor = await admin();
+    const deleted = await trailRun();
+    const erased = await trailRun();
+    const kept = await trailRun();
+    for (const [event, email] of [[deleted, "ana@example.ro"], [erased, "ion@example.ro"], [kept, "mara@example.ro"]] as const) {
+      expect((await signGroupRunDeclaration(db, await input(event.id, { email }), NOW)).outcome).toBe("signed");
+    }
+    await db.insert(emailOutbox).values({
+      messageType: "STAFF_INVITATION",
+      recipientEmail: "club@example.ro",
+      locale: "ro",
+      payloadJson: { unrelated: true },
+      idempotencyKey: "unrelated-message",
+    });
+
+    await deleteEvent(db, { actor, eventId: deleted.id });
+    const [title] = await db.select({ title: eventTranslations.title }).from(eventTranslations).where(eq(eventTranslations.eventId, erased.id));
+    await hardDeleteEvent(db, { actor, eventId: erased.id, typedTitle: title?.title ?? erased.id, reason: "creat din greșeală", now: NOW });
+
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([kept.id]);
+    const left = (await db.select().from(emailOutbox)).map((row) => row.recipientEmail).sort();
+    expect(left).toEqual(["club@example.ro", "mara@example.ro"]);
   });
 });
 

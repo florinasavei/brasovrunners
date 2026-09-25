@@ -52,8 +52,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * summary (§47), and on the server the same PDF renderer and the archive copy — exactly what the
  * race's declaration uses. What differs is only what the signature is bound to: an event and a
  * signer who registered nothing, rather than a registration reached from an emailed link. So the
- * page asks what a registration would have known — the name and the email address — and the
- * language the declaration and its PDF are in.
+ * page asks what a registration would have known — the name and the email address. The language
+ * is the page's: the runner signs the text they read, and the PDF and the email follow it (§57).
  *
  * **Bound to the text that was read (§57).** The version's id and hash ride in the form; a newer
  * version in force at the press is refused and this page shows the current text with a notice.
@@ -121,7 +121,6 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const draftKind = ID_DOCUMENT_TYPES.find((kind) => kind === draft?.idDocumentType) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: tDeclare(`declare.idDocumentTypes.${kind}`) }));
   const fieldLabel = (field: (typeof GROUP_RUN_FORM_FIELDS)[number]) => t(`groupRunDeclaration.page.fields.${field}`);
-  const preferred = draft?.preferredLocale === "en" || draft?.preferredLocale === "ro" ? draft.preferredLocale : locale;
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -129,7 +128,15 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("groupRunDeclaration.page.title")}
       </Typography>
-      <Typography sx={{ mb: 3 }}>{t("groupRunDeclaration.page.intro", { event: event.title })}</Typography>
+      <Typography sx={{ mb: 1 }}>{t("groupRunDeclaration.page.intro", { event: event.title })}</Typography>
+      {/* Adults only (the text says so in its first sentence), and the text is this page's language:
+          what is signed is what is shown (§57); the header's switch brings the other language's text. */}
+      <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-adults">
+        {t("groupRunDeclaration.page.adultsOnly")}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {t("groupRunDeclaration.page.languageNote")}
+      </Typography>
 
       {/* The approved text, its blanks filled for this run and left dotted for the signer (§95, §225). */}
       <LegalDocumentBody
@@ -212,22 +219,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             required
             autoComplete="email"
           />
-          {/* The language of the declaration, its PDF and the email (§97): the page's, unless changed. */}
-          <TextField
-            id="preferredLocale"
-            name="preferredLocale"
-            label={fieldLabel("preferredLocale")}
-            helperText={t("groupRunDeclaration.page.preferredLocaleHelp")}
-            select
-            defaultValue={preferred}
-            slotProps={{ select: { native: true } }}
-          >
-            {routing.locales.map((code) => (
-              <option key={code} value={code}>
-                {t(`groupRunDeclaration.page.languages.${code}`)}
-              </option>
-            ))}
-          </TextField>
+          {/* The consent box carries the age statement the text opens with: adults only, for now. */}
           <CheckboxField id="accepted" name="accepted" required defaultChecked={draft?.accepted === "on"}>
             {t("groupRunDeclaration.page.accept")}
           </CheckboxField>

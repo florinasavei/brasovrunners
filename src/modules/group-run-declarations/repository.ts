@@ -1,4 +1,5 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
 import type { Database } from "@/db/types";
@@ -83,6 +84,31 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
 }
 
 export type SignedGroupRunDeclaration = NonNullable<Awaited<ReturnType<typeof findSignedGroupRunDeclaration>>>;
+
+/**
+ * The outbox rows about an event's declarations (§NNN), deleted before the event goes: the
+ * declarations cascade with it, and a message about one would then be a row that carries the
+ * signer's address and can never render. The same match the erase and the retention sweep use —
+ * the payload's id compared as text, so a payload of any other shape is simply not matched.
+ */
+export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<number> {
+  const deleted = await db
+    .delete(emailOutbox)
+    .where(
+      inArray(
+        sql`${emailOutbox.payloadJson}->>'groupRunDeclarationId'`,
+        db
+          .select({ id: sql<string>`${groupRunDeclarations.id}::text` })
+          .from(groupRunDeclarations)
+          .where(eq(groupRunDeclarations.eventId, eventId)),
+      ),
+    )
+    .returning({ id: emailOutbox.id });
+  return deleted.length;
+}
 
 /** An outbox row's declaration id (§NNN), or null when its payload carries none. */
 export function groupRunDeclarationIdOf(payload: unknown): string | null {

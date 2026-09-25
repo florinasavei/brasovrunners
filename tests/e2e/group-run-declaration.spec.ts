@@ -56,11 +56,16 @@ async function noSidewaysScroll(page: Page) {
 async function sign(page: Page, locale: "ro" | "en", name: string, email: string) {
   const words =
     locale === "ro"
-      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația" }
-      : { document: "Identity document (series and number)", email: "Email address", accept: "I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration" };
+      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am împlinit 18 ani, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "am împlinit 18 ani" }
+      : { document: "Identity document (series and number)", email: "Email address", accept: "I am 18 or older, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I am 18 or older" };
   await hydrated(page);
-  // The approved text, before anything is asked (§57): the sample's banner says what it is.
+  // The approved text, before anything is asked (§57): the sample's banner says what it is, and the
+  // text opens with the signer's own statement of age — adults only.
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
+  await expect(page.locator("#main")).toContainText(words.adults);
+  await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
+  // No language select: the text signed is the one on the page, in the page's language (§57).
+  await expect(page.locator('[name="preferredLocale"]')).toHaveCount(0);
   await page.getByLabel(words.document, { exact: false }).first().fill("BV 123456");
   await page.getByRole("textbox", { name: words.email }).fill(email);
   await page.getByRole("checkbox", { name: words.accept }).check();
@@ -75,18 +80,50 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.getByTestId("group-run-declaration-done")).toBeVisible();
 }
 
-async function outboxFor(email: string): Promise<string[]> {
+async function outboxFor(email: string): Promise<{ type: string; to: string }[]> {
   return withDatabase(async (client) => {
-    const { rows } = await client.query<{ message_type: string }>(
-      `SELECT o.message_type FROM email_outbox o JOIN group_run_declarations d ON d.id::text = o.payload_json->>'groupRunDeclarationId'
-        WHERE d.email = $1 ORDER BY o.message_type`,
+    const { rows } = await client.query<{ message_type: string; recipient_email: string }>(
+      `SELECT o.message_type, o.recipient_email FROM email_outbox o JOIN group_run_declarations d ON d.id::text = o.payload_json->>'groupRunDeclarationId'
+        WHERE d.email = $1`,
       [email],
     );
-    return rows.map((row) => row.message_type);
+    // Sorted by name here: `ORDER BY` on an enum sorts by the enum's own order.
+    return rows.map((row) => ({ type: row.message_type, to: row.recipient_email })).sort((a, b) => a.type.localeCompare(b.type));
+  });
+}
+
+/** Where the club's archive copy goes on this database: the mailbox named on /admin/emails. */
+const ARCHIVE_FALLBACK = "arhiva-declaratii@example.test";
+let archive = "";
+
+/**
+ * The club's declarations mailbox, named if the database has none — so the archive copy is always
+ * queued and the spec can count it, whatever the local `.env` says about `DECLARATIONS_ARCHIVE_TO`.
+ * A mailbox already named is kept (it wins over the environment, as `resolveDeclarationCopies`
+ * reads it); both projects write the same value, so running them side by side is safe.
+ */
+async function ensureArchiveMailbox(): Promise<string> {
+  return withDatabase(async (client) => {
+    await client.query(
+      `INSERT INTO platform_settings (key, value, updated_at)
+         VALUES ('clubNotices', jsonb_build_object('declarations', jsonb_build_object('to', $1::text, 'cc', '[]'::jsonb, 'bcc', '[]'::jsonb), 'confirmations', jsonb_build_object('to', '[]'::jsonb), 'participants', jsonb_build_object('bcc', '[]'::jsonb)), now())
+       ON CONFLICT (key) DO UPDATE SET
+         value = platform_settings.value || jsonb_build_object('declarations',
+           coalesce(platform_settings.value->'declarations', '{"cc": [], "bcc": []}'::jsonb) || jsonb_build_object('to', $1::text)),
+         updated_at = now()
+       WHERE coalesce(platform_settings.value->'declarations'->>'to', '') = ''`,
+      [ARCHIVE_FALLBACK],
+    );
+    const { rows } = await client.query<{ to: string }>("SELECT value->'declarations'->>'to' AS to FROM platform_settings WHERE key = 'clubNotices'");
+    return rows[0].to;
   });
 }
 
 test.describe.serial("§NNN a group run's optional self-declaration", () => {
+  test.beforeAll(async () => {
+    archive = await ensureArchiveMailbox();
+  });
+
   test("the editor ticks it by itself for a trail group run, and the run is published", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     title = `Tura de trail ${suffix}`;
@@ -156,7 +193,7 @@ test.describe.serial("§NNN a group run's optional self-declaration", () => {
     await page.goto(`/ro/evenimente/${slug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
     await expect(offer).toBeVisible();
-    await expect(offer).toContainText("o primești pe email, iar clubul o păstrează 7 zile după eveniment");
+    await expect(offer).toContainText("o primești pe email, iar platforma clubului o șterge la 7 zile după alergare");
     const button = offer.getByRole("link", { name: "Semnează declarația pe propria răspundere" });
     expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await noSidewaysScroll(page);
@@ -164,9 +201,11 @@ test.describe.serial("§NNN a group run's optional self-declaration", () => {
     await expect(page).toHaveURL(new RegExp(`/ro/evenimente/${slug}/declaratie$`));
     await sign(page, "ro", "Ana Popescu", signers.ro);
 
-    // One row, never a registration, and two messages: the signer's and, with an archive, the club's.
-    const types = await outboxFor(signers.ro);
-    expect(types).toContain("GROUP_RUN_DECLARATION_SIGNED");
+    // One row, never a registration, and two messages: the signer's and the club's archive copy.
+    expect(await outboxFor(signers.ro)).toEqual([
+      { type: "GROUP_RUN_DECLARATION_ARCHIVE", to: archive },
+      { type: "GROUP_RUN_DECLARATION_SIGNED", to: signers.ro },
+    ]);
     const registrations = await withDatabase(async (client) => (await client.query("SELECT count(*)::int AS n FROM registrations WHERE event_id = $1", [eventId])).rows[0].n);
     expect(registrations).toBe(0);
   });
@@ -174,7 +213,7 @@ test.describe.serial("§NNN a group run's optional self-declaration", () => {
   test("and in English, from the English page", async ({ page }) => {
     await page.goto(`/en/events/${englishSlug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
-    await expect(offer).toContainText("the club keeps it for 7 days after the event");
+    await expect(offer).toContainText("and the club's platform deletes it 7 days after the run");
     await offer.getByRole("link", { name: "Sign the self-declaration" }).click();
     await expect(page).toHaveURL(new RegExp(`/en/events/${englishSlug}/declaration$`));
     await sign(page, "en", "Ion Ionescu", signers.en);
@@ -182,18 +221,14 @@ test.describe.serial("§NNN a group run's optional self-declaration", () => {
     expect(locale).toBe("en");
   });
 
-  test("the outbox holds both messages, and /admin/emails shows what each one says", async ({ page }) => {
-    const archived = await withDatabase(async (client) => {
-      const { rows } = await client.query<{ n: number }>(
-        "SELECT count(*)::int AS n FROM email_outbox WHERE message_type = 'GROUP_RUN_DECLARATION_ARCHIVE' AND payload_json->>'groupRunDeclarationId' IN (SELECT id::text FROM group_run_declarations WHERE email = $1)",
-        [signers.ro],
-      );
-      return rows[0].n;
-    });
-    const signed = await outboxFor(signers.ro);
-    // The club's copy goes wherever the club named a declarations mailbox; the signer's always.
-    expect(signed.filter((type) => type === "GROUP_RUN_DECLARATION_SIGNED")).toHaveLength(1);
-    expect(archived).toBeLessThanOrEqual(1);
+  test("the outbox holds both messages per signature, and /admin/emails shows what each one says", async ({ page }) => {
+    // Exactly one of each per signature: the signer's, to them, and the club's, to the archive.
+    for (const email of [signers.ro, signers.en]) {
+      expect(await outboxFor(email), email).toEqual([
+        { type: "GROUP_RUN_DECLARATION_ARCHIVE", to: archive },
+        { type: "GROUP_RUN_DECLARATION_SIGNED", to: email },
+      ]);
+    }
 
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/emails");

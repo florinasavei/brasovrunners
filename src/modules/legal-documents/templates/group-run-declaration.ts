@@ -28,7 +28,9 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * **Adults only, for now.** The signer declares for themselves: `{{participant}}` and
  * `{{idDocument}}` are the signer's own name and document. A minor's signature beside a parent's
  * (§330) is the race's flow, bound to a registration; whether a parent may sign here for a child is
- * the owner's question (listed in §NNN).
+ * the owner's question (listed in §NNN). Until it is answered, both texts open with the signer's own
+ * statement that they are 18 or older, and the signing page's consent box repeats it: a minor cannot
+ * give this declaration alone, so the archive must not hold one that looks as if they did.
  *
  * **No hardcoded value (§357).** One approved text serves every group run of its surface, so
  * nothing names a run, a place, a date or a distance — those are merge fields — and the club is
@@ -39,12 +41,12 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 
 /** What both surfaces open with: who, which run, that it is optional and not a race. */
 const openingRo = [
-  "Subsemnatul/a {{participant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar pe propria răspundere că particip la alergarea de grup {{event}}, din data de {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
+  "Subsemnatul/a {{participant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar pe propria răspundere că am împlinit 18 ani, că particip la alergarea de grup {{event}}, din data de {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",
 ];
 
 const openingEn = [
-  "I, {{participant}}, holder of identity document {{idDocument}}, declare on my own responsibility that I take part in the group run {{event}}, on {{eventDate}}, starting from {{eventLocation}}, and that I have read its details on the event's page on the club's website.",
+  "I, {{participant}}, holder of identity document {{idDocument}}, declare on my own responsibility that I am 18 or older, that I take part in the group run {{event}}, on {{eventDate}}, starting from {{eventLocation}}, and that I have read its details on the event's page on the club's website.",
   "I know that a group run is neither a competition nor a guided tour: it has no registration, no timing and no safety crew on the course, and the organiser* announces the time, the place and the route and runs together with the participants. Signing this declaration is optional and is not a condition of running with the group.",
 ];
 
