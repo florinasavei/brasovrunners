@@ -148,7 +148,9 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     expect(new Set(glyphClasses).size).toBe(1);
     expect(route.dd).toContain('data-testid="StraightenIcon"');
     expect(route.dd).toContain('data-testid="TrendingUpIcon"');
-    expect(route.dd).toContain('data-testid="SignalCellularAlt1BarIcon"');
+    // "Ușor" (EASY) is one dumbbell lit, two faint (`DifficultyIcon.tsx`, §NNN).
+    expect((route.dd.match(/data-testid="difficulty-dumbbell-on"/g) ?? []).length).toBe(1);
+    expect((route.dd.match(/data-testid="difficulty-dumbbell-off"/g) ?? []).length).toBe(2);
   });
 
   it("says the climb short in English too", async () => {

@@ -2,6 +2,7 @@ import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -11,9 +12,6 @@ import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
 import ScienceIcon from "@mui/icons-material/Science";
-import SignalCellularAltIcon from "@mui/icons-material/SignalCellularAlt";
-import SignalCellularAlt1BarIcon from "@mui/icons-material/SignalCellularAlt1Bar";
-import SignalCellularAlt2BarIcon from "@mui/icons-material/SignalCellularAlt2Bar";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
@@ -23,6 +21,7 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
+import { EASY_DIFFICULTY_ICON, HARD_DIFFICULTY_ICON, MODERATE_DIFFICULTY_ICON } from "./DifficultyIcon";
 import RoadIcon from "./RoadIcon";
 
 /** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
@@ -39,9 +38,11 @@ export type Glyph = ComponentType<SvgIconProps>;
  * trophy (every runner finishes a race, few win one); a gear test is the flask (something is
  * being tried); "other event" is a group of people; an external event opens elsewhere;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
- * mixed the fork in the path; difficulty is one, two or three bars — the shape a phone's
- * signal uses for "how much", which needs no legend; cost is a coin, crossed out when there is
- * none, or a hand holding a heart for a donation — the platform takes none of the three itself.
+ * mixed the fork in the path; difficulty is a scale of dumbbells, one through three of them lit
+ * (§NNN; the owner, 2026-09-25, of the phone-signal bars this replaces: "I want also for the
+ * difficulty to have a better icon system, like weights or something" — drawn in `DifficultyIcon.tsx`);
+ * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
+ * platform takes none of the three itself.
  */
 export const TYPE_GLYPH: Record<EventType, Glyph> = {
   GROUP_RUN: DirectionsRunIcon,
@@ -60,9 +61,9 @@ export const SURFACE_GLYPH: Record<EventSurface, Glyph> = {
 };
 
 export const DIFFICULTY_GLYPH: Record<"EASY" | "MODERATE" | "HARD", Glyph> = {
-  EASY: SignalCellularAlt1BarIcon,
-  MODERATE: SignalCellularAlt2BarIcon,
-  HARD: SignalCellularAltIcon,
+  EASY: EASY_DIFFICULTY_ICON,
+  MODERATE: MODERATE_DIFFICULTY_ICON,
+  HARD: HARD_DIFFICULTY_ICON,
 };
 
 export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
@@ -100,6 +101,12 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
  * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
+ *
+ * `difficulty` is Material's own dumbbell, `FitnessCenterIcon`, registered by name for a caller
+ * that wants the bare concept rather than one value's own level (§NNN) — the three `difficulty:*`
+ * entries below are `DifficultyIcon.tsx`'s own drawing, one through three dumbbells lit, one
+ * `<svg>` each so `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other
+ * glyph here hands them.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -113,6 +120,7 @@ export const GLYPHS = {
   elevation: TrendingUpIcon,
   headlamp: FlashlightOnIcon,
   partner: HandshakeIcon,
+  difficulty: FitnessCenterIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;
