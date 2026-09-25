@@ -41,10 +41,25 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     // Not publishable yet: no photo.
     await expect(page.getByText("Albumul nu are nicio fotografie")).toBeVisible();
 
+    // The quality beside the button (§NNN): the recommendation until somebody chooses, then the
+    // choice — a thumb's target, like every control here.
+    const quality = page.getByTestId("image-quality");
+    const normal = quality.getByRole("radio", { name: "Normală (recomandat)" });
+    const high = quality.getByRole("radio", { name: "Înaltă (fișier mai mare)" });
+    await expect(normal).toBeChecked();
+    const highLabel = quality.locator("label").filter({ has: high });
+    expect((await highLabel.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await high.check();
+
     // A 1600×1200 JPEG made here, handed to the file input; the uploader shrinks and posts it.
     const photo = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
     await page.locator('input[type="file"]').setInputFiles({ name: "IMG_0042.jpg", mimeType: "image/jpeg", buffer: photo });
     await expect(page.getByText("1 fotografii încărcate.")).toBeVisible({ timeout: 20_000 });
+    // What the photo became, in words: its size and the quality it was stored at.
+    await expect(page.getByTestId("photo-stored")).toContainText("1600 × 1200 px, calitate înaltă");
+    // Remembered for the session: the page comes back with the same choice.
+    await page.reload();
+    await expect(page.getByTestId("image-quality").getByRole("radio", { name: "Înaltă (fișier mai mare)" })).toBeChecked();
     // The page re-rendered with the photo in its grid, served from the local store.
     const thumb = page.locator("main img[src*='/api/media/']").first();
     await expect(thumb).toBeVisible({ timeout: 20_000 });
@@ -66,6 +81,18 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     const response = await page.request.get((await link.getAttribute("href")) as string);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toBe("image/webp");
+
+    // The tile offers every stored width, and says how wide it is drawn (§NNN): a phone at 3×
+    // takes a rung, not an enlarged thumbnail. Every width it names is really there.
+    const tile = link.locator("img");
+    const srcset = (await tile.getAttribute("srcset")) as string;
+    expect(srcset).toMatch(/\/480w\.webp 480w, .*\/960w\.webp 960w, .*\/1280w\.webp 1280w, .*\/web\.webp 1600w$/);
+    expect(await tile.getAttribute("sizes")).toMatch(/calc\(50vw - 20px\)$/);
+    for (const candidate of srcset.split(", ").map((entry) => entry.split(" ")[0])) {
+      const rung = await page.request.get(candidate);
+      expect(rung.status(), candidate).toBe(200);
+      expect(rung.headers()["content-type"]).toBe("image/webp");
+    }
 
     // The section appears in the header once an album is published — on the row or in the
     // menu, depending on the width (SiteNav folds what does not fit).
@@ -94,6 +121,9 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     const thumbSrc = (await page.locator("main img[src*='/api/media/']").first().getAttribute("src")) as string;
+    // One of the ladder's rungs, beside the thumbnail (§NNN): it must go with the album too.
+    const rungSrc = thumbSrc.replace(/thumb\.webp$/, "960w.webp");
+    expect((await page.request.get(rungSrc)).status()).toBe(200);
 
     await page.getByRole("button", { name: "Șterge albumul" }).click();
     await confirmDialog(page);
@@ -101,5 +131,6 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
 
     expect((await page.goto(`/ro/galerie/${slug}`))?.status()).toBe(404);
     expect((await page.request.get(thumbSrc)).status()).toBe(404);
+    expect((await page.request.get(rungSrc)).status()).toBe(404);
   });
 });

@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import {
   galleryAlbumTranslations,
@@ -11,7 +10,9 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import { processUploadedImage } from "@/modules/media/images";
-import { getStorage, objectKey } from "@/modules/media/storage";
+import type { ImageQuality } from "@/modules/media/ladder";
+import { newAssetKeyPrefix, putImageObjects, type StoredImageFacts, storedImageFacts } from "@/modules/media/service";
+import { deleteAssetObjects, getStorage } from "@/modules/media/storage";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
   canCreateEvent,
@@ -26,7 +27,7 @@ import { albumFieldsSchema, type AlbumFieldsInput } from "./fields";
  * Albums and their photos (BR-REQ-054-01, `DECISIONS.md` §66).
  *
  * The same shape as standing pages — create, save with a version, transition, delete — plus
- * the two things a gallery adds: a photo comes in as bytes and goes out as two objects and two
+ * the two things a gallery adds: a photo comes in as bytes and goes out as its ladder of objects (§NNN) and two
  * rows; and deleting anything that owns objects deletes the objects too, because a bucket
  * nobody sweeps fills with photos nobody can find (§17 "reference check before delete; orphan
  * cleanup"). Objects are removed *after* the rows commit: a row without objects is a broken
@@ -204,7 +205,8 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
 }
 
 /**
- * A photo, from the bytes the uploader posted to two objects and two rows.
+ * A photo, from the bytes the uploader posted to its ladder of objects (§NNN) and two rows, at
+ * the quality chosen beside the upload.
  *
  * Rows first, inside a transaction, then the objects — and if an object fails to store, the
  * rows are removed again rather than left pointing at nothing. The first photo of an album
@@ -212,15 +214,15 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
  */
 export async function addPhoto<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { actor: Actor; albumId: string; file: Buffer; originalFilename: string; now?: Date },
-): Promise<{ itemId: string; assetId: string }> {
+  input: { actor: Actor; albumId: string; file: Buffer; originalFilename: string; quality?: ImageQuality; now?: Date },
+): Promise<{ itemId: string; assetId: string; stored: StoredImageFacts }> {
   if (!canEditEventFields(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not add a photo`);
   }
   const now = input.now ?? new Date();
   const storage = getStorage();
-  const processed = await processUploadedImage(input.file);
-  const keyPrefix = randomUUID();
+  const processed = await processUploadedImage(input.file, { quality: input.quality });
+  const keyPrefix = newAssetKeyPrefix();
 
   const rows = await db.transaction(async (tx) => {
     const [album] = await tx.select({ id: galleryAlbums.id, cover: galleryAlbums.coverMediaAssetId }).from(galleryAlbums).where(eq(galleryAlbums.id, input.albumId)).limit(1);
@@ -256,20 +258,18 @@ export async function addPhoto<T extends Record<string, unknown>>(
   });
 
   try {
-    await storage.put(objectKey(keyPrefix, "web"), processed.web, "image/webp");
-    await storage.put(objectKey(keyPrefix, "thumb"), processed.thumb, "image/webp");
+    await putImageObjects(storage, keyPrefix, processed);
   } catch (error) {
     await db.delete(mediaAssets).where(eq(mediaAssets.id, rows.assetId));
-    await storage.delete(objectKey(keyPrefix, "web")).catch(() => undefined);
     throw error;
   }
   // Only once the objects exist: a cached album pointing at a photo not yet stored is a broken
   // picture on a published page.
   revalidatePublicContent("gallery");
-  return rows;
+  return { ...rows, stored: storedImageFacts(processed) };
 }
 
-/** Remove one photo: its rows, then its two objects. A cover that was this photo moves on. */
+/** Remove one photo: its rows, then its objects. A cover that was this photo moves on. */
 export async function deletePhoto<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; itemId: string },
@@ -349,8 +349,8 @@ async function removeObjects(prefixes: readonly string[]): Promise<void> {
   const storage = getStorage();
   for (const prefix of prefixes) {
     // Best effort, one by one: the rows are already gone, and a failed delete is a stray
-    // object to sweep, not a reason to report the removal as failed.
-    await storage.delete(objectKey(prefix, "web")).catch(() => undefined);
-    await storage.delete(objectKey(prefix, "thumb")).catch(() => undefined);
+    // object to sweep, not a reason to report the removal as failed. Every file of the ladder
+    // too (§NNN).
+    await deleteAssetObjects(storage, prefix);
   }
 }

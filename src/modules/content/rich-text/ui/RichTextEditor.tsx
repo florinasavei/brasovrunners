@@ -49,6 +49,8 @@ import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import ImageQualityChoice, { type ImageQualityLabels, readRemembered, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
+import { describeStoredImage, type StoredFacts, type StoredFactsLabels } from "@/modules/media/ui/stored-facts";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ToolbarButton from "@/shared/ui/ToolbarButton";
 import {
@@ -227,6 +229,10 @@ function RichTextEditorIsland({
     image: string;
     imageUploading: string;
     imageFailed: string;
+    /** The choice beside the upload and what the picture became (§NNN). */
+    imageQuality: ImageQualityLabels;
+    imageChoose: string;
+    imageStored: StoredFactsLabels;
     imageAlt: string;
     imageAltHelp: string;
     imageCaption: string;
@@ -280,6 +286,14 @@ function RichTextEditorIsland({
   const [youtubeDraft, setYoutubeDraft] = useState<string | null>(null);
   const [youtubeInvalid, setYoutubeInvalid] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
+  /**
+   * The picture bar (§NNN): the toolbar's picture control opens it rather than the file dialog,
+   * so the quality is chosen beside the upload; the file input itself stays mounted, and a paste
+   * or a drop uses the same remembered choice. `stored` is what the last upload became.
+   */
+  const [imageBarOpen, setImageBarOpen] = useState(false);
+  const [imageQuality, setImageQuality] = useImageQuality();
+  const [stored, setStored] = useState<StoredFacts | null>(null);
   /**
    * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
    * taken once when the dialog opens rather than read on every keystroke, and `null` while it is
@@ -506,13 +520,19 @@ function RichTextEditorIsland({
    */
   const insertImage = async (file: File) => {
     setImageState("uploading");
+    setImageBarOpen(false);
+    setStored(null);
     try {
       const body = new FormData();
       body.append("file", await shrinkImageInBrowser(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
       body.append("originalFilename", file.name);
+      // From the store, not from this render: a paste or a drop calls the function Tiptap kept
+      // from the first render, whose `imageQuality` is the default whatever was chosen since.
+      body.append("quality", readRemembered());
       const response = await fetch("/api/admin/media", { method: "POST", body });
       if (!response.ok) throw new Error(String(response.status));
-      const uploaded = (await response.json()) as { src: string; width: number; height: number };
+      const uploaded = (await response.json()) as { src: string; width: number; height: number; stored?: StoredFacts };
+      setStored(uploaded.stored ?? null);
       // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
       // and an empty alt is what the nag under the editor counts.
       editor
@@ -784,8 +804,8 @@ function RichTextEditorIsland({
           <ToolbarButton
             label={imageState === "uploading" ? labels.imageUploading : labels.image}
             icon={AddPhotoAlternateIcon}
-            active={false}
-            onClick={() => fileInputRef.current?.click()}
+            active={imageBarOpen}
+            onClick={() => setImageBarOpen((open) => !open)}
           />
           <input
             ref={fileInputRef}
@@ -871,9 +891,33 @@ function RichTextEditorIsland({
           </Stack>
         )}
 
+        {/* The picture bar (§NNN): the quality beside the upload, then the file. */}
+        {imageBarOpen && (
+          <Stack
+            direction="row"
+            sx={{ p: 1, borderBottom: 1, borderColor: "divider", flexWrap: "wrap", alignItems: "center", columnGap: 2, rowGap: 1 }}
+            data-testid="rich-text-image-bar"
+          >
+            <ImageQualityChoice value={imageQuality} onChange={setImageQuality} labels={labels.imageQuality} />
+            <Stack direction="row" spacing={1}>
+              <Button variant="contained" onClick={() => fileInputRef.current?.click()} sx={{ minHeight: 44 }}>
+                {labels.imageChoose}
+              </Button>
+              <Button color="inherit" onClick={() => setImageBarOpen(false)} sx={{ minHeight: 44 }}>
+                {labels.linkCancel}
+              </Button>
+            </Stack>
+          </Stack>
+        )}
+
         {imageState !== "idle" && (
           <Typography variant="body2" color={imageState === "failed" ? "error" : "text.secondary"} sx={{ px: 1, py: 0.5 }}>
             {imageState === "failed" ? labels.imageFailed : labels.imageUploading}
+          </Typography>
+        )}
+        {imageState === "idle" && stored && (
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-stored">
+            {describeStoredImage(stored, labels.imageStored, document.documentElement.lang || "ro")}
           </Typography>
         )}
 

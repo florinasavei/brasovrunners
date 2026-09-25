@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/shared/config/env";
+import { isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 
 /**
  * Where a photo's bytes live, behind the four-method adapter of AGENTS.md §17 — three of
@@ -22,10 +23,12 @@ import { env } from "@/shared/config/env";
  *
  * Keys are opaque and prefixed with the environment (`qa/…`, `production/…`), so two
  * environments can share one bucket without either seeing the other's photos; the objects
- * are always the two WebP variants of an asset, `<prefix>/web.webp` and `<prefix>/thumb.webp`.
+ * are the WebP variants of an asset, `<prefix>/web.webp` and `<prefix>/thumb.webp`, and since
+ * §NNN the ladder's rungs beside them, `<prefix>/<width>w.webp` (`ladder.ts`).
  */
 
-export type StoredVariant = "web" | "thumb";
+/** `web` (the master), `thumb`, or a rung of the ladder by its width (§NNN, `ladder.ts`). */
+export type StoredVariant = "web" | "thumb" | number;
 
 export type Storage = {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
@@ -53,7 +56,24 @@ export class StorageUnavailableError extends Error {
 
 /** The object key of one variant of one asset: environment, opaque prefix, variant. */
 export function objectKey(keyPrefix: string, variant: StoredVariant): string {
-  return `${env.APP_ENV}/${keyPrefix}/${variant}.webp`;
+  return `${env.APP_ENV}/${keyPrefix}/${typeof variant === "number" ? `${variant}w` : variant}.webp`;
+}
+
+/**
+ * Every object an asset may own: the master and the thumbnail, and — for one stored with a
+ * ladder (§NNN) — a key for every rung the ladder has, whether or not this picture was wide
+ * enough to get it. Deleting a key that was never written is a no-op on R2, on the disk and in
+ * memory, and it spares every caller of a delete from having to know the picture's width.
+ */
+export function assetObjectKeys(keyPrefix: string): string[] {
+  const keys = [objectKey(keyPrefix, "web"), objectKey(keyPrefix, "thumb")];
+  if (isLadderKeyPrefix(keyPrefix)) keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
+  return keys;
+}
+
+/** Remove every object of an asset, best effort: the row is already gone (§66 "rows first"). */
+export async function deleteAssetObjects(storage: Storage, keyPrefix: string): Promise<void> {
+  for (const key of assetObjectKeys(keyPrefix)) await storage.delete(key).catch(() => undefined);
 }
 
 const LOCAL_ROOT = path.join(process.cwd(), ".media");

@@ -70,6 +70,21 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     image: rt("image"),
     imageUploading: rt("imageUploading"),
     imageFailed: rt("imageFailed"),
+    // The quality beside the upload and what the picture became (§NNN).
+    imageQuality: {
+      legend: rt("imageQualityLegend"),
+      normal: rt("imageQualityNormal"),
+      high: rt("imageQualityHigh"),
+      help: rt("imageQualityHelp"),
+    },
+    imageChoose: rt("imageChoose"),
+    // Raw, with its six placeholders: the island substitutes the facts itself.
+    imageStored: {
+      template: rt.raw("imageStored") as string,
+      normal: rt("imageStoredNormal"),
+      high: rt("imageStoredHigh"),
+      nearLossless: rt("imageStoredNearLossless"),
+    },
     imageAlt: rt("imageAlt"),
     imageAltHelp: rt("imageAltHelp"),
     imageCaption: rt("imageCaption"),

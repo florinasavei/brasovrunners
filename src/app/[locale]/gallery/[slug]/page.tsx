@@ -10,6 +10,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { coverMagnification, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import ContactLink from "@/shared/ui/ContactLink";
@@ -106,6 +107,10 @@ export default async function AlbumPage({ params }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element -- our own WebP thumbnail, sized on upload */}
               <img
                 src={photo.thumbUrl}
+                // The tile's width, magnified by the 4:3 cut of a wider photograph: the browser
+                // takes the smallest stored width that fills it at the screen's density (§NNN).
+                srcSet={pictureSrcSet(photo.webUrl, photo.width, photo.height)}
+                sizes={pictureSizes("tile", 100, coverMagnification(photo.width, photo.height, 4 / 3))}
                 alt={t("photoAlt", { n: photo.position, total: album.photoCount, title: album.title })}
                 width={photo.width}
                 height={photo.height}

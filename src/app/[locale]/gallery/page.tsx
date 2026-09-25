@@ -13,6 +13,7 @@ import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import type { PublicAlbumSummary } from "@/modules/content/gallery/repository";
+import { coverMagnification, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { cachedPublishedAlbums } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
@@ -114,6 +115,10 @@ async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSumma
                   // eslint-disable-next-line @next/next/no-img-element -- our own WebP thumbnail, sized on upload
                   <img
                     src={album.coverThumbUrl}
+                    // The cover is a card's width — a whole phone below `sm` — so the browser
+                    // chooses among the stored widths rather than enlarging the thumbnail (§NNN).
+                    srcSet={album.coverWebUrl ? pictureSrcSet(album.coverWebUrl, album.coverWidth, album.coverHeight) : undefined}
+                    sizes={pictureSizes("cover", 100, coverMagnification(album.coverWidth ?? 0, album.coverHeight ?? 0, 4 / 3))}
                     alt=""
                     loading={index < 3 ? "eager" : "lazy"}
                     style={{ display: "block", width: "100%", aspectRatio: "4 / 3", objectFit: "cover" }}

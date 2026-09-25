@@ -7,7 +7,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { canEditEventFields, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { bodyImageSrc, getStorage, objectKey } from "./storage";
+import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./storage";
 
 /**
  * Where a stored picture is used, and what happens to one that is used nowhere
@@ -94,8 +94,7 @@ export async function sweepOrphanAssets<T extends Record<string, unknown>>(
       .where(and(eq(mediaAssets.id, candidate.id), not(referencedSomewhere)))
       .returning({ keyPrefix: mediaAssets.keyPrefix });
     if (!row) continue;
-    await storage.delete(objectKey(row.keyPrefix, "web")).catch(() => undefined);
-    await storage.delete(objectKey(row.keyPrefix, "thumb")).catch(() => undefined);
+    await deleteAssetObjects(storage, row.keyPrefix);
     deleted += 1;
   }
   return deleted;
@@ -252,6 +251,5 @@ export async function deleteMediaAsset<T extends Record<string, unknown>>(
   if (!row) throw new DomainError("VALIDATION_ERROR", "the picture is used on a page, an event or in an album");
 
   const storage = getStorage();
-  await storage.delete(objectKey(row.keyPrefix, "web")).catch(() => undefined);
-  await storage.delete(objectKey(row.keyPrefix, "thumb")).catch(() => undefined);
+  await deleteAssetObjects(storage, row.keyPrefix);
 }
