@@ -28,6 +28,7 @@ import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { readWeatherStatus } from "@/modules/weather/source";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
@@ -179,6 +180,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const emailHealth = await checkEmailHealth(db, now);
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
+  // The weather forecast's service and its last answer (§NNN): the cached entry the pages read, so no extra request inside the hour.
+  const weather = await readWeatherStatus();
   /**
    * The Neon plan, and the month read against it: Free's ceilings and the red past eighty
    * percent, or Launch's estimate at the catalogue's rates and no ceiling at all. What Neon
@@ -808,6 +811,35 @@ export default async function DevsPage({ params, searchParams }: Props) {
                 sweepable: pictures.sweepable,
                 days: ORPHAN_ASSET_DAYS,
               })}
+            </Typography>
+            {/*
+              The weather on the event page and in the reminder (§NNN): Open-Meteo, public and keyless,
+              so nothing to configure — only whether it answered. Amber when it did not, never red:
+              a page without a forecast is a working page, and `/api/health` does not read it.
+            */}
+            <Typography
+              variant="body2"
+              data-testid="weather-status"
+              color={weather.source === "open-meteo" && !weather.ok ? "warning.main" : "text.primary"}
+            >
+              {t("weather.title")}:{" "}
+              {weather.source !== "open-meteo"
+                ? t(`weather.${weather.source}`)
+                : weather.ok
+                  ? t("weather.ok", {
+                      when: formatDay(weather.fetchedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                      hours: weather.hours,
+                    })
+                  : weather.reason === "stale" && weather.failedAt
+                    ? t("weather.stale", {
+                        when: formatDay(weather.failedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                      })
+                    : weather.failedAt
+                      ? t("weather.failedAt", {
+                          when: formatDay(weather.failedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                          reason: weather.reason,
+                        })
+                      : t("weather.failed", { reason: weather.reason })}
             </Typography>
           </Stack>
         </Box>

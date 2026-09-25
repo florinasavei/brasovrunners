@@ -38,6 +38,7 @@ import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
+import { weatherForEvent } from "@/modules/weather/source";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailEventFacts } from "./domain/event-facts";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -381,6 +382,17 @@ async function renderRow(
       data.eventProgramme = programmeLines(localizedSchedule(items, locale), eventDetails.timezone, locale);
       data.eventProgrammeOther = programmeLines(localizedSchedule(items, other), eventDetails.timezone, other);
     }
+  }
+  /*
+    The forecast for the start on the reminder (§NNN), read at send time — the reminder goes out a
+    day or two before, inside the seven days a forecast is shown for — through the same cached
+    request the event page makes. Each half words it in its own language (`templates.ts`). Nothing
+    when Open-Meteo did not answer within its three seconds: the reminder goes out without the line,
+    never later for it.
+  */
+  if (row.messageType === "EVENT_REMINDER" && eventDetails) {
+    const weather = await weatherForEvent(eventDetails, now);
+    if (weather) data.eventWeather = weather;
   }
   // The thank-you's optional link (§82) rides in the payload; it is the action, and not a token.
   let payloadActionUrl: string | undefined;

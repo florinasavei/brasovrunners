@@ -13,6 +13,10 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
+import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
+import { weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
@@ -138,10 +142,17 @@ export default async function EventFacts({
   links = true,
   stacked = false,
   whenLead,
+  weather = null,
 }: {
   event: PublicEvent;
   now: Date;
   variant?: "full" | "compact";
+  /**
+   * The forecast for the start (§NNN), read by the page (`weatherForEvent`) — null beyond seven
+   * days, for an event not going ahead, and whenever Open-Meteo did not answer. The event page and
+   * its preview only (`stacked`); the cards and the hero never show it.
+   */
+  weather?: WeatherReading | null;
   /**
    * The card's words in front of the date, on the date's own line: a series card's "Următoarea:"
    * (§113, §366), so "Următoarea: Luni, 28 sept. 2026 · 18:30" is one line rather than a label on a
@@ -919,6 +930,33 @@ export default async function EventFacts({
   }
   if (state === "NOT_APPLICABLE" && mentionsRegistration) {
     rows.push({ key: "registration", label: t("registration"), icon: HowToRegIcon, value: t("registrationState.NOT_APPLICABLE") });
+  }
+
+  /*
+    The weather at the start (§NNN; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
+    pe ceva API"): «Vremea» with the forecast's own glyph in the row glyph's place — the sun, a
+    cloud, a raindrop — then its word, the temperature, the chance of rain and the wind, as one
+    flowing line like «Când», and under it the credit Open-Meteo's licence asks for, a link of its
+    own. Only when the page read a forecast: within seven days of the start and when the service
+    answered; otherwise the row is not there at all, never a sentence saying it is missing. After
+    the short facts and before the partners, whose cards stay last (§356).
+  */
+  if (weather) {
+    const words = weatherWords(weather, locale);
+    rows.push({
+      key: "weather",
+      label: words.label,
+      icon: WEATHER_GLYPH[weather.glyph],
+      value: (
+        <Box data-testid="event-weather">
+          {flow([words.summary, ...words.details])}
+          <Typography component="div" variant="body2" color="text.secondary">
+            {/* The ten pixels above given back, the ten below kept: the next row's label may sit nearer than that (§366). */}
+            {links ? outLink(OPEN_METEO_SITE, words.credit, undefined, "above") : words.credit}
+          </Typography>
+        </Box>
+      ),
+    });
   }
 
   /*
