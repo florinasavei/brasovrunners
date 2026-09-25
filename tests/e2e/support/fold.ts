@@ -10,15 +10,19 @@ const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * heading begins with it. "Begins", because the heading carries the box's closed line after the
  * title — "Locul Parcul Titulescu · hartă" — and its "23 înscriși" chip.
  *
- * Found whether or not it can be seen: a card inside a closed box — "Traseul" inside "Ce fel de
- * eveniment" (§358) — has its heading out of the accessibility tree until the box opens, and the
- * card is still the thing a spec means.
+ * A card that writes a section of the public page carries the section's number before its title
+ * (§NNN: "4 · Data și ora — apare pe pagină"), so the title may follow "N · " and nothing else: a
+ * spec names the card, and the number is `events/domain/page-sections.ts`'s to move.
+ *
+ * Found whether or not it can be seen: a card inside a closed box — a card of "Participare și
+ * înscrieri" — has its heading out of the accessibility tree until the box opens, and the card is
+ * still the thing a spec means.
  */
 export function editorBox(scope: Page | Locator, title: string): Locator {
   const page = "page" in scope && typeof scope.page === "function" ? scope.page() : (scope as Page);
   return scope
     .locator("summary")
-    .filter({ has: page.getByRole("heading", { name: new RegExp(`^${escaped(title)}`), includeHidden: true }) })
+    .filter({ has: page.getByRole("heading", { name: new RegExp(`^(?:\\d+ · )?${escaped(title)}`), includeHidden: true }) })
     .first()
     .locator("xpath=..");
 }
@@ -27,7 +31,8 @@ export function editorBox(scope: Page | Locator, title: string): Locator {
  * Open a box of the event editor by its title, the way a person does (`openFold`), and return it.
  *
  * Every box around it first, outermost first — a card inside a closed box cannot be pressed until
- * the box is open (§358: the status, the course and the links sit inside "Ce fel de eveniment").
+ * the box is open (the cards of "Participare și înscrieri"; §358's cards inside "Ce fel de
+ * eveniment" are boxes of their own since §NNN).
  */
 export async function openEditorBox(scope: Page | Locator, title: string): Promise<Locator> {
   const box = editorBox(scope, title);

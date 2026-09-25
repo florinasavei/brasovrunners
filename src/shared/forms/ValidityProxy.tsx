@@ -18,8 +18,9 @@ export const VALIDITY_PROXY_ATTRIBUTE = "data-validity-proxy";
  * the browser before any script runs.
  *
  * `required` is set by the editor that knows whether its document is empty (the legal text, which
- * is always required), or imperatively for one press by a button that knows a rule the field does
- * not (`CreateAndPublishButton`: the summary is required for publication, not for a draft).
+ * is always required). The event's summary, required for publication and not for a draft, is no
+ * longer made required for a press: "Creează și publică" answers a missing one with the summary of
+ * gaps before the browser validates anything (§NNN, `PublishCheck`).
  * `label` names it for `SubmitButton`'s "fill in first" sentence; it is hidden from assistive
  * technology, which reads the editor itself.
  */

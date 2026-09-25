@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -18,7 +17,6 @@ import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS } f
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
-import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { type EventFieldName, eventInputConstraints } from "../../constraints";
 import BibDesignPanel from "../BibDesignPanel";
@@ -30,7 +28,6 @@ import {
   initialCostTypeOf,
   registrationSummary,
   registrationWindowSummary,
-  startListSummary,
   summaryDate,
 } from "../box-summaries";
 import CostFields from "../CostFields";
@@ -66,14 +63,16 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * Box 8, "Participare și înscrieri" (§350): what it costs, how people register — here, with
- * another organizer, or not at all — and under which rules. Everything about registration is in
- * this one box, as named cards: the period, who may enter and what they sign, the confirmation
- * window, the race numbers (with the bib design and, on the editor, allocation and printing), and
- * the public list (owner requirement 1: the list lives in the registration box).
+ * "Participare și înscrieri" (§350): what it costs, how people register — here, with another
+ * organizer, or not at all — and under which rules; on the page, the cost row, who may enter and
+ * the button (§NNN: the card sits where the page draws the first of them). Registration's rules are
+ * in this one box, as named cards: the period, who may enter and what they sign, the confirmation
+ * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
+ * printing). The public list was the fifth card here (owner requirement 1 of §350); since §NNN it is
+ * its own card, last, because the page draws it last (`StartListBox`).
  *
  * **Only what the chosen mode needs is shown** (`OnlyForMode`): "Pe site" shows the capacity and
- * the five cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
+ * the cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
  * takes no registration at all (§111): its sentence replaces everything under the cost. Every
  * hidden field stays in the document — hidden, not removed — so switching back finds what was
  * typed, and the service ignores what the mode hides (`ignoreHiddenFields`, before its schema). No
@@ -94,6 +93,7 @@ export default async function RegistrationBox({
   event,
   mayEditSettings,
   risk,
+  heading,
   declarations,
   waiting = 0,
   bibCounts,
@@ -209,7 +209,7 @@ export default async function RegistrationBox({
     <Panel
       collapsible
       id="box-registration"
-      title={t("editor.boxes.registration.title")}
+      title={heading ?? t("editor.boxes.registration.title")}
       aside={summary}
       openWhen={{ attention: needsDeclaration }}
       tone={risk ? "risk" : "default"}
@@ -506,17 +506,8 @@ export default async function RegistrationBox({
                       {bibPrint}
                     </Stack>
                   </Panel>
-
-                  {/* 8.5 — the start list, off unless somebody deliberately turns it on
-                      (BR-REQ-039-01): a disclosure, so the help says what it publishes. */}
-                  <Panel collapsible level={3} id="box-start-list" title={t("editor.boxes.startList.title")} aside={startListSummary(words, event?.participantListVisibility)}>
-                    <Box>
-                      <CheckboxField name="event.participantListVisibility" defaultChecked={event?.participantListVisibility === "NAMES"}>
-                        {t("editor.participantList")}
-                      </CheckboxField>
-                      <BoxNote>{t("editor.participantListHelp")}</BoxNote>
-                    </Box>
-                  </Panel>
+                  {/* The public list was 8.5 here; it is its own card now, last, where the page
+                      draws it (§NNN, `StartListBox`). */}
                 </Stack>
               </OnlyForMode>
             </Stack>

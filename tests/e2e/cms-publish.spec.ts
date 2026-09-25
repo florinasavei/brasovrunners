@@ -113,11 +113,14 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const kind = await openEditorBox(page, "Ce fel de eveniment");
     const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
     await expect(readOnly).toBeVisible();
-    // Once, for the box: its three cards — the status, the course, the links — are then their
-    // headings and their lines, readable without opening anything (§358).
     await expect(readOnly).toHaveCount(1);
-    for (const card of ["Starea evenimentului", "Traseul", "Linkuri și fișiere"]) {
-      await expect(kind.getByRole("heading", { level: 3, name: new RegExp(`^${card}`) })).toBeVisible();
+    // The status and the links are boxes of their own since §NNN, where the page draws them — or
+    // apart, the status — and for this reader each is its heading and its line, nothing to open
+    // (§358). The course keeps a fold: its route description is words, and the words are theirs (§387).
+    for (const card of ["Starea evenimentului", "Linkuri și fișiere"]) {
+      const heading = page.getByRole("heading", { level: 2, name: new RegExp(`^(?:\\d+ · )?${card}`) });
+      await expect(heading).toBeVisible();
+      await expect(page.locator("section").filter({ has: heading })).toHaveCount(1);
     }
     await expect(kind.getByRole("combobox", { name: /Tip eveniment/ })).toHaveCount(0);
   });
@@ -377,8 +380,23 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Creat și publicat într-o singură apăsare.");
 
-    // The publish button says what publication still needs; the English tab is empty.
-    await expect(page.getByText(/Nu se poate publica încă — lipsește: Titlu și rezumat › English › Titlu/)).toBeVisible();
+    // The button is its full self whatever is missing (§NNN; it used to dim to 38%, which read as
+    // no button at all). The English tab is empty, and the closed card and its tabs say so.
+    const publish = page.getByRole("button", { name: "Creează și publică" });
+    await expect(publish).toHaveCSS("opacity", "1");
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("lipsesc: Titlu (EN) · Rezumat (EN)");
+    await expect(languageTab(page, "title", "ro")).toHaveText("Română · complet");
+    await expect(languageTab(page, "title", "en")).toHaveText("English · 2 obligatorii lipsă");
+    // Pressed now, it posts nothing: the §47 summary takes the focus and names each gap per
+    // language, and the first card that lacks one is opened on the missing language.
+    await publish.click();
+    const gaps = page.getByTestId("publish-gaps");
+    await expect(gaps).toBeFocused();
+    await expect(gaps.getByRole("link", { name: "Titlu și rezumat › English › Titlu" })).toBeVisible();
+    await expect(gaps.getByRole("link", { name: "Titlu și rezumat › English › Rezumat" })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+    await expect(editorBox(page, "Titlu și rezumat")).toHaveAttribute("open", "");
+    await expect(field("translations.en.title")).toBeVisible();
     // The Publicare box lists every gap by box and tab, from the same check (§350).
     const publication = await openEditorBox(page, "Publicare");
     await expect(publication.getByTestId("missing-for-publish").getByRole("link", { name: "Titlu și rezumat › English › Titlu" })).toBeVisible();

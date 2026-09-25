@@ -1185,7 +1185,6 @@
       },
       "repeatOn": "Repeat this event",
       "repeatHelpSummary": "How a series works",
-      "tabMissing": "the whole text",
       "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
@@ -1253,7 +1252,6 @@
       },
       "createAndPublish": "Create and publish",
       "publishing": "Publishing…",
-      "notReadyToPublish": "Cannot publish yet — missing: {field}",
       "createdPublished": "The event was created and published. It is on the site, in both languages.",
       "createdPublishedWithSeries": "The event and {dates} were created and published.",
       "createdNotPublished": "The event was created as a draft but could not be published. Missing: {detail}. Nothing you typed was lost — fill it in and press “Publish”.",
@@ -1306,9 +1304,8 @@
       "repeatRuleLiveUntil": " — until {until}.",
       "repeatRuleLiveHorizon": "The dates of the next {horizon} are created now.",
       "groups": {
-        "event": "The event",
-        "day": "The day and who takes part",
-        "details": "Partners and presentation"
+        "page": "The event page, top to bottom",
+        "offPage": "Not on the page"
       },
       "publication": {
         "missingTitle": "Missing before publishing",
@@ -1388,7 +1385,8 @@
           "unprinted": "Not printed yet: {count}."
         },
         "startList": {
-          "title": "Public participant list"
+          "title": "Public participant list",
+          "onlyHere": "A public list exists only for registration on the site: choose “On the site” under Taking part and registration."
         },
         "status": {
           "title": "Event status",
@@ -1449,8 +1447,6 @@
           "oneLanguage": "to write in {language} too (both languages or neither)",
           "identical": "{language} same as {source}",
           "titleSummary": {
-            "missingTitle": "title missing ({language})",
-            "missingSummary": "summary missing ({language})",
             "untitled": "untitled"
           },
           "when": {
@@ -1560,6 +1556,14 @@
             "none": "no address",
             "seoOneLanguage": "SEO in one language only"
           }
+        },
+        "video": {
+          "title": "The film",
+          "stored": "a film, from an older link",
+          "none": "no separate film",
+          "storedHelp": "The page shows this film under the rules, behind one press. It is a link saved before the editor had its YouTube button, and it is kept on every save. A new film goes in the description.",
+          "noneHelp": "A film goes in the description, with the text editor's YouTube button, like a picture. The page has no other section for a film.",
+          "toDescription": "Go to the description"
         }
       },
       "identical": {
@@ -1573,6 +1577,46 @@
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
+      },
+      "pageFlow": {
+        "title": "The page, top to bottom",
+        "drawnHeading": "{number} · {name} — on the page",
+        "emptyHeading": "{number} · {name} — empty, not on the page",
+        "drawn": "on the page",
+        "empty": "empty, not on the page",
+        "automatic": "automatic, no card",
+        "missing": "required fields missing",
+        "shareLine": "Here the page puts the share buttons and the calendar — automatically, from the page's address; they have no card.",
+        "short": {
+          "kind": "Type",
+          "title": "Title",
+          "description": "Description",
+          "when": "When",
+          "place": "Where",
+          "course": "The course",
+          "registration": "Cost and registration",
+          "coHosts": "Together with",
+          "share": "Share",
+          "links": "Links and files",
+          "programme": "Programme",
+          "rules": "Rules",
+          "video": "The film",
+          "startList": "Participant list"
+        }
+      },
+      "required": {
+        "missing": "missing: {list}",
+        "complete": "complete",
+        "tab": {
+          "one": "{count} required missing",
+          "few": "{count} required missing",
+          "other": "{count} required missing"
+        }
+      },
+      "publishGaps": {
+        "title": "Cannot publish yet",
+        "intro": "Publication needs these fields, in every language:",
+        "introSaved": "Publication needs these fields, in every language, filled in and saved:"
       }
     },
     "preview": {

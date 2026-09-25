@@ -18,6 +18,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { countForm } from "@/i18n/count-form";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
@@ -64,8 +65,18 @@ export type LocalePanel = {
   label: string;
   /** Set when this language is not yet complete; shown on the tab. The server's first paint. */
   incompleteLabel?: string;
+  /** How many required boxes this language lacks, for a strip that counts them (`requiredCount`). The server's first paint. */
+  missingCount?: number;
   content: ReactNode;
 };
+
+/**
+ * A strip whose boxes publication needs counts them on each tab instead of the bare mark (§NNN;
+ * the owner: "I need to see on the cards as well what info is required"): «Română · 2 obligatorii
+ * lipsă», «English · complet». The three counted forms (`countForm`) with `{count}`, the word for
+ * none, and the reader's language to choose the form in.
+ */
+export type RequiredCountWords = { one: string; few: string; other: string; complete: string; locale: string };
 
 /**
  * Which of the panel's boxes make its tab "· incomplet", re-read as the person types (§350):
@@ -123,11 +134,14 @@ export default function LocaleTabPanels({
   watch,
   markLabel,
   identical,
+  requiredCount,
   live = true,
 }: {
   /** The box this strip belongs to: every id on it starts with it. */
   idPrefix: string;
   panels: readonly LocalePanel[];
+  /** Count the required boxes a language lacks on its tab, rather than mark it (a `required` watch). */
+  requiredCount?: RequiredCountWords;
   /** Recompute the tabs' marks from the boxes as they are typed into. */
   watch?: TabWatch;
   /** The mark's word ("incomplet") for a tab that becomes unfinished while typing. */
@@ -139,6 +153,7 @@ export default function LocaleTabPanels({
 }) {
   const [active, setActive] = useState(0);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
+  const [counts, setCounts] = useState<readonly number[]>(() => panels.map((panel) => panel.missingCount ?? 0));
   const [same, setSame] = useState(identical?.initial ?? false);
   const markWord = markLabel ?? panels.find((panel) => panel.incompleteLabel)?.incompleteLabel;
   // Whether this validation pass has already brought a panel forward; see `reveal`.
@@ -258,6 +273,15 @@ export default function LocaleTabPanels({
         // the strip on every keystroke and every focus leaving a box — the press of a save button
         // too — and MUI's `Tabs` measures its tabs after every render it makes, a forced layout.
         setIncomplete((current) => (current.length === next.length && current.every((mark, index) => mark === next[index]) ? current : next));
+        if (requiredCount && watch.rule === "required") {
+          // A language with no boxes here (the reader may not write it) keeps the server's count.
+          const missing = panels.map((panel) =>
+            watch.names.some((field) => boxOf(panel.locale, field))
+              ? watch.names.filter((field) => isBlankValue(valueOf(panel.locale, field))).length
+              : (panel.missingCount ?? 0),
+          );
+          setCounts((current) => (current.length === missing.length && current.every((count, index) => count === missing[index]) ? current : missing));
+        }
       }
       if (identical) {
         const [first, ...rest] = panels;
@@ -277,7 +301,16 @@ export default function LocaleTabPanels({
       for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, scheduler.schedule);
       scheduler.cancel();
     };
-  }, [watch, identical, live, panels]);
+  }, [watch, identical, live, panels, requiredCount]);
+
+  /** The tab's own state: the counted phrase for a counting strip, the bare mark otherwise. */
+  const stateOf = (index: number): string | null => {
+    if (requiredCount) {
+      const count = counts[index] ?? 0;
+      return count === 0 ? requiredCount.complete : requiredCount[countForm(count, requiredCount.locale)].replace("{count}", String(count));
+    }
+    return incomplete[index] && markWord ? markWord : null;
+  };
 
   return (
     <Box ref={root}>
@@ -319,7 +352,7 @@ export default function LocaleTabPanels({
             */
             label={[
               panel.label,
-              incomplete[index] && markWord ? markWord : null,
+              stateOf(index),
               // The copying language's tab — every one after the first — says it (§354).
               same && identical && index > 0 ? identical.mark : null,
             ]
