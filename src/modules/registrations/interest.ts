@@ -6,6 +6,7 @@ import type { Database } from "@/db/types";
 import { registrationState, type RegistrationWindowInput } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
+import { interestAction } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -157,12 +158,12 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
   let queued = 0;
   let dropped = 0;
   for (const event of candidates) {
-    const state = registrationState(event, now);
-    if (state === "NOT_YET_OPEN") continue;
-    // Open but not published — taken off the site for a while — cannot be registered on
-    // either; the addresses wait for the page to come back, or for the start to pass.
-    if (state === "OPEN" && event.editorialStatus !== "PUBLISHED") continue;
-    const announce = state === "OPEN";
+    // Ahead, or open but not published — taken off the site for a while, so it cannot be
+    // registered on either: the addresses wait for the window, the page to come back, or the
+    // start to pass. One formula with the forecast on `/admin/emails` (`interestAction`, §383).
+    const action = interestAction(event, now);
+    if (action === "wait") continue;
+    const announce = action === "announce";
     await db.transaction(async (tx) => {
       const rows = await tx
         .select({ id: registrationInterests.id, deliveryEmail: registrationInterests.deliveryEmail, locale: registrationInterests.locale })

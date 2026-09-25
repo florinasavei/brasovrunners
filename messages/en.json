@@ -2784,6 +2784,43 @@
         "saved": "The deadlines were saved; they apply from now on.",
         "readOnly": "The Administrator changes the deadlines; you see the values in force."
       },
+      "forecast": {
+        "title": "Upcoming automatic emails",
+        "intro": "What the platform sends participants on its own in the coming days, event by event: when, which message, and how many people it reaches if it went now. A message goes at the job's first run after the moment shown. Not listed: what a staff member sends (the update notice, the cancellation, the thank-you after the race, the organizers' message), nor the answers to a runner's own click (the confirmation link, the confirmation, the waiting list), which go at once.",
+        "aside": {
+          "one": "1 send in the next {days} days",
+          "few": "{count} sends in the next {days} days",
+          "other": "{count} sends in the next {days} days"
+        },
+        "empty": "Nothing in the next {days} days: no registration is waiting for an automatic email.",
+        "nextRun": "at the job's next run",
+        "recipients": {
+          "one": "1 recipient now",
+          "few": "{count} recipients now",
+          "other": "{count} recipients now"
+        },
+        "tests": {
+          "one": "and 1 test registration",
+          "few": "and {count} test registrations",
+          "other": "and {count} test registrations"
+        },
+        "sends": {
+          "reminder": "the reminder before the start, to those confirmed",
+          "lastCall": "the last call to sign, to those who have not signed yet",
+          "participation": "the participation confirmation opens, to those who have not signed yet",
+          "nextInLine": "a held place lapses; it goes to the next on the waiting list",
+          "bibs": "registration closes; race numbers become final",
+          "registrationOpened": "registration opens, to the addresses left on the event's page"
+        },
+        "zone": "{zone} time",
+        "untitled": "(untitled event)",
+        "untitledOther": "(untitled event) — {title} ({locale})",
+        "clubCopy": {
+          "none": "Club copy: none. The club receives no copy of the emails to participants.",
+          "some": "Club copy: every email above also goes, separately and with “[Club copy]” in the subject, to {addresses}. Not for test registrations, and not for “Registration is open”, which belongs to no registration.",
+          "link": "Change it in “The club's copies”"
+        }
+      },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here."
     },
     "guide": {

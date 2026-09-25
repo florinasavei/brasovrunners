@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.90-2026-09-25
+
+- The "Următoarele emailuri automate" forecast on /admin/emails now keeps a last call to sign that falls before the hold's own lapse to the next in line (previously dropped whenever any lapse was foreseen, regardless of order), the panel marks an event title borrowed from the other language with its language code instead of showing it unlabelled, and the two "how many lapsed holds does the queue want" formulas are now documented as the two different, and where they agree, rules they are. §383.
 ## BR-V1.89-2026-09-25
 
 - **"Necesită frontală" on an event**: an editor checkbox in "Traseul" puts a headlamp pill on the card, the event page, the hero and the calendar, both languages; unmarked events show nothing. §382.
