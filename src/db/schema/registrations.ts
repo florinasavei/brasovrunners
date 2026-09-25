@@ -176,6 +176,21 @@ export const registrations = pgTable(
      * name" — the declaration, the emails, the backoffice — reads this column.
      */
     registeredName: text("registered_name").notNull(),
+    /**
+     * Whose registration this is, as a key: `registered_name` folded the way the signature and the
+     * erase confirmation compare a name (`foldName`, §179, §314) — case, whitespace, diacritics and
+     * an apostrophe's shape forgiven (§389, a family on one address).
+     *
+     * The participant is the address (§74, BR-REQ-032); one address may carry several runners at
+     * one event — a parent and two children — each a registration of their own, and this is what
+     * tells them apart. Written by the application wherever `registered_name` is written (the
+     * insert, a restart, a staff correction of the name), never read to decide anything: the
+     * service compares the names themselves under the event's lock, and the unique index below is
+     * the database's backstop for that decision. Rows written before the column carry a SQL
+     * approximation of the key (migration `0072`); null only on a row inserted by something that
+     * is not this application, which the index then does not constrain.
+     */
+    nameKey: text("name_key"),
 
     /**
      * Race entry details (BR-REQ-031-04). Nullable in the database, required by the *public*
@@ -418,7 +433,18 @@ export const registrations = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    /*
+      One registration per address per event — until the contract release drops it (§389). While
+      it stands, the family flow is switched off by itself (`registrations/family-gate.ts`): the
+      public form behaves as it always did, and no "register another person" link is offered.
+    */
     unique("registrations_event_participant_unique").on(t.eventId, t.participantId),
+    /*
+      The key that replaces it (§389): one registration per address, per event, per runner — the
+      runner's own name folded (`name_key`). Added now, beside the old one (expand only, AGENTS.md
+      §7.6); the service decides under the event's lock, and this refuses what slips past it.
+    */
+    uniqueIndex("registrations_event_participant_name_unique").on(t.eventId, t.participantId, t.nameKey),
 
     // One distance per race, but only while the registration is still active — a cancelled
     // attempt at one distance must not block joining another.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.92-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.93-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1309,7 +1309,7 @@ Rules:
 - email confirmed before active waitlist;
 - FIFO by `waitlisted_at`, then stable ID;
 - existing eligible waiting entries always have priority over later direct registrations;
-- one active registration per participant/event;
+- one active registration per runner per participant/event (§389: a family on one address, up to the club's limit per address; the runner is keyed by `name_key`, `foldName` of `registered_name`);
 - promotion creates `WAITLIST_OFFERED` and `hold_expires_at`;
 - offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start;
 - signing declaration confirms;
