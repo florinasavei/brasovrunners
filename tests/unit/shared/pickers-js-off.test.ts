@@ -119,4 +119,10 @@ describe("TimeField, the platform's own native input", () => {
     const html = renderField(createElement(TimeField, { name: "event.startsAtTime", label: "Ora", defaultValue: "09:00", clearable: false }));
     expect(html).not.toContain(`aria-label="${messages.Admin.pickers.clearTime}"`);
   });
+
+  it("carries no duplicate AccessTime adornment and no rule hiding the browser's own picker indicator", () => {
+    const html = renderField(createElement(TimeField, { name: "event.startsAtTime", label: "Ora", defaultValue: "19:00" }));
+    expect(html).not.toContain('data-testid="AccessTimeIcon"');
+    expect(html).not.toContain("calendar-picker-indicator");
+  });
 });
