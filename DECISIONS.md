@@ -15511,9 +15511,27 @@ PartnerEmoji, the emoji replacement for the partner glyph (introduced 2026-09-25
 
 Baseline `BR-V1.87-2026-09-25`.
 
-## 380. test
+## 380. Amending §366/§375: one phone density scale, so "tighter on mobile" is an edit to `src/theme/density.ts` and not a hunt through six components
 
-test
+Amending §366/§375: one phone density scale, so "tighter on mobile" is an edit to `src/theme/density.ts` and not a hunt through six components.
+
+The owner, 2026-09-24, on his phone, after the listing and an event page: "There is a bit too much padding and whitespace on mobile, the space could be used more efficiently."
+
+**Decided: `src/theme/density.ts` exports `DENSITY`, six named MUI-spacing-unit steps** — `pagePadY` (1.5, was 2), `cardPadTop` (1.5, was 2), `cardGridGap` (1, was 1.5), `heroPad` (2, was 2.5), `gapSm` (1, was 2) and `sectionGapLg` (2.5, was 4), plus `sectionGap` (2, was 3) — used only as the `xs` side of a breakpoint object, `{ xs: DENSITY.x, sm: <the page's existing value> }`. `sm` and up are untouched everywhere this is used: a tablet or a desktop had no complaint, and the e2e desktop project (full viewport) still passes unchanged.
+
+Applied to: every public-page `<Container>`'s `py` (the listing, an event page, the calendar, a standing page); the listing's section gaps (the intro paragraph, the type filter, "Alte evenimente"/past-events fold, the grid gap between cards); the featured hero's own padding and foot margin; the event page's "back to events" row, its alerts, its divider, the registration-steps and share-links gaps, and the `mt: 4` sections ("Linkuri și fișiere", the programme, the rules); and the listing card's own top padding (`CARD_BODY_SX.pt`).
+
+**Deliberately not touched, and why:**
+- `card-layout.ts`'s `LINE_GAP`/`GROUP_GAP`. They are not a phone override — they apply at every width — and §366's title, the door and the fold measure their 44px tap targets against those exact numbers (10px reach above a title, 8px below). Moving them would silently break a proven tap-target height rather than merely add whitespace.
+- The listing card's horizontal padding (`CARD_BODY_SX.px`) and `EventFacts.tsx`'s row layout. §366/§375 measured the card's "when" row against an exact width budget — 94 reserved pixels at every phone width, a 226px row at 320px, the 376px breakpoint for a series' "Următoarea:" lead — in headless Chromium, character by character. Only the card's *vertical* top padding moved, so every number in those comments still holds; nothing needed remeasuring.
+- The registration form (`events/[slug]/register/page.tsx`). A distinct surface the owner did not name ("the listing and an event page"); left for a pass of its own.
+- `EventFacts.tsx`'s own `rowGap`/`pl`/`mb` on the event page's `<dl>` (the label column collapsing on a phone, §356) — alignment, not the padding-and-gaps whitespace the owner pointed at.
+
+**Measured, production build, 360px width, `#main`'s `scrollHeight`:**
+- The listing: 1685px → 1573px (−112px, −6.6%).
+- An event page (the seeded anniversary race, registration open, rules and programme present): 973px → 933px (−40px, −4.1%).
+
+**Tests:** `tests/unit/theme/density.test.ts` — the scale's own shape (every value smaller than what it replaced, all positive), a grep-style walk over `src/modules/events/ui`, `src/app/[locale]/events`, `src/app/[locale]/calendar` and `src/app/[locale]/pages` refusing any `xs`-literal spacing value that is not `0`, not a `DENSITY` value and not on a short, reasoned allowlist (a chip's own already-larger-on-phone tap padding, the event page's alignment split, the registration form's untouched `Container`), and an assertion that every converted line still reads its original `sm` value. `tests/e2e/listing-cards.spec.ts`, `listing-card-button.spec.ts` and `event-pages.spec.ts` pass on both Playwright projects against a production build.
 
 Review round 3 (2026-09-25). The scale has eight steps now. The new one is `gapXs` = 0.75 (6px), the tightest. It is used for the featured event's facts rows (was 8px; round 2 had put `gapSm` there, which was 1, the value already in place, so nothing changed) and, on an event page, for the space under one answer before the next question (the stacked `dd`'s margin, was 8px). One partner card under another in the "Împreună cu" row is now `gapSm` (8px, was 12). Two values on the stacked facts stay, and they are recorded here with their pixels. The 4px between a question and its answer (`rowGap` 0.5) is already the tight end: any less and the answer reads as the label's second line. The answer's 28px indent (`pl` 3.5, the 20-pixel glyph plus its 8-pixel gap, §356) lines the answer up with the label's first letter, so it is alignment rather than whitespace.
 
