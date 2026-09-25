@@ -102,6 +102,13 @@ export default defineConfig({
        * same way `CLUB_*` above wins over `.env.local`: set here, before Next loads that file.
        */
       E2E_DISABLE_NEON: "true",
+      /**
+       * A save that carries a YouTube film fetches its poster from `i.ytimg.com`
+       * (`modules/media/video-poster.ts`) — a real third party this suite's CI runner may have
+       * no route to. `env.ts`'s `E2E_STUB_YOUTUBE_POSTER` swaps that one fetch for an
+       * in-process fixture, the same shape as `E2E_DISABLE_NEON` above.
+       */
+      E2E_STUB_YOUTUBE_POSTER: "true",
     },
   },
 });

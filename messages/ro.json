@@ -274,7 +274,12 @@
     "video": {
       "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
-      "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi."
+      "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
+      "play": "Redă filmul",
+      "playNamed": "Redă filmul: {name}",
+      "mute": "Fără sunet",
+      "unmute": "Cu sunet",
+      "volume": "Volum"
     },
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
@@ -2290,6 +2295,10 @@
       "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
       "youtubeCaption": "Legendă (sub film)",
       "youtubeRemove": "Scoate filmul",
+      "youtubePoster": "Alege un thumbnail",
+      "youtubePosterUploading": "Se încarcă…",
+      "youtubePosterFailed": "Thumbnail-ul nu a putut fi încărcat; încearcă din nou.",
+      "youtubePosterUseYoutube": "Folosește thumbnail-ul de pe YouTube",
       "imageAlign": "Poziția în text",
       "imageAlignBlock": "În flux",
       "imageAlignLeft": "Stânga",

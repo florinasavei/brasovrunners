@@ -45,6 +45,37 @@ async function writeBody(
   await page.keyboard.type(paragraph);
 }
 
+/**
+ * A stand-in for YouTube's embedded player, served at the embed's own address by `page.route` —
+ * this suite never reaches YouTube — and faithful to the one rule of the IFrame API's
+ * `postMessage` protocol the volume bar depends on (`DECISIONS.md` §NNN): the player posts
+ * nothing to its parent, not `onReady`, not `infoDelivery`, until the parent has sent it
+ * `listening`. It then answers every command with its state, as the real player does.
+ */
+const STUB_PLAYER = `<!doctype html><html><body style="margin:0;background:#000"><script>
+let heard = false, muted = false, volume = 100, id = null;
+const send = (message) => parent.postMessage(JSON.stringify({ ...message, id, channel: "widget" }), "*");
+addEventListener("message", (event) => {
+  let data;
+  try { data = JSON.parse(event.data); } catch { return; }
+  if (data.event === "listening") {
+    if (heard) return;
+    heard = true;
+    id = data.id ?? null;
+    send({ event: "onReady", info: null });
+    send({ event: "infoDelivery", info: { muted, volume } });
+    return;
+  }
+  if (!heard || data.event !== "command") return;
+  if (data.func === "mute") muted = true;
+  if (data.func === "unMute") muted = false;
+  if (data.func === "setVolume") volume = data.args[0];
+  send({ event: "infoDelivery", info: { muted, volume } });
+});
+</script></body></html>`;
+
+type PlayerWindow = { playerMessages?: string[] };
+
 /* Serial: all four tests act on the one page the first creates. */
 test.describe.serial("BR-REQ-050-03 standing pages", () => {
   test("is created, published, and reachable in both languages", async ({ page }) => {
@@ -100,6 +131,21 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
+    // The player is the stand-in above, and every message it posts to this page is kept, so the
+    // bar's effect is read from the player's own answer, not from the bar's own button.
+    let playerRequests = 0;
+    await page.route(/^https:\/\/www\.youtube-nocookie\.com\/embed\//, (route) => {
+      playerRequests += 1;
+      return route.fulfill({ status: 200, contentType: "text/html", body: STUB_PLAYER });
+    });
+    await page.addInitScript(() => {
+      const target = window as unknown as PlayerWindow;
+      target.playerMessages = [];
+      window.addEventListener("message", (event) => {
+        if (event.origin === "https://www.youtube-nocookie.com") target.playerMessages?.push(String(event.data));
+      });
+    });
+
     // Both languages go live together (`AGENTS.md` §11.2), each at its own address.
     await page.goto(`/ro/pagini/${slug}`);
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
@@ -107,10 +153,53 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // beneath it is text — the editor's output rendered through the §11.3 allowlist.
     await expect(page.getByRole("heading", { name: "Cine suntem" })).toBeVisible();
     await expect(page.getByText("Un club de alergare din Brașov.")).toBeVisible();
-    // The film: a closed disclosure — nothing fetched from YouTube until pressed (§69, §110).
-    const film = page.locator("details", { has: page.locator('iframe[src*="youtube-nocookie.com/embed/dQw4w9WgXcQ"]') });
-    await expect(film).toHaveCount(1);
-    await expect(film).not.toHaveAttribute("open", "");
+    // The film: a poster facade, nothing fetched from YouTube on load (§69, §110, §NNN) — a
+    // native `<details>`/`<summary>` disclosure (found by re-review): the iframe is already in
+    // the page's HTML, but a closed `<details>` hides its contents exactly like `display: none`,
+    // so it is not visible and — in every evergreen browser — nothing inside it is fetched
+    // until the summary is opened, with no script required. The poster itself is the club's own
+    // stored copy: fetched once, at the save above (stubbed for this suite,
+    // `E2E_STUB_YOUTUBE_POSTER`), served from this site as a real `<img>`, never a request to
+    // YouTube's image host.
+    const iframe = page.locator('iframe[src*="youtube-nocookie.com/embed/dQw4w9WgXcQ"]');
+    await expect(iframe).not.toBeVisible();
+    const playButton = page.getByRole("button", { name: "Redă filmul" });
+    await expect(playButton).toBeVisible();
+    const posterSrc = await playButton.locator("img").getAttribute("src");
+    expect(posterSrc).not.toBeNull();
+    expect(posterSrc).not.toContain("i.ytimg.com");
+    expect(playerRequests).toBe(0);
+    await playButton.click();
+    await expect(iframe).toBeVisible();
+    // Open, the film takes the poster's place: the summary is gone, not stacked above the player.
+    await expect(playButton).toBeHidden();
+
+    // The bar: mute toggles `aria-pressed` (`DECISIONS.md` §NNN), and — found by re-review — it
+    // never overlaps the player's own controls, which is exactly where an earlier version laid
+    // it: a normal-flow row under the 16∶9 box, not a strip absolutely positioned over its bottom.
+    const muteButton = page.getByRole("button", { name: "Fără sunet" });
+    const [iframeBox, barBox] = await Promise.all([iframe.boundingBox(), muteButton.boundingBox()]);
+    expect(iframeBox).not.toBeNull();
+    expect(barBox).not.toBeNull();
+    if (iframeBox && barBox) {
+      expect(barBox.y).toBeGreaterThanOrEqual(iframeBox.y + iframeBox.height - 1);
+    }
+    await expect(muteButton).toHaveAttribute("aria-pressed", "false");
+    await muteButton.click();
+    await expect(page.getByRole("button", { name: "Cu sunet" })).toHaveAttribute("aria-pressed", "true");
+    // And the player heard it: the bar's handshake got an answer, its queued `mute` was sent, and
+    // the player's own `infoDelivery` says muted — which no press reaches without `listening`.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          ((window as unknown as PlayerWindow).playerMessages ?? []).some((raw) => {
+            const message = JSON.parse(raw) as { event?: string; info?: { muted?: boolean } | null };
+            return message.event === "infoDelivery" && message.info?.muted === true;
+          }),
+        ),
+      )
+      .toBe(true);
+    await page.unroute(/^https:\/\/www\.youtube-nocookie\.com\/embed\//);
 
     expect((await page.goto(`/en/pages/${englishSlug}`))?.status()).toBe(200);
     await expect(page.getByRole("heading", { name: "Who we are" })).toBeVisible();

@@ -274,7 +274,12 @@
     "video": {
       "open": "Watch the event film",
       "title": "Event film (YouTube)",
-      "notice": "The player is YouTube's and loads only when you open it."
+      "notice": "The player is YouTube's and loads only when you open it.",
+      "play": "Play the film",
+      "playNamed": "Play the film: {name}",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "volume": "Volume"
     },
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
@@ -2290,6 +2295,10 @@
       "youtubeInvalid": "Not a YouTube address. Copy the link from the browser bar or from “Share” (youtube.com/watch?v=… or youtu.be/…).",
       "youtubeCaption": "Caption (under the film)",
       "youtubeRemove": "Remove the film",
+      "youtubePoster": "Choose a poster",
+      "youtubePosterUploading": "Uploading…",
+      "youtubePosterFailed": "The poster could not be uploaded; try again.",
+      "youtubePosterUseYoutube": "Use YouTube's own thumbnail",
       "imageAlign": "Where it sits in the text",
       "imageAlignBlock": "In the flow",
       "imageAlignLeft": "Left",

@@ -41,7 +41,13 @@ export function isYoutubeLink(url: string | null | undefined): boolean {
   return youtubeVideoId(url) !== null;
 }
 
-/** The address the iframe loads: the id, and nothing the organizer typed. */
-export function youtubeEmbedUrl(videoId: string): string {
-  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+/**
+ * The address the iframe loads: the id, and nothing the organizer typed — plus `enablejsapi=1`
+ * and `origin`, so the mute/volume bar (`VideoFacade`, `DECISIONS.md` §NNN) can talk to the
+ * embedded player through the IFrame API's postMessage protocol once it is on the page. No
+ * `iframe_api` script is ever loaded — the origin is enough for the player to accept commands
+ * posted to it, which is the whole of what `enablejsapi` is for.
+ */
+export function youtubeEmbedUrl(videoId: string, origin: string): string {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&enablejsapi=1&origin=${encodeURIComponent(origin)}`;
 }

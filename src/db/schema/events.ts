@@ -224,6 +224,19 @@ export const events = pgTable(
     videoUrl: text("video_url"),
 
     /**
+     * The club's own copy of that film's thumbnail (`DECISIONS.md` §NNN, AGENTS.md §17): the
+     * address `modules/media/video-poster.ts` stored it at, fetched from YouTube once when
+     * `video_url` was saved and never asked of Google again — the facade the visitor sees
+     * shows this address, not `i.ytimg.com`, keeping §69/§110's rule that nothing but the
+     * player itself is a request to a third party, and only after the visitor presses play.
+     * Null until a fetch has succeeded for the video currently stored, or after `video_url` is
+     * cleared; a fetch failure for a *new* video leaves it null (the page falls back to the
+     * text facade) and one for the *same* video leaves whatever was there (a transient network
+     * failure keeps the old poster rather than blanking it).
+     */
+    videoPosterUrl: text("video_poster_url"),
+
+    /**
      * The club's Strava group event for this occurrence (BR-REQ-011-01 criterion 10): the
      * page where members RSVP on Strava. One occurrence's link, so it is never carried onto a
      * duplicate or a repeat. Checked to be a Strava page at the form (`isStravaLink`).
