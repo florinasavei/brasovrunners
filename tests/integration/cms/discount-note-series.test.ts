@@ -313,4 +313,44 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
       expect(rows.find((r) => r.locale === "en")?.discountNote).toBeNull();
     }
   });
+
+  it("a settings-only save on a FREE date does not wipe an EXTERNAL + PAID sibling's own note (`DECISIONS.md` §NNN)", async () => {
+    // The source is FREE from the start — `clearDiscountNoteIfNotAllowed` returns true on
+    // *every* save of it, whatever that save actually touches — while a sibling, diverged from
+    // it after the series was made, is its own EXTERNAL + PAID date with its own note. Neither
+    // `registrationMode` nor `costType` is among this save's changes, so the blanket clear this
+    // round replaces must leave the sibling's note exactly as it was.
+    const source = await createEvent(db, {
+      actor: admin,
+      fields: {
+        ...FIELDS,
+        registrationMode: "NONE",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        costType: "FREE",
+        costAmount: "",
+        translations: TRANSLATIONS,
+      },
+      now: NOW,
+    });
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
+    expect(dates.length).toBeGreaterThan(0);
+    const sibling = dates[0]!;
+    await db
+      .update(events)
+      .set({ registrationMode: "EXTERNAL", externalProvider: "Alt club", externalRegistrationUrl: "https://alt-club.ro/inscriere", costType: "PAID", costAmount: "75 lei" })
+      .where(eq(events.id, sibling.id));
+    await db.update(eventTranslations).set({ discountNote: "40 lei pentru membri BR" }).where(eq(eventTranslations.eventId, sibling.id));
+
+    // Capacity alone changes on the source, scope "following" — no `registrationMode` or
+    // `costType` in this save at all.
+    const row = await reloadEvent(source.id);
+    const form = settingsOnlyForm(source.id, row.version, { registrationMode: "NONE", costType: "FREE", capacity: "50" });
+    form.set("scope", "following");
+    await postSave(form);
+
+    const siblingRows = await translationsOf(sibling.id);
+    expect(siblingRows.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+  });
 });

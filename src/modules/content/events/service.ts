@@ -1630,18 +1630,28 @@ async function applyToSeries<T extends Record<string, unknown>>(
     );
 
   /*
-    Every member in scope loses the note, in one `UPDATE`, whether or not the diff above found a
-    change to carry (`DECISIONS.md` §NNN) — the saved date's own note may already have been
-    `null` (nothing to diff) while a sibling's was not. Ahead of the per-member loop below, so a
+    Only members whose own post-propagation state is not `EXTERNAL` + `PAID` lose the note
+    (`DECISIONS.md` §NNN) — `input.discountNoteCleared` says the *saved* date moved off that
+    combination, not every sibling: a sibling that is `EXTERNAL` + `PAID` on its own and whose
+    mode/cost this save never touches keeps its note. Ahead of the per-member loop below, so a
     date whose only change is this one still reads correctly if that loop later touches it too.
   */
   if (input.discountNoteCleared && members.length > 0) {
-    await tx.update(eventTranslations).set({ discountNote: null }).where(
-      inArray(
-        eventTranslations.eventId,
-        members.map((member) => member.id),
-      ),
+    const toClear = members.filter(
+      (member) =>
+        !costPaidToExternalOrganizer({
+          registrationMode: (rowChanges.registrationMode as EditableEvent["registrationMode"] | undefined) ?? member.registrationMode,
+          costType: (rowChanges.costType as EditableEvent["costType"] | undefined) ?? member.costType,
+        }),
     );
+    if (toClear.length > 0) {
+      await tx.update(eventTranslations).set({ discountNote: null }).where(
+        inArray(
+          eventTranslations.eventId,
+          toClear.map((member) => member.id),
+        ),
+      );
+    }
   }
 
   const zone = after.timezone;
