@@ -5,6 +5,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentBody, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
@@ -274,8 +275,30 @@ describe("the club's declaration (§95)", () => {
 
     const all = await listSignedDeclarations(db, event.id);
     expect(all.map((s) => s.typedName)).toEqual(["Ana Popescu", "Ion Ionescu"]);
-    const pdf = await renderEventDeclarationsPdf(db, event.id, "ro", LABELS, NOW);
+    // The bundle still carries whole identity documents, so every page's footer warns to delete
+    // it within seven days (§NNN); labels carry the notice the way `declarationWords` does.
+    const bundleLabels = { ...LABELS, idDocumentsNotice: declarationWords("ro", NOW).idDocumentsNotice };
+    const pdf = await renderEventDeclarationsPdf(db, event.id, "ro", bundleLabels, NOW);
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBeGreaterThanOrEqual(2);
+    // pdfkit draws by glyph id, so the words are not in the bytes — but the notice is its own
+    // text run, below the main footer line: two runs share the main line's y (the organisation
+    // half and the page number), and a third, lower run is the notice. Its y still falls in the
+    // footer region the geometry test uses (below `FOOTER_TOP`), never in the body.
+    for (const page of textLinesByPage(pdf)) {
+      const footer = page.filter(([, y]) => y < FOOTER_TOP);
+      const distinctY = new Set(footer.map(([, y]) => y));
+      expect(footer.length, "three footer runs: two on the main line, one for the notice").toBe(3);
+      expect(distinctY.size, "the notice sits on its own, lower line").toBe(2);
+      expect(Math.min(...footer.map(([, y]) => y)), "the notice's line is below the footer's top").toBeLessThan(FOOTER_TOP);
+    }
+    // Once the retention sweep clears every identity document (§85), the bundle carries none
+    // to warn about: the footer goes back to its two runs on the main line alone.
+    await db.update(declarationAcceptances).set({ idDocument: null, minorIdDocument: null });
+    const swept = await renderEventDeclarationsPdf(db, event.id, "ro", bundleLabels, NOW);
+    for (const page of textLinesByPage(swept)) {
+      const footer = page.filter(([, y]) => y < FOOTER_TOP);
+      expect(footer.length, "no notice line once identity documents are gone").toBe(2);
+    }
     // Nothing signed is still a valid file.
     const empty = await renderDeclarationPdf({ entries: [], locale: "ro", generatedAt: NOW, labels: LABELS });
     expect(empty.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);

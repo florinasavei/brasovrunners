@@ -9,12 +9,14 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * Written for the club to approve in `/admin/legal` (the "start from the platform's text"
  * link prefills it). The one fact left to the club is its own legal name, in the footnote.
  *
- * Since a minor's declaration is signed by the minor and a parent or guardian together (§330),
- * the text opens with the participant and their own document (`{{participant}}`,
- * `{{participantIdDocument}}`) and names the parent in a sentence of its own (`{{guardian}}`,
- * `{{guardianIdDocument}}`), which for an adult reads an em dash in both places — the paper form's
- * "for minors" line left empty. `{{declarant}}` and `{{idDocument}}` still work in every text the
- * club approved before; this template simply no longer needs them.
+ * Since a minor's declaration is always signed by the parent or guardian, and — only from age 14,
+ * and only where the text asks for it — co-signed by the minor too (§330), the text opens with
+ * the participant and their own document (`{{participant}}`, `{{participantIdDocument}}`) and
+ * names the parent in a sentence of its own (`{{guardian}}`, `{{guardianIdDocument}}`), which for
+ * an adult reads an em dash in both places — the paper form's "for minors" line left empty. Under
+ * 14 the minor signs nothing and is asked for no document; the parent or guardian signs alone, in
+ * the minor's name, as legal representative. `{{declarant}}` and `{{idDocument}}` still work in
+ * every text the club approved before; this template simply no longer needs them.
  *
  * **The runner takes ownership (§357).** The owner, 2026-09-24: the declaration must "cover us on
  * the encounters with wild animals, proper equipment (shoes, headlamp for night running), falling,

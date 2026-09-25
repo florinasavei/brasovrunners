@@ -23,6 +23,16 @@
  * TODO(legal-code): the box of §1's last paragraph and the version recorded with the registration
  * that §9 promises are the code chain's — the required terms tick on the public and the family-link
  * form, and `registrations.terms_version` / `terms_accepted_at` written by `submitRegistration`.
+ * The tick's own words, verbatim (not a messages key — the box has no viewer until the code
+ * chain ships it):
+ *   RO: "Am citit și accept Termenii și condițiile (versiunea {version}), inclusiv, în mod
+ *   expres, clauzele despre anularea sau modificarea evenimentului (secțiunea 3), oprirea sau
+ *   excluderea de pe traseu (secțiunea 4), răspunderea (secțiunea 5) și legea aplicabilă și
+ *   instanța competentă (secțiunea 10)."
+ *   EN: "I have read and accept the Terms and conditions (version {version}), including,
+ *   expressly, the clauses on cancelling or changing the event (section 3), stopping or
+ *   excluding a participant (section 4), liability (section 5), and the governing law and
+ *   competent court (section 10)."
  * The club approves this text only once that has shipped.
  */
 import type { LegalDocumentBody } from "../domain/content-hash";

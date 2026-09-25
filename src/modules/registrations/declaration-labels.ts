@@ -31,7 +31,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     generatedOn: "Generat pe {date}",
     page: "Pagina {n} din {total}",
     signedByLink:
-      "Semnat electronic pe {when}, din linkul unic trimis pe adresa de email a înscrierii: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
+      "Semnat electronic pe {when}, din linkul unic trimis pe adresa de email a înscrierii: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea.",
     signedOnPaper: "Semnat pe hârtie, la masa de înscrieri; înregistrat de {who} pe {when}. Originalul semnat este păstrat de club.",
     attesterRemoved: "un membru al echipei (cont șters)",
     // The event's bundle, while it carries whole identity documents (§NNN; privacy notice §7).
@@ -50,7 +50,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     generatedOn: "Generated on {date}",
     page: "Page {n} of {total}",
     signedByLink:
-      "Signed electronically on {when}, from the single-use link sent to the registration's email address: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
+      "Signed electronically on {when}, from the single-use link sent to the registration's email address: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them.",
     signedOnPaper: "Signed on paper at the registration desk; recorded by {who} on {when}. The club keeps the signed original.",
     attesterRemoved: "a team member (account removed)",
     idDocumentsNotice: "Contains identity document numbers — delete this file within seven days of the event.",
