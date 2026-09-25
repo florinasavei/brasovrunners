@@ -57,7 +57,6 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 - The public site's own toasts (the contact form's sent state, self-unregistration, the participation confirmation) — say if you want them.
 - `yarn ship` waits until no check is pending before judging; `docs:land` refuses a blank fix report (the tooling chores found tonight). `docs:land` also never takes a round's `changelogLine` for the CHANGELOG bullet, never accepts a blank `decisionsTitle`, and never lands a fixer's "carry forward" or "no edit made" text (the three defects V1.91's landing had).
 - `yarn migrations:check` classifies `DROP CONSTRAINT` and `DROP INDEX` as contracts (migration `0073` passed as neither and carries its `-- contract:` note by hand).
-- The weather forecast's `WEATHER_PLACE` (`src/modules/weather/source.ts`) repeats the club's coordinates by hand rather than reading `CLUB_COORDINATES`, which is not on `qa` yet (only on `feat/night-event-from-sunset`). Once that setting lands, replace `WEATHER_PLACE` with `env.CLUB_COORDINATES` and fold the coordinates into `CACHE_KEY`, so a changed place reads a fresh grid cell rather than the old one's cached answer.
 
 ## Released
 
