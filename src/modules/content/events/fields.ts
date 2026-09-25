@@ -137,7 +137,7 @@ export const translationFieldsSchema = z
     /** The programme — kit pickup, briefing, start, cut-offs (§96); empty allowed. */
     schedule: richTextField,
     /**
-     * The route / training description (§NNN): the pit stops, the climbs, what to expect, and a
+     * The route / training description (§387): the pit stops, the climbs, what to expect, and a
      * map as a picture in the text. The same contract as the body; empty allowed; written in the
      * "Traseul" card and shown under `#route` with the route's own links.
      */

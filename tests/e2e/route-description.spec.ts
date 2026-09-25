@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-050-02 and BR-REQ-011-01 (`DECISIONS.md` §NNN) — "Descriere traseu / antrenament".
+ * BR-REQ-050-02 and BR-REQ-011-01 (`DECISIONS.md` §387) — "Descriere traseu / antrenament".
  *
  * The owner, 2026-09-25: "I should be able to put 'descriere traseu/antrenament' with pit stops
  * and all, basically a free text, might also attach a map there; you can move the GPX and Strava
@@ -46,7 +46,7 @@ async function writeRouteDescription(page: Page, locale: "ro" | "en", text: stri
 /** A link's height, for the 44-pixel rule (BR-REQ-041-01 criterion 6). */
 const heightOf = async (link: Locator) => (await link.boundingBox())?.height ?? 0;
 
-test.describe.serial("BR-REQ-050-02 the route / training description (§NNN)", () => {
+test.describe.serial("BR-REQ-050-02 the route / training description (§387)", () => {
   test("is written in both languages with a map in the «Traseul» card and published", async ({ page }) => {
     // The whole editor walk — two languages, a picture uploaded, a save and a publish — runs past
     // the default thirty seconds on the 320-pixel project under a shared machine's load.
@@ -109,7 +109,7 @@ test.describe.serial("BR-REQ-050-02 the route / training description (§NNN)", (
 
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
-    // The closed card says it has a description (§NNN).
+    // The closed card says it has a description (§387).
     await expect(page.locator("#box-course")).toContainText("cu descriere");
 
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();

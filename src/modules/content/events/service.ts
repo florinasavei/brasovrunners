@@ -779,7 +779,7 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     // A group run has no programme (§111): the editor hides the field, and this is what
     // holds when the type changed in the same save or the hidden field still posted text.
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
-    // The route / training description (§NNN): on every type — a group run has a route too.
+    // The route / training description (§387): on every type — a group run has a route too.
     routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
   };
 }
@@ -1447,7 +1447,7 @@ const SERIES_TRANSLATION_COLUMNS = [
   "bodyJson",
   "rulesJson",
   "scheduleJson",
-  // The route / training description (§NNN): the same course on every date of a weekly run.
+  // The route / training description (§387): the same course on every date of a weekly run.
   "routeDescriptionJson",
   "checklist",
   "coverAltText",

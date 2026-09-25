@@ -256,7 +256,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         return (
           <Stack spacing={0.5}>
             <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
-              {/* The public type chip, not a bare glyph (§NNN — the owner, 2026-09-25, on
+              {/* The public type chip, not a bare glyph (§388 — the owner, 2026-09-25, on
                   `/admin` on his phone: "I want the same small icons for the event types,
                   trail, distance, etc. on the back-office cards as well, people will get used
                   to them"): the same word and glyph the listing's own chip wears (§112). */}
@@ -280,7 +280,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               <PartnerChip event={event} />
             </Stack>
             {/* The route's pills, exactly as the listing's compact card draws them —
-                `buildRoutePills` and `RoutePills` (§NNN), so neither surface can read the route
+                `buildRoutePills` and `RoutePills` (§388), so neither surface can read the route
                 in a different order or a different set from the other. A series shares one
                 route, so this reads the next occurrence's row once for the whole line. */}
             <RoutePills pills={buildRoutePills(event, tEvent, format)} />

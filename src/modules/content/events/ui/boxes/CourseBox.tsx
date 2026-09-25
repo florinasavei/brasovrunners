@@ -19,7 +19,7 @@ import { LanguageTabs } from "./TextBoxes";
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
  *
- * Under the settings, in its own Română | English tabs, the route / training description (§NNN):
+ * Under the settings, in its own Română | English tabs, the route / training description (§387):
  * the pit stops, the climbs, what to expect, and a map as a picture in the text — the words' role's,
  * like every other text, both languages or neither (§352), shown under `#route` on the event page.
  *
@@ -45,7 +45,7 @@ export default async function CourseBox({ event, mayEditSettings, languages }: B
       languages.map((entry) => entry.translation),
     ),
   } as const;
-  // "Descriere traseu / antrenament" (§NNN), per language: posted as `translations.<locale>.routeDescription`.
+  // "Descriere traseu / antrenament" (§387), per language: posted as `translations.<locale>.routeDescription`.
   const routeDescription =
     languages.length > 0 ? (
       <LanguageTabs

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — the backoffice event cards wear the public card's route pills. The
+ * `DECISIONS.md` §388 — the backoffice event cards wear the public card's route pills. The
  * owner, 2026-09-25, on `/admin` on his phone: "I want the same small icons for the event
  * types, trail, distance, etc. on the back-office cards as well, people will get used to them."
  *
@@ -53,7 +53,7 @@ function chips(fragment: string) {
   }));
 }
 
-describe("§NNN buildRoutePills — surface, difficulty, distance, elevation, headlamp, then cost", () => {
+describe("§388 buildRoutePills — surface, difficulty, distance, elevation, headlamp, then cost", () => {
   it("builds every pill, in that order, from what the club stated", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
@@ -90,7 +90,7 @@ describe("§NNN buildRoutePills — surface, difficulty, distance, elevation, he
   });
 });
 
-describe("§NNN RoutePills — one small outlined chip per pill, its glyph, nothing when there is nothing", () => {
+describe("§388 RoutePills — one small outlined chip per pill, its glyph, nothing when there is nothing", () => {
   it("draws every pill built for it, small and outlined, each with its glyph", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();

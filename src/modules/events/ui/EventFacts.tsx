@@ -509,7 +509,7 @@ export default async function EventFacts({
       free (AGENTS.md §1.2).
     */
     // `buildRoutePills` (`route-pills.ts`) is the one function that orders and builds them — the
-    // event page's compact card and the backoffice's own list both call it (§NNN), so neither
+    // event page's compact card and the backoffice's own list both call it (§388), so neither
     // reads the route in a different order or a different set from the other.
     const cardPills = buildRoutePills(event, t, format);
 
@@ -787,7 +787,7 @@ export default async function EventFacts({
   */
   const routeLinks: ReactNode[] = [];
   /*
-    With a route description in this language (§NNN), the route link moves into the page's own
+    With a route description in this language (§387), the route link moves into the page's own
     "Traseul" section (`EventRoute`, under `#route`) with the GPX and the map, and this row points
     there instead — one in-page link, 44 pixels like the rest. The Strava event and the Facebook
     event stay: they are where people say "going", not the route.

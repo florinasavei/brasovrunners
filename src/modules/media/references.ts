@@ -15,7 +15,7 @@ import { bodyImageSrc, getStorage, objectKey } from "./storage";
  *
  * A `media_assets` row is referenced by a gallery item, an album cover, or a body — a page's
  * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
- * `route_description` (§NNN: the map is a picture in that text) — where the image node
+ * `route_description` (§387: the map is a picture in that text) — where the image node
  * carries the variant's address and that address contains the asset's opaque `key_prefix`. Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
@@ -36,8 +36,8 @@ const TOUCH_INTERVAL_HOURS = 1;
 /**
  * Whether one event translation carries the asset in any of its rich texts. Every text the editor
  * lets a picture into is here — the summary, the description, the rules, the programme's notes and
- * the route description (§NNN) — because a text left out is a picture the sweep deletes from a
- * page that shows it. The rules and the programme's notes were missing until §NNN.
+ * the route description (§387) — because a text left out is a picture the sweep deletes from a
+ * page that shows it. The rules and the programme's notes were missing until §387.
  */
 const inEventTranslation = sql`(${eventTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
     OR ${eventTranslations.excerptJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'

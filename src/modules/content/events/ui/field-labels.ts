@@ -167,7 +167,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     body: ["description", t("editor.fields.body")],
     rules: ["rules", t("editor.fields.rules")],
     schedule: ["programme", t("editor.fields.scheduleNotes")],
-    // The route / training description (§NNN), in the "Traseul" card.
+    // The route / training description (§387), in the "Traseul" card.
     routeDescription: ["course", t("editor.fields.routeDescription")],
     checklist: ["programme", t("editor.fields.checklist")],
     slug: ["address", t("editor.fields.slug")],

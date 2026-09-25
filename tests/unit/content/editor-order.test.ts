@@ -91,7 +91,7 @@ describe("§350 the editor's boxes, in order", () => {
       expect(source, file).toMatch(new RegExp(`level: 3,\\s+id: "${id}"`));
       expect(source, file).toContain("<Panel collapsible {...card}>");
       // The course card keeps its fold for a reader who may write a language's route description
-      // (§NNN), and is its heading alone for one who may write neither the settings nor the texts.
+      // (§387), and is its heading alone for one who may write neither the settings nor the texts.
       expect(source, file).toContain(
         file === "CourseBox" ? "if (!languages.some((entry) => entry.mayEdit)) return <Panel {...card} />;" : "if (!mayEditSettings) return <Panel {...card} />;",
       );
@@ -172,7 +172,7 @@ describe("§260 the language pieces, each in its box", () => {
   it("mounts no rich-text editor until its fold is opened", () => {
     expect(FIELDS).not.toMatch(/<RichTextEditor\b/);
     // The summary, the description, the programme's notes, the rules and the route description
-    // (§NNN): five a language.
+    // (§387): five a language.
     expect(FIELDS.match(/<LazyRichTextEditor\b/g)).toHaveLength(5);
   });
 
@@ -186,7 +186,7 @@ describe("§260 the language pieces, each in its box", () => {
 
   it("gives each box's tabs their own ids, so six strips share one page", () => {
     // The Locul box has no strip since §362: its two names stand side by side. The course card has
-    // one since §NNN, for the route description.
+    // one since §387, for the route description.
     const boxes = ["TextBoxes", "PlaceBox", "ProgrammeBox", "CourseBox"].map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`)).join("");
     const prefixes = [...boxes.matchAll(/idPrefix="(\w+)"/g)].map((match) => match[1]);
     expect(prefixes.sort()).toEqual(["address", "course", "description", "programme", "rules", "title"]);

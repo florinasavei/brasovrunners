@@ -134,7 +134,7 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
-  // The route / training description (§NNN), under `#route` with the route's links.
+  // The route / training description (§387), under `#route` with the route's links.
   routeDescriptionJson: eventTranslations.routeDescriptionJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
@@ -482,7 +482,7 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // Whether the page has "Linkuri și fișiere" to point at (§332), read by what the rows
       // mean — `readEventLinks` — rather than by the column being non-null.
       links: events.links,
-      // The route / training description (§NNN), so an email can tell whether this language's
+      // The route / training description (§387), so an email can tell whether this language's
       // route section exists — a route-kind link moves into it and out of "Linkuri și fișiere",
       // exactly as the page draws it (`partitionEventLinks`).
       routeDescriptionJson: eventTranslations.routeDescriptionJson,

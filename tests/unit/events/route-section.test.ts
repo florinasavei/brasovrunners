@@ -14,7 +14,7 @@ import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
 
 /**
- * BR-REQ-011-01 (`DECISIONS.md` §NNN) — "Traseul" / "The route" on the event page, under `#route`:
+ * BR-REQ-011-01 (`DECISIONS.md` §387) — "Traseul" / "The route" on the event page, under `#route`:
  * the organizer's route / training description, with the route's own links first — the route link
  * (a Strava route, with Strava's mark), the GPX and the map — which then leave the facts' route row
  * and "Linkuri și fișiere". An event with no description in this language keeps every link where
@@ -86,7 +86,7 @@ const linksSection = (routeSectionShown: boolean, links: unknown = EVERY_KIND, l
 
 const hrefs = (html: string) => [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((match) => match[1]);
 
-describe("BR-REQ-011-01 which links belong to the route (§NNN)", () => {
+describe("BR-REQ-011-01 which links belong to the route (§387)", () => {
   it("says for every kind which side it is on: the GPX and the map are the route's, the rest are not", () => {
     const route = EVENT_LINK_KINDS.filter(isRouteLinkKind);
     expect(route).toEqual(["GPX", "MAP"]);
@@ -125,7 +125,7 @@ describe("BR-REQ-011-01 which links belong to the route (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the «Traseul» section (§NNN)", () => {
+describe("BR-REQ-011-01 the «Traseul» section (§387)", () => {
   it("renders under #route: the heading, the route's links first, then the text", () => {
     const html = routeSection(DESCRIPTION_RO, { routeUrl: STRAVA_ROUTE });
     expect(html).toContain('id="route"');
@@ -177,7 +177,7 @@ describe("BR-REQ-011-01 the «Traseul» section (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 20 «Linkuri și fișiere» beside a route section (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 20 «Linkuri și fișiere» beside a route section (§387)", () => {
   it("keeps the other kinds and drops the GPX and the map", () => {
     const html = linksSection(true);
     expect(hrefs(html)).toEqual([PDF, ALBUM, RESULTS, OTHER]);
@@ -240,7 +240,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
 const facts = async (overrides: Partial<PublicEvent> = {}) =>
   renderToStaticMarkup(await EventFacts({ event: event(overrides), now: new Date("2026-09-25T10:00:00Z"), stacked: true })).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-describe("BR-REQ-011-01 the facts' route row points at the section (§NNN)", () => {
+describe("BR-REQ-011-01 the facts' route row points at the section (§387)", () => {
   it("without a description: the route link stays in the row, as before", async () => {
     const html = await facts();
     expect(html).toContain(`href="${STRAVA_ROUTE}"`);
@@ -258,7 +258,7 @@ describe("BR-REQ-011-01 the facts' route row points at the section (§NNN)", () 
   });
 });
 
-describe("BR-REQ-050-02 the «Traseul» card says it on its closed line and warns of the same words (§NNN)", () => {
+describe("BR-REQ-050-02 the «Traseul» card says it on its closed line and warns of the same words (§387)", () => {
   const summaryWords = (locale: "ro" | "en") => (locale === "ro" ? ro : en).Admin.editor.boxes.summary as SummaryWords;
   const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: STRAVA_ROUTE, headlampRequired: false };
   const labels = { surface: "Trail", difficulty: "Mediu" };
@@ -302,7 +302,7 @@ describe("BR-REQ-050-02 the «Traseul» card says it on its closed line and warn
   });
 });
 
-describe("BR-REQ-011-01 where the section sits (§NNN)", () => {
+describe("BR-REQ-011-01 where the section sits (§387)", () => {
   const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 
   it("on the public page: after the facts and the registration button, before «Linkuri și fișiere» and the programme", () => {
@@ -325,7 +325,7 @@ describe("BR-REQ-011-01 where the section sits (§NNN)", () => {
   });
 
   it("leaves the calendar file, the structured data and the email templates without it", () => {
-    // render.ts reads `routeDescriptionJson` too (§NNN, review round): the "Linkuri și fișiere"
+    // render.ts reads `routeDescriptionJson` too (§387, review round): the "Linkuri și fișiere"
     // line must agree with the page's own split (`partitionEventLinks`) about which links are
     // still in "Linkuri și fișiere" once a route section has taken the GPX and the map out of it.
     for (const file of ["src/modules/events/ical.ts", "src/modules/events/structured-data.ts", "src/modules/notifications/templates.ts"]) {

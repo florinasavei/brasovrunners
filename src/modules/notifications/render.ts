@@ -316,7 +316,7 @@ async function renderRow(
     data.myRegistrationsUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`;
   }
   // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
-  // anchor exists only then (`EventLinks`), and a route section (§NNN) can take every link of the
+  // anchor exists only then (`EventLinks`), and a route section (§387) can take every link of the
   // route's own kinds out of it, so the page's own split (`partitionEventLinks`) decides, not a
   // raw count of the event's links. The addresses themselves stay on the page: the email names
   // where they are, never a raw Drive link in a message that is forwarded.

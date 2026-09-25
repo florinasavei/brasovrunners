@@ -18,7 +18,7 @@ const PILL_SX = { height: "auto", minHeight: 24, maxWidth: "100%", "& .MuiChip-l
  * own.
  *
  * Called from the listing card's compact facts (`EventFacts`) and the backoffice's own event
- * list (`DECISIONS.md` §NNN — the owner, 2026-09-25, on `/admin` on his phone: "I want the same
+ * list (`DECISIONS.md` §388 — the owner, 2026-09-25, on `/admin` on his phone: "I want the same
  * small icons for the event types, trail, distance, etc. on the back-office cards as well,
  * people will get used to them"), so neither surface can read the route pills differently from
  * the other. Nothing at all when there is nothing to draw.

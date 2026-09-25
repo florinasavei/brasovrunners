@@ -186,7 +186,7 @@ export default async function PreviewEventPage({ params }: Props) {
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} stacked />
 
-      {/* The route section (§NNN), then the links (§332), before the programme as on the public
+      {/* The route section (§387), then the links (§332), before the programme as on the public
           page, in the public words — the GPX and the map in the route section when there is one. */}
       <EventRoute
         descriptionJson={preview.routeDescriptionJson}

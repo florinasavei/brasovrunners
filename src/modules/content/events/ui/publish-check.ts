@@ -69,7 +69,7 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
  * The boxes whose long text is checked for "identical in both languages", in the order of the
  * editor's boxes: the summary (box 2), the description (3), the programme's notes and what to
  * bring (6), the rules (7), each partner's description (12), and the route description in the
- * "Traseul" card (§NNN). A title, a place's name or a link's label is short and may honestly read
+ * "Traseul" card (§387). A title, a place's name or a link's label is short and may honestly read
  * the same — none of them is here.
  */
 export type IdenticalBox = "titleSummary" | "description" | "programme" | "rules" | "coHosts" | "course";
@@ -134,7 +134,7 @@ export type StoredTexts = {
   bodyJson: unknown;
   rulesJson: unknown;
   scheduleJson: unknown;
-  /** The route / training description (§NNN); absent for a caller from before it. */
+  /** The route / training description (§387); absent for a caller from before it. */
   routeDescriptionJson?: unknown;
   checklist: string | null;
 };

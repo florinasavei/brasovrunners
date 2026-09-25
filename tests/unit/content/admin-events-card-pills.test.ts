@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — the backoffice event cards wear the public card's chips and pills. The
+ * `DECISIONS.md` §388 — the backoffice event cards wear the public card's chips and pills. The
  * owner, 2026-09-25, on `/admin` on his phone, of a series card (the bare runner glyph, the
  * title, the "9 date" chip, the recurrence line, the fold, Stare, Data, Înscrieri, the actions):
  * "I want the same small icons for the event types, trail, distance, etc. on the back-office
@@ -20,7 +20,7 @@ const ROOT = process.cwd();
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 const page = read("src/app/[locale]/admin/(list)/page.tsx");
 
-describe("§NNN the backoffice event list wears the public card's type chip, route pills and partner marker", () => {
+describe("§388 the backoffice event list wears the public card's type chip, route pills and partner marker", () => {
   it("replaces the bare type glyph with the public type chip — the same glyph name and the same word the listing card wears", () => {
     expect(page).not.toContain("const TypeGlyph = TYPE_GLYPH[event.type]");
     expect(page).not.toContain('import { TYPE_GLYPH } from "@/modules/events/ui/glyphs"');

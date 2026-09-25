@@ -8,7 +8,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 (`DECISIONS.md` §NNN) — "Descriere traseu / antrenament", the route / training
+ * BR-REQ-050-02 (`DECISIONS.md` §387) — "Descriere traseu / antrenament", the route / training
  * description, end to end through the editor's own Server Actions, the series edit and the copies.
  *
  * The owner, 2026-09-25: "I should be able to put 'descriere traseu/antrenament' with pit stops and
@@ -160,7 +160,7 @@ async function posted(action: Promise<unknown>) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("BR-REQ-050-02 the editor's action persists the route description in both languages (§NNN)", () => {
+describe("BR-REQ-050-02 the editor's action persists the route description in both languages (§387)", () => {
   it("stores each language's own text with the map picture, and the public page reads each in its own language", async () => {
     const created = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const map = await uploadMap();
@@ -251,7 +251,7 @@ describe("§17 a route's map is a picture in use", () => {
     expect(listed.references).toEqual([{ kind: "event", id: created.id, title: "Running up that hill" }]);
   });
 
-  it("counts a picture in the rules or the programme's notes as used too — both were missed before §NNN", async () => {
+  it("counts a picture in the rules or the programme's notes as used too — both were missed before §387", async () => {
     const inRules = await uploadMap();
     const inSchedule = await uploadMap();
     const race = { ...FIELDS, type: "RACE" };

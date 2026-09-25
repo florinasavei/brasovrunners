@@ -292,7 +292,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* The address is not repeated here: it is the second line of "Unde" in the facts above
           (§356), under the place's name, which is the one link to the map. */}
 
-      {/* "Traseul" (§NNN), under `#route`: the route / training description with the route's own
+      {/* "Traseul" (§387), under `#route`: the route / training description with the route's own
           links first — the route link, the GPX, the map. The facts' route row points here. Not
           between the facts and the registration button, which stays where a phone finds it; the
           first section after them. Nothing at all when this language has no description. */}
@@ -308,7 +308,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
           because most of them are the route again — the GPX, a map — and before the programme.
-          With a route section, the GPX and the map are drawn there instead (§NNN). Nothing at all
+          With a route section, the GPX and the map are drawn there instead (§387). Nothing at all
           when the event has none left to show. */}
       <EventLinks
         links={event.links}

@@ -20,7 +20,7 @@ import { LINK_GLYPH } from "./link-glyphs";
  * the destination: nothing sniffs the file or promises what is behind the link. The address is
  * whatever an organizer pasted, so it opens in a new tab with `rel="noopener noreferrer"`.
  *
- * When the page has a route section (§NNN, `routeSection`), the route's own kinds — the GPX and
+ * When the page has a route section (§387, `routeSection`), the route's own kinds — the GPX and
  * the map — are drawn there instead (`partitionEventLinks`), and this section keeps the rest or
  * hides itself when nothing is left.
  *
@@ -41,7 +41,7 @@ export default function EventLinks({
   heading: string;
   /** Each kind's word in the reader's language — the label of a link the club did not name. */
   kindLabels: Record<EventLinkKind, string>;
-  /** Whether the page draws a route section (§NNN), which then takes the route's own kinds. */
+  /** Whether the page draws a route section (§387), which then takes the route's own kinds. */
   routeSection?: boolean;
 }) {
   const rows = partitionEventLinks(links, routeSection).other;
@@ -72,7 +72,7 @@ export function eventLinkRow(link: EventLink, locale: "ro" | "en", kindLabels: R
 }
 
 /**
- * The list itself, shared by "Linkuri și fișiere" and the route section (§NNN), so a GPX reads the
+ * The list itself, shared by "Linkuri și fișiere" and the route section (§387), so a GPX reads the
  * same in either place: one link per row, the glyph, the label, and the host beneath it.
  */
 export function LinkList({ rows }: { rows: readonly LinkRow[] }) {

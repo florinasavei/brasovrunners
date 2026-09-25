@@ -250,7 +250,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(withLinks.text).not.toContain(drive);
   });
 
-  it("a GPX with a route description has no page it can point at (§NNN, review round)", async () => {
+  it("a GPX with a route description has no page it can point at (§387, review round)", async () => {
     // A weekly run's typical shape: a route description in both languages and a GPX link, no
     // other link. `EventLinks` then renders nothing (every link moved into the route section),
     // so the page has no `#links` — the email must not send the runner to an anchor that is not

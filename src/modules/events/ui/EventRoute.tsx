@@ -10,7 +10,7 @@ import { hasRouteDescription, partitionEventLinks } from "../domain/route-sectio
 import { eventLinkRow, LinkList, type LinkRow } from "./EventLinks";
 
 /**
- * "Traseul" / "The route" under `#route` (§NNN): the organizer's route or training description —
+ * "Traseul" / "The route" under `#route` (§387): the organizer's route or training description —
  * the pit stops, the climbs, what to expect, and a map when they have one, which is a picture in
  * the text (§72–§73) rather than a field of its own — with the route's own links first: the route
  * link (a Strava route or activity, with Strava's mark, §61) and the GPX and map links of

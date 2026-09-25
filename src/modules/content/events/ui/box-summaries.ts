@@ -114,7 +114,7 @@ export type SummaryTranslation = {
   bodyJson: unknown;
   rulesJson: unknown;
   scheduleJson: unknown;
-  /** The route / training description (§NNN), in the "Traseul" card; absent for a caller from before it. */
+  /** The route / training description (§387), in the "Traseul" card; absent for a caller from before it. */
   routeDescriptionJson?: unknown;
   checklist: string | null;
   locationName: string | null;
@@ -425,7 +425,7 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
 
 /**
  * Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu · cu descriere`, or `Nimic
- * completat` (the headlamp, §382). The route / training description (§NNN) adds `cu descriere` when
+ * completat` (the headlamp, §382). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
  * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
  */

@@ -154,7 +154,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
-  // The route section (§NNN), born on the scale, spaced like "Linkuri și fișiere" beside it.
+  // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/modules/events/ui/EventVideo.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3, count: 6 },

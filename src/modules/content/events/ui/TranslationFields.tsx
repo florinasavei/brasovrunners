@@ -285,7 +285,7 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
 }
 
 /**
- * Card 1.2, "Traseul", its tabs (§NNN): the route / training description — the pit stops, the
+ * Card 1.2, "Traseul", its tabs (§387): the route / training description — the pit stops, the
  * climbs, what to expect, and a map as a picture in the text (§72–§73) — in the same editor as the
  * description, folded so it mounts only when opened (§96). Shown under `#route` on the event page,
  * with the route's own links.

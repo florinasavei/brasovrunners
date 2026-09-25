@@ -2,7 +2,7 @@ import { hasRichTextContent, readRichText } from "@/modules/content/rich-text/do
 import { type EventLink, type EventLinkKind, readEventLinks } from "./links";
 
 /**
- * The route section of the event page, "Traseul" under `#route` (§NNN; the owner, 2026-09-25: "I
+ * The route section of the event page, "Traseul" under `#route` (§387; the owner, 2026-09-25: "I
  * should be able to put 'descriere traseu/antrenament' with pit stops and all, basically a free
  * text, might also attach a map there; you can move the GPX and Strava link there").
  *
