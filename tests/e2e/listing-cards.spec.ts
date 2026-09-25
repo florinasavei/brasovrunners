@@ -180,9 +180,7 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
     // unique on the page, but its time shares "Ora" with `startsAt`'s — the second one, in
     // source order.
     await fillDateField(page, "Startul cursei", ymd(day));
-    const raceTime = page.getByRole("group", { name: "Ora", exact: true }).nth(1);
-    await raceTime.getByRole("spinbutton").first().click();
-    await page.keyboard.type("0900");
+    await page.getByRole("textbox", { name: "Ora", exact: true }).nth(1).fill("09:00");
   }
   await field("event.locationName").fill("Stadionul Tineretului");
   await field("event.locationNameEn").fill("Youth Stadium");

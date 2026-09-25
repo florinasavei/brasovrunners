@@ -168,12 +168,34 @@ export async function fillDateField(scope: Page | Locator, label: string, value:
   await group.page().keyboard.type(`${day}${month}${year}`);
 }
 
-/** The time half of the same picker family, always on the 24-hour clock (§345). */
+/**
+ * The time half, the platform's own `<input type="time">` since §345 was amended, 2026-09-25 —
+ * MUI's picker before that, which `fillDateField` above still drives (the date half of §345 is
+ * untouched). `.fill()` on a native time box takes `HH:mm` directly and posts exactly that,
+ * always on the 24-hour clock (`type="time"`'s own value has no AM/PM to disagree about).
+ *
+ * By role and accessible name, **not** `getByLabel`: a required box's `<label>` carries a second,
+ * `aria-hidden` child for the asterisk (MUI's own `Mui­FormLabel-asterisk`), and `getByLabel`'s
+ * exact match reads the label element's raw text — asterisk included — so `{ exact: true }`
+ * never matches a required "Ora" at all (found the hard way: every event's own start time is
+ * required, so this alone hung every create-page fill for 30 seconds). `getByRole`'s accessible
+ * name is computed properly and drops the hidden node, so it reads "Ora" exactly as a person
+ * does; confirmed against this page's own `ariaSnapshot()` before writing it this way.
+ *
+ * `.filter({ visible: true })` before `.first()`: "Ora" also labels the race's own gun time,
+ * which `OnlyForType` keeps in the DOM but `display: none` on any event that is not a race
+ * (`WhenBox`), and a role/name match resolves to a hidden box exactly as readily as a shown one
+ * — without the filter, `.first()` in DOM order can hand back that hidden, read-only box and
+ * `.fill()` then times out waiting for it to become visible. "Ora" is not unique on a page
+ * carrying the event's own start time and a programme row's either, so a caller scopes to the
+ * row (`programmeRow`) when it means one.
+ */
 export async function fillTimeField(scope: Page | Locator, label: string, value: string /* HH:mm */) {
-  const [hour, minute] = value.split(":");
-  const group = pickerGroup(scope, label);
-  await group.getByRole("spinbutton").first().click();
-  await group.page().keyboard.type(`${hour}${minute}`);
+  await scope
+    .getByRole("textbox", { name: label, exact: true })
+    .filter({ visible: true })
+    .first()
+    .fill(value);
 }
 
 /**

@@ -1,15 +1,14 @@
 "use client";
 
+import CloseIcon from "@mui/icons-material/Close";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import type { Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useRecall } from "@/shared/forms/recall";
-import { PICKER_BUTTON_SX, useIslandRunning, usePickerAsNativeBox } from "./picker-island";
-import { pickerClock, postedClock } from "./picker-values";
-import { TIME_DISPLAY_FORMAT, TIME_PATTERN } from "./wall-values";
+import { TIME_PATTERN } from "./wall-values";
 
 export type TimeFieldProps = {
   /** What the form posts, unchanged: `event.startsAtTime`, `event.schedule[0].time`… */
@@ -30,126 +29,70 @@ export type TimeFieldProps = {
 };
 
 /**
- * A time of day in the backoffice, on MUI's time picker and always on the 24-hour clock: `19:00`,
- * never `07:00 PM` (`DECISIONS.md` §345; the owner: "vreau ca timpul să fie mereu în format de
- * 24H, nu cu AM și PM"). `<input type="time">` posts `HH:mm` but *shows* the browser's clock, and
- * an English-language Chrome shows AM and PM whatever the page says (§70, §303).
+ * A time of day in the backoffice: the platform's own `<input type="time">`, always *posting*
+ * `HH:mm` on the 24-hour clock (`DECISIONS.md` §345, amended by §NNN; the owner, 2026-09-25, of
+ * the MUI wheel picker: "I simply hate this time picker"). The browser may *show* a 12-hour
+ * clock face with its own AM/PM in some locales, exactly as §303 found before the pickers went
+ * in, but the value this box carries and posts never changes shape, and a phone gets its own OS
+ * wheel, which every runner already knows how to use, rather than MUI's.
  *
- * `ampm={false}` and the `HH:mm` format hold in both languages: the clock face on a phone is the
- * 24-hour one (13–23 on the inner ring), the columns on a desktop run 00 to 23.
+ * **What it posts has not changed:** `HH:mm` under the same name — `type="time"`'s own value,
+ * with `step={60}` so no browser offers seconds. §345's date half is untouched (`DateField`
+ * still runs the picker); only the time half drops the library.
  *
- * **What it posts has not changed:** `HH:mm` under the same name, from a hidden input; the
- * picker's own input posts nothing. **Without JavaScript** the server's HTML is a text input with
- * the `HH:mm` pattern under the same name — the shape `<input type="time">` always posted.
- *
- * Needs `PickerProvider` above it — the backoffice's layout mounts it once.
+ * No island, no hydration swap: the native control is typeable on a desktop and the OS wheel on
+ * a phone from the very first paint, server-rendered and client-rendered alike, so there is
+ * nothing left for `PickerProvider` or `useIslandRunning` to do for a time box.
  */
 export default function TimeField({ name, label, defaultValue = "", required = false, helperText, size, sx, clearable = !required }: TimeFieldProps) {
   const recall = useRecall();
   const t = useTranslations("Admin");
-  const running = useIslandRunning();
   const initial = recall.value(name) ?? defaultValue;
   const named = recall.named(name);
   const id = recall.idOf(name);
   const help = named && recall.fieldError ? recall.fieldError : helperText;
+  const field = useRef<HTMLInputElement>(null);
 
-  if (!running) {
-    return (
-      <TextField
-        key={recall.generation}
-        id={id}
-        name={name}
-        label={label}
-        defaultValue={initial}
-        required={required}
-        error={named}
-        helperText={help}
-        size={size}
-        sx={sx}
-        slotProps={{
-          inputLabel: { shrink: true },
-          htmlInput: { pattern: TIME_PATTERN, placeholder: t("pickers.timePlaceholder"), title: t("pickers.timeTyped"), maxLength: 5 },
-        }}
-      />
-    );
+  function clear() {
+    const input = field.current;
+    if (!input) return;
+    input.value = "";
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.focus();
   }
 
   return (
-    <TimePickerInput
+    <TextField
       key={recall.generation}
       id={id}
       name={name}
+      type="time"
+      inputRef={field}
       label={label}
-      initial={initial}
+      defaultValue={initial}
       required={required}
       error={named}
       helperText={help}
       size={size}
       sx={sx}
-      clearable={clearable}
-      refusal={t("pickers.timeIncomplete")}
+      slotProps={{
+        inputLabel: { shrink: true },
+        // `pattern` is inert on `type="time"` in every shipping browser — kept only for the
+        // scriptless render (`pickers-js-off.test.ts`) and as documentation of the shape.
+        htmlInput: { step: 60, pattern: TIME_PATTERN, title: t("pickers.timeTyped") },
+        input: {
+          // Chromium and Edge draw their own clock icon inside `type="time"`; clicking it opens
+          // that browser's own time popup (Chrome 83+), so it stays visible and untouched — an
+          // `AccessTimeIcon` start adornment would only sit beside it as a second, dead clock.
+          endAdornment: clearable ? (
+            <InputAdornment position="end">
+              <IconButton aria-label={t("pickers.clearTime")} onClick={clear} sx={{ minWidth: 44, minHeight: 44 }} size="small">
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : undefined,
+        },
+      }}
     />
-  );
-}
-
-/**
- * The picker and the hidden input that posts for it. Exported for
- * `tests/unit/shared/pickers-running.test.ts`, which renders it on the server under
- * `PickerProvider` and reads what it would post (`HH:mm`, from the hidden input alone) and what
- * it shows (`19:00`, two sections and no AM/PM); pages use `TimeField`.
- */
-export function TimePickerInput({
-  id,
-  name,
-  label,
-  initial,
-  required,
-  error,
-  helperText,
-  size,
-  sx,
-  clearable,
-  refusal,
-}: {
-  id: string;
-  name: string;
-  label: string;
-  initial: string;
-  required: boolean;
-  error: boolean;
-  helperText?: string;
-  size?: "small" | "medium";
-  sx?: SxProps<Theme>;
-  clearable: boolean;
-  refusal: string;
-}) {
-  const [picked, setPicked] = useState<Dayjs | null>(() => pickerClock(initial));
-  const [refused, setRefused] = useState(false);
-  const field = useRef<HTMLInputElement>(null);
-  const hidden = useRef<HTMLInputElement>(null);
-  const posted = postedClock(picked);
-  usePickerAsNativeBox({ field, posted, hidden, refused, refusal });
-
-  return (
-    <>
-      <TimePicker
-        value={picked}
-        onChange={setPicked}
-        onError={(reason) => setRefused(reason !== null)}
-        ampm={false}
-        views={["hours", "minutes"]}
-        format={TIME_DISPLAY_FORMAT}
-        label={label}
-        inputRef={field}
-        sx={sx}
-        slotProps={{
-          textField: { id, required, error: error || undefined, helperText, size },
-          field: { clearable },
-          openPickerButton: { sx: PICKER_BUTTON_SX },
-          clearButton: { sx: PICKER_BUTTON_SX },
-        }}
-      />
-      <input ref={hidden} type="hidden" name={name} value={posted} />
-    </>
   );
 }
