@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -61,7 +61,14 @@ async function acquireFeaturedEventLock(): Promise<void> {
  * to its 90s timeout until somebody deletes it by hand. The marker's own timestamp, not the
  * directory's mtime (which nothing here else touches, but which a filesystem is still free to
  * treat as it likes), says how long it has stood; past `FEATURED_LOCK_STALE_MS` nobody plausibly
- * still holds it, so it is removed here and the loop above's next `mkdirSync` takes it instead.
+ * still holds it, so it is broken here and the loop above's next `mkdirSync` takes it instead.
+ *
+ * Breaking it is rename-then-remove, not check-then-remove (`DECISIONS.md` §NNN): two workers
+ * can both read the marker as stale, but `renameSync` to a name carrying this process's own pid
+ * only succeeds for one of them — a directory can have one name at a time, so the loser's rename
+ * fails with `ENOENT`/`EEXIST` and it falls through to polling again instead of removing
+ * whatever the winner (or a third worker that has since re-acquired the original path) now holds
+ * there. Only the renamer ever calls `rmSync`, and only on the path it privately renamed to.
  */
 function breakFeaturedEventLockIfStale(): void {
   let acquiredAt: number;
@@ -71,11 +78,13 @@ function breakFeaturedEventLockIfStale(): void {
     return; // No marker yet — a race with the holder's own write right after its `mkdirSync` — or already gone.
   }
   if (Date.now() - acquiredAt < FEATURED_LOCK_STALE_MS) return;
+  const claimed = `${FEATURED_LOCK_DIR}.stale-${process.pid}`;
   try {
-    rmSync(FEATURED_LOCK_DIR, { recursive: true, force: true });
+    renameSync(FEATURED_LOCK_DIR, claimed);
   } catch {
-    // Another worker broke or released it first.
+    return; // Another worker already renamed it away, or re-acquired it first — not this worker's to remove.
   }
+  rmSync(claimed, { recursive: true, force: true });
 }
 
 function releaseFeaturedEventLock(): void {
