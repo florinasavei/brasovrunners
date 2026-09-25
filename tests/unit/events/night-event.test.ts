@@ -822,6 +822,12 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
     expect(nightShape(shapes.january)).toEqual({ suffix: "Dawn", values: { start: "05:30", sunrise: "07:55" } });
   });
 
+  it("a 07:40 January start at the club's place — after civil dawn, before sunrise — is a day verdict with the plain shape, not the dawn words (§NNN)", () => {
+    const dayVerdict = clubNightEvent({ nightOverride: null, timezone: ZONE, startsAt: at("2027-01-13T07:40") });
+    expect(dayVerdict.night).toBe(false);
+    expect(nightShape(dayVerdict)).toEqual({ suffix: "", values: { start: "07:40", sunset: "16:57" } });
+  });
+
   it("an automatic night event whose start is before civil dawn carries the day's sunrise too, with no end named (§NNN)", () => {
     expect(shapes.dawn).toEqual({
       night: true,

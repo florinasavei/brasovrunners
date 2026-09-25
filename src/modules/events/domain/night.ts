@@ -151,6 +151,7 @@ export function nightShape(
 ): { suffix: "" | "End" | "EndProgramme" | "After" | "Dawn"; values: Record<string, string> } | null {
   if (!facts.sunset || !facts.start) return null;
   const values = { start: facts.start, sunset: facts.sunset };
+  if (!facts.night) return { suffix: "", values };
   if (!facts.end) {
     if (facts.source === "automatic" && facts.sunrise && facts.start < facts.sunrise) {
       return { suffix: "Dawn", values: { start: facts.start, sunrise: facts.sunrise } };
