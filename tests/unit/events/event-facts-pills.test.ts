@@ -86,9 +86,8 @@ const page = async (overrides: Partial<PublicEvent> = {}) =>
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 
-/** The `<dl>`'s rows, in order: each label (the `<dt>`'s words, its leading glyph aside — an
- * `<svg>` for every Material row and a `<span>` for the partner's 🤝, which is text itself and
- * would otherwise land inside the label) with its `<dt>` and `<dd>` markup. */
+/** The `<dl>`'s rows, in order: each label (the `<dt>`'s words, its leading `<svg>` glyph aside,
+ * which would otherwise land inside the label) with its `<dt>` and `<dd>` markup. */
 function rows(html: string) {
   return [...withoutStyles(html).matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt><dd\b[^>]*>([\s\S]*?)<\/dd>/g)].map(([, dt, dd]) => ({
     label: text(dt.replace(/^<(svg|span)\b[^>]*>[\s\S]*?<\/\1>/, "")),
@@ -280,11 +279,12 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 
   it("one glyph per row, all of one size, one colour and one alignment", async () => {
-    // Five Material rows draw an <svg>; the partner's is PartnerEmoji's <span> (§379) — a
-    // different element and Emotion class, so each row's own rule is checked rather than one
-    // shared class name, but every rule carries the same twenty pixels, colour and alignment.
+    // Every row, the partner's included (§NNN, reverting §379's <span> emoji to the `Handshake`
+    // `<svg>`), draws its glyph the same way — one shared shape, so each row's own rule is
+    // checked rather than one shared class name, but every rule carries the same twenty pixels,
+    // colour and alignment.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
-    const glyphs = rows(html).map((r) => /<(?:svg|span)\b[^>]*>/.exec(r.dt)?.[0] ?? "");
+    const glyphs = rows(html).map((r) => /<svg\b[^>]*>/.exec(r.dt)?.[0] ?? "");
     expect(glyphs).toHaveLength(6);
     for (const glyph of glyphs) expect(glyph).toContain('aria-hidden="true"');
     const classes = glyphs.map((glyph) => /class="([^"]*)"/.exec(glyph)?.[1]?.split(" ").at(-1));

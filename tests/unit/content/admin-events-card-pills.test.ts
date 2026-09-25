@@ -40,7 +40,7 @@ describe("§388 the backoffice event list wears the public card's type chip, rou
     expect(page).toContain("const format = await getFormatter();");
   });
 
-  it("wears the 🤝 partner marker through the same `PartnerChip` the listing card renders, never a list of partner names", () => {
+  it("wears the handshake partner marker through the same `PartnerChip` the listing card renders, never a list of partner names", () => {
     expect(page).toContain('import PartnerChip from "@/modules/events/ui/PartnerChip"');
     expect(page).toContain("<PartnerChip event={event} />");
   });

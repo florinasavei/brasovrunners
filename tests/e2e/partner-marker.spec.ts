@@ -27,11 +27,13 @@ const DATE = "2027-04-17";
 const MONTH = "2027-04";
 
 /**
- * The partner marker's glyph, 🤝 as text (§379, replacing the `Handshake` SVG §367 chose): its
- * own `data-testid`, set in the markup rather than by MUI's dev-only `SvgIcon` machinery, so it
- * survives a production build the way the SVG's never did.
+ * The partner marker's glyph, Material's `Handshake` (§367, reverted from §379/§386's 🤝 emoji
+ * by §NNN — the owner, 2026-09-25: "wow shit handshake icon is super ugly! Use the MUI icon
+ * ASAP"): found by the start of its own path (`@mui/icons-material/Handshake`), like
+ * `headlamp.spec.ts`'s torch, since a production build carries no `data-testid` — MUI writes
+ * that attribute only outside production.
  */
-const HANDSHAKE = '[data-testid="PartnerEmoji"]';
+const HANDSHAKE = 'svg:has(path[d^="M16.48 10.41c-.39.39-1.04.39-1.43 0l-4.47-4.46"])';
 
 let title = "";
 let englishTitle = "";
@@ -113,8 +115,6 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(chip).toHaveCount(1);
     await expect(chip).not.toContainText(partner);
     await expect(chip.locator(HANDSHAKE)).toHaveCount(1);
-    // Gray ink (§379): the handshake is desaturated, not the emoji's own bright colours.
-    await expect(chip.locator(HANDSHAKE)).toHaveCSS("filter", /grayscale\(1\) brightness\(0\.45\)/);
     // At 320 pixels the label wraps inside the card rather than widening the page.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
