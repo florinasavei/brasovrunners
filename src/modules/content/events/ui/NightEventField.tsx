@@ -26,7 +26,7 @@ export type NightEventWords = {
   autoLineNoDate: string;
   verdictNight: string;
   verdictDay: string;
-  /** "… alergarea ține până la {end} …" — shown only when the start alone was not dark and the end came from «Durata» (§NNN). */
+  /** "… alergarea ține până la {end} …" — shown only when the start alone was not dark and the end came from «Durata» (§394). */
   endLine: string;
   /** "… programul zilei ține până la {end} (ultimul punct) …" — the same, when the end is the day's last programme row. */
   endLineProgramme: string;
@@ -45,7 +45,7 @@ const NO_ROWS: readonly NightProgrammeRow[] = [];
 
 /**
  * The span's end as the form stands, by the server's own rule (`night.ts#occurrenceSpanEnd`,
- * §NNN): «Durata»'s minutes added to the start when the box has a number — the event's own end;
+ * §394): «Durata»'s minutes added to the start when the box has a number — the event's own end;
  * else the latest programme row on the start's own date (its end time, or its start when it has
  * none); else none.
  */
@@ -65,7 +65,7 @@ function formSpanEnd(
 
 /**
  * The automatic answer's line, from the boxes as they stand: the event's day in words, its sunset
- * and the verdict (§NNN) — decided by the **whole span**, not the start alone, with the server's
+ * and the verdict (§394) — decided by the **whole span**, not the start alone, with the server's
  * own end rule (`formSpanEnd`) and its own span test (`nightSpan`): a run that starts in daylight
  * and finishes after dusk is a night run, and `endLine` (null otherwise) says until when and
  * whether «Durata» or the programme said so. Pure — the island reads the form and hands the
@@ -110,7 +110,7 @@ const sameRows = (a: readonly NightProgrammeRow[], b: readonly NightProgrammeRow
   a.length === b.length && a.every((row, i) => row.date === b[i].date && row.time === b[i].time && row.endTime === b[i].endTime);
 
 /**
- * "Eveniment de noapte" in the "Traseul" card (§NNN, replacing §382's "Necesită frontală"
+ * "Eveniment de noapte" in the "Traseul" card (§394, replacing §382's "Necesită frontală"
  * checkbox): Automat (după apus) / Da / Nu, and under it the automatic answer for the date in the
  * "Data și ora" card — recomputed as the date, the time or the zone is changed, so the organizer
  * sees what "Automat" will say before saving. A client island because it follows other boxes of the
@@ -163,11 +163,11 @@ export default function NightEventField({
         time: text("event.startsAtTime") || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),
         timeZone: text("event.timezone") || zone,
         series: inSeries || (seriesToggleName ? data.get(seriesToggleName) === "on" : false),
-        // "Cât durează" (§71), added to the start (§NNN): a run that finishes after dusk is a
+        // "Cât durează" (§71), added to the start (§394): a run that finishes after dusk is a
         // night run even from a daylight start. No box, or not a number, means no end to name.
         durationMinutes: Number.isFinite(duration) && duration > 0 ? duration : null,
         // The programme's rows (§117), the end when «Durata» is empty — the server's own order
-        // (§NNN). A form without the programme's boxes keeps the saved rows.
+        // (§394). A form without the programme's boxes keeps the saved rows.
         programme: programmeRowsOf(data) ?? programme,
       };
       // The same answer keeps the same object, so a keystroke elsewhere in the form renders nothing here.

@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 import { RepeatPublishField } from "@/modules/content/events/ui/RepeatRuleFields";
 
 /**
- * `DECISIONS.md` §NNN — the owner: the robot glyph belongs "wherever it appears", and the
+ * `DECISIONS.md` §398 — the owner: the robot glyph belongs "wherever it appears", and the
  * create page's own "Publică datele noi automat" switch (`RepeatFields` → `RepeatPublishField`)
  * had it only on `RecurrenceSeriesPanel`'s state line, never on the switch itself.
  */
-describe("§NNN RepeatPublishField carries the renew glyph on its own line", () => {
+describe("§398 RepeatPublishField carries the renew glyph on its own line", () => {
   const render = () =>
     renderToStaticMarkup(
       createElement(RepeatPublishField, {

@@ -33,7 +33,7 @@ const NESTED_FOLD_SX = {
 } as const;
 
 /**
- * The `help` variant's own line (§NNN): no card, no border, no elevation — a caret and a
+ * The `help` variant's own line (§398): no card, no border, no elevation — a caret and a
  * sentence, the way a footnote reads rather than a card. Tight spacing, the density the public
  * pages' `DENSITY.gapXs`/`gapSm` name for the same reason (§380), typed here rather than pulled
  * from that file, which the backoffice does not import.
@@ -87,7 +87,7 @@ type Props = {
   /** The border's meaning (`PanelTone`); the plain box when absent. */
   tone?: PanelTone;
   /**
-   * The look this panel draws as (§NNN). `"card"` (the default, and every existing call) is the
+   * The look this panel draws as (§398). `"card"` (the default, and every existing call) is the
    * boxed folder `BOXED_DISCLOSURE_SX` draws. `"help"` is a small clickable line instead — no
    * border, no elevation, `body2` in the secondary ink, a caret that turns — for an explainer
    * nobody needs a heading to find: "Ce înseamnă fiecare tip?" under the event editor's type

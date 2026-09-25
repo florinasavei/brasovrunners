@@ -30,7 +30,7 @@ export const DOCUMENT_CODES: Record<LegalDocumentKey, string> = {
   PRIVACY_NOTICE: "GDPR",
   TERMS: "TERMS",
   EVENT_DECLARATION: "DECLARATION",
-  // The group runs' optional declarations (§NNN): the surface in the code, so the two are told apart.
+  // The group runs' optional declarations (§393): the surface in the code, so the two are told apart.
   GROUP_RUN_DECLARATION_ASPHALT: "ASPHALT",
   GROUP_RUN_DECLARATION_TRAIL: "TRAIL",
 };

@@ -67,7 +67,7 @@ describe("owner tasks", () => {
     ).toBe("blocking");
   });
 
-  /** §NNN — the public list's states wait on the club's notice, and the row says so without blocking anybody. */
+  /** §396 — the public list's states wait on the club's notice, and the row says so without blocking anybody. */
   it("keeps the list-states row open while the notice in force does not describe them, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, listStatesDescribed: false }, "listStatesNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "listStatesNotice")).toBe("done");

@@ -10,7 +10,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * One group run's self-declaration as a PDF, for the backoffice (§NNN): whoever may read the
+ * One group run's self-declaration as a PDF, for the backoffice (§393): whoever may read the
  * registrations (§289) — the Organizer, the Administrator — and nobody else, asserted here and not
  * by hiding the link (BR-REQ-060-01): the volunteer and the Tehnic role get 403. Whole, identity
  * document included, like the race's backoffice copy (§320): it is read by signed-in staff inside

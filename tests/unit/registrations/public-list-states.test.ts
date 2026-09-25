@@ -19,7 +19,7 @@ import { startListPage } from "@/modules/registrations/domain/start-list-page";
 import { listStatesClause, listStatesMergeValues, listStateWords } from "@/modules/registrations/list-state-words";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (amending §32 and §143) — the public list says where each
+ * BR-REQ-039-01, `DECISIONS.md` §396 (amending §32 and §143) — the public list says where each
  * registration stands, and lists the pending and the waiting list too, once the privacy notice in
  * force describes it. The pure half: which state is which group, which words, which states never
  * appear, and the marker that switches it on.
@@ -31,7 +31,7 @@ function translator(locale: "ro" | "en") {
   ) => string;
 }
 
-describe("§NNN the three groups", () => {
+describe("§396 the three groups", () => {
   it("shows the confirmed, the pending and the waiting — and no other state", () => {
     const groups = Object.fromEntries(registrationStatus.enumValues.map((status) => [status, publicListGroupOf(status)]));
     expect(groups).toEqual({
@@ -69,7 +69,7 @@ describe("§NNN the three groups", () => {
   });
 });
 
-describe("§NNN the privacy notice's marker", () => {
+describe("§396 the privacy notice's marker", () => {
   const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 
   it("is a merge field the platform's notice and terms carry, in both languages", () => {
@@ -109,7 +109,7 @@ describe("§NNN the privacy notice's marker", () => {
   });
 });
 
-describe("§NNN the counted line for the rows after the confirmed ones", () => {
+describe("§396 the counted line for the rows after the confirmed ones", () => {
   it("names each group with a count, and leaves out a group with nobody in it", () => {
     const ro_ = translator("ro");
     expect(othersPhrases(ro_, "ro", { pending: 1, waitlisted: 3 })).toEqual([
@@ -126,7 +126,7 @@ describe("§NNN the counted line for the rows after the confirmed ones", () => {
   });
 });
 
-describe("§NNN the pending and waiting rows page after every confirmed one", () => {
+describe("§396 the pending and waiting rows page after every confirmed one", () => {
   it("asks for none of them while a page is full of confirmed rows", () => {
     expect(startListPage(40, 10, "1", 50, 7)).toMatchObject({ pages: 2, namedLimit: 40, anonymousOnPage: 10, othersLimit: 0, confirmed: 50, total: 57 });
     expect(startListPage(40, 10, "2", 50, 7)).toMatchObject({ namedLimit: 0, anonymousOnPage: 0, othersOffset: 0, othersLimit: 7 });

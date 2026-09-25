@@ -69,7 +69,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
     props;
   const running = ruleSentence !== null && !ended;
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
-  // The robot (§NNN; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu că se
+  // The robot (§398; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu că se
   // reînnoiește automat"), leading this card's own two mentions of the switch — the same glyph
   // as the events list's renewal sentence (`ACTION_ICONS.renew`), decorative and aria-hidden.
   const RenewIcon = ACTION_ICONS.renew;

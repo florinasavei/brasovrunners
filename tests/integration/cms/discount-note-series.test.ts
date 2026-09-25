@@ -8,7 +8,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * The club's discount on an external event's own fee travels the way its cost does
- * (`DECISIONS.md` §NNN): a series held at a discount is held at it every date, and a duplicate
+ * (`DECISIONS.md` §394): a series held at a discount is held at it every date, and a duplicate
  * carries it too — the same rule `night-override.test.ts` proves for `nightOverride`.
  *
  * The settings-only case below goes through the editor's real Server Action
@@ -128,7 +128,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }, 
   ...changes,
 });
 
-describe("the discount note, on a series and a duplicate (§NNN)", () => {
+describe("the discount note, on a series and a duplicate (§394)", () => {
   it("is written on create, for an EXTERNAL + PAID event, in both languages", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const rows = await translationsOf(source.id);
@@ -213,7 +213,7 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     }
   });
 
-  it("a settings-only save through the editor's real action clears the note too, once the mode no longer needs it (§NNN)", async () => {
+  it("a settings-only save through the editor's real action clears the note too, once the mode no longer needs it (§394)", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const before = await translationsOf(source.id);
     expect(before.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
@@ -239,7 +239,7 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     // An Organizer without text rights posts `event.*` alone, scope `all`: no
     // `translations.*` box, so nothing but `clearDiscountNoteIfNotAllowed` on the saved date
     // could clear the note; `translationsAfter` has to see that write for `applyToSeries` to
-    // carry it to the other two dates too (`DECISIONS.md` §NNN).
+    // carry it to the other two dates too (`DECISIONS.md` §394).
     const row = await reloadEvent(source.id);
     const form = settingsOnlyForm(source.id, row.version, { registrationMode: "NONE", externalProvider: "", externalRegistrationUrl: "" });
     form.set("scope", "all");
@@ -287,7 +287,7 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     expect(after.find((r) => r.locale === "en")?.discountNote).toBeNull();
   });
 
-  it("a settings-only series save with scope 'all' still clears a sibling's note when the saved date's own note was already null (§NNN)", async () => {
+  it("a settings-only series save with scope 'all' still clears a sibling's note when the saved date's own note was already null (§394)", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
     const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
@@ -314,7 +314,7 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     }
   });
 
-  it("a settings-only save on a FREE date does not wipe an EXTERNAL + PAID sibling's own note (`DECISIONS.md` §NNN)", async () => {
+  it("a settings-only save on a FREE date does not wipe an EXTERNAL + PAID sibling's own note (`DECISIONS.md` §395)", async () => {
     // The source is FREE from the start — `clearDiscountNoteIfNotAllowed` returns true on
     // *every* save of it, whatever that save actually touches — while a sibling, diverged from
     // it after the series was made, is its own EXTERNAL + PAID date with its own note. Neither

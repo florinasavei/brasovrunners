@@ -5,7 +5,7 @@ import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
 
 /**
- * An optional self-declaration signed on a group run's page (§NNN; the owner, 2026-09-25: "people
+ * An optional self-declaration signed on a group run's page (§393; the owner, 2026-09-25: "people
  * should be able to sign and email it to us").
  *
  * **Never a registration.** A group run is turned up to (§111): no place, no queue, no participant

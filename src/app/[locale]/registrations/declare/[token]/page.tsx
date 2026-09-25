@@ -375,7 +375,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
               // The club's deadlines, should the declaration name one (§377) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
-              // The list-states marker, should the declaration name it (§NNN) — as the PDF fills it.
+              // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
               ...listStatesMergeValues(locale),
             }}
           />

@@ -101,7 +101,7 @@ export default function SignatureField({
   refused?: boolean;
   /**
    * The line under a box with no name to compare (`expectedName` null) — a group run's
-   * self-declaration (§NNN), where nobody registered a name and the signature is the name itself.
+   * self-declaration (§393), where nobody registered a name and the signature is the name itself.
    * Absent: the race's own words.
    */
   help?: string;

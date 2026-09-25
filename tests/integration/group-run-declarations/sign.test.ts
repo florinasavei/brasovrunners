@@ -22,7 +22,7 @@ import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * A group run's optional self-declaration, signed, sent, erased and swept (§NNN).
+ * A group run's optional self-declaration, signed, sent, erased and swept (§393).
  *
  * The owner, 2026-09-25: "I might need a 'declarație pe propria răspundere' for group runs as well,
  * especially for the trail one; this is optional but people should be able to sign and email it to
@@ -132,7 +132,7 @@ async function admin(role: StaffUser["role"] = "ADMIN"): Promise<StaffUser> {
 const claimed = (row: OutboxRow): OutboxRow => ({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW });
 const drawnFrom = (value: unknown) => JSON.stringify((value as DeclarationPdfInput).entries.map((entry) => ({ values: entry.values, signature: entry.signature })));
 
-describe("§NNN signing a group run's self-declaration", () => {
+describe("§393 signing a group run's self-declaration", () => {
   it("writes one row — never a registration — and queues the signer's copy and the club's archive copy", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun();
@@ -315,7 +315,7 @@ describe("§NNN signing a group run's self-declaration", () => {
   });
 });
 
-describe("§NNN erasing one (§67, §88)", () => {
+describe("§393 erasing one (§67, §88)", () => {
   it("is the Administrator's; the Organizer, the Tehnic role and the volunteer are refused", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun();
@@ -383,7 +383,7 @@ describe("§NNN erasing one (§67, §88)", () => {
   });
 });
 
-describe("§NNN retention: the declaration goes seven days after the run", () => {
+describe("§393 retention: the declaration goes seven days after the run", () => {
   it("sweeps a declaration of a run eight days gone with its messages, and keeps one six days gone", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const old = await trailRun({ startsAt: new Date("2026-09-01T16:00:00.000Z") });

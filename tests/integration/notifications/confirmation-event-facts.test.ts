@@ -11,7 +11,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the confirmed email tells the runner everything about the event (the owner, 2026-09-25:
+ * §392 — the confirmed email tells the runner everything about the event (the owner, 2026-09-25:
  * "la mailul de «Înscrierea este confirmată» am nevoie de mai multe detalii, gen locație, program,
  * etc."). One facts block — Când · Unde · Program · Traseu · Cost · Linkuri — drawn by the
  * confirmation, the reminder and the declaration request, each half of the bilingual message in its
@@ -36,7 +36,7 @@ function halves(message: OutgoingEmail): [string, string] {
   return [first, second];
 }
 
-describe("§NNN the event's facts in the confirmed email, the reminder and the declaration request", () => {
+describe("§392 the event's facts in the confirmed email, the reminder and the declaration request", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let sequence = 0;

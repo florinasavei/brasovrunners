@@ -47,7 +47,7 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
- * "3 înscriși în așteptarea confirmării", "5 pe lista de așteptare" (§NNN): the rows the list
+ * "3 înscriși în așteptarea confirmării", "5 pe lista de așteptare" (§396): the rows the list
  * gains behind the privacy notice's gate, each group in its own words, and only the groups that
  * have anybody — "0 pe lista de așteptare" is a sentence about nobody. Counted from the same
  * query the rows are drawn from, so only those who ticked «Vreau să apar»: the phrase counts the

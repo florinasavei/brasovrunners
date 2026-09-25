@@ -631,7 +631,7 @@ export default async function EventFacts({
       route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
     }
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-    // The night event (§NNN, where §382 put the headlamp), with the headlamp's glyph like the pill
+    // The night event (§394, where §382 put the headlamp), with the headlamp's glyph like the pill
     // it is on the card and the page, before the cost — the same pill's words, from the same function.
     if (headlampPill) route.push(withGlyph(GLYPHS.headlamp, headlampPill.label));
     // The coin for the cost, below, is the closed set's other glyph (§112).
@@ -645,7 +645,7 @@ export default async function EventFacts({
     */
     if (event.costType === "PAID" && costPaidToExternalOrganizer(event)) {
       // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-      // form, not the club's (`DECISIONS.md` §NNN): the hero says so plainly, the same wording
+      // form, not the club's (`DECISIONS.md` §394): the hero says so plainly, the same wording
       // the page's cost row uses, and never links `costUrl` — the club's own address is not where
       // this fee goes. The club's own discount, if any, follows on its own piece.
       route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal")));
@@ -857,7 +857,7 @@ export default async function EventFacts({
   const costExtras: ReactNode[] = [];
   let costPill: Pill | null = null;
   // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-  // form, not the club's (`DECISIONS.md` §NNN): the pill says so plainly ("Cu taxă, la
+  // form, not the club's (`DECISIONS.md` §394): the pill says so plainly ("Cu taxă, la
   // organizator") rather than reading like a club fee, and the club's own discount, if any,
   // follows it with the tag glyph (§112).
   const externalPaid = costPaidToExternalOrganizer(event);

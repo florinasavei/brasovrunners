@@ -20,7 +20,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
  * Every window this sweep enforces, in the order it runs them (§322):
  *
  *     identity document, health note   7 days after the event's start (cleared, the rows stay)
- *     a group run's self-declarations  7 days after the event's start (the rows go; §NNN)
+ *     a group run's self-declarations  7 days after the event's start (the rows go; §393)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
  *     throttle buckets                 1 day
@@ -113,7 +113,7 @@ export const RETENTION = {
    */
   identityAndHealthDaysAfterEvent: 7,
   /**
-   * A group run's optional self-declaration (§NNN) goes whole seven days after the run's start —
+   * A group run's optional self-declaration (§393) goes whole seven days after the run's start —
    * the row, the name, the identity document and the address, and the messages that carry them.
    * It exists for the run: nobody registered, no kit was handed out, and there is no three-year
    * record of a registration for it to be the evidence of. The signer keeps the PDF that was
@@ -142,7 +142,7 @@ export type PruneCounts = {
   healthNotes: number;
   /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
   minorSocials: number;
-  /** A group run's self-declarations, gone seven days after the run (§NNN). */
+  /** A group run's self-declarations, gone seven days after the run (§393). */
   groupRunDeclarations: number;
   auditLogs: number;
 };
@@ -258,7 +258,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    A group run's optional self-declarations (§NNN), seven days after the run: the whole row, and
+    A group run's optional self-declarations (§393), seven days after the run: the whole row, and
     first the outbox rows about it, which carry the signer's address — a message not sent by then
     has nothing left to send. Second, beside the identity documents, for the same reason: an
     identity number is the data whose window matters most.

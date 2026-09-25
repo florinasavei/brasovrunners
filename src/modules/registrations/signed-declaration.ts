@@ -193,7 +193,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The club's deadlines, should the declaration name one (§377): read when the PDF is drawn,
       // like the event's facts above — from the instance's memo, once per batch of PDFs.
       ...deadlineMergeValues(locale, await currentDeadlines(db)),
-      // The list-states marker is a general merge field (§NNN) and the declaration editor accepts
+      // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
       ...listStatesMergeValues(locale),
     },

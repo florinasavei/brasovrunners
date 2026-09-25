@@ -15,7 +15,7 @@ import { orderRoutePills, type Pill } from "@/modules/events/ui/route-pills";
 import { buildTemplateContent, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * BR-REQ-020-01, BR-REQ-050-02, the reminder and the calendar file (`DECISIONS.md` §NNN, replacing
+ * BR-REQ-020-01, BR-REQ-050-02, the reminder and the calendar file (`DECISIONS.md` §394, replacing
  * §382's "Necesită frontală" checkbox) — the night event, computed from the sunset.
  *
  * The owner, 2026-09-25: "«Necesită frontală» ar trebui să fie cumva «eveniment de noapte» setat
@@ -77,7 +77,7 @@ const minutes = (a: string, b: string) => {
 };
 const at = (wall: string, zone = ZONE) => fromWallTimeInput(wall, zone)!;
 
-describe("§NNN the sun — NOAA's algorithm against published tables, within five minutes", () => {
+describe("§394 the sun — NOAA's algorithm against published tables, within five minutes", () => {
   /*
     References: timeanddate.com's tables (which follow the same NOAA/USNO definitions: the upper limb
     on the horizon, with refraction) for Bucharest and London, and NOAA's own Solar Calculator for
@@ -132,7 +132,7 @@ describe("§NNN the sun — NOAA's algorithm against published tables, within fi
   });
 });
 
-describe("§NNN the line: civil dusk to civil dawn of the start's own day", () => {
+describe("§394 the line: civil dusk to civil dawn of the start's own day", () => {
   const november = sunTimes("2026-11-18", BRASOV)!;
 
   it("is night from the minute of civil dusk, and not a minute before", () => {
@@ -162,7 +162,7 @@ describe("§NNN the line: civil dusk to civil dawn of the start's own day", () =
   });
 });
 
-describe("§NNN the club's place — CLUB_COORDINATES", () => {
+describe("§394 the club's place — CLUB_COORDINATES", () => {
   it("reads «latitude,longitude» and refuses anything else", () => {
     expect(parseCoordinates("45.6427,25.5887")).toEqual({ latitude: 45.6427, longitude: 25.5887 });
     expect(parseCoordinates(" -33.9 , 18.42 ")).toEqual({ latitude: -33.9, longitude: 18.42 });
@@ -177,7 +177,7 @@ describe("§NNN the club's place — CLUB_COORDINATES", () => {
   });
 });
 
-describe("§NNN nightEvent — the override before the sun", () => {
+describe("§394 nightEvent — the override before the sun", () => {
   it("«Automat» (null) is the sun's answer, with the day's sunset", () => {
     expect(nightEvent({ nightOverride: null, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({
       night: true,
@@ -267,7 +267,7 @@ function rows(html: string) {
   return [...withoutStyles(html).matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt><dd\b[^>]*>([\s\S]*?)<\/dd>/g)].map(([, dt, dd]) => ({ label: text(dt), dd }));
 }
 
-describe("§NNN orderRoutePills — the night event where §382 put the headlamp", () => {
+describe("§394 orderRoutePills — the night event where §382 put the headlamp", () => {
   const surface: Pill = { glyph: "surface:TRAIL", label: "Trail" };
   const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
@@ -288,8 +288,8 @@ describe("§NNN orderRoutePills — the night event where §382 put the headlamp
   });
 });
 
-describe("§NNN the event page's facts", () => {
-  // `event()` defaults to `type: "GROUP_RUN"` (§NNN), so its pill is «Alergare de noapte».
+describe("§394 the event page's facts", () => {
+  // `event()` defaults to `type: "GROUP_RUN"` (§394), so its pill is «Alergare de noapte».
   it("puts «Alergare de noapte» last in the route's pills, with the headlamp and the sunset in its tooltip", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
@@ -332,7 +332,7 @@ describe("§NNN the event page's facts", () => {
   });
 });
 
-describe("§NNN the listing card and the hero", () => {
+describe("§394 the listing card and the hero", () => {
   it("the card's pills: the route, the night run, then the cost", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
     expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte", "Gratuit"]);
@@ -358,7 +358,7 @@ describe("§NNN the listing card and the hero", () => {
   });
 });
 
-describe("§NNN the calendar entry names it after the place, with the sunset", () => {
+describe("§394 the calendar entry names it after the place, with the sunset", () => {
   function chip(values: Partial<Parameters<typeof CalendarEventChip>[0]> = {}) {
     return renderToStaticMarkup(
       createElement(CalendarEventChip, {
@@ -384,7 +384,7 @@ describe("§NNN the calendar entry names it after the place, with the sunset", (
     expect(lines).toEqual(["19:00 Running up that hill", moved.text, "Eveniment de noapte — apusul la 16:44", "Colaborare"]);
   });
 
-  // The fixture is a group run: «Alergare de noapte» in the month view too, as on its card (§NNN).
+  // The fixture is a group run: «Alergare de noapte» in the month view too, as on its card (§394).
   it("the calendar hands each date its own answer, in the reader's language", async () => {
     for (const [locale, words] of [
       ["ro", "Alergare de noapte — apusul la 16:44"],
@@ -410,7 +410,7 @@ describe("§NNN the calendar entry names it after the place, with the sunset", (
   });
 });
 
-describe("§NNN the calendar file's description", () => {
+describe("§394 the calendar file's description", () => {
   function translator(catalogue: { Event: Record<string, unknown> }): CalendarLabels["t"] {
     return (key, values) => {
       const message = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], catalogue.Event);
@@ -450,7 +450,7 @@ describe("§NNN the calendar file's description", () => {
   });
 });
 
-describe("§NNN the reminder's line", () => {
+describe("§394 the reminder's line", () => {
   const base: TemplateData = { participantName: "Ana", eventTitle: "Running up that hill" };
   const paragraphs = (locale: "ro" | "en", data: TemplateData, overrides?: Parameters<typeof buildTemplateContent>[4]) =>
     buildTemplateContent("EVENT_REMINDER", locale, data, undefined, overrides).paragraphs.join("\n");
@@ -474,7 +474,7 @@ describe("§NNN the reminder's line", () => {
     expect(confirmed).not.toContain("Eveniment de noapte");
   });
 
-  it("«Alergare de noapte» on a group run — the owner calls a run a run (§NNN)", () => {
+  it("«Alergare de noapte» on a group run — the owner calls a run a run (§394)", () => {
     expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
     expect(paragraphs("en", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
     // Every other type keeps "Eveniment de noapte" / "Night event" (already proven above).
@@ -482,11 +482,11 @@ describe("§NNN the reminder's line", () => {
   });
 });
 
-describe("§NNN the editor: the closed card's word and the automatic line", () => {
+describe("§394 the editor: the closed card's word and the automatic line", () => {
   const roWords = ro.Admin.editor.boxes.summary as SummaryWords;
   const enWords = en.Admin.editor.boxes.summary as SummaryWords;
 
-  it("«de noapte (automat)», «de noapte», «de zi» — and «de zi (automat)» for an automatic day (§NNN)", () => {
+  it("«de noapte (automat)», «de noapte», «de zi» — and «de zi (automat)» for an automatic day (§394)", () => {
     expect(nightSummary(roWords, null, true)).toBe("de noapte (automat)");
     expect(nightSummary(roWords, true, false)).toBe("de noapte");
     expect(nightSummary(roWords, false, true)).toBe("de zi");
@@ -503,7 +503,7 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: null, nightOverride: null };
     expect(courseSummary(roWords, course, { surface: "Trail", difficulty: "Mediu", night: true })).toBe("Trail · Mediu · 8 km · +250 m · de noapte (automat)");
     expect(courseSummary(roWords, { ...course, nightOverride: false }, { surface: null, difficulty: null, night: true })).toBe("8 km · +250 m · de zi");
-    // §NNN nit: the closed card names an automatic daytime date too, not just an automatic night one.
+    // §394 nit: the closed card names an automatic daytime date too, not just an automatic night one.
     expect(courseSummary(roWords, course, { surface: null, difficulty: null, night: false })).toBe("8 km · +250 m · de zi (automat)");
   });
 
@@ -534,10 +534,10 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     expect(nightAutoLine(lineWords(en, "en"), { date: "", time: "19:00", timeZone: ZONE }, BRASOV).line).toBe(en.Admin.editor.night.autoLineNoDate);
   });
 
-  // §NNN — the owner, 2026-09-25: the start AND the end decide; a run that starts in daylight
+  // §394 — the owner, 2026-09-25: the start AND the end decide; a run that starts in daylight
   // and finishes after dusk is a night run. Three cases: dark at the start, dark only at the end
   // (the end alone decides), and light throughout.
-  describe("the span, not the start alone, decides (§NNN)", () => {
+  describe("the span, not the start alone, decides (§394)", () => {
     // 21:00 in Brașov in June is well after civil dusk: dark at the start already.
     it("dark at the start: night whatever the duration says", () => {
       const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "23:00", timeZone: ZONE }, BRASOV, 30);
@@ -549,7 +549,7 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     it("light at the start, dark by the end: the duration alone makes it a night run", () => {
       const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "19:00", timeZone: ZONE }, BRASOV, 180);
       expect(verdict.line).toContain("eveniment de noapte");
-      // The end is named with its time, in the words of «Durata» (§NNN, review round 3).
+      // The end is named with its time, in the words of «Durata» (§394, review round 3).
       expect(verdict.endLine).toBe("Startul e înainte de amurg, dar alergarea ține până la 22:00 și prinde întunericul — tot eveniment de noapte.");
     });
 
@@ -633,7 +633,7 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     expect(facts.end).toBe("22:00");
   });
 
-  // §NNN (review round 3): «any part of that span». An overnight ultra that starts at 16:00 in June
+  // §394 (review round 3): «any part of that span». An overnight ultra that starts at 16:00 in June
   // and finishes at 08:00 the next morning has both ends in daylight and a whole night inside.
   it("nightEvent: a span with both ends in daylight but the night inside it is a night event", () => {
     const overnight = nightEvent(
@@ -650,7 +650,7 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     expect(island.endLine).toBe("The start is before dusk, but the run lasts until 08:00 and reaches the dark — still a night event.");
   });
 
-  it("the pill's tooltip names the end, by where it came from, in both languages (§NNN)", async () => {
+  it("the pill's tooltip names the end, by where it came from, in both languages (§394)", async () => {
     // 16:00 on 18 November, ninety minutes: dusk falls inside the run.
     const late = event({ startsAt: at("2026-11-18T16:00"), endsAt: at("2026-11-18T17:30") });
     const roHtml = renderToStaticMarkup(await EventFacts({ event: late, now: NOW, stacked: true }));
@@ -701,7 +701,7 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
   });
 });
 
-describe("§NNN the migration", () => {
+describe("§394 the migration", () => {
   it("is 0076_night_override in the journal, landing on top of the external discount note's 0075 (the backfill is proven in tests/integration/db)", () => {
     const journal = JSON.parse(readFileSync("src/db/migrations/meta/_journal.json", "utf8")) as { entries: Array<{ idx: number; tag: string }> };
     expect(journal.entries.find((entry) => entry.tag === "0076_night_override")?.idx).toBe(76);

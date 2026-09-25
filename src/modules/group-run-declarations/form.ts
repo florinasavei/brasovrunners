@@ -1,5 +1,5 @@
 /**
- * The signing form's boxes, by the names they post (§NNN) — what a refusal may name in the address
+ * The signing form's boxes, by the names they post (§393) — what a refusal may name in the address
  * (`?invalid=typedName,email`), and in the order the summary lists them (§47). Names only, never a
  * value (§14.5).
  */

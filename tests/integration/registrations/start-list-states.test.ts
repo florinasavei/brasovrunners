@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (amending §32 and §143) — the rendered public list, both
+ * BR-REQ-039-01, `DECISIONS.md` §396 (amending §32 and §143) — the rendered public list, both
  * faces of the gate.
  *
  * With a privacy notice in force that names `{{participantListStates}}` — the platform's own
@@ -60,7 +60,7 @@ async function approveNotice(bodies: { ro: LegalDocumentBody; en: LegalDocumentB
   });
 }
 
-/** A notice approved before §NNN: it describes the confirmed names and says nothing of states. */
+/** A notice approved before §396: it describes the confirmed names and says nothing of states. */
 const OLDER_NOTICE = {
   ro: { sections: [{ heading: "4. Lista publică", paragraphs: ["Lista publică arată doar numele participanților confirmați care au bifat."] }] },
   en: { sections: [{ heading: "4. Public list", paragraphs: ["The public list shows only the names of confirmed participants who ticked."] }] },
@@ -175,7 +175,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN with a notice that describes the states", () => {
+describe("§396 with a notice that describes the states", () => {
   it("lists the confirmed, then the pending, then the waiting list — each with its word, in Romanian", async () => {
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     const event = await mixedEvent();
@@ -212,7 +212,7 @@ describe("§NNN with a notice that describes the states", () => {
   });
 });
 
-describe("§NNN with a notice approved before it", () => {
+describe("§396 with a notice approved before it", () => {
   it("is exactly today's list: the confirmed names, no words, nobody else", async () => {
     await approveNotice(OLDER_NOTICE);
     const event = await mixedEvent();
@@ -239,7 +239,7 @@ describe("§NNN with a notice approved before it", () => {
   });
 });
 
-describe("§NNN the marker check the backoffice reads", () => {
+describe("§396 the marker check the backoffice reads", () => {
   it("is off with no notice, off with an older one, on with the platform's, off again if the next version drops it", async () => {
     expect(await noticeDescribesListStates(db, NOW)).toBe(false);
     await approveNotice(OLDER_NOTICE, 1);

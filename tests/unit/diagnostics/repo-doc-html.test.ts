@@ -7,7 +7,7 @@ import { renderRepoDocMarkdown } from "@/modules/diagnostics/repo-docs";
 /**
  * GitHub task lists (`- [ ]` / `- [x]`), rendered by `marked` — the one renderer `/devs/docs`
  * and `/admin/tasks`'s «Aplicația» / «The app» panel share (`repo-docs.ts`, `RepoDocHtml.tsx`,
- * `DECISIONS.md` §88, §NNN). This runs the fixture below through `renderRepoDocMarkdown` — the
+ * `DECISIONS.md` §88, §397). This runs the fixture below through `renderRepoDocMarkdown` — the
  * exact function `renderRepoDoc` calls — rather than depending on a tracked document's own
  * content: a live doc's task list can empty out (the dispatcher clears § Later) without turning
  * this test unrelated-red.

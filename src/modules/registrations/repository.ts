@@ -467,7 +467,7 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
 
 /**
  * The rows the public list gains once the privacy notice in force describes the states
- * (`DECISIONS.md` §NNN, amending §32 and §143): the registered who have not confirmed yet, then
+ * (`DECISIONS.md` §396, amending §32 and §143): the registered who have not confirmed yet, then
  * the waiting list.
  *
  * Only ever called behind that gate — `StartList` asks `cachedListStatesDisclosed` first — and

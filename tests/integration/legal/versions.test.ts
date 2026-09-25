@@ -153,7 +153,7 @@ describe("BR-REQ-053-01 sample legal documents (DECISIONS.md §29)", () => {
     expect(() => assertSampleLegalDocumentsAllowed()).not.toThrow();
   });
 
-  it("covers every key in both languages — the three a registration rests on, and the group runs' two (§NNN)", () => {
+  it("covers every key in both languages — the three a registration rests on, and the group runs' two (§393)", () => {
     expect(SAMPLE_DOCUMENTS.map((document) => document.key).sort()).toEqual([
       "EVENT_DECLARATION",
       "GROUP_RUN_DECLARATION_ASPHALT",

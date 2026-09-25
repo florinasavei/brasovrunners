@@ -1,7 +1,7 @@
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 
 /**
- * Every legal document key, in the order the backoffice lists them (§NNN): the three a
+ * Every legal document key, in the order the backoffice lists them (§393): the three a
  * registration rests on (BR-REQ-053-01), then the group runs' two optional self-declarations.
  *
  * Written out here rather than read off the enum, so a client component (the legal editor's
@@ -20,7 +20,7 @@ export const LEGAL_DOCUMENT_KEYS = [
 export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const satisfies readonly LegalDocumentKey[];
 
 /**
- * The two optional self-declarations of a group run (§NNN), by the surface they are written for.
+ * The two optional self-declarations of a group run (§393), by the surface they are written for.
  * They gate nothing: no registration asks for them, and no registration is refused without them.
  */
 export const GROUP_RUN_DECLARATION_KEYS = ["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"] as const satisfies readonly LegalDocumentKey[];
@@ -31,7 +31,7 @@ export function isGroupRunDeclarationKey(key: string): key is GroupRunDeclaratio
 }
 
 /**
- * Which declaration a group run may offer, by what it is run on (§NNN): asphalt's or the trail's.
+ * Which declaration a group run may offer, by what it is run on (§393): asphalt's or the trail's.
  * Anything else — a race, a hike, a mixed or unstated surface — has none: the risks the two texts
  * name are the surface's, and a mixed route would need a third text nobody has written.
  */
@@ -43,7 +43,7 @@ export function groupRunDeclarationKeyFor(event: { type: string; surface: string
 }
 
 /**
- * The declaration an event offers right now, or null (§NNN): a group run on asphalt or trail whose
+ * The declaration an event offers right now, or null (§393): a group run on asphalt or trail whose
  * organizer ticked "Declarație opțională pe propria răspundere". Whether the club has an approved
  * version of that kind in force is the caller's second question — without one there is nothing to
  * sign, and the page shows nothing.

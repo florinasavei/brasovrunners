@@ -251,7 +251,7 @@ describe("the calendar file", () => {
     expect(donation).toContain("Donație: pe wingsforlifeworldrun.com · sugerat 50 lei");
   });
 
-  it("carries an EXTERNAL-registration PAID event's cost as «Cost: {amount}, la organizator», with the discount note (§NNN)", () => {
+  it("carries an EXTERNAL-registration PAID event's cost as «Cost: {amount}, la organizator», with the discount note (§394)", () => {
     const external = calendarDescription(
       { ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei pentru membri" },
       labelsRo,
@@ -276,9 +276,9 @@ describe("the calendar file", () => {
     expect(internal).not.toContain("la organizator");
   });
 
-  // §NNN (review round 3): the file reads the span as the pill and the reminder do — a daylight
+  // §394 (review round 3): the file reads the span as the pill and the reminder do — a daylight
   // start whose own end, or whose programme's last row, falls after dusk is a night event here too.
-  it("says the night line for a daylight start that ends after dusk, from the end or the programme (§NNN)", () => {
+  it("says the night line for a daylight start that ends after dusk, from the end or the programme (§394)", () => {
     // 16:00 on 18 November in Brașov, ninety minutes: dusk (~17:15) falls inside.
     const november = {
       ...event,

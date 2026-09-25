@@ -54,7 +54,7 @@ export default function GlyphChip({
   glyph: GlyphName;
   label: string;
   /**
-   * Why the pill is there, on hover and on a tap (§NNN: the night pill's "Apusul la 16:36 — ia o
+   * Why the pill is there, on hover and on a tap (§394: the night pill's "Apusul la 16:36 — ia o
    * frontală"). It describes the chip rather than naming it (`describeChild`), so the chip's words
    * stay what a screen reader announces first.
    */

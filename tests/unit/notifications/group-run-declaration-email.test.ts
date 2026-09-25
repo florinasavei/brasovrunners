@@ -3,7 +3,7 @@ import { placeholdersFilledBy } from "@/modules/notifications/email-copy-fields"
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * §NNN — the two messages of a group run's self-declaration: the signer's copy and the club's
+ * §393 — the two messages of a group run's self-declaration: the signer's copy and the club's
  * archive copy. Bilingual like every message (§96), with no action button (there is nothing to
  * manage), the signer's with a privacy line that says why it came (§323), the club's with none.
  */
@@ -18,7 +18,7 @@ const DATA: TemplateData = {
 const render = (messageType: "GROUP_RUN_DECLARATION_SIGNED" | "GROUP_RUN_DECLARATION_ARCHIVE", locale: "ro" | "en") =>
   buildOutgoingEmail({ to: "x@example.test", locale, idempotencyKey: `t:${messageType}:${locale}`, messageType, data: DATA });
 
-describe("§NNN the group run's declaration messages", () => {
+describe("§393 the group run's declaration messages", () => {
   it("tells the signer it is their copy, that it registered them for nothing, in both halves", () => {
     for (const locale of ["ro", "en"] as const) {
       const email = render("GROUP_RUN_DECLARATION_SIGNED", locale);

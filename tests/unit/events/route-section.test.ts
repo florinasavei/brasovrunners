@@ -278,7 +278,7 @@ describe("BR-REQ-050-02 the «Traseul» card says it on its closed line and warn
   const long = doc("Oprire cu apă la km 4, apoi urcarea pe serpentine până la creastă.");
 
   it("«cu descriere» / «with a description» when written in both languages", () => {
-    // §NNN: `labels.night` is not `true` here (automatic, unstated), so «de zi (automat)» names it.
+    // §394: `labels.night` is not `true` here (automatic, unstated), so «de zi (automat)» names it.
     expect(courseSummary(summaryWords("ro"), course, labels, [language("ro", DESCRIPTION_RO), language("en", DESCRIPTION_EN)])).toBe(
       "Trail · Mediu · 8 km · +250 m · de zi (automat) · traseu · cu descriere",
     );

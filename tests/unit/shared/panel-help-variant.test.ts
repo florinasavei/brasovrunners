@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import Panel from "@/shared/ui/Panel";
 
 /**
- * §NNN — the owner, on the event editor's «Ce înseamnă fiecare tip?»: "ar trebui să fie un card
+ * §398 — the owner, on the event editor's «Ce înseamnă fiecare tip?»: "ar trebui să fie un card
  * mai mic". `Panel`'s `help` variant is a small clickable line instead of a boxed card: no
  * border, no elevation, no heading tag — a caret and a sentence, closed by default (§336). The
  * same variant, with `legendIcon="info"`, is the field legend on `/admin/emails` (§373's
@@ -17,7 +17,7 @@ function render(el: ReactElement): string {
   return markup(renderToStaticMarkup(el));
 }
 
-describe("§NNN Panel's help variant", () => {
+describe("§398 Panel's help variant", () => {
   it("is a plain <details>, closed by default, no card frame, no heading tag", () => {
     const html = render(
       createElement(Panel, { variant: "help", collapsible: true, title: "Ce înseamnă fiecare tip?" }, createElement("p", null, "words")),

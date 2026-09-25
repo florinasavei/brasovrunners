@@ -18,7 +18,7 @@ import { staffUsers } from "./staff-users";
  * The legal document families of AGENTS.md §12.5. One versioning mechanism serves all of them.
  *
  * `EVENT_DECLARATION` is the race's declaration, the one a registration cannot be confirmed
- * without (BR-REQ-053-01). The two group-run declarations (§NNN) are optional self-declarations
+ * without (BR-REQ-053-01). The two group-run declarations (§393) are optional self-declarations
  * a runner may sign on a group run's page, one per surface: the Tâmpa trail run and the asphalt
  * runs carry different risks. They gate nothing — no registration, no place.
  */

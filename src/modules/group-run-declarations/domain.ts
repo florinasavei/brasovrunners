@@ -1,5 +1,5 @@
 /**
- * The pure rules of a group run's optional self-declaration (§NNN), shared by the run's page, the
+ * The pure rules of a group run's optional self-declaration (§393), shared by the run's page, the
  * signing page and the service, with no database behind them.
  */
 
@@ -7,7 +7,7 @@
 export const SIGNING_GRACE_MINUTES = 60;
 
 /**
- * Whether a signature may still be taken (§NNN): a published event, not cancelled, whose start is
+ * Whether a signature may still be taken (§393): a published event, not cancelled, whose start is
  * at most `SIGNING_GRACE_MINUTES` behind. After that the declaration would be about a run that has
  * happened, and the retention sweep is the next thing that touches it.
  */
@@ -29,7 +29,7 @@ export const ID_DOCUMENT_MAX = 80;
 export const ERASE_REASON_MAX = 500;
 
 /**
- * How many days after the run's start the platform deletes its self-declarations (§NNN). One
+ * How many days after the run's start the platform deletes its self-declarations (§393). One
  * number for the sweep (`RETENTION.groupRunDeclarationsDaysAfterEvent` is this), the run's page,
  * the signing page, the backoffice fold and both emails: each says it through `durationPhrase`,
  * never as a word typed into a sentence, so changing it here changes every sentence at once.
@@ -37,7 +37,7 @@ export const ERASE_REASON_MAX = 500;
 export const GROUP_RUN_DECLARATION_RETENTION_DAYS = 7;
 
 /**
- * Whether the event's backoffice page draws "Declarații semnate (alergare de grup)" (§NNN): when
+ * Whether the event's backoffice page draws "Declarații semnate (alergare de grup)" (§393): when
  * the run offers the declaration now, or when some are still kept from before the organizer
  * unticked it — never merely because the run is on asphalt or trail.
  */

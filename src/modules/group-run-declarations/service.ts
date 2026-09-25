@@ -24,7 +24,7 @@ import { ERASE_REASON_MAX, ID_DOCUMENT_MAX, signingOpen, TYPED_NAME_MAX } from "
 import { insertGroupRunDeclaration } from "./repository";
 
 /**
- * Signing a group run's optional self-declaration, and erasing one (§NNN).
+ * Signing a group run's optional self-declaration, and erasing one (§393).
  *
  * **Never a registration.** A group run is turned up to (§111): signing creates no participant, no
  * registration and no place, touches no capacity and passes through no allocator. It writes one
@@ -169,7 +169,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       acceptedAt: now,
       createdAt: now,
     });
-    // The signer's copy, with the PDF: no participant, no registration, no token (§NNN).
+    // The signer's copy, with the PDF: no participant, no registration, no token (§393).
     await enqueueEmail(tx, {
       participantId: null,
       registrationId: null,
@@ -201,7 +201,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
 }
 
 /**
- * An Administrator erases one group-run declaration (§NNN, the shape of §67 and §88).
+ * An Administrator erases one group-run declaration (§393, the shape of §67 and §88).
  *
  * The audit row first, in the same transaction: who acted, why, and the event — never who had
  * signed (`AGENTS.md` §12.12). Then the messages about it that still hold the signer's address, and

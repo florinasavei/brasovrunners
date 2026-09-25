@@ -103,7 +103,7 @@ export default async function KindBox({
                 warning
               />
             )}
-            {/* A compact help fold, not a card (§NNN; the owner: "«Ce înseamnă fiecare tip?» ar
+            {/* A compact help fold, not a card (§398; the owner: "«Ce înseamnă fiecare tip?» ar
                 trebui să fie un card mai mic"): a clickable line, closed by default (§336). */}
             <Panel collapsible variant="help" title={t("editor.typeHelpSummary")}>
               <Typography variant="body2" color="text.secondary">

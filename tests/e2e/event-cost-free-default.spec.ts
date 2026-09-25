@@ -4,12 +4,12 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * `DECISIONS.md` §NNN — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite".
+ * `DECISIONS.md` §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite".
  * The create page's cost select preselects "Gratuit"; a save that never opens "Participare și
  * înscrieri" still writes it, and the public page reads "Gratuit" without anyone having touched
  * the cost box at all.
  */
-test.describe("a new event starts free (§NNN)", () => {
+test.describe("a new event starts free (§398)", () => {
   test("the create page shows Gratuit selected, and the explainer fold is closed at 320px", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");

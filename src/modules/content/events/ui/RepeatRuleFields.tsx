@@ -203,7 +203,7 @@ export function RepeatPublishField({
 }) {
   const recall = useRecall();
   const [on, setOn] = useState(recall.has ? recall.value(name) === "on" : true);
-  // The robot (§NNN): the same glyph as the source event's Recurență card, leading this
+  // The robot (§398): the same glyph as the source event's Recurență card, leading this
   // switch's own line too, decorative and aria-hidden.
   const RenewIcon = ACTION_ICONS.renew;
   return (

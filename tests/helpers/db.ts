@@ -90,7 +90,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   forgetCachedAddressCap();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
-  // A group run's self-declarations (§NNN) reference the event and the legal version: before both.
+  // A group run's self-declarations (§393) reference the event and the legal version: before both.
   await db.delete(groupRunDeclarations);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);

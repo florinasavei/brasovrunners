@@ -43,7 +43,7 @@ type Props = {
  *
  * A legend fold under the editor, closed (§336), whose closed line counts the fields and the
  * ones this message uses ("12 câmpuri · 4 folosite aici") — drawn a little differently from an
- * ordinary card (§NNN; the owner, 11:10, on this exact accordion: "trebuie să fie un pic diferit
+ * ordinary card (§398; the owner, 11:10, on this exact accordion: "trebuie să fie un pic diferit
  * de celelalte acordeoane și cu un «i» button"): `Panel`'s `help` variant, no border, led by an
  * "i". A Server Component: the fold is `<details>`, the rows are text.
  */

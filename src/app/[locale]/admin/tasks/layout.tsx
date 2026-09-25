@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * This section has no child routes, so its `loading.tsx` covers only its own page and no route
  * group is needed to scope it.
  *
- * `canOpenTasks` (`modules/diagnostics/domain/task-panels.ts`, `DECISIONS.md` §NNN) is wider
+ * `canOpenTasks` (`modules/diagnostics/domain/task-panels.ts`, `DECISIONS.md` §397) is wider
  * than the old `canManageRegistrations` alone, since 2026-09-25: Tehnic may open this page too,
  * for the "Aplicația" panel only — the page itself asserts which panel each role may reach.
  */

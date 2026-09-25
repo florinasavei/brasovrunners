@@ -197,7 +197,7 @@ export function participantMessageBcc(setting: ClubNotices | null): readonly str
  */
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>([
   "DECLARATION_ARCHIVE",
-  // The group run's archive copy (§NNN): the club's own, like the race's.
+  // The group run's archive copy (§393): the club's own, like the race's.
   "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",

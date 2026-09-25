@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §NNN, replacing §382's checkbox) — "Eveniment de
+ * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §394, replacing §382's checkbox) — "Eveniment de
  * noapte", computed from the sunset: a 19:00 group run in November is a night event on the listing
  * card, the event page (in both languages) and the calendar entry without anybody ticking anything,
  * and the editor says so before the save; the same run moved to June is not; "Da" in June is.
@@ -126,7 +126,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
 
   test("the event page carries the pill in both languages, with the torch and the sunset", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
-    // «Alergare de noapte», not «Eveniment de noapte»: a group run is a run (§NNN).
+    // «Alergare de noapte», not «Eveniment de noapte»: a group run is a run (§394).
     const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
@@ -190,19 +190,19 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
   });
 
-  test("a start in daylight that finishes after dusk is a night run too (§NNN)", async ({ page }) => {
+  test("a start in daylight that finishes after dusk is a night run too (§394)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
     await openEditorBox(page, "Data și ora");
     // Back to November, light at 16:00 (civil dusk that day is 17:17), but 90 minutes of duration
-    // crosses it — a start in daylight that finishes after dusk (§NNN).
+    // crosses it — a start in daylight that finishes after dusk (§394).
     await fillDateField(page, "Începutul evenimentului", NOVEMBER);
     await fillTimeField(page, "Ora", "16:00");
     await page.locator('[name="event.durationMinutes"]').fill("90");
     await openEditorBox(page, "Traseul");
     await expect(autoLine(page)).toHaveText(/— eveniment de noapte$/);
-    // The end is named with its time and its source, «Durata» (§NNN, review round 3).
+    // The end is named with its time and its source, «Durata» (§394, review round 3).
     await expect(page.getByTestId("night-end-line")).toHaveText(/alergarea ține până la 17:30 și prinde întunericul/);
     await saveWithChoice(page, "Automat (după apus)", true);
 

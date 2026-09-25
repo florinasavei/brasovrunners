@@ -40,7 +40,7 @@ const FULL_ROUTE = {
   difficulty: "EASY" as const,
   distanceMeters: 10000,
   elevationGainMeters: 300,
-  // A Wednesday 19:00 in November: after dusk in Brașov, so the automatic answer is a night event (§NNN).
+  // A Wednesday 19:00 in November: after dusk in Brașov, so the automatic answer is a night event (§394).
   startsAt: new Date("2026-11-18T17:00:00Z"),
   endsAt: null,
   scheduleItems: null,
@@ -52,7 +52,7 @@ const FULL_ROUTE = {
 
 /** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
 function chips(fragment: string) {
-  // `[^>]*` before the class: the night pill's tooltip (§NNN) puts its words in a `title` first.
+  // `[^>]*` before the class: the night pill's tooltip (§394) puts its words in a `title` first.
   return [...fragment.matchAll(/<div [^>]*?class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),
     small: classes.includes("MuiChip-sizeSmall"),
@@ -111,7 +111,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     expect(pills.at(-1)?.srSuffix).toBeUndefined();
   });
 
-  it("adds the organizer's screen-reader-only suffix only on EXTERNAL + PAID (§NNN)", async () => {
+  it("adds the organizer's screen-reader-only suffix only on EXTERNAL + PAID (§394)", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const internalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "INTERNAL" }, t, format);

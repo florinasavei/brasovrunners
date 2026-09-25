@@ -1,7 +1,7 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 
 /**
- * The public participant list's three groups (`DECISIONS.md` §NNN, amending §32 and §143).
+ * The public participant list's three groups (`DECISIONS.md` §396, amending §32 and §143).
  *
  * The owner, 2026-09-25: "pe lista de participanți publică trebuie să apară și statusul, ca
  * oamenii să știe că sunt pe lista de așteptare sau anulați sau ce or fi." A runner on the
@@ -22,7 +22,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
  * **Everything else is nobody here.** `PENDING_EMAIL_CONFIRMATION` is an address nobody has proved
  * yet — publishing it would publish whoever typed somebody else's name. `CANCELLED` and `EXPIRED`
  * are withdrawals, and a withdrawal is not announced (the owner's "anulați" is recorded as a
- * question, §NNN). An erased registration has no row at all.
+ * question, §396). An erased registration has no row at all.
  *
  * Pure and dependency-free, because the repository's filters read these lists: the words each
  * group is shown with are the catalogue's (`Event.startList.states`), read by `list-state-words.ts`.

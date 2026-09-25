@@ -10,7 +10,7 @@ import { orderRoutePills, routePillParts } from "@/modules/events/ui/route-pills
 import { COLOR } from "@/theme/brand";
 
 /**
- * The event's facts in an email, as one block (§NNN; the owner, 2026-09-25: "la mailul de
+ * The event's facts in an email, as one block (§392; the owner, 2026-09-25: "la mailul de
  * «Înscrierea este confirmată» am nevoie de mai multe detalii, gen locație, program, etc.").
  *
  * Six rows, the event page's own questions in the page's own words (`EventFacts`, §356): **Când**

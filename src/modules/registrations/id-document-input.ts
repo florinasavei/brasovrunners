@@ -7,7 +7,7 @@
  * a text the club approved, and the signed PDF has to read as a sentence — "Carte de identitate BV
  * 123456". The kind is translated at this moment, in the language the person is signing in,
  * because that is the language of the document they are signing. Shared by the race's declaration
- * and a group run's self-declaration (§NNN).
+ * and a group run's self-declaration (§393).
  */
 export function idDocumentFrom(form: FormData, t: (key: string) => string, field: "idDocument" | "minorIdDocument"): string | undefined {
   const series = String(form.get(field) ?? "").trim();

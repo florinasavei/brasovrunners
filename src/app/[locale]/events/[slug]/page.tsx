@@ -242,7 +242,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           the address under the place. */}
       <EventFacts event={event} now={now} stacked />
 
-      {/* A group run's optional self-declaration (§NNN), under the route's pills at `#declaratie`:
+      {/* A group run's optional self-declaration (§393), under the route's pills at `#declaratie`:
           only where the organizer offered it and the club has approved the text of its surface. */}
       <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
 

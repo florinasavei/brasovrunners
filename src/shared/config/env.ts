@@ -145,7 +145,7 @@ export const envSchema = z
     CLUB_STRAVA_URL: z.url().optional(),
 
     /**
-     * Where the club runs, "latitude,longitude" in decimal degrees (§NNN): the place whose sunset
+     * Where the club runs, "latitude,longitude" in decimal degrees (§394): the place whose sunset
      * decides whether a start is a night event — the pill, the calendar line and the reminder's
      * line, unless the organizer said "Da" or "Nu". A fact of the club like `CLUB_NAME` (§369),
      * but configuration rather than a constant because another club running this platform

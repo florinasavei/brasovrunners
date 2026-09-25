@@ -45,7 +45,7 @@ export const routing = defineRouting({
     "/calendar": { ro: "/calendar", en: "/calendar" },
     "/events/[slug]": { ro: "/evenimente/[slug]", en: "/events/[slug]" },
     "/events/[slug]/register": { ro: "/evenimente/[slug]/inscriere", en: "/events/[slug]/register" },
-    // A group run's optional self-declaration (§NNN): the page that signs it, never a registration.
+    // A group run's optional self-declaration (§393): the page that signs it, never a registration.
     "/events/[slug]/declaration": { ro: "/evenimente/[slug]/declaratie", en: "/events/[slug]/declaration" },
 
     /**

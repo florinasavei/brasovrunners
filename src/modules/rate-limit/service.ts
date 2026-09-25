@@ -115,7 +115,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    */
   "contact-message": { limit: 5, windowMs: 60 * 60_000 },
   /**
-   * A group run's optional self-declaration (§NNN), keyed on a hash of the signer's canonical
+   * A group run's optional self-declaration (§393), keyed on a hash of the signer's canonical
    * email like the contact form's. Every signature queues two messages — the signer's PDF and the
    * club's archive copy — so a script posting the page spends the club's Mailgun allowance twice
    * per post. Five an hour is a runner signing for Monday and correcting a typo, several times over.

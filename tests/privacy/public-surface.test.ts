@@ -261,12 +261,12 @@ describe("§346 what the anonymous count may contain — nothing but itself", ()
 });
 
 /**
- * §NNN (amending §32 and §143) — the rows the list gains once the privacy notice in force
+ * §396 (amending §32 and §143) — the rows the list gains once the privacy notice in force
  * describes the states: the ticked ones who have not confirmed yet, then the waiting list. A
  * deliberate widening, and a narrow one: a name, a club and a *group* — never the lifecycle's own
  * state, a date or an identifier — and never an unproved address, a withdrawal or a test row.
  */
-describe("§NNN what the pending and waiting rows may contain", () => {
+describe("§396 what the pending and waiting rows may contain", () => {
   const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
 
   it("lists the ticked pending, then the ticked waiting list in queue order — and nobody else", async () => {

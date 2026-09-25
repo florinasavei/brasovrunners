@@ -99,7 +99,7 @@ export const dynamic = "force-dynamic";
  * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
  *   club must be able to switch it off on the day it refuses real people.
  * - `costs` — what the club pays today and what the next thing to cost anything would cost.
- * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §NNN).
+ * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §397).
  *
  * A query parameter, not four routes: each panel needs the same session and the same reading of
  * the system (`describeTasks`), so four routes would be four copies of this page's head.
@@ -196,7 +196,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   }
 
   const t = await getTranslations("Admin.tasks");
-  // «Aplicația» / «The app» sits after «Sistem» (§NNN; the owner asked for one more tab, not a
+  // «Aplicația» / «The app» sits after «Sistem» (§397; the owner asked for one more tab, not a
   // rearrangement of the others). `opsTaskPanels` is empty for a Tehnic, who never sees the
   // club's worklist or its money.
   const subNavItems = [
@@ -211,7 +211,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   /**
    * The app tab: `docs/QUEUE.md`, rendered read-only through the same renderer `/devs/docs`
-   * uses (`repo-docs.ts`, `DECISIONS.md` §88, §NNN). It needs none of the club's registration
+   * uses (`repo-docs.ts`, `DECISIONS.md` §88, §397). It needs none of the club's registration
    * or money data below, so it answers on its own — the only path a Tehnic-only session ever
    * reaches, and the lightest one for an Administrator who just wants to read the queue.
    *
@@ -368,7 +368,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
-      // §NNN: the text in force switches the public list's states on, in every language.
+      // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,

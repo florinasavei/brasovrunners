@@ -23,7 +23,7 @@ import { LanguageTabs } from "./TextBoxes";
 
 /**
  * Card 1.2, "Traseul" (§350, §358), inside "Ce fel de eveniment": what they run on, how hard, how
- * long and how steep, whether it is a night event (automatic from the sunset, §NNN), and where the route can be
+ * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
  *
@@ -46,10 +46,10 @@ export default async function CourseBox({
   const tEvent = await getTranslations("Event");
   const locale = await getLocale();
   const { words } = await summaryWords();
-  // The event's own start on its own clock, for the night line's first paint (§NNN).
+  // The event's own start on its own clock, for the night line's first paint (§394).
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const wall = toWallTimeInput(event?.startsAt ?? null, zone);
-  // The span's end for the first paint, by the server's rule (§NNN): «Durata» (the saved end), else
+  // The span's end for the first paint, by the server's rule (§394): «Durata» (the saved end), else
   // the programme's rows on the event's clock — the island reads both from the form after.
   const savedMinutes = event?.endsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : null;
   const savedProgramme = readScheduleItems(event?.scheduleItems).map((row) => {
@@ -66,7 +66,7 @@ export default async function CourseBox({
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
         difficulty: event?.difficulty ? t(`editor.difficultyValues.${event.difficulty}`) : null,
-        // The automatic answer for the event's own date (§NNN), read by the same function as the pill.
+        // The automatic answer for the event's own date (§394), read by the same function as the pill.
         night: event ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
       languages.map((entry) => entry.translation),
@@ -134,7 +134,7 @@ export default async function CourseBox({
             sx={{ flex: 1 }}
           />
         </Stack>
-        {/* "Eveniment de noapte" (§NNN, replacing §382's "Necesită frontală"): Automat by default —
+        {/* "Eveniment de noapte" (§394, replacing §382's "Necesită frontală"): Automat by default —
             the Wednesday hill run is a night event from autumn to spring by its own sunset — with
             "Da" and "Nu" for the organizer who knows better, and the automatic answer under it. */}
         <Box>
@@ -151,7 +151,7 @@ export default async function CourseBox({
             // inside the one `ActionForm` this card also lives in. On the edit page, "Repetă" is a
             // separate `ActionForm` (the aside's own submit, `scope="repeat"`), so a name here could
             // never be read from this form's data; the series sentence there depends on `inSeries`
-            // alone, computed server-side from the event's own row (§NNN).
+            // alone, computed server-side from the event's own row (§394).
             seriesToggleName={event ? undefined : "repeat.on"}
             words={{
               label: t("editor.night.label"),
@@ -169,7 +169,7 @@ export default async function CourseBox({
           />
           <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
-        {/* "Declarație opțională pe propria răspundere" (§NNN): a group run on asphalt or trail may
+        {/* "Declarație opțională pe propria răspundere" (§393): a group run on asphalt or trail may
             offer its surface's self-declaration — on by default for trail, the mountain rescue asks
             for it on the Tâmpa run. An island: it follows the type and surface selects above. */}
         <GroupRunDeclarationField

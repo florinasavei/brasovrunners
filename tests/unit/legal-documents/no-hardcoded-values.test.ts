@@ -34,7 +34,7 @@ import { CLUB_NAME, WORDMARK } from "@/theme/brand";
  * the platform's own fixed periods (48 hours, 30 minutes, three years…), which are the same for
  * every event because the code makes them so.
  */
-// Every key, the group runs' two declarations included (§NNN).
+// Every key, the group runs' two declarations included (§393).
 const KEYS: readonly LegalDocumentKey[] = LEGAL_DOCUMENT_KEYS;
 
 const texts = (body: LegalDocumentBody) => body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]);

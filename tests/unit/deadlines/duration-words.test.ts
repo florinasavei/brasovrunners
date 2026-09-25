@@ -3,7 +3,7 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlineMergeValues, isMergeField, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-// The notice also names the public list's states since §NNN, filled from the catalogue as the page fills it.
+// The notice also names the public list's states since §396, filled from the catalogue as the page fills it.
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 
 /**

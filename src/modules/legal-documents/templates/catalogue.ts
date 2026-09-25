@@ -33,7 +33,7 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Declarație pe proprie răspundere", body: declarationRo },
     en: { title: "Declaration of own responsibility", body: declarationEn },
   },
-  // The group runs' optional self-declarations, one per surface (§NNN).
+  // The group runs' optional self-declarations, one per surface (§393).
   GROUP_RUN_DECLARATION_ASPHALT: {
     ro: { title: "Declarație pe propria răspundere (alergare de grup, asfalt)", body: groupRunAsphaltRo },
     en: { title: "Self-declaration (group run, asphalt)", body: groupRunAsphaltEn },

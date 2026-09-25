@@ -298,7 +298,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {(() => {
               const renewal = renewalOf(members.map((member) => member.event.repeatRule));
               if (!renewal) return null;
-              // The robot (§NNN; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu
+              // The robot (§398; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu
               // că se reînnoiește automat"), leading the sentence unchanged — decorative, since
               // the sentence itself already says "automat".
               const RenewIcon = ACTION_ICONS.renew;

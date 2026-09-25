@@ -1,7 +1,7 @@
 import { toWallTimeInput } from "./zoned-time";
 
 /**
- * When the sun sets over the club's place, and whether a start is in the dark (§NNN; the owner,
+ * When the sun sets over the club's place, and whether a start is in the dark (§394; the owner,
  * 2026-09-25: "«Necesită frontală» ar trebui să fie cumva «eveniment de noapte» setat automat în
  * funcție de ora de start și când apune soarele").
  *

@@ -419,7 +419,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     locationToBeAnnounced: fields.locationToBeAnnounced,
-    // §NNN — the owner: "by default toate evenimentele sunt gratuite". A create that posts no
+    // §398 — the owner: "by default toate evenimentele sunt gratuite". A create that posts no
     // cost type at all (the field absent — `costType` is optional, like `costAmount`/`costUrl`
     // above) stores `FREE`, the same default the form's own select preselects
     // (`initialCostTypeOf`); an edit that posts none leaves the stored value alone, exactly the
@@ -435,7 +435,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     nightOverride: fields.nightOverride,
-    // Only a group run on asphalt or trail has a self-declaration to offer (§NNN): anything else
+    // Only a group run on asphalt or trail has a self-declaration to offer (§393): anything else
     // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
     // turn-up type's registration block.
     offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
@@ -654,7 +654,7 @@ async function writePlaceNames<T extends Record<string, unknown>>(tx: Transactio
 
 /**
  * Clears `discountNote` on both languages' rows when the event's saved fields no longer allow
- * one (`DECISIONS.md` §NNN) — inside the event save's transaction, like `writePlaceNames` above,
+ * one (`DECISIONS.md` §394) — inside the event save's transaction, like `writePlaceNames` above,
  * because the settings save an Organizer without text rights makes never touches a translation
  * row through `applyTranslationSave`. Without this, switching the mode away from `EXTERNAL` +
  * `PAID` on the settings panel alone would leave a stale note nobody with text rights posted
@@ -752,7 +752,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     /** The type the event has after this save — the form's, when the settings are saved too. */
     eventType: EditableEvent["type"];
     /**
-     * Whether `discountNote` may be written after this save (`DECISIONS.md` §NNN) — the mode and
+     * Whether `discountNote` may be written after this save (`DECISIONS.md` §394) — the mode and
      * cost type the event has after it, the same discipline `eventType` follows above.
      */
     registrationMode: EditableEvent["registrationMode"];
@@ -829,7 +829,7 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
     // The route / training description (§387): on every type — a group run has a route too.
     routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
-    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): kept only while
+    // The club's discount on an external event's own fee (`DECISIONS.md` §394): kept only while
     // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
     ...(discountAllowed ? {} : { discountNote: null }),
   };
@@ -1467,10 +1467,10 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
-  // The night override, a fact of the route like the two above (§382, §NNN). "Automat" carried to
+  // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
   // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
   "nightOverride",
-  // The self-declaration offered on the run's page (§NNN), like the night override: "from this
+  // The self-declaration offered on the run's page (§394), like the night override: "from this
   // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
   "registrationMode",
@@ -1516,7 +1516,7 @@ const SERIES_TRANSLATION_COLUMNS = [
   // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
   "seoTitle",
   "seoDescription",
-  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §NNN): a series
+  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §394): a series
   // edit's discount note carries the way its cost does.
   "discountNote",
 ] as const;
@@ -1561,7 +1561,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
     /** The club's deadlines, read before the transaction, for the offers a raised capacity makes (§377). */
     deadlines: Deadlines;
     /**
-     * `clearDiscountNoteIfNotAllowed`'s result on the saved date (`DECISIONS.md` §NNN): the
+     * `clearDiscountNoteIfNotAllowed`'s result on the saved date (`DECISIONS.md` §394): the
      * mode or cost moved off `EXTERNAL` + `PAID`, so no date in scope may keep a note — reached
      * here regardless of what `translationChanges` below found, because a saved date whose own
      * note was already `null` shows no *change* to carry, yet a sibling's stale note still has
@@ -1648,7 +1648,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
 
   /*
     Only members whose own post-propagation state is not `EXTERNAL` + `PAID` lose the note
-    (`DECISIONS.md` §NNN) — `input.discountNoteCleared` says the *saved* date moved off that
+    (`DECISIONS.md` §395) — `input.discountNoteCleared` says the *saved* date moved off that
     combination, not every sibling: a sibling that is `EXTERNAL` + `PAID` on its own and whose
     mode/cost this save never touches keeps its note. Ahead of the per-member loop below, so a
     date whose only change is this one still reads correctly if that loop later touches it too.
@@ -1908,7 +1908,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       // was loaded before this update ran and still carries the stale note in memory — without
       // it, `translationsAfter` would compare that stale value against itself, see no change,
       // and a series save (scope `following`/`all`) would leave every other date's note in
-      // place (`DECISIONS.md` §NNN).
+      // place (`DECISIONS.md` §394).
       discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, savedEvent);
     }
 
@@ -2308,11 +2308,11 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
-    // The night override travels with the route (§382, §NNN): a copy, and every date a series
+    // The night override travels with the route (§382, §394): a copy, and every date a series
     // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
     // night event by its own sunset.
     nightOverride: source.nightOverride,
-    // The self-declaration travels with the route too (§NNN): a copy of the trail run, and every
+    // The self-declaration travels with the route too (§393): a copy of the trail run, and every
     // date a series makes from it, offers the same declaration.
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
     featured: false,
@@ -2756,7 +2756,7 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   }
 
   // `event_translations` cascades from the event, and so do a group run's self-declarations
-  // (§NNN) — whose outbox rows go first, in the same transaction, since nothing could render them.
+  // (§393) — whose outbox rows go first, in the same transaction, since nothing could render them.
   await db.transaction(async (tx) => {
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
     await tx.delete(events).where(eq(events.id, input.eventId));
@@ -2867,7 +2867,7 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
     // `event_translations` and `registration_interests` cascade; a gallery album's `event_id`
     // and a later edition's `repeat_of` are set to null. The registrations are gone above,
     // which is the only reference that would have refused this. A group run's self-declarations
-    // cascade too (§NNN); their outbox rows carry the signer's address and could never render
+    // cascade too (§393); their outbox rows carry the signer's address and could never render
     // without them, so they go first.
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));

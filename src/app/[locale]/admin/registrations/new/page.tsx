@@ -77,7 +77,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // `max` the island computes once an event is chosen, and today and 120 years ago from here, as
   // on the public form, so the server's render and the browser's agree.
   const now = new Date();
-  // §NNN: whether the public lists show each runner's stage — the list tick's help says so then.
+  // §396: whether the public lists show each runner's stage — the list tick's help says so then.
   const listStatesOn = await noticeDescribesListStates(getDb(), now);
   const eventDays = Object.fromEntries(events.map((event) => [event.id, dayIn(event.startsAt, event.timezone)]));
   // Each event's own minimum age (§329), so the date's bound follows the event chosen.
@@ -222,7 +222,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.listOptInHelp")}
               </Typography>
-              {/* §NNN: said to the person on the phone too, once the notice in force describes it. */}
+              {/* §396: said to the person on the phone too, once the notice in force describes it. */}
               {listStatesOn && (
                 <Typography variant="body2" color="text.secondary" data-testid="staff-list-opt-in-states">
                   {t("registrations.listOptInStates", listStateWords(locale))}

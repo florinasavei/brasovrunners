@@ -66,10 +66,10 @@ export function deadlineMergeValues(
 }
 
 /**
- * The privacy notice's marker for the public list's states (§NNN, amending §32 and §143), and
+ * The privacy notice's marker for the public list's states (§396, amending §32 and §143), and
  * the words it is filled with.
  *
- * Since §NNN the public participant list may say, beside each name, where the registration
+ * Since §396 the public participant list may say, beside each name, where the registration
  * stands — "Confirmat", "Înscris, în așteptarea confirmării", "Pe lista de așteptare" — and it
  * lists the pending and the waiting too, not only the confirmed. That is a wider disclosure than
  * the one the club's approved notice describes, so it is the notice that switches it on, the way
@@ -243,7 +243,7 @@ export function asksForMinorSignature(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the public list's states (§NNN): it does when it names
+ * Whether a privacy notice describes the public list's states (§396): it does when it names
  * `{{participantListStates}}`, anywhere the merge would fill it. The gate for showing them, and
  * the pending and waiting groups, on every public list at once — one mechanism, the same shape
  * as `asksForMinorSignature` (§330): the club's approval of a text is the switch, with no setting

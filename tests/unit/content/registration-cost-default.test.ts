@@ -9,7 +9,7 @@ import { initialCostTypeOf } from "@/modules/content/events/ui/box-summaries";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite". A new event's
+ * §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite". A new event's
  * cost select preselects `FREE` (`initialCostTypeOf`, tested on its own in
  * `box-summaries.test.ts`); this checks that `RegistrationBox` actually reads the select's
  * `defaultValue`, and `CostFields`' visibility switch, off that one function — so the create
@@ -23,7 +23,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const SOURCE = readFileSync(path.join(process.cwd(), "src", "modules", "content", "events", "ui", "boxes", "RegistrationBox.tsx"), "utf8");
 
-describe("§NNN a new event starts free", () => {
+describe("§398 a new event starts free", () => {
   it("computes the box's cost value with initialCostTypeOf, not straight off the event", () => {
     expect(SOURCE).toContain("const initialCostType = initialCostTypeOf(event);");
   });
@@ -39,7 +39,7 @@ describe("§NNN a new event starts free", () => {
   });
 });
 
-describe("§NNN initialCostTypeOf agrees with RegistrationBox's use of it", () => {
+describe("§398 initialCostTypeOf agrees with RegistrationBox's use of it", () => {
   it("FREE on create, kept as typed on an edit — including an unstated cost", () => {
     expect(initialCostTypeOf(null)).toBe("FREE");
     expect(initialCostTypeOf({ costType: null })).toBe("");
@@ -48,14 +48,14 @@ describe("§NNN initialCostTypeOf agrees with RegistrationBox's use of it", () =
 });
 
 /**
- * §NNN — the "saved value" half, proven through the create service rather than by reading
+ * §398 — the "saved value" half, proven through the create service rather than by reading
  * `RegistrationBox`'s source: a create posted with `costType` omitted — what a form that never
  * renders the box (or a caller that never mentions it) would post — writes `FREE` on its own,
  * because the service now defaults it on create; the row reads back `FREE`, not null and not
  * the DB column's own default. A second case proves an edit given the same omission is not
  * touched: the service only defaults on create, never on save.
  */
-describe("§NNN a create that never opens the cost box saves FREE, and reads back FREE", () => {
+describe("§398 a create that never opens the cost box saves FREE, and reads back FREE", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -197,13 +197,13 @@ describe("§NNN a create that never opens the cost box saves FREE, and reads bac
 });
 
 /**
- * §NNN — a regression test: `eventColumnsFrom` (the one place create and save both build the
+ * §398 — a regression test: `eventColumnsFrom` (the one place create and save both build the
  * `events` columns through) dropped `difficulty: fields.difficulty` while adding the cost-type
  * default above it, so a create silently stored `null` and a save never changed a difficulty
  * the club picked, though nothing refused it — the column is nullable, so typecheck stayed
  * clean and nothing else caught it. This proves both paths read HARD back.
  */
-describe("§NNN a picked difficulty survives create and save", () => {
+describe("§398 a picked difficulty survives create and save", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

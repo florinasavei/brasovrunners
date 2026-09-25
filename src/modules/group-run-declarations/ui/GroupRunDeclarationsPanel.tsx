@@ -15,7 +15,7 @@ import { ERASE_REASON_MAX, GROUP_RUN_DECLARATION_RETENTION_DAYS } from "../domai
 import type { GroupRunDeclarationListRow } from "../repository";
 
 /**
- * "Declarații semnate (alergare de grup)" on the event's backoffice page (§NNN): who signed the
+ * "Declarații semnate (alergare de grup)" on the event's backoffice page (§393): who signed the
  * run's optional self-declaration, and when, with each one's PDF. A closed fold (§336).
  *
  * For whoever may read the registrations — the Organizer and the Administrator (§289); the page

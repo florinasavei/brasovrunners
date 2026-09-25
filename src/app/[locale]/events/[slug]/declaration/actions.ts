@@ -22,7 +22,7 @@ function text(form: FormData, name: string): string {
 }
 
 /**
- * The group run's self-declaration, signed (§NNN). Always a redirect back to the signing page:
+ * The group run's self-declaration, signed (§393). Always a redirect back to the signing page:
  * `?done=1` when signed (or when a bot's post was ignored, answered the same, §19.4); `?invalid=`
  * with the refused boxes' names, never a value (§14.5), what was typed riding back sealed (§314);
  * `?changed=1` when a newer version took effect between reading and signing (§57); `?limited=1`

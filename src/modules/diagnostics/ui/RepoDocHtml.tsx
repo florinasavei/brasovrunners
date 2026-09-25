@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 /**
  * The one styling of a repository document's rendered HTML (`repo-docs.ts`), shared by
  * `/devs/docs/[name]` and `/admin/tasks`'s "Aplicația" / "The app" panel (`DECISIONS.md` §88,
- * §NNN) — a single place that knows what `marked` writes, rather than two copies drifting apart.
+ * §397) — a single place that knows what `marked` writes, rather than two copies drifting apart.
  *
  * Task lists (`- [ ]` / `- [x]`) are GFM, which `marked` already renders as a `<li>` holding a
  * disabled `<input type="checkbox">` and the item's text — no extension needed. This is the one

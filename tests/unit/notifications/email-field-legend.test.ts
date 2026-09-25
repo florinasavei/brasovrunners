@@ -141,7 +141,7 @@ describe("§373 the fields of an email's words, as a legend", () => {
     }
   });
 
-  it("is a legend fold, closed, whose closed line counts the fields and the ones used here — led by an «i», not a card (§NNN)", async () => {
+  it("is a legend fold, closed, whose closed line counts the fields and the ones used here — led by an «i», not a card (§398)", async () => {
     // Emotion's style tags aside, the whole legend is one fold.
     const html = (await render("REGISTRATION_CONFIRMED", "ro")).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
     expect(html.startsWith("<details")).toBe(true);

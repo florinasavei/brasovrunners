@@ -58,7 +58,7 @@ import ListStateLabel from "./ListStateLabel";
  * from the same two counts the rows are drawn from, so it matches the confirmed count the club
  * sees in the backoffice, test registrations excluded (`AGENTS.md` §12.6).
  *
- * ## The states, behind the privacy notice (§NNN)
+ * ## The states, behind the privacy notice (§396)
  *
  * Once the privacy notice in force describes it (`cachedListStatesDisclosed` — the notice names
  * `{{participantListStates}}`), every row says where its registration stands — "Confirmat",
@@ -88,7 +88,7 @@ export default async function StartList({
   // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
   const { named, anonymous } = await cachedStartListCounts(event.id);
-  // The gate (§NNN): the notice in force, in every language, describes the states. Off, nothing
+  // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(new Date());
   const others = statesOn ? await cachedStartListOthersCounts(event.id) : { pending: 0, waitlisted: 0 };
@@ -141,7 +141,7 @@ export default async function StartList({
               {confirmedPhrase(t, locale, { confirmed: view.confirmed, named })}
             </Typography>
           )}
-          {/* Behind the notice's gate (§NNN): how many of the rows after the confirmed ones are
+          {/* Behind the notice's gate (§396): how many of the rows after the confirmed ones are
               in each group — only those who ticked, since only they are rows. */}
           {extra.length > 0 && (
             <Typography variant="body2" data-testid="start-list-others-summary" sx={{ pb: 1 }}>
@@ -217,7 +217,7 @@ export default async function StartList({
                   </Box>
                 ))}
                 {/*
-                  Behind the notice's gate (§NNN): the ticked ones who have not confirmed yet, then
+                  Behind the notice's gate (§396): the ticked ones who have not confirmed yet, then
                   the waiting list in queue order. No position — a number would read as a place in
                   the confirmed order, or on the waiting list, and the second is the question the
                   owner left open (default: not shown).

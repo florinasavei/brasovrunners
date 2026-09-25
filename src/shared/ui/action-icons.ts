@@ -108,7 +108,7 @@ export type ActionIconName =
   | "repeat"
   | "repeatStop"
   | "cover"
-  // The robot that keeps a series going on its own (§NNN; the owner, on the events list's "Se
+  // The robot that keeps a series going on its own (§398; the owner, on the events list's "Se
   // reînnoiește automat" line: "aici am nevoie de o iconiță gen «robot» ca să știu că se
   // reînnoiește automat"). Never `repeat` — that glyph is the action of repeating one event, and
   // this marks the platform doing it unattended.

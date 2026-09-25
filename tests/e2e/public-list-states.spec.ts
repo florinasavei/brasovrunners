@@ -6,7 +6,7 @@ import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (amending §32 and §143) — the public participant list says
+ * BR-REQ-039-01, `DECISIONS.md` §396 (amending §32 and §143) — the public participant list says
  * where each registration stands, and lists the pending and the waiting too, only while the
  * privacy notice in force describes it (it names `{{participantListStates}}`).
  *
@@ -16,7 +16,7 @@ import { signIn } from "./support/featured-event";
  *   the confirmed, "Înscris, în așteptarea confirmării", "Pe lista de așteptare" — on `/ro` and on
  *   `/en`, and nobody cancelled, unconfirmed or unticked;
  * - **without it** (a notice version approved without the marker): the confirmed names alone, no
- *   words — exactly the list before §NNN — and `/admin/legal` says what is missing.
+ *   words — exactly the list before §396 — and `/admin/legal` says what is missing.
  *
  * The notice is the club's text, so the switch is flipped the way the club flips it: a version
  * approved in `/admin/legal`, which expires the public pages' cached copy of the notice (§333). The
@@ -226,7 +226,7 @@ async function restoreMarker(page: Page): Promise<void> {
   await expect.poll(async () => JSON.stringify((await withDatabase(noticeInForce)).translations).includes(MARKER)).toBe(true);
 }
 
-test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice (§NNN)", () => {
+test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice (§396)", () => {
   // A click that cannot happen fails in seconds and names itself, rather than at the test's end.
   test.use({ actionTimeout: 20_000, navigationTimeout: 60_000 });
 

@@ -146,7 +146,7 @@ export const translationFieldsSchema = z
     seoTitle: optionalText(200).optional(),
     seoDescription: optionalText(320).optional(),
     /**
-     * The club's discount on an external event's own fee (`DECISIONS.md` §NNN): shown, and
+     * The club's discount on an external event's own fee (`DECISIONS.md` §394): shown, and
      * postable, only on an `EXTERNAL`-registration, `PAID` event — the box is hidden otherwise
      * (`RegistrationBox`), and the service clears the column when the mode or cost type stops
      * needing it, whatever this caller posted. Optional in the input like `checklist`; both
@@ -611,7 +611,7 @@ export const eventFieldsSchema = z
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
-    // §NNN — optional, like `costAmount`/`costUrl` below: absent means this caller is not
+    // §398 — optional, like `costAmount`/`costUrl` below: absent means this caller is not
     // editing the cost fields at all, not "clear it". The service defaults an *absent* value to
     // `FREE` only on create (`eventColumnsFrom`, the owner: "by default toate evenimentele sunt
     // gratuite"); a save that omits it leaves the stored value untouched, the same discipline
@@ -692,13 +692,13 @@ export const eventFieldsSchema = z
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     /**
-     * "Eveniment de noapte" (§NNN, replacing §382's checkbox): the organizer's override — true
+     * "Eveniment de noapte" (§394, replacing §382's checkbox): the organizer's override — true
      * "Da", false "Nu", null "Automat" (after sunset, `events/domain/night.ts`). Optional for a
      * caller from before it existed, which means automatic.
      */
     nightOverride: z.boolean().nullable().optional().default(null),
     /**
-     * "Declarație opțională pe propria răspundere" (§NNN): the group run's self-declaration, a
+     * "Declarație opțională pe propria răspundere" (§393): the group run's self-declaration, a
      * checkbox in "Traseul". Optional for a caller from before it existed, which means none offered;
      * the service keeps it only on a group run on asphalt or trail (`groupRunDeclarationKeyFor`).
      */

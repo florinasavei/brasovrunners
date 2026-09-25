@@ -236,10 +236,10 @@ function eventFieldsFrom(form: FormData) {
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
-    // "Eveniment de noapte" (§NNN): the three choices in "Traseul" — "yes", "no", or "auto" (and
+    // "Eveniment de noapte" (§394): the three choices in "Traseul" — "yes", "no", or "auto" (and
     // an absent value) for the sunset's own answer.
     nightOverride: nightOverrideFromChoice(value("nightOverride")),
-    // The group run's optional self-declaration (§NNN): a checkbox in "Traseul"; unticked, or
+    // The group run's optional self-declaration (§393): a checkbox in "Traseul"; unticked, or
     // disabled because the club has no approved text of that kind, posts nothing: not offered.
     offersGroupRunDeclaration: form.get("event.offersGroupRunDeclaration") === "on",
     featured: form.get("event.featured") === "on",
@@ -307,7 +307,7 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
-    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), posted from the
+    // The club's discount on an external event's own fee (`DECISIONS.md` §394), posted from the
     // cost card's own strip (`RegistrationBox`), which now renders for a words-only reader too
     // (no settings rights) as well as inside the settings editor's `CostFields`. Read only when
     // the box was actually posted, the way `reminderHoursBefore` above is — an absent box (a
@@ -949,7 +949,7 @@ export async function withdrawInterestAction(_previous: FormOutcome | null, form
 }
 
 /**
- * An Administrator erases one group run's self-declaration (§NNN): the reason typed, the audit row
+ * An Administrator erases one group run's self-declaration (§393): the reason typed, the audit row
  * first (who and why, never who had signed). The coarse gate here and the service's own, which is
  * the one that holds (BR-REQ-060-01). A reason left empty comes back in its box (§315).
  */

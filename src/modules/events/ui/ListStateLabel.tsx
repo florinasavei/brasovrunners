@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import type { PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 
 /**
- * Where a registration stands, beside a name on the public list (`DECISIONS.md` §NNN): "Confirmat",
+ * Where a registration stands, beside a name on the public list (`DECISIONS.md` §396): "Confirmat",
  * "Înscris, în așteptarea confirmării", "Pe lista de așteptare". One component for the three, so
  * they read as one kind of thing — a muted word, not a badge competing with the name.
  *

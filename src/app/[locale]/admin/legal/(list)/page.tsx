@@ -148,7 +148,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     )
   ).filter((key) => key !== null);
   /*
-    §NNN: the public list shows each runner's stage, and the pending and waiting groups, only
+    §396: the public list shows each runner's stage, and the pending and waiting groups, only
     while the notice in force names `{{participantListStates}}`. Said here, where the text that
     would switch it on is approved, only while a notice is in force and does not — with none at
     all, the "one step" box above is the thing to do, and registration is closed anyway.

@@ -63,7 +63,7 @@ async function acquireFeaturedEventLock(): Promise<void> {
  * treat as it likes), says how long it has stood; past `FEATURED_LOCK_STALE_MS` nobody plausibly
  * still holds it, so it is broken here and the loop above's next `mkdirSync` takes it instead.
  *
- * Breaking it is rename-then-remove, not check-then-remove (`DECISIONS.md` §NNN): two workers
+ * Breaking it is rename-then-remove, not check-then-remove (`DECISIONS.md` §395): two workers
  * can both read the marker as stale, but `renameSync` to a name carrying this process's own pid
  * only succeeds for one of them — a directory can have one name at a time, so the loser's rename
  * fails with `ENOENT`/`EEXIST` and it falls through to polling again instead of removing

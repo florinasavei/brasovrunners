@@ -206,13 +206,13 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     );
 
     // Sorted, at the event's wall clock (09:00 EEST), the Romanian half first and the English after —
-    // the facts block's own row now (§NNN), one line per row, in place of the one sentence.
+    // the facts block's own row now (§392), one line per row, in place of the one sentence.
     expect(message.text).toContain("Program: 09:00 — Ridicarea numerelor (Cort)\n  09:30 — Briefing");
     expect(message.text).toContain("Programme: 09:00 — Number pickup (Cort)\n  09:30 — Briefing");
     expect(message.text).not.toContain("Programul: 09:00");
   });
 
-  it("says the sunset and to bring a light in the reminder of a night event only (§NNN)", async () => {
+  it("says the sunset and to bring a light in the reminder of a night event only (§394)", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const row = {
@@ -244,13 +244,13 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(day.text).not.toContain("Night run");
 
     // A Wednesday 19:00 in November, automatic: after dusk — the sunset of that day in both
-    // halves. The fixture's type is GROUP_RUN (§NNN), so the run's own words: «Alergare de noapte».
+    // halves. The fixture's type is GROUP_RUN (§394), so the run's own words: «Alergare de noapte».
     await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
     const night = await render();
     expect(night.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
     expect(night.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
 
-    // §NNN (review round 3): a daylight start whose own end («Durata», no programme rows) is after
+    // §394 (review round 3): a daylight start whose own end («Durata», no programme rows) is after
     // dusk — 16:00 to 17:30 on 18 November — carries the line too; ending at 16:45, it does not.
     await db
       .update(events)
@@ -312,7 +312,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     await db.update(events).set({ links: [{ kind: "GPX", url: drive, labelRo: null, labelEn: null }] }).where(eq(events.id, event.id));
     const withLinks = await renderOutboxMessage({ ...row, id: "row-l2", idempotencyKey: "test:l2" }, db, NOW);
     expect(withLinks.html).toMatch(/\/evenimente\/crosul#links"/);
-    // One link in each half's facts block (§NNN), to the page's section — never the Drive address.
+    // One link in each half's facts block (§392), to the page's section — never the Drive address.
     expect(withLinks.text).toMatch(/Linkuri și fișiere: \S+\/evenimente\/crosul#links/);
     expect(withLinks.text).toMatch(/Links and files: \S+\/evenimente\/crosul#links/);
     expect(withLinks.html).not.toContain(drive);

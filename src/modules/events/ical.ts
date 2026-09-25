@@ -94,7 +94,7 @@ export type CalendarEvent = {
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
   /**
-   * The organizer's night override (§NNN): true "Da", false "Nu", null or absent "Automat" — the
+   * The organizer's night override (§394): true "Da", false "Nu", null or absent "Automat" — the
    * start and the end against civil dusk and dawn at the club's place (the end is `endsAt`, else
    * the programme's last row of the day). A night event gets a line of its own under the facts
    * line, "Eveniment de noapte — apusul la 16:36, ia o frontală" in the calendar's language.
@@ -107,9 +107,9 @@ export type CalendarEvent = {
   costAmount?: string | null;
   /** Where a paid event is settled, or where a donation is made (§343); https, or nothing. */
   costUrl?: string | null;
-  /** Whether registration is with another organizer (§NNN) — a `PAID` cost then reads "la organizator". */
+  /** Whether registration is with another organizer (§394) — a `PAID` cost then reads "la organizator". */
   registrationMode?: "NONE" | "INTERNAL" | "EXTERNAL" | null;
-  /** The club's discount on an `EXTERNAL`-registration `PAID` event's own fee (§NNN), in the calendar's language. */
+  /** The club's discount on an `EXTERNAL`-registration `PAID` event's own fee (§394), in the calendar's language. */
   discountNote?: string | null;
   /** The links group (§159): each line only when the organizer gave the link. */
   routeUrl?: string | null;
@@ -370,7 +370,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   */
   const costFacts = ((): string[] => {
     if (event.costType === "PAID" && event.registrationMode === "EXTERNAL") {
-      // The place is entered and paid at the organizer's own form (§NNN), never the club's: its
+      // The place is entered and paid at the organizer's own form (§394), never the club's: its
       // own line, "Cost: 75 lei, la organizator", with the club's discount after it when there
       // is one — the same fact the page's cost row and pill state.
       const main = event.costAmount ? t("costPaidExternalLine", { amount: event.costAmount }) : t("costPaidExternal");
@@ -389,8 +389,8 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     return event.costType ? [t(`costValues.${event.costType}`)] : [];
   })();
 
-  // A night event (§NNN): this date's own answer, from the one function every surface asks.
-  // The span decides (§NNN): the event's own end, else the programme's last row of the day —
+  // A night event (§394): this date's own answer, from the one function every surface asks.
+  // The span decides (§394): the event's own end, else the programme's last row of the day —
   // the same inputs the pill and the reminder read, so the file cannot stay silent where they speak.
   const night = clubNightEvent({
     nightOverride: event.nightOverride ?? null,
@@ -399,7 +399,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     endsAt: event.endsAt,
     programme: event.programme,
   });
-  // A group run is «Alergare de noapte», as on its card and in its reminder (§NNN).
+  // A group run is «Alergare de noapte», as on its card and in its reminder (§394).
   const run = event.type === "GROUP_RUN";
   const nightLine = night.night
     ? night.sunset
@@ -462,7 +462,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     place.lines,
     excerpt ? [{ text: excerpt }] : [],
     body ? [{ text: body }] : [],
-    // A night event (§NNN, where §382 put the headlamp) on its own line under the facts: a thing to
+    // A night event (§394, where §382 put the headlamp) on its own line under the facts: a thing to
     // pack, read on the morning of a dark evening's run, not one more word lost among the route's.
     [times, facts, nightLine].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],

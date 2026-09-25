@@ -33,7 +33,7 @@ export async function resolveLocaleSwitch(
 
   if (!parsed) return listing;
 
-  // The group run's self-declaration page (§NNN) is the event's page in the other language too.
+  // The group run's self-declaration page (§393) is the event's page in the other language too.
   if (parsed.route === "/events/[slug]" || parsed.route === "/events/[slug]/register" || parsed.route === "/events/[slug]/declaration") {
     const slug = parsed.params.slug;
     if (!slug) return listing;

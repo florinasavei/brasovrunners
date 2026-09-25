@@ -8,7 +8,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — a group run's self-declaration is kept for one number of days, and every sentence that
+ * §393 — a group run's self-declaration is kept for one number of days, and every sentence that
  * says how long reads that number: the sweep, the run's page, the signing page, the backoffice
  * fold and both emails. A "șapte zile" typed into one of them would stay behind the day the rule
  * changed.
@@ -18,7 +18,7 @@ const DATA: TemplateData = { participantName: "Ana Popescu", eventTitle: "Tura p
 /** The spelled-out or digit forms of the current value, in either language. */
 const LITERALS = /șapte zile|seven days|\b7 zile\b|\b7 days\b/i;
 
-describe("§NNN one retention for a group run's self-declaration", () => {
+describe("§393 one retention for a group run's self-declaration", () => {
   it("is the sweep's own window", () => {
     expect(RETENTION.groupRunDeclarationsDaysAfterEvent).toBe(GROUP_RUN_DECLARATION_RETENTION_DAYS);
   });

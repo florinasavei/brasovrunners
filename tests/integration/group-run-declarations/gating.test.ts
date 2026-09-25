@@ -12,7 +12,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-053-01, §NNN — the group runs' two declarations gate nothing.
+ * BR-REQ-053-01, §393 — the group runs' two declarations gate nothing.
  *
  * A registration still rests on the three texts it always did: no approved privacy notice, no
  * registration; the race's declaration is what a registration signs and what confirms it. An
@@ -87,7 +87,7 @@ async function race(): Promise<EventForRegistration> {
   };
 }
 
-describe("BR-REQ-053-01 the group runs' declarations gate nothing (§NNN)", () => {
+describe("BR-REQ-053-01 the group runs' declarations gate nothing (§393)", () => {
   it("do not stand in for the privacy notice: with only them approved, a registration is still refused", async () => {
     await approve("GROUP_RUN_DECLARATION_ASPHALT");
     await approve("GROUP_RUN_DECLARATION_TRAIL");

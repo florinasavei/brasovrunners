@@ -1,7 +1,7 @@
 import type { LegalDocumentBody } from "../domain/content-hash";
 
 /**
- * The optional self-declarations of a group run (§NNN), one per surface: asphalt and trail.
+ * The optional self-declarations of a group run (§393), one per surface: asphalt and trail.
  *
  * The owner, 2026-09-25: "I might need a 'declarație pe propria răspundere' for group runs as well,
  * especially for the trail one; this is optional but people should be able to sign and email it to
@@ -28,7 +28,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * **Adults only, for now.** The signer declares for themselves: `{{participant}}` and
  * `{{idDocument}}` are the signer's own name and document. A minor's signature beside a parent's
  * (§330) is the race's flow, bound to a registration; whether a parent may sign here for a child is
- * the owner's question (listed in §NNN). Until it is answered, both texts open with the signer's own
+ * the owner's question (listed in §393). Until it is answered, both texts open with the signer's own
  * statement that they are 18 or older, and the signing page's consent box repeats it: a minor cannot
  * give this declaration alone, so the archive must not hold one that looks as if they did.
  *

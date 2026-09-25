@@ -3,7 +3,7 @@ import { signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-090-05 — `/admin/tasks`'s «Aplicația» / «The app» tab: `docs/QUEUE.md`, the
- * dispatcher's own work queue, rendered read-only (`DECISIONS.md` §368, §NNN).
+ * dispatcher's own work queue, rendered read-only (`DECISIONS.md` §368, §397).
  *
  * The owner, 2026-09-25: "în «De făcut» vreau un tab unde să randez efectiv MD file din repo cu
  * tasklisturi și ce mai e de făcut în aplicație." Unit-tested: the role gate
@@ -34,7 +34,7 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     await expect(main.getByRole("heading", { name: "Later" })).toBeVisible();
 
     // The lead line above the document: one sentence, in the page's own language — never the
-    // other one beside it (§NNN).
+    // other one beside it (§397).
     await expect(main.getByText(/din depozit/)).toBeVisible();
     await expect(main.getByText(/from the repository/)).toHaveCount(0);
   });
@@ -50,7 +50,7 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
 
   test("a Tehnic reaches the tab from the backoffice's own nav, not only a typed address", async ({ page }) => {
     await signIn(page, "Dev Technical");
-    // A page a Tehnic may already open (§NNN, `canWorkTheDesk`), not a typed `/admin/tasks`
+    // A page a Tehnic may already open (§397, `canWorkTheDesk`), not a typed `/admin/tasks`
     // address: the backoffice tab bar itself has to offer the way in.
     await page.goto("/ro/admin/checkin");
     await expect(page.getByRole("tab", { name: "De făcut" })).toBeVisible();

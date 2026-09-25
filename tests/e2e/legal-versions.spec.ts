@@ -39,7 +39,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await page.getByRole("combobox").first().click();
     await page
       .getByRole("option", {
-        // The race's declaration, named as the owner named the three since §NNN.
+        // The race's declaration, named as the owner named the three since §393.
         name: wantsTerms ? /Termeni|Terms/ : /\(concurs\)|\(race\)/,
       })
       .click();

@@ -85,7 +85,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: field,
     example: inBoth((locale) => deadlineMergeValues(locale, DEFAULT_DEADLINES)[field]),
   })),
-  // The privacy notice's marker for the public list's states (§NNN): filled with the three words
+  // The privacy notice's marker for the public list's states (§396): filled with the three words
   // the list prints, and the switch that lets the list print them (`describesListStates`).
   {
     token: `{{${LIST_STATES_MERGE_FIELD}}}`,

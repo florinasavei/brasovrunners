@@ -86,7 +86,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
             })}
           </Typography>
           {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text
-              itself, and the public list's three state words (§NNN), from the catalogue the list reads. */}
+              itself, and the public list's three state words (§396), from the catalogue the list reads. */}
           <LegalDocumentBody
             body={document.body}
             values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale) }}

@@ -8,6 +8,15 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.96-2026-09-25
+
+- **The confirmed email, the reminder and the declaration request** now carry one shared facts block — Când · Unde · Program · Traseu · Cost · Linkuri — above the QR and under the club's own text, each half in its own language, with the event's own page linked first in Linkuri §392.
+- **An optional self-declaration on a group run**: a group run on asphalt or trail can offer its own "declarație pe propria răspundere" (on by default for trail). The runner signs it in the page's language, confirms they are 18 or older, and gets the PDF by email. The club's archive gets a copy with the ID masked, and the platform deletes it seven days after the run (migration `0072`). §393.
+- **Night events from sunset** — events after civil dusk or before civil dawn are marked automatically from the club's coordinates, with an Automat/Da/Nu override on the editor and the pill on every public surface. §394.
+- **A club discount note on an external event's own fee** — the club's own words on an `EXTERNAL`-registration, `PAID` event's cost row, both languages, and a screen reader is told the fee is paid to the organizer, never the club, on the event page, the listing card and its featured hero alike (§395). §395.
+- **The public participant list says where each runner stands** — «Confirmat», «Înscris, în așteptarea confirmării», «Pe lista de așteptare» beside every name, with the ticked pending and waiting after the confirmed, only while the privacy notice in force describes it (`{{participantListStates}}`); without it the list is unchanged. §396.
+- **`/admin/tasks` gains «Aplicația»**, docs/QUEUE.md rendered read-only and open to Tehnic through a real link in the backoffice's own nav, not only a typed address §397.
+- **A closed line reads as one sentence at 320 px, and the series' robot glyph reaches the editor's own switch** — the field legend's title and count wrap as one paragraph, not two narrow columns, and the recurrence card's publish-state and renewal lines carry the same robot glyph as the events list. §398.
 ## BR-V1.95-2026-09-25
 
 - **The partner marker is Material's `Handshake` icon again**, not the grayscale-filtered 🤝 emoji, on the listing card, the calendar and the event page's overline — §391.

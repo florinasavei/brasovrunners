@@ -7,13 +7,13 @@ import { emailSampleActionUrl, emailSampleEventFacts, emailSampleFor } from "@/m
 import { renderBilingual } from "@/modules/notifications/templates";
 
 /**
- * §NNN — the event's facts block: the platform's, like the button and the QR, so the closed set of
+ * §392 — the event's facts block: the platform's, like the button and the QR, so the closed set of
  * fields the club writes with is unchanged; and the previews on `/admin/emails` draw it for every
  * message that carries it, from the sample event, never from a fact typed into the page.
  */
 const CARRIERS: EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION"];
 
-describe("§NNN the facts block is not a placeholder", () => {
+describe("§392 the facts block is not a placeholder", () => {
   it("leaves the closed set of fields exactly as it was", () => {
     expect([...EMAIL_COPY_PLACEHOLDERS]).toEqual([
       "participantName",
@@ -36,7 +36,7 @@ describe("§NNN the facts block is not a placeholder", () => {
   });
 });
 
-describe("§NNN the previews draw the block with the sample event", () => {
+describe("§392 the previews draw the block with the sample event", () => {
   for (const messageType of CARRIERS) {
     for (const locale of ["ro", "en"] as const) {
       it(`${messageType} (${locale}) shows every row, each half in its own language`, () => {

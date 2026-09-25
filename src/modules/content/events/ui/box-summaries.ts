@@ -329,7 +329,7 @@ type RegistrationEvent = Pick<
 >;
 
 /**
- * The cost select's own starting value (§NNN; the owner: "by default toate evenimentele sunt
+ * The cost select's own starting value (§398; the owner: "by default toate evenimentele sunt
  * gratuite"). A new event (`event === null`, the create page before a first save) preselects
  * `FREE`; an edited event keeps exactly what it has — an unset cost included, which stays "" and
  * reads as "Nespecificat", the same as before this decision. `RegistrationBox` posts this value
@@ -439,7 +439,7 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride">;
 
 /**
- * The night event's word on the closed "Traseul" card (§NNN): `de noapte` for the organizer's "Da",
+ * The night event's word on the closed "Traseul" card (§394): `de noapte` for the organizer's "Da",
  * `de zi` for "Nu", `de noapte (automat)` when automatic and the event's own date is one, and
  * `de zi (automat)` when automatic and it is not — a stated answer, unlike the true "nothing"
  * this card gives a fact nobody typed, since "Automat" is always a choice, never a blank.
@@ -458,7 +458,7 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
 
 /**
  * Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · de noapte (automat) · traseu · cu descriere`, or
- * `Nimic completat` (the night event, §NNN — `labels.night` is the automatic answer for the event's
+ * `Nimic completat` (the night event, §394 — `labels.night` is the automatic answer for the event's
  * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
  * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).

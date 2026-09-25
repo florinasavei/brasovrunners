@@ -106,7 +106,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventScheduleUrl: `${base}/${locale}/EXAMPLE-event#schedule`,
     // "Linkuri și fișiere" (§332): the sample event has some, so the preview shows the line.
     eventLinksUrl: `${base}/${locale}/EXAMPLE-event#links`,
-    // The facts block (§NNN), each half in its own language, from the sample event — never a fact typed here.
+    // The facts block (§392), each half in its own language, from the sample event — never a fact typed here.
     eventFacts: emailSampleEventFacts(locale),
     eventFactsOther: emailSampleEventFacts(OTHER[locale]),
     manageUrl: `${base}/${locale}/EXAMPLE`,
@@ -137,7 +137,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
 }
 
 /**
- * The sample event's facts block data in one language (§NNN): `EMAIL_SAMPLE_EVENT` with the sample's
+ * The sample event's facts block data in one language (§392): `EMAIL_SAMPLE_EVENT` with the sample's
  * place in that language, and the page's sections the sample event has — a programme, rules, a route
  * description and a document under "Linkuri și fișiere" — so every row of the block shows.
  */
@@ -279,7 +279,7 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_OPENED",
 /** Messages about no event: "my registrations" is about a person (§77), the invitation about the team (§141). */
 const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION"]);
 /** Messages about no one registration: the two above, and "registration is open". */
-// A group run's self-declaration (§NNN) is about a signature, never a registration: no status to state.
+// A group run's self-declaration (§393) is about a signature, never a registration: no status to state.
 const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "PROFILE_MANAGE_LINK",
   "STAFF_INVITATION",

@@ -6,7 +6,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 (`DECISIONS.md` §NNN, replacing §382's checkbox) — "Eveniment de noapte", the
+ * BR-REQ-050-02 (`DECISIONS.md` §394, replacing §382's checkbox) — "Eveniment de noapte", the
  * editor's three choices, end to end.
  *
  * The owner, 2026-09-25: "«Necesită frontală» ar trebui să fie cumva «eveniment de noapte» setat

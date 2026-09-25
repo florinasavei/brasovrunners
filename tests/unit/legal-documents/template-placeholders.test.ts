@@ -21,7 +21,7 @@ import { clubFactsFromEnv, remainingPlaceholders } from "@/modules/legal-documen
  * Counted, not merely found: a text that lost the second `<EMAIL DE CONTACT>` of four still
  * "contains" the placeholder, and still asks the club to approve a sentence with a hole in it.
  */
-// Every key, the group runs' two declarations included (§NNN).
+// Every key, the group runs' two declarations included (§393).
 const KEYS: readonly LegalDocumentKey[] = LEGAL_DOCUMENT_KEYS;
 const LOCALES = ["ro", "en"] as const;
 

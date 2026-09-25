@@ -45,7 +45,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * A group run's optional self-declaration, signed on the club's site (§NNN).
+ * A group run's optional self-declaration, signed on the club's site (§393).
  *
  * **The race's signing flow, bound to something else.** The text panel (`LegalDocumentBody`, the
  * approved text with its blanks in bold, §225), the identity-document boxes (`IdDocumentFields`,

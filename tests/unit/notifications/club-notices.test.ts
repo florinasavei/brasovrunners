@@ -191,7 +191,7 @@ describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and att
     expect(declarationPdfAudience("REGISTRATION_CONFIRMED", false)).toBe("participant");
     expect(declarationPdfAudience("DECLARATION_SIGNED", false)).toBe("participant");
     expect(declarationPdfAudience("DECLARATION_ARCHIVE", false)).toBe("club");
-    // A group run's self-declaration (§NNN): whole to the signer, masked to the archive.
+    // A group run's self-declaration (§393): whole to the signer, masked to the archive.
     expect(declarationPdfAudience("GROUP_RUN_DECLARATION_SIGNED", false)).toBe("participant");
     expect(declarationPdfAudience("GROUP_RUN_DECLARATION_ARCHIVE", false)).toBe("club");
     for (const type of emailMessageType.enumValues) {

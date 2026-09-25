@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — the owner, on the events list's series line ("Se reînnoiește automat: ..."): "aici am
+ * §398 — the owner, on the events list's series line ("Se reînnoiește automat: ..."): "aici am
  * nevoie de o iconiță gen «robot» ca să știu că se reînnoiește automat". The glyph is `SmartToy`,
  * registered as `renew` in the backoffice's one glyph table (`shared/ui/action-icons.ts`, §318)
  * and drawn from it directly — never an emoji, never an element handed across a server/client
@@ -17,7 +17,7 @@ const PANEL = readFileSync(
   "utf8",
 );
 
-describe("§NNN the series' robot glyph", () => {
+describe("§398 the series' robot glyph", () => {
   it("registers SmartToy as `renew`, one file, never the barrel", () => {
     expect(REGISTRY).toContain('import SmartToyIcon from "@mui/icons-material/SmartToy";');
     expect(REGISTRY).toContain("renew: SmartToyIcon,");

@@ -19,7 +19,7 @@ export type BoxProps = {
   /** The people a change here reaches, when the box is one that reaches them (§350). */
   risk?: RiskMark | null;
   /**
-   * Whether the club has an approved group-run declaration in force for each surface (§NNN): the
+   * Whether the club has an approved group-run declaration in force for each surface (§393): the
    * route card's "Declarație opțională" is disabled for a surface without one. Absent: none.
    */
   groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", boolean>;

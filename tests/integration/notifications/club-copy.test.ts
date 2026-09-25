@@ -312,7 +312,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
     await approve(db);
     const event = await createEvent(db);
     const registration = await confirmedRegistration(event);
-    // Not a group run's self-declaration (§NNN): it is about no registration, so it is never copied
+    // Not a group run's self-declaration (§393): it is about no registration, so it is never copied
     // (`enqueueClubCopies` copies only a message with a registration) and a copy of it cannot exist.
     const types = (emailMessageType.enumValues as EmailMessageType[]).filter((type) => isParticipantMessage(type) && type !== "GROUP_RUN_DECLARATION_SIGNED");
     expect(types.length).toBeGreaterThanOrEqual(14);

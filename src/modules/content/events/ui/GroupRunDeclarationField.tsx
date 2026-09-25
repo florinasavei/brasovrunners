@@ -9,13 +9,13 @@ import { useRecall } from "@/shared/forms/recall";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import { useSelectedValue } from "./OnlyForType";
 
-/** The two surfaces a group run's self-declaration is written for (§NNN). */
+/** The two surfaces a group run's self-declaration is written for (§393). */
 type DeclarationSurface = "ASPHALT" | "TRAIL";
 
 const SURFACES: readonly string[] = ["ASPHALT", "TRAIL"];
 
 /**
- * "Declarație opțională pe propria răspundere" (§NNN), in "Traseul": whether this group run's page
+ * "Declarație opțională pe propria răspundere" (§393), in "Traseul": whether this group run's page
  * offers the self-declaration of its surface.
  *
  * A client island because the answer follows two selects of the same form — the type (§111: only a

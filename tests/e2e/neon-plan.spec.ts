@@ -13,7 +13,7 @@ import { signIn } from "./support/featured-event";
  * a unit test cannot see — that the select posts, that the other screen reads the row, and that a
  * reader who may not open the costs panel is told where the plan is set rather than shown it.
  *
- * Since `DECISIONS.md` §NNN, Tehnic may open `/admin/tasks` for its own "Aplicația" tab — a
+ * Since `DECISIONS.md` §397, Tehnic may open `/admin/tasks` for its own "Aplicația" tab — a
  * typed `?panel=costs` address now lands back on that tab rather than a missing route, the same
  * "an address nobody offered reads as nothing asked" the owner/kind filters already use
  * (`modules/diagnostics/domain/task-panels.ts`).

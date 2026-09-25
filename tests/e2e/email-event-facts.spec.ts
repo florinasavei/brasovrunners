@@ -3,7 +3,7 @@ import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN (the owner, 2026-09-25: "la mailul de «Înscrierea este confirmată» am nevoie de mai multe
+ * §392 (the owner, 2026-09-25: "la mailul de «Înscrierea este confirmată» am nevoie de mai multe
  * detalii, gen locație, program, etc.") — the preview of the confirmed email on `/admin/emails`
  * draws the event's facts block with the sample event's values, in both halves, each in its own
  * language, above the QR and below the club's text (§81's bold date/place line gives way to it,
@@ -31,7 +31,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
     await expect(ro).toContainText("30 lei");
     await expect(ro.getByRole("link", { name: "Vezi pe hartă" })).toBeVisible();
     await expect(ro.getByRole("link", { name: "Traseul" })).toHaveAttribute("href", /\/ro\/EXAMPLE-event#route$/);
-    // The Linkuri row names the event's own page first (fix round §NNN), and the list under the
+    // The Linkuri row names the event's own page first (fix round §392), and the list under the
     // button does not repeat it.
     await expect(ro.getByRole("link", { name: "Pagina evenimentului" })).toHaveAttribute("href", /\/ro\/EXAMPLE-event$/);
 

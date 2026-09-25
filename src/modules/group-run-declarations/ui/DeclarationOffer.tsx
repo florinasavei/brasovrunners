@@ -12,7 +12,7 @@ import { DENSITY } from "@/theme/density";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
 
 /**
- * "Semnează declarația pe propria răspundere" on a group run's page (§NNN; the owner, 2026-09-25:
+ * "Semnează declarația pe propria răspundere" on a group run's page (§393; the owner, 2026-09-25:
  * "for these group runs I should just have an optional 'semnează declarația pe propria răspundere'
  * button that just opens the signing flow").
  *
@@ -22,7 +22,7 @@ import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
  * trail, the club has an approved text of that kind in force, an approved privacy notice is in
  * force (the signature takes an address and an identity document, and the service refuses it
  * without one, as a registration is refused), and the run can still be signed for. The listing
- * card says nothing (§NNN).
+ * card says nothing (§393).
  *
  * A Server Component with a plain link: no island, nothing for a visitor who does not press it.
  */

@@ -7,7 +7,7 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Migration `0076_night_override` (`DECISIONS.md` §NNN), proven on real PostgreSQL (PGlite): the
+ * Migration `0076_night_override` (`DECISIONS.md` §394), proven on real PostgreSQL (PGlite): the
  * database is built up to the migration before it, rows are written the way §382's checkbox wrote
  * them, and then the rest of the migrations run over them — as `yarn db:migrate:env` runs them over
  * production.
@@ -55,7 +55,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("§NNN migration 0076_night_override — the checkbox becomes an override", () => {
+describe("§394 migration 0076_night_override — the checkbox becomes an override", () => {
   it("keeps a ticked row «Da» and turns every unticked one into «Automat»", async () => {
     const { rows } = await client.query<{ type: string; headlamp_required: boolean | null }>(
       "SELECT type, headlamp_required FROM events ORDER BY starts_at",

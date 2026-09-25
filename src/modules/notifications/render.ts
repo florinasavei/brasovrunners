@@ -148,7 +148,7 @@ async function renderRow(
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
 
-  // A group run's self-declaration (§NNN) is about no registration: its own, shorter path.
+  // A group run's self-declaration (§393) is about no registration: its own, shorter path.
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
     return renderGroupRunDeclarationRow(row, db, now, eventRows);
   }
@@ -349,7 +349,7 @@ async function renderRow(
     if (partitionEventLinks(eventDetails.links, routeSection).other.length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
   }
   /*
-    The event's facts block (§NNN): each half in its own language, from its own row — its place's
+    The event's facts block (§392): each half in its own language, from its own row — its place's
     name, its page and that page's sections — with the event's own facts (the start, the address,
     the route, the cost, the programme's rows) shared. The template draws it on the three messages
     that carry it; the rows here are read once per event per batch already.
@@ -363,7 +363,7 @@ async function renderRow(
       data.eventFactsOther = emailEventFacts(otherDetails, otherUrl);
     }
   }
-  // A night event (§NNN, the question §382 left open): the reminder says the sunset and to bring a
+  // A night event (§394, the question §382 left open): the reminder says the sunset and to bring a
   // light — only when this date, the one being reminded of, is one; the same function as the pill.
   if (row.messageType === "EVENT_REMINDER" && eventDetails) {
     const night = clubNightEvent(eventDetails);
@@ -373,7 +373,7 @@ async function renderRow(
     }
   }
   // The programme's rows in the update notice when the programme is what changed (§331), each half
-  // of the bilingual mail in its own words; the reminder carries them in the facts block (§NNN).
+  // of the bilingual mail in its own words; the reminder carries them in the facts block (§392).
   if (updateChanges.includes("programme") && eventDetails) {
     const items = readScheduleItems(eventDetails.scheduleItems);
     if (items.length > 0) {
@@ -663,7 +663,7 @@ async function renderRow(
 }
 
 /**
- * A group run's optional self-declaration (§NNN): the signer's copy or the club's archive copy.
+ * A group run's optional self-declaration (§393): the signer's copy or the club's archive copy.
  *
  * About a declaration row, not a registration: no participant, no token, no manage link — there is
  * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95): whole on
@@ -747,7 +747,7 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
 }
 
 /**
- * One language's row of the event as the facts block reads it (§NNN): the anchors of that
+ * One language's row of the event as the facts block reads it (§392): the anchors of that
  * language's page by the page's own rules — `#route` only with a route description in that
  * language (§387), `#links` only when the page's own split leaves "Linkuri și fișiere" something
  * to show (`partitionEventLinks`, the rule `EventLinks` draws by).

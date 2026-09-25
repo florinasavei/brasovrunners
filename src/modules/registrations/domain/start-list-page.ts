@@ -25,7 +25,7 @@ export type StartListPage = {
   anonymousOnPage: number;
   /**
    * What to ask the database for from the rows after the confirmed ones — the pending and the
-   * waiting list, shown only behind the privacy notice's gate (§NNN). Zero wherever the caller
+   * waiting list, shown only behind the privacy notice's gate (§396). Zero wherever the caller
    * passed none.
    */
   othersOffset: number;
@@ -39,7 +39,7 @@ export type StartListPage = {
 };
 
 /**
- * `others` (§NNN) is the pending and waiting rows, which follow every confirmed one — named and
+ * `others` (§396) is the pending and waiting rows, which follow every confirmed one — named and
  * anonymous — so a confirmed runner never changes page when somebody joins the waiting list, as a
  * named one never does when somebody opts out (§250).
  */

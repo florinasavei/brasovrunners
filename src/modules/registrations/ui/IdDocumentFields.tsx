@@ -13,7 +13,7 @@ export type DocumentBox = "idDocument" | "minorIdDocument";
  * same two boxes under its own words (§330). The action composes each pair into the one line the
  * declaration prints (`id-document-input.ts`).
  *
- * Shared by the race's declaration page and a group run's self-declaration (§NNN), so the two ask
+ * Shared by the race's declaration page and a group run's self-declaration (§393), so the two ask
  * for a document with the same two boxes and the same pattern.
  *
  * Rendered on the server with the page: it passes strings to MUI and nothing else

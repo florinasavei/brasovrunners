@@ -171,7 +171,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(programmeSummary(words, { timezone: ZONE, scheduleItems: null } as never, true, [], "ro")).toBe("Fără program");
   });
 
-  it("§NNN — a new event's cost select preselects FREE; an edited one keeps what it has", () => {
+  it("§398 — a new event's cost select preselects FREE; an edited one keeps what it has", () => {
     // The create page: no event yet.
     expect(initialCostTypeOf(null)).toBe("FREE");
     // An edited event with a stated cost keeps it, whatever it is.
@@ -229,7 +229,7 @@ describe("§350 each box's summary, empty and filled", () => {
 
   it("Traseul, Linkuri, Parteneri, Evidențiere — and the empty state of each", () => {
     expect(courseSummary(words, null, { surface: null, difficulty: null })).toBe("Nimic completat");
-    // §NNN: automatic and no night fact given (`labels.night` absent, so not `true`) still names
+    // §394: automatic and no night fact given (`labels.night` absent, so not `true`) still names
     // the day, «de zi (automat)» — the nit's fix, so the card says something rather than nothing.
     expect(courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: 450, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail", difficulty: "Mediu" })).toBe(
       "Trail · Mediu · 12 km · +450 m · de zi (automat) · traseu",

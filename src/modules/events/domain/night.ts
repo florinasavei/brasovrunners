@@ -2,7 +2,7 @@ import { readScheduleItems } from "./schedule";
 import { type Coordinates, isNightEvent, localDay, sunTimes, wallClockTime } from "./sun";
 
 /**
- * Whether an occurrence is a night event (§NNN, replacing §382's "Necesită frontală" checkbox).
+ * Whether an occurrence is a night event (§394, replacing §382's "Necesită frontală" checkbox).
  *
  * `events.headlamp_required` is the organizer's override, `nightOverride` in the code: `true` is
  * "Da" (a night event whatever the sun does — a start in a forest at 18:30 in September), `false`
@@ -25,7 +25,7 @@ export type NightEventFacts = {
   /** Sunset of the occurrence's own day on its wall clock, "16:36" — for the pill's tooltip and the lines. */
   sunset: string | null;
   /**
-   * Where the span's own end came from, when the automatic answer used one (§NNN): the event's
+   * Where the span's own end came from, when the automatic answer used one (§394): the event's
    * own end, the latest timed programme row of the occurrence's own date, or the start alone —
    * for the editor's line and the pill's tooltip to name.
    */
@@ -40,12 +40,12 @@ export type NightEventSource = {
   /** The event's own zone, whose wall clock names the day and prints the time. */
   timezone: string;
   /**
-   * `events.ends_at` (§NNN): the occurrence's own end, when the club named one — the automatic
+   * `events.ends_at` (§394): the occurrence's own end, when the club named one — the automatic
    * answer's first place to look for the span's end. Absent from a caller that has not read it.
    */
   endsAt?: Date | null;
   /**
-   * `events.schedule_items` (§NNN), raw: read for the latest timed row of the occurrence's own
+   * `events.schedule_items` (§394), raw: read for the latest timed row of the occurrence's own
    * date only when `endsAt` is unset — a schedule row on another date of a series is not this
    * occurrence's own. Absent from a caller that has not read it.
    */
@@ -58,7 +58,7 @@ export type NightEventSource = {
 };
 
 /**
- * The occurrence's own end instant, and where it came from (§NNN): the event's own `endsAt` when
+ * The occurrence's own end instant, and where it came from (§394): the event's own `endsAt` when
  * the club named one; else the latest timed programme row of the occurrence's own date (its
  * `endsAt`, or its `startsAt` when a row has none); else the start alone — a point, not a span,
  * which changes nothing about the start's own answer.
@@ -83,7 +83,7 @@ function occurrenceSpanEnd(
 }
 
 /**
- * Whether any part of the span from `start` to `end` is in the dark (§NNN) — the one rule the
+ * Whether any part of the span from `start` to `end` is in the dark (§394) — the one rule the
  * server and the editor's island both ask: the start after dusk or before dawn; the end likewise;
  * or the span running through the dark between them — it contains the start day's civil dusk, or
  * it ends on a later day of the wall clock than it starts (an overnight ultra that starts at 16:00
@@ -114,7 +114,7 @@ export function nightEvent(event: NightEventSource, occurrenceStartsAt: Date | n
   const { end, source } = occurrenceSpanEnd(event, occurrenceStartsAt);
   const { night, nightAtStart } = nightSpan(occurrenceStartsAt, end, place, event.timezone);
   // The end is only named when it is the reason: a start already after dusk needs no mention of
-  // when the run finishes (§NNN).
+  // when the run finishes (§394).
   const named = night && !nightAtStart && end ? source : null;
   return { night, source: "automatic", sunset, endSource: named, end: named && end ? wallClockTime(end, event.timezone) : null };
 }

@@ -121,7 +121,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
     },
     languages: Object.fromEntries(routing.locales.map((contentLocale) => [contentLocale, tSite(`languageName.${contentLocale}`)])),
   };
-  // Which group-run declarations the club has approved (§NNN): the route card's checkbox asks.
+  // Which group-run declarations the club has approved (§393): the route card's checkbox asks.
   const box = { event: null, mayEditSettings: true, groupRunDeclarations: await groupRunDeclarationsInForce(getDb(), new Date()) } as const;
   /*
     "Creează și publică" puts an event on the site in one press (§384): it asks first, as the

@@ -169,7 +169,7 @@ function eventPlace(event: PublicEvent) {
  *   cannot represent honestly, and a guessed one would tell a search engine something the club
  *   never said. On an `EXTERNAL`-registration event the place is taken at the organizer's own
  *   link, not the club's payment link (which may not even exist), so `offers.url` is
- *   `externalRegistrationUrl` there instead of `cost_url` (`DECISIONS.md` §NNN).
+ *   `externalRegistrationUrl` there instead of `cost_url` (`DECISIONS.md` §394).
  * - `DONATION`: **free**. schema.org's `isAccessibleForFree` is whether the event can be
  *   attended without payment, and a donation is money given without compensation — the place
  *   is not bought with it. §343 records it as the runner's choice ("sugerat 50 lei" is a

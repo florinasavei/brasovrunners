@@ -6,7 +6,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * §NNN — a group run's optional self-declaration, end to end, on the phone and the desktop.
+ * §393 — a group run's optional self-declaration, end to end, on the phone and the desktop.
  *
  * The owner, 2026-09-25: "I might need a 'declarație pe propria răspundere' for group runs as well,
  * especially for the trail one; this is optional but people should be able to sign and email it to
@@ -162,7 +162,7 @@ async function restoreArchiveMailbox(): Promise<void> {
   }
 }
 
-test.describe.serial("§NNN a group run's optional self-declaration", () => {
+test.describe.serial("§393 a group run's optional self-declaration", () => {
   test.beforeAll(async () => {
     archive = await ensureArchiveMailbox();
   });

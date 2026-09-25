@@ -132,7 +132,7 @@ export type OwnerTaskInputs = {
   /** Does an approved privacy notice exist at all? Without one, registration refuses everyone. */
   hasApprovedPrivacyNotice: boolean;
   /**
-   * Does the notice in force, in every language, describe the public list's states (§NNN,
+   * Does the notice in force, in every language, describe the public list's states (§396,
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
    */
   listStatesDescribed: boolean;
@@ -250,7 +250,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   /*
-    The public list's states (§NNN), only once a notice is in force — without one, the row above
+    The public list's states (§396), only once a notice is in force — without one, the row above
     is the thing to do. Open, never blocking: nothing is refused while the notice is the older
     one; the list simply shows confirmed names alone, as it always did. It closes by itself the
     day a notice naming `{{participantListStates}}` takes effect, with no setting to tick.

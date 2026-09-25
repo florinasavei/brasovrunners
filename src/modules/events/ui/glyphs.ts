@@ -113,7 +113,7 @@ export const GLYPHS = {
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
   headlamp: FlashlightOnIcon,
-  // The club's discount on an external event's own fee (§NNN): a price tag, under the cost row.
+  // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
   discount: LocalOfferIcon,
   partner: HandshakeIcon,
 };

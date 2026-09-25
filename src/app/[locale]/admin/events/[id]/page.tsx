@@ -361,7 +361,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   };
   const notice = { labels: noticeLabels, offerNotice: internal, maxLength: EVENT_NOTICE_TEXT_MAX };
   /*
-    The run's signed self-declarations (§NNN), read only for a role that may read who registered
+    The run's signed self-declarations (§393), read only for a role that may read who registered
     (§289) and only on a group run that offers one or already has some: null draws nothing.
   */
   const groupRunDeclarationRows =
@@ -370,7 +370,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           showsGroupRunDeclarationsFold(offeredGroupRunDeclarationKey(event), rows.length) ? rows : null,
         )
       : null;
-  // Which group-run declarations the club has approved (§NNN): the route card's checkbox asks.
+  // Which group-run declarations the club has approved (§393): the route card's checkbox asks.
   const box = { event, mayEditSettings: maySaveSettings, groupRunDeclarations: await groupRunDeclarationsInForce(db, now) } as const;
   const heading = orderedTranslations[0]?.title || t("editor.untitled");
   const thanksDue = canManageRegistrations(staffUser.role) && internal && event.eventStatus !== "CANCELLED" && event.startsAt.getTime() <= now.getTime();
@@ -524,7 +524,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           {saved === "repeatPublishOn" && <Alert severity="success">{t("editor.repeatPublishStarted")}</Alert>}
           {saved === "repeatPublishOff" && <Alert severity="success">{t("editor.repeatPublishStopped")}</Alert>}
           {saved === "interestRemoved" && <Alert severity="success">{t("queue.interestRemoved")}</Alert>}
-          {/* A group run's self-declaration erased (§NNN): the trail names who and why. */}
+          {/* A group run's self-declaration erased (§393): the trail names who and why. */}
           {saved === "groupRunDeclarationErased" && (
             <Alert severity="success" data-testid="group-run-declaration-erased">
               {t("groupRunDeclarations.erased")}
@@ -818,7 +818,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           }
           below={
             <Stack spacing={2}>
-              {/* A group run's optional self-declarations (§NNN): who signed and when, for the Organizer
+              {/* A group run's optional self-declarations (§393): who signed and when, for the Organizer
                   and the Administrator only (§289, BR-REQ-060-01); the erase is the Administrator's. */}
               {groupRunDeclarationRows && (
                 <GroupRunDeclarationsPanel

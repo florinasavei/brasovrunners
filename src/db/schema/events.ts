@@ -302,7 +302,7 @@ export const events = pgTable(
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
-     * "Eveniment de noapte" — the organizer's override of the computed answer (§NNN, replacing
+     * "Eveniment de noapte" — the organizer's override of the computed answer (§394, replacing
      * §382's "Necesită frontală" checkbox; the owner, 2026-09-25: "«Necesită frontală» ar trebui
      * să fie cumva «eveniment de noapte» setat automat în funcție de ora de start și când apune
      * soarele"). `null` is "Automat": the start and the end against civil dusk and dawn of its own
@@ -314,7 +314,7 @@ export const events = pgTable(
      */
     nightOverride: boolean("headlamp_required"),
     /**
-     * Offer the optional self-declaration on the event's page (§NNN; the owner, 2026-09-25: "I
+     * Offer the optional self-declaration on the event's page (§393; the owner, 2026-09-25: "I
      * might need a 'declarație pe propria răspundere' for group runs as well, especially for the
      * trail one"). Only a group run (§111) whose surface is asphalt or trail has a declaration to
      * offer — `GROUP_RUN_DECLARATION_ASPHALT` or `_TRAIL`, by the surface — and only while the club
@@ -807,7 +807,7 @@ export const eventTranslations = pgTable(
     seoDescription: text("seo_description"),
 
     /**
-     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §NNN):
+     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §394):
      * shown only on an `EXTERNAL`-registration, `PAID` event — the organizer sets the price, the
      * club only knows what its members get off it. Free text, at most 200 characters (checked in
      * `content/events/fields.ts`, not here — the same discipline `checklist` follows), both

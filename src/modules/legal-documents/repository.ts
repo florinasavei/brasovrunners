@@ -108,7 +108,7 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
 }
 
 /**
- * Whether the club has an approved group-run declaration in force for each surface (§NNN) — what
+ * Whether the club has an approved group-run declaration in force for each surface (§393) — what
  * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked.
  * Asked in Romanian: both languages are required before a version can be approved (§46).
  */
@@ -133,7 +133,7 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 }
 
 /**
- * Whether the privacy notice in force describes the public list's states (§NNN,
+ * Whether the privacy notice in force describes the public list's states (§396,
  * `describesListStates`) — in **every** language, because the list is one list: a runner who
  * registered in English was told what the English notice says, and a state shown beside their
  * name must be one that notice describes. False while no notice is approved, as it must be.
@@ -422,7 +422,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       // Every signature against this version: a race's acceptances, and a group run's optional
-      // self-declarations (§NNN) — both are somebody relying on these exact words.
+      // self-declarations (§393) — both are somebody relying on these exact words.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})

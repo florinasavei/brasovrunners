@@ -6,7 +6,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — "Declarație opțională pe propria răspundere", the route card's checkbox, end to end.
+ * §393 — "Declarație opțională pe propria răspundere", the route card's checkbox, end to end.
  *
  * The editor's own Server Action is called with the form "Traseul" posts, as `headlamp.test.ts`
  * does: the tick reaches the row, an unticked box (which posts nothing) clears it, and the service
@@ -123,7 +123,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN the editor's action persists «Declarație opțională pe propria răspundere»", () => {
+describe("§393 the editor's action persists «Declarație opțională pe propria răspundere»", () => {
   it("ticked on a trail group run, the row carries it; unticked (nothing posted), it is cleared", async () => {
     const created = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect(created.offersGroupRunDeclaration).toBe(false);
@@ -156,7 +156,7 @@ describe("§NNN the editor's action persists «Declarație opțională pe propri
   });
 });
 
-describe("§NNN a series carries it by the scope radio (§350), and a copy keeps it", () => {
+describe("§393 a series carries it by the scope radio (§350), and a copy keeps it", () => {
   async function seedSeries() {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-04", publish: false }, now: NOW });

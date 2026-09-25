@@ -6,7 +6,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 
 /**
- * The rows of a group run's optional self-declarations (§NNN). No update: a signature is what it
+ * The rows of a group run's optional self-declarations (§393). No update: a signature is what it
  * was when it was made (§57). Rows leave by the retention sweep, the Administrator's erase, or with
  * their event.
  */
@@ -22,7 +22,7 @@ export async function insertGroupRunDeclaration<T extends Record<string, unknown
   return row;
 }
 
-/** What the backoffice lists (§NNN): who and when. Never the identity document or the address. */
+/** What the backoffice lists (§393): who and when. Never the identity document or the address. */
 export type GroupRunDeclarationListRow = { id: string; typedName: string; acceptedAt: Date; locale: Locale };
 
 export async function listGroupRunDeclarations<T extends Record<string, unknown>>(
@@ -86,7 +86,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
 export type SignedGroupRunDeclaration = NonNullable<Awaited<ReturnType<typeof findSignedGroupRunDeclaration>>>;
 
 /**
- * The outbox rows about an event's declarations (§NNN), deleted before the event goes: the
+ * The outbox rows about an event's declarations (§393), deleted before the event goes: the
  * declarations cascade with it, and a message about one would then be a row that carries the
  * signer's address and can never render. The same match the erase and the retention sweep use —
  * the payload's id compared as text, so a payload of any other shape is simply not matched.
@@ -110,7 +110,7 @@ export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<
   return deleted.length;
 }
 
-/** An outbox row's declaration id (§NNN), or null when its payload carries none. */
+/** An outbox row's declaration id (§393), or null when its payload carries none. */
 export function groupRunDeclarationIdOf(payload: unknown): string | null {
   const id = typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>).groupRunDeclarationId : undefined;
   return typeof id === "string" ? id : null;

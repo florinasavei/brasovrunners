@@ -19,7 +19,7 @@ import { remainingPlaceholders } from "@/modules/legal-documents/templates/club-
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 
 /**
- * §NNN — the group runs' optional self-declarations: three kinds of declaration, two new templates,
+ * §393 — the group runs' optional self-declarations: three kinds of declaration, two new templates,
  * and which one a run offers.
  *
  * The owner, 2026-09-25: "we need 'declarație pe propria răspundere (concurs)' and asfalt and trail
@@ -34,7 +34,7 @@ const TEXTS = {
 } as const;
 const bullets = (list: readonly string[]) => list.filter((p) => p.startsWith("• "));
 
-describe("§NNN the kinds and their names", () => {
+describe("§393 the kinds and their names", () => {
   it("lists every enum value, in order, and the two optional kinds after the three a registration rests on", () => {
     expect([...LEGAL_DOCUMENT_KEYS]).toEqual([...legalDocumentKey.enumValues]);
     expect([...REGISTRATION_LEGAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"]);
@@ -55,7 +55,7 @@ describe("§NNN the kinds and their names", () => {
   });
 });
 
-describe("§NNN which declaration a run offers: the surface decides", () => {
+describe("§393 which declaration a run offers: the surface decides", () => {
   it("maps a group run's surface to its text, and anything else to none", () => {
     expect(groupRunDeclarationKeyFor({ type: "GROUP_RUN", surface: "ASPHALT" })).toBe("GROUP_RUN_DECLARATION_ASPHALT");
     expect(groupRunDeclarationKeyFor({ type: "GROUP_RUN", surface: "TRAIL" })).toBe("GROUP_RUN_DECLARATION_TRAIL");
@@ -89,7 +89,7 @@ describe("§NNN which declaration a run offers: the surface decides", () => {
   });
 });
 
-describe("§NNN the two templates", () => {
+describe("§393 the two templates", () => {
   it("carry the race declaration's tokens for an adult signer, and ask for the identity document", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
       expect([...mergeFieldsIn(body)].sort()).toEqual(["event", "eventDate", "eventLocation", "idDocument", "participant", "signedAt"]);
@@ -169,7 +169,7 @@ describe("§NNN the two templates", () => {
   });
 });
 
-describe("§NNN the public offer line states the retention truthfully", () => {
+describe("§393 the public offer line states the retention truthfully", () => {
   it("says the club's platform deletes it, not that the club keeps it (the archive copy is the privacy notice's three years)", () => {
     expect(ro.Event.groupRunDeclaration.line).toMatch(/platforma clubului o șterge la \{days\} după alergare/);
     expect(en.Event.groupRunDeclaration.line).toMatch(/the club's platform deletes it \{days\} after the run/);
@@ -184,7 +184,7 @@ describe("§NNN the public offer line states the retention truthfully", () => {
   });
 });
 
-describe("§NNN the sample seed (§29)", () => {
+describe("§393 the sample seed (§29)", () => {
   it("wraps both group-run texts in the not-approved banner, placeholders kept", () => {
     for (const key of GROUP_RUN_DECLARATION_KEYS) {
       const sample = SAMPLE_DOCUMENTS.find((document) => document.key === key);

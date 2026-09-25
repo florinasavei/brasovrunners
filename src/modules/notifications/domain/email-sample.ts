@@ -39,7 +39,7 @@ export const EMAIL_SAMPLE_HOLD_EXPIRES_AT = new Date("2026-10-02T15:30:00Z");
 export const EMAIL_SAMPLE_SIGNED_AT = new Date("2026-09-28T16:42:00Z");
 
 /**
- * The sample event's facts, for the facts block every affected preview draws (§NNN) — the same made-up
+ * The sample event's facts, for the facts block every affected preview draws (§392) — the same made-up
  * race as the title and the place above, never a value typed into the page. None of these is a field
  * of the closed set (§247): the block is the platform's, the club's words never carry it and the
  * starting text never names it, so the save has nothing of it to refuse. The place's name is the

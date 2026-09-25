@@ -142,7 +142,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
   });
 
   /**
-   * `Panel`'s `help` variant (§NNN; the owner, on "Ce înseamnă fiecare tip?": "ar trebui să fie
+   * `Panel`'s `help` variant (§398; the owner, on "Ce înseamnă fiecare tip?": "ar trebui să fie
    * un card mai mic") is a deliberate second kind of fold — a small clickable line, no card, no
    * border, so it never spreads `BOXED_DISCLOSURE_SX`. One `component="details"` in `Panel.tsx`
    * is this variant's, counted here rather than folded into the boxed-fold rule the rest of the

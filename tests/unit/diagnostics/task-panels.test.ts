@@ -3,7 +3,7 @@ import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/rol
 import { canOpenTasks, opsTaskPanels, resolveTaskPanel, TASK_PANELS } from "@/modules/diagnostics/domain/task-panels";
 
 /**
- * The role gate for `/admin/tasks`, exhaustive over every role (`DECISIONS.md` §NNN).
+ * The role gate for `/admin/tasks`, exhaustive over every role (`DECISIONS.md` §397).
  *
  * The owner, 2026-09-25: a tab that renders `docs/QUEUE.md` on `/admin/tasks`'s «De făcut», for
  * Administrator, Superadministrator and Tehnic; every other role gets no tab and a 404 on the
@@ -14,7 +14,7 @@ const APP_ROLES: readonly StaffRole[] = ["DEV", "ADMIN", "SUPERADMIN"];
 const OPS_ROLES: readonly StaffRole[] = ["ADMIN", "SUPERADMIN"];
 const SHUT_OUT_ROLES: readonly StaffRole[] = STAFF_ROLES.filter((role) => !APP_ROLES.includes(role));
 
-describe("§NNN canOpenTasks — who may open /admin/tasks at all", () => {
+describe("§397 canOpenTasks — who may open /admin/tasks at all", () => {
   it("is exactly Tehnic, Administrator and Superadministrator", () => {
     for (const role of APP_ROLES) expect(canOpenTasks(role)).toBe(true);
   });
@@ -24,7 +24,7 @@ describe("§NNN canOpenTasks — who may open /admin/tasks at all", () => {
   });
 });
 
-describe("§NNN resolveTaskPanel — which panel a request lands on", () => {
+describe("§397 resolveTaskPanel — which panel a request lands on", () => {
   it("defaults an Administrator or a Superadministrator to «De făcut»", () => {
     for (const role of OPS_ROLES) expect(resolveTaskPanel(role, undefined)).toBe("todo");
   });
@@ -57,7 +57,7 @@ describe("§NNN resolveTaskPanel — which panel a request lands on", () => {
   });
 });
 
-describe("§NNN opsTaskPanels — the sub-navigation's own panels", () => {
+describe("§397 opsTaskPanels — the sub-navigation's own panels", () => {
   it("is the club's three ops panels, in order, for Administrator and Superadministrator", () => {
     for (const role of OPS_ROLES) expect(opsTaskPanels(role)).toEqual(["todo", "botCheck", "costs"]);
   });

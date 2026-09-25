@@ -8,7 +8,7 @@ import { canManageRegistrations, canSeeDiagnostics, type StaffRole } from "@/mod
  * `todo`, `botCheck` and `costs` are the club's own worklist and its money, behind
  * `canManageRegistrations` (Administrator and Superadministrator) as they always were.
  * `app` — "Aplicația" / "The app" — is `docs/QUEUE.md`, the dispatcher's own work queue
- * (`DECISIONS.md` §368, §NNN), rendered read-only. The owner, 2026-09-25: "în «De făcut» vreau
+ * (`DECISIONS.md` §368, §397), rendered read-only. The owner, 2026-09-25: "în «De făcut» vreau
  * un tab unde să randez efectiv MD file din repo cu tasklisturi și ce mai e de făcut în
  * aplicație." It is diagnostic reading, not a club decision, so it sits behind the same
  * threshold as `/devs` — `canSeeDiagnostics`, which is Tehnic and everything above it — rather

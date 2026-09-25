@@ -3,7 +3,7 @@ import ro from "../../../messages/ro.json";
 
 /**
  * The public list's three state words, read from the catalogue outside a request (`DECISIONS.md`
- * §NNN): for the privacy notice's `{{participantListStates}}`, which is merged on the legal pages
+ * §396): for the privacy notice's `{{participantListStates}}`, which is merged on the legal pages
  * and in the legal editor's token legend, where no `Event` translator is at hand.
  *
  * Read from `Event.startList.states` rather than typed again here, so the approved notice and the

@@ -261,7 +261,7 @@ export async function cachedStartListPage(eventId: string, offset: number, limit
 
 /**
  * How many of the ticked pending and waiting rows the list gains behind the notice's gate
- * (§NNN) — `countPublicStartListOthers`, expired by the same "places" tag every change of state
+ * (§396) — `countPublicStartListOthers`, expired by the same "places" tag every change of state
  * and every change of the tick expires.
  */
 export async function cachedStartListOthersCounts(eventId: string): Promise<{ pending: number; waitlisted: number }> {
@@ -278,7 +278,7 @@ export async function cachedStartListOthersPage(eventId: string, offset: number,
 }
 
 /**
- * Whether the public list may show the states, and the pending and waiting groups (§NNN): the
+ * Whether the public list may show the states, and the pending and waiting groups (§396): the
  * privacy notice in force describes them (`describesListStates`), in every language. Read
  * through `cachedCurrentApprovedDocument`, so an approval expires it and a version approved for
  * a later day takes over on that day — exactly when the notice itself changes on

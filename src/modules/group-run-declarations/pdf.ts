@@ -8,7 +8,7 @@ import { type DeclarationAudience, eventMergeValues } from "@/modules/registrati
 import type { SignedGroupRunDeclaration } from "./repository";
 
 /**
- * How a group-run declaration was signed, under the signature (§NNN): on the run's own page, not
+ * How a group-run declaration was signed, under the signature (§393): on the run's own page, not
  * from a link sent by email — the race's words (`signedByLink`) would say something untrue. The
  * same record beneath it: typed name, tick, instant, the text's fingerprint (§86).
  */
@@ -22,7 +22,7 @@ export function signedOnPageWords(locale: Locale, when: string): string {
 }
 
 /**
- * One signed group-run declaration as a PDF (§NNN), drawn by the race declaration's own renderer
+ * One signed group-run declaration as a PDF (§393), drawn by the race declaration's own renderer
  * (§95): the lockup, the title, the text with its blanks filled in bold (§225), the typed name in a
  * hand, the version and the hash. Rendered from the rows on request, never stored as a file.
  *
@@ -31,7 +31,7 @@ export function signedOnPageWords(locale: Locale, when: string): string {
  * for a mailbox nothing sweeps, the document masked in the text and on the signature line alike,
  * from one value so the two cannot disagree. Required, never defaulted.
  *
- * The signer declares for themselves (adults only, §NNN), so `{{participant}}` and `{{declarant}}`
+ * The signer declares for themselves (adults only, §393), so `{{participant}}` and `{{declarant}}`
  * are the signer and `{{guardian}}` an em dash, as on an adult's race declaration.
  */
 export async function renderGroupRunDeclarationPdf<T extends Record<string, unknown>>(

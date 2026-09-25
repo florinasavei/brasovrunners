@@ -26,7 +26,7 @@
  * (three years, seven days, thirty days…) are not merge fields: they are the club's legal
  * commitment, written in the text it approves, and no setting may move them.
  *
- * `{{participantListStates}}` in section 4 is two things at once (§NNN): the three words the
+ * `{{participantListStates}}` in section 4 is two things at once (§396): the three words the
  * public list prints beside a name, filled from the catalogue when the notice is shown, and the
  * switch — the list shows the states, the pending and the waiting list only while the notice in
  * force names it (`describesListStates`), the way §330's declaration switches the minor's

@@ -271,7 +271,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     .toISOString()
     .slice(0, 10);
   /*
-    §NNN: when this event publishes a list and the notice in force describes its states, the
+    §396: when this event publishes a list and the notice in force describes its states, the
     «Vreau să apar» box says what the list will show beside the name. The cached read the event
     page's list makes; optional, so a failure leaves the box as it always read.
   */
@@ -1250,7 +1250,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   {`${t("listOptIn")} — ${t("optionalSuffix")}`}
                 </CheckboxField>
               )}
-              {/* What the list shows beside the name, once the notice in force says so (§NNN) —
+              {/* What the list shows beside the name, once the notice in force says so (§396) —
                   the same three words the list prints, from its own catalogue keys. */}
               {event.participantListVisibility === "NAMES" && listStatesOn && (
                 <Typography variant="body2" color="text.secondary" data-testid="list-opt-in-states" sx={{ mt: -0.5 }}>
