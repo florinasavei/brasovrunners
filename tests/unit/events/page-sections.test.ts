@@ -59,7 +59,8 @@ function pageSequence(): PageSectionId[] {
     ['key: "route"', "course"],
     ['key: "cost"', "registration"],
     ['key: "age"', "registration"],
-    ['key: "coHost"', "coHosts"],
+    // No longer a row of the facts (§401): the partners' own `<section>`, after the `<dl>` closes.
+    ['component="section" id="partners"', "coHosts"],
   ];
   const at = (source: string, needle: string) => {
     const index = source.indexOf(needle);
