@@ -14,7 +14,8 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { signingOpen } from "@/modules/group-run-declarations/domain";
+import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "@/modules/group-run-declarations/domain";
 import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid } from "@/modules/group-run-declarations/form";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
@@ -98,7 +99,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const db = getDb();
   const open = signingOpen({ ...event, editorialStatus: "PUBLISHED" }, now) && !closed;
   const document = open ? await findCurrentApprovedDocument(db, key, locale, now) : undefined;
-  if (!open || !document) {
+  // No approved privacy notice in force, no form: the service refuses the signature then (the rule
+  // a registration answers to, BR-REQ-053-01), so the page does not ask for an address first.
+  const privacyNotice = document ? await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now) : undefined;
+  if (!open || !document || !privacyNotice) {
     return (
       <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {back}
@@ -200,7 +204,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               typeLabel={tDeclare("declare.idDocumentType")}
               typeHelp={tDeclare("declare.idDocumentTypeHelp")}
               label={fieldLabel("idDocument")}
-              help={t("groupRunDeclaration.page.idDocumentHelp")}
+              help={t("groupRunDeclaration.page.idDocumentHelp", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_RETENTION_DAYS, "days") })}
               placeholder={tDeclare("declare.idDocumentPlaceholder")}
               kinds={documentKinds}
               defaultKind={draftKind}

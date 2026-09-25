@@ -11,6 +11,7 @@ import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 
 /**
@@ -117,9 +118,11 @@ export const RETENTION = {
    * It exists for the run: nobody registered, no kit was handed out, and there is no three-year
    * record of a registration for it to be the evidence of. The signer keeps the PDF that was
    * emailed; the club's archive copy has the document masked (§320). The same seven days as the
-   * identity document above, so the run's page and the privacy notice can say one number.
+   * identity document above, so the run's page and the privacy notice can say one number. The
+   * number itself lives in `group-run-declarations/domain.ts`, where the pages and the emails
+   * read it too.
    */
-  groupRunDeclarationsDaysAfterEvent: 7,
+  groupRunDeclarationsDaysAfterEvent: GROUP_RUN_DECLARATION_RETENTION_DAYS,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
 } as const;

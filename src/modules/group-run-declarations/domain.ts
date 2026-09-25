@@ -27,3 +27,20 @@ export const ID_DOCUMENT_MAX = 80;
 
 /** The longest reason the erase keeps (§88's length): a sentence, not a file. */
 export const ERASE_REASON_MAX = 500;
+
+/**
+ * How many days after the run's start the platform deletes its self-declarations (§NNN). One
+ * number for the sweep (`RETENTION.groupRunDeclarationsDaysAfterEvent` is this), the run's page,
+ * the signing page, the backoffice fold and both emails: each says it through `durationPhrase`,
+ * never as a word typed into a sentence, so changing it here changes every sentence at once.
+ */
+export const GROUP_RUN_DECLARATION_RETENTION_DAYS = 7;
+
+/**
+ * Whether the event's backoffice page draws "Declarații semnate (alergare de grup)" (§NNN): when
+ * the run offers the declaration now, or when some are still kept from before the organizer
+ * unticked it — never merely because the run is on asphalt or trail.
+ */
+export function showsGroupRunDeclarationsFold(offeredKey: string | null, signedCount: number): boolean {
+  return offeredKey !== null || signedCount > 0;
+}

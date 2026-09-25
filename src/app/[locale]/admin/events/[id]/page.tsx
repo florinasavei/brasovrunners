@@ -80,7 +80,8 @@ import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrat
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
-import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
+import { showsGroupRunDeclarationsFold } from "@/modules/group-run-declarations/domain";
+import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   addTestRegistrationsAction,
@@ -366,7 +367,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const groupRunDeclarationRows =
     canReadRegistrations(staffUser.role) && event.type === "GROUP_RUN"
       ? await listGroupRunDeclarations(db, event.id).then((rows) =>
-          rows.length > 0 || groupRunDeclarationKeyFor(event) !== null ? rows : null,
+          showsGroupRunDeclarationsFold(offeredGroupRunDeclarationKey(event), rows.length) ? rows : null,
         )
       : null;
   // Which group-run declarations the club has approved (§NNN): the route card's checkbox asks.

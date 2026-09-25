@@ -97,12 +97,28 @@ const ARCHIVE_FALLBACK = "arhiva-declaratii@example.test";
 let archive = "";
 
 /**
+ * A key of this spec's own for PostgreSQL's advisory locks: every run of the spec holds it shared
+ * while the fixture below is in place, and the last one out takes it exclusively to put the
+ * setting back.
+ */
+const FIXTURE_LOCK = 4_783_375;
+
+/** The connection that holds this run's shared lock, from `beforeAll` to `afterAll`. */
+let lockHolder: pg.Client | null = null;
+
+/**
  * The club's declarations mailbox, named if the database has none — so the archive copy is always
  * queued and the spec can count it, whatever the local `.env` says about `DECLARATIONS_ARCHIVE_TO`.
  * A mailbox already named is kept (it wins over the environment, as `resolveDeclarationCopies`
  * reads it); both projects write the same value, so running them side by side is safe.
+ *
+ * **Scoped to the spec.** The shared lock is taken first, so a run that is finishing and putting
+ * the setting back (`restoreArchiveMailbox`, exclusive) is waited for rather than raced.
  */
 async function ensureArchiveMailbox(): Promise<string> {
+  lockHolder = new pg.Client({ connectionString: databaseUrl() });
+  await lockHolder.connect();
+  await lockHolder.query("SELECT pg_advisory_lock_shared($1)", [FIXTURE_LOCK]);
   return withDatabase(async (client) => {
     await client.query(
       `INSERT INTO platform_settings (key, value, updated_at)
@@ -119,9 +135,39 @@ async function ensureArchiveMailbox(): Promise<string> {
   });
 }
 
+/**
+ * Put the setting back once no run of this spec needs it: the fallback mailbox, if it is still the
+ * one named, is unnamed again — "nobody named", as the database had it — so a later race
+ * declaration on this database queues no archive copy to a test address. A mailbox somebody named
+ * is never touched. Only the last run out does it: the exclusive lock is granted only when no other
+ * run still holds the shared one.
+ */
+async function restoreArchiveMailbox(): Promise<void> {
+  const client = lockHolder;
+  lockHolder = null;
+  if (!client) return;
+  try {
+    await client.query("SELECT pg_advisory_unlock_shared($1)", [FIXTURE_LOCK]);
+    const { rows } = await client.query<{ last: boolean }>("SELECT pg_try_advisory_lock($1) AS last", [FIXTURE_LOCK]);
+    if (!rows[0]?.last) return;
+    await client.query(
+      `UPDATE platform_settings
+          SET value = jsonb_set(value, '{declarations,to}', '""'::jsonb), updated_at = now()
+        WHERE key = 'clubNotices' AND value->'declarations'->>'to' = $1`,
+      [ARCHIVE_FALLBACK],
+    );
+    await client.query("SELECT pg_advisory_unlock($1)", [FIXTURE_LOCK]);
+  } finally {
+    await client.end();
+  }
+}
+
 test.describe.serial("§NNN a group run's optional self-declaration", () => {
   test.beforeAll(async () => {
     archive = await ensureArchiveMailbox();
+  });
+  test.afterAll(async () => {
+    await restoreArchiveMailbox();
   });
 
   test("the editor ticks it by itself for a trail group run, and the run is published", async ({ page }) => {
@@ -193,6 +239,9 @@ test.describe.serial("§NNN a group run's optional self-declaration", () => {
     await page.goto(`/ro/evenimente/${slug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
     await expect(offer).toBeVisible();
+    // A named section: its heading is its accessible name.
+    await expect(page.getByRole("region", { name: "Declarație pe propria răspundere (opțional)" })).toBeVisible();
+    await expect(offer.getByRole("heading", { level: 2, name: "Declarație pe propria răspundere (opțional)" })).toBeVisible();
     await expect(offer).toContainText("o primești pe email, iar platforma clubului o șterge la 7 zile după alergare");
     const button = offer.getByRole("link", { name: "Semnează declarația pe propria răspundere" });
     expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -213,6 +262,7 @@ test.describe.serial("§NNN a group run's optional self-declaration", () => {
   test("and in English, from the English page", async ({ page }) => {
     await page.goto(`/en/events/${englishSlug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
+    await expect(offer.getByRole("heading", { level: 2, name: "Self-declaration (optional)" })).toBeVisible();
     await expect(offer).toContainText("and the club's platform deletes it 7 days after the run");
     await offer.getByRole("link", { name: "Sign the self-declaration" }).click();
     await expect(page).toHaveURL(new RegExp(`/en/events/${englishSlug}/declaration$`));

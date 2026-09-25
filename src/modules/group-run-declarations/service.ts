@@ -19,6 +19,7 @@ import { classifySubmission } from "@/modules/registrations/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import { ERASE_REASON_MAX, ID_DOCUMENT_MAX, signingOpen, TYPED_NAME_MAX } from "./domain";
 import { insertGroupRunDeclaration } from "./repository";
 
@@ -110,6 +111,11 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const verdict = classifySubmission({ honeypot: input.honeypot, renderedAt: input.renderedAt, email: input.email, firstName: input.typedName }, now);
   if (verdict !== "ok" && verdict !== "autofill") return { outcome: "ignored" };
 
+  // A posted id that is not a uuid names no run, and never reaches a uuid column (§376): the
+  // form's own "closed" answer rather than PostgreSQL's 22P02 and a 500.
+  if (!isUuid(input.eventId)) throw new DomainError("NOT_FOUND", "this run offers no declaration to sign");
+  if (!isUuid(input.documentId)) throw declarationChanged();
+
   const event = await findSignableEvent(db, input.eventId);
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key || !signingOpen(event, now)) throw new DomainError("NOT_FOUND", "this run offers no declaration to sign");
@@ -117,6 +123,15 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   // The text in force, in the language chosen for it — the same version in both (§46).
   const document = await findCurrentApprovedDocument(db, key, input.locale, now);
   if (!document) throw new DomainError("NOT_FOUND", "the club has no approved declaration of this kind");
+
+  // A signature takes an address and an identity document: without an approved privacy notice in
+  // force to say why and for how long, nothing is taken — the rule a registration answers to
+  // (`submitRegistration`, BR-REQ-053-01), in the same words. NOT_FOUND, so the page says the
+  // declaration cannot be signed, which is true, and the run's page draws no button meanwhile.
+  const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
+  if (!privacyNotice) {
+    throw new DomainError("NOT_FOUND", "no approved privacy notice exists yet; the declaration cannot be signed");
+  }
   if (document.id !== input.documentId || document.contentSha256 !== input.contentSha256) throw declarationChanged();
 
   // Every box that is wrong at once, so the summary can name each (§47).
@@ -201,6 +216,7 @@ export async function eraseGroupRunDeclaration<T extends Record<string, unknown>
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", "erasing a declaration is an Administrator's");
   const reason = input.reason.trim();
   if (reason === "" || reason.length > ERASE_REASON_MAX) throw new DomainError("VALIDATION_ERROR", "reason: say why", ["reason"]);
+  if (!isUuid(input.id)) throw new DomainError("NOT_FOUND", "no such declaration");
 
   return db.transaction(async (tx) => {
     const [row] = await tx

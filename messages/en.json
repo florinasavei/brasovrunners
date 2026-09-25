@@ -298,6 +298,7 @@
       "checklist": "What to bring"
     },
     "groupRunDeclaration": {
+      "heading": "Self-declaration (optional)",
       "button": "Sign the self-declaration",
       "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
       "page": {
@@ -317,7 +318,7 @@
           "typedName": "Signature: your full name",
           "captcha": "The anti-bot check"
         },
-        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the club's copy it is masked, and the platform deletes it seven days after the run. We keep no copy of the document.",
+        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the club's copy it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
         "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
@@ -1514,7 +1515,7 @@
       },
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
-        "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run.",
+        "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
       }
@@ -3178,7 +3179,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration on the run's page, and when. The identity document and the email address are in the PDF. The platform deletes the declarations seven days after the run.",
+      "help": "Who signed the optional declaration on the run's page, and when. The identity document and the email address are in the PDF. The platform deletes the declarations {days} after the run.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when}",
       "pdf": "PDF",

@@ -298,6 +298,7 @@
       "checklist": "Ce să aduci"
     },
     "groupRunDeclaration": {
+      "heading": "Declarație pe propria răspundere (opțional)",
       "button": "Semnează declarația pe propria răspundere",
       "line": "Dacă vrei, semnează declarația pe propria răspundere pentru această alergare; o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
       "page": {
@@ -317,7 +318,7 @@
           "typedName": "Semnătura: numele tău complet",
           "captcha": "Verificarea anti-bot"
         },
-        "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copia clubului apare mascat, iar platforma o șterge la șapte zile după alergare. Nu păstrăm o copie a actului.",
+        "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copia clubului apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
         "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
         "adultsOnly": "Declarația este pentru adulți: o semnezi doar dacă ai împlinit 18 ani, și nu o semnezi în numele unui minor.",
@@ -1514,7 +1515,7 @@
       },
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
-        "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail.",
+        "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
       }
@@ -3178,7 +3179,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Actul de identitate și adresa de email sunt în PDF. Platforma șterge declarațiile la șapte zile după alergare.",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Actul de identitate și adresa de email sunt în PDF. Platforma șterge declarațiile la {days} după alergare.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when}",
       "pdf": "PDF",

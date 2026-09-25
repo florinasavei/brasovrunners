@@ -10,6 +10,7 @@ import { deleteEvent, hardDeleteEvent } from "@/modules/content/events/service";
 import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
+import { deleteApprovedVersion, updateDraftVersion } from "@/modules/legal-documents/service";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import type { OutboxRow } from "@/modules/notifications/outbox";
@@ -61,7 +62,7 @@ beforeEach(async () => {
   watched.pdfInputs.length = 0;
 });
 
-async function approveTemplate(key: LegalDocumentKey, version = 1) {
+async function approveOne(key: LegalDocumentKey, version = 1) {
   const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES[key][locale] }));
   await insertLegalDocumentVersion(db, {
     key,
@@ -72,6 +73,16 @@ async function approveTemplate(key: LegalDocumentKey, version = 1) {
     translations,
     now: NOW,
   });
+}
+
+/**
+ * The declaration's text, and the privacy notice beside it: a signature takes an address and an
+ * identity document, and without an approved notice in force nothing is taken (BR-REQ-053-01's
+ * rule, the one a registration answers to). `{ privacy: false }` leaves the notice out.
+ */
+async function approveTemplate(key: LegalDocumentKey, { privacy = true }: { privacy?: boolean } = {}) {
+  await approveOne(key);
+  if (privacy) await approveOne("PRIVACY_NOTICE");
 }
 
 /** The Tâmpa trail run: a published group run on a trail, offering the declaration. */
@@ -253,12 +264,54 @@ describe("§NNN signing a group run's self-declaration", () => {
     expect((await signGroupRunDeclaration(db, await input(event.id, { email: "ion@example.ro" }), NOW)).outcome).toBe("signed");
   });
 
-  it("counts a signature as reliance on the version, so the text cannot be edited or deleted under it", async () => {
+  it("refuses the signature while no approved privacy notice is in force, and writes nothing", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL", { privacy: false });
+    const event = await trailRun();
+    await expect(signGroupRunDeclaration(db, await input(event.id), NOW)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: expect.stringContaining("no approved privacy notice exists yet"),
+    });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+    expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+
+  it("answers a posted id that is not a uuid with the form's refusal, before any query (§376)", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun();
+    // An old `renderedAt`, so the timing check passes and the id is what is judged.
+    const renderedAt = new Date(NOW.getTime() - 60_000).toISOString();
+    await expect(signGroupRunDeclaration(db, await input(event.id, { eventId: "not-a-uuid", renderedAt }), NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(signGroupRunDeclaration(db, await input(event.id, { documentId: "1; drop", renderedAt }), NOW)).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(eraseGroupRunDeclaration(db, await admin(), { id: "nope", reason: "asked" }, NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+  });
+
+  it("counts a signature as reliance on the version: it cannot be edited or deleted under it, and can once the sweep took the signature", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun();
     await signGroupRunDeclaration(db, await input(event.id), NOW);
     const [row] = (await listVersionsForBackoffice(db)).filter((version) => version.key === "GROUP_RUN_DECLARATION_TRAIL");
     expect(row.acceptanceCount).toBe(1);
+
+    // A successor in force, so "in force" is no longer the obstacle — the signature is.
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
+      locale,
+      title: LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].title,
+      body: { sections: [...LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].body.sections, { paragraphs: ["v2"] }] },
+    }));
+    await insertLegalDocumentVersion(db, { key: "GROUP_RUN_DECLARATION_TRAIL", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+
+    const superadmin = await admin("SUPERADMIN");
+    const later = new Date("2026-10-20T08:00:00.000Z");
+    const remove = () => deleteApprovedVersion(db, superadmin, { versionId: row.id, typedConfirmation: "TRAIL 1", reason: "curățenie", now: later });
+    await expect(remove()).rejects.toMatchObject({ code: "CONFLICT", message: expect.stringContaining("somebody has relied on this version") });
+    // Edited: never — an approved version is history, and a signed one twice over.
+    await expect(updateDraftVersion(db, superadmin, row.id, translations, later)).rejects.toMatchObject({ code: "CONFLICT" });
+
+    // Seven days after the run the sweep takes the signature, and with it the only reliance.
+    const counts = await pruneExpiredRows(db, later);
+    expect(counts.groupRunDeclarations).toBe(1);
+    await expect(remove()).resolves.toEqual({ key: "GROUP_RUN_DECLARATION_TRAIL", version: 1 });
   });
 });
 
