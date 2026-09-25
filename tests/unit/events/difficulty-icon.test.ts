@@ -59,15 +59,27 @@ describe("§NNN DifficultyIcon — a scale of dumbbells, one through three lit",
     for (const [tag] of svgOpenTags) expect(tag).toContain('aria-hidden="true"');
   });
 
-  it("the difficulty pill's accessible name is «Dificultate: …», not the bare word (fix round, finding 3)", () => {
-    const html = renderToStaticMarkup(
-      GlyphChip({ glyph: "difficulty:MODERATE", label: "Mediu", ariaLabel: "Dificultate: Mediu" }),
-    );
-    expect(html).toContain('aria-label="Dificultate: Mediu"');
-    expect(html).toContain(">Mediu<");
+  it("an ariaLabel is visually-hidden text ahead of the visible word, never an aria-label on the chip's roleless div (fix round, finding 1)", () => {
+    const html = renderToStaticMarkup(GlyphChip({ glyph: "difficulty:MODERATE", label: "Mediu", ariaLabel: "Dificultate: Mediu" }));
+    // No `aria-label` attribute — ARIA 1.2 does not let one name a generic `<div>`.
+    expect(html).not.toMatch(/aria-label="/);
+    // The full accessible name is in the markup, read first — clipped to a pixel (`srOnlySx`),
+    // not shown, but never removed from the accessible tree the way `display:none` would.
+    const hiddenMatch = html.match(/<span class="MuiBox-root (css-[\w-]+)">Dificultate: Mediu<\/span>/);
+    expect(hiddenMatch, "the hidden span is in the render").not.toBeNull();
+    const rule = html.match(new RegExp(`\\.${hiddenMatch![1]}\\{([^}]*)\\}`))?.[1] ?? "";
+    expect(rule).toContain("width:1px");
+    expect(rule).toContain("clip:rect(0");
+    // The visible word follows, hidden from the accessible tree so it is not read twice.
+    expect(html).toMatch(/<span class="MuiBox-root [^"]*" aria-hidden="true">Mediu<\/span>/);
     const svgOpenTags = [...html.matchAll(/<svg\b[^>]*>/g)];
     for (const [tag] of svgOpenTags) expect(tag).toContain('aria-hidden="true"');
   });
+
+  // The pill's accessible name itself — «Dificultate: …» built from the catalogue, for each
+  // level, in both locales — is tested through `buildRoutePills` in `route-pills-build.test.ts`
+  // (fix round, finding 2): a hand-written `ariaLabel` passed straight into `GlyphChip`, as this
+  // file used to, would pass even if `routePillParts` built the wrong key or a locale lost it.
 
   it("draws each of the scale's dumbbells as Material's own FitnessCenter path, one per level, in a wide viewBox", () => {
     const html = renderToStaticMarkup(HARD_DIFFICULTY_ICON({}));

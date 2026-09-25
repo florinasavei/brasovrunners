@@ -43,17 +43,29 @@ const FULL_ROUTE = {
   costType: "FREE" as const,
 };
 
-/** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph.
- * The opening tag's attribute order is not fixed — the difficulty pill now carries `aria-label`
- * ahead of `class` (fix round, finding 3) — so the class match looks for `class="…"` anywhere in
- * the tag rather than requiring it first. */
+/** The chip's *visible* word, out of its `.MuiChip-label`: the difficulty pill (only) carries a
+ * `GlyphChip` `ariaLabel`, which wraps the label in a visually-hidden accessible-name span
+ * (`GlyphChip`'s `srOnlySx`) followed by an `aria-hidden` span holding the visible word — checked
+ * first, before falling back to the plain text node every other closed set's pill still renders
+ * (fix round, finding 1: `GlyphChip`'s accessible name moved off an `aria-label` attribute). */
+function visibleLabel(labelInner: string): string | undefined {
+  return /<span class="MuiBox-root [^"]*" aria-hidden="true">([^<]*)<\/span>/.exec(labelInner)?.[1] ?? /^([^<]*)/.exec(labelInner)?.[1];
+}
+
+/** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
 function chips(fragment: string) {
-  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
-    outlined: classes.includes("MuiChip-outlined"),
-    small: classes.includes("MuiChip-sizeSmall"),
-    label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
-    glyph: /<(?:svg|span)\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
-  }));
+  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => {
+    // Greedy to the end of `inner`: the label span is the chip's last child, so nothing follows
+    // its own closing `</span>` — safe even though the difficulty pill nests two more `</span>`s
+    // inside it.
+    const labelInner = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*)<\/span>\s*$/.exec(inner)?.[1] ?? "";
+    return {
+      outlined: classes.includes("MuiChip-outlined"),
+      small: classes.includes("MuiChip-sizeSmall"),
+      label: visibleLabel(labelInner),
+      glyph: /<(?:svg|span)\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
+    };
+  });
 }
 
 describe("§388 buildRoutePills — surface, difficulty, distance, elevation, headlamp, then cost", () => {
@@ -90,6 +102,25 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, he
     const format = await getFormatter();
     const pills = buildRoutePills({ ...FULL_ROUTE, costType: "PAID" }, t, format);
     expect(pills.at(-1)?.label).toBe("Cu taxă");
+  });
+
+  // Fix round, finding 2: through `buildRoutePills` for every level in both locales, so a wrong
+  // key or a missing locale in `routePillParts`'s own `ariaLabel` line fails here — the earlier
+  // test passed a hand-written `ariaLabel` straight into `GlyphChip` and would pass regardless.
+  it.each([
+    ["ro", "EASY", "Dificultate: Ușor"],
+    ["ro", "MODERATE", "Dificultate: Mediu"],
+    ["ro", "HARD", "Dificultate: Avansat"],
+    ["en", "EASY", "Difficulty: Easy"],
+    ["en", "MODERATE", "Difficulty: Moderate"],
+    ["en", "HARD", "Difficulty: Hard"],
+  ] as const)("the difficulty pill's ariaLabel is «%s» for %s in %s", async (locale, difficulty, expected) => {
+    currentLocale = locale;
+    const t = await getTranslations("Event");
+    const format = await getFormatter();
+    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty }, t, format);
+    const difficultyPill = pills.find((pill) => pill.glyph === `difficulty:${difficulty}`);
+    expect(difficultyPill?.ariaLabel).toBe(expected);
   });
 });
 

@@ -106,13 +106,27 @@ function row(html: string, label: string) {
  * opening tag's attribute order is not fixed — the difficulty pill now carries `aria-label`
  * ahead of `class` (fix round, finding 3) — so the class match looks for `class="…"` anywhere in
  * the tag rather than requiring it first. */
+/** The chip's *visible* word, out of its `.MuiChip-label`: the difficulty pill (only) carries a
+ * `GlyphChip` `ariaLabel`, which wraps the label in a visually-hidden accessible-name span
+ * (`GlyphChip`'s `srOnlySx`) followed by an `aria-hidden` span holding the visible word — checked
+ * first, before falling back to the plain text node every other closed set's pill still renders. */
+function visibleLabel(labelInner: string): string | undefined {
+  return /<span class="MuiBox-root [^"]*" aria-hidden="true">([^<]*)<\/span>/.exec(labelInner)?.[1] ?? /^([^<]*)/.exec(labelInner)?.[1];
+}
+
 function chips(fragment: string) {
-  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
-    outlined: classes.includes("MuiChip-outlined"),
-    small: classes.includes("MuiChip-sizeSmall"),
-    label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
-    glyph: /<svg\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
-  }));
+  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => {
+    // Greedy to the end of `inner`: the label span is the chip's last child, so nothing follows
+    // its own closing `</span>` — safe even though the difficulty pill nests two more `</span>`s
+    // inside it (`GlyphChip`'s hidden accessible-name span and its visible, `aria-hidden` one).
+    const labelInner = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*)<\/span>\s*$/.exec(inner)?.[1] ?? "";
+    return {
+      outlined: classes.includes("MuiChip-outlined"),
+      small: classes.includes("MuiChip-sizeSmall"),
+      label: visibleLabel(labelInner),
+      glyph: /<svg\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
+    };
+  });
 }
 
 describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)", () => {

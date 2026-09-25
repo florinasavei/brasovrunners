@@ -102,9 +102,14 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 
-/** Every chip's label, in order. */
+/** Every chip's label, in order. The difficulty pill (only) carries a `GlyphChip` `ariaLabel`,
+ * which wraps the label in a visually-hidden accessible-name span (`srOnlySx`) followed by an
+ * `aria-hidden` span holding the visible word — checked first, before falling back to the plain
+ * text node every other closed set's pill still renders. */
 function pillLabels(fragment: string): string[] {
-  return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+  return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span>\s*<\/div>/g)].map(
+    ([, labelInner]) => /<span class="MuiBox-root [^"]*" aria-hidden="true">([^<]*)<\/span>/.exec(labelInner)?.[1] ?? text(labelInner),
+  );
 }
 
 /** The `<dl>`'s rows: each label with its `<dd>` markup. */

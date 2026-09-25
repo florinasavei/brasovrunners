@@ -153,8 +153,14 @@ const anchors = (html: string) =>
     attributes,
     text: text(inner),
   }));
-/** The words of every chip, in order. */
-const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+/** The words of every chip, in order. The difficulty pill (only) carries a `GlyphChip`
+ * `ariaLabel`, which wraps the label in a visually-hidden accessible-name span (`srOnlySx`)
+ * followed by an `aria-hidden` span holding the visible word — the `aria-hidden` span is checked
+ * first, before falling back to the plain text node every other closed set's pill still renders. */
+const chipLabels = (html: string) =>
+  [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span>\s*<\/div>/g)].map(
+    ([, labelInner]) => /<span class="MuiBox-root [^"]*" aria-hidden="true">([^<]*)<\/span>/.exec(labelInner)?.[1] ?? text(labelInner),
+  );
 /** Where the facts end: the series card's fold, or the door to the page. */
 const AFTER_FACTS = /<details\b|<a\b[^>]*>(?:<svg\b[\s\S]*?<\/svg>)?(?:Descrierea completă|Full event description)/;
 /** One fact line of the card (`data-fact`), from its opening tag up to the next line or the end of the facts. */

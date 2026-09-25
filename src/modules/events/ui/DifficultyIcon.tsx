@@ -34,6 +34,11 @@ const FITNESS_CENTER_PATH =
  * reached through `sx` on each faint dumbbell's `<g>` rather than a number written here, so
  * neither scheme needs a value of its own.
  *
+ * The chip's clone width (`sx={{ width: … }}`) and `level`'s own type are both derived from
+ * `DIFFICULTY_LEVELS.length` rather than written as `'3em'` and `1 | 2 | 3` — a fourth level
+ * added to the closed set above widens the icon and the type on its own, instead of the
+ * viewBox growing while the width and the accepted levels stayed at three (fix round, finding 3).
+ *
  * `aria-hidden` throughout, like every glyph in the registry (§112) — the pill's own
  * `aria-label` (`route-pills.ts`, `GlyphChip`) is what a screen reader hears, never the count of
  * dumbbells.
@@ -47,10 +52,19 @@ const FITNESS_CENTER_PATH =
  * the backoffice's (§388), the hero's `withGlyph`, `GlyphSelect`'s option — draws the scale with
  * no change of its own.
  */
-function difficultyScale(level: 1 | 2 | 3) {
+
+/** One icon-width (`1em`) per level in the closed set, so the chip's clone widens automatically
+ * when `DIFFICULTY_LEVELS` grows (fix round, finding 3). */
+const SCALE_WIDTH = `${DIFFICULTY_LEVELS.length}em`;
+
+/** The closed set's own level index, 1-based — `number`, not the hand-written `1 | 2 | 3`, so a
+ * fourth level added to `DIFFICULTY_LEVELS` above needs no matching edit here; the runtime check
+ * below is what actually keeps a caller inside the set (fix round, finding 3). */
+function difficultyScale(level: number) {
+  if (level < 1 || level > DIFFICULTY_LEVELS.length) throw new RangeError(`difficultyScale: level ${level} is outside 1..${DIFFICULTY_LEVELS.length}`);
   function DifficultyScale(props: SvgIconProps) {
     return (
-      <SvgIcon {...props} viewBox={`0 0 ${DIFFICULTY_LEVELS.length * 24} 24`} sx={{ width: "3em", ...props.sx }}>
+      <SvgIcon {...props} viewBox={`0 0 ${DIFFICULTY_LEVELS.length * 24} 24`} sx={{ width: SCALE_WIDTH, ...props.sx }}>
         {DIFFICULTY_LEVELS.map((_, index) => {
           const on = index < level;
           return (
