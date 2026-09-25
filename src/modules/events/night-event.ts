@@ -14,7 +14,7 @@ export function clubNightEvent(event: NightEventSource & { startsAt: Date }, occ
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * The pill's tooltip (§394, §NNN) — the sunset alone, "Apusul la 16:44": the owner, 2026-09-25,
+ * The pill's tooltip (§394, §NNN) — the sunset alone, "Soarele apune la 16:44": the owner, 2026-09-25,
  * "la alergarea de noapte, pe tooltip trebuie doar să zic când apune soarele". §404's five shapes
  * (naming the start, and the end when it is the reason) stay on the calendar entry, the `.ics`
  * line and the reminder (`nightLine`) — only the tooltip was asked to say one thing. Null when the
@@ -27,8 +27,8 @@ export function nightTooltip(facts: NightEventFacts, t: Translate): string | nul
 /**
  * The calendar entry's line («Alergare de noapte: începe la 19:00, apusul la 19:00, …») or the
  * `.ics` description's (the same, then «— ia o frontală»), §394, §404: the label by type — a group
- * run is «Alergare de noapte» — then the same times the tooltip names. The label alone when there
- * is no time to name.
+ * run is «Alergare de noapte» — then the same times `nightShape` names. The label alone when there
+ * is no time to name. (The pill's tooltip is a different sentence, the sunset alone, §NNN.)
  */
 export function nightLine(facts: NightEventFacts, t: Translate, groupRun: boolean, kind: "calendar" | "ics"): string {
   const label = t(groupRun ? "night.runPill" : "night.pill");

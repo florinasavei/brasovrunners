@@ -278,7 +278,7 @@ describe("§394 orderRoutePills — the night event where §382 put the headlamp
   const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
   const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
-  const night: Pill = { glyph: "headlamp", label: "Eveniment de noapte", tooltip: "Apusul la 16:44" };
+  const night: Pill = { glyph: "headlamp", label: "Eveniment de noapte", tooltip: "Soarele apune la 16:44" };
 
   it("surface, difficulty, distance, elevation, then the night event — whatever order it is handed in", () => {
     expect(orderRoutePills({ headlamp: night, elevation, distance, difficulty, surface })).toEqual([surface, difficulty, distance, elevation, night]);
@@ -301,17 +301,17 @@ describe("§394 the event page's facts", () => {
     const route = rows(html).find((row) => row.label === "Traseu");
     expect(route).toBeDefined();
     expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte"]);
-    expect(tooltips(route!.dd)).toEqual(["Apusul la 16:44"]);
+    expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="FlashlightOnIcon"');
     expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
   });
 
-  it("says «Night run» and «Sunset at 16:44» in English", async () => {
+  it("says «Night run» and «The sun sets at 16:44» in English", async () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Route")!;
     expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night run"]);
-    expect(tooltips(route.dd)).toEqual(["Sunset at 16:44"]);
+    expect(tooltips(route.dd)).toEqual(["The sun sets at 16:44"]);
   });
 
   it("says «Eveniment de noapte» on every other type", async () => {
@@ -332,7 +332,7 @@ describe("§394 the event page's facts", () => {
     expect(june).not.toContain("FlashlightOnIcon");
     const yes = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19, nightOverride: true }), now: NOW, stacked: true }));
     expect(pillLabels(yes)).toContain("Alergare de noapte");
-    expect(tooltips(yes)[0]).toMatch(/^Apusul la 21:\d\d$/);
+    expect(tooltips(yes)[0]).toMatch(/^Soarele apune la 21:\d\d$/);
     const no = renderToStaticMarkup(await EventFacts({ event: event({ nightOverride: false }), now: NOW, stacked: true }));
     expect(no).not.toContain("Alergare de noapte");
   });
@@ -673,14 +673,14 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
 
   it("the pill's tooltip says only the sunset, whatever named the end, in both languages (§NNN)", async () => {
     // 16:00 on 18 November, ninety minutes: dusk falls inside the run. §404's «End» shape still
-    // decides the calendar and reminder lines, but the tooltip says only «Apusul la 16:44» — the
+    // decides the calendar and reminder lines, but the tooltip says only «Soarele apune la 16:44» — the
     // owner, 2026-09-25: "pe tooltip trebuie doar să zic când apune soarele".
     const late = event({ startsAt: at("2026-11-18T16:00"), endsAt: at("2026-11-18T17:30") });
     const roHtml = renderToStaticMarkup(await EventFacts({ event: late, now: NOW, stacked: true }));
-    expect(tooltips(roHtml)).toContain("Apusul la 16:44");
+    expect(tooltips(roHtml)).toContain("Soarele apune la 16:44");
     currentLocale = "en";
     const enHtml = renderToStaticMarkup(await EventFacts({ event: late, now: NOW, stacked: true }));
-    expect(tooltips(enHtml)).toContain("Sunset at 16:44");
+    expect(tooltips(enHtml)).toContain("The sun sets at 16:44");
     currentLocale = "ro";
     const fromProgramme = event({
       startsAt: at("2026-11-18T16:00"),
@@ -689,7 +689,7 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
       ],
     } as Partial<PublicEvent>);
     const programmeHtml = renderToStaticMarkup(await EventFacts({ event: fromProgramme, now: NOW, stacked: true }));
-    expect(tooltips(programmeHtml)).toContain("Apusul la 16:44");
+    expect(tooltips(programmeHtml)).toContain("Soarele apune la 16:44");
   });
 
   it("carries every word in both catalogues", () => {
@@ -750,7 +750,7 @@ describe("§394 the migration", () => {
 });
 
 /**
- * §404 — the owner, 2026-09-25, on the tooltip «Apusul la 19:00, sfârșitul la 20:40» of a 19:00
+ * §404 — the owner, 2026-09-25, on the calendar line «Apusul la 19:00, sfârșitul la 20:40» of a 19:00
  * run: "evenimentul începe atunci, nu apusul începe atunci!". Every sentence names the start first,
  * then the sunset, then the end when it is the reason — so a sunset that happens to fall on the
  * start's own minute can no longer be read as the start.
@@ -842,16 +842,16 @@ describe("§404 the night sentences name the start, the sunset and the end", () 
   // zic când apune soarele" — whatever shape §404 picks for the calendar, the `.ics` and the
   // reminder. Every shape here shares the same day's sunset, "19:00", except "january" (16:57).
   it.each([
-    ["ro", "start", "Apusul la 19:00"],
-    ["ro", "end", "Apusul la 19:00"],
-    ["ro", "programme", "Apusul la 19:00"],
-    ["ro", "dawn", "Apusul la 19:00"],
-    ["en", "start", "Sunset at 19:00"],
-    ["en", "end", "Sunset at 19:00"],
-    ["en", "programme", "Sunset at 19:00"],
-    ["en", "dawn", "Sunset at 19:00"],
-    ["ro", "january", "Apusul la 16:57"],
-    ["en", "january", "Sunset at 16:57"],
+    ["ro", "start", "Soarele apune la 19:00"],
+    ["ro", "end", "Soarele apune la 19:00"],
+    ["ro", "programme", "Soarele apune la 19:00"],
+    ["ro", "dawn", "Soarele apune la 19:00"],
+    ["en", "start", "The sun sets at 19:00"],
+    ["en", "end", "The sun sets at 19:00"],
+    ["en", "programme", "The sun sets at 19:00"],
+    ["en", "dawn", "The sun sets at 19:00"],
+    ["ro", "january", "Soarele apune la 16:57"],
+    ["en", "january", "The sun sets at 16:57"],
   ] as const)("the pill's tooltip, %s, %s", (locale, shape, words) => {
     expect(nightTooltip(shapes[shape], tr(locale === "ro" ? ro : en, locale))).toBe(words);
   });
