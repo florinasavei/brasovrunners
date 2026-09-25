@@ -2918,7 +2918,7 @@
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
-        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea.",
+        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
         "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
         "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
         "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",

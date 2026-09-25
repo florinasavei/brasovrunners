@@ -2918,7 +2918,7 @@
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
-        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration.",
+        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
         "field": "Registrations per address (per event)",
         "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
         "value": "One address may register at most {people} for an event.",

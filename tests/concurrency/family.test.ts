@@ -26,9 +26,11 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
  * The first case holds on either schema — with the one-registration-per-address constraint of
  * today, and without it after the contract release. The second needs the contract release (the
  * family flow is closed until then, `family-gate.ts`), so it performs it on this database — drops
- * the old constraint for itself and never skips. Teardown reads the catalogue again rather than a
- * local flag, so a run that crashed after the DROP (its own or an earlier one's) still leaves the
- * shared concurrency database with the constraint back in place for every later run.
+ * the old constraint for itself and never skips. `beforeAll` reads `pg_constraint` once, before any
+ * test touches the schema, into `existedAtStart`; `afterAll` recreates the constraint only when it
+ * was there at the start *and* is absent now, so the suite leaves the database exactly as it found
+ * it. On a database past the contract migration (`0073`), the constraint was never there at the
+ * start of the run — `existedAtStart` is false — and the teardown correctly never resurrects it.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -38,7 +40,7 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
   const db = drizzle(pool);
   const NOW = new Date("2026-09-25T10:00:00.000Z");
   const createdEventIds: string[] = [];
-  let familyOpen = false;
+  let existedAtStart = false;
   let previousCap: unknown = undefined;
 
   beforeAll(async () => {
@@ -55,7 +57,7 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
       translations,
       now: NOW,
     }).catch(() => undefined);
-    familyOpen = await familyRegistrationOpen(db);
+    existedAtStart = !(await familyRegistrationOpen(db));
     const [kept] = await db.select().from(platformSettings).where(eq(platformSettings.key, ADDRESS_CAP_SETTING_KEY));
     previousCap = kept?.value;
   });
@@ -77,10 +79,11 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
       await db.delete(participants).where(inArray(participants.id, participantIds));
     }
     // The schema as this suite found it — after this suite's rows are gone, so nothing can collide.
-    // Read the catalogue again rather than trust `droppedLegacyConstraint`: a run that crashed
-    // after the DROP (in the previous test, before this teardown ran) leaves the constraint absent
-    // for every later run on this shared database, with no local flag to say so.
-    if (await familyRegistrationOpen(db)) {
+    // Recreate the legacy constraint only when it was there at the start of this run
+    // (`existedAtStart`) and the run has since removed it. Past the contract migration (`0073`)
+    // the constraint is gone for good on this database — `existedAtStart` is false — and this
+    // teardown must leave it gone rather than resurrect it.
+    if (existedAtStart && (await familyRegistrationOpen(db))) {
       await db.execute(sql.raw(`ALTER TABLE "registrations" ADD CONSTRAINT "${LEGACY_ONE_PER_ADDRESS_CONSTRAINT}" UNIQUE ("event_id", "participant_id")`));
     }
     // The club's limit as this suite found it.
@@ -132,9 +135,9 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
 
   it("the emailed links pressed together cannot pass the club's limit per address", async () => {
     // The contract release, on this database only and for this case only: the old constraint is
-    // dropped here and put back in `afterAll`, so the proof runs on every run rather than waiting
-    // for a schema that does not exist yet.
-    if (!familyOpen) {
+    // dropped here and put back in `afterAll` when it was there at the start, so the proof runs on
+    // every run rather than waiting for a schema that does not exist yet.
+    if (existedAtStart) {
       await db.execute(sql.raw(`ALTER TABLE "registrations" DROP CONSTRAINT "${LEGACY_ONE_PER_ADDRESS_CONSTRAINT}"`));
     }
     expect(await familyRegistrationOpen(db)).toBe(true);
