@@ -41,9 +41,11 @@ type Props = {
  *   the facts above, the row adds that a paragraph with only it is not sent: the intro's "stays
  *   empty" would otherwise be wrong for it (`dropsParagraph`).
  *
- * A named card folded under the editor, closed (§336), whose closed line counts the fields and the
- * ones this message uses ("12 câmpuri · 4 folosite aici"). A Server Component: the fold is
- * `<details>`, the rows are text, and the summary is `Panel`'s 44-pixel bar.
+ * A legend fold under the editor, closed (§336), whose closed line counts the fields and the
+ * ones this message uses ("12 câmpuri · 4 folosite aici") — drawn a little differently from an
+ * ordinary card (§NNN; the owner, 11:10, on this exact accordion: "trebuie să fie un pic diferit
+ * de celelalte acordeoane și cu un «i» button"): `Panel`'s `help` variant, no border, led by an
+ * "i". A Server Component: the fold is `<details>`, the rows are text.
  */
 export default async function EmailFieldLegend({ locale, emailLocale, messageType, deadlines }: Props) {
   const t = await getTranslations("Admin");
@@ -60,7 +62,8 @@ export default async function EmailFieldLegend({ locale, emailLocale, messageTyp
       intro={t("emails.copy.legend.intro")}
       aside={summary}
       collapsible
-      level={4}
+      variant="help"
+      legendIcon="info"
       id={`email-fields-${messageType}`}
       data-testid={`email-fields-${messageType}`}
     >
