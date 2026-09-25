@@ -22,7 +22,10 @@ import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * Card 1.2, "Traseul" (§350, §358), inside "Ce fel de eveniment": what they run on, how hard, how
+ * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
+ * route's pills in the facts, then the declaration offer under them (§393) and, further down, the
+ * route section under `#route` (§387). It was card 1.2 inside "Ce fel de eveniment" (§358) and
+ * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
@@ -33,13 +36,14 @@ import { LanguageTabs } from "./TextBoxes";
  *
  * For a role that may only read the settings, the card is its heading and its line (§358) — unless
  * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
- * alone, since those words are theirs. The first box has already said the settings are not.
+ * alone, since those words are theirs. The type's box has already said the settings are not.
  */
 export default async function CourseBox({
   event,
   mayEditSettings,
   groupRunDeclarations,
   languages,
+  heading,
   inSeries = false,
 }: BoxProps & { languages: readonly LanguageEntry[]; inSeries?: boolean }) {
   const t = await getTranslations("Admin");
@@ -57,9 +61,8 @@ export default async function CourseBox({
     return { date: from.slice(0, 10), time: from.slice(11, 16), endTime: row.endsAt ? toWallTimeInput(new Date(row.endsAt), zone).slice(11, 16) : "" };
   });
   const card = {
-    level: 3,
     id: "box-course",
-    title: t("editor.boxes.course.title"),
+    title: heading ?? t("editor.boxes.course.title"),
     aside: courseSummary(
       words,
       event,
@@ -157,6 +160,7 @@ export default async function CourseBox({
               label: t("editor.night.label"),
               choices: { auto: t("editor.night.auto"), yes: t("editor.night.yes"), no: t("editor.night.no") },
               autoLine: t.raw("editor.night.autoLine") as string,
+              autoLineDawn: t.raw("editor.night.autoLineDawn") as string,
               autoLineNoTime: t.raw("editor.night.autoLineNoTime") as string,
               autoLineNoDate: t("editor.night.autoLineNoDate"),
               verdictNight: t("editor.night.verdictNight"),

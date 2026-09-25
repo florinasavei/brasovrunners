@@ -1,7 +1,6 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { BOXED_DISCLOSURE_SX } from "./disclosure";
@@ -93,7 +92,7 @@ type Props = {
    * nobody needs a heading to find: "Ce înseamnă fiecare tip?" under the event editor's type
    * select, and the field legend on `/admin/emails`, which also takes `legendIcon="info"`.
    * `level` and `tone` are ignored on this variant; there is no card to nest or to warn about.
-   * `badge` is ignored too — there is no heading line to carry a chip. The line always folds
+   * The line always folds
    * (`collapsible` and `static` are read only by the `card` variant): a `help` line's whole
    * point is a caret, so there is no reading to give it that leaves the caret behind.
    */
@@ -105,11 +104,6 @@ type Props = {
    * that keeps that table honest.
    */
   legendIcon?: "info";
-  /**
-   * A short state beside the title, as a chip, readable while the fold is shut — "23 înscriși"
-   * on a box whose change reaches them. Plain text: the chip is drawn here.
-   */
-  badge?: string;
   /**
    * The boxed frame with no toggle at all, as a `<section>` — for the box that must never be
    * shut: a required tick in a closed box is a Save that silently does nothing (§350).
@@ -167,7 +161,6 @@ export default function Panel({
   openWhen,
   level = 2,
   tone = "default",
-  badge,
   variant = "card",
   legendIcon,
   static: isStatic = false,
@@ -220,9 +213,6 @@ export default function Panel({
   const heading = (
     <>
       {title}
-      {badge ? (
-        <Chip component="span" size="small" color="warning" variant="outlined" label={badge} sx={{ ml: 1, verticalAlign: "middle", fontWeight: 400 }} />
-      ) : null}
       {aside ? (
         <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }}>
           {aside}

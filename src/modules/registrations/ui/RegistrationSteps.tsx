@@ -12,6 +12,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedFamilyRegistrationOpen } from "@/modules/public-cache/reads";
+import { confirmationDueAtStart, confirmationDueWords } from "@/modules/registrations/domain/hold-deadlines";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 const STEPS = [
@@ -59,11 +60,14 @@ export default async function RegistrationSteps({ folded = false, window = null,
     offer: words.offer,
     reminder: reminderHours > 0 ? leadPhrase(locale, reminderHours) : "",
     opens: daysPhrase(locale, window?.opensDays ?? 0),
-    deadline: daysPhrase(locale, window?.deadlineDays ?? 0),
+    // "cu 2 zile înainte de start" / "la start" (§407): the one helper decides which.
+    due: confirmationDueWords(locale, window?.deadlineDays ?? 0),
   };
   const stepBody = (key: string) =>
     key === "declaration" && window
-      ? t("steps.declaration.bodyLater", values)
+      ? confirmationDueAtStart({ days: window.deadlineDays })
+        ? t("steps.declaration.bodyLaterAtStart", values)
+        : t("steps.declaration.bodyLater", values)
       : key === "confirmed" && reminderHours === 0
         ? t("steps.confirmed.bodyNoReminder")
         : t(`steps.${key}.body`, values);
