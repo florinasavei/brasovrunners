@@ -9,7 +9,6 @@ import {
   pgTable,
   text,
   timestamp,
-  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -434,15 +433,11 @@ export const registrations = pgTable(
   },
   (t) => [
     /*
-      One registration per address per event — until the contract release drops it (§NNN). While
-      it stands, the family flow is switched off by itself (`registrations/family-gate.ts`): the
-      public form behaves as it always did, and no "register another person" link is offered.
-    */
-    unique("registrations_event_participant_unique").on(t.eventId, t.participantId),
-    /*
-      The key that replaces it (§NNN): one registration per address, per event, per runner — the
-      runner's own name folded (`name_key`). Added now, beside the old one (expand only, AGENTS.md
-      §7.6); the service decides under the event's lock, and this refuses what slips past it.
+      One registration per address, per event, per runner (§NNN) — the runner's own name folded
+      (`name_key`). This replaced `registrations_event_participant_unique` (one registration per
+      address per event, with no room for a family) in the contract migration that closed out
+      `registrations/family-gate.ts`: the service decides under the event's lock, and this refuses
+      what slips past it.
     */
     uniqueIndex("registrations_event_participant_name_unique").on(t.eventId, t.participantId, t.nameKey),
 

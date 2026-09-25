@@ -57,8 +57,10 @@ const { ADDRESS_CAP_SETTING_KEY } = await import("@/modules/registrations/addres
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
-  // The contract release (§NNN): the family flow is open, so every branch below is the new one.
-  await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique`);
+  // The contract release (§NNN): migration 0073 already drops the constraint on a fresh database,
+  // so every branch below is the new one. `IF EXISTS` keeps this working the day this file is run
+  // before 0073 lands, too.
+  await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_event_participant_unique`);
 });
 afterAll(async () => close());
 beforeEach(async () => {
