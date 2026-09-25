@@ -30,6 +30,10 @@ export const emailActionTokenPurpose = pgEnum("email_action_token_purpose", [
   "WAITLIST_OFFER",
   "MANAGE_PROFILE",
   "LIST_CONSENT",
+  // The form for another person on the same address (§389): scoped to the registration the
+  // address already holds at the event, which names the event and the participant; spent by the
+  // submission that creates the other person's registration, never by opening the page.
+  "REGISTER_ANOTHER_PERSON",
 ]);
 
 export type EmailActionTokenPurpose = (typeof emailActionTokenPurpose.enumValues)[number];
