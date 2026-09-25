@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.92-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.93-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -276,12 +276,12 @@ Rules:
 - for consumer Gmail addresses, a `+tag` suffix is ignored for duplicate detection;
 - `gmail.com` and `googlemail.com` are the same inbox and collapse to one identity;
 - Gmail-specific rules are not applied to custom domains or other providers;
-- one participant may have only one registration for the same event;
+- one participant (one canonical address) may carry several registrations for the same event, one per runner — a family on one inbox — up to the club's limit per address ("Maxim de înscrieri pe o adresă (pe eveniment)", 4 unless the club changes it);
+- the same runner (the same name, as the signature compares names) never has two registrations for the same event on one address;
 - one participant may hold only one active registration across the distances of one race (BR-BUS-012);
 - the same participant may register for different events;
-- one email address cannot be used to represent several participants in the same event.
 
-If two people share one inbox, they need separate email addresses to create separate participant identities.
+A second person on an address that is already registered is never added from the public form. Sending the form again with another name registers nobody, and the screen says what it says to everybody. The address receives an email: "you are already registered — register someone else with the same address?". Its single-use link opens the form for the other person with the address fixed, or, at the club's limit, the email says so. Each person then confirms their own registration and signs their own declaration (an adult never signs for another adult; a minor as BR-BUS-033 says), and has their own number and QR code. So an address receives one QR code per confirmed person, and reminders come one per person. The flow is available once the one-registration-per-address constraint is dropped (DECISIONS.md §389).
 
 These rules prevent common aliases of the same inbox. They do not prove that two unrelated email addresses belong to different humans. Stronger identity verification is not planned.
 

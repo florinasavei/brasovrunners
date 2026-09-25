@@ -15,14 +15,22 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| A family on one address: the second sign-up becomes an email with a link for the extra person, a cap per address, one QR per person | `feat/family-registration` | its own release; before the weekend |
+| The family flow's contract migration: drop `registrations_event_participant_unique` (`BR-V1.94`, the release right after `BR-V1.93` reaches production) | `feat/drop-participant-unique` | queued |
+| The confirmed email (and the reminder, the participation confirmation) carry the event's facts: when, where, programme, route, cost, links — one shared block | `feat/confirmation-email-details` | queued |
+| The public participant list shows each person's state (confirmed · awaiting confirmation · waiting list), gated on the privacy notice in force | `feat/public-list-states` | queued |
+| Editor small: «Ce înseamnă fiecare tip?» as a compact help fold, cost «Gratuit» by default, a robot glyph on the series line, the email legend with an «i» | `fix/editor-small-2026-09-25` | queued |
+| /admin/tasks gains the tab «Aplicația» rendering docs/QUEUE.md | `feat/tasks-queue-tab` | queued |
+| The YouTube player: a poster from the club's store before the click, mute and volume after it | `feat/youtube-poster-volume` | queued |
+| The event editor mirrors the page: one card per section in page order, a page map, numbered titles with «apare pe pagină» | `feat/editor-page-flow` | queued |
+| «Eveniment de noapte» computed from the start time and the sunset at the club's city, per date; the headlamp checkbox becomes an override | `feat/night-event-from-sunset` | queued |
+| The money side of an external event: a bilingual discount note, «la organizator» cost wording, the ics cost line, JSON-LD offers | `feat/external-discount-note` | queued |
 | An optional self-declaration for group runs (asfalt, trail), signed on the site and emailed to the club (migration) | `feat/group-run-declaration` | queued; the trail one on by default (Salvamont) |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.92` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.93` |
 
 ## Next, queued
 
@@ -60,6 +68,7 @@ picks it up and this section moves the line to "Building".
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.93` | a family on one address through the inbox, the club's limit per address, each person confirms and signs alone — dormant until `BR-V1.94`'s contract migration; migration `0072` (§389) · the share picture's button says «Descarcă poza» |
 | `BR-V1.92` | a route / training description per language under `#route`, with the route link, the GPX and the map inside it; migration `0071` (§387) · the backoffice event cards wear the public card's type chip, route pills and 🤝 marker (§388) · the phone tap-target e2e assertions round to a tenth of a pixel |
 | `BR-V1.91` | a toast after every backoffice action and one confirmation dialog before every irreversible or outward-facing one, naming how many real participants are emailed; check-in stays one tap; the bulk cancel's ticks belong to their form · the phone footer says "GDPR", a rule before RO/EN, a condensed fold, the version as a chip · the 🤝 marker in gray ink; the chip says "Colaborare" / "Partnership" |
 | `BR-V1.90` | "Următoarele emailuri automate": every automatic email of the next fourteen days on `/admin/emails`, from the jobs' own formula, with recipient counts and the "Copie club" line |

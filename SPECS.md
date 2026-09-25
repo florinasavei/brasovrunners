@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.92-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.93-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -436,6 +436,9 @@ coffee is run on nothing.
 7. A declaration hold, a waiting-list offer or an email-confirmation link created after a change takes the new length. One created before keeps the deadline it was given, however the setting moves afterwards. The email link's lapse is written on the registration, and a restart gets a lapse of its own (2026-09-25, `DECISIONS.md` §377).
 8. The allocator's offer step (`fillAvailableSpots`) takes the club's deadlines as a required argument and reads none itself. Every caller reads them before its transaction and passes them in: the registration paths, the editor's capacity raise for one date or for every date of a series, and the maintenance job once per run. No read of `platform_settings` happens inside the transaction that holds the event row lock, even when the instance's memo has expired (2026-09-25, `DECISIONS.md` §377).
 9. The backoffice queue panel's help sentences name the club's hold and offer as currently set, read once per request from the database, and its times stay in the event's own zone (§369). A public page reads the setting from the data cache and never wakes the database (§333) (2026-09-25, `DECISIONS.md` §377).
+10. The public form sent again with a registered address and a different name creates no registration and answers with the same screen as any other submission. The address receives one `REGISTER_ANOTHER_PERSON` message instead: a single-use link, hashed at rest, valid for the club's email-link window, to the event's form with the address fixed. When the address is at the club's limit, the message has no link (2026-09-25, `DECISIONS.md` §389).
+11. The club's limit on registrations per address per event (default 4, range 1-10) is read and enforced under the event's lock, which `submitRegistration` takes before it reads which runners the address holds. Five emailed links pressed at once with one slot left produce exactly one registration and four `addressAtCap` refusals, proven against a real PostgreSQL server by `tests/concurrency/family.test.ts` on every run (2026-09-25, `DECISIONS.md` §389).
+12. Two members of one family pressing the public form at once produce one registration and no error, on today's schema and after the contract release (2026-09-25, `DECISIONS.md` §389).
 
 **Verification:** integration `capacity/concurrency.test.ts` against real PostgreSQL; integration `cms/capacity-raise.test.ts`
 
@@ -500,6 +503,7 @@ coffee is run on nothing.
 5. Given the registration form, when it renders, then under its title it states the event's date and time in the event's zone and its meeting point, and offers as links, each a 44 px target: the event's page, its rules when the organizer wrote any, the terms and the privacy notice — so what is being signed up for and under which terms is on the form itself (`DECISIONS.md` §102).
 6. Given a registration submitted again for the same event by the same address, when the re-sent message renders, then its opening sentence says the person is already registered, with that phrase underlined in the HTML part and plain in the text part, while the screen after the form stays the same for everybody (criterion 3) (2026-09-23, `DECISIONS.md` §309).
 7. Given Turnstile switched on and a too-fast refusal, when the registration form's "Trimite din nou înscrierea" is pressed before Cloudflare's token exists, then the press is held with the same waiting sentence as the main send button and is sent once the token arrives, or once the eight-second release opens; it is never dropped (2026-09-23, `DECISIONS.md` §324).
+8. Criterion 3 is extended. Given the same submission posted to the public form for an address holding no registration, one registration, or the club's limit of registrations at the event, when the response is compared, then the redirect and every cookie set are byte-for-byte identical. Only the outbox differs (§389).
 
 **Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
@@ -678,6 +682,7 @@ registration — and it lists registrations and never changes an address.
 6. Given an invalid, expired, used or registration-scoped token, when the page is opened, then it renders the same generic sentence as every other participant token surface.
 7. Given the public footer, when it renders, then it carries "Înscrierile mele" so the form is findable without an email.
 8. Given a participant's "Înscrierile mele" link, when a registration of theirs is over (checked in, cancelled or expired) but still holds a health note or socials, then it is listed with the buttons that delete each; once nothing optional is left it drops off the list (2026-09-23, `DECISIONS.md` §324).
+9. New criterion. Given an address with several registrations at events, when "Înscrierile mele" is opened from its link, then every active registration is listed with its runner's name. Asking for the link again for an event queues one message per person on the address who still owes a step (§389).
 
 **Verification:** integration `registrations/my-registrations.test.ts`; integration `cms/boundary.test.ts` (the routes)
 
@@ -709,6 +714,7 @@ registration — and it lists registrations and never changes an address.
 1. Given `" Ana.Pop@Example.RO "`, when it is canonicalized, then the canonical value is `ana.pop@example.ro`.
 2. Given the same input, when the participant is stored, then `delivery_email` preserves the submitted spelling minus surrounding whitespace.
 3. Given two submissions differing only in case or surrounding whitespace for one event, when both are posted, then the second is treated as the same participant and the same registration.
+4. The participant is still the canonical email address. On an address that already holds a registration at an event, a second runner can be registered under the same participant. Each registration is told apart by the runner's name folded with `foldName`, stored as `registrations.name_key`, and unique per (event, participant, name_key) (2026-09-25, `DECISIONS.md` §389).
 
 **Verification:** unit `participants/canonicalize.test.ts`
 
@@ -742,6 +748,8 @@ registration — and it lists registrations and never changes an address.
 2. Given the database, when a duplicate `(event_id, participant_id)` insert is attempted directly, then a unique constraint rejects it.
 3. Given a participant registered for one event, when they register for a different event, then it succeeds.
 4. Given a participant registered for one distance of a race, when they register for another distance of the same race, then it is refused (BR-REQ-012-01).
+5. Given the one-per-address constraint has been dropped and an active registration on an address, when the public form is submitted again with the same address and a different runner's name, then no registration is created, the screen is the generic success, and the address receives one REGISTER_ANOTHER_PERSON email with a single-use link (or, at the limit, no link).
+6. Given the database, when a second row with the same (event_id, participant_id, name_key) is inserted directly, then the unique index registrations_event_participant_name_unique rejects it.
 
 **Verification:** integration `registrations/uniqueness.test.ts`
 
@@ -985,6 +993,7 @@ registration — and it lists registrations and never changes an address.
 5. Given a new token for the same purpose and registration, when it is issued, then previous active tokens for that purpose are invalidated.
 6. Given repeated validation attempts presenting the same token, when they exceed the limit for the window, then further attempts are refused with the same generic response an unknown token receives, and the limit is keyed on the token's hash rather than on the caller.
 7. Given a consent withdrawal, when the manage token names no registration, or the form posts a registration id that is not a uuid, then it is refused as NOT_FOUND like any bad token, and never reaches the database as a cast error (2026-09-23, `DECISIONS.md` §324).
+8. Each runner on an address confirms, signs their own declaration, gets their own race number and QR code, and is erased on their own. "Înscrierile mele" names each runner, and every email greets the runner of the registration it is about (2026-09-25, `DECISIONS.md` §389).
 
 **Verification:** integration `tokens/action-tokens.test.ts`, `tokens/token-throttle.test.ts`
 
@@ -1040,6 +1049,7 @@ registration — and it lists registrations and never changes an address.
 4. Given a cancellation by an administrator, when it commits, then the released place is offered to the front of the waiting list, exactly as a participant's own cancellation is.
 5. Given a registration, when the backoffice shows it — on its own page and as the "Etapă" column of the list — then its journey is derived from the row as six ordered steps (submitted, email confirmed, place reserved, declaration signed, place confirmed, present), with the step the person is at marked current, a waiting-list entry waiting at the reservation step, a signed declaration recognised whether it was signed online or on paper, the race number on the confirmation and on the check-in, a cancelled or expired row keeping the steps it reached and naming how it ended, and a registration restarted on the same row showing only the steps of its current cycle; the list's cell names the last step done, never the one awaited, and reads the acceptance with one probe per row, never a query per row (added 2026-09-19, `DECISIONS.md` §145).
 6. Given a public submission for an event by an address that already holds an active registration for it, when it is accepted, then exactly one `audit_logs` row `registration.resubmitted` is written in the same transaction as the re-send, on that registration, with the participant, no staff actor, and metadata holding only the state found and the message type re-sent (null when nothing was queued); the public answer is identical to a first submission's; the registration's timeline shows each such row as a dated line naming the state and the re-sent message; and the registrations list marks the row "Reînscriere ×N" with the last date, read in one grouped query for the page's rows and counted in no figure the club is given (2026-09-23, `DECISIONS.md` §312).
+7. A staff name correction that would give a registration the same folded name as another registration on the same address and event is refused on the name field. The check and the update run under the event's lock, so a rename racing a family-link registration of the same name gets that refusal and never a database error (2026-09-25, `DECISIONS.md` §389).
 
 **Verification:** integration `registrations/staff-crud.test.ts`; unit `registrations/journey.test.ts`; integration `registrations/admin-list.test.ts`
 
@@ -1460,6 +1470,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 8. Only the chosen registration mode's fields are shown in "Participare și înscrieri"; a capacity, declaration or public list posted with a mode other than on-site registration, and an organizer name or link posted with a mode other than elsewhere, are saved as none rather than refused.
 9. A refusal of the event form — by the browser or the server — opens every closed box and card around each field it names and brings that field's language tab forward, with every value kept (e.g. a missing declaration on an on-site registration opens "Participare și înscrieri" › "Condiții de participare și declarația").
 10. Given a role without settings rights (Redactor) on the event editor, when "Ce fel de eveniment" renders, then "Setările le schimbă un Organizator sau un Administrator." appears exactly once, in place of the type. Its three cards are shown as their headings and closed lines with nothing to open, and no `event.*` field is posted. Verification: unit `content/editor-first-card.test.ts`; e2e `cms-publish.spec.ts` (2026-09-24, `DECISIONS.md` §358).
+11. Migration `0072_family_registration` is expand-only: it adds the name key and its unique index beside the one-registration-per-address constraint. The family flow stays closed, and no link is offered, until a later contract migration drops that constraint. `family-gate.ts` reads the catalogue, so the flow opens with no flag and no deploy of its own (2026-09-25, `DECISIONS.md` §389).
 
 **Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
@@ -1787,6 +1798,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 27. Given the thank-you, a participant message, an update notice or a cancellation, when it is sent, then the number the toast and the banner state equals the dialog's number. A test registration is written to and counted in neither. Verification: integration `notifications/confirm-counts.test.ts` (2026-09-25, `DECISIONS.md` §384).
 28. Given the registrations list, when an Administrator ticks rows and presses the bulk cancel or the bulk erase, then the ticked ids are posted with the form: each tick's `form` is on its `<input>`. Verification: e2e `bulk-cancel-count.spec.ts` on both projects (2026-09-25, `DECISIONS.md` §384).
 29. Given the race-day desk, when a volunteer checks a runner in or undoes it, then no dialog asks first and a toast says it happened. Given any question, when it is answered, then the server still asserts the role, the version and every rule as before: the dialog is a courtesy and never a permission (2026-09-25, `DECISIONS.md` §384).
+30. Only an Administrator can change the limit per address, in the "Termene" fold. The change asks for confirmation first, is audited, and a save that changes nothing writes nothing. An Organizer sees the limit and is offered no form (2026-09-25, `DECISIONS.md` §389).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

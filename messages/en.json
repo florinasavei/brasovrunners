@@ -102,7 +102,7 @@
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
       "instagram": "Instagram",
-      "instagramDownload": "Download the picture for Instagram",
+      "instagramDownload": "Download the picture",
       "calendarTitle": "Add to calendar:",
       "googleCalendar": "Google Calendar",
       "ics": ".ics file"
@@ -800,6 +800,8 @@
       "honeypotOffBody": "The field stays and is logged, but refuses nobody any more.",
       "deadlinesTitle": "Save the deadlines?",
       "deadlinesBody": "Every hold, offer and link given from now on takes the new numbers, and the emails and pages say them. Nothing already given changes: a link, a held place or an offer keeps the deadline it got.",
+      "addressCapTitle": "Save the limit per address?",
+      "addressCapBody": "From now on, at every event, one email address may register at most this many people, and the email offering to register someone else says the new number. Registrations already made all stay.",
       "jobCadenceTitle": "Save the interval?",
       "jobCadenceBody": "The email queue and the maintenance run at most once per chosen interval; an email may wait that long.",
       "neonLimitsTitle": "Save the Neon limits?",
@@ -2625,7 +2627,8 @@
         "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed",
         "EVENT_UPDATE_NOTICE": "Updated details (place, time, programme)",
         "EVENT_CANCELLED": "Event cancelled",
-        "ORGANIZER_MESSAGE": "Message from the organizers"
+        "ORGANIZER_MESSAGE": "Message from the organizers",
+        "REGISTER_ANOTHER_PERSON": "Registering another person with the same address"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts {confirmation}.",
@@ -2648,7 +2651,8 @@
         "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
         "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link.",
-        "ORGANIZER_MESSAGE": "Only when an organizer writes and sends a message from the event's page → “Send a message to participants” — bad weather or a last-minute change, for instance. The subject and the text are written for each send, in Romanian and English; the preview here uses a sample text. To the group chosen — confirmed, on the waiting list, with the declaration unsigned, or all — each in their own language. No token and no attachment: the button leads to the event's page."
+        "ORGANIZER_MESSAGE": "Only when an organizer writes and sends a message from the event's page → “Send a message to participants” — bad weather or a last-minute change, for instance. The subject and the text are written for each send, in Romanian and English; the preview here uses a sample text. To the group chosen — confirmed, on the waiting list, with the declaration unsigned, or all — each in their own language. No token and no attachment: the button leads to the event's page.",
+        "REGISTER_ANOTHER_PERSON": "When the public form is sent again with an address already registered for the event and another name. No registration is created, and the screen shows the same “check your email” as always. The address gets a single-use link, valid for {confirmation}, to the form with the address fixed — or, if it already has {people}, only the sentence that says so, with no link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -2671,7 +2675,8 @@
         "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
         "EVENT_UPDATE_NOTICE": "only when an organizer announces a change",
         "EVENT_CANCELLED": "when the event is cancelled, if ticked",
-        "ORGANIZER_MESSAGE": "only when an organizer writes a message"
+        "ORGANIZER_MESSAGE": "only when an organizer writes a message",
+        "REGISTER_ANOTHER_PERSON": "when the form is sent again for another person"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -2914,7 +2919,21 @@
           "link": "Change it in “The club's copies”"
         }
       },
-      "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here."
+      "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
+      "addressCap": {
+        "title": "Registrations per address (per event)",
+        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration.",
+        "field": "Registrations per address (per event)",
+        "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
+        "value": "One address may register at most {people} for an event.",
+        "save": "Save the limit",
+        "saved": "The limit of registrations per address was saved.",
+        "people": {
+          "one": "one person",
+          "few": "{count} people",
+          "other": "{count} people"
+        }
+      }
     },
     "guide": {
       "title": "How to use the platform",
@@ -2949,6 +2968,27 @@
             "Event full: they join the waiting list and get an email when a place frees up, with {offer} to sign the declaration.",
             "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot.",
             "In their calendar: every event has “Google Calendar” and “Add to calendar (.ics)”; on the events page, “Subscribe” puts the club's whole calendar on the phone and it updates by itself when you publish something new."
+          ],
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "key": "family",
+          "title": "A family on one address",
+          "who": "For every role. How several people register with the same email.",
+          "steps": [
+            "One person registers as usual. If the form is sent again with the same address and another name, no registration is created: the screen shows the same “check your email” as always (so nobody can learn from the form who is registered), and the address gets the email “You are already registered — do you want to register someone else with the same address?”.",
+            "The email has a button to the form, with the address already filled in and locked. You fill in the other person's details: the name, the birth date (for a minor, the parent too), the phone is optional, the consents as usual. The link is valid for {confirmation} and works once.",
+            "One address may register at most {people} for an event. An administrator changes the number in “Emails” → “Deadlines”. At the limit, the email says so and carries no button.",
+            "Each person confirms their own registration (their own confirmation link) and signs their own declaration — an adult never signs for another adult; a minor signs as usual. Each has their own place, their own race number and, if it comes to it, their own place on the waiting list.",
+            "The address receives one QR code for each confirmed person, in separate emails — up to {people}. At the desk you scan each code in turn: each opens that person's own page.",
+            "In the registrations list, at the desk and in the export each person is a row of their own, with the same address. “My registrations” lists every registration of the address, each with its name. Cancelling or erasing one leaves the others alone. Reminders and thank-yous come one per person."
           ],
           "roles": [
             "CONTRIBUTOR",
@@ -3035,7 +3075,8 @@
           ]
         }
       ],
-      "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'."
+      "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'.",
+      "familyPending": "Not switched on yet: the database still keeps one registration per address per event, until BR-V1.94, the update that changes it. Until then, sending the form again for another person only re-sends the first registration's email."
     },
     "erase": {
       "backToEvent": "Back to the event",
@@ -3337,6 +3378,10 @@
       "waitingList": {
         "title": "If it is full",
         "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offer} to sign the declaration."
+      },
+      "family": {
+        "title": "Registering someone else on the same address?",
+        "body": "Send the form again — you get an email with the next step."
       }
     },
     "journey": {
@@ -3405,7 +3450,21 @@
     "phoneTooShort": "Keep going — a number has at least 4 digits.",
     "phoneValid": "Looks right. We will store it as",
     "botCheckWait": "One second while we check you are not a robot — we send the form ourselves as soon as it answers; no need to press again.",
-    "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first."
+    "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
+    "another": {
+      "title": "Registering another person with the same address",
+      "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event.",
+      "emailFixed": "The address the link was sent to. It cannot be changed here: for another address, use the ordinary form.",
+      "phoneOptional": "Optional for this person — a child without a phone, for instance. The emergency contact below is still required.",
+      "alreadyOnAddress": "This person is already registered with this address. Nothing was created. For someone else, change the name and send again — the link still works.",
+      "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address.",
+      "linkGone": "The link for another person no longer works — it was used, it expired, or it is for another event. Send the form below again with your address and the person's name: you get a new email with the next step.",
+      "people": {
+        "one": "one person",
+        "few": "{count} people",
+        "other": "{count} people"
+      }
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -3543,7 +3602,8 @@
       "closedTitle": "Registrations that are over",
       "closedHelp": "These registrations are no longer active, but they still hold details you gave us only because you agreed to. You can delete them here; the rest of the registration is kept for as long as the privacy notice says.",
       "eventCancelledChip": "Event cancelled",
-      "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do."
+      "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
+      "runner": "Registered: {name}"
     },
     "manage": {
       "title": "Manage your registration",
@@ -4083,6 +4143,7 @@
       "neonPlan": "Neon plan saved.",
       "jobCadence": "Interval saved.",
       "deadlines": "Deadlines saved.",
+      "addressCap": "Limit per address saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed."
     }

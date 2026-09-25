@@ -102,7 +102,7 @@
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
       "instagram": "Instagram",
-      "instagramDownload": "Descarcă poza pentru Instagram",
+      "instagramDownload": "Descarcă poza",
       "calendarTitle": "Adaugă în calendar:",
       "googleCalendar": "Google Calendar",
       "ics": "Fișier .ics"
@@ -800,6 +800,8 @@
       "honeypotOffBody": "Câmpul rămâne și se notează în jurnal, dar nu mai refuză pe nimeni.",
       "deadlinesTitle": "Salvezi termenele?",
       "deadlinesBody": "Fiecare loc ținut, ofertă și link dat de acum înainte primește numerele noi, iar emailurile și paginile le spun. Nimic din ce s-a dat deja nu se schimbă: un link, un loc ținut sau o ofertă își păstrează termenul primit.",
+      "addressCapTitle": "Salvezi limita pe adresă?",
+      "addressCapBody": "De acum, la fiecare eveniment, o adresă de email poate înscrie cel mult atâtea persoane, iar emailul care oferă înscrierea altcuiva spune numărul nou. Înscrierile făcute deja rămân toate.",
       "jobCadenceTitle": "Salvezi intervalul?",
       "jobCadenceBody": "Emailurile din coadă și întreținerea rulează cel mult o dată la intervalul ales; un email poate aștepta atât.",
       "neonLimitsTitle": "Salvezi limitele Neon?",
@@ -2625,7 +2627,8 @@
         "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat",
         "EVENT_UPDATE_NOTICE": "Detalii actualizate (loc, oră, program)",
         "EVENT_CANCELLED": "Eveniment anulat",
-        "ORGANIZER_MESSAGE": "Mesaj de la organizatori"
+        "ORGANIZER_MESSAGE": "Mesaj de la organizatori",
+        "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil {confirmation}.",
@@ -2648,7 +2651,8 @@
         "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token.",
         "EVENT_UPDATE_NOTICE": "Doar când un organizator bifează „Anunță participanții despre schimbare” la salvarea evenimentului, și doar dacă s-a schimbat locul, data și ora sau programul, ori dacă a scris un mesaj. Câte un email fiecărei înscrieri active (în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată), în limba ei; locul și ora sunt cele de la trimitere. Fără token: butonul duce la pagina evenimentului. Nebifat, nu pleacă nimic.",
         "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune.",
-        "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului."
+        "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului.",
+        "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -2671,7 +2675,8 @@
         "CLUB_CONFIRMATION_NOTICE": "la fiecare confirmare, către club",
         "EVENT_UPDATE_NOTICE": "doar când un organizator anunță o schimbare",
         "EVENT_CANCELLED": "la anularea evenimentului, dacă e bifat",
-        "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj"
+        "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj",
+        "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -2914,7 +2919,21 @@
           "link": "Schimbă în „Copiile clubului”"
         }
       },
-      "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici."
+      "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
+      "addressCap": {
+        "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
+        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea.",
+        "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
+        "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
+        "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+        "save": "Salvează maximul",
+        "saved": "Maximul de înscrieri pe o adresă a fost salvat.",
+        "people": {
+          "one": "o persoană",
+          "few": "{count} persoane",
+          "other": "{count} de persoane"
+        }
+      }
     },
     "guide": {
       "title": "Ghid de utilizare",
@@ -2949,6 +2968,27 @@
             "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are {offer} să semneze declarația.",
             "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc.",
             "În calendarul lui: pe fiecare eveniment sunt „Google Calendar” și „Adaugă în calendar (.ics)”; pe pagina de evenimente, „Abonează-te” pune tot calendarul clubului în telefon și se actualizează singur când publicați ceva nou."
+          ],
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "key": "family",
+          "title": "O familie pe o singură adresă",
+          "who": "Pentru toate rolurile. Cum se înscriu mai multe persoane cu același email.",
+          "steps": [
+            "O persoană se înscrie ca de obicei. Dacă formularul e trimis din nou cu aceeași adresă și alt nume, nu se creează nicio înscriere: pe ecran apare același „verifică-ți emailul” ca oricând (așa nimeni nu poate afla din formular cine e înscris), iar adresa primește emailul „Ești deja înscris(ă) — vrei să înscrii pe altcineva cu aceeași adresă?”.",
+            "Emailul are un buton către formular, cu adresa deja completată și blocată. Se completează datele celeilalte persoane: numele, data nașterii (la un minor, și părintele), telefonul e opțional, acordurile ca de obicei. Linkul e valabil {confirmation} și merge o singură dată.",
+            "Pe o adresă se pot înscrie cel mult {people} la un eveniment. Numărul îl schimbă un administrator, în „Emailuri” → „Termene”. La limită, emailul spune asta și nu mai are buton.",
+            "Fiecare persoană își confirmă singură înscrierea (propriul link de confirmare) și își semnează singură declarația — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei. Fiecare are propriul loc, propriul număr de concurs și, dacă e cazul, propriul loc pe lista de așteptare.",
+            "Adresa primește câte un cod QR pentru fiecare persoană confirmată, în emailuri separate — până la {people}. La masă scanezi fiecare cod pe rând: fiecare deschide pagina persoanei lui.",
+            "În lista de înscrieri, la masă și în export fiecare persoană e un rând separat, cu aceeași adresă. „Înscrierile mele” arată toate înscrierile adresei, cu numele fiecăruia. Anularea sau ștergerea uneia nu le atinge pe celelalte. Mementourile și mulțumirile vin câte unul pentru fiecare persoană."
           ],
           "roles": [
             "CONTRIBUTOR",
@@ -3035,7 +3075,8 @@
           ]
         }
       ],
-      "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor."
+      "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor.",
+      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la BR-V1.94, actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri."
     },
     "erase": {
       "backToEvent": "Înapoi la eveniment",
@@ -3337,6 +3378,10 @@
       "waitingList": {
         "title": "Dacă nu mai sunt locuri",
         "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offer} să semnezi declarația."
+      },
+      "family": {
+        "title": "Înscrii pe altcineva cu aceeași adresă?",
+        "body": "Trimite din nou formularul — primești un email cu pasul următor."
       }
     },
     "journey": {
@@ -3405,7 +3450,21 @@
     "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
     "phoneValid": "Arată bine. Îl salvăm ca",
     "botCheckWait": "Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
-    "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei."
+    "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
+    "another": {
+      "title": "Înscrii o altă persoană cu aceeași adresă",
+      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "emailFixed": "Adresa la care a venit linkul. Nu se poate schimba aici: pentru altă adresă, completează formularul obișnuit.",
+      "phoneOptional": "Opțional pentru această persoană — de exemplu un copil fără telefon. Contactul de urgență de mai jos rămâne obligatoriu.",
+      "alreadyOnAddress": "Persoana aceasta este deja înscrisă cu această adresă. Nu s-a creat nimic. Pentru altcineva, schimbă numele și trimite din nou — linkul rămâne valabil.",
+      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email.",
+      "linkGone": "Linkul pentru încă o persoană nu mai este valabil — a fost folosit, a expirat sau este pentru alt eveniment. Trimite din nou formularul de mai jos cu adresa ta și numele persoanei: primești un email nou cu pasul următor.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -3543,7 +3602,8 @@
       "closedTitle": "Înscrieri încheiate",
       "closedHelp": "Aceste înscrieri nu mai sunt active, dar încă păstrează date pe care ni le-ai dat doar cu acordul tău. Le poți șterge de aici; restul înscrierii îl păstrăm cât scrie în nota de confidențialitate.",
       "eventCancelledChip": "Eveniment anulat",
-      "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic."
+      "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
+      "runner": "Înscris: {name}"
     },
     "manage": {
       "title": "Gestionează înscrierea",
@@ -4083,6 +4143,7 @@
       "neonPlan": "Plan Neon salvat.",
       "jobCadence": "Interval salvat.",
       "deadlines": "Termene salvate.",
+      "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
     }
