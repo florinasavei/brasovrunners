@@ -68,10 +68,13 @@ export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL",
  * the reader's own language, and it also stops "Mediu", "mediu" and "Medium" being three
  * difficulties in a filter that does not exist yet but will.
  *
- * Three values, because three is what the club uses. A fourth is a migration, not a free-text
- * escape hatch — the point of the closed set is that adding to it is a decision.
+ * Three values at first, because three is what the club used; five since §NNN (the owner,
+ * 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu") — `VERY_EASY` before `EASY` and
+ * `VERY_HARD` after `HARD`, so the enum's own order is the scale's order (migration `0078`,
+ * `ADD VALUE … BEFORE/AFTER`, the three old values untouched). A sixth is a migration, not a
+ * free-text escape hatch — the point of the closed set is that adding to it is a decision.
  */
-export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
+export const eventDifficulty = pgEnum("event_difficulty", ["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
 
 /**
  * Whether the event costs money, and how — three answers, not two.

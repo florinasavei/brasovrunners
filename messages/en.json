@@ -270,9 +270,11 @@
       "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
+      "VERY_EASY": "Very easy",
       "EASY": "Easy",
       "MODERATE": "Moderate",
-      "HARD": "Hard"
+      "HARD": "Hard",
+      "VERY_HARD": "Very hard"
     },
     "costValues": {
       "FREE": "Free",
@@ -1054,9 +1056,11 @@
       "delete": "Delete",
       "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
       "difficultyValues": {
+        "VERY_EASY": "Very easy",
         "EASY": "Easy",
         "MODERATE": "Moderate",
-        "HARD": "Hard"
+        "HARD": "Hard",
+        "VERY_HARD": "Very hard"
       },
       "costValues": {
         "FREE": "Free",
