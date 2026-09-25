@@ -251,6 +251,61 @@ describe("the calendar file", () => {
     expect(donation).toContain("Donație: pe wingsforlifeworldrun.com · sugerat 50 lei");
   });
 
+  it("carries an EXTERNAL-registration PAID event's cost as «Cost: {amount}, la organizator», with the discount note (§394)", () => {
+    const external = calendarDescription(
+      { ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei pentru membri" },
+      labelsRo,
+    );
+    expect(external).toContain("Cost: 75 lei, la organizator · 40 lei pentru membri");
+    expect(external).not.toContain("plata pe");
+
+    const externalEn = calendarDescription(
+      { ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei for members" },
+      labelsEn,
+    );
+    expect(externalEn).toContain("Cost: 75 lei, paid to the organizer · 40 lei for members");
+
+    // No discount stated: the cost line alone, still "la organizator".
+    const noDiscount = calendarDescription({ ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: null }, labelsRo);
+    expect(noDiscount).toContain("Cost: 75 lei, la organizator");
+    expect(noDiscount).not.toContain("40 lei pentru membri");
+
+    // An INTERNAL paid event is unaffected: the plain amount and payment link, as before.
+    const internal = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners", registrationMode: "INTERNAL" }, labelsRo);
+    expect(internal).toContain("Taxă: 50 lei · plata pe revolut.me");
+    expect(internal).not.toContain("la organizator");
+  });
+
+  // §394 (review round 3): the file reads the span as the pill and the reminder do — a daylight
+  // start whose own end, or whose programme's last row, falls after dusk is a night event here too.
+  it("says the night line for a daylight start that ends after dusk, from the end or the programme (§394)", () => {
+    // 16:00 on 18 November in Brașov, ninety minutes: dusk (~17:15) falls inside.
+    const november = {
+      ...event,
+      type: "RACE" as const,
+      timezone: "Europe/Bucharest",
+      startsAt: new Date("2026-11-18T14:00:00.000Z"),
+      endsAt: new Date("2026-11-18T15:30:00.000Z"),
+      nightOverride: null,
+    };
+    expect(calendarDescription(november, labelsRo)).toContain("Eveniment de noapte — apusul la 16:44, ia o frontală");
+    expect(calendarDescription(november, labelsEn)).toContain("Night event — sunset at 16:44, bring a headlamp");
+    // The same start ending at 16:45: in the light throughout, no line.
+    expect(calendarDescription({ ...november, endsAt: new Date("2026-11-18T14:45:00.000Z") }, labelsRo)).not.toContain("de noapte");
+
+    // No end of its own: the programme's last row of the day (17:45) carries it past dusk.
+    const programme = [
+      { startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: null, label: "Start", place: null },
+      { startsAt: new Date("2026-11-18T15:30:00.000Z"), endsAt: new Date("2026-11-18T15:45:00.000Z"), label: "Premiere", place: null },
+    ];
+    expect(calendarDescription({ ...november, endsAt: null, programme }, labelsRo)).toContain("Eveniment de noapte — apusul la 16:44");
+
+    // A group run is «Alergare de noapte» in the file, as on its card and in its reminder.
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).toContain("Alergare de noapte — apusul la 16:44, ia o frontală");
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsEn)).toContain("Night run — sunset at 16:44, bring a headlamp");
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).not.toContain("Eveniment de noapte");
+  });
+
   it("writes one line per partner, the label said once, each keeping its own page (§168)", () => {
     const three = calendarDescription(
       {

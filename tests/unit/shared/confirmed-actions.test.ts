@@ -60,6 +60,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteEventAction: [],
   removeTestRegistrationsAction: [],
   withdrawInterestAction: [],
+  // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
+  eraseGroupRunDeclarationAction: ["eraseAction"],
   assignBibNumbersAction: ["assignAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],

@@ -102,31 +102,16 @@ function row(html: string, label: string) {
   return found;
 }
 
-/** Every chip in a fragment: its variant, its label and whether it carries its glyph. The
- * opening tag's attribute order is not fixed — the difficulty pill now carries `aria-label`
- * ahead of `class` (fix round, finding 3) — so the class match looks for `class="…"` anywhere in
- * the tag rather than requiring it first. */
-/** The chip's *visible* word, out of its `.MuiChip-label`: the difficulty pill (only) carries a
- * `GlyphChip` `ariaLabel`, which wraps the label in a visually-hidden accessible-name span
- * (`GlyphChip`'s `srOnlySx`) followed by an `aria-hidden` span holding the visible word — checked
- * first, before falling back to the plain text node every other closed set's pill still renders. */
-function visibleLabel(labelInner: string): string | undefined {
-  return /<span class="MuiBox-root [^"]*" aria-hidden="true">([^<]*)<\/span>/.exec(labelInner)?.[1] ?? /^([^<]*)/.exec(labelInner)?.[1];
-}
-
+/** Every chip in a fragment: its variant, its label and whether it carries its glyph. The label
+ * is the chip's own first text — the difficulty pill's visually-hidden «— Dificultate» follows it
+ * in a span of its own (`GlyphChip`'s `srSuffix`), so the visible word is still what this reads. */
 function chips(fragment: string) {
-  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => {
-    // Greedy to the end of `inner`: the label span is the chip's last child, so nothing follows
-    // its own closing `</span>` — safe even though the difficulty pill nests two more `</span>`s
-    // inside it (`GlyphChip`'s hidden accessible-name span and its visible, `aria-hidden` one).
-    const labelInner = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*)<\/span>\s*$/.exec(inner)?.[1] ?? "";
-    return {
-      outlined: classes.includes("MuiChip-outlined"),
-      small: classes.includes("MuiChip-sizeSmall"),
-      label: visibleLabel(labelInner),
-      glyph: /<svg\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
-    };
-  });
+  return [...fragment.matchAll(/<div class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
+    outlined: classes.includes("MuiChip-outlined"),
+    small: classes.includes("MuiChip-sizeSmall"),
+    label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
+    glyph: /<svg\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
+  }));
 }
 
 describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)", () => {
@@ -298,7 +283,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 
   it("one glyph per row, all of one size, one colour and one alignment", async () => {
-    // Every row, the partner's included (§NNN, reverting §379's <span> emoji to the `Handshake`
+    // Every row, the partner's included (§391, reverting §379's <span> emoji to the `Handshake`
     // `<svg>`), draws its glyph the same way — one shared shape, so each row's own rule is
     // checked rather than one shared class name, but every rule carries the same twenty pixels,
     // colour and alignment.

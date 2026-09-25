@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import { LEGAL_TEMPLATES, templatePrefill } from "@/modules/legal-documents/templates/catalogue";
@@ -20,7 +21,8 @@ import { clubFactsFromEnv, remainingPlaceholders } from "@/modules/legal-documen
  * Counted, not merely found: a text that lost the second `<EMAIL DE CONTACT>` of four still
  * "contains" the placeholder, and still asks the club to approve a sentence with a hole in it.
  */
-const KEYS: readonly LegalDocumentKey[] = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"];
+// Every key, the group runs' two declarations included (§393).
+const KEYS: readonly LegalDocumentKey[] = LEGAL_DOCUMENT_KEYS;
 const LOCALES = ["ro", "en"] as const;
 
 const texts = (body: LegalDocumentBody) => body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]);

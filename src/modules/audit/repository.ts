@@ -96,6 +96,17 @@ export type AuditAction =
   | "registration.declaration_downloaded"
   /** Every signed declaration of one event downloaded as one PDF (§324): the event and how many, never who. */
   | "event.declarations_downloaded"
+  /**
+   * One group run's optional self-declaration downloaded as a PDF from the backoffice (§393, as
+   * §324 for the race's): the event as the entity, `{ format: "pdf" }` — never whose it was.
+   */
+  | "event.group_run_declaration_downloaded"
+  /**
+   * One group run's self-declaration erased by an Administrator (§393, as §67 and §88 for a
+   * registration): written first, in the transaction that deletes the row. Names who acted and why
+   * (the reason typed) and the event — never who had signed: the row it would name is gone.
+   */
+  | "event.group_run_declaration_erased"
   /** One event's emergency sheet rendered (§322): the event and the row count, never a value. */
   | "event.emergency_sheet_viewed"
   /**

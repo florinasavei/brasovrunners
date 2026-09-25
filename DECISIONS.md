@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.96-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.94-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.96-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15854,3 +15854,260 @@ Baseline `BR-V1.93-2026-09-25`.
 **Still owed by the club.** The privacy notice in force on production must describe the flow before people use it: the template's sentence shipped with BR-V1.93; the club approves a new version from the platform's text in `/admin/legal` (CLAUDE.md "Still owed", item 14).
 
 Baseline `BR-V1.94-2026-09-25`.
+
+## 391. Amending §379 and §386: the partner marker reverts to Material's `Handshake` icon
+
+Amends §379 and §386. The owner, 2026-09-25, of the listing card: "wow shit handshake icon is super ugly! Use the MUI icon ASAP."
+
+§379 replaced the registry's `Handshake` SVG (§367) with a 🤝 emoji rendered as text, because MUI writes an icon's `data-testid` only outside a production build and the marker needed a stable e2e selector. §386 then put that emoji behind `filter: grayscale(1) brightness(…)` — a different multiplier per colour scheme, plus a third, filled-entry-only pair on the calendar's race dates (`primary.contrastText` swaps which end of the scale it sits near between light and dark) — to make its own bright, skin-toned colours read as one flat, muted ink. The owner's verdict on the result: it reads as a dark smudge, not a desaturated hand.
+
+The registry's `partner` entry (`src/modules/events/ui/glyphs.ts`) is Material's `Handshake` icon again, imported the same way as every other glyph in `GLYPHS` — one file, never the barrel (§90, §112). It carries no colour and no filter of its own: an `SvgIcon`'s default fill is `currentColor`, so it inherits whichever ink the surface around it already sets — `GlyphChip`'s own icon colour in the listing card's chip and the backoffice card, `text.secondary` in the overline (`PartnerOverline`), `text.primary`/`primary.contrastText` in the calendar's `CalendarEventChip` (filled and unfilled alike), `text.secondary` in `EventFacts`'s "Împreună cu" row. This is the same mechanism every other glyph in the registry already relies on, so no per-surface filter or dark-scheme override is needed anywhere the marker appears — `PartnerMark` and `CalendarEventChip` drop the `sx` overrides (`FILLED_PARTNER_SX`) they carried only to compensate for the emoji's own fixed colours.
+
+§379's premise — that the marker's e2e selector needs its own always-on `data-testid` because MUI's is dev-only — still holds, so `tests/e2e/partner-marker.spec.ts` now finds the icon the way `headlamp.spec.ts` finds the torch: by the start of its own SVG path (`@mui/icons-material/Handshake`), rather than by a `data-testid` that would only exist under `next dev`.
+
+`PartnerEmoji.tsx` is deleted along with the emoji character and every grayscale/brightness filter and `[data-dark] &` rule §379/§386 added for it. §367's original description of the marker — "the handshake" — and its four surfaces, the generic "Colaborare" / "Partnership" label (§375/§379), the tooltip, the accessible names and the one-tooltip-per-calendar-entry rule are all unchanged.
+
+Baseline `BR-V1.95-2026-09-25`.
+
+## 392. The confirmed email tells the runner everything about the event: one facts block for the confirmation, the reminder and the declaration request
+
+The owner, 2026-09-25: "la mailul de «Înscrierea este confirmată» am nevoie de mai multe detalii, gen locație, program, etc." Until now the confirmation said the date, the time and the meeting point in one bold line (§81), with a map link and the Strava event under it. For everything else the runner had to open the page: the address, the programme, the route, the cost, where the rules are.
+
+**Decision: one block, one function, three messages.** `notifications/domain/event-facts.ts#eventFactsBlock(details, locale)` returns `{ html, text }` for one language. It has six rows, and a row the event has nothing for is not drawn:
+- **Când:** the date with its weekday (§349), then the time, or a race's two named times ("întâlnire la 09:00 · start la 09:30").
+- **Unde:** the place in that language (§362), the address under it, and "Vezi pe hartă".
+- **Program:** the programme's timed rows (§117).
+- **Traseu:** the route's facts in the page's own words and order (surface, difficulty, distance, elevation, headlamp §382). They are read through `routePillParts`/`orderRoutePills`, the source `buildRoutePills` reads, never a second list. Under them: the route link when there is no route description, the Strava event and the Facebook event.
+- **Cost (§343):** the amount and "plata pe {host}", or "Donație", the suggested amount and "Donează pe {host}". Nothing for a free event or an unstated cost: a free registration needs no line saying so.
+- **Linkuri:** the anchors of that language's page, by the page's own rules:
+  - `#schedule` with a programme;
+  - `#rules` with rules;
+  - `#route` only with a route description in that language (§387);
+  - `#links` only when `partitionEventLinks(links, hasRouteDescription(json)).other` is non-empty. This is the rule `EventLinks` draws by, so an email never points at a section the page does not have.
+
+**Why one block for three messages.** The confirmation, the reminder and the declaration request are the three messages a runner keeps to know where and when. The declaration request is also the participation confirmation of §104, sent at once and again when the window opens. Signing it commits the runner to a date and a place, so it shows them. There is no separate PARTICIPATION_CONFIRMED type, so the block is on every COMPLETE_DECLARATION. Built once, the three messages cannot describe the same event differently. Built in three templates, they would drift.
+
+**Where it sits.**
+- **The confirmed email:** the club's editable text first, then the QR and number card as before, then the block, then the button and the links as before. The runner reads that they are confirmed first, and the facts under it.
+- **The reminder:** the block replaces its own programme sentence and its section links. The number, "what to bring", the code and "can't come? cancel" stay.
+- **The declaration request:** the block sits under the text.
+- **The bold line of §81** gives way to the block in these three messages, because the block already says the date, the place and the map. The other messages keep the bold line: the number given by hand, the update notice, the organizer's message, "registration is open".
+- **The list under the button** no longer repeats `#schedule`, `#rules` or `#links`, since the block carries them. Each section is linked once per half.
+- **Bilingual:** the card draws the block once per language half (§373). Each half reads its own language's row: its place name, its programme labels, its page and that page's sections. The second half's anchors point at the second language's page, where the flags they were checked against belong.
+- **The club's copy (§320)** keeps the block: every fact in it is on the public page. It still has no QR, token or attachment.
+
+**Why not a placeholder.** The block is the platform's, like the button and the QR. It is layout plus the event's public facts, not the club's wording. As a `{eventFacts}` field it would:
+- need every text the club has saved on production to be edited before any runner saw it;
+- let a Redactor delete it or put it in the wrong place;
+- need a multi-line HTML value inside a paragraph the editor treats as text.
+
+The closed set of placeholders (§247, §359, §373) is unchanged, and a unit test pins it. A text the club saved renders with the block under it and needs no edit.
+
+**What is withheld, and when.**
+- **While the place is to be announced (§328),** the query has already returned null for the place's name in either language, the address and the map, and emptied every programme row's place. The Unde row says the page's own sentence, "Locația se anunță în curând" / "Location to be announced soon", and nothing else.
+- **The addresses behind "Linkuri și fișiere"** (a Drive GPX, a document) never reach a message. The block links the page's section, as §332 decided.
+- **In the club copy,** the QR, the personal links and the attachments stay out (§320).
+
+The facts query `findEventNotificationRows` reads a few more columns: the address, the route's facts, the route link, the cost. They are all among the columns a public page already shows (`PUBLIC_COLUMNS`), and they are still read once per event per batch (§373).
+
+**The preview.** Every affected card on `/admin/emails` draws the block. The facts come from a sample event in `domain/email-sample.ts` (`EMAIL_SAMPLE_EVENT`), the same made-up race as the title and the place, never a fact typed into the page. The block is not a field, so the sample-value guard (§359) has nothing of it to refuse.
+
+**Rejected.**
+- A block at the top of the confirmation, above the club's words: the runner should read "you are confirmed" first.
+- A block on every message: a waiting-list notice or a cancellation is not a message a runner keeps for race day.
+- Repeating the section links in the block and again in the list under the button.
+- Attaching the programme or the route as files: a link is what a phone opens (§81).
+
+No migration, no dependency. Tests:
+- unit `notifications/event-facts-block.test.ts`;
+- integration `notifications/confirmation-event-facts.test.ts`, with `notifications/render.test.ts` updated for the reminder's programme and links now in the block;
+- e2e `email-event-facts.spec.ts`, both projects, on a production build.
+
+**Review round (2026-09-25).** One shared `eventFactsBlock` (Când · Unde · Program · Traseu · Cost · Linkuri) is drawn by `renderContent` **after the club's own text and above the QR** — the position §81's bold date/place line held, first thing a phone finds on race morning — on the confirmation, the reminder and the declaration request (which is also the participation confirmation, §104). The Linkuri row names the event's own page first, then the page's own anchors (`#schedule`, `#rules`, `#route`, `#links`) it actually has; the list under the button never repeats any of them, the same dedupe already applied to the anchors.
+
+Baseline `BR-V1.96-2026-09-25`.
+
+## 393. A group run's optional self-declaration, by surface (asphalt, trail)
+
+**The owner, 2026-09-25:** "I might need a 'declarație pe propria răspundere' for group runs as well, especially for the trail one; this is optional but people should be able to sign and email it to us." And, the same morning, the mountain rescue asks for one on the Tâmpa trail run.
+
+**What exists.**
+- **Two legal kinds.** `GROUP_RUN_DECLARATION_ASPHALT` and `GROUP_RUN_DECLARATION_TRAIL` sit beside the race's `EVENT_DECLARATION`. On /admin/legal they are named as the owner named them, each with a "what is it" line and "start from the platform's text".
+  - They gate nothing. The registration checks still read only the three registration texts (BR-REQ-053-01).
+- **The templates.** Each is informed acceptance of its surface's own risks, never a waiver.
+  - Asphalt names traffic, the group's pace and the dark.
+  - Trail names the terrain, wild animals and sheepdogs, the weather, the dark, a headlamp and the runner's own pace.
+  - Every disclaimer carries "în limitele permise de lege" / "to the extent the law allows" (Civil Code art. 1355, as in §357).
+  - The four club facts are `<PLACEHOLDER>`s.
+- **Adults only, for now.** Each text opens with the signer's own statement that they are 18 or older, and the signing page's consent box repeats it. A minor cannot give this declaration alone. Whether a parent may sign for a child is the owner's question; the race's two-signature flow (§330) is bound to a registration.
+- **The editor.** The route card has "Declarație opțională pe propria răspundere".
+  - It is on by default for trail and off for asphalt. It is disabled, with a line naming the text to approve, while none is approved.
+  - The series scope, copies and generated dates carry it.
+- **The public side.**
+  - A 44-px link under the route at `#declaratie` opens `/ro/evenimente/[slug]/declaratie` ↔ `/en/events/[slug]/declaration`.
+  - **The signature is in the page's language**, the text that was read (§57). There is no language select; the header's switch brings the other language's text first.
+  - The page uses the race's signing parts: the text panel, the identity-document boxes, the signature in a hand, the §47 refusal summary, the honeypot, the timing check, Turnstile and a hashed per-address throttle.
+- **The data.** A `group_run_declarations` row, never a registration (migration `0072`, after `0071_route_description`).
+  - The same transaction queues two outbox messages: the signer's PDF, and the club's archive copy with the identity document masked (§99, §320).
+  - The platform deletes the row and its messages seven days after the run. The public line says exactly that, and not that "the club keeps it": the archive copy is the privacy notice's three years.
+  - Deleting or erasing the event deletes its declarations' outbox rows first.
+- **The backoffice.** The Organizer and the Administrator read the list and the PDF. The Administrator erases, through the §384 dialog, with an audit row that names who and why and never the signer.
+- **The privacy notice.** Only the template's new paragraph describes this processing. /admin/legal and the editor say to re-approve the notice from the platform's text before offering the declaration (§32's principle).
+
+**Open:** once the sweep has removed a version's signatures, that version counts as unused again and becomes deletable, even though signers hold PDFs that cite its version and hash. The owner decides whether a signed group-run version stays undeletable.
+
+**Review round (2026-09-25).** A signature takes an email address and an identity document, so it now answers to the same rule as a registration (BR-REQ-053-01). Without an approved privacy notice in force in the signing language, `signGroupRunDeclaration` refuses with "no approved privacy notice exists yet; the declaration cannot be signed". This is NOT_FOUND, so the signing page shows its closed notice. The run's page draws no offer and the signing page draws no form meanwhile. The editor's help line says so. A posted event or document id that is not a uuid gets the form's own answer (closed, or version changed) before any query reaches a uuid column (§376). The erase checks its id the same way.
+
+The offer is a named section. The h2 "Declarație pe propria răspundere (opțional)" / "Self-declaration (optional)" labels `#declaratie`.
+
+The retention is one number, `GROUP_RUN_DECLARATION_RETENTION_DAYS` in `group-run-declarations/domain.ts`, and the sweep's `RETENTION.groupRunDeclarationsDaysAfterEvent` reads it. The run's page, the signing page, the backoffice fold and both emails say it through `durationPhrase` (§377) as a `{days}` value. A unit test keeps the spelled-out and digit forms out of those sentences. The approved legal templates (the declaration's GDPR paragraph and the privacy notice) still spell it out, like the notice's other windows.
+
+The backoffice fold "Declarații semnate (alergare de grup)" appears only when the run offers the declaration now, or still keeps some signatures. A trail or asphalt group run alone does not bring it.
+
+A signature counts as reliance on its version: deleting it and editing it are refused. The sweep's removal of the last signature, seven days after the run, makes a superseded version deletable again. The e2e spec's archive-mailbox fixture holds a shared advisory lock while it runs. The last run out puts the setting back, so a local database is not left sending archive copies to a test address.
+
+Baseline `BR-V1.96-2026-09-25`.
+
+## 394. "Eveniment de noapte" is computed from the sunset, with the organizer's override (replacing §382's "Necesită frontală" checkbox)
+
+**Context.** The owner, 2026-09-25: "«Necesită frontală» ar trebui să fie cumva «eveniment de noapte» setat automat în funcție de ora de start și când apune soarele." §382 stored a tick per row. The Wednesday 19:00 "Running up that hill" run is in daylight in June and in the dark from late October. So a stored tick had to be set every autumn and cleared every spring, date by date, with the series scope radio. A weekly run changes with the season, and the season is arithmetic, not a thing to remember.
+
+**Decision: computed, not stored.** Whether a date is a night event is computed from the start and the sun, whenever it is read. One function answers it: `nightEvent(event, occurrenceStartsAt, place)` in `events/domain/night.ts`, bound to the club's place by `clubNightEvent`. Every surface asks it:
+- the route pill in `buildRoutePills`, at the position §382 gave the headlamp (surface, difficulty, distance, elevation, night, then cost), so the listing card, the event page and the backoffice list all follow;
+- the featured hero's route line;
+- the calendar entry's tooltip and accessible name;
+- the `.ics` description line;
+- the reminder email;
+- the editor's closed-card summary.
+
+A series' dates are rows of their own (§113), so each answers by its own sunset: the winter dates are night events and the summer ones are not. The listing's one line for a series draws its next date's answer.
+
+**The line is civil dusk.** A start is a night event when it is at or after civil dusk (the sun 6° under the horizon), or before civil dawn, of its own day on the event's wall clock. Twenty minutes after sunset a path is still readable; at civil dusk it is not. A start with no time is never a night event. Polar days and nights are handled: no dusk at all means always light, no dawn means always dark. The words say sunset — "Apusul la 16:44 — ia o frontală" — because that is the time a runner knows. The editor's help line says the rule is dusk.
+
+**The override is tri-state.** `events.headlamp_required` keeps its name: renaming it would be a contract migration for a word. The code calls it `nightOverride`:
+- null is "Automat (după apus)", the default;
+- true is "Da", a night event whatever the sun does (for example a forest start at 18:30 in September);
+- false is "Nu", never a night event.
+
+In the editor, "Traseul" (§350) carries the three choices as a radio group. Under it is the automatic answer for the date in the form, recomputed as the date, time or zone changes: "Automat: pe mie., 18 nov. 2026, apusul e la 16:44 — eveniment de noapte". This is a client island (`NightEventField`) running the same `sun.ts` as the server. The day's words come from the server (`calendarDayWords`, §349/§324). A series shows one more sentence saying each date follows its own sunset. The closed card says "de noapte (automat)", "de noapte" or "de zi" ("night (automatic)" / "night" / "day"). An automatic day shows nothing. The series scope, duplicates and the dates a series makes carry the override, and "Automat" stays automatic.
+
+**The migration and the backfill.** `0075_night_override` is expand-only (AGENTS.md §7.6). It drops NOT NULL and the default, then runs `UPDATE … SET NULL WHERE = false`. An unticked box under §382 had said nothing, so it becomes automatic. A ticked one keeps the club's word ("Da"). This is proven on PGlite: the database is built to the migration before, §382-shaped rows are written, then the rest is migrated. During the deploy window, old code still reads null as falsy, and a save from old code writes an explicit false ("Nu"). That window is accepted as negligible.
+
+**The reminder.** This answers the question §382 left open. Only a reminder whose date is a night event carries "Eveniment de noapte: apusul e la 16:44. Ia o frontală." / "Night event: sunset is at 16:44. Bring a headlamp." It sits after the body, like §237's provisional number: it is a fact about the date, not a matter of how the club writes, so a reminder the club reworded (§247) still says it. No other message carries it.
+
+**The club's place is a setting.** `CLUB_COORDINATES` ("latitude,longitude") is read in `env.ts`, beside `CLUB_NAME` as a club fact (§369). It is configuration rather than a constant because another club would run somewhere else. It is never a secret. Unset, it is Brașov's centre (45.6427, 25.5887). A malformed value stops the app at startup with the value named.
+
+**The algorithm.** It is NOAA's solar position calculator (the Global Monitoring Laboratory's spreadsheet, after Meeus, *Astronomical Algorithms*):
+- the sun's declination and the equation of time from the Julian century;
+- then the hour angle at zenith 90.833° (sunrise and sunset: the upper limb, with refraction) and at 96° (civil twilight);
+- each instant solved twice, the second time at the first answer's own instant.
+
+There is no dependency, and it is pure, so the island and the server run the same code. The day and the printed times go through the event's zone via `Intl` (`zoned-time.ts`), never a fixed offset, so daylight saving time is handled.
+
+Tested accuracy is within about one minute of published tables: Bucharest's solstices (05:31/21:03 in June, 07:48/16:38 in December) and London's June solstice (04:43/21:21). The tests allow ±5 minutes. Brașov computes to 05:28/21:10 on 21 June 2026 and 07:55/16:36 on 21 December. The brief's "≈ 21:03 / 05:31" for Brașov were Bucharest's figures.
+
+With the civil-dusk line, the 19:00 Wednesday run becomes a night event from 17 October 2026 and stops being one on 21 March 2027.
+
+*Rejected:*
+- A stored flag per date, which is §382 as it was.
+- Plain sunset as the line: a run starting twenty minutes after sunset starts in twilight, not in the dark.
+- Renaming the column.
+- A dependency such as suncalc: forty lines of tested arithmetic are enough.
+- The browser's zone or a fixed UTC+2/+3.
+
+**Consequences.**
+- New: `events/domain/sun.ts`, `events/domain/night.ts`, `events/night-event.ts`, `content/events/ui/NightEventField.tsx`, `src/db/migrations/0075_night_override.sql`.
+- Changed: `route-pills.ts` (`nightPill`), `GlyphChip` (optional tooltip), `EventFacts` hero, `EventCalendar`/`CalendarEventChip` (`night` prop), `ical.ts`, `notifications/render.ts` and `templates.ts` (`nightEventSunset`), `CourseBox`, `box-summaries.ts` (`nightSummary`), `fields.ts`, `actions.ts`, `service.ts`, `repository.ts`.
+- Messages: `Event.night.*` and `Admin.editor.night.*`, plus the summary words, in both catalogues.
+- Tests:
+  - `tests/unit/events/night-event.test.ts`: the algorithm, the boundaries, the override, the pill and tooltip words, the calendar, the ics, the reminder line and the summary and editor lines;
+  - `tests/integration/cms/night-override.test.ts`: the three choices saved and read, the series answers per date and the copies;
+  - `tests/integration/db/night-override-migration.test.ts`: the backfill;
+  - `tests/integration/notifications/render.test.ts`: the reminder only on a night date;
+  - `tests/e2e/night-event.spec.ts`: both projects.
+
+This round: merged feat/external-discount-note (tip 7cffd7ff) so this branch lands after it; renumbered its own migration from 0075_night_override to 0076_night_override on top of the merged branch's 0075_discount_note snapshot (idx 76, prevId d5cab819-f507-42ff-971e-69c789f9e766). The night-event answer now looks at the occurrence's whole span — its own end (events.endsAt), else the latest timed programme row of that date, else the start alone — against civil dusk and civil dawn, not the start alone (the owner, 2026-09-25: a run that starts in daylight and finishes after dusk is a night run). A group run's pill and reminder line say "Alergare de noapte" / "Night run"; every other event type keeps "Eveniment de noapte" / "Night event". The closed "Traseul" card now names an automatic daytime date ("de zi (automat)") as well as an automatic night one. The edit page's series sentence under the night field depends on the event's own computed inSeries state; the "repeat" toggle it used to target lives in a separate form there and could never be read from this card's data.
+
+Review round 3 (2026-09-25). The span is one rule, `nightSpan` in `events/domain/night.ts`. The server (`nightEvent`) and the editor's island both call it. The answer is night when the start is dark, when the end is dark, when the span contains the start day's civil dusk, or when the span ends on a later day of the event's wall clock than it starts. So an overnight ultra that starts at 16:00 in June and finishes at 08:00 the next morning has both ends in daylight and is still a night event. The end is the event's own `endsAt` («Durata»). Without one, it is the latest timed programme row of the occurrence's own date (that row's end, or its start). Without either, it is the start alone. Every surface now reads the same inputs. The `.ics` and Google Calendar line pass `endsAt` and the calendar's programme instants (`NightEventSource.programme`). The reminder's details query selects `events.endsAt`. The editor's island reads «Durata» and the programme rows from the form (`event.schedule[i].*`), and for the first paint the page gives it the saved duration and the saved rows. So the island's line, the closed card, the pill, the calendar file and the reminder cannot disagree about the same date.
+
+When the start alone was not dark, the end is named with its time and where it came from. `NightEventFacts.end` is the end on the wall clock. The pill's tooltip reads «Apusul la 16:44, sfârșitul la 17:30 — ia o frontală», or «…, ultimul punct din program la 17:40 — …» when the end came from the programme. The editor's line says the same, «alergarea ține până la {end}» or «programul zilei ține până la {end} (ultimul punct)». Both are in both languages. A group run is «Alergare de noapte» / «Night run» in the month view's tooltip and in the calendar file too (`night.calendarRun`, `night.icsRun`), as on its card and in its reminder. Every other type is «Eveniment de noapte». Only the comments of migration `0076_night_override` changed; its SQL statements are the same.
+
+Baseline `BR-V1.96-2026-09-25`.
+
+## 395. A discount note, not a second price, for an external event paid at another organizer's form
+
+The owner, 2026-09-25: "another friend's race where we just go as a group but we pay for it; they gave us a discount so that they appear on our calendar." An `EXTERNAL`-registration, `PAID` event's cost row says the fee is settled at the organizer's own form, never the club's, and carries the club's own discount note per language when there is one — on the event page, the listing card and, since this round, the featured hero too.
+
+This round answered the adversarial re-review's findings on the implementer's branch:
+
+- **The blocker.** A Redactor (COPYWRITER — `canEditTexts` but not `canEditEventFields`) saving any text on an EXTERNAL+PAID event was silently deleting the club's discount note in both languages: the box lived only inside `RegistrationBox`'s settings-gated branch, so the form posted no `discountNote` input for that role, yet it always posts `translationId`, which is enough to run the translation save and null the column. Fixed two ways: `actions.ts` now reads `discountNote` only when the form actually posted the box (`form.has(...)`, the same discipline `reminderHoursBefore` already followed), and `RegistrationBox` now renders the discount strip for every `mayEdit` language even without `mayEditSettings`, gated on the event's *stored* mode and cost type rather than the live select a words-only reader cannot change. The one role the club named for "the words" (§103) can now actually write this note.
+- **The `aria-label` on a roleless chip.** `GlyphChip`'s override for "the fee goes to the organizer" was an `aria-label` on a non-clickable MUI `Chip`, which renders as a plain `<div>` — ARIA 1.2 does not allow naming a generic element, so browse-mode screen readers ignored the attribute and read only the visible word. Replaced with visually-hidden text appended inside the chip's own label (`Pill.srSuffix`, `GlyphChip`'s `srOnlySx`), which works on any element. `costPaidExternalAria` is now `costPaidExternalSrSuffix` in both catalogues, holding only the extra words ("paid to the organizer, not to the club" / "plătit la organizator, nu la club") rather than a full replacement string.
+- **The e2e's missing surfaces.** `event-cost-external-discount.spec.ts` now opens the listing on `/ro` and `/en` after publishing and asserts the partner event's card shows the closed-set word ("Cu taxă" / "Paid") and carries the hidden organizer wording, and fetches the English `.ics` alongside the Romanian one already checked.
+- **The hero's stale wording.** The listing's featured hero still said "Taxă: 75 lei" and linked "plata pe {host}" for an EXTERNAL+PAID event, disagreeing with the page, the `.ics` and the JSON-LD, which all already say the fee goes to the organizer and ignore `costUrl`. The hero's `route` array now takes the same branch when `costPaidToExternalOrganizer(event)` is true, and appends the club's discount note as its own piece when there is one.
+- **Nits.** `EventFacts` now reads its discount glyph through `GLYPHS.discount` rather than importing `LocalOfferIcon` a second time. `CostFields` hides (never removes) "Unde se plătește" while the discount strip is the one that matters, since the page, the `.ics` and the JSON-LD ignore `costUrl` on an EXTERNAL+PAID event now — an organizer filling it would otherwise watch it vanish from the site with no explanation. A new integration case proves a series edit with the "following" scope carries a freshly-typed note to the sibling dates, and that switching the source date's cost off the same way clears the note on every date the save reaches (`SERIES_TRANSLATION_COLUMNS` already carried `discountNote`; only the test coverage was missing).
+
+No dependency added, no DB `CHECK`, no baseline or `SPECS.md`/`AGENTS.md` edit — the migration (one nullable `discount_note` text column) was already expand-only and unchanged by this round.
+
+§395 — the discount note's fix round (2026-09-25): the branch's four review findings answered — the merge into `origin/qa` completed (twice, as qa kept moving: route-description work, then the family-registration PR that took migration `0072` and `§389` first; this branch's migration is `0073_discount_note.sql` in the branch at that moment — renumbered to `0075_discount_note` at landing, after the contract migration 0073 and the group-run declaration 0074); `GlyphChip`'s screen-reader-only suffix span now uses string pixel values (`'1px'`, `'-1px'`) rather than the bare numbers MUI's `sx` sizing transform reads as spacing-scale percentages, which had made the "single pixel, clipped" box the full size of the chip; the qa-side `RoutePills` component, found to drop `srSuffix` on its way from `GlyphChip`, now forwards it, or the card's accessible text would never have rendered through the shared component qa introduced; `tests/e2e/event-cost-external-discount.spec.ts` now actually ran (the first fix round had only listed it), extended to the listing card's pill, the featured hero's own wording (folded into its "Traseu"/"Route" line, not a "Cost" row — the hero's existing shape), and both languages' `.ics` lines, on both Playwright projects against a production build; and the service now clears `discountNote` from a settings-only save too (`saveEventFields`, used when an actor may set the registration mode but not the words), through `clearDiscountNoteIfNotAllowed` beside `writePlaceNames`, not only from a translation save's `translationColumnsFrom`.
+
+Re-review round on feat/external-discount-note (2026-09-25): the discount note's clearing rule moved from the dead `saveEventFields` path into `saveEventAndTranslations` itself, so a settings-only save (an Organizer without text rights switching an event off `EXTERNAL` + `PAID`) clears a stale note the same way a translation save already did — proven through the editor's real Server Action, not the service function alone. The compact listing card's cost pill now goes through the same `buildRoutePills` helper the backoffice's own event list calls (§388), extended to carry the organizer's screen-reader-only suffix itself, so the two surfaces cannot read the pill differently. Every `§390` placeholder the branch's own review left behind is `§395` until the dispatcher assigns the real number.
+
+The discount note's series propagation reads the same event-fields save's translationsAfter that applyToSeries compares against translationsBefore; a settings-only save that clears the note in the database has to reflect that clear in the in-memory rows it hands to that comparison, or a series edit (scope following/all) leaves every date but the saved one with a stale note. The shared FEATURED e2e fixture is mutated by tests in more than one spec file across two Playwright projects (mobile, desktop) run as separate processes; test.describe.configure({mode:"serial"}) only orders tests inside one project's run of one file, so a test that mutates FEATURED for its own duration takes a cross-process advisory lock (an exclusive mkdir in the OS temp dir) rather than relying on serial mode alone.
+
+This round only fixed defects in behavior the branch's own commits had already described under placeholder §395 citations (the discount note travelling with a series, and its clearing when a date moves off EXTERNAL + PAID) — it introduces no new rule for DECISIONS.md to record. The one structural fact worth carrying forward for whoever finalizes the §395 numbering: migration 0073 is now, and must stay, 0073_drop_registration_participant_unique.sql (the family flow's contract migration, from feat/drop-participant-unique / feat/group-run-declaration), 0074 is 0074_group_run_declaration.sql, and this branch's own migration is 0075_discount_note.sql. Any other branch still carrying a same-numbered 0073 for its own feature needs the identical treatment before it can land: merge in 46298626 (or whatever qa's actual history is by then), delete its stray migration files, and regenerate with drizzle-kit so the idx and prevId are assigned fresh rather than hand-edited.
+
+Round 6 on feat/external-discount-note answered the review's two should-fixes and two nits. The scope-wide discount-note clear in `applyToSeries` (added in round 5) was too broad: it read `input.discountNoteCleared` — true whenever the *saved* date's own fields no longer allow a note, including a save that touched neither `registrationMode` nor `costType` — and then nulled the note on every series member in scope, whether or not that member's own state still permitted one. It now filters members by their own post-propagation `registrationMode`/`costType` (the save's `rowChanges` where those columns changed, else the member's own row), so a sibling that is independently still EXTERNAL + PAID keeps its note. The branch was also re-merged against origin/qa (BR-V1.95, §391's Handshake-glyph revert and the family-flow's §389 wording), resolving glyphs.ts by keeping qa's Material Handshake for `partner` alongside this branch's own `discount` glyph, and taking qa's §389 wording in the three §395/§389 comment collisions. The e2e featured-event lock's stale-break is now rename-then-remove rather than check-then-remove, closing a two-worker race that could let both proceed against the shared seeded event. This round's fixes are separate commits on top of the merge commit, not folded into it.
+
+Baseline `BR-V1.96-2026-09-25`.
+
+## 396. The public participant list says where each runner stands, behind the privacy notice
+
+**Amends §32 and §143.** The owner, 2026-09-25: "pe lista de participanți publică trebuie să apară și statusul, ca oamenii să știe că sunt pe lista de așteptare sau anulați sau ce or fi."
+
+**What the list shows.** Three groups, never a raw lifecycle state (`registrations/domain/public-list-states.ts`): *Confirmat* (`CONFIRMED`), *Înscris, în așteptarea confirmării* (`PENDING_DECLARATION` and `WAITLIST_OFFERED`, the same position reached from the waiting list), *Pe lista de așteptare* (`WAITLISTED`, in queue order, no position printed). Every row carries its word; the ticked pending and waiting follow the confirmed rows. Never shown: an unproved address (`PENDING_EMAIL_CONFIRMATION`), a cancellation or expiry (a withdrawal is not announced — the owner's "anulați" stays a question), an erased row, an unticked person, a `TEST` row. The query selects a name, a club and a group, never the raw state.
+
+**The gate.** The list is a disclosure (§32), so it widens only while the privacy notice in force, in every language, names the new merge field `{{participantListStates}}` — the same mechanism §330 uses for the minor's signature. The field is both the switch (`describesListStates`) and the three words, filled from `Event.startList.states` so the notice and the list name exactly the same words. With the gate off the list is exactly what it was: confirmed names, no words, and no pending or waiting row is read at all, not even counted. The platform's privacy-notice and terms templates now name the field; `/admin/legal` says when the notice in force does not, and `/admin/tasks` carries an open (never blocking) `listStatesNotice` row. The register form and the staff entry form name the states under «Vreau să apar» while the gate is on. The field is a general merge field, so a declaration that names it is filled on the declaration page and in the signed PDF as well.
+
+**Consent given before the notice.** The gate reads only the notice in force. The day the club approves a marker-carrying notice, a runner who ticked «Vreau să apar» under the older notice (which described the list as "participanții confirmați care au bifat") and is pending or waiting appears with their state. That is deliberate in this change and is the owner's call to narrow: the narrow form adds `registrations.privacy_notice_version >= <first approved notice carrying the marker>` to the two list queries, with no migration.
+
+No migration.
+
+Baseline `BR-V1.96-2026-09-25`.
+
+## 397. /admin/tasks's «Aplicația» tab: docs/QUEUE.md read-only, open to Tehnic too
+
+The owner, 2026-09-25: "în «De făcut» vreau un tab unde să randez efectiv MD file din repo cu tasklisturi și ce mai e de făcut în aplicație." `/admin/tasks` gains a fourth panel, «Aplicația» / «The app», that renders `docs/QUEUE.md` read-only through the same `marked`-based renderer `/devs/docs` already uses (`repo-docs.ts`, `RepoDocHtml`) — one rendering rule, not a second pipeline.
+
+The panel sits behind `canOpenTasks` (`canManageRegistrations(role) || canSeeDiagnostics(role)`), which is wider than the rest of the screen: a Tehnic (`DEV`) may open this one panel of `/admin/tasks`, never the club's worklist or its money, both of which stay behind `canManageRegistrations` alone. `visibleAdminSections` (`roles.ts`) offers the `tasks` section itself to the same predicate, inlined rather than importing `canOpenTasks` from `modules/diagnostics/domain/task-panels.ts` — that module already imports `canManageRegistrations` and `canSeeDiagnostics` from `roles.ts`, so importing back would cycle. This keeps the role hierarchy's monotonicity property intact (`tests/unit/staff/roles.test.ts`): DEV ranks below ADMIN and SUPERADMIN, both of which already had `tasks`.
+
+Because this page sits below `loading.tsx`'s Suspense boundary, it cannot answer a real 404 for "the admitted role asked for a panel it may not see" — `resolveTaskPanel` returns `null` and the page redirects to the role's own default panel instead (`todo` for ops roles, `app` for Tehnic). The same reasoning applies to a traced-but-missing `docs/QUEUE.md`: rather than `notFound()` — the 200-with-not-found-body case this feature exists to avoid elsewhere — the panel renders a short "the document is not in this deployment" sentence.
+
+The lead line above the rendered document is one sentence in the reader's own language (`t.rich("app.lead", { code })`), never both languages at once: the "multi-lingual, always" rule (§352) is about text the club types into the CMS, not this screen's own words, and it is the only lead line in the backoffice that ever printed two languages together.
+
+`/devs`'s own sub-nav gained a matching «Aplicația» link (`?panel=app` on `/admin/tasks`), and its existing "Anti-robot" link is now shown only to `canManageRegistrations` — a Tehnic who followed that link used to be silently redirected to «Aplicația» under a label ("Anti-robot") that did not describe where they landed.
+
+`docs/QUEUE.md`'s § Later section is deliberately kept as a GFM task list (`- [ ]`) rather than a table like § Building and § Ready, specifically so this tab has a real checkbox to render and the e2e spec (`tasks-app-queue.spec.ts`) can assert on one; `docs/DISPATCHER.md` now says so.
+
+This round answered the re-review of feat/tasks-queue-tab (`/admin/tasks`'s «Aplicația» tab, §368): the e2e evidence now covers both Playwright projects rather than desktop alone; the task-list-into-checkbox rendering rule is proven in the unit suite against a fixture through a new exported `renderRepoDocMarkdown`, so neither the unit test nor the e2e spec depends any longer on `docs/QUEUE.md`'s own § Later content, which the dispatcher empties out as it picks items up; the dead `isRepoDocName("QUEUE")` guard on a compile-time-constant name is removed; and the «Aplicația» lead line in both catalogues now names what was asked — what is building, what is ready, what comes next — rather than describing the source document's language.
+
+docs/QUEUE.md and docs/DISPATCHER.md returned to origin/qa's shared state rather than carrying the branch's own § Later rewrite, since that rewrite both conflicted with qa's concurrent edit and fed an e2e checkbox assertion the branch no longer makes. `/admin/tasks`'s «Aplicația» lead line was shortened to name only what the sentence needs to say — the source file and that it is read straight from the repository — dropping the clause narrating the document's own section structure, and rendered with a plain translation call once no inline markup remained. The e2e spec's header now cites BR-REQ-090-05, the requirement that names `/admin/tasks` itself (SPECS.md §"The club can see what it may spend"), rather than the unrelated role-gate requirement.
+
+Baseline `BR-V1.96-2026-09-25`.
+
+## 398. Panel's help variant, and a new event starts free
+
+The owner, 2026-09-25, on the event editor: "«Ce înseamnă fiecare tip?» ar trebui să fie un card mai mic" and "by default toate evenimentele sunt gratuite".
+
+**The help fold.** `Panel` (`shared/ui/Panel.tsx`) gets a `variant?: "card" | "help"` (default "card", every existing call unchanged). "help" draws a small clickable line instead of the boxed folder `BOXED_DISCLOSURE_SX` gives every other fold: no border, no elevation, body2 in the secondary ink, a caret (ExpandMore) that turns purely from the `<details>`'s own `[open]` attribute in CSS — no script, works with JavaScript off. It also takes `legendIcon?: "info"` (deliberately not named `icon` — that name is `action-icons.ts`'s own lookup-by-name convention for backoffice buttons, §318, and the source walk that keeps that table honest scans for the literal attribute `icon="..."`; colliding with it made a real false-positive test failure during this change, caught and fixed). `level` and `tone` are ignored on this variant. Used for the event editor's "Ce înseamnă fiecare tip?" (`KindBox.tsx`, no icon) and for the emails field legend (`EmailFieldLegend.tsx`, `legendIcon="info"`), which the owner separately asked to look "a bit different from the other accordions, with an «i» button." `tests/unit/shared/boxed-disclosure.test.ts`'s §269 guard (every backoffice fold spreads `BOXED_DISCLOSURE_SX`) now carries one documented exception for `Panel.tsx`'s own help-variant `<details>`, deliberately unboxed. The declaration's `TokenLegend` was left alone: it never used `Panel`/a fold at all — it's a plain always-open `Paper` — so there was no shared fold behaviour to carry the change onto.
+
+**Free by default.** `RegistrationBox`'s cost select now reads `initialCostTypeOf(event)` (new, exported from `content/events/ui/box-summaries.ts`, unit-tested on its own): "FREE" when `event === null` (the create page, before a first save), and `event.costType ?? ""` otherwise — an edited event, including one whose cost was never stated, keeps exactly what it has. `CostFields`' shown/hidden switch and the box's closed summary line both read off the same value, so the create page's own "Gratuit" reads correctly even before a first save. No change was needed to `content/events/fields.ts` or the `cost_type` column, and its documented "no default, because null means unstated rather than free" comment stays true for edits — the select is a real form control that always posts a value regardless of whether its `<details>` is open or closed, so a save on the create page that never opens "Participare și înscrieri" already writes FREE. The form was the only thing missing.
+
+**The robot.** The owner, on the events list's series line ("Se reînnoiește automat...", §341/§351): "aici am nevoie de o iconiță gen «robot» ca să știu că se reînnoiește automat." `SmartToy` (Material) is registered as `renew` in `shared/ui/action-icons.ts` (§318's one glyph table), distinct from `repeat`/`repeatStop`, which are verbs a person presses rather than a state the platform is in on its own. It leads the sentence, `aria-hidden`, drawn directly in the Server Component that already renders the list (`admin/(list)/page.tsx`) — no element crosses a server/client boundary.
+
+The renew (robot) glyph asked for on every mention of the auto-publish switch (§398, prior round) was only on `RecurrenceSeriesPanel`'s two lines; the create page's own switch (`RepeatFields` → `RepeatRuleFields#RepeatPublishField`) drew the tick with no icon. It now leads that line too, decorative and `aria-hidden`, from the same `ACTION_ICONS.renew` registry entry, proven by a rendered-markup unit test rather than a source regex. Separately, the cost default's "saved value" half (§398, cost defaults) was proven only by regexes over `RegistrationBox.tsx`'s source and by the e2e; a PGlite test now posts a `createEvent` call exactly as a closed `CostFields` box submits it — `costType: "FREE"`, no amount, no link — and reads `FREE` back from the row. Finally, `tests/e2e/email-copy-fields.spec.ts`, written against `EmailFieldLegend`'s changed DOM (no `h4`, an inline-flex summary, a `pl: 3.25` indent) but never re-run, was run on both the desktop and mobile Playwright projects against a production build: it passes unchanged, with no assertion loosened.
+
+§398, addendum for this round (2026-09-25): the create-time FREE default is now decided once in the service, not the form. `costType` became optional in `eventFieldsSchema`, on the same "absent means not editing this" discipline `costAmount`/`costUrl` already followed (`src/modules/content/events/fields.ts`); `eventColumnsFrom` (`src/modules/content/events/service.ts`) reads that absence and writes `FREE` only when called from `createEvent` (a new `{ isCreate: true }` option), while `saveEventFields` leaves an omitted cost type on an existing row exactly as it was. This closes the gap the previous round's saved-value test left open: that test posted `costType: "FREE"` and read `FREE` back, which proved only that the service stores what it is given, not that a create with no cost field defaults to FREE. The rewritten test posts no `costType` key at all on create and adds a second case — a save that also omits the field on a previously PAID event — proving the edit path never defaults or clears it. tests/e2e/event-cost-free-default.spec.ts was actually run this round, on both Playwright projects against a production build; it fails on both, on a pre-existing frontend defect (the create page's Cost select does not read the FREE default from `GlyphSelect`/`RegistrationBox`) that predates this fix round and is outside its three findings — flagged as a blocker for the branch rather than fixed here.
+
+§398 (this round, 2026-09-25): the same "by default toate evenimentele sunt gratuite" change (2f5b8cf6) that added the create-time FREE default to `eventColumnsFrom` also dropped `difficulty: fields.difficulty` from the same function in the same diff hunk — a create stored `difficulty` as null and a save could never change it, undetected because the column is nullable. Restored, with a create/save round-trip test (`registration-cost-default.test.ts`) alongside the existing FREE-default tests. Separately, the event-cost-free-default e2e spec was re-verified against a genuinely fresh build and a migrated local database: it passes 4/4 on both mobile and desktop, twice in a row — the earlier "reads Nespecificat" review finding was against a stale reused Playwright server, not a defect in `RegistrationBox`/`GlyphSelect`/`initialCostTypeOf`.
+
+Baseline `BR-V1.96-2026-09-25`.

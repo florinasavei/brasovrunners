@@ -139,7 +139,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
   });
 
   it("copies every message to a participant and none of the club's, the staff's or the interest list's", () => {
-    const excluded = ["DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION", "REGISTRATION_OPENED"];
+    const excluded = ["DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION", "REGISTRATION_OPENED"];
     for (const type of emailMessageType.enumValues) {
       expect(isParticipantMessage(type), type).toBe(!excluded.includes(type));
     }
@@ -191,10 +191,13 @@ describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and att
     expect(declarationPdfAudience("REGISTRATION_CONFIRMED", false)).toBe("participant");
     expect(declarationPdfAudience("DECLARATION_SIGNED", false)).toBe("participant");
     expect(declarationPdfAudience("DECLARATION_ARCHIVE", false)).toBe("club");
+    // A group run's self-declaration (§393): whole to the signer, masked to the archive.
+    expect(declarationPdfAudience("GROUP_RUN_DECLARATION_SIGNED", false)).toBe("participant");
+    expect(declarationPdfAudience("GROUP_RUN_DECLARATION_ARCHIVE", false)).toBe("club");
     for (const type of emailMessageType.enumValues) {
       // A club copy of any message attaches no PDF at all.
       expect(declarationPdfAudience(type, true), type).toBeNull();
-      if (!["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE"].includes(type)) {
+      if (!["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"].includes(type)) {
         expect(declarationPdfAudience(type, false), type).toBeNull();
       }
     }

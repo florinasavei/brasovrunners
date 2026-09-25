@@ -14,20 +14,18 @@ import { hydrated, signIn } from "./support/featured-event";
  * only that the word was visible, which was already true of the old signal-bar icon and so never
  * actually tested the change.
  *
- * `GlyphChip`'s `ariaLabel` moved off the chip's own `aria-label` attribute to a
- * visually-hidden `<span>` in the label's content (fix round, finding 1) — `toHaveAccessibleName`
- * is *not* the right check for it: a plain, roleless `<div>` (what MUI's `Chip` renders when it
- * is not `clickable`) has no accessible name computed for it at all under the accessible-name
- * algorithm, hidden span or not, which is exactly why an `aria-label` on it went unheard.
- * Browse-mode screen readers instead read every text node in visual order regardless of that
- * computed name, so the check here is that the hidden text is a real, present text node ahead of
- * the visible word — `expect(pill).toContainText(…)`, which reads DOM text content, not the
- * accessible-name API.
+ * The level's word says a level without saying of what; `GlyphChip`'s `srSuffix` — the one the
+ * external cost pill uses too (§394) — follows it with «— Dificultate» in a visually-hidden span.
+ * `toHaveAccessibleName` is *not* the right check for it: a plain, roleless `<div>` (what MUI's
+ * `Chip` renders when it is not `clickable`) has no accessible name computed for it at all, and
+ * browse-mode screen readers read its text nodes in order instead, so the check is that the
+ * hidden text is a real text node right after the visible word — `toContainText`, which reads
+ * DOM text content.
  *
  * The compact pill's fit at the phone widths the brief named — 320 and 360px, §375's own set —
  * gets its own dumbbell counts at each width (fix round, finding 4: the first pass measured only
  * "no sideways scroll", true of the old, narrower icon too and so never actually exercised the
- * wider one), and its measured pixel width is attached to the test report at both.
+ * wider one), and its measured pixel width is attached to the test report and printed at both.
  */
 test.describe("BR-REQ-041-01 the difficulty scale (§NNN)", () => {
   test("the event page's route row keeps the word beside the scale, two of three dumbbells lit", async ({ page }) => {
@@ -37,7 +35,7 @@ test.describe("BR-REQ-041-01 the difficulty scale (§NNN)", () => {
     await expect(difficultyPill).toBeVisible();
     // The word is what a screen reader hears from the text content; the scale is decoration.
     await expect(difficultyPill.locator("svg.MuiChip-icon")).toHaveAttribute("aria-hidden", "true");
-    await expect(difficultyPill).toContainText("Dificultate: Mediu");
+    await expect(difficultyPill).toContainText("Mediu — Dificultate");
     await expect(difficultyPill.locator('[data-testid="difficulty-dumbbell-on"]')).toHaveCount(2);
     await expect(difficultyPill.locator('[data-testid="difficulty-dumbbell-off"]')).toHaveCount(1);
   });
@@ -52,14 +50,16 @@ test.describe("BR-REQ-041-01 the difficulty scale (§NNN)", () => {
       const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu" });
       await expect(pill).toBeVisible();
       await expect(pill.locator("svg")).toHaveAttribute("aria-hidden", "true");
-      await expect(pill).toContainText("Dificultate: Mediu");
+      await expect(pill).toContainText("Mediu — Dificultate");
       await expect(pill.locator('[data-testid="difficulty-dumbbell-on"]')).toHaveCount(2);
       await expect(pill.locator('[data-testid="difficulty-dumbbell-off"]')).toHaveCount(1);
       // Still nothing wider than the phone with the scale's extra width (§375's 320px lead).
       expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
       // Measured and reported, not merely bounded — the pill's own pixel width at this viewport.
       const box = await pill.boundingBox();
-      await testInfo.attach(`difficulty-pill-width-${width}px`, { body: `${box?.width ?? "unmeasured"}px at viewport ${width}px` });
+      const measured = `${box?.width ?? "unmeasured"}px at viewport ${width}px (${testInfo.project.name})`;
+      await testInfo.attach(`difficulty-pill-width-${width}px`, { body: measured });
+      console.log(`difficulty-pill-width: ${measured}`);
     });
   }
 
@@ -70,7 +70,7 @@ test.describe("BR-REQ-041-01 the difficulty scale (§NNN)", () => {
     const pill = page.locator(".MuiChip-root:visible", { hasText: "Mediu" }).first();
     await expect(pill).toBeVisible();
     await expect(pill.locator("svg.MuiChip-icon")).toHaveAttribute("aria-hidden", "true");
-    await expect(pill).toContainText("Dificultate: Mediu");
+    await expect(pill).toContainText("Mediu — Dificultate");
     await expect(pill.locator('[data-testid="difficulty-dumbbell-on"]')).toHaveCount(2);
     await expect(pill.locator('[data-testid="difficulty-dumbbell-off"]')).toHaveCount(1);
   });

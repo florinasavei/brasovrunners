@@ -2,11 +2,8 @@
 
 import Box from "@mui/material/Box";
 import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
+import { DIFFICULTY_LEVELS } from "./difficulty-levels";
 
-/** The closed set's own three levels (§329's migration `0018`), in ascending order — the index
- * into this tuple *is* the level (1-based), so a fourth level added here is caught by every
- * reader below rather than silently missing from the scale (fix round, finding 6). */
-const DIFFICULTY_LEVELS = ["EASY", "MODERATE", "HARD"] as const;
 
 /** Material's own `FitnessCenterIcon` path (`@mui/icons-material/FitnessCenter`, on its own
  * 24-unit grid) — drawn `DIFFICULTY_LEVELS.length` times rather than the three hand-drawn bars
@@ -39,52 +36,42 @@ const FITNESS_CENTER_PATH =
  * added to the closed set above widens the icon and the type on its own, instead of the
  * viewBox growing while the width and the accepted levels stayed at three (fix round, finding 3).
  *
- * `aria-hidden` throughout, like every glyph in the registry (§112) — the pill's own
- * `aria-label` (`route-pills.ts`, `GlyphChip`) is what a screen reader hears, never the count of
- * dumbbells.
+ * `aria-hidden` throughout, like every glyph in the registry (§112) — the pill's word and its
+ * visually-hidden `srSuffix` (`route-pills.ts`, `GlyphChip`) are what a screen reader hears, never
+ * the count of dumbbells.
  *
- * A factory, not one component reading a `level` prop: the registry's `Glyph` type
- * (`ComponentType<SvgIconProps>`) is what `GlyphChip`, `GlyphSelect` and `CalendarEventChip`
- * already call — with no prop of their own beyond `sx` and `aria-hidden`, the same shape `RoadIcon`
- * satisfies — so `EASY_DIFFICULTY_ICON` / `MODERATE_DIFFICULTY_ICON` / `HARD_DIFFICULTY_ICON`
- * (below) sit in `DIFFICULTY_GLYPH` (`glyphs.ts`) exactly where the three bar icons stood, and
- * every surface that already reads a glyph by name — the event page's pill, the listing card's,
- * the backoffice's (§388), the hero's `withGlyph`, `GlyphSelect`'s option — draws the scale with
- * no change of its own.
+ * One component reading a `level` prop, not a factory per level: the registry's three
+ * `difficulty:*` entries are mapped over `DIFFICULTY_LEVELS` in `difficulty-glyphs.ts`, a module
+ * with no `"use client"` of its own, so a Server Component (`EventFacts`) can read one by name —
+ * a record or a per-level export from *this* client module would reach the server as a client
+ * reference it cannot dot into.
  */
 
 /** One icon-width (`1em`) per level in the closed set, so the chip's clone widens automatically
  * when `DIFFICULTY_LEVELS` grows (fix round, finding 3). */
 const SCALE_WIDTH = `${DIFFICULTY_LEVELS.length}em`;
 
-/** The closed set's own level index, 1-based — `number`, not the hand-written `1 | 2 | 3`, so a
- * fourth level added to `DIFFICULTY_LEVELS` above needs no matching edit here; the runtime check
- * below is what actually keeps a caller inside the set (fix round, finding 3). */
-function difficultyScale(level: number) {
-  if (level < 1 || level > DIFFICULTY_LEVELS.length) throw new RangeError(`difficultyScale: level ${level} is outside 1..${DIFFICULTY_LEVELS.length}`);
-  function DifficultyScale(props: SvgIconProps) {
-    return (
-      <SvgIcon {...props} viewBox={`0 0 ${DIFFICULTY_LEVELS.length * 24} 24`} sx={{ width: SCALE_WIDTH, ...props.sx }}>
-        {DIFFICULTY_LEVELS.map((_, index) => {
-          const on = index < level;
-          return (
-            <Box
-              key={index}
-              component="g"
-              transform={`translate(${index * 24} 0)`}
-              data-testid={on ? "difficulty-dumbbell-on" : "difficulty-dumbbell-off"}
-              sx={on ? undefined : { opacity: (theme) => theme.palette.action.disabledOpacity }}
-            >
-              <path d={FITNESS_CENTER_PATH} fill="currentColor" />
-            </Box>
-          );
-        })}
-      </SvgIcon>
-    );
-  }
-  return DifficultyScale;
+/** The closed set's own level, 1-based — `number`, not a hand-written `1 | 2 | 3`, so a fourth
+ * level added to `DIFFICULTY_LEVELS` needs no matching edit here; the runtime check is what keeps
+ * a caller inside the set. */
+export default function DifficultyScaleIcon({ level, ...props }: SvgIconProps & { level: number }) {
+  if (level < 1 || level > DIFFICULTY_LEVELS.length) throw new RangeError(`DifficultyScaleIcon: level ${level} is outside 1..${DIFFICULTY_LEVELS.length}`);
+  return (
+    <SvgIcon {...props} viewBox={`0 0 ${DIFFICULTY_LEVELS.length * 24} 24`} sx={{ width: SCALE_WIDTH, ...props.sx }}>
+      {DIFFICULTY_LEVELS.map((name, index) => {
+        const on = index < level;
+        return (
+          <Box
+            key={name}
+            component="g"
+            transform={`translate(${index * 24} 0)`}
+            data-testid={on ? "difficulty-dumbbell-on" : "difficulty-dumbbell-off"}
+            sx={on ? undefined : { opacity: (theme) => theme.palette.action.disabledOpacity }}
+          >
+            <path d={FITNESS_CENTER_PATH} fill="currentColor" />
+          </Box>
+        );
+      })}
+    </SvgIcon>
+  );
 }
-
-export const EASY_DIFFICULTY_ICON = difficultyScale(1);
-export const MODERATE_DIFFICULTY_ICON = difficultyScale(2);
-export const HARD_DIFFICULTY_ICON = difficultyScale(3);

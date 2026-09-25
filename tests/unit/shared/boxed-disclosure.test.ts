@@ -141,16 +141,26 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     expect(read("src/modules/notifications/ui/ParticipantEmailsPanel.tsx")).not.toMatch(FOLD);
   });
 
+  /**
+   * `Panel`'s `help` variant (§398; the owner, on "Ce înseamnă fiecare tip?": "ar trebui să fie
+   * un card mai mic") is a deliberate second kind of fold — a small clickable line, no card, no
+   * border, so it never spreads `BOXED_DISCLOSURE_SX`. One `component="details"` in `Panel.tsx`
+   * is this variant's, counted here rather than folded into the boxed-fold rule the rest of the
+   * file still keeps.
+   */
+  const UNBOXED_FOLDS: Record<string, number> = { "src/shared/ui/Panel.tsx": 1 };
+
   for (const file of folds) {
     it(`${file} draws every <details> with BOXED_DISCLOSURE_SX and none by hand`, () => {
       const source = read(file);
       expect(source, "imports the shared object").toMatch(/import \{[^}]*\bBOXED_DISCLOSURE_SX\b[^}]*\} from "(@\/shared\/ui\/disclosure|\.\/disclosure)"/);
-      // One spread per fold: the count of `component="details"` equals the count of the object
-      // reaching an `sx` — spread into one, or handed over whole. Comments and the import do
-      // not count, and a fold styled by hand shows up here as one use too few.
-      const details = count(source, new RegExp(FOLD.source, "g"));
+      // One spread per boxed fold: the count of `component="details"` equals the count of the
+      // object reaching an `sx`, minus this file's own deliberately unboxed folds (above) — a
+      // spread into one, or handed over whole. Comments and the import do not count, and a fold
+      // styled by hand shows up here as one use too few.
+      const details = count(source, new RegExp(FOLD.source, "g")) - (UNBOXED_FOLDS[file] ?? 0);
       const uses = count(source, /(?:\.\.\.|sx=\{)BOXED_DISCLOSURE_SX\b/g);
-      expect(uses, `${details} fold(s), ${uses} spread(s)`).toBe(details);
+      expect(uses, `${details} boxed fold(s), ${uses} spread(s)`).toBe(details);
       // No fold writes its own summary rule any more: pointer, height and marker come from
       // the object, and a one-off here is how the screens came to disagree.
       expect(source).not.toMatch(/"& > summary": \{ cursor/);

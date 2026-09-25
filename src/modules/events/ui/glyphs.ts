@@ -7,6 +7,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -20,7 +21,8 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
-import { EASY_DIFFICULTY_ICON, HARD_DIFFICULTY_ICON, MODERATE_DIFFICULTY_ICON } from "./DifficultyIcon";
+import { DIFFICULTY_ICONS } from "./difficulty-glyphs";
+import type { DifficultyLevel } from "./difficulty-levels";
 import RoadIcon from "./RoadIcon";
 
 /** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
@@ -59,11 +61,9 @@ export const SURFACE_GLYPH: Record<EventSurface, Glyph> = {
   MIXED: AltRouteIcon,
 };
 
-export const DIFFICULTY_GLYPH: Record<"EASY" | "MODERATE" | "HARD", Glyph> = {
-  EASY: EASY_DIFFICULTY_ICON,
-  MODERATE: MODERATE_DIFFICULTY_ICON,
-  HARD: HARD_DIFFICULTY_ICON,
-};
+/** One scale per level, mapped over `DIFFICULTY_LEVELS` in `DifficultyIcon.tsx` — a level added
+ * there is registered here with no edit of its own. */
+export const DIFFICULTY_GLYPH: Record<DifficultyLevel, Glyph> = DIFFICULTY_ICONS;
 
 export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
   FREE: MoneyOffIcon,
@@ -89,7 +89,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  *
  * `partner` marks an event held with another organization, on the listing card's chip, the
  * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): Material's
- * `Handshake` glyph everywhere (§NNN, reverting §379/§386's 🤝 emoji — the owner, 2026-09-25:
+ * `Handshake` glyph everywhere (§391, reverting §379/§386's 🤝 emoji — the owner, 2026-09-25:
  * "wow shit handshake icon is super ugly! Use the MUI icon ASAP", of the emoji rendered through
  * a grayscale filter, which read as a dark smudge rather than a desaturated hand). Drawn with no
  * colour of its own, so it takes `currentColor` from wherever it sits — the chip's icon ink, the
@@ -99,13 +99,13 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * `headlamp` is a torch that is lit (§382; the owner, 2026-09-25: "a headlamp icon for the events
  * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
- * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
+ * the kit). Always beside its word, "Eveniment de noapte" / "Night event", like every other pill.
  *
  * There is no bare `difficulty` entry: every caller reads one value's own level, so only the
- * three `difficulty:*` entries below exist — `DifficultyIcon.tsx`'s own drawing, Material's
- * `FitnessCenterIcon` path repeated one through three times lit, one `<svg>` each so
+ * `difficulty:*` entries exist — one per level of `DIFFICULTY_LEVELS` (`DifficultyIcon.tsx`),
+ * Material's `FitnessCenterIcon` path repeated one through three times lit, one `<svg>` each so
  * `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
- * hands them (fix round, finding 2 — a bare `FitnessCenterIcon` registration had no caller).
+ * hands them.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -118,6 +118,8 @@ export const GLYPHS = {
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
   headlamp: FlashlightOnIcon,
+  // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
+  discount: LocalOfferIcon,
   partner: HandshakeIcon,
 };
 

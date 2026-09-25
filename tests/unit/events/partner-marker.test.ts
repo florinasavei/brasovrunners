@@ -97,7 +97,7 @@ describe("§367 the listing card's chip, amended §375: one glyph, a generic lab
     expect(english).not.toContain("Brașov Running Festival");
   });
 
-  it("hides the glyph from a screen reader — the chip's own visible label is what is read (§NNN, `Handshake`'s own SvgIcon default)", async () => {
+  it("hides the glyph from a screen reader — the chip's own visible label is what is read (§391, `Handshake`'s own SvgIcon default)", async () => {
     const html = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival") } }));
     const glyphTag = html.match(/<svg[^>]*data-testid="HandshakeIcon"[^>]*>/)?.[0] ?? "";
     expect(glyphTag).toContain('aria-hidden="true"');
@@ -244,7 +244,7 @@ describe("§367 one tooltip per calendar entry", () => {
     expect(link).toContain('data-testid="WarningAmberIcon"');
   });
 
-  it("carries no filter, dense or not, filled or not — the handshake takes its ink from `currentColor` (§NNN, reverting §379/§386's grayscale filter)", () => {
+  it("carries no filter, dense or not, filled or not — the handshake takes its ink from `currentColor` (§391, reverting §379/§386's grayscale filter)", () => {
     for (const dense of [true, false]) {
       for (const filled of [true, false]) {
         const html = chip({ dense, partner: PARTNER, filled });
@@ -286,7 +286,7 @@ describe("§367 one tooltip per calendar entry", () => {
     expect(html).toContain(`aria-label="${MOVED.text}"`);
     // Named images a screen reader can reach — not MUI's default `aria-hidden="true"` — and no SVG
     // `<title>`, which would be the browser's own tooltip over MUI's. Both the handshake and the
-    // date's note are an `<svg>` (§NNN — the partner mark reverted from §379's `<span>` emoji),
+    // date's note are an `<svg>` (§391 — the partner mark reverted from §379's `<span>` emoji),
     // and both carry `role="img"` the same way.
     const marks = [...html.matchAll(/<[a-z]+ [^>]*role="img"[^>]*>/g)].map((match) => match[0]);
     expect(marks).toHaveLength(2);

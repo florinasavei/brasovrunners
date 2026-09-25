@@ -1,19 +1,42 @@
 import type { events } from "@/db/schema/events";
+import { costPaidToExternalOrganizer } from "../domain/cost";
 import { distanceInKm } from "../domain/event-type";
+import { clubNightEvent } from "../night-event";
 import type { GlyphName } from "./glyphs";
 
-/** A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary (§112), and its words.
- * `ariaLabel`, when the bare word does not carry enough context on its own — the difficulty
- * pill's «Dificultate: Mediu» (fix round, finding 3) — is the chip's accessible name; every other
- * pill leaves it unset and keeps its word as its accessible name. */
-export type Pill = { glyph: GlyphName; label: string; ariaLabel?: string };
+/**
+ * A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary
+ * (§112), its words, and — only the night pill's (§394) — a tooltip that says why. `srSuffix`
+ * adds extra words a screen reader reads right after `label`, never shown, while the visible
+ * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
+ * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
+ * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394); the difficulty pill's
+ * «Mediu» is followed, for a screen reader, by the field's own name, «Dificultate». Content, not an
+ * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
+ * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
+ * own text (visually hidden) rather than on the attribute.
+ */
+export type Pill = { glyph: GlyphName; label: string; tooltip?: string; srSuffix?: string };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
- * route, and the cost — the same columns on the public event row and the backoffice's own
- * (`EditableEvent`), so one function serves both without either module importing the other's. */
+ * route, the cost, and the start, its end, its programme, its zone and the night override (§394:
+ * whether this date is a night event is its start-to-end span's question, against the sunset) —
+ * the same columns on the public event row and the backoffice's own (`EditableEvent`), so one
+ * function serves both without either module importing the other's. */
 export type RouteFactsSource = Pick<
   typeof events.$inferSelect,
-  "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "headlampRequired" | "costType"
+  | "type"
+  | "surface"
+  | "difficulty"
+  | "distanceMeters"
+  | "elevationGainMeters"
+  | "nightOverride"
+  | "startsAt"
+  | "endsAt"
+  | "scheduleItems"
+  | "timezone"
+  | "costType"
+  | "registrationMode"
 >;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -30,8 +53,9 @@ type FormatNumber = { number(value: number, options?: { maximumFractionDigits?: 
  * The route's pills, in one fixed order (§366, amended §375 — the owner, 2026-09-24, of the
  * card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order of this should be: terrain
  * type, difficulty, distance, elevation"): **surface, difficulty, distance, elevation**, then the
- * **headlamp** (§382) — what to bring for that route, after what the route is — then the cost
- * pill after them wherever a caller adds one.
+ * **night event** (§394, at the place §382 gave the headlamp — it is still the headlamp's glyph,
+ * what to bring for that route, after what the route is) — then the cost pill after them wherever
+ * a caller adds one.
  *
  * One function decides the order for both surfaces that draw route pills — the listing card
  * (`EventFacts`'s compact form) and the event page (`EventFacts`'s stacked form, §356) — so
@@ -74,16 +98,46 @@ export function routePillParts(
     ? {
         glyph: `difficulty:${event.difficulty}`,
         label: t(`difficultyValues.${event.difficulty}`),
-        // «Dificultate: Mediu» / «Difficulty: Medium» (fix round, finding 3) — `Event.difficulty`
-        // and `Event.difficultyValues.*` are both already in the catalogue for the field label
-        // and the pill's own word, so the accessible name is built from the same two keys rather
-        // than a string written here.
-        ariaLabel: `${t("difficulty")}: ${t(`difficultyValues.${event.difficulty}`)}`,
+        // The visible word alone — «Mediu» — says a level without saying of what; a screen reader
+        // hears «Mediu — Dificultate» through the same `srSuffix` the external cost pill uses, the
+        // field's own catalogue label (`Event.difficulty`), never a string written here.
+        srSuffix: t("difficulty"),
       }
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
-  const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;
-  return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill };
+  return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };
+}
+
+/**
+ * "Eveniment de noapte" / "Night event" (§394): the headlamp's glyph, the words, and the tooltip
+ * "Apusul la 16:36 — ia o frontală" — or null on a date that is not one. The answer is this row's
+ * own date's (`clubNightEvent`): a series' dates are rows of their own, so the listing's one line
+ * for a series, which draws its next date, says the next date's answer.
+ */
+export function nightPill(
+  event: Pick<RouteFactsSource, "type" | "nightOverride" | "startsAt" | "endsAt" | "scheduleItems" | "timezone">,
+  t: Translate,
+): Pill | null {
+  const facts = clubNightEvent(event);
+  if (!facts.night) return null;
+  // «Alergare de noapte» on a group run — the owner calls a run a run, not an "event" — and
+  // «Eveniment de noapte» on every other type (§394).
+  const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
+  // The end is only named when the start alone would not have been dark (§394): a run that
+  // starts in daylight and finishes after dusk — with its time, and in the words of where it
+  // came from (the event's own end, or the day's last programme row).
+  const tooltip = !facts.sunset
+    ? null
+    : facts.end && facts.endSource === "programme"
+      ? t("night.tooltipEndProgramme", { time: facts.sunset, end: facts.end })
+      : facts.end
+        ? t("night.tooltipEnd", { time: facts.sunset, end: facts.end })
+        : t("night.tooltip", { time: facts.sunset });
+  return {
+    glyph: "headlamp",
+    label,
+    ...(tooltip ? { tooltip } : {}),
+  };
 }
 
 /**
@@ -99,10 +153,21 @@ export function routePillParts(
  * the array this returns; it is the one function both surfaces (the listing card's compact facts
  * and the backoffice's own event list) call, so neither reads the route in a different order or
  * a different set from the other.
+ *
+ * The cost pill's word stays the closed set's own — "Cu taxă" — but on an `EXTERNAL`-registration
+ * `PAID` event a screen reader alone is told the fee goes to the organizer, never the club
+ * (`DECISIONS.md` §394, `GlyphChip`'s `srSuffix`): the one place that decides it, so the event
+ * page's compact card and the backoffice's own list cannot read the pill differently.
  */
 export function buildRoutePills(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill[] {
   const parts = routePillParts(event, t, format);
   const pills = orderRoutePills(parts);
-  if (event.costType) pills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+  if (event.costType) {
+    pills.push({
+      glyph: `cost:${event.costType}`,
+      label: t(`costValues.${event.costType}`),
+      srSuffix: costPaidToExternalOrganizer(event) ? t("costPaidExternalSrSuffix") : undefined,
+    });
+  }
   return pills;
 }

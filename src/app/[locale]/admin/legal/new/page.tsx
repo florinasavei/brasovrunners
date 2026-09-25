@@ -21,6 +21,7 @@ import LegalDocumentForm, {
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
 import { createLegalVersionAction } from "../actions";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -132,7 +133,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
             {t("legal.startFrom.intro")}
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} sx={{ flexWrap: "wrap", gap: 1 }}>
-            {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((documentKey) => (
+            {LEGAL_DOCUMENT_KEYS.map((documentKey) => (
               <GlyphButton
                 key={documentKey}
                 icon="template"

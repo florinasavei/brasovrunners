@@ -141,14 +141,18 @@ describe("§373 the fields of an email's words, as a legend", () => {
     }
   });
 
-  it("is a named card, closed, whose closed line counts the fields and the ones used here", async () => {
+  it("is a legend fold, closed, whose closed line counts the fields and the ones used here — led by an «i», not a card (§398)", async () => {
     // Emotion's style tags aside, the whole legend is one fold.
     const html = (await render("REGISTRATION_CONFIRMED", "ro")).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
     expect(html.startsWith("<details")).toBe(true);
     expect(html.endsWith("</details>")).toBe(true);
     expect(html.match(/<details[^>]*>/)?.[0]).not.toMatch(/\sopen/);
     expect(html).toContain('id="email-fields-REGISTRATION_CONFIRMED"');
-    expect(html).toMatch(/<summary[^>]*><h4[^>]*>Câmpurile pe care le poți folosi<span[^>]*>16 câmpuri · 4 câmpuri folosite aici<\/span><\/h4><\/summary>/);
+    // No card frame — no h4 heading — and the "i" leads the line, ahead of the caret and the words.
+    expect(html).not.toMatch(/<summary[^>]*><h4/);
+    expect(html).toMatch(
+      /<summary[^>]*><svg[^>]*InfoOutlined[^>]*>[\s\S]*?<\/svg>[\s\S]*?<span[^>]*>Câmpurile pe care le poți folosi<span[^>]*>16 câmpuri · 4 câmpuri folosite aici<\/span><\/span><\/summary>/,
+    );
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.intro);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.missing);
 

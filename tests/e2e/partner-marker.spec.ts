@@ -28,7 +28,7 @@ const MONTH = "2027-04";
 
 /**
  * The partner marker's glyph, Material's `Handshake` (§367, reverted from §379/§386's 🤝 emoji
- * by §NNN — the owner, 2026-09-25: "wow shit handshake icon is super ugly! Use the MUI icon
+ * by §391 — the owner, 2026-09-25: "wow shit handshake icon is super ugly! Use the MUI icon
  * ASAP"): found by the start of its own path (`@mui/icons-material/Handshake`), like
  * `headlamp.spec.ts`'s torch, since a production build carries no `data-testid` — MUI writes
  * that attribute only outside production.

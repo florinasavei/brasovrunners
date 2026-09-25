@@ -35,45 +35,38 @@ afterEach(() => {
 
 /** QA's `test-bvr`-shaped route: everything the club can state, stated. */
 const FULL_ROUTE = {
+  type: "RACE" as const,
   surface: "ASPHALT" as const,
   difficulty: "EASY" as const,
   distanceMeters: 10000,
   elevationGainMeters: 300,
-  headlampRequired: true,
+  // A Wednesday 19:00 in November: after dusk in Brașov, so the automatic answer is a night event (§394).
+  startsAt: new Date("2026-11-18T17:00:00Z"),
+  endsAt: null,
+  scheduleItems: null,
+  timezone: "Europe/Bucharest",
+  nightOverride: null,
   costType: "FREE" as const,
+  registrationMode: "INTERNAL" as const,
 };
-
-/** The chip's *visible* word, out of its `.MuiChip-label`: the difficulty pill (only) carries a
- * `GlyphChip` `ariaLabel`, which wraps the label in a visually-hidden accessible-name span
- * (`GlyphChip`'s `srOnlySx`) followed by an `aria-hidden` span holding the visible word — checked
- * first, before falling back to the plain text node every other closed set's pill still renders
- * (fix round, finding 1: `GlyphChip`'s accessible name moved off an `aria-label` attribute). */
-function visibleLabel(labelInner: string): string | undefined {
-  return /<span class="MuiBox-root [^"]*" aria-hidden="true">([^<]*)<\/span>/.exec(labelInner)?.[1] ?? /^([^<]*)/.exec(labelInner)?.[1];
-}
 
 /** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
 function chips(fragment: string) {
-  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => {
-    // Greedy to the end of `inner`: the label span is the chip's last child, so nothing follows
-    // its own closing `</span>` — safe even though the difficulty pill nests two more `</span>`s
-    // inside it.
-    const labelInner = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*)<\/span>\s*$/.exec(inner)?.[1] ?? "";
-    return {
-      outlined: classes.includes("MuiChip-outlined"),
-      small: classes.includes("MuiChip-sizeSmall"),
-      label: visibleLabel(labelInner),
-      glyph: /<(?:svg|span)\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
-    };
-  });
+  // `[^>]*` before the class: the night pill's tooltip (§394) puts its words in a `title` first.
+  return [...fragment.matchAll(/<div [^>]*?class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
+    outlined: classes.includes("MuiChip-outlined"),
+    small: classes.includes("MuiChip-sizeSmall"),
+    label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
+    glyph: /<(?:svg|span)\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
+  }));
 }
 
-describe("§388 buildRoutePills — surface, difficulty, distance, elevation, headlamp, then cost", () => {
+describe("§388 buildRoutePills — surface, difficulty, distance, elevation, night event, then cost", () => {
   it("builds every pill, in that order, from what the club stated", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Frontală", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Eveniment de noapte", "Gratuit"]);
     expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY", "distance", "elevation", "headlamp", "cost:FREE"]);
   });
 
@@ -81,16 +74,29 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, he
     currentLocale = "en";
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Headlamp", "Free"]);
+    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Night event", "Free"]);
   });
 
   it("gives a pill only to what the club stated, and none at all when it stated nothing", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, headlampRequired: false }, t, format);
+    const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, nightOverride: false }, t, format);
     expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km", "Gratuit"]);
     const none = buildRoutePills(
-      { surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, headlampRequired: false, costType: null },
+      {
+        type: "RACE",
+        surface: null,
+        difficulty: null,
+        distanceMeters: null,
+        elevationGainMeters: null,
+        startsAt: FULL_ROUTE.startsAt,
+        endsAt: null,
+        scheduleItems: null,
+        timezone: "Europe/Bucharest",
+        nightOverride: false,
+        costType: null,
+        registrationMode: "INTERNAL",
+      },
       t,
       format,
     );
@@ -102,25 +108,46 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, he
     const format = await getFormatter();
     const pills = buildRoutePills({ ...FULL_ROUTE, costType: "PAID" }, t, format);
     expect(pills.at(-1)?.label).toBe("Cu taxă");
+    expect(pills.at(-1)?.srSuffix).toBeUndefined();
   });
 
-  // Fix round, finding 2: through `buildRoutePills` for every level in both locales, so a wrong
-  // key or a missing locale in `routePillParts`'s own `ariaLabel` line fails here — the earlier
-  // test passed a hand-written `ariaLabel` straight into `GlyphChip` and would pass regardless.
+  it("adds the organizer's screen-reader-only suffix only on EXTERNAL + PAID (§394)", async () => {
+    const t = await getTranslations("Event");
+    const format = await getFormatter();
+    const internalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "INTERNAL" }, t, format);
+    expect(internalPaid.at(-1)?.label).toBe("Cu taxă");
+    expect(internalPaid.at(-1)?.srSuffix).toBeUndefined();
+
+    const externalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "EXTERNAL" }, t, format);
+    expect(externalPaid.at(-1)?.label).toBe("Cu taxă");
+    expect(externalPaid.at(-1)?.srSuffix).toBe("plătit la organizator, nu la club");
+  });
+
+  // Through `buildRoutePills` and `RoutePills` for every level in both locales, asserting what a
+  // screen reader is given — the chip's visible word, then the visually-hidden span — so a wrong
+  // key or a missing locale in `routePillParts`'s `srSuffix` line fails here.
   it.each([
-    ["ro", "EASY", "Dificultate: Ușor"],
-    ["ro", "MODERATE", "Dificultate: Mediu"],
-    ["ro", "HARD", "Dificultate: Avansat"],
-    ["en", "EASY", "Difficulty: Easy"],
-    ["en", "MODERATE", "Difficulty: Moderate"],
-    ["en", "HARD", "Difficulty: Hard"],
-  ] as const)("the difficulty pill's ariaLabel is «%s» for %s in %s", async (locale, difficulty, expected) => {
+    ["ro", "EASY", "Ușor", "Dificultate"],
+    ["ro", "MODERATE", "Mediu", "Dificultate"],
+    ["ro", "HARD", "Avansat", "Dificultate"],
+    ["en", "EASY", "Easy", "Difficulty"],
+    ["en", "MODERATE", "Moderate", "Difficulty"],
+    ["en", "HARD", "Hard", "Difficulty"],
+  ] as const)("in %s, the %s pill reads «%s» and, hidden, «— %s»", async (locale, difficulty, word, field) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty }, t, format);
-    const difficultyPill = pills.find((pill) => pill.glyph === `difficulty:${difficulty}`);
-    expect(difficultyPill?.ariaLabel).toBe(expected);
+    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty }, t, format).filter((pill) => pill.glyph === `difficulty:${difficulty}`);
+    expect(pills).toHaveLength(1);
+    const html = renderToStaticMarkup(RoutePills({ pills }));
+    const label = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[1] ?? "";
+    // The word is the label's own text, shown; the field's name follows it in a span clipped to
+    // one pixel (`GlyphChip`'s `srOnlySx`) — the only other text in the label.
+    expect(/^([^<]*)</.exec(label)?.[1]).toBe(word);
+    const hidden = /<span class="MuiBox-root [^"]*">([^<]*)$/.exec(label)?.[1];
+    expect(hidden).toBe(` — ${field}`);
+    expect(html).not.toMatch(/aria-label=/);
+    expect(html).not.toMatch(/aria-hidden="true">[^<]*(Ușor|Mediu|Avansat|Easy|Moderate|Hard)/);
   });
 });
 
@@ -130,7 +157,7 @@ describe("§388 RoutePills — one small outlined chip per pill, its glyph, noth
     const format = await getFormatter();
     const html = renderToStaticMarkup(RoutePills({ pills: buildRoutePills(FULL_ROUTE, t, format) }));
     const drawn = chips(html);
-    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Frontală", "Gratuit"]);
+    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Eveniment de noapte", "Gratuit"]);
     for (const pill of drawn) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);

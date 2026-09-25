@@ -8,7 +8,7 @@ import GlyphChip from "./GlyphChip";
  * kept even now the marker reads "Colaborare" / "Partnership" (§379 — shorter than §375's longer
  * label, which was a full word wider than some 320-pixel cards leave it) — a card narrower
  * still, or a phone's own font-size setting, is still safer wrapped than clipped. Unaffected by
- * the glyph reverting from the emoji back to Material's `Handshake` icon (§NNN): the chip's own
+ * the glyph reverting from the emoji back to Material's `Handshake` icon (§391): the chip's own
  * width comes from the label, not the glyph. A plain object in module scope, because it crosses
  * to `GlyphChip`.
  */
@@ -23,7 +23,7 @@ const PARTNER_CHIP_SX = {
  * The partner marker on a listing card (§367, amended §375 — the owner, 2026-09-24: "For the
  * partnership, I just need 1 icon, I do not need to show the full partners list, there might be
  * multiple partners"), and again (§379 — "the chip is too long, just say 'colaborare' in the
- * Romanian one"), and again (§NNN — the owner, 2026-09-25: "wow shit handshake icon is super
+ * Romanian one"), and again (§391 — the owner, 2026-09-25: "wow shit handshake icon is super
  * ugly! Use the MUI icon ASAP", of the emoji §379/§386 put here, filtered gray until it read as
  * a smudge): one small outlined chip in the card's chips row, Material's own `Handshake` icon in
  * the chip's own ink and a generic "Colaborare" — the size and the colour of the surface chip
