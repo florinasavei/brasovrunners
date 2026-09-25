@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.91-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.91-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.92-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -275,6 +275,10 @@ sections and in `CHANGELOG.md`.
   and every irreversible or outward-facing one asks first in one `ConfirmDialog` — publishing, cancelling, erasing, notices, messages, settings,
   the team, the legal versions — naming how many real participants are emailed, from the query the send uses; test rows counted apart;
   check-in stays one tap; the bulk cancel's ticks now belong to their form (§384) · the phone footer says "GDPR", a rule before RO/EN, a condensed fold, the version as a chip (§385) · the 🤝 marker in gray ink, the chip says "Colaborare" / "Partnership" (§386).
+- **Batch 16 (2026-09-25, `BR-V1.92`):** a route / training description per language in the "Traseul" card — pit stops, climbs, a map as a
+  picture in the text, both languages or neither — shown on the event page as "Traseul" under `#route` with the route link, the GPX and the map
+  inside it while "Linkuri și fișiere" keeps the rest; the emails deep-link by the page's own rule; the orphan-picture sweep now counts every
+  text of an event (§387, migration `0071`) · the backoffice event cards wear the public card's type chip, route pills and 🤝 marker — one shared `buildRoutePills` / `RoutePills` draws the listing card, the event page's own rows and the backoffice list (§388) · the phone tap-target e2e assertions round to a tenth of a pixel (the CI flake).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

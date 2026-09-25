@@ -167,11 +167,13 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     body: ["description", t("editor.fields.body")],
     rules: ["rules", t("editor.fields.rules")],
     schedule: ["programme", t("editor.fields.scheduleNotes")],
+    // The route / training description (§387), in the "Traseul" card.
+    routeDescription: ["course", t("editor.fields.routeDescription")],
     checklist: ["programme", t("editor.fields.checklist")],
     slug: ["address", t("editor.fields.slug")],
     seoTitle: ["address", t("editor.fields.seoTitle")],
     seoDescription: ["address", t("editor.fields.seoDescription")],
-    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), under the same
+    // The club's discount on an external event's own fee (`DECISIONS.md` §389), under the same
     // box the cost boxes live in.
     discountNote: ["registration", t("editor.discountNote")],
   };
@@ -200,6 +202,7 @@ export async function identicalTextLabels(): Promise<IdenticalLabels> {
       programme: t("editor.boxes.programme.title"),
       rules: t("editor.boxes.rules.title"),
       coHosts: t("editor.boxes.coHosts.title"),
+      course: t("editor.boxes.course.title"),
     },
     fields: {
       excerpt: t("editor.boxes.summaryLabel"),
@@ -208,6 +211,7 @@ export async function identicalTextLabels(): Promise<IdenticalLabels> {
       checklist: t("editor.fields.checklist"),
       rules: t("editor.fields.rules"),
       coHostDescription: t("editor.coHostRows.about"),
+      routeDescription: t("editor.fields.routeDescription"),
     },
     languages: Object.fromEntries(routing.locales.map((locale) => [locale, tSite(`languageName.${locale}`)])),
     // The card's number is filled in by `identicalTextLabel`, so the placeholder travels as itself.

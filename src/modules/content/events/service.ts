@@ -632,6 +632,23 @@ async function writePlaceNames<T extends Record<string, unknown>>(tx: Transactio
   }
 }
 
+/**
+ * Clears `discountNote` on both languages' rows when the event's saved fields no longer allow
+ * one (`DECISIONS.md` §389) — inside the event save's transaction, like `writePlaceNames` above,
+ * because the settings save an Organizer without text rights makes never touches a translation
+ * row through `applyTranslationSave`. Without this, switching the mode away from `EXTERNAL` +
+ * `PAID` on the settings panel alone would leave a stale note nobody with text rights posted
+ * again and nobody can read on the page any more.
+ */
+async function clearDiscountNoteIfNotAllowed<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  eventId: string,
+  fields: { registrationMode: EditableEvent["registrationMode"]; costType: EditableEvent["costType"] },
+): Promise<void> {
+  if (costPaidToExternalOrganizer(fields)) return;
+  await tx.update(eventTranslations).set({ discountNote: null }).where(eq(eventTranslations.eventId, eventId));
+}
+
 /** The rows as `writePlaceNames` left them, without reading them again. */
 function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames): EditableTranslation[] {
   return rows.map((row) => {
@@ -711,7 +728,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     /** The type the event has after this save — the form's, when the settings are saved too. */
     eventType: EditableEvent["type"];
     /**
-     * Whether `discountNote` may be written after this save (`DECISIONS.md` §NNN) — the mode and
+     * Whether `discountNote` may be written after this save (`DECISIONS.md` §389) — the mode and
      * cost type the event has after it, the same discipline `eventType` follows above.
      */
     registrationMode: EditableEvent["registrationMode"];
@@ -775,7 +792,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
  * insert leaves at the column's default.
  */
 function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"], discountAllowed: boolean) {
-  const { body, rules, schedule, excerptBody, ...columns } = fields;
+  const { body, rules, schedule, routeDescription, excerptBody, ...columns } = fields;
   const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return {
     ...columns,
@@ -786,7 +803,9 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     // A group run has no programme (§111): the editor hides the field, and this is what
     // holds when the type changed in the same save or the hidden field still posted text.
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
-    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): kept only while
+    // The route / training description (§387): on every type — a group run has a route too.
+    routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
+    // The club's discount on an external event's own fee (`DECISIONS.md` §389): kept only while
     // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
     ...(discountAllowed ? {} : { discountNote: null }),
   };
@@ -797,6 +816,7 @@ type OptionalTextColumns = {
   bodyJson?: unknown;
   rulesJson?: unknown;
   scheduleJson?: unknown;
+  routeDescriptionJson?: unknown;
   checklist?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -814,6 +834,7 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     body: writtenDoc(row.bodyJson),
     rules: writtenDoc(row.rulesJson),
     schedule: writtenDoc(row.scheduleJson),
+    routeDescription: writtenDoc(row.routeDescriptionJson),
     checklist: isWrittenText(row.checklist),
     seoTitle: isWrittenText(row.seoTitle),
     seoDescription: isWrittenText(row.seoDescription),
@@ -1336,6 +1357,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     const translationsBefore = await listTranslationsForEvent(tx, input.eventId);
     const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
     await writePlaceNames(tx, input.eventId, names);
+    await clearDiscountNoteIfNotAllowed(tx, input.eventId, fields);
     if (announcing) {
       // No words are saved here; only the place's names moved, and the notice compares those.
       await announceSave(tx, {
@@ -1459,13 +1481,15 @@ const SERIES_TRANSLATION_COLUMNS = [
   "bodyJson",
   "rulesJson",
   "scheduleJson",
+  // The route / training description (§387): the same course on every date of a weekly run.
+  "routeDescriptionJson",
   "checklist",
   "coverAltText",
   // Not `locationName`: the place's name in each language is the event's since §362 and travels
   // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
   "seoTitle",
   "seoDescription",
-  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §NNN): a series
+  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §389): a series
   // edit's discount note carries the way its cost does.
   "discountNote",
 ] as const;
@@ -2249,6 +2273,7 @@ function copiedTranslationValues(
     bodyJson: translation.bodyJson,
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
+    routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     coverAltText: translation.coverAltText,
     // The place's name in this language goes with the copy: the same place, the same word.

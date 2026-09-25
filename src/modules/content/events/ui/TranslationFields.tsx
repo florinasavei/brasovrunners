@@ -56,6 +56,7 @@ export type TranslationDraft = Pick<
   | "bodyJson"
   | "rulesJson"
   | "scheduleJson"
+  | "routeDescriptionJson"
   | "checklist"
   | "locationName"
   | "seoTitle"
@@ -75,6 +76,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
     bodyJson: null,
     rulesJson: null,
     scheduleJson: null,
+    routeDescriptionJson: null,
     checklist: null,
     locationName: null,
     seoTitle: null,
@@ -285,6 +287,41 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
 }
 
 /**
+ * Card 1.2, "Traseul", its tabs (§387): the route / training description — the pit stops, the
+ * climbs, what to expect, and a map as a picture in the text (§72–§73) — in the same editor as the
+ * description, folded so it mounts only when opened (§96). Shown under `#route` on the event page,
+ * with the route's own links.
+ */
+export async function RouteDescriptionFields({ translation, mayEdit }: PieceProps) {
+  const t = await getTranslations("Admin");
+  const name = named(translation);
+  if (!mayEdit) {
+    return (
+      <Stack spacing={1}>
+        <ReadOnlyLine label={t("editor.fields.routeDescription")} value={await documentState(translation.routeDescriptionJson)} />
+        <TextsReadOnly />
+      </Stack>
+    );
+  }
+  return (
+    <Stack spacing={1}>
+      <LazyRichTextEditor
+        name={name("routeDescription")}
+        label={t("editor.fields.routeDescription")}
+        summary={t("editor.fields.routeDescription")}
+        emptyHint={t("editor.routeDescriptionEmpty")}
+        initialBody={translation.routeDescriptionJson}
+        accessibleSuffix={translation.locale.toUpperCase()}
+        labels={await editorLabels()}
+      />
+      <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+        {t("editor.routeDescriptionHelp")}
+      </Typography>
+    </Stack>
+  );
+}
+
+/**
  * Box 14, "Adresa paginii și motoarele de căutare": the address, locked once published (§11.5) —
  * a locked box is disabled and posts nothing, so a hidden input carries it — and the two fields a
  * search engine shows.
@@ -327,7 +364,7 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
 }
 
 /**
- * The club's discount on an external event's own fee (`DECISIONS.md` §NNN): one short line per
+ * The club's discount on an external event's own fee (`DECISIONS.md` §389): one short line per
  * language, inside the cost card, shown only on an `EXTERNAL`-registration, `PAID` event
  * (`CostFields`). Never required — the organizer sets the price; the club only ever knows the
  * discount, if there is one.

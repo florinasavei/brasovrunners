@@ -70,7 +70,7 @@ export type SummaryWords = {
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
-  course: { route: string; km: string; elevation: string; headlamp: string };
+  course: { route: string; km: string; elevation: string; headlamp: string; described: string; describedOneLanguage: string };
   links: { strava: string; facebook: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
@@ -114,6 +114,8 @@ export type SummaryTranslation = {
   bodyJson: unknown;
   rulesJson: unknown;
   scheduleJson: unknown;
+  /** The route / training description (§387), in the "Traseul" card; absent for a caller from before it. */
+  routeDescriptionJson?: unknown;
   checklist: string | null;
   locationName: string | null;
   /** The two search-engine overrides (box 14), when the caller has them — the editor always does. */
@@ -165,6 +167,7 @@ export const BLANK = {
     (translation: SummaryTranslation) => (translation.checklist ?? "").trim() === "",
   ],
   rules: (translation: SummaryTranslation) => docBlank(translation.rulesJson),
+  route: (translation: SummaryTranslation) => docBlank(translation.routeDescriptionJson),
   address: (translation: SummaryTranslation) => translation.slug.trim() === "",
 } as const;
 
@@ -420,12 +423,19 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
   return km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null;
 }
 
-/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu`, or `Nimic completat` (the headlamp, §382). */
+/**
+ * Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu · cu descriere`, or `Nimic
+ * completat` (the headlamp, §382). The route / training description (§387) adds `cu descriere` when
+ * written in every language, `descriere într-o singură limbă` when in one only — the text the next
+ * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
+ */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
   labels: { surface: string | null; difficulty: string | null },
+  translations: readonly SummaryTranslation[] = [],
 ): string {
+  const described = translations.filter((translation) => !BLANK.route(translation)).length;
   const line = join(words, [
     labels.surface,
     labels.difficulty,
@@ -433,6 +443,8 @@ export function courseSummary(
     event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
     event?.headlampRequired ? words.course.headlamp : null,
     event?.routeUrl ? words.course.route : null,
+    described === 0 ? null : described === translations.length ? words.course.described : words.course.describedOneLanguage,
+    ...identicalMarks(words, translations, ["routeDescription"]),
   ]);
   return line || words.nothing;
 }

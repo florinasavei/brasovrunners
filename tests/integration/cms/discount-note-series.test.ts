@@ -2,13 +2,13 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { duplicateEvent, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
+import { duplicateEvent, repeatEvent, saveEventAndTranslations, saveEventFields } from "@/modules/content/events/service";
 import { createEvent } from "@/modules/content/events/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
  * The club's discount on an external event's own fee travels the way its cost does
- * (`DECISIONS.md` §NNN): a series held at a discount is held at it every date, and a duplicate
+ * (`DECISIONS.md` §389): a series held at a discount is held at it every date, and a duplicate
  * carries it too — the same rule `headlamp.test.ts` proves for `headlampRequired`.
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
@@ -75,7 +75,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }, 
   ...changes,
 });
 
-describe("the discount note, on a series and a duplicate (§NNN)", () => {
+describe("the discount note, on a series and a duplicate (§389)", () => {
   it("is written on create, for an EXTERNAL + PAID event, in both languages", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const rows = await translationsOf(source.id);
@@ -158,5 +158,27 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
       expect(rows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
       expect(rows.find((r) => r.locale === "en")?.discountNote).toBeNull();
     }
+  });
+
+  it("a settings-only save (no text posted) clears the note too, once the mode no longer needs it (§389)", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    const before = await translationsOf(source.id);
+    expect(before.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+
+    // `saveEventFields` is what an Organizer with settings rights but no text rights calls: it
+    // never posts a translation, so `applyTranslationSave` never runs — the note has to be
+    // cleared from the saved event fields themselves, not from posted words.
+    const row = await reloadEvent(source.id);
+    await saveEventFields(db, {
+      actor: admin,
+      eventId: source.id,
+      fields: { ...FIELDS, registrationMode: "NONE", externalProvider: "", externalRegistrationUrl: "" },
+      expectedVersion: row.version,
+      now: NOW,
+    });
+
+    const after = await translationsOf(source.id);
+    expect(after.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+    expect(after.find((r) => r.locale === "en")?.discountNote).toBeNull();
   });
 });

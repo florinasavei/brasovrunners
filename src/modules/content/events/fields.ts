@@ -136,11 +136,17 @@ export const translationFieldsSchema = z
     rules: richTextField,
     /** The programme — kit pickup, briefing, start, cut-offs (§96); empty allowed. */
     schedule: richTextField,
+    /**
+     * The route / training description (§387): the pit stops, the climbs, what to expect, and a
+     * map as a picture in the text. The same contract as the body; empty allowed; written in the
+     * "Traseul" card and shown under `#route` with the route's own links.
+     */
+    routeDescription: richTextField,
     // Optional in the input like `excerpt`: the form posts them, an older caller may not.
     seoTitle: optionalText(200).optional(),
     seoDescription: optionalText(320).optional(),
     /**
-     * The club's discount on an external event's own fee (`DECISIONS.md` §NNN): shown, and
+     * The club's discount on an external event's own fee (`DECISIONS.md` §389): shown, and
      * postable, only on an `EXTERNAL`-registration, `PAID` event — the box is hidden otherwise
      * (`RegistrationBox`), and the service clears the column when the mode or cost type stops
      * needing it, whatever this caller posted. Optional in the input like `checklist`; both

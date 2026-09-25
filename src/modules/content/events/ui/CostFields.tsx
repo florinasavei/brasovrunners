@@ -61,7 +61,7 @@ export default function CostFields({
   /**
    * The discount note's own strip, per language, rendered by the caller (`RegistrationBox`) so
    * this file need not know about `LocaleTabPanels` or the editor's translations — only when to
-   * show it (`DECISIONS.md` §NNN). `children`, not a named prop: a Server Component may hand a
+   * show it (`DECISIONS.md` §389). `children`, not a named prop: a Server Component may hand a
    * client component `children` but no other element-valued prop (§370's own guard).
    */
   children: ReactNode;
@@ -71,7 +71,7 @@ export default function CostFields({
   const isDonation = current === "DONATION";
   const shown = current === "PAID" || isDonation;
   // The club's discount only means anything where the fee is settled at another organizer's own
-  // form (`DECISIONS.md` §NNN): hidden, not removed, the same rule the two boxes above follow —
+  // form (`DECISIONS.md` §389): hidden, not removed, the same rule the two boxes above follow —
   // switching back to "La organizator" finds what was typed.
   const showDiscount = current === "PAID" && mode === "EXTERNAL";
 
@@ -89,7 +89,7 @@ export default function CostFields({
         />
         {/* Hidden, not removed, while the club's discount strip is the one that matters
             (`showDiscount`): the page, the .ics and the JSON-LD all ignore `costUrl` on an
-            `EXTERNAL` + `PAID` event now (`DECISIONS.md` §NNN — the fee is paid at the
+            `EXTERNAL` + `PAID` event now (`DECISIONS.md` §389 — the fee is paid at the
             organizer's own form) — showing the box here would let an organizer fill it and watch
             it vanish from the site with no explanation. Whatever was typed stays, the same rule
             the pair follows switching between `PAID` and `DONATION`. */}

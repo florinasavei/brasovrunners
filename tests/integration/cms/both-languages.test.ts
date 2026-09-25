@@ -202,6 +202,8 @@ describe("BR-REQ-050-01 the event's optional texts: both languages or neither (ย
     ["the description", { ro: { body: doc("Traseul trece prin centru.") } }, "translations.en.body"],
     ["the rules", { en: { rules: doc("Headphones are not allowed.") } }, "translations.ro.rules"],
     ["the programme's notes", { ro: { schedule: doc("Ridicarea kiturilor de la 8.") } }, "translations.en.schedule"],
+    // The route / training description in the "Traseul" card (ยง387).
+    ["the route description", { en: { routeDescription: doc("Water at km 4, then the climb.") } }, "translations.ro.routeDescription"],
     ["what to bring", { en: { checklist: "Water and a cap." } }, "translations.ro.checklist"],
     ["the search-engine title", { ro: { seoTitle: "Crosul festivalului" } }, "translations.en.seoTitle"],
     ["the search-engine description", { en: { seoDescription: "Run with us on Sunday." } }, "translations.ro.seoDescription"],
@@ -264,7 +266,7 @@ describe("BR-REQ-050-01 the event's optional texts: both languages or neither (ย
   });
 });
 
-describe("the club's discount on an EXTERNAL-registration PAID event's own fee, both languages or neither (ยงNNN)", () => {
+describe("the club's discount on an EXTERNAL-registration PAID event's own fee, both languages or neither (ยง389)", () => {
   const EXTERNAL_PAID = {
     registrationMode: "EXTERNAL",
     externalProvider: "Alt club",

@@ -1,5 +1,5 @@
 {
-  "id": "fa12b6ed-9b43-45a7-87a1-910ac4ef59e0",
+  "id": "2e54a874-71bf-4cbe-b888-40f46ef7a80c",
   "prevId": "9e84b552-1667-4c9d-9c4f-f3ca0118bbdf",
   "version": "7",
   "dialect": "postgresql",
@@ -839,6 +839,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "route_description": {
+          "name": "route_description",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "checklist": {
           "name": "checklist",
           "type": "text",
@@ -865,12 +871,6 @@
         },
         "seo_description": {
           "name": "seo_description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "discount_note": {
-          "name": "discount_note",
           "type": "text",
           "primaryKey": false,
           "notNull": false

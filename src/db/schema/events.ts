@@ -745,6 +745,13 @@ export const eventTranslations = pgTable(
      */
     scheduleJson: jsonb("schedule_json"),
     /**
+     * The route / training description, per language (§387): the pit stops, the climbs, what to
+     * expect — and a map, which is a picture in the text (§72–§73), not a field of its own.
+     * Same editor and contract as the description; written in the "Traseul" card; shown under
+     * `#route` on the event page with the route's own links. Null when the organizer wrote none.
+     */
+    routeDescriptionJson: jsonb("route_description"),
+    /**
      * "What to bring", one line, per language (`DECISIONS.md` §81): it goes on the
      * confirmation and the reminder — the two emails a participant keeps. Editorial, so it
      * lives on the translation; plain text, at most 300 characters, because an email is read
@@ -786,12 +793,15 @@ export const eventTranslations = pgTable(
     seoDescription: text("seo_description"),
 
     /**
-     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §NNN):
+     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §389):
      * shown only on an `EXTERNAL`-registration, `PAID` event — the organizer sets the price, the
      * club only knows what its members get off it. Free text, at most 200 characters (checked in
      * `content/events/fields.ts`, not here — the same discipline `checklist` follows), both
-     * languages or neither. Null on every other event, and the service clears it when the mode or
-     * the cost type no longer needs it, so a row never carries a discount nobody can read.
+     * languages or neither. Null on every other event: the service clears it whenever a saved
+     * event stops being `EXTERNAL` + `PAID`, whether the words were posted in the same save
+     * (`translationColumnsFrom`) or the mode moved from a settings-only save that posts no words
+     * at all (`clearDiscountNoteIfNotAllowed`) — an Organizer with settings rights but no text
+     * rights leaves no stale note nobody can read.
      */
     discountNote: text("discount_note"),
 

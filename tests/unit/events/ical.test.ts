@@ -251,7 +251,7 @@ describe("the calendar file", () => {
     expect(donation).toContain("Donație: pe wingsforlifeworldrun.com · sugerat 50 lei");
   });
 
-  it("carries an EXTERNAL-registration PAID event's cost as «Cost: {amount}, la organizator», with the discount note (§NNN)", () => {
+  it("carries an EXTERNAL-registration PAID event's cost as «Cost: {amount}, la organizator», with the discount note (§389)", () => {
     const external = calendarDescription(
       { ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei pentru membri" },
       labelsRo,
