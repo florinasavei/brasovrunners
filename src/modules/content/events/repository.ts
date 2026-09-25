@@ -85,6 +85,8 @@ export async function countConfirmedAndCheckedInByEvent<T extends Record<string,
       checkedIn: sql<number>`count(*) FILTER (WHERE ${registrations.checkedInAt} IS NOT NULL)`.mapWith(Number),
     })
     .from(registrations)
+    // Real rows only, as `countDesk` (§30, AGENTS.md §12.6; §NNN).
+    .where(eq(registrations.kind, "REAL"))
     .groupBy(registrations.eventId);
   return new Map(rows.map((row) => [row.eventId, { confirmed: row.confirmed, checkedIn: row.checkedIn }]));
 }

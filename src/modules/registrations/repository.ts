@@ -711,6 +711,13 @@ export type EventForExpiry = {
  * `WAITLISTED` there to want the place, so without this a runner who never signed would keep it
  * until the race while everybody after them was turned away. Counted like one more person
  * waiting: one newcomer, one hold, the oldest deadline first.
+ *
+ * The same after registration has closed (§NNN). `fillAvailableSpots` then makes no offer — one
+ * would be born lapsed — but the place a lapsed hold gives back is still wanted: the desk gives it
+ * to somebody waiting (`promoteFromWaitlistByStaff`) or to the runner standing there with a paper
+ * (`confirmByStaff`), both under the same lock and both after this sweep. Keeping the hold here
+ * would leave them "the event is full" for a place nobody is holding. The guard against dead
+ * offers lives in `fillAvailableSpots` alone.
  */
 async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -785,7 +792,14 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   if (releasing.length > 0) {
     await db
       .update(registrations)
-      .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
+      /*
+        The number goes with the place here too (§220, §NNN). This sweep was the one that forgot:
+        a lapsed hold kept its provisional number, the settle — which reads only final numbers as
+        taken — gave that number to somebody else as their final one, and re-allocating the lapsed
+        row at the desk (`confirmByStaff`, §160) then adopted it as *its* final number and hit the
+        unique index, so the runner standing there with a signed paper could never be confirmed.
+      */
+      .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", provisionalBibNumber: null, updatedAt: now })
       .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
   }
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public

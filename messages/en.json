@@ -272,9 +272,11 @@
       "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
+      "VERY_EASY": "Very easy",
       "EASY": "Easy",
       "MODERATE": "Moderate",
-      "HARD": "Hard"
+      "HARD": "Hard",
+      "VERY_HARD": "Very hard"
     },
     "costValues": {
       "FREE": "Free",
@@ -929,6 +931,13 @@
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
+      "coordinates": "Coordinates (lat, lng)",
+      "coordinatesHelp": "Optional: latitude, longitude — e.g. 45.6427, 25.5887. Copy them from Google Maps: right-click the point → the first line. Used only for the weather, when the map link does not carry them (a short link, a venue's page).",
+      "weatherPlace": {
+        "map": "The weather is read for the point in the map link ({coordinates}).",
+        "typed": "The weather is read for these coordinates ({coordinates}).",
+        "club": "The weather is read for {place} ({coordinates}): the map link carries no coordinates and none are typed."
+      },
       "locationHelp": "The place, as you would tell a friend: a name, a street, or both — in Romanian and in English, each for its own language's page. If it is called the same in both, press “Same name in English”: while the two say the same, what you type in Romanian is written in English too.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
@@ -1056,9 +1065,11 @@
       "delete": "Delete",
       "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
       "difficultyValues": {
+        "VERY_EASY": "Very easy",
         "EASY": "Easy",
         "MODERATE": "Moderate",
-        "HARD": "Hard"
+        "HARD": "Hard",
+        "VERY_HARD": "Very hard"
       },
       "costValues": {
         "FREE": "Free",
@@ -2188,11 +2199,17 @@
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
           "todo": "Done on 19 September 2026: the widget “brasovrunners-site” exists and both keys are on both Vercel projects — this row turns green on the next deployment. The registration form already has a trap field and a fill-time check, which stop the simple bots; Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest.",
           "done": "The registration form has the anti-bot check on.",
+          "misconfigured": "Both keys are set, but Cloudflare says the secret key itself is wrong — mistyped, revoked, or belongs to another widget. Nobody is refused registration by this: a check that cannot run fails open (`DECISIONS.md` §205), which is exactly why nothing else on the platform noticed until this row existed. Fix the key below; until then the site's bot defence is silently down to the trap field and the fill-time check alone.",
           "how": [
             "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
             "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
             "✓ In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
+          ],
+          "howMisconfigured": [
+            "Cloudflare → Turnstile → the “brasovrunners-site” widget → copy the Secret key again (or Rotate Secret Key if it may have leaked).",
+            "Vercel → the production project (and QA, with its own key if it has one) → Settings → Environment Variables: replace TURNSTILE_SECRET_KEY. Redeploy.",
+            "Reload this page after the deployment: the row turns green once Cloudflare accepts the secret again. A test registration is not required — this row is checked without one."
           ]
         },
         "declarationArchiveMail": {
@@ -3906,7 +3923,7 @@
     "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
     "weather": {
       "title": "Weather forecast",
-      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast.",
+      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
       "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
       "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
       "stale": "Open-Meteo (public, keyless) — last answer at {when}, too old to show. The pages and the reminders show no weather until it answers.",
@@ -4220,6 +4237,18 @@
     "wind": "wind {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
+    "feelsLike": "feels like {degrees} °C",
+    "precipitation": "{amount} mm of precipitation",
+    "gusts": "gusts {speed} km/h",
+    "humidity": "humidity {percent}%",
+    "uv": "UV index {index}",
+    "rainShort": "{percent}% rain",
+    "hours": "Hour by hour, from the start",
+    "atStart": "Weather at the start",
+    "place": {
+      "event": "For the event's place",
+      "club": "For {place}"
+    },
     "codes": {
       "clear": "Clear",
       "mainlyClear": "Mostly clear",

@@ -1,5 +1,5 @@
 {
-  "id": "b94e2168-b684-4963-8237-b993698fb80d",
+  "id": "07fc02c4-8569-4c4f-ba3e-ed0942258531",
   "prevId": "702b9941-49e2-4168-84ba-f1e057cd6690",
   "version": "7",
   "dialect": "postgresql",
@@ -3357,18 +3357,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "terms_version": {
-          "name": "terms_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "terms_accepted_at": {
-          "name": "terms_accepted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "privacy_notice_version": {
           "name": "privacy_notice_version",
           "type": "integer",
@@ -4036,9 +4024,11 @@
       "name": "event_difficulty",
       "schema": "public",
       "values": [
+        "VERY_EASY",
         "EASY",
         "MODERATE",
-        "HARD"
+        "HARD",
+        "VERY_HARD"
       ]
     },
     "public.event_status": {

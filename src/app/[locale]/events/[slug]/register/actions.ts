@@ -9,6 +9,7 @@ import { clearFormDraft, stashFormDraft, stashSubmittedFacts } from "@/modules/r
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
+import { publicFormEvent } from "@/modules/registrations/public-form-event";
 import { submitRegistration } from "@/modules/registrations/service";
 import { consumeAndRegisterAnotherPerson } from "@/modules/registrations/token-actions";
 import { ANOTHER_LINK_INVALID, ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
@@ -87,19 +88,8 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
       if (!internalEvent) redirect(getPathname({ locale, href: "/events" }));
       registered = await consumeAndRegisterAnotherPerson(
         another,
-        {
-          id: internalEvent.id,
-          eventStatus: internalEvent.eventStatus,
-          registrationMode: internalEvent.registrationMode,
-          startsAt: internalEvent.startsAt,
-          registrationOpensAt: internalEvent.registrationOpensAt,
-          registrationClosesAt: internalEvent.registrationClosesAt,
-          capacity: internalEvent.capacity,
-          raceId: internalEvent.raceId,
-          publishedAt: publicEvent.publishedAt,
-          timezone: internalEvent.timezone,
-          minAge: internalEvent.minAge,
-        },
+        // The whole row the allocator needs, the participation window included (§104, §NNN).
+        publicFormEvent(internalEvent, publicEvent.publishedAt),
         readRegistrationForm(form, locale),
         {
           turnstile: verdict,
@@ -143,21 +133,9 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
 
     await submitRegistration(
       db,
-      {
-        id: internalEvent.id,
-        eventStatus: internalEvent.eventStatus,
-        registrationMode: internalEvent.registrationMode,
-        startsAt: internalEvent.startsAt,
-        registrationOpensAt: internalEvent.registrationOpensAt,
-        registrationClosesAt: internalEvent.registrationClosesAt,
-        capacity: internalEvent.capacity,
-        raceId: internalEvent.raceId,
-        publishedAt: publicEvent.publishedAt,
-        // The day the minimum age is counted against is the race's own (§321), and so is the
-        // number (§329).
-        timezone: internalEvent.timezone,
-        minAge: internalEvent.minAge,
-      },
+      // The whole row the allocator needs: the race's own day and minimum age (§321, §329), and the
+      // participation window, which a verified runner's restart is held until (§104, §NNN).
+      publicFormEvent(internalEvent, publicEvent.publishedAt),
       readRegistrationForm(form, locale),
       new Date(),
       "REAL",

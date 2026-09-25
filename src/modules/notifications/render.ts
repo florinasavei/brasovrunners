@@ -560,7 +560,20 @@ async function renderRow(
       purpose === "COMPLETE_DECLARATION" && eventId
         ? (eventDetails?.startsAt ?? (await findEventStartsAt(db, eventId)))
         : undefined;
-    const placeUntil = purpose === "COMPLETE_DECLARATION" ? (eventStartsAt ?? holdExpiresAt) : holdExpiresAt;
+    /*
+      The verification link dies when the registration's own link does (§377, §NNN): the lapse
+      written on the row when it entered `PENDING_EMAIL_CONFIRMATION`, or — on a row written before
+      the column — the club's hours from now. It used to borrow `holdExpiresAt`, which that state
+      never has, and so lived the fourteen-day default: after the job had lapsed the row at 48 hours,
+      the link was still good, was spent on a click, and the page said "confirmed, now sign" to a
+      registration that no longer existed (BR-REQ-031-03 criterion 2).
+    */
+    const placeUntil =
+      purpose === "COMPLETE_DECLARATION"
+        ? (eventStartsAt ?? holdExpiresAt)
+        : purpose === "VERIFY_REGISTRATION_EMAIL"
+          ? (registration?.emailLinkExpiresAt ?? emailLinkExpiresAt(now, settings))
+          : holdExpiresAt;
     const expiresAt = placeUntil && placeUntil.getTime() > now.getTime() ? placeUntil : defaultExpiresAt;
     const issued = await issueActionToken(db, {
       participantId: row.participantId,

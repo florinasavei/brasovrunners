@@ -529,3 +529,40 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
     }
   });
 });
+
+describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
+  const reading = {
+    hourAt: 0,
+    code: 3,
+    kind: "overcast",
+    glyph: "cloud",
+    temperatureC: 12.4,
+    precipitationProbability: 30,
+    windKmh: 9,
+    feelsLikeC: 10,
+    precipitationMm: 0,
+    gustKmh: 20,
+    humidity: 70,
+    uvIndex: 1,
+  } as const;
+
+  it("shows the glyph and the degrees among the card's marks, the word for a screen reader alone", async () => {
+    const html = withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading })));
+    const pill = /<span\b[^>]*data-testid="card-weather"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[0] ?? "";
+    expect(pill).toMatch(/<svg\b[^>]*aria-hidden="true"/);
+    expect(pill).toContain('<span aria-hidden="true">12 °C</span>');
+    expect(text(pill)).toContain("Vremea la start: Înnorat, 12 °C");
+    // The rain, the wind and the details are the page's, never the card's.
+    expect(text(html)).not.toContain("șanse de ploaie");
+    expect(text(html)).not.toContain("rafale");
+    // Before the title: in the marks row, not a line of its own under the facts.
+    expect(html.indexOf('data-testid="card-weather"')).toBeLessThan(html.indexOf("<h2"));
+  });
+
+  it("is on the series card for its next date, and on neither card without a forecast", async () => {
+    const withWeather = withoutStyles(await markup(createElement(SeriesCard, { members: series(), index: 0, now: NOW, weather: reading })));
+    expect(withWeather).toContain('data-testid="card-weather"');
+    expect(withoutStyles(await single())).not.toContain('data-testid="card-weather"');
+    expect(withoutStyles(await repeated())).not.toContain('data-testid="card-weather"');
+  });
+});

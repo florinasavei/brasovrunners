@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import pg from "pg";
 import { computeContentHash } from "../../src/modules/legal-documents/domain/content-hash";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-039-01, `DECISIONS.md` §396 (amending §32 and §143) — the public participant list says
@@ -96,8 +96,11 @@ async function insertDraft(client: pg.Client, translations: Translation[]): Prom
 /** Approve a draft the way the club does, which also expires the public pages' copy (§333). */
 async function approve(page: Page, id: string): Promise<void> {
   await page.goto(`/ro/admin/legal/${id}`);
+  // A tick that lands mid-hydration is lost (§NNN, the audit's flake): wait, as every other backoffice click does.
+  await hydrated(page);
   const form = page.getByTestId("approve-version-form");
   await form.getByRole("checkbox").check();
+  await expect(form.getByRole("checkbox")).toBeChecked();
   await form.getByRole("button", { name: "Aprobă și publică" }).click();
   await confirmDialog(page);
   await expect(page).toHaveURL(/\/admin\/legal/);

@@ -114,22 +114,31 @@ export async function issueActionToken<T extends Record<string, unknown>>(
   const tokenHash = hashTokenSecret(secret);
 
   const token = await db.transaction(async (tx) => {
-    await tx
-      .update(emailActionTokens)
-      .set({ invalidatedAt: now })
-      .where(
-        and(
-          eq(emailActionTokens.purpose, purpose),
-          isNull(emailActionTokens.usedAt),
-          isNull(emailActionTokens.invalidatedAt),
-          registrationId === null
-            ? and(
-                eq(emailActionTokens.participantId, participantId),
-                isNull(emailActionTokens.registrationId),
-              )
-            : eq(emailActionTokens.registrationId, registrationId),
-        ),
-      );
+    /*
+      The one purpose whose earlier links stay live (§NNN): each "register another person" email
+      (§389) promises its own link for the club's email-link window, and a family fills the form
+      once per person before opening the inbox. The address's limit is counted under the event's
+      lock whenever one is used, and each is single use, so several live links cannot add a
+      registration the limit refuses. The partial unique index leaves this purpose out to match.
+    */
+    if (purpose !== "REGISTER_ANOTHER_PERSON") {
+      await tx
+        .update(emailActionTokens)
+        .set({ invalidatedAt: now })
+        .where(
+          and(
+            eq(emailActionTokens.purpose, purpose),
+            isNull(emailActionTokens.usedAt),
+            isNull(emailActionTokens.invalidatedAt),
+            registrationId === null
+              ? and(
+                  eq(emailActionTokens.participantId, participantId),
+                  isNull(emailActionTokens.registrationId),
+                )
+              : eq(emailActionTokens.registrationId, registrationId),
+          ),
+        );
+    }
 
     const [row] = await tx
       .insert(emailActionTokens)

@@ -272,9 +272,11 @@
       "EVENT_COMPLETED": "Evenimentul s-a încheiat"
     },
     "difficultyValues": {
+      "VERY_EASY": "Foarte ușor",
       "EASY": "Ușor",
       "MODERATE": "Mediu",
-      "HARD": "Avansat"
+      "HARD": "Greu",
+      "VERY_HARD": "Foarte greu"
     },
     "costValues": {
       "FREE": "Gratuit",
@@ -929,6 +931,13 @@
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "coordinates": "Coordonate (lat, lng)",
+      "coordinatesHelp": "Opțional: latitudine, longitudine — de ex. 45.6427, 25.5887. Copiază-le din Google Maps: clic dreapta pe punct → prima linie. Folosite doar pentru vreme, când linkul hărții nu le conține (un link scurt, pagina unui loc).",
+      "weatherPlace": {
+        "map": "Vremea se citește acum pentru punctul din linkul hărții ({coordinates}).",
+        "typed": "Vremea se citește acum pentru aceste coordonate ({coordinates}).",
+        "club": "Vremea se citește acum pentru {place} ({coordinates}): linkul hărții nu conține coordonate și nu sunt scrise altele."
+      },
       "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă — în română și în engleză, fiecare pe pagina limbii lui. Dacă se numește la fel în ambele, apasă „Același nume și în engleză”: cât timp cele două spun același lucru, ce scrii în română se scrie și în engleză.",
       "locationCopyToEnglish": "Același nume și în engleză",
       "locationEnglishLeftBehind": "În engleză scrie tot „{place}”. Dacă s-a mutat locul, schimbă-l și aici.",
@@ -1056,9 +1065,11 @@
       "delete": "Șterge",
       "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
       "difficultyValues": {
+        "VERY_EASY": "Foarte ușor",
         "EASY": "Ușor",
         "MODERATE": "Mediu",
-        "HARD": "Avansat"
+        "HARD": "Greu",
+        "VERY_HARD": "Foarte greu"
       },
       "costValues": {
         "FREE": "Gratuit",
@@ -2188,11 +2199,17 @@
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
           "todo": "Făcut pe 19 septembrie 2026: widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel — rândul devine verde la următoarea publicare. Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli; Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul.",
           "done": "Formularul de înscriere are verificarea anti-bot pornită.",
+          "misconfigured": "Ambele chei sunt puse, dar Cloudflare spune că secretul (Secret key) în sine e greșit — scris greșit, revocat sau al altui widget. Nimeni nu e refuzat la înscriere din cauza asta: o verificare care nu poate rula lasă înscrierea să treacă (`DECISIONS.md` §205), și tocmai de asta nimic altceva de pe platformă nu observase până acum. Corectează cheia mai jos; până atunci apărarea anti-bot a site-ului stă doar pe capcana ascunsă și verificarea timpului de completare.",
           "how": [
             "✓ Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
             "✓ Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
             "✓ În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
+          ],
+          "howMisconfigured": [
+            "Cloudflare → Turnstile → widgetul „brasovrunners-site” → copiază din nou Secret key (sau Rotate Secret Key dacă a putut fi expus).",
+            "Vercel → proiectul de producție (și QA, cu cheia lui proprie dacă are una) → Settings → Environment Variables: înlocuiește TURNSTILE_SECRET_KEY. Redeploy.",
+            "Reîncarcă această pagină după deploy: rândul devine verde imediat ce Cloudflare acceptă din nou secretul. Nu e nevoie de o înscriere de test — rândul se verifică fără una."
           ]
         },
         "declarationArchiveMail": {
@@ -3906,7 +3923,7 @@
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
     "weather": {
       "title": "Prognoza vremii",
-      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
       "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",
@@ -4220,6 +4237,18 @@
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
+    "feelsLike": "se simte ca {degrees} °C",
+    "precipitation": "{amount} mm precipitații",
+    "gusts": "rafale {speed} km/h",
+    "humidity": "umiditate {percent}%",
+    "uv": "indice UV {index}",
+    "rainShort": "{percent}% ploaie",
+    "hours": "Pe ore, de la start",
+    "atStart": "Vremea la start",
+    "place": {
+      "event": "Pentru locul evenimentului",
+      "club": "Pentru {place}"
+    },
     "codes": {
       "clear": "Senin",
       "mainlyClear": "Predominant senin",

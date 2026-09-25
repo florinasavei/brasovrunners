@@ -162,6 +162,28 @@ export function mayReportState(
 }
 
 /**
+ * A declaration link that is still live, on a registration that has moved on (§NNN).
+ *
+ * The token can outlive the state it was sent for: the declaration's lives until the start
+ * (§160), and nothing invalidates it when the hold lapses, the runner cancels from "Înscrierile
+ * mele" or staff cancel. The page used to render the full signing form for such a row, and the
+ * press then ended on the error page. Only a `PENDING_DECLARATION` hold or a `WAITLIST_OFFERED`
+ * offer can be signed (`service.ts#signDeclaration`); for every other state this is the notice the
+ * page shows in the form's place — the same sentences a spent link gets, from the same table,
+ * because the question the person is asking is the same one: where does my registration stand.
+ * Null when the form is the right answer.
+ */
+export function describeMovedOnDeclarationLink(
+  purpose: "COMPLETE_DECLARATION" | "WAITLIST_OFFER",
+  status: RegistrationStatus,
+): { message: SpentLinkMessage; next: SpentLinkNext } | null {
+  if (status === "PENDING_DECLARATION" || status === "WAITLIST_OFFERED") return null;
+  // `ALREADY_USED` is the one reason the table answers with the state; the link has done its work.
+  const view = describeActionLink({ purpose, reason: "ALREADY_USED", status });
+  return view.view === "ALREADY_DONE" ? { message: view.message, next: view.next } : null;
+}
+
+/**
  * The whole decision, as one table.
  *
  * `status` is the registration's state read at the moment of the request, never inferred from

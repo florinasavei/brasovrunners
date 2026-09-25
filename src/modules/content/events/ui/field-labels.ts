@@ -41,6 +41,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
     "event.locationToBeAnnounced": inBox("place", t("editor.placeToBeAnnounced")),
     "event.mapUrl": inBox("place", t("editor.mapUrl")),
+    "event.coordinates": inBox("place", t("editor.coordinates")),
     "event.registrationMode": inBox("registration", t("editor.registrationMode")),
     "event.capacity": inBox("registration", t("editor.capacity")),
     "event.waitlistCapacity": inBox("registration", t("editor.waitlistCapacity")),
