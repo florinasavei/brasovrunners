@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -12,7 +12,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 import { ADDRESS_CAP_SETTING_KEY } from "@/modules/registrations/address-cap";
-import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
+import { familyRegistrationOpen, LEGACY_ONE_PER_ADDRESS_CONSTRAINT } from "@/modules/registrations/family-gate";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 
 /**
@@ -25,7 +25,8 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
  *
  * The first case holds on either schema — with the one-registration-per-address constraint of
  * today, and without it after the contract release. The second needs the contract release (the
- * family flow is closed until then, `family-gate.ts`) and says so when it is skipped.
+ * family flow is closed until then, `family-gate.ts`), so it performs it on this database — drops
+ * the old constraint for itself and restores it in teardown — and never skips.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -36,6 +37,7 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
   const NOW = new Date("2026-09-25T10:00:00.000Z");
   const createdEventIds: string[] = [];
   let familyOpen = false;
+  let droppedLegacyConstraint = false;
   let previousCap: unknown = undefined;
 
   beforeAll(async () => {
@@ -72,6 +74,10 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
     if (participantIds.length > 0) {
       await db.delete(emailOutbox).where(inArray(emailOutbox.participantId, participantIds));
       await db.delete(participants).where(inArray(participants.id, participantIds));
+    }
+    // The schema as this suite found it — after this suite's rows are gone, so nothing can collide.
+    if (droppedLegacyConstraint) {
+      await db.execute(sql.raw(`ALTER TABLE "registrations" ADD CONSTRAINT "${LEGACY_ONE_PER_ADDRESS_CONSTRAINT}" UNIQUE ("event_id", "participant_id")`));
     }
     // The club's limit as this suite found it.
     await db.delete(platformSettings).where(eq(platformSettings.key, ADDRESS_CAP_SETTING_KEY));
@@ -120,11 +126,15 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
     expect(rows).toHaveLength(1);
   });
 
-  it("the emailed links pressed together cannot pass the club's limit per address", async (context) => {
+  it("the emailed links pressed together cannot pass the club's limit per address", async () => {
+    // The contract release, on this database only and for this case only: the old constraint is
+    // dropped here and put back in `afterAll`, so the proof runs on every run rather than waiting
+    // for a schema that does not exist yet.
     if (!familyOpen) {
-      context.skip("the family flow is closed until the contract release drops registrations_event_participant_unique");
-      return;
+      await db.execute(sql.raw(`ALTER TABLE "registrations" DROP CONSTRAINT "${LEGACY_ONE_PER_ADDRESS_CONSTRAINT}"`));
+      droppedLegacyConstraint = true;
     }
+    expect(await familyRegistrationOpen(db)).toBe(true);
     await db
       .insert(platformSettings)
       .values({ key: ADDRESS_CAP_SETTING_KEY, value: { registrationsPerAddress: 2 }, updatedAt: NOW })

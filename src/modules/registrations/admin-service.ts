@@ -32,6 +32,7 @@ import {
   findRegistrationByEventAndParticipant,
   findRegistrationById,
   findRegistrationsByEventAndParticipant,
+  lockEventForCapacity,
 } from "./repository";
 import {
   checkIn,
@@ -620,19 +621,25 @@ export async function correctRegisteredName<T extends Record<string, unknown>>(
     The runner's key follows the name (§NNN): it is what tells two people on one address apart, so
     a corrected name that is another registration's on the same address and event would make one
     person of two. Refused with the name box's own field, before the unique index would refuse it
-    as a driver error.
+    as a driver error — and read under the event's lock, the one `submitRegistration` takes before
+    it reads the address, so a rename and a new runner on the same address cannot both find the
+    name free and meet in the index.
   */
   const nameKey = registrationNameKey(trimmed);
-  const siblings = await findRegistrationsByEventAndParticipant(db, current.eventId, current.participantId);
-  if (siblings.some((row) => row.id !== current.id && registrationNameKey(row.registeredName) === nameKey)) {
-    throw new DomainError("VALIDATION_ERROR", "another registration on this address at this event already carries that name", ["registeredName"]);
-  }
-
-  const [updated] = await db
-    .update(registrations)
-    .set({ registeredName: trimmed, nameKey, updatedAt: now })
-    .where(eq(registrations.id, registrationId))
-    .returning();
+  const updated = await db.transaction(async (tx) => {
+    const locked = await lockEventForCapacity(tx, current.eventId);
+    if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+    const siblings = await findRegistrationsByEventAndParticipant(tx, current.eventId, current.participantId);
+    if (siblings.some((row) => row.id !== current.id && registrationNameKey(row.registeredName) === nameKey)) {
+      throw new DomainError("VALIDATION_ERROR", "another registration on this address at this event already carries that name", ["registeredName"]);
+    }
+    const [row] = await tx
+      .update(registrations)
+      .set({ registeredName: trimmed, nameKey, updatedAt: now })
+      .where(eq(registrations.id, registrationId))
+      .returning();
+    return row;
+  });
 
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
