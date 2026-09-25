@@ -671,6 +671,11 @@ export const eventFieldsSchema = z
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
+    /**
+     * "Necesită frontală" (§NNN): bring a headlamp — a checkbox in "Traseul". Optional for a caller
+     * from before it existed, which means none is needed, like `isSpecial`.
+     */
+    headlampRequired: z.boolean().optional().default(false),
     featured: z.boolean(),
     /**
      * A special edition (§168): any number of events may carry it, so there is nothing to

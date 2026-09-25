@@ -1,18 +1,20 @@
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
-import { type BoxProps, summaryWords } from "./box-kit";
+import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
  * Card 1.2, "Traseul" (§350, §358), inside "Ce fel de eveniment": what they run on, how hard, how
- * long and how steep, and where the route can be seen — a separate question from the meeting point
- * (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
+ * long and how steep, whether it is run in the dark (the headlamp, §NNN), and where the route can be
+ * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
@@ -74,6 +76,14 @@ export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
             sx={{ flex: 1 }}
           />
         </Stack>
+        {/* "Necesită frontală" (§NNN): the Wednesday hill run starts in the dark from autumn to
+            spring. A checkbox like the promotion box's: unticked posts nothing, "none needed". */}
+        <Box>
+          <CheckboxField name="event.headlampRequired" defaultChecked={event?.headlampRequired ?? false}>
+            {t("editor.headlampRequired")}
+          </CheckboxField>
+          <BoxNote>{t("editor.headlampRequiredHelp")}</BoxNote>
+        </Box>
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}
