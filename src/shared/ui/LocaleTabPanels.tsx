@@ -19,6 +19,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { countForm } from "@/i18n/count-form";
+import { missingForPublish, missingInLanguage, type PublishGapBox } from "@/modules/content/events/ui/publish-check";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
@@ -74,9 +75,12 @@ export type LocalePanel = {
  * A strip whose boxes publication needs counts them on each tab instead of the bare mark (§NNN;
  * the owner: "I need to see on the cards as well what info is required"): «Română · 2 obligatorii
  * lipsă», «English · complet». The three counted forms (`countForm`) with `{count}`, the word for
- * none, and the reader's language to choose the form in.
+ * none, the reader's language to choose the form in, and the card whose publication gaps are
+ * counted: the count is `missingForPublish` over the form as typed, filtered to that card
+ * (`missingInLanguage`) — the one rule the card's closed line, the map and "Publică" read, never a
+ * second one here.
  */
-export type RequiredCountWords = { one: string; few: string; other: string; complete: string; locale: string };
+export type RequiredCountWords = { one: string; few: string; other: string; complete: string; locale: string; box: PublishGapBox };
 
 /**
  * Which of the panel's boxes make its tab "· incomplet", re-read as the person types (§350):
@@ -274,11 +278,16 @@ export default function LocaleTabPanels({
         // too — and MUI's `Tabs` measures its tabs after every render it makes, a forced layout.
         setIncomplete((current) => (current.length === next.length && current.every((mark, index) => mark === next[index]) ? current : next));
         if (requiredCount && watch.rule === "required") {
-          // A language with no boxes here (the reader may not write it) keeps the server's count.
+          // The publication check itself, over the whole form as it stands (§NNN): the same gaps the
+          // card's closed line and "Publică" name. A language with no boxes here (the reader may not
+          // write it) keeps the server's count.
+          const form = container.closest("form") ?? container;
+          const gaps = missingForPublish(
+            (name) => form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`)?.value ?? "",
+            panels.map((panel) => panel.locale),
+          );
           const missing = panels.map((panel) =>
-            watch.names.some((field) => boxOf(panel.locale, field))
-              ? watch.names.filter((field) => isBlankValue(valueOf(panel.locale, field))).length
-              : (panel.missingCount ?? 0),
+            watch.names.some((field) => boxOf(panel.locale, field)) ? missingInLanguage(gaps, requiredCount.box, panel.locale) : (panel.missingCount ?? 0),
           );
           setCounts((current) => (current.length === missing.length && current.every((count, index) => count === missing[index]) ? current : missing));
         }

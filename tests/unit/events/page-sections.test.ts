@@ -57,7 +57,7 @@ function pageSequence(): PageSectionId[] {
     ['key: "when"', "when"],
     ['key: "where"', "place"],
     ['key: "route"', "course"],
-    ['key: "cost"', "registration"],
+    ['key: "cost"', "cost"],
     ['key: "age"', "registration"],
     // No longer a row of the facts (§401): the partners' own `<section>`, after the `<dl>` closes.
     ['component="section" id="partners"', "coHosts"],
@@ -89,17 +89,19 @@ describe("§NNN the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 13 in that order, and gives the automatic share links none", () => {
+  it("numbers the cards 1 to 14 in that order, and gives the automatic share links none", () => {
     const numbered = numberedPageSections();
-    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 13 }, (_, index) => index + 1));
+    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 14 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
     expect(pageSectionNumber("kind")).toBe(1);
-    expect(pageSectionNumber("links")).toBe(9);
-    expect(pageSectionNumber("startList")).toBe(13);
+    expect(pageSectionNumber("cost")).toBe(7);
+    expect(pageSectionNumber("registration")).toBe(8);
+    expect(pageSectionNumber("links")).toBe(10);
+    expect(pageSectionNumber("startList")).toBe(14);
   });
 
   it("gives every card section the id of the card the editor draws for it", () => {
-    const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeBox", "VideoBox", "StartListBox"]
+    const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeBox", "VideoBox", "StartListBox"]
       .map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`))
       .join("\n");
     for (const section of PAGE_SECTIONS) {
@@ -117,6 +119,7 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<WhenBox ", "when"],
   ["<PlaceBox ", "place"],
   ["<CourseBox ", "course"],
+  ["<CostBox ", "cost"],
   ["<RegistrationBox", "registration"],
   ["<CoHostsBox ", "coHosts"],
   ["<AutomaticSection ", "share"],
@@ -187,6 +190,8 @@ describe("§NNN whether the page draws each section", () => {
     const data = bare();
     data.event = {
       ...data.event,
+      type: "RACE",
+      registrationMode: "INTERNAL",
       locationName: "Parcul Tractorul",
       distanceMeters: 10_000,
       costType: "FREE",
@@ -214,7 +219,14 @@ describe("§NNN whether the page draws each section", () => {
     expect(drawn(data)).toMatchObject({ place: true, course: true });
   });
 
-  it("draws no registration for a group run that states no cost, and one for a race registering here", () => {
+  it("draws the cost row while a cost is stated, on any type, and nothing for an unstated one", () => {
+    expect(drawn(bare()).cost).toBe(false);
+    const free = bare();
+    free.event = { ...free.event, costType: "FREE" };
+    expect(drawn(free)).toMatchObject({ cost: true, registration: false });
+  });
+
+  it("draws no registration for a group run, and one for a race registering here", () => {
     expect(drawn(bare()).registration).toBe(false);
     const race = bare();
     race.event = { ...race.event, type: "RACE", registrationMode: "INTERNAL" };
@@ -232,6 +244,6 @@ describe("§NNN whether the page draws each section", () => {
 
   it("starts a new event as the create page opens it: a free group run with no title yet", () => {
     const states = drawn(BLANK_PAGE_SECTION_DATA);
-    expect(Object.entries(states).filter(([, on]) => on).map(([id]) => id)).toEqual(["kind", "when", "registration", "share"]);
+    expect(Object.entries(states).filter(([, on]) => on).map(([id]) => id)).toEqual(["kind", "when", "cost", "share"]);
   });
 });

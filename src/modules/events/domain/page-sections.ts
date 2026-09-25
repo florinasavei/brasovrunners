@@ -12,7 +12,7 @@ import { youtubeVideoId } from "./video";
  * la editor ca să văd exact ce flow am în pagină").
  *
  * **The page's own order, as a list.** `app/[locale]/events/[slug]/page.tsx` draws the overline,
- * the title, the description, the facts (when, where, the route, the cost and who may enter, the
+ * the title, the description, the facts (when, where, the route, the cost, who may enter, the
  * partners), the registration button, the share links, then `#route`, `#links`, `#schedule`,
  * `#rules`, the film and the start list. A section's place here is where the page first draws
  * something its card holds. The page does not import this list — it is drawn by hand, no table of
@@ -43,6 +43,7 @@ export const PAGE_SECTION_IDS = [
   "when",
   "place",
   "course",
+  "cost",
   "registration",
   "coHosts",
   "share",
@@ -66,6 +67,7 @@ export type PageSectionGlyph =
   | "when"
   | "place"
   | "course"
+  | "cost"
   | "registration"
   | "partner"
   | "share"
@@ -180,10 +182,11 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
       night ||
       texts.some((text) => hasRouteDescription(text.routeDescriptionJson)),
   },
+  // "Cost" (§343, §356): its own row in the facts, on every type, while a cost is stated.
+  { id: "cost", card: "box-cost", anchor: null, glyph: "cost", automatic: false, drawn: ({ event }) => event.costType !== null },
   /*
-    "Cost", who may enter, and the button (`RegistrationCta`): the cost row is the first of them the
-    page draws. A group run takes no registration (§111); an event with no cost stated and nobody
-    to register draws none of it.
+    Who may enter and the button (`RegistrationCta`), under the cost row. A group run takes no
+    registration (§111); an event nobody registers for draws neither.
   */
   {
     id: "registration",
@@ -191,7 +194,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     anchor: null,
     glyph: "registration",
     automatic: false,
-    drawn: ({ event }) => event.costType !== null || (takesRegistrations(event.type) && event.registrationMode !== "NONE"),
+    drawn: ({ event }) => takesRegistrations(event.type) && event.registrationMode !== "NONE",
   },
   // "Împreună cu": each partner's card, the last of the facts (§344).
   { id: "coHosts", card: "box-cohosts", anchor: null, glyph: "partner", automatic: false, drawn: ({ event }) => readCoHosts(event).length > 0 },

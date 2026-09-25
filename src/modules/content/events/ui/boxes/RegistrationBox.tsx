@@ -7,10 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { costPaidToExternalOrganizer, EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
-import { identicalInBothLanguages, isWrittenText } from "@/shared/forms/both-languages";
-import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
@@ -25,18 +22,14 @@ import {
   bibsSummary,
   confirmationSummary,
   conditionsSummary,
-  initialCostTypeOf,
   registrationSummary,
   registrationWindowSummary,
   summaryDate,
 } from "../box-summaries";
-import CostFields from "../CostFields";
-import { DiscountNoteFields } from "../TranslationFields";
-import GlyphSelect from "../GlyphSelect";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
 import WallTimeField from "../WallTimeField";
-import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
@@ -63,9 +56,9 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * "Participare și înscrieri" (§350): what it costs, how people register — here, with another
- * organizer, or not at all — and under which rules; on the page, the cost row, who may enter and
- * the button (§NNN: the card sits where the page draws the first of them). Registration's rules are
+ * "Participare și înscrieri" (§350): how people register — here, with another organizer, or not at
+ * all — and under which rules; on the page, who may enter and the button, under the cost row (§NNN:
+ * the cost is its own card, `CostBox`, just above this one, where the page draws its row). Registration's rules are
  * in this one box, as named cards: the period, who may enter and what they sign, the confirmation
  * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
  * printing). The public list was the fifth card here (owner requirement 1 of §350); since §NNN it is
@@ -73,21 +66,14 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  *
  * **Only what the chosen mode needs is shown** (`OnlyForMode`): "Pe site" shows the capacity and
  * the cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
- * takes no registration at all (§111): its sentence replaces everything under the cost. Every
+ * takes no registration at all (§111): its sentence replaces everything here. Every
  * hidden field stays in the document — hidden, not removed — so switching back finds what was
  * typed, and the service ignores what the mode hides (`ignoreHiddenFields`, before its schema). No
  * mode-dependent box carries a browser `required`: the server decides; and while hidden, the boxes
  * are read-only, so a `min` or a `pattern` left unmet out of sight never stops the save (`ShownWhen`).
  *
- * The cost's amount and its payment or donation link sit with the cost, at the top (§343,
- * `CostFields`, which shows them only while the chosen kind needs them); the waiting list's length
- * sits beside the capacity (§350, the waiting-list cap), and "not here" stores no length either.
- *
- * **A new event starts free** (§398; the owner: "by default toate evenimentele sunt gratuite"):
- * the cost select preselects `FREE` only when `event === null` (the create page); an edited
- * event, unstated cost included, keeps exactly what it has. Because the select always posts —
- * folded or not, `<details>` still submits what is inside it — a save that never opened this box
- * on the create page still writes `FREE`, with no change needed to the schema or the column.
+ * The waiting list's length sits beside the capacity (§350, the waiting-list cap), and "not here"
+ * stores no length either.
  */
 export default async function RegistrationBox({
   event,
@@ -101,7 +87,6 @@ export default async function RegistrationBox({
   locale,
   now,
   clubDeadlines,
-  languages,
 }: BoxProps & {
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
@@ -117,8 +102,6 @@ export default async function RegistrationBox({
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
   locale: string;
-  /** Every language's row, for the discount note's own strip inside the cost card (`DECISIONS.md` §394). */
-  languages: readonly LanguageEntry[];
 }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
@@ -128,47 +111,6 @@ export default async function RegistrationBox({
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
-  // A new event starts on "Gratuit" (§398, `initialCostTypeOf`); an existing one keeps what it has.
-  const initialCostType = initialCostTypeOf(event);
-  // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind
-  // that has one (§343) — what the page will say, on the box's closed line. `initialCostType`
-  // rather than `event?.costType` so the create page's own "Gratuit" default reads here too.
-  const costAmount = initialCostType === "PAID" || initialCostType === "DONATION" ? (event?.costAmount ?? "").trim() : "";
-  // "cu reducere" (`DECISIONS.md` §394): the closed cost line names the club's discount when the
-  // event is `EXTERNAL` + `PAID` and at least one language carries a note — read off the strip's
-  // own rows, never a query of its own.
-  const hasDiscountNote = languages.some((entry) => isWrittenText(entry.translation.discountNote));
-  const discounted = event ? costPaidToExternalOrganizer(event) && hasDiscountNote : false;
-  // Whether the note may be typed at all right now (`DECISIONS.md` §394): the event's stored
-  // mode and cost, not the live select — a reader without `mayEditSettings` cannot change either,
-  // and one with it sees the same strip inside `CostFields`, which does watch the live select.
-  const discountNoteApplies = event !== null && costPaidToExternalOrganizer(event);
-  // The strip itself, one instance, used both inside `CostFields` (settings editors, who can also
-  // change the cost type live) and on its own for a words-only reader (`RegistrationBox:183`):
-  // the club's one role for "the words" (§103) must be able to write this note without settings
-  // rights, so it renders outside the settings gate too, gated on the stored mode/cost instead.
-  const discountNotePanels = (
-    <LocaleTabPanels
-      idPrefix="discount-note"
-      panels={languages.map((entry) => ({
-        locale: entry.translation.locale,
-        label: entry.label,
-        content: <DiscountNoteFields translation={entry.translation} mayEdit={entry.mayEdit} />,
-      }))}
-      identical={{
-        names: ["discountNote"],
-        warning: t("editor.identical.warning"),
-        mark: t("editor.identical.tab"),
-        initial: (() => {
-          const [first, ...rest] = languages;
-          return first ? rest.some((entry) => identicalInBothLanguages(first.translation.discountNote, entry.translation.discountNote)) : false;
-        })(),
-      }}
-    />
-  );
-  const costLabel = initialCostType
-    ? `${t(`editor.costValues.${initialCostType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
-    : null;
   const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
   const needsDeclaration = initialMode === "INTERNAL" && declaration === null && event !== null;
   const design = readBibDesign(event?.bibDesign ?? null);
@@ -198,7 +140,8 @@ export default async function RegistrationBox({
 
   const summary = registrationSummary(words, event, {
     takesRegistrations: takesRegistrations(initialType),
-    costLabel,
+    // The cost is its own card since §NNN (`CostBox`), and its closed line says it.
+    costLabel: null,
     declarationVersion: declaration?.version ?? null,
     defaultMinAge: MIN_PARTICIPANT_AGE,
     locale,
@@ -216,54 +159,9 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        <Stack spacing={2}>
-          <SettingsReadOnly />
-          {/* A words-only reader (Redactor, §103) still owns the club's discount note on an
-              EXTERNAL + PAID event, even without the settings rights the rest of this box needs
-              (`DECISIONS.md` §394). */}
-          {discountNoteApplies && discountNotePanels}
-        </Stack>
+        <SettingsReadOnly />
       ) : (
         <Stack spacing={2}>
-          {/* The cost, on every type (moved from "Traseu și detalii"): the empty option is "not
-              stated", a real answer the page shows by omitting the row. */}
-          <GlyphSelect
-            name="event.costType"
-            label={t("editor.fields.costType")}
-            helperText={t("editor.costHelp")}
-            defaultValue={initialCostType}
-            options={[
-              { value: "", label: t("editor.notStated") },
-              ...EVENT_COST_TYPES.map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
-            ]}
-          />
-
-          {/*
-            "Suma" and "Unde se plătește" for a paid event, "Link pentru donație" and "Suma
-            sugerată" for a donation (§343; the owner: "Cu taxă" showed no box for the money, and
-            usually nothing is paid — the exception is Wings for Life, where a donation is made
-            on another site). One pair of columns, relabelled by `CostFields` rather than posted
-            twice; shown only while the chosen kind needs one of them, values kept otherwise.
-          */}
-          <CostFields
-            initialCostType={initialCostType}
-            initialMode={initialMode}
-            costAmount={{ defaultValue: event?.costAmount ?? "", box: box("costAmount") }}
-            costUrl={{ defaultValue: event?.costUrl ?? "", box: box("costUrl", { inputMode: "url" }) }}
-            labels={{
-              paidAmount: t("editor.costAmount"),
-              paidAmountHelp: t("editor.costAmountHelp"),
-              paidUrl: t("editor.costPaidUrl"),
-              paidUrlHelp: t("editor.costPaidUrlHelp"),
-              donationUrl: t("editor.costDonationUrl"),
-              donationUrlHelp: t("editor.costDonationUrlHelp"),
-              donationAmount: t("editor.costDonationAmount"),
-              donationAmountHelp: t("editor.costDonationAmountHelp"),
-            }}
-          >
-            {discountNotePanels}
-          </CostFields>
-
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>
             <BoxNote testId="group-run-no-registration">{t("editor.groupRunNoRegistration")}</BoxNote>
           </OnlyForType>

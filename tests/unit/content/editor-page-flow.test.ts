@@ -156,7 +156,7 @@ describe("§NNN the language tabs count what is missing", () => {
             { locale: "ro", label: "Română", missingCount: missing[0], content: "ro" },
             { locale: "en", label: "English", missingCount: missing[1], content: "en" },
           ],
-          requiredCount: { one: "{count} obligatoriu lipsă", few: "{count} obligatorii lipsă", other: "{count} de obligatorii lipsă", complete: "complet", locale: "ro" },
+          requiredCount: { one: "{count} obligatoriu lipsă", few: "{count} obligatorii lipsă", other: "{count} de obligatorii lipsă", complete: "complet", locale: "ro", box: "titleSummary" },
         }),
       ),
     );
@@ -176,6 +176,15 @@ describe("§NNN the language tabs count what is missing", () => {
       expect(Object.keys(catalogue).sort(), locale).toEqual(["few", "one", "other"]);
     }
   });
+
+  it("counts as typed by the publication check itself, filtered to the card — never a second rule", () => {
+    const strip = read("src/shared/ui/LocaleTabPanels.tsx");
+    const count = strip.slice(strip.indexOf('if (requiredCount && watch.rule === "required")'), strip.indexOf("setCounts("));
+    expect(count).toContain("missingForPublish(");
+    expect(count).toContain("missingInLanguage(gaps, requiredCount.box, panel.locale)");
+    expect(count).not.toContain("isBlankValue");
+    expect(read("src/modules/content/events/ui/boxes/TextBoxes.tsx")).toContain("box: required,");
+  });
 });
 
 describe("§NNN the cards' headings and the map", () => {
@@ -191,8 +200,10 @@ describe("§NNN the cards' headings and the map", () => {
     expect(flow.headings.when).toBe("4 · Data și ora — apare pe pagină");
     expect(flow.headings.place).toBe("5 · Locul — apare pe pagină");
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
-    expect(flow.headings.video).toBe("12 · Filmul — gol, nu apare pe pagină");
-    expect(flow.headings.startList).toBe("13 · Lista publică a participanților — gol, nu apare pe pagină");
+    expect(flow.headings.cost).toBe("7 · Cost — apare pe pagină");
+    expect(flow.headings.registration).toBe("8 · Participare și înscrieri — gol, nu apare pe pagină");
+    expect(flow.headings.video).toBe("13 · Filmul — gol, nu apare pe pagină");
+    expect(flow.headings.startList).toBe("14 · Lista publică a participanților — gol, nu apare pe pagină");
     expect("share" in flow.headings).toBe(false);
     currentLocale = "en";
     const en = await pageFlow(saved());
@@ -212,6 +223,7 @@ describe("§NNN the cards' headings and the map", () => {
       "box-when",
       "box-place",
       "box-course",
+      "box-cost",
       "box-registration",
       "box-cohosts",
       "box-links",

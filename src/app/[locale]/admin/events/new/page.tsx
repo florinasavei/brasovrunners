@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import CostBox from "@/modules/content/events/ui/boxes/CostBox";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
@@ -234,7 +235,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <WhenBox {...box} heading={flow.headings.when} />
               <PlaceBox {...box} languages={languages} heading={flow.headings.place} />
               <CourseBox {...box} languages={languages} heading={flow.headings.course} />
-              <RegistrationBox {...box} heading={flow.headings.registration} declarations={declarations} locale={locale} clubDeadlines={deadlines} languages={languages} />
+              <CostBox {...box} languages={languages} heading={flow.headings.cost} />
+              <RegistrationBox {...box} heading={flow.headings.registration} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
               <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />

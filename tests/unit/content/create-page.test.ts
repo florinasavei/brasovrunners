@@ -61,6 +61,7 @@ describe("the create page is the editor's page", () => {
       "<WhenBox",
       "<PlaceBox",
       "<CourseBox",
+      "<CostBox",
       "<RegistrationBox",
       "<CoHostsBox",
       "<LinksBox",
