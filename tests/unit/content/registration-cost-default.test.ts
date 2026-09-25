@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { eq } from "drizzle-orm";
-import { createEvent } from "@/modules/content/events/service";
+import { createEvent, saveEventFields } from "@/modules/content/events/service";
 import { initialCostTypeOf } from "@/modules/content/events/ui/box-summaries";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -49,9 +49,11 @@ describe("§NNN initialCostTypeOf agrees with RegistrationBox's use of it", () =
 
 /**
  * §NNN — the "saved value" half, proven through the create service rather than by reading
- * `RegistrationBox`'s source: a create posted with the cost box never opened writes exactly what
- * the closed `<details>` submits — `costType: "FREE"`, no amount, no link — and the row reads
- * back `FREE`, not null and not the DB column's own default.
+ * `RegistrationBox`'s source: a create posted with `costType` omitted — what a form that never
+ * renders the box (or a caller that never mentions it) would post — writes `FREE` on its own,
+ * because the service now defaults it on create; the row reads back `FREE`, not null and not
+ * the DB column's own default. A second case proves an edit given the same omission is not
+ * touched: the service only defaults on create, never on save.
  */
 describe("§NNN a create that never opens the cost box saves FREE, and reads back FREE", () => {
   let db: TestDatabase;
@@ -98,9 +100,9 @@ describe("§NNN a create that never opens the cost box saves FREE, and reads bac
         declarationDocumentId: "",
         externalProvider: "",
         externalRegistrationUrl: "",
-        // Exactly what a closed CostFields box still submits (§343): the select's own
-        // `defaultValue` from `initialCostTypeOf(null)`, and the two amount/link fields empty.
-        costType: "FREE",
+        // `costType` genuinely absent — no key at all, not even `null` — the same as
+        // `costAmount`/`costUrl` when a caller is not editing the cost fields. This proves the
+        // service's own create-time default, not merely that it stores what it was given.
         costAmount: "",
         costUrl: "",
         translations: {
@@ -114,5 +116,82 @@ describe("§NNN a create that never opens the cost box saves FREE, and reads bac
     expect(row.costType).toBe("FREE");
     expect(row.costAmount).toBeNull();
     expect(row.costUrl).toBeNull();
+  });
+
+  it("leaves a saved cost type alone when a save posts no cost type", async () => {
+    const created = await createEvent(db, {
+      actor: admin,
+      fields: {
+        type: "GROUP_RUN",
+        eventStatus: "SCHEDULED",
+        timezone: "Europe/Bucharest",
+        startsAtWallTime: "2026-10-18T18:00",
+        endsAtWallTime: "",
+        raceStartsAtWallTime: "",
+        locationName: "Parcul Tractorul",
+        locationAddress: "",
+        surface: null,
+        difficulty: null,
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: "NONE",
+        participantListVisibility: "HIDDEN",
+        capacity: "",
+        registrationOpensAtWallTime: "",
+        registrationClosesAtWallTime: "",
+        declarationDocumentId: "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        costType: "PAID",
+        costAmount: "50 RON",
+        costUrl: "",
+        translations: {
+          ro: { slug: "cursa-cu-plata", title: "Cursă cu plată", excerpt: "Kilometri împreună." },
+          en: { slug: "paid-race", title: "Paid race", excerpt: "Kilometres together." },
+        },
+      },
+    });
+
+    const saved = await saveEventFields(db, {
+      actor: admin,
+      eventId: created.id,
+      expectedVersion: created.version,
+      fields: {
+        type: "GROUP_RUN",
+        eventStatus: "SCHEDULED",
+        timezone: "Europe/Bucharest",
+        startsAtWallTime: "2026-10-18T18:00",
+        endsAtWallTime: "",
+        raceStartsAtWallTime: "",
+        locationName: "Parcul Tractorul",
+        locationAddress: "",
+        surface: null,
+        difficulty: null,
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: "NONE",
+        participantListVisibility: "HIDDEN",
+        capacity: "",
+        registrationOpensAtWallTime: "",
+        registrationClosesAtWallTime: "",
+        declarationDocumentId: "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        // No cost type posted — genuinely absent, an edit that never opens the cost box, or a
+        // caller that does not touch it. The service must not treat this as "make it FREE" the
+        // way create does, nor as "clear it": the stored value stays exactly as it was.
+        costAmount: "",
+        costUrl: "",
+      },
+    });
+
+    const [row] = await db.select().from(events).where(eq(events.id, saved.id));
+    expect(row.costType).toBe("PAID");
   });
 });

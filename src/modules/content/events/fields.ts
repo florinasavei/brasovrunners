@@ -299,7 +299,7 @@ function placeRule(
  * and left the required one blank is refused.
  */
 function costRule(
-  fields: { costType: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
+  fields: { costType?: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
   ctx: z.RefinementCtx,
 ): void {
   if (fields.costType === "PAID" && fields.costAmount !== undefined && !fields.costAmount) {
@@ -603,7 +603,13 @@ export const eventFieldsSchema = z
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
-    costType: optionalEnum(EVENT_COST_TYPES),
+    // §NNN — optional, like `costAmount`/`costUrl` below: absent means this caller is not
+    // editing the cost fields at all, not "clear it". The service defaults an *absent* value to
+    // `FREE` only on create (`eventColumnsFrom`, the owner: "by default toate evenimentele sunt
+    // gratuite"); a save that omits it leaves the stored value untouched, the same discipline
+    // `links` and `bibDesign` follow. A caller that posts `""` (the closed box's own default,
+    // or a dropdown reset to "not stated") still writes `null`, on create and on edit alike.
+    costType: optionalEnum(EVENT_COST_TYPES).optional(),
     /**
      * What a paid event costs, or what a donation suggests (§343): free text, at most 60
      * characters, required by `costRule` below when `costType` is `PAID`. Optional in the input

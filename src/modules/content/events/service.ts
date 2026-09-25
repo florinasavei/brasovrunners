@@ -371,7 +371,7 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
 }
 
 /** The columns of `events` a form writes, in one place, so create and save cannot drift. */
-function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
+function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, options?: { isCreate?: boolean }) {
   return {
     type: fields.type,
     surface: fields.surface,
@@ -408,8 +408,14 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     locationToBeAnnounced: fields.locationToBeAnnounced,
-    difficulty: fields.difficulty,
-    costType: fields.costType,
+    // §NNN — the owner: "by default toate evenimentele sunt gratuite". A create that posts no
+    // cost type at all (the field absent — `costType` is optional, like `costAmount`/`costUrl`
+    // above) stores `FREE`, the same default the form's own select preselects
+    // (`initialCostTypeOf`); an edit that posts none leaves the stored value alone, exactly the
+    // discipline `costAmount`/`costUrl` already follow. This is the only place either can
+    // default it, since `eventColumnsFrom` is what create and save both write through — and a
+    // caller that posts an explicit value, including `null` for "not stated", always writes it.
+    ...(fields.costType === undefined ? (options?.isCreate ? { costType: "FREE" as const } : {}) : { costType: fields.costType }),
     // Absent means this caller is not editing the cost fields (§343), the discipline `links`
     // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
     // is in the boxes even while the chosen kind does not need one of them.
@@ -1951,7 +1957,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     const [event] = await tx
       .insert(events)
       .values({
-        ...eventColumnsFrom(parsed, times),
+        ...eventColumnsFrom(parsed, times, { isCreate: true }),
         editorialStatus: "DRAFT",
         createdByStaffUserId: input.actor.id,
         updatedByStaffUserId: input.actor.id,
