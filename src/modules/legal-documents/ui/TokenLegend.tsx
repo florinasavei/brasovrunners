@@ -1,8 +1,7 @@
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import FieldLegend from "@/shared/ui/FieldLegend";
 import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates/tokens";
 
 /**
@@ -17,7 +16,8 @@ import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates
  *
  * A Server Component, and each token is plain text inside a `<code>`: selecting and copying one
  * is the browser's job, and a click-to-insert control would be a client island owning a textarea
- * this form deliberately keeps native.
+ * this form deliberately keeps native. The rows are `shared/ui/FieldLegend`, the layout the
+ * emails' legend shares (§373, email follow-up).
  *
  * `usedIn` marks the ones the current draft already carries — so a text that lost `{{eventDate}}`
  * in an edit says so on the page rather than at the first signature.
@@ -41,50 +41,24 @@ export default async function TokenLegend({ body }: { body?: string }) {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
         {t("tokens.intro")}
       </Typography>
-      <Box
-        component="dl"
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" },
-          columnGap: 2,
-          rowGap: 1,
-          m: 0,
-          alignItems: "baseline",
-        }}
-      >
-        {DECLARATION_TOKENS.map((entry) => (
-          <Box key={entry.token} sx={{ display: "contents" }}>
-            <Typography component="dt" sx={{ m: 0 }}>
-              <Box
-                component="code"
-                sx={{
-                  fontFamily: "monospace",
-                  fontSize: "0.875rem",
-                  bgcolor: "action.hover",
-                  px: 0.75,
-                  py: 0.25,
-                  borderRadius: 0.5,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {entry.token}
-              </Box>
-              {used?.has(entry.token) && (
-                <Chip size="small" variant="outlined" color="success" label={t("tokens.inText")} sx={{ ml: 1 }} />
-              )}
-            </Typography>
-            <Typography component="dd" variant="body2" color="text.secondary" sx={{ m: 0 }}>
-              {t(`tokens.${entry.messageKey}`)} — <em lang={first}>{entry.example[first]}</em>
+      <FieldLegend
+        rows={DECLARATION_TOKENS.map((entry) => ({
+          token: entry.token,
+          meaning: t(`tokens.${entry.messageKey}`),
+          example: (
+            <>
+              <span lang={first}>{entry.example[first]}</span>
               {entry.example[second] !== entry.example[first] && (
                 <>
                   {" / "}
-                  <em lang={second}>{entry.example[second]}</em>
+                  <span lang={second}>{entry.example[second]}</span>
                 </>
               )}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
+            </>
+          ),
+          marks: used?.has(entry.token) ? [{ label: t("tokens.inText"), tone: "success" as const }] : undefined,
+        }))}
+      />
     </Paper>
   );
 }

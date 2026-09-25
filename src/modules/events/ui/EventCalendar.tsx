@@ -49,7 +49,8 @@ export type CalendarLayout = "grid" | "list";
  * Each event is one link with its type's glyph and its surface's (§112). A race is filled in
  * the brand colour, everything else is quiet: the race is what the page advertises, the
  * Monday run is what regulars already know. An event held with a partner wears the handshake
- * at its end (§367), the partner named in the entry's tooltip and accessible name.
+ * at its end (§367), and the generic "Eveniment în parteneriat" / "Partnered event" in the
+ * entry's tooltip and accessible name (amended §375).
  */
 export default async function EventCalendar({
   view,
@@ -114,8 +115,9 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
-        // Held with a partner (§367): the handshake beside the entry, the words in its tooltip.
-        partner={partnerPhrase(tEvent, locale, readCoHosts(event).map((host) => host.name))}
+        // Held with a partner (§367, amended §375): the handshake beside the entry, the generic
+        // "Eveniment în parteneriat" in its tooltip — it never names a partner (there may be several).
+        partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}
         dense={dense}
       />
     );

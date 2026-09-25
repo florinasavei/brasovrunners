@@ -1,7 +1,6 @@
-import Alert from "@mui/material/Alert";
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { BACKOFFICE_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages";
@@ -51,7 +50,6 @@ export default async function AdminLayout({ children, params }: Props) {
     redirect(getPathname({ locale, href: "/sign-in" }));
   }
 
-  const t = await getTranslations("Admin");
   const messages = await getMessages({ locale });
   // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §NNN): shown once by
   // the provider below, which also clears the cookie, so a refresh shows nothing.
@@ -64,21 +62,7 @@ export default async function AdminLayout({ children, params }: Props) {
       merging with them, so this subtree's whole list is named here. `/devs` nests the same.
     */
     <NextIntlClientProvider messages={pickMessages(messages, BACKOFFICE_CLIENT_MESSAGES)} formats={null}>
-      <BackofficeShell
-        locale={locale}
-        staffUser={staffUser}
-        signOut={signOutAction}
-        notice={
-          /*
-            The club writes its own legal text now (`DECISIONS.md` §46), so this no longer says it
-            cannot. What it says instead is the rule that is still true and still easy to trip over:
-            an approved version is never rewritten.
-          */
-          <Alert severity="info" sx={{ mb: 3 }}>
-            {t("legalNotice")}
-          </Alert>
-        }
-      >
+      <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
         {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,
             `DECISIONS.md` §345) — never on a public route, which never imports this shell. The
             toasts the same: one provider, every backoffice form's "it worked" (§NNN). */}

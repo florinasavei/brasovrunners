@@ -31,6 +31,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deletePageAction, savePageAction, transitionPageAction } from "../actions";
 
@@ -68,6 +69,8 @@ export default async function EditPagePage({ params, searchParams }: Props) {
     asserts — which is the other half of the fix, because they did not.
   */
   if (!canReadContent(actor.role)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
 
   const found = await findPageForEditor(getDb(), id);
   if (!found) notFound();

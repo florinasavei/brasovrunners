@@ -27,6 +27,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteAlbumAction, deletePhotoAction, saveAlbumAction, setCoverAction, transitionAlbumAction } from "../actions";
 
@@ -49,6 +50,8 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
 
   const actor = await requireStaff();
   if (!isEditorial(actor.role)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
 
   const db = getDb();
   const found = await findAlbumForEditor(db, id);

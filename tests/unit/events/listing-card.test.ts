@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createTheme } from "@mui/material/styles";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
@@ -303,14 +304,61 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // The clock comes after the date and before the time.
     expect(when.indexOf("2026")).toBeLessThan(when.indexOf('data-testid="ScheduleIcon"'));
     expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("10:00"));
-    expect(text(when)).toBe("Duminică, 27 sept. 2026·10:00");
+    // The event is within the coming twelve months of `NOW`, so the card carries both renderings
+    // of the date — the full one and the year dropped (§366, amended §375) — CSS shows one at a
+    // time by width; both are in the text a crude tag-strip reads.
+    expect(text(when)).toContain("Duminică, 27 sept. 2026");
+    expect(text(when)).toContain("10:00");
   });
 
-  it("draws the route and the cost as the page's pills, and says the surface once — as a pill, not also a chip at the top", async () => {
+  it("never wraps the when line onto a second line, except a race's two named times (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", () => {
+    // `flow`'s row is `nowrap` only for a card, and only while it is not a race's two named
+    // times (`card.wrap`, which stays `wrap` so a race's start time cannot be clipped, §366
+    // amended §375) — and its glyphs and pieces never shrink, so the row cannot break inside a
+    // piece, only between whole ones.
+    const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
+    expect(source).toMatch(/flexWrap:\s*card\s*&&\s*!card\.wrap\s*\?\s*"nowrap"\s*:\s*"wrap"/);
+    expect(source).toContain("flexShrink: 0");
+  });
+
+  it("wraps the when line rather than clip it, for a date more than a year out that keeps its year (a review, 2026-09-24)", async () => {
+    // More than 365 days ahead of `NOW`: the card keeps the year («Sâmbătă, 26 sept. 2027 · 08:00»)
+    // and, kept whole under `nowrap`, would run past the card's width and be cut by its own
+    // `overflow: hidden`. `wrap: !!event.raceStartsAt || (compact && !dateShort)` catches it too,
+    // not only a race's two named times.
+    const html = await single({ startsAt: new Date("2027-09-26T05:00:00Z") });
+    const when = fact(html, "when");
+    expect(text(when)).toContain("2027");
+    // The flow row's own class — the second `MuiBox-root` inside the fact, the first being the
+    // `minWidth: 0` wrapper `cardLine` gives every value: `flex-wrap:wrap`, not `nowrap`.
+    const rowClass = [...when.matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(rowClass, "the flow row's own emotion class").toBeTruthy();
+    expect(rulesFor(html, rowClass!)).toContain("flex-wrap:wrap");
+    expect(rulesFor(html, rowClass!)).not.toContain("flex-wrap:nowrap");
+  });
+
+  it("wraps a past event's when line too: a past date keeps its year, and «Duminică, 20 sept. 2026 · 07:00» does not fit a 320-pixel card (a review, 2026-09-24)", async () => {
+    // A date before `NOW` also carries its year (`dateWithinYear` requires a non-negative
+    // difference). Measured in Chromium: "Duminică, 27 sept. 2026 · [clock] 18:30" is 227 pixels
+    // against the 226 a 320-pixel card leaves the row, and with a series' lead in front 310
+    // against a 360-pixel card's 266 — so every year-carrying card may wrap between whole pieces.
+    // Flex wrapping breaks the line only when the row does not fit, so one that fits stays one line.
+    const html = await single({ startsAt: new Date("2026-08-30T05:00:00Z") });
+    const when = fact(html, "when");
+    expect(text(when)).toContain("Duminică, 30 aug. 2026");
+    // One rendering only: no year-less copy for a past date.
+    expect([...when.matchAll(/Duminică, 30 aug\./g)]).toHaveLength(1);
+    const rowClass = [...when.matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(rowClass, "the flow row's own emotion class").toBeTruthy();
+    expect(rulesFor(html, rowClass!)).toContain("flex-wrap:wrap");
+    expect(rulesFor(html, rowClass!)).not.toContain("flex-wrap:nowrap");
+  });
+
+  it("draws the route and the cost as the page's pills, in order — surface, difficulty, distance, climb, cost — and says the surface once, not also a chip at the top", async () => {
     const html = await single();
     // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.
-    expect(chipLabels(html)).toEqual(["Alergare de grup", "În parteneriat cu Brașov Running Festival", "8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
-    expect(chipLabels(fact(html, "pills"))).toEqual(["8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
+    expect(chipLabels(html)).toEqual(["Alergare de grup", "Eveniment în parteneriat", "Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    expect(chipLabels(fact(html, "pills"))).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
     // No middle dot between them and none of the old line's long words.
     expect(text(fact(html, "pills"))).not.toContain("·");
     expect(html).not.toContain("diferență de nivel");
@@ -324,9 +372,9 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(block).not.toContain('data-testid="HandshakeIcon"');
   });
 
-  it("carries its marks at the top: special, cancelled", async () => {
+  it("carries its marks at the top: special, cancelled, the partner marker never a name (§367, amended §375)", async () => {
     const html = await single({ isSpecial: true, eventStatus: "CANCELLED" });
-    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "În parteneriat cu Brașov Running Festival", "Anulat"]);
+    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "Eveniment în parteneriat", "Anulat"]);
   });
 
   it("prints the summary with no link and the address as its host", async () => {
@@ -348,10 +396,10 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("in English too", async () => {
     currentLocale = "en";
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Group run", "With Brașov Running Festival", "8 km", "250 m climb", "Moderate", "Mixed", "Free"]);
+    expect(chipLabels(html)).toEqual(["Group run", "Partnered event", "Mixed", "Moderate", "8 km", "250 m climb", "Free"]);
     expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
-    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026·10:00$/);
+    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026Sunday, 27 Sept?·10:00$/);
     expect(fact(html, "when")).toContain('data-testid="ScheduleIcon"');
   });
 });
@@ -366,7 +414,10 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
       "Happy Monday",
       "În fiecare luni, la 18:30",
       "O oră de alergare ușoară",
-      "Următoarea:Luni, 28 sept. 2026·18:30",
+      // The date is within the coming twelve months of `NOW`, so both renderings are in the
+      // markup — the full one, then the year dropped (§366, amended §375) — CSS shows one at a
+      // time by width.
+      "Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30",
       "Parcul Titulescu, la fântâna arteziană",
       "8 km",
       "Gratuit",
@@ -378,8 +429,10 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
     // «Următoarea» is not a line of its own any more: it leads the date's line, and the clock the time.
     const when = fact(html, "when");
-    expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026·18:30");
+    expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30");
     expect(when).toContain('data-testid="ScheduleIcon"');
+    // The row never wraps: nowrap, and every glyph and piece kept whole (§366, amended §375).
+    expect(when).toContain("white-space:nowrap");
   });
 
   it("sets the rhythm a line's gap under the title — no nearer than the title's link reaches, so the line never sits on it (§366)", async () => {

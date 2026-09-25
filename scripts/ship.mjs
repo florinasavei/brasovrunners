@@ -3,10 +3,11 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V1.83-2026-09-24 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V1.85-2026-09-25 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
- *   2. waits for the batch PR's checks, stops unless every one is green, and merges it into `qa`;
+ *   2. waits for the batch PR's checks, stops unless every one is green, and merges it into `qa`
+ *      — an already-merged batch PR is taken as done, and the run continues from step 3;
  *   3. opens the `qa → main` release PR, or takes the one already open;
  *   4. waits for `qa`'s docs-check run on that merge, rerunning it once when the only failure is the
  *      Google Fonts download the build makes (a flake, not the code);
@@ -92,12 +93,21 @@ const onProduction = await until(async () => {
 if (!onProduction) stop(`production never reported ${PREV}`);
 
 console.log(`== batch PR #${PR}`);
-ghMayFail("pr", "checks", PR, "--watch", "--interval", "30");
-const batchState = checksState(PR);
-console.log(`checks: ${batchState}`);
-if (batchState !== "SUCCESS") stop(`PR #${PR} is not green`);
-gh("pr", "merge", PR, "--merge");
-const batchMerge = gh("pr", "view", PR, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
+const batchInfo = JSON.parse(gh("pr", "view", PR, "--json", "state,baseRefName,mergeCommit"));
+let batchMerge;
+if (batchInfo.state === "MERGED" && batchInfo.baseRefName === "qa") {
+  batchMerge = batchInfo.mergeCommit.oid;
+  console.log(`PR #${PR} is already merged into qa (${batchMerge.slice(0, 8)}): continuing from step 3`);
+} else if (batchInfo.state === "MERGED") {
+  stop(`PR #${PR} is already merged, but into ${batchInfo.baseRefName}, not qa`);
+} else {
+  ghMayFail("pr", "checks", PR, "--watch", "--interval", "30");
+  const batchState = checksState(PR);
+  console.log(`checks: ${batchState}`);
+  if (batchState !== "SUCCESS") stop(`PR #${PR} is not green`);
+  gh("pr", "merge", PR, "--merge");
+  batchMerge = gh("pr", "view", PR, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
+}
 
 console.log("== the qa run on that merge");
 const qaRun = await until(() => {

@@ -37,6 +37,7 @@ import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-id
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
@@ -73,6 +74,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const actor = await requireStaff();
   if (!canReadRegistrations(actor.role)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
   const mayManage = canManageRegistrations(actor.role);
 
   const db = getDb();

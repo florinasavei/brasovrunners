@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.83-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.85-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15179,3 +15179,140 @@ Two accepted limits:
 - The hidden runner costs a few hundred bytes of HTML per submit button on public pages.
 
 Baseline `BR-V1.83-2026-09-24`.
+
+## 372. A phone's footer fits in one row without clipping, and opening the fold no longer breaks it
+
+A follow-up to §365 (a19c28fb), caught in review before merge.
+
+Two defects in §365's one-row footer, found by measuring the built page in Chromium rather than trusting the summary "verified in a real browser": at 320px the fold's own label ("Despre club") was clipped to "Des…" — the summary had 47px and needed 82 — and opening the fold on any width below `md` broke the row, dropping the social marks, the privacy notice and the language onto a line under the whole panel instead of beside the switch.
+
+**The clipping** is closed by giving every other item on the row less of its own padding at `xs` before anything shrinks its target size: the fold's own marker gap, the privacy link's padding, and RO/EN's padding and inter-item gap. That alone closes the gap from 35px to 6px. The last 6px comes from the social marks alone, which drop from 32 to 28 pixels — the one item still above WCAG 2.5.5 AA's 24px floor once every other item had already given up what it could.
+
+**The row-break** was a structural bug, not a sizing one: the fold's panel lived inside `<details>`, and `<details>[open]` grew to `calc(100% - the switch's width)` so the panel had room, which left too little of the row for the marks, the notice and the language — `flexWrap` moved them to a second line, and since a flex line's height is its tallest item, that line sat under the whole panel rather than beside the switch. The panel is a sibling of the row now, shown purely in CSS with `:has()` on their common ancestor, reading the `<details>`'s own `[open]` state — native `<details>` still owns opening and closing it, and there is still no JavaScript here.
+
+**The exception's true numbers, footer-only, below 600px:** 32px for the switch, the fold's summary, the privacy notice and each side of the language switcher; 28px for the three social marks, the one item that had to give up more.
+
+**The owner's decision, 2026-09-24 22:50, supersedes the earlier "all visible, smaller" brief (32 px targets).** Eight items with their words need about 370 px: the switch, "Despre club", three marks, "Confidențialitate", RO and EN. A phone gives the bar 288 to 328 px. So on a phone the bar keeps every item but not every word. The row is: the switch, the fold's summary with its words, Facebook / Instagram / Strava, the privacy notice as a lock, then RO and EN as flags. This is the DOM order at every width, with no CSS `order`; from `sm` the desktop shows the same order, with the word "Confidențialitate" in place of the lock.
+
+The lock is `@mui/icons-material/LockOutlined`, decorative, inside the same link to the privacy notice. The link's accessible name and its `title` tooltip are both "Nota de confidențialitate (GDPR)" / "Privacy notice". On the phone the word is not rendered.
+
+The two languages are flags only on the phone. The current one is marked twice: `aria-current="true"` and a 2 px ring in the primary colour. Each item's `title`, and the other language's `aria-label`, is the language named in its own words. The two-letter code is clipped to one pixel rather than removed, so a screen reader still reads it for the current language. That item is a `<span>`, which cannot carry a name of its own.
+
+**Geometry.** Every item on the bar is a square of the bar's target, set in one place, `src/shared/ui/footer-target.ts`:
+- 24 px below 360 px, which is WCAG 2.2 SC 2.5.8's AA minimum;
+- 28 px from 360 px;
+- 44 px from `sm` (600 px), exactly as before.
+
+It applies to the switch, the summary's height, the three marks, the privacy link and each language item. At 320 px the fixed items take 168 px, which leaves about 150 px for "Despre club" (about 85 px) or "About the club" (about 100 px), so the label is never cut.
+
+The 360-px step is a band closed at both ends, `(min-width:360px) and (max-width:599.95px)`. It is not a theme breakpoint, because a new key would add a band to every responsive value on the site. It is not open-ended either, because MUI writes its own breakpoint queries ahead of every other key in an `sx`. An open-ended `min-width:360px` rule would then come after the `sm` rule and win, giving 28 px on a desktop. The unit test found exactly that.
+
+This is a footer-bar-only exception to criterion 6. The fold's panel keeps 44-px links at every width.
+
+**The fold owns its panel again.** The panel is inside the `<details>`, after its summary. The panel's own box is zero pixels wide, so the fold adds nothing to the row's width beyond the summary. Its content overflows to the right, visibly, capped at 40rem and at the viewport width less 60 px (the widest switch, 44 px, plus 16 px). The row is aligned to the top, so opening the fold only grows the footer downward and every item stays on the switch's line.
+
+This replaces two earlier attempts:
+- the fold grown to nearly the row's width, which pushed the marks onto a second line;
+- a sibling panel shown by a `:has()` rule, which the `<details>` no longer owned.
+
+No `:has()` and no JavaScript remain.
+
+**The scroll reserve.** `scroll-padding-bottom` on a phone is 40 px: the bar is at most 28 px plus its border, with some room to spare. It was 96 px, sized for two 44-px lines. From 600 px it stays 52 px.
+
+(round 3: comments, the panel width reserve, the unit test stubs — no behaviour change) Round 2 of the footer/build-stamp fix (fix/footer-one-row) closed out the reviewer's four remaining findings without changing behavior further: the BuildBadge and layout comments were brought in line with what §372's SiteFooter change actually ships (the stamp inside the "Despre club" fold below `md`, pinned to the bar's own bottom-right corner from `md`), the open panel's width reserve was widened from 60 to 80 pixels so it clears a classic 17-pixel Windows scrollbar rather than the previously assumed "under 16 pixels", and the unit test was given real social-URL stubs so its guarded assertions on the Facebook/Instagram/Strava marks — their DOM order ahead of the privacy link and their bar-sized targets — actually execute in `yarn check` instead of silently no-opping.
+
+Baseline `BR-V1.84-2026-09-25`.
+
+## 373. Email follow-up: the fields as a legend, like the declaration's, and each half of a bilingual email in its own language's event words
+
+**Context.** The owner, 2026-09-24, on `/admin/emails`: "I like how the placeholders are listed here on the documents — need to have the same on emails, because now they are just plain inline text." And the rule from §354, "multi-lingual, always": that section's review found that the second half of every bilingual message (§96) still read the event's title, "what to bring" and the place's own name in the registrant's language. §354 left this to its own decision because it looked like a second read per message and a change to every subject line. The re-review of the starting-text change (§373, the placeholders) also asked for two things. First, the sample should have a value for every field, since the helper line said the preview had all of them. Second, the save guard should stop refusing ordinary club prose.
+
+**1. The fields are a legend under each message's words** (`notifications/ui/EmailFieldLegend.tsx`, `shared/ui/FieldLegend.tsx`).
+- It is a named card, closed (§336), under the editor. Its closed line counts the fields and the ones used here, for example "12 câmpuri · 4 folosite aici", through `countForm`, or "niciunul folosit aici".
+- Inside: one row per field of the closed set (§247). Each row has the field in a code chip, what it becomes in words, and an example. The example is the value the page's one sample constant (`domain/email-sample.ts`) gives the field in the language being edited, so it is exactly what the preview shows.
+- The order and the marks:
+  - First, the fields this message's platform text uses, marked "folosit în textul platformei".
+  - Then the rest of the fields this message carries. Those a send may lack (`EMAIL_COPY_CONDITIONAL_FACTS`) are marked "poate lipsi", and the paragraph rule is said once above the rows.
+  - Last, the fields this message never carries, dimmed, with "nu se completează în acest mesaj" and no example. Examples: `{staffRole}` outside the invitation, `{bibNumber}` on the address confirmation.
+- Which fields a message carries is one table, `placeholdersFilledBy`, read off `render.ts`. A unit test holds that the platform's own text never names a field its message does not carry.
+- The preview now leaves those fields out too (`emailSampleFor`). A `{staffRole}` the club writes into a reminder previews as nothing, which is what the reminder sends. The platform's own previews are unchanged byte for byte.
+- It is the declaration's layout (§190), shared: `TokenLegend` renders through the same `FieldLegend`.
+  - The rows are plain `dl`/`dt`/`dd` under one styled list. Twenty legends of twelve rows as MUI elements came to about 126 KB of markup on a page that already carries twenty previews; plain elements come to about 72 KB.
+  - On a phone the rows stack and a field name may break, so a 320-pixel card keeps its width. The summary is `Panel`'s 44-pixel bar.
+- The one inline sentence it replaces, and its two catalogue keys, are gone.
+
+**2. Each half of a bilingual message reads its own language's event texts** (`events/repository.ts#findEventNotificationRows`, `notifications/render.ts#createOutboxRenderer`, `templates.ts#renderBilingual`).
+- **No second read.** The query `findEventNotificationDetails` always ran already brought every language's translation row and kept one. `findEventNotificationRows` returns them all.
+- **Once per event per batch.** `createOutboxRenderer()` caches each event's rows for one `processOutboxBatch` call: a batch of twenty reminders for one race is one read, where it used to be twenty.
+  - The drain, the job endpoint and "send now" build one renderer per batch.
+  - It is never a module-level memo. The event's words are read at send time (§331), and a batch lasts seconds.
+  - A failed read is not remembered: the next row asks again, because a failed render is final (`AGENTS.md` §16.1).
+- **What the second half reads:**
+  - The other language's title. That puts it in the second subject whenever a subject carries the title, and in a `{eventTitle}` of the club's own words for that language.
+  - Its "what to bring". When that language has none, the second half says nothing, never the first half's words.
+  - Its own name for the place (`translation.location_name`, else the event's). A place to be announced keeps each half's own sentence (§328).
+- **Unchanged:**
+  - Subjects without a title.
+  - An event with text in one language only, which reads that language in both halves as before.
+  - The outbox row, which stores no event text, so rows queued before this render the same way with the new halves. There is no migration.
+
+**3. The sample has every field, and the guard refuses only the sample** (`domain/email-sample.ts`).
+- `EMAIL_SAMPLE` gains the hold's deadline ("vineri, 2 oct. 2026, 18:30") and the time of signing ("luni, 28 sept. 2026, 19:42"). Both go through the send path's own `formatDay` call, in both languages. The declaration's preview now shows the sentences that name them. Like every sample value, both are refused by the save.
+- The previews on `/admin/emails` render each half with its own language's sample: title, place, checklist and dates.
+- The guard matches each value exactly as the sample writes it, and as a whole word or phrase on both sides.
+  - It is case-sensitive, including for values of several words: the old starting text carried the value verbatim, so a case-blind match only added the club's own prose ("ne vedem la crosul de toamnă").
+  - A hyphen joins two words, so "the autumn cross-country" is not the title and "Ana Popescu-Ionescu" is not the sample runner. An apostrophe does not join ("The autumn cross's route" is still the title).
+  - Letters and combining marks of any script count as letters, and text is compared in NFC.
+- Decided per value, in `email-sample-guard.test.ts`: every value is refused everywhere, exactly as written, except the role "Organizator", which is refused only inside the invitation. A real place written exactly as the sample writes it ("Stația de telecabină Tâmpa") is refused and named with `{eventLocationName}`.
+
+**Not done.**
+- The second half's links (event page, rules, programme) still point at the registrant's language's page.
+- `{currentStatus}` still sends the registration's raw state ("CONFIRMED"), while the sample and the legend show "confirmată".
+- Both are listed as questions for the owner.
+
+Tests:
+- unit: `notifications/email-field-legend.test.ts` (every field with its meaning and example, ordering, dimmed rows, the counted summary in both languages, the old sentence gone, used ⊆ filled, previews per half, the sample's dates), `notifications/email-sample-guard.test.ts` (per-value true positives, prose that must pass), `notifications/email-copy-prefill.test.ts` updated;
+- integration: `notifications/bilingual-event-texts.test.ts` (a Romanian registrant's English half and the reverse, subjects, a one-language checklist, a one-language event, the club's words for the other language, two reads for four messages across two events through the reader seam, a failed read not remembered); `registrations/interest.test.ts` and `registrations/declaration-archive.test.ts` now expect the English title in the second subject;
+- e2e: `email-copy-fields.spec.ts` (the legend at 320 px and on desktop: closed, 44 px, twelve rows, dimmed, no sideways scroll; the preview's second half; presses wait for hydration).
+
+Since the review's fixes landed on the merge with qa (BR-V1.79–V1.82): `eventTitleOther`/`eventChecklistOther` in `renderBilingual` now apply to every message's second half, not only `ORGANIZER_MESSAGE` — the organizer's message reads the same general override rather than a narrower one of its own, which is what the email-follow-up work (each half of a bilingual message in its own language, read once per event per batch) was for all along. `{currentStatus}` is now written in the reader's own language's words through one table, `notifications/domain/registration-status-words.ts`, read by the send path and by the sample the previews and the guard share, so a participant never reads a raw `CONFIRMED`/`WAITLISTED`. The legend's "used" count now names the field in every plural form ("1 câmp folosit aici" / "4 câmpuri folosite aici" / "12 de câmpuri folosite aici"; "1/4/12 field(s) used here"), matching the field-count phrase beside it.
+
+This round of the email follow-up branch closed out the reviewer's remaining findings: the bilingual message's second half now reads `{currentStatus}` in its own language rather than repeating the registrant's word under the other language's sentence — the same `currentStatusOther` pattern every other bilingual field (title, checklist, place, dates) already used. The `otherDetails` lookup in `render.ts` was fixed to actually suppress the second half's event row when the reader's own language has no translation and the row already in use is the fallback (previously a no-op comparison against a freshly built object made the guard always pass). And `placeholdersFilledBy` for the organizer's own message now reads off `ORGANIZER_MESSAGE_PLACEHOLDERS`, the closed set that message type already declares, so the backoffice legend no longer dims `{bibNumber}` (which the organizer's message does carry, settled numbers only) or lights up `{currentStatus}` (which it never carries).
+
+Email follow-up cleanup: the ORGANIZER_MESSAGE branch in `renderEmailData` no longer duplicates setting `eventTitleOther`/`eventChecklistOther`/`eventLocationNameOther` — those three fields are set once, unconditionally, for every bilingual message (the second-half-in-its-own-language work already covers the organizer's message; no separate "second read" was ever needed for it). Test coverage for `{currentStatus}` in a bilingual message's two halves now spans both locales and both statuses, and the field legend's preview of REGISTRATION_STATE_NOTICE is asserted to match the rendered email's first half.
+
+Baseline `BR-V1.84-2026-09-25`.
+
+## 374. The dispatcher: guarding its own context, resuming review correctly, and treating an already-merged batch PR as done
+
+**Amends §368 (2026-09-24).** Five small hardening fixes found while running the dispatcher: `docs/DISPATCHER.md` gains a "Guard your own context" section (grep §/BR-REQ instead of whole-file reads, save workflow results to files and read back only verdicts, delegate investigations to Opus and sweeps/CI-logs/cleanup to Haiku, `tail`/`head`/`-q` never whole logs, hand off in the red band) and a Worktree sweep card (Haiku, low: prune only unlocked/clean/merged-into-origin/qa worktrees). Every brief now opens with a line telling the implementer that owner messages relayed mid-turn are for the orchestrator, not a new instruction — one implementer once read such a message and quit with nothing done. `br-chain.js`'s resumed-implementer path no longer silently skips review when the branch has commits but the implementer reports nothing new (it happened to perf/inp-submit on 2026-09-24: green checks, no review); a `reviewTip` arg lets the dispatcher hand it the tip to review. `scripts/ship.mjs` step 2 now recognises an already-merged batch PR (state MERGED, base qa) and continues from step 3 instead of waiting forever on checks that already ran.
+
+Baseline `BR-V1.82-2026-09-24` unchanged — the orchestrator bumps it when this lands.
+
+Baseline `BR-V1.84-2026-09-25`.
+
+## 375. Amending §366 and §367: the partner marker loses names, the card's date row stays one line on a phone, the pills read terrain-first
+
+No DECISIONS.md edit made — the reviewer's own instructions said no DECISIONS/CHANGELOG/SPECS/baseline edits for this fix-one-branch pass, matching the implementer's original round. The §375 placeholders already present in the branch (and added here) are the `land-batch.mjs` convention the owner's batch-landing script fills in when this PR lands; they are intentionally left as literal `§375` text in code comments, not resolved here.
+
+A review, 2026-09-24/25, of the series card's «Următoarea:» / «Next:» lead found it hidden below MUI's `sm` breakpoint (600px), losing it on every phone rather than only the ones too narrow for it. Its own breakpoint is 345 pixels (measured: the lead next to the date, the clock and the time needs about 245px; a 320-pixel card gives about 226, a 360-pixel one about 266), and below it the lead is visually hidden by a clip technique rather than `display: none`, so a screen reader still reads it at every width. Separately, a card whose date is genuinely more than a year out keeps its year and now wraps between whole pieces rather than being clipped by the card's own `overflow: hidden` — but only for that case (`dateMoreThanYearOut`, a distance check), not for every date lacking the short (no-year) rendering: a past-dated event also lacks that rendering but does not need the extra room, and a first draft of the fix (using `!dateShort` as the review's own literal suggestion) wrapped such a card unnecessarily, caught by the seed's own past-dated card in e2e.
+
+A third review, 2026-09-24, amended the card's "when" row twice more.
+
+A card that keeps its year on a phone is not always a date more than a year out: a date already past keeps it too, and a past-dated card was nowrap. Measured in Chromium, "Duminică, 20 sept. 2026 · 07:00" is 227 pixels against the 226 a 320-pixel card leaves the row, and a series card's lead in front of a past date ("Următoarea: Duminică, 27 sept. 2026 · 18:30", 310) runs past a 360-pixel card's 266, so the Card's own `overflow: hidden` cut the time off. The rule is now one condition: the row may wrap between whole pieces for a race's two named times or whenever the card keeps its year on a phone (`wrap: !!event.raceStartsAt || (compact && !dateShort)`). Flex wrapping breaks only a row that does not fit, so a year-carrying card with room stays one line. The earlier distinction between "more than a year out" and "past" is withdrawn.
+
+The series lead's breakpoint came from one Monday (345 pixels). It is now measured over the widest case: every day of a year, in both languages, in headless Chromium on the built listing (Roboto, 14 pixels, the date bold, the year dropped). Widest in Romanian: "Următoarea: Duminică, 27 sept. · 18:30", 274 pixels. Widest in English: "Next: Wednesday, 30 Sept · 18:30", 240 pixels. The page and the card take 94 pixels around the row at every phone width. So the lead fits from 368 pixels. The breakpoint is 376 (eight pixels to spare for font rendering elsewhere), one number for both languages, since the Romanian lead is the wider. When the row is short of room the lead gives way, never the time: below 376 it is clipped visually, never `display: none`, so a screen reader still reads it. That is a different mechanism from the date's year, which swaps two renderings with `display`. This is the orchestrator's decision, listed for the owner: a 368–375-pixel phone loses a lead that would just fit.
+
+The e2e check now makes its own fixtures rather than relying on what the database holds: a series on the longest Romanian weekday (a Sunday with a two-digit day), one on the longest English weekday (a Wednesday), a race with two times, a run more than a year out and a run already past. It measures each card's row by its pieces' right edge at 320, 360, 390 and 412 pixels in both languages.
+
+Baseline `BR-V1.85-2026-09-25`.
+
+## 376. The /admin/legal notice says what the code enforces and folds shut; a malformed admin id is refused before it reaches the database
+
+No DECISIONS.md edit made (repo convention: docs:land fills §376 placeholders later; this is application code under the fast lane per CLAUDE.md). If a decisions entry is wanted, it would read: the legal-versions explanation now states exactly what the service and deletability rules enforce (frozen once approved; deletable only if unrelied-on and not in force; declaration+notice must both be in effect, not approved, together) and is shown only on /admin/legal rather than on every backoffice page.
+
+§336 addendum: the legal-versions notice on `/admin/legal` was found saying more than the code does — "refused unless a declaration and a privacy notice are both in effect at the same time" reads as one joint condition, where `registerForEvent` refuses on a missing `PRIVACY_NOTICE` alone and the declaration is checked separately, at confirmation. Both language files now say the two refusals apart: no privacy notice blocks registration; no declaration blocks confirming a place. The notice itself also moved: it was rendered by the section's `layout.tsx`, above `{children}` — so it sat over the list page's own saved/refusal alert, its heading and the platform-approve card, the one thing on the page most in need of being seen first when something needs the club's attention. It now lives in `(list)/page.tsx`, directly under the legal.title / legal.intro / whatIs block, as `id="legal-versions"` so `/admin/legal#legal-versions` opens it like every other §336 panel; the layout is back to being a plain role gate. `BackofficeShell`'s `notice` prop, which nothing had called since the notice moved out of it, is removed along with its render slot.
+
+The legal-versions fold's `id` moved from the wrapping `Box` to the `Panel` component itself (its rendered `<details>`), so that `openFoldsAround` — which walks up the DOM from `#legal-versions` — finds the fold to open rather than an inert spacing wrapper. The Box is kept only for its margin-bottom spacing. `tests/unit/legal/legal-notice-fold.test.ts` now asserts the id appears on the `<Panel id="legal-versions" ...>` element rather than a bare `<Box id="legal-versions"`, and separately asserts the RO and EN `Admin.legalNotice.title` strings read from `messages/ro.json` and `messages/en.json` match the expected headings, rather than checking only that the translation key `legalNotice.title` is referenced.
+
+Baseline `BR-V1.85-2026-09-25`.

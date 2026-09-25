@@ -9,6 +9,7 @@ import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { bibPictureUrl } from "@/modules/registrations/bib-design";
 import { env } from "@/shared/config/env";
+import { isUuid } from "@/shared/ids";
 
 /** A club's header or sponsors' strip: one of this site's own WebP variants, so both are small. */
 const PICTURE_MAX_BYTES = 4 * 1024 * 1024;
@@ -46,6 +47,7 @@ export async function GET(
   }
 
   const { id } = await context.params;
+  if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const url = new URL(request.url);
   const locale = url.searchParams.get("locale") ?? routing.defaultLocale;
   if (!hasLocale(routing.locales, locale)) {

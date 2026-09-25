@@ -8,6 +8,15 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.85-2026-09-25
+
+- **A listing card's date and time stay on one line on a phone, a partnered event wears one generic marker, and the route reads in the owner's order.** An event held with partners shows one handshake and "Eveniment în parteneriat" / "Partnered event" — never a partner's name or a count — on its card, series card, hero, calendar entry and page overline; the partners themselves are on the event's page. On a phone a card's date drops its year when the date is within the coming twelve months (the weekday stays), so "Duminică, 27 sept. · 18:30" fits one line; a series card's «Următoarea:» / «Next:» stands in front of it from 376 pixels up (measured on the longest weekday and month in both languages) and gives way below that, never the time. A race's two times, and a date that keeps its year (past, or more than a year out), wrap between whole pieces instead of being cut off by the card. The route's pills read surface, difficulty, distance, elevation on the card and the page, and the hero in the same order. §375.
+- Fixed the legal-versions notice fragment: the id now sits on the Panel's `<details>` itself, not its wrapping Box, so `/admin/legal#legal-versions` opens the fold as intended (§376). §376.
+## BR-V1.84-2026-09-25
+
+- **The phone footer is one row with every item on it.** On a phone the bar now holds, left to right: the light/dark switch, "Despre club", Facebook, Instagram and Strava, a lock that opens the privacy notice and names it on hover and to a screen reader, then the Romanian and English flags, with the current language ringed. On the narrowest phones each is 24 pixels, from 360 pixels wide 28, and on tablets and desktops 44 as before. Opening "Despre club" keeps the row in place and shows its links under it. §372.
+- Cleaned up a leftover comment and a dead duplicate block from the organizer-message bilingual rendering path, and widened the split-halves status and legend test coverage to both locales and both statuses (§373). §373.
+- **The dispatcher keeps its own context small** — grep instead of whole-file reads, delegate sweeps to Haiku, resumed branches still get reviewed, and `yarn ship` skips a batch PR that is already merged §368. §374.
 ## BR-V1.83-2026-09-24
 
 - **The club's name is written in one place.** The page title, the header, the wordmark, the JSON-LD, the share pictures, the calendar, the legal PDF's Author and the sender's default all read `CLUB_NAME`, and the catalogues no longer hold the name: a sentence that names the club takes it as `{club}`. The declaration's token legend uses a made-up event in both languages. A donation event is free to attend in structured data, with its link as a `DonateAction`. The queue panel shows times in the event's own zone, and the legal editor no longer jumps when it loads. §369.
