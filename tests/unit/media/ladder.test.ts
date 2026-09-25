@@ -15,7 +15,7 @@ import {
 import { describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
 
 /**
- * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 20 (`DECISIONS.md` §NNN) — a picture is
+ * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN) — a picture is
  * stored at the widths the site draws it at, and every public `<img>` lets the browser choose.
  *
  * The owner, 2026-09-25: "I wanna choose the quality of the image when uploading it — cuz it's
