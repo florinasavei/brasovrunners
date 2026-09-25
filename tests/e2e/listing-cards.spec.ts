@@ -203,6 +203,54 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
 }
 
 /**
+ * A race that takes registrations here, open now with twelve places, not featured — so it stands
+ * on the listing as a card, not as the hero — published through the backoffice and signed out of
+ * (§NNN). Nobody registers: an event with registrations cannot be deleted, and the spec must leave
+ * the listing as it found it. The waiting-list and full states are the integration test's
+ * (`card-registration.test.ts`), on a real database.
+ */
+async function publishOpenRace(page: Page, created: Created): Promise<{ ro: string; en: string }> {
+  const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+  const title = `Cursă cu locuri ${suffix}`;
+  const titleEn = `Race with places ${suffix}`;
+  const field = (name: string) => page.locator(`[name="${name}"]`);
+  const today = new Date();
+  const day = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 10, 9));
+
+  await signIn(page, "Dev Administrator");
+  await page.goto("/ro/admin/events/new");
+  await hydrated(page);
+  await page.getByRole("combobox", { name: "Tip eveniment" }).click();
+  await page.getByRole("option", { name: "Concurs" }).click();
+  await fillDateField(page, "Începutul evenimentului", ymd(day));
+  await fillTimeField(page, "Ora", "09:00");
+  await field("event.locationName").fill("Stadionul Tineretului");
+  await field("event.locationNameEn").fill("Youth Stadium");
+  // Everything about registration is one box, and the declaration is in its own card (§350).
+  await openEditorBox(page, "Participare și înscrieri");
+  await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+  await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+  await field("event.capacity").fill("12");
+  await openEditorBox(page, "Condiții de participare și declarația");
+  await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
+  await page.getByRole("option").nth(1).click();
+  await field("translations.ro.title").fill(title);
+  await field("translations.ro.slug").fill(`cursa-cu-locuri-${suffix}`);
+  await languageTab(page, "title", "en").click();
+  await field("translations.en.title").fill(titleEn);
+  await languageTab(page, "address", "en").click();
+  await field("translations.en.slug").fill(`race-with-places-${suffix}`);
+  await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
+  await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+  created.push({ title, dates: 1 });
+  await hydrated(page);
+
+  await page.context().clearCookies();
+  return { ro: title, en: titleEn };
+}
+
+/**
  * An event a spec published, deleted from the backoffice's list — one row, whether it is a series'
  * dates (§113, §114) or a single one; `dates` is how many the alert must say were deleted.
  */

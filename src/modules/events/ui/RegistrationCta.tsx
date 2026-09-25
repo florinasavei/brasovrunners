@@ -1,20 +1,16 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
-import { unstable_rethrow } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
-import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { accentOnHover } from "@/theme/surfaces";
 import { DENSITY } from "@/theme/density";
-import { publicFill, registrationCta } from "../domain/registration-cta";
-import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 import { fillPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { readRegistrationDoor } from "./registration-door";
+import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
 /**
  * The one way in to registration, on the two pages a visitor actually reads.
@@ -43,80 +39,22 @@ export default async function RegistrationCta({
   const t = await getTranslations("Event");
   const locale = await getLocale();
 
-  /**
-   * Only an open internal event costs a query.
-   *
-   * `capacity` is deliberately absent from the public columns, so the count needs the internal
-   * row — and asking for it on every event page, including the three quarters of them that take
-   * no registration at all, would be two round trips bought for nothing. `registrationCta`
-   * re-derives the state from the same pure function below; calling it twice is cheaper than
-   * the query this avoids.
-   */
-  let availablePlaces: number | null = null;
-  // The event's own number of places, from the same row the count was read against: the
-  // "out of" of §346's sentence. Null for an uncapped event, and for every event not read here.
-  let capacity: number | null = null;
-  // The waiting list's room and limit (§348), off the same cached read; null for no limit.
-  let waitlistRoom: number | null = null;
-  let waitlistCapacity: number | null = null;
-  if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
-    try {
-      /*
-        From the public cache (§333), and still the allocator's number for this instant: every
-        registration that moves expires it, and the one input the clock changes — a waiting-list
-        offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
-        Without it, an open race's page woke the database for every visitor during exactly the
-        weeks the page is read most. The same entry carries the event's size beside the free
-        places (§346 public fill count) and the waiting list's room and limit (§350 waiting-list
-        length), off the same row the count was taken against, so neither line costs more.
-      */
-      const availability = await cachedPublicAvailability(event.id, now);
-      if (availability) {
-        availablePlaces = availability.available;
-        capacity = availability.capacity;
-        waitlistRoom = availability.waitlistRoom;
-        waitlistCapacity = availability.waitlistCapacity;
-      }
-    } catch (error) {
-      /*
-        The one thing on a page that is never served from a copy (§281).
-
-        The rest of an event page — the date, the place, the rules, the programme — is the same
-        facts it was an hour ago, and showing the last copy of those during an outage costs a
-        reader nothing. How many places are left is not like that: it is the number somebody
-        decides on, the allocator is the only thing that knows it (`AGENTS.md` §10.6), and a
-        stale "3 locuri libere" sends a person through a form to be refused at the end of it.
-
-        So when this one query cannot be answered, this one block says so and the page around it
-        stands. A refresh is what fixes it, and it is offered as a link rather than a promise.
-      */
-      unstable_rethrow(error);
-      console.error("[registration-cta] could not read the availability", error);
-      return <CapacityUnknown slug={event.slug} />;
-    }
-  }
-
-  const cta = registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity }, now);
+  /*
+    The state and the count, read once (`registration-door.ts`, shared with the listing card since
+    §NNN): only an open internal event costs a read, from the public cache (§333), and it is still
+    the allocator's number for this instant. When that one read cannot be answered (§281), this one
+    block says so and the page around it stands. A refresh is what fixes it, and it is offered as a
+    link rather than a promise.
+  */
+  const door = await readRegistrationDoor(event, now);
+  if (door.kind === "UNKNOWN") return <CapacityUnknown slug={event.slug} />;
+  const { cta, fill } = door;
   if (cta.kind === "NONE") return null;
 
   if (cta.kind === "EXTERNAL") {
     return (
       <Box sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
-        <Button
-          // `component="a"` with the organizer's own URL: this leaves the site, so it is a
-          // plain anchor rather than the locale-aware Link. `nofollow` as well as `noopener
-          // noreferrer` — the club does not vouch for an entry form it does not run.
-          component="a"
-          href={cta.url}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          variant="contained"
-          sx={{ ...TAP_TARGET, ...accentOnHover }}
-        >
-          {cta.provider
-            ? t("cta.externalWithProvider", { provider: cta.provider })
-            : t("cta.external")}
-        </Button>
+        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} />
       </Box>
     );
   }
@@ -124,19 +62,9 @@ export default async function RegistrationCta({
   if (cta.kind === "OPEN" || cta.kind === "FULL") {
     // How full it is (§346): the free places read against the event's size. Null — and nothing
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
-    const fill = publicFill(capacity, availablePlaces);
     return (
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, alignItems: "flex-start" }}>
-        <ButtonLink
-          variant="contained"
-          // The one action the page exists for, so it is the one button that lights up under
-          // a pointer (§166). Hover only, and only where hover is real: on a phone `:hover`
-          // sticks after a tap and the button would stay lit for the rest of the visit.
-          sx={{ ...TAP_TARGET, ...accentOnHover }}
-          href={{ pathname: "/events/[slug]/register", params: { slug: event.slug } }}
-        >
-          {cta.kind === "FULL" ? t("cta.joinWaitingList") : t("cta.register")}
-        </ButtonLink>
+        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} />
 
         {fill && (
           <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
@@ -174,7 +102,6 @@ export default async function RegistrationCta({
     the page's own and is untouched by this: it belongs to a window not yet open.
   */
   if (cta.kind === "WAITLIST_FULL" || cta.kind === "FULL_NO_WAITLIST") {
-    const fill = publicFill(capacity, availablePlaces);
     return (
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, alignItems: "flex-start" }}>
         <Typography variant="body1" data-testid="registration-full" sx={{ fontWeight: 500 }}>
