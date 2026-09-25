@@ -211,10 +211,10 @@ describe("§382 the calendar entry names it after the place", () => {
 
   it("the tooltip's lines: the time and title, the place's note, the headlamp, the partner", () => {
     const moved = { kind: "moved" as const, text: "Nu în locul obișnuit: Stația de telecabină Tâmpa" };
-    const html = chip({ note: moved, headlamp: "Frontală necesară", partner: "Eveniment în parteneriat" });
+    const html = chip({ note: moved, headlamp: "Frontală necesară", partner: "Colaborare" });
     const tooltip = html.slice(html.indexOf("data-tooltip-title"), html.indexOf("<a "));
     const lines = [...tooltip.matchAll(/<span class="[^"]*">([^<]+)<\/span>/g)].map((match) => match[1]);
-    expect(lines).toEqual(["19:00 Running up that hill", moved.text, "Frontală necesară", "Eveniment în parteneriat"]);
+    expect(lines).toEqual(["19:00 Running up that hill", moved.text, "Frontală necesară", "Colaborare"]);
   });
 
   it("the calendar hands the words in the reader's language, and none to an unmarked date", async () => {

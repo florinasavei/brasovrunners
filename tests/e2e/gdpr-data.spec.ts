@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { confirmDialog } from "./support/confirm";
 import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
@@ -117,6 +118,7 @@ test.describe("BR-REQ-031-05 the emergency details, for the people they are for 
     await page.getByRole("checkbox", { name: "Nota medicală și acordul pentru ea" }).check();
     await page.locator('form:has([name="health"]) [name="reason"]').fill("cerere scrisă");
     await page.getByRole("button", { name: "Retrage", exact: true }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=consentWithdrawn/);
 
     const healthNotes = await withDatabase(async (client) => {

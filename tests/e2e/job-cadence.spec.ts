@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -35,6 +36,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
 
     await card.getByLabel("Cel mult o dată la").selectOption("30");
     await card.getByRole("button", { name: "Salvează intervalul" }).click();
+    await confirmDialog(page);
 
     await expect(page).toHaveURL(/panel=costs/);
     await expect(main.getByText("Intervalul a fost salvat", { exact: false })).toBeVisible();
@@ -47,6 +49,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await page.goto("/ro/admin/tasks?panel=costs");
     await main.getByTestId("job-cadence").getByLabel("Cel mult o dată la").selectOption("0");
     await main.getByTestId("job-cadence").getByRole("button", { name: "Salvează intervalul" }).click();
+    await confirmDialog(page);
     await expect(main.getByTestId("job-cadence-in-force")).toContainText(/^Setarea în vigoare: la nevoie/);
   });
 });

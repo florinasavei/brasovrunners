@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
@@ -38,7 +39,8 @@ function outcomeOf(error: unknown): { error: string } {
   return { error: isDomainError(error) ? error.code : "UNKNOWN" };
 }
 
-function backTo(path: string, outcome: { error?: string; saved?: string }): never {
+async function backTo(path: string, outcome: { error?: string; saved?: string }): Promise<never> {
+  await flashOutcome(outcome);
   const query = outcome.error ? `?error=${outcome.error}` : `?saved=${outcome.saved ?? "1"}`;
   redirect(`${path}${query}#admin-alert`);
 }
@@ -76,6 +78,7 @@ export async function createAlbumAction(_previous: FormOutcome | null, form: For
     return refused(error, form);
   }
   // Straight to the album, where the photos go in.
+  await flashOutcome({ saved: "albumCreated" });
   redirect(`${albumPath(locale, albumId)}?saved=created#admin-alert`);
 }
 
@@ -93,10 +96,10 @@ export async function saveAlbumAction(_previous: FormOutcome | null, form: FormD
   } catch (error) {
     return refused(error, form);
   }
-  backTo(albumPath(locale, albumId), { saved: "album" });
+  return backTo(albumPath(locale, albumId), { saved: "album" });
 }
 
-export async function transitionAlbumAction(form: FormData): Promise<void> {
+export async function transitionAlbumAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const albumId = text(form, "albumId");
   let outcome: { error?: string; saved?: string };
@@ -112,10 +115,10 @@ export async function transitionAlbumAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(albumPath(locale, albumId), outcome);
+  return backTo(albumPath(locale, albumId), outcome);
 }
 
-export async function deletePhotoAction(form: FormData): Promise<void> {
+export async function deletePhotoAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const albumId = text(form, "albumId");
   let outcome: { error?: string; saved?: string };
@@ -126,7 +129,7 @@ export async function deletePhotoAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(albumPath(locale, albumId), outcome);
+  return backTo(albumPath(locale, albumId), outcome);
 }
 
 export async function setCoverAction(form: FormData): Promise<void> {
@@ -140,18 +143,19 @@ export async function setCoverAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(albumPath(locale, albumId), outcome);
+  return backTo(albumPath(locale, albumId), outcome);
 }
 
-export async function deleteAlbumAction(form: FormData): Promise<void> {
+export async function deleteAlbumAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const albumId = text(form, "albumId");
   try {
     const actor = await requireStaff();
     await deleteAlbum(getDb(), { actor, albumId });
   } catch (error) {
-    backTo(albumPath(locale, albumId), outcomeOf(error));
+    return backTo(albumPath(locale, albumId), outcomeOf(error));
   }
+  await flashOutcome({ saved: "albumDeleted" });
   redirect(`${getPathname({ locale, href: "/admin/gallery" })}?saved=deleted#admin-alert`);
 }
 
@@ -159,7 +163,7 @@ export async function deleteAlbumAction(form: FormData): Promise<void> {
  * Delete a stored picture from the pictures page (`DECISIONS.md` §73). Refused while it is
  * used anywhere — the page says where — so nothing published can lose its picture.
  */
-export async function deletePictureAction(form: FormData): Promise<void> {
+export async function deletePictureAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/gallery/pictures" });
   try {
@@ -167,8 +171,8 @@ export async function deletePictureAction(form: FormData): Promise<void> {
     await deleteMediaAsset(getDb(), { actor, assetId: text(form, "assetId") });
   } catch (error) {
     const outcome = outcomeOf(error);
-    backTo(path, outcome.error === "VALIDATION_ERROR" ? { error: "PICTURE_IN_USE" } : outcome);
+    return backTo(path, outcome.error === "VALIDATION_ERROR" ? { error: "PICTURE_IN_USE" } : outcome);
   }
-  backTo(path, { saved: "deleted" });
+  return backTo(path, { saved: "deleted" });
 }
 

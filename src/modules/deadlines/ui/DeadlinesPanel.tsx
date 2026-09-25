@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { updateDeadlinesAction } from "@/app/[locale]/admin/emails/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -37,6 +38,7 @@ type Props = {
  */
 export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
+  const confirmText = await confirmWords();
   const { deadlines, updatedAt } = state;
   const words = deadlineWords(locale, deadlines);
   const labels = Object.fromEntries(DEADLINE_KEYS.map((key) => [key, t(`emails.deadlines.fields.${key}`)]));
@@ -85,7 +87,14 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen 
         </Stack>
       ) : (
         /* A refused save comes back with every box as typed (§315); `scope` keeps its ids apart from the page's other forms. */
-        <ActionForm action={updateDeadlinesAction} messages={await refusalMessages(labels)} scope="deadlines" data-testid="deadlines-form">
+        /* Asks first (§384): the numbers every participant is given from now on change with it. */
+        <ActionForm
+          action={updateDeadlinesAction}
+          messages={await refusalMessages(labels)}
+          confirm={{ title: t("confirm.deadlinesTitle"), body: t("confirm.deadlinesBody"), confirmLabel: t("emails.deadlines.save"), cancelLabel: confirmText.cancel }}
+          scope="deadlines"
+          data-testid="deadlines-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
             {DEADLINE_KEYS.map((key) => {

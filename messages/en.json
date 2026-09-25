@@ -161,7 +161,7 @@
     "coHost": "Together with",
     "special": "Special edition",
     "partner": {
-      "marker": "Partnered event"
+      "marker": "Partnership"
     },
     "surface": {
       "ASPHALT": "Asphalt",
@@ -753,10 +753,91 @@
       "cancelRegistrationPrintedBody": "Number {number} is already printed; after cancelling it stays retired — never given to anybody else — and must be pulled out of the pile.",
       "repeatTitle": "Create the dates?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
+      "repeatPublishOnBody": "From now on, every new date the series creates goes on the site by itself, in both languages. The dates already created stay as they are.",
       "bibsTitle": "Assign the race numbers?",
       "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay.",
       "bulkEraseTitle": "Erase the ticked registrations for good?",
-      "bulkEraseBody": "This cannot be undone. The places are released through the waiting list and the participants' data leave the record."
+      "bulkEraseBody": "This cannot be undone. The places are released through the waiting list and the participants' data leave the record.",
+      "email": {
+        "one": "An email will be sent to {count} participant.",
+        "few": "An email will be sent to {count} participants.",
+        "other": "An email will be sent to {count} participants."
+      },
+      "emailMessages": {
+        "one": "{count} email from the queue is sent now.",
+        "few": "{count} emails from the queue are sent now.",
+        "other": "{count} emails from the queue are sent now."
+      },
+      "publishTitle": "Publish “{title}”?",
+      "publishBody": "It appears on the site in both languages. An event with registration on the site opens it within its window.",
+      "createPublishTitle": "Create and publish the event?",
+      "unpublishTitle": "Take “{title}” off the site?",
+      "unpublishBody": "It disappears from the site in both languages until you publish it again. What already exists — registrations, photos — stays.",
+      "archiveContentTitle": "Archive “{title}”?",
+      "archiveContentBody": "It disappears from the site in both languages. You can bring it back later, through review and publication again.",
+      "bulkPublishTitle": "Publish the ticked events?",
+      "bulkPublishBody": "Every ticked event with both languages complete appears on the site; the others stay as they are and are counted.",
+      "bulkArchiveTitle": "Archive the ticked events?",
+      "bulkArchiveBody": "They disappear from the site in both languages. You can bring them back later, one at a time.",
+      "saveNoticeTitle": "Save and tell the participants?",
+      "saveNoticeBody": "The changes are saved, and the participants receive “Details updated”, each in their language — if the place, the start or the programme changed, the event was reinstated, or you wrote a note.",
+      "cancelEventTitle": "Cancel “{title}”?",
+      "cancelEventBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants receive “Event cancelled” with your reason.",
+      "cancelEventQuietBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants are not told.",
+      "givePlaceTitle": "Give them a place?",
+      "givePlaceBody": "{name} gets a free place ahead of the waiting list, and the confirmation with the race number.",
+      "setBibTitle": "Save the number?",
+      "setBibBody": "The number stays this person's and is never given to anybody else.",
+      "resendTitle": "Send the email again?",
+      "resendBody": "The email for the current state goes to {name} again, with a new link; the link in the old email stops working.",
+      "reminderTitle": "Send the reminder?",
+      "reminderBody": "{name} receives the pre-race reminder now.",
+      "createRegistrationTitle": "Add the registration?",
+      "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
+      "renameTitle": "Change the name?",
+      "renameBody": "The new name appears on the list, on the race number and in the emails; the old one stays in the log.",
+      "withdrawConsentTitle": "Erase the ticked data?",
+      "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
+      "eraseRegistrationTitle": "Erase the registration for good?",
+      "eraseRegistrationBody": "It cannot be undone. The place is released through the waiting list, and the person's data disappears from the records.",
+      "bulkCancelTitle": "Cancel the ticked registrations?",
+      "bulkCancelBody": "Each place is released and offered to the waiting list. The registrations stay on record as “cancelled”.",
+      "sendNowTitle": "Send the emails now?",
+      "sendNowBody": "The queue goes out now, without waiting for the monitor, and stops at the day's limit.",
+      "interestWithdrawTitle": "Withdraw the address?",
+      "interestWithdrawBody": "The address typed is removed from “Notify me” and no longer receives the announcement that registration opened.",
+      "inviteStaffTitle": "Add the person to the team?",
+      "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter the backoffice as soon as they set a password.",
+      "changeRoleTitle": "Change the role?",
+      "changeRoleBody": "{name} gets the chosen role from the next page they open.",
+      "approvePlatformTitle": "Approve the three texts?",
+      "approvePlatformBody": "From this moment they are in effect on the site, as the club's texts; a correction is a new version.",
+      "approveVersionTitle": "Approve and publish version {version}?",
+      "approveVersionBody": "The text becomes public and can no longer be changed. A later correction means a new version.",
+      "emailPlanTitle": "Change the Mailgun plan?",
+      "emailPlanBody": "The quotas, “how much we can still send” and the cost table follow the new plan from now on.",
+      "contactRecipientsTitle": "Change who receives the contact messages?",
+      "contactRecipientsBody": "Messages from the contact form reach the saved addresses from now on, and only them.",
+      "clubNoticesTitle": "Change who receives the club's copies?",
+      "clubNoticesBody": "Signed declarations, confirmations and the copies of messages to participants — with their personal data — go from now on to the addresses saved, and only to them.",
+      "emailCopyResetTitle": "Go back to the platform's text?",
+      "emailCopyResetBody": "The club's own text for this email, in this language, is lost; emails sent from now on use the platform's text.",
+      "botCheckOnTitle": "Turn the anti-bot check on?",
+      "botCheckOnBody": "The public forms show Cloudflare's “I am not a robot” box; a failed check stops the send.",
+      "botCheckOffTitle": "Turn the anti-bot check off?",
+      "botCheckOffBody": "The public forms no longer ask “I am not a robot”. The hidden trap and the per-address limit stay.",
+      "honeypotOnTitle": "Turn the honeypot on?",
+      "honeypotOnBody": "A hidden field people never see; a form that fills it in is refused.",
+      "honeypotOffTitle": "Turn the honeypot off?",
+      "honeypotOffBody": "The field stays and is logged, but refuses nobody any more.",
+      "deadlinesTitle": "Save the deadlines?",
+      "deadlinesBody": "Every hold, offer and link given from now on takes the new numbers, and the emails and pages say them. Nothing already given changes: a link, a held place or an offer keeps the deadline it got.",
+      "jobCadenceTitle": "Save the interval?",
+      "jobCadenceBody": "The email queue and the maintenance run at most once per chosen interval; an email may wait that long.",
+      "neonLimitsTitle": "Save the Neon limits?",
+      "neonLimitsBody": "A project that reaches its monthly quota is suspended until the next period — the site does not answer until then.",
+      "neonPlanTitle": "Change the Neon plan?",
+      "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -2296,7 +2377,7 @@
       "incomplete": "Both languages must be complete before publishing. Missing: {detail}.",
       "readOnly": "Your role can read pages but not change them.",
       "delete": "Delete page",
-      "deleteTitle": "Delete this page?",
+      "deleteTitle": "Delete “{title}”?",
       "deleteBody": "The page and both translations go permanently. If it was published and you only want it off the site, use “Archive”.",
       "viewPublic": "View the public page →",
       "columnTitle": "Title",
@@ -2345,6 +2426,7 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Delete",
       "deleteConfirm": "Delete the picture for good?",
+      "deleteBody": "“{name}” is deleted for good, from the library and from storage. This cannot be undone.",
       "tableCaption": "Uploaded pictures, newest first",
       "total": "{count, plural, one {# picture} other {# pictures}} · {size} MB stored",
       "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes."
@@ -3887,5 +3969,176 @@
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
     "capacityUnknown": "We cannot check how many places are left right now.",
     "capacityRetry": "Try again"
+  },
+  "Feedback": {
+    "close": "Close",
+    "toast": {
+      "saved": "Saved.",
+      "event": "The event was saved.",
+      "eventSeries": {
+        "one": "Saved on {count} date of the series.",
+        "few": "Saved on {count} dates of the series.",
+        "other": "Saved on {count} dates of the series."
+      },
+      "eventNotified": {
+        "one": "Saved; “Details updated” queued for {count} participant.",
+        "few": "Saved; “Details updated” queued for {count} participants.",
+        "other": "Saved; “Details updated” queued for {count} participants."
+      },
+      "eventSeriesNotified": {
+        "one": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participant.",
+        "few": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participants.",
+        "other": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participants."
+      },
+      "eventCancelled": {
+        "one": "Cancelled; “Event cancelled” queued for {count} participant.",
+        "few": "Cancelled; “Event cancelled” queued for {count} participants.",
+        "other": "Cancelled; “Event cancelled” queued for {count} participants."
+      },
+      "eventSeriesCancelled": {
+        "one": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participant.",
+        "few": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participants.",
+        "other": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participants."
+      },
+      "eventCancelledQuiet": "Cancelled; no email was sent.",
+      "created": "The event was created, as a draft.",
+      "createdPublished": "Created and published: on the site in both languages.",
+      "duplicated": "The copy was created, as a draft.",
+      "eventsRepeated": {
+        "one": "{count} new date was created.",
+        "few": "{count} new dates were created.",
+        "other": "{count} new dates were created."
+      },
+      "repeatStopped": "The recurrence was stopped.",
+      "repeatPublishOn": "Automatic publication is on.",
+      "repeatPublishOff": "Automatic publication is off.",
+      "bibsAssigned": {
+        "one": "{count} race number assigned.",
+        "few": "{count} race numbers assigned.",
+        "other": "{count} race numbers assigned."
+      },
+      "thanksSent": {
+        "one": "Email queued for {count} participant.",
+        "few": "Email queued for {count} participants.",
+        "other": "Email queued for {count} participants."
+      },
+      "deleted": "Deleted for good.",
+      "eventErased": {
+        "one": "The event and {count} registration were erased.",
+        "few": "The event and {count} registrations were erased.",
+        "other": "The event and {count} registrations were erased."
+      },
+      "testRegistrationsAdded": "The test registrations were added.",
+      "testRegistrationsStopped": {
+        "one": "{count} test registration added; the waiting list is full.",
+        "few": "{count} test registrations added; the waiting list is full.",
+        "other": "{count} test registrations added; the waiting list is full."
+      },
+      "testRegistrationsRemoved": "The test registrations were removed.",
+      "interestRemoved": "The address was removed from “Notify me”.",
+      "interestNotFound": "That address was not on “Notify me”.",
+      "eventsArchived": {
+        "one": "Archived: {count} event.",
+        "few": "Archived: {count} events.",
+        "other": "Archived: {count} events."
+      },
+      "eventsPublished": {
+        "one": "Published: {count} event.",
+        "few": "Published: {count} events.",
+        "other": "Published: {count} events."
+      },
+      "eventsDeleted": {
+        "one": "Deleted: {count} event.",
+        "few": "Deleted: {count} events.",
+        "other": "Deleted: {count} events."
+      },
+      "PUBLISHED": "Published. It is on the site in both languages.",
+      "IN_REVIEW": "Sent for review.",
+      "DRAFT": "Moved to draft: no longer on the site.",
+      "ARCHIVED": "Archived: no longer on the site.",
+      "invited": "The person was added to the team.",
+      "reinvited": "The invitation was sent again.",
+      "passwordReset": "The password reset link was sent.",
+      "accountDeactivated": "The account was deactivated.",
+      "accountReactivated": "The account was reactivated.",
+      "role": "The role was changed.",
+      "revoked": "Access was withdrawn.",
+      "registrationConfirmed": "The registration is confirmed; the email with the number is queued.",
+      "registrationWaitlisted": "No place left: the registration joined the waiting list.",
+      "bibSet": "Number saved.",
+      "checkedIn": "Present at the desk.",
+      "checkinUndone": "No longer checked in.",
+      "registrationCreated": "The person was added; the email is queued.",
+      "nameCorrected": "The name was changed.",
+      "registrationCancelled": "The registration was cancelled; the email is queued.",
+      "consentWithdrawn": "The ticked data was erased.",
+      "bibsPrinted": "Marked as printed.",
+      "bibsUnprinted": "Marked as not printed.",
+      "registrationsCancelled": {
+        "one": "{count} registration cancelled; {count} email queued.",
+        "few": "{count} registrations cancelled; {count} emails queued.",
+        "other": "{count} registrations cancelled; {count} emails queued."
+      },
+      "registrationsCancelledTest": {
+        "one": "{count} registration cancelled; {count} email queued. Also cancelled, counted nowhere: {test} test registrations.",
+        "few": "{count} registrations cancelled; {count} emails queued. Also cancelled, counted nowhere: {test} test registrations.",
+        "other": "{count} registrations cancelled; {count} emails queued. Also cancelled, counted nowhere: {test} test registrations."
+      },
+      "registrationsErased": {
+        "one": "{count} registration erased.",
+        "few": "{count} registrations erased.",
+        "other": "{count} registrations erased."
+      },
+      "registrationDeleted": "Registration erased for good.",
+      "outboxSent": {
+        "one": "{count} email sent now.",
+        "few": "{count} emails sent now.",
+        "other": "{count} emails sent now."
+      },
+      "resent": "The email was queued again.",
+      "reminderSent": "The reminder was queued.",
+      "participantMessageSent": {
+        "one": "Email queued for {count} participant.",
+        "few": "Email queued for {count} participants.",
+        "other": "Email queued for {count} participants."
+      },
+      "participantMessageDuplicate": "The message had already been sent; nothing was queued again.",
+      "legalDraftCreated": "New draft.",
+      "legalDraftSaved": "Draft saved.",
+      "platformApproved": {
+        "one": "{count} text approved and in effect.",
+        "few": "{count} texts approved and in effect.",
+        "other": "{count} texts approved and in effect."
+      },
+      "legalVersionApproved": "The version is approved and in effect.",
+      "legalVersionDeleted": "Draft deleted.",
+      "legalVersionWithdrawn": "The version was withdrawn.",
+      "legalVersionErased": "The version was erased.",
+      "albumCreated": "The album was created.",
+      "album": "The album was saved.",
+      "photoRemoved": "The photo was removed.",
+      "cover": "The cover was set.",
+      "albumDeleted": "The album was deleted.",
+      "pageCreated": "The page was created.",
+      "page": "The page was saved.",
+      "moved": "The order was changed.",
+      "pageDeleted": "The page was deleted.",
+      "emailPlan": "The Mailgun plan was saved.",
+      "contactRecipients": "The contact recipients were saved.",
+      "clubNotices": "The club's copies were saved.",
+      "emailCopy": "The email's wording was saved.",
+      "emailCopyReset": "The email's wording is the platform's again.",
+      "emailCopySamples": "The sample values were replaced with fields.",
+      "botCheckOn": "Anti-bot: on.",
+      "botCheckOff": "Anti-bot: off.",
+      "honeypotOn": "Honeypot: on.",
+      "honeypotOff": "Honeypot: off.",
+      "neonPlan": "Neon plan saved.",
+      "jobCadence": "Interval saved.",
+      "deadlines": "Deadlines saved.",
+      "neonLimits": "The Neon limits were saved.",
+      "neonLimitsSame": "The limits were already these; nothing changed.",
+      "groupRunDeclarationErased": "The declaration was erased."
+    }
   }
 }

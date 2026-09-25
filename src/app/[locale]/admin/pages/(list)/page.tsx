@@ -16,6 +16,8 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CLUB_NAME } from "@/theme/brand";
@@ -59,6 +61,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const { saved, error } = current;
   const rows = await listPagesForAdmin(getDb(), locale);
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
 
   const query = parseListQuery(current, {
     // The navigation's own order is the only order this list has: it is what the menu shows,
@@ -195,19 +198,33 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
               */}
               {canEditTexts(actor.role) && (
                 <>
-                  <form id={`publish-${row.id}`} action={transitionPageAction} hidden>
+                  {/* Each verb's form asks its own question (§384); the menu only submits it. */}
+                  <ActionForm
+                    id={`publish-${row.id}`}
+                    action={transitionPageAction}
+                    hidden
+                    confirm={
+                      row.editorialStatus === "PUBLISHED"
+                        ? { title: t("pages.unpublishTitle"), body: t("pages.unpublishBody"), confirmLabel: t("pages.unpublish"), cancelLabel: words.cancel, destructive: true }
+                        : { title: t("pages.publishTitle"), body: t("pages.publishBody"), confirmLabel: t("pages.publish"), cancelLabel: words.cancel }
+                    }
+                  >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="pageId" value={row.id} />
                     <input type="hidden" name="expectedVersion" value={row.version} />
                     <input type="hidden" name="to" value={row.editorialStatus === "PUBLISHED" ? "DRAFT" : "PUBLISHED"} />
-                  </form>
-                  <form id={`delete-${row.id}`} action={deletePageAction} hidden>
+                  </ActionForm>
+                  <ActionForm
+                    id={`delete-${row.id}`}
+                    action={deletePageAction}
+                    hidden
+                    confirm={{ title: t("pages.deleteTitle", { title: row.title ?? t("pages.untitled") }), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
+                  >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="pageId" value={row.id} />
-                  </form>
+                  </ActionForm>
                   <RowMenu
                     ariaLabel={t("pages.rowActions", { title: row.title ?? t("pages.untitled") })}
-                    cancelLabel={t("confirm.cancel")}
                     items={[
                       {
                         kind: "link",
@@ -221,11 +238,6 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                         icon: row.editorialStatus === "PUBLISHED" ? "unpublish" : "publish",
                         formId: `publish-${row.id}`,
                         color: row.editorialStatus === "PUBLISHED" ? "warning" : "primary",
-                        confirm: {
-                          title: row.editorialStatus === "PUBLISHED" ? t("pages.unpublishTitle") : t("pages.publishTitle"),
-                          body: row.editorialStatus === "PUBLISHED" ? t("pages.unpublishBody") : t("pages.publishBody"),
-                          confirmLabel: row.editorialStatus === "PUBLISHED" ? t("pages.unpublish") : t("pages.publish"),
-                        },
                       },
                       {
                         kind: "submit",
@@ -233,11 +245,6 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                         icon: "delete",
                         formId: `delete-${row.id}`,
                         color: "error",
-                        confirm: {
-                          title: t("pages.deleteTitle"),
-                          body: t("pages.deleteBody", { title: row.title ?? t("pages.untitled") }),
-                          confirmLabel: t("pages.delete"),
-                        },
                       },
                     ] satisfies RowMenuItem[]}
                   />

@@ -10,6 +10,8 @@ import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { OutboxQueue } from "@/modules/notifications/queue";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
@@ -37,6 +39,7 @@ type Props = {
  */
 export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
   const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
 
@@ -62,7 +65,11 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
             answer, and the else-branch's "allowance spent" would be an answer to a question they
             were never offered. */}
         {!mayEdit ? null : queue.total > 0 && (volume.remaining === null || volume.remaining > 0) ? (
-          <Box component="form" action={sendOutboxNowFromEmailsAction}>
+          <ActionForm
+            action={sendOutboxNowFromEmailsAction}
+            confirm={{ title: t("confirm.sendNowTitle"), body: t("confirm.sendNowBody"), email: words.queue(queue.total), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
+            data-testid="send-now-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <GlyphSubmitButton
               label={t("outbox.sendNow")}
@@ -71,7 +78,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
               icon="send"
               variant="contained"
             />
-          </Box>
+          </ActionForm>
         ) : (
           <Typography variant="body2" color="text.secondary">
             {queue.total === 0 ? t("outbox.nothingWaiting") : t("outbox.allowanceSpent")}

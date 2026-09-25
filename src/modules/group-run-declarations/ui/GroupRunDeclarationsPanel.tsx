@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import { ERASE_REASON_MAX } from "../domain";
@@ -40,6 +40,7 @@ export default async function GroupRunDeclarationsPanel({
 }) {
   const t = await getTranslations("Admin");
   const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
+  const { cancel } = await confirmWords();
   return (
     <Panel
       collapsible
@@ -75,7 +76,14 @@ export default async function GroupRunDeclarationsPanel({
                 </GlyphButton>
               </Stack>
               {mayErase && messages && (
-                <ActionForm action={eraseAction} messages={messages} scope={`grd-${row.id}`} data-testid="group-run-declaration-erase">
+                <ActionForm
+                  action={eraseAction}
+                  messages={messages}
+                  // The one confirmation dialog (§384): destructive, as every erase is.
+                  confirm={{ title: t("groupRunDeclarations.eraseTitle"), body: t("groupRunDeclarations.eraseBody"), confirmLabel: t("groupRunDeclarations.erase"), cancelLabel: cancel, destructive: true }}
+                  scope={`grd-${row.id}`}
+                  data-testid="group-run-declaration-erase"
+                >
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="eventId" value={eventId} />
                   <input type="hidden" name="declarationId" value={row.id} />
@@ -90,15 +98,9 @@ export default async function GroupRunDeclarationsPanel({
                       sx={{ flex: 1 }}
                     />
                     <Box>
-                      <ConfirmSubmitButton
-                        label={t("groupRunDeclarations.erase")}
-                        icon="delete"
-                        title={t("groupRunDeclarations.eraseTitle")}
-                        body={t("groupRunDeclarations.eraseBody")}
-                        confirmLabel={t("groupRunDeclarations.erase")}
-                        cancelLabel={t("confirm.cancel")}
-                        color="error"
-                      />
+                      <GlyphButton icon="delete" type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44 }}>
+                        {t("groupRunDeclarations.erase")}
+                      </GlyphButton>
                     </Box>
                   </Stack>
                 </ActionForm>

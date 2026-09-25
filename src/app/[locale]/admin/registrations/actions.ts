@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -55,9 +56,15 @@ function detailPath(locale: Locale, registrationId: string): string {
   });
 }
 
-function backTo(path: string, outcome: Record<string, string | undefined>): never {
+async function backTo(
+  path: string,
+  outcome: Record<string, string | undefined>,
+  /** The page's own query, carried in the URL and never into the flash (a desk search is a name). */
+  params: Record<string, string | undefined> = {},
+): Promise<never> {
+  await flashOutcome(outcome);
   const query = new URLSearchParams(
-    Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
+    Object.entries({ ...params, ...outcome }).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
   // `#admin-alert` so the browser lands on the outcome rather than at the top of a long page,
   // where a one-line alert about a save that failed is easy to walk straight past. Every
@@ -98,9 +105,9 @@ function returnTo(
 }
 
 /** `backTo`, for a desk verb: the page's own query first, then the outcome. */
-function backToDesk(form: FormData, locale: Locale, registrationId: string, outcome: Record<string, string | undefined>): never {
+async function backToDesk(form: FormData, locale: Locale, registrationId: string, outcome: Record<string, string | undefined>): Promise<never> {
   const target = returnTo(form, locale, registrationId);
-  backTo(target.path, { ...target.params, ...outcome });
+  return backTo(target.path, outcome, target.params);
 }
 
 /**
@@ -108,7 +115,7 @@ function backToDesk(form: FormData, locale: Locale, registrationId: string, outc
  * volunteer works — the service asserts `canWorkTheDesk` again for anything that is not this
  * action. Each redirects with the outcome so the desk reads a sentence, not a stack trace.
  */
-export async function confirmRegistrationNowAction(form: FormData): Promise<void> {
+export async function confirmRegistrationNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
@@ -122,10 +129,10 @@ export async function confirmRegistrationNowAction(form: FormData): Promise<void
     // about a button with no data behind it. Nothing was written; the row stays as it was.
     outcome = { error: waitlistRefusalCode(error) ?? outcomeOf(error).error };
   }
-  backToDesk(form, locale, registrationId, outcome);
+  return backToDesk(form, locale, registrationId, outcome);
 }
 
-export async function promoteRegistrationAction(form: FormData): Promise<void> {
+export async function promoteRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
@@ -137,7 +144,7 @@ export async function promoteRegistrationAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backToDesk(form, locale, registrationId, outcome);
+  return backToDesk(form, locale, registrationId, outcome);
 }
 
 /**
@@ -161,10 +168,10 @@ export async function setBibNumberAction(_previous: FormOutcome | null, form: Fo
       fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" || failure.code === "CONFLICT" ? ["bibNumber"] : failure.fields),
     });
   }
-  backToDesk(form, locale, registrationId, { saved: "bibSet" });
+  return backToDesk(form, locale, registrationId, { saved: "bibSet" });
 }
 
-export async function checkInAction(form: FormData): Promise<void> {
+export async function checkInAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
   const direction = text(form, "direction") === "undo" ? "undo" : "in";
@@ -177,7 +184,7 @@ export async function checkInAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backToDesk(form, locale, registrationId, outcome);
+  return backToDesk(form, locale, registrationId, outcome);
 }
 
 /** An unanswered field on the staff form is absent, not empty (BR-REQ-031-04 criterion 5). */
@@ -281,9 +288,9 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   // the desk, when the form was opened from there, otherwise the list.
   const fromDesk = text(form, "back") === "desk";
   if (fromDesk) {
-    backTo(getPathname({ locale, href: "/admin/checkin" }), { ...outcome, eventId });
+    return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
   }
-  backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
+  return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
 
 /** The one editable field (BR-REQ-037-03). A refused name stays in its box (§315). */
@@ -298,7 +305,7 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
     return refused(error, form, { fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" ? ["registeredName"] : failure.fields) });
   }
 
-  backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
+  return backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
 }
 
 /** Cancel, with a reason. A refusal keeps the reason typed (§315). */
@@ -313,7 +320,7 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
     return refused(error, form);
   }
 
-  backTo(detailPath(locale, registrationId), { saved: "registrationCancelled" });
+  return backTo(detailPath(locale, registrationId), { saved: "registrationCancelled" });
 }
 
 /**
@@ -321,9 +328,11 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
  * to keep — so a refusal lands where it always did: the registration's own page, with the code.
  * The same action underneath as the page's form, which redirects by itself on success.
  */
-export async function cancelRegistrationFromRowAction(form: FormData): Promise<void> {
+export async function cancelRegistrationFromRowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const refusal = await cancelRegistrationAction(null, form);
-  if (refusal) backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
+  if (refusal) return backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
+  // Unreachable: a cancel that went through redirected from inside `cancelRegistrationAction`.
+  return null;
 }
 
 /**
@@ -331,7 +340,7 @@ export async function cancelRegistrationFromRowAction(form: FormData): Promise<v
  * groups, the reason typed. `requireStaffRole("ADMIN")` is the coarse gate and the service asks
  * `canManageRegistrations` again, so a replayed POST from an Organizer's session goes nowhere.
  */
-export async function withdrawConsentAction(form: FormData): Promise<void> {
+export async function withdrawConsentAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
@@ -349,7 +358,7 @@ export async function withdrawConsentAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  backTo(detailPath(locale, registrationId), outcome);
+  return backTo(detailPath(locale, registrationId), outcome);
 }
 
 /**
@@ -399,6 +408,7 @@ export async function markBibsPrintedAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
+  await flashOutcome(outcome);
   const separator = returnTo.includes("?") ? "&" : "?";
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
@@ -420,7 +430,7 @@ export async function setBibPrintedAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backToDesk(form, locale, registrationId, outcome);
+  return backToDesk(form, locale, registrationId, outcome);
 }
 
 export async function bulkCancelRegistrationsAction(form: FormData): Promise<void> {
@@ -441,25 +451,29 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
   const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
 
   if (ids.length === 0) {
-    backTo(returnTo, { error: "NOTHING_SELECTED" });
+    return backTo(returnTo, { error: "NOTHING_SELECTED" });
   }
 
   let cancelled = 0;
+  let test = 0;
   let failed = 0;
   let voided: number[] = [];
   try {
     const actor = await requireStaffRole("ADMIN");
-    ({ cancelled, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
+    ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
   } catch (error) {
-    backTo(returnTo, outcomeOf(error));
+    return backTo(returnTo, outcomeOf(error));
   }
 
   // The printed numbers this press just made void (§311), for the banner to name: numbers only,
   // which is all the page needs to say which bibs come out of the pile.
   const separator = returnTo.includes("?") ? "&" : "?";
   const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
+  // The real rows only (§30): each was cancelled and sent its email, the number the dialog stated.
+  const real = cancelled - test;
+  await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed), test: String(test) });
   redirect(
-    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${cancelled}&failed=${failed}${voidedQuery}#admin-alert`,
+    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}&test=${test}${voidedQuery}#admin-alert`,
   );
 }
 
@@ -506,9 +520,10 @@ export async function bulkDeleteRegistrationsAction(form: FormData): Promise<voi
       { confirmCount },
     ));
   } catch (error) {
-    backTo(returnTo, outcomeOf(error));
+    return backTo(returnTo, outcomeOf(error));
   }
 
+  await flashOutcome({ saved: "registrationsErased", erased: String(erased), failed: String(failed) });
   const separator = returnTo.includes("?") ? "&" : "?";
   redirect(`${returnTo}${separator}saved=registrationsErased&erased=${erased}&failed=${failed}#admin-alert`);
 }
@@ -530,7 +545,7 @@ export async function deleteRegistrationAction(_previous: FormOutcome | null, fo
 
   // Always back to the list, never to the detail page: on success that page describes a row
   // that no longer exists, and a 404 is a poor way to learn a deletion worked.
-  backTo(getPathname({ locale, href: "/admin/registrations" }), { saved: "registrationDeleted" });
+  return backTo(getPathname({ locale, href: "/admin/registrations" }), { saved: "registrationDeleted" });
 }
 
 /**
@@ -606,6 +621,7 @@ export async function eraseRegistrationFromListAction(_previous: FormOutcome | n
   const params = new URLSearchParams(text(form, "listQuery"));
   for (const key of ["erase", "error"]) params.delete(key);
   params.set("saved", "registrationDeleted");
+  await flashOutcome({ saved: "registrationDeleted" });
   redirect(`${listPath}?${params.toString()}#admin-alert`);
 }
 
@@ -613,7 +629,7 @@ export async function eraseRegistrationFromListAction(_previous: FormOutcome | n
  * "Send now" — drain the outbox from the list page, within the day's allowance
  * (`DECISIONS.md` §80). Lands back on the list with the count it sent, or the refusal.
  */
-export async function sendOutboxNowAction(form: FormData): Promise<void> {
+export async function sendOutboxNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin/registrations" });
   const listQuery = text(form, "listQuery");
@@ -625,8 +641,9 @@ export async function sendOutboxNowAction(form: FormData): Promise<void> {
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
   } catch (error) {
-    backTo(returnTo, outcomeOf(error));
+    return backTo(returnTo, outcomeOf(error));
   }
+  await flashOutcome({ saved: "outboxSent", sent: String(sent) });
   redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}#admin-alert`);
 }
 

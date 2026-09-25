@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.90-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.91-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.90-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.91-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -271,6 +271,10 @@ sections and in `CHANGELOG.md`.
 - **Batch 14 (2026-09-25, `BR-V1.90`):** "Următoarele emailuri automate" on `/admin/emails` — every email the platform will send on its
   own in the next fourteen days, from the jobs' own formula (one pure module both the jobs and the panel call), with the recipients
   the job would pick now and the "Copie club" line (§383).
+- **Batch 15 (2026-09-25, `BR-V1.91`):** every backoffice action that worked says so in a toast (a flash cookie across redirects, never twice),
+  and every irreversible or outward-facing one asks first in one `ConfirmDialog` — publishing, cancelling, erasing, notices, messages, settings,
+  the team, the legal versions — naming how many real participants are emailed, from the query the send uses; test rows counted apart;
+  check-in stays one tap; the bulk cancel's ticks now belong to their form (§384) · the phone footer says "GDPR", a rule before RO/EN, a condensed fold, the version as a chip (§385) · the 🤝 marker in gray ink, the chip says "Colaborare" / "Partnership" (§386).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
