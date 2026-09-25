@@ -37,7 +37,6 @@
   },
   "Events": {
     "title": "Evenimente",
-    "loading": "Se încarcă…",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
@@ -46,12 +45,37 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Toate evenimentele ({count})",
+    "othersCountFiltered": "Evenimentele alese ({count})",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "pastCountFiltered": "Din trecut, după filtre ({count})",
     "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
-      "label": "Tipul evenimentului",
-      "all": "Toate",
-      "partner": "Colaborare"
+      "label": "Filtrele evenimentelor",
+      "button": "Filtre",
+      "buttonCount": "Filtre ({count})",
+      "help": "Într-un grup ajunge oricare bifă; între grupuri trebuie să se potrivească toate.",
+      "groups": {
+        "type": "Tipul",
+        "surface": "Terenul",
+        "difficulty": "Dificultatea",
+        "distance": "Distanța",
+        "cost": "Costul",
+        "more": "Altele"
+      },
+      "distance": {
+        "UP_TO_5": "Sub 5 km",
+        "FROM_5_TO_10": "5–10 km",
+        "FROM_10_TO_21": "10–21 km",
+        "OVER_21": "Peste 21 km"
+      },
+      "partner": "Colaborare",
+      "night": "Eveniment de noapte",
+      "registration": "Înscrieri deschise",
+      "apply": "Aplică",
+      "clear": "Șterge filtrele",
+      "remove": "Scoate filtrul",
+      "active": "Filtre active",
+      "none": "Niciun eveniment nu se potrivește filtrelor alese."
     },
     "calendar": {
       "previous": "Luna anterioară",

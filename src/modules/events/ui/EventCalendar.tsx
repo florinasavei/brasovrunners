@@ -36,12 +36,13 @@ export type CalendarLayout = "grid" | "list";
  * reader asks (`?view=list`; `DECISIONS.md` §89, §137) — or the year, as the agenda of every
  * month that has something on it (§116).
  *
- * The controls that change the period are `CalendarHeader`, and the split is deliberate
- * (§166): this is the half that costs a query, so this is the half the listing wraps in a
- * `<Suspense>` boundary. `events` therefore arrives as a **promise** — the page starts the
- * query and hands it over without awaiting, so the rest of the page can be sent to the
- * browser while the database is still answering, and this region shows a skeleton of its own
- * exact size until it is not.
+ * The controls that change the period are `CalendarHeader`. `events` arrives **already read**
+ * — the period's rows, from the public cache (§333) with their last good copy behind them
+ * (§281), awaited once by the page and narrowed by its filters (§NNN, amending §166 here): no
+ * streamed boundary and no skeleton stands in for this region any more, because a streamed
+ * region is revealed by a script and the filter panel above it is a GET form that must work
+ * without one. With a script, a month change is a soft navigation that keeps this grid on
+ * screen until the next one is ready.
  *
  * Server-rendered and navigated by links, so the whole thing is HTML and a crawler reads next
  * month's runs; the event chips (`CalendarEventChip`, for the tooltip) are the only island
@@ -65,18 +66,18 @@ export default async function EventCalendar({
   view: CalendarView;
   /** The page the calendar is on (§251): a day links back to it, never to the listing. */
   pathname?: "/calendar" | "/events";
-  /** Awaited here, so the boundary above suspends on the query rather than the page doing it. */
-  events: PublicEvent[] | Promise<PublicEvent[]>;
+  /** The period's rows, already read and filtered by the page (§NNN). */
+  events: PublicEvent[];
   now: Date;
-  /** Other query parameters the month links keep — the type filter (§89), the layout (§137). */
-  query?: Record<string, string>;
+  /** Other query parameters the month links keep — the filters (§89, §NNN; a group ticked twice is an array), the layout (§137). */
+  query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   const format = await getFormatter();
   const locale = (await getLocale()) as "ro" | "en";
-  const rows = await events;
+  const rows = events;
 
   const today = dayKey(now, CLUB_TIME_ZONE);
 

@@ -1,6 +1,7 @@
 import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -17,6 +18,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TuneIcon from "@mui/icons-material/Tune";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
@@ -121,6 +123,11 @@ export const GLYPHS = {
   // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
   discount: LocalOfferIcon,
   partner: HandshakeIcon,
+  // The filter button's own glyph (§NNN) — a tuning icon, not the funnel `FilterListIcon`, and
+  // "registration open" among the filter's boxes (§NNN): a calendar with a tick, the same
+  // metaphor a confirmed place gets elsewhere.
+  filters: TuneIcon,
+  registration: EventAvailableIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

@@ -37,7 +37,6 @@
   },
   "Events": {
     "title": "Events",
-    "loading": "Loading…",
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
@@ -46,12 +45,37 @@
     "featuredCallToAction": "See the race details",
     "others": "Other events",
     "othersCount": "All events ({count})",
+    "othersCountFiltered": "Matching events ({count})",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
+    "pastCountFiltered": "Past, filtered ({count})",
     "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
-      "label": "Event type",
-      "all": "All",
-      "partner": "Partnership"
+      "label": "Event filters",
+      "button": "Filters",
+      "buttonCount": "Filters ({count})",
+      "help": "Within a group any tick will do; across groups, every one must match.",
+      "groups": {
+        "type": "Type",
+        "surface": "Surface",
+        "difficulty": "Difficulty",
+        "distance": "Distance",
+        "cost": "Cost",
+        "more": "More"
+      },
+      "distance": {
+        "UP_TO_5": "Under 5 km",
+        "FROM_5_TO_10": "5–10 km",
+        "FROM_10_TO_21": "10–21 km",
+        "OVER_21": "Over 21 km"
+      },
+      "partner": "Partnership",
+      "night": "Night event",
+      "registration": "Registration open",
+      "apply": "Apply",
+      "clear": "Clear filters",
+      "remove": "Remove filter",
+      "active": "Active filters",
+      "none": "No event matches the filters you chose."
     },
     "calendar": {
       "previous": "Previous month",

@@ -1,5 +1,6 @@
 "use client";
 
+import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -50,6 +51,7 @@ export default function GlyphChip({
   tooltip,
   sx,
   srSuffix,
+  closeMark = false,
 }: {
   glyph: GlyphName;
   label: string;
@@ -76,16 +78,24 @@ export default function GlyphChip({
    * stays the closed set's own ("Cu taxă").
    */
   srSuffix?: string;
+  /**
+   * A small ✕ after the word, drawn only (`aria-hidden`): the listing's active-filter chip, whose
+   * whole link removes that filter (§NNN) and says so in its own accessible name. Not MUI's
+   * `onDelete`, whose icon stops the click from reaching the link around the chip.
+   */
+  closeMark?: boolean;
 }) {
   const Icon = GLYPHS[glyph];
-  const content = srSuffix ? (
-    <>
-      {label}
-      <Box component="span" sx={srOnlySx}>{` — ${srSuffix}`}</Box>
-    </>
-  ) : (
-    label
-  );
+  const content =
+    srSuffix || closeMark ? (
+      <>
+        {label}
+        {srSuffix && <Box component="span" sx={srOnlySx}>{` — ${srSuffix}`}</Box>}
+        {closeMark && <CloseIcon aria-hidden="true" sx={{ fontSize: 14, ml: 0.5, verticalAlign: "-2px" }} />}
+      </>
+    ) : (
+      label
+    );
   const chip = href ? (
     <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} />
   ) : (

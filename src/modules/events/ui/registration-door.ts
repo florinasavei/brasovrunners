@@ -1,5 +1,6 @@
 import { unstable_rethrow } from "next/navigation";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
+import { registrationDoorOpen } from "../domain/listing-filter";
 import { type PublicFill, publicFill, registrationCta, type RegistrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -70,4 +71,27 @@ export async function readRegistrationDoor(event: PublicEvent, now: Date): Promi
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity }, now),
     fill: publicFill(capacity, availablePlaces),
   };
+}
+
+/**
+ * Which of these events' pages has a registration door right now — the «Înscrieri deschise» box on
+ * the listing and the calendar (§NNN) — asked of `readRegistrationDoor` itself, event by event, so
+ * the filter, the card's button and the page's own door are one answer (§409), never two readings
+ * of the same rule that could drift. `registrationDoorOpen` says which answers are a door: `OPEN`,
+ * `FULL` with a waiting list that takes people, or `EXTERNAL`; `UNKNOWN` (a count that could not
+ * be read, §281, already logged there) is not.
+ *
+ * **What it costs** is what `readRegistrationDoor` costs: one cached availability entry (§333) per
+ * open internal event on the page, the same entry its card and its page read, and nothing for any
+ * other row. The reads run side by side, once per event however often it appears in `events`.
+ */
+export async function readRegistrationDoors(events: readonly PublicEvent[], now: Date): Promise<(event: PublicEvent) => boolean> {
+  const unique = new Map(events.map((event) => [event.id, event]));
+  const doors = new Map<string, boolean>();
+  await Promise.all(
+    [...unique.values()].map(async (event) => {
+      doors.set(event.id, registrationDoorOpen(await readRegistrationDoor(event, now)));
+    }),
+  );
+  return (event) => doors.get(event.id) ?? false;
 }
