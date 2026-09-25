@@ -119,7 +119,11 @@ describe("Cloudflare Turnstile", () => {
     // endpoint and the admin task row must both surface.
     expect(await probeTurnstileSecret(answer(["invalid-input-secret"]))).toBe("misconfigured");
     expect(await probeTurnstileSecret(answer(["missing-input-secret"]))).toBe("misconfigured");
-    expect(await probeTurnstileSecret(answer(["internal-error"]))).toBe("misconfigured");
+    expect(await probeTurnstileSecret(answer(["invalid-input-secret", "internal-error"]))).toBe("misconfigured");
+
+    // Cloudflare's own internal error is its passing fault, not the secret's (§NNN): read like a
+    // 5xx, so fifteen minutes of cache never show a right secret as wrong.
+    expect(await probeTurnstileSecret(answer(["internal-error"]))).toBe("unreachable");
 
     // Cloudflare not answering says nothing about the secret, and must never read as broken.
     const down = (async () => {

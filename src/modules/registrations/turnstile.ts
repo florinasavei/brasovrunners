@@ -23,6 +23,14 @@ export const TURNSTILE_FIELD = "cf-turnstile-response";
  */
 const SERVER_SIDE_ERROR_CODES: ReadonlySet<string> = new Set(["missing-input-secret", "invalid-input-secret", "internal-error"]);
 
+/**
+ * Of those, the codes that say the *secret* is wrong (§NNN). `internal-error` is Cloudflare's own
+ * fault — transient, like a 5xx — and says nothing about the secret, so the health probe reads it
+ * as `unreachable`, never `misconfigured`: a passing fault must not show a wrong secret for the
+ * probe's cache window.
+ */
+const SECRET_ERROR_CODES: ReadonlySet<string> = new Set(["missing-input-secret", "invalid-input-secret"]);
+
 export function turnstileSiteKey(): string | undefined {
   return env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? env.TURNSTILE_SITE_KEY : undefined;
 }
@@ -126,10 +134,10 @@ export type TurnstileSecretHealth = "ok" | "misconfigured" | "unreachable" | "no
  * cheaper half: it sends a token that is certainly not real. Cloudflare always rejects it — the
  * question is which reason it gives. A secret that matches the site key answers
  * `invalid-input-response` (the token, not the secret, is bad) or `timeout-or-duplicate`, and
- * that is `ok`. A secret that is missing, mistyped or belongs to another widget answers one of
- * `SERVER_SIDE_ERROR_CODES` regardless of the token, which is exactly the case
- * `verifyTurnstile` already recognises — this reuses that same set rather than inventing a
- * second notion of "server-side error".
+ * that is `ok`. A secret that is missing, mistyped or belongs to another widget answers
+ * `missing-input-secret` or `invalid-input-secret` regardless of the token (`SECRET_ERROR_CODES`),
+ * and that alone is `misconfigured`. Cloudflare's `internal-error` is its own passing fault, read
+ * like a 5xx or a timeout: `unreachable`.
  */
 export async function probeTurnstileSecret(fetchImpl: typeof fetch = fetch): Promise<TurnstileSecretHealth> {
   if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return "not_configured";
@@ -148,7 +156,8 @@ export async function probeTurnstileSecret(fetchImpl: typeof fetch = fetch): Pro
     const result = (await response.json()) as { success?: boolean; "error-codes"?: unknown };
     if (result.success === true) return "ok";
     const codes = Array.isArray(result["error-codes"]) ? result["error-codes"].map(String) : [];
-    return codes.some((code) => SERVER_SIDE_ERROR_CODES.has(code)) ? "misconfigured" : "ok";
+    if (codes.some((code) => SECRET_ERROR_CODES.has(code))) return "misconfigured";
+    return codes.includes("internal-error") ? "unreachable" : "ok";
   } catch {
     return "unreachable";
   }

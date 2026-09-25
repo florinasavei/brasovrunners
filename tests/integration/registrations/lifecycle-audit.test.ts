@@ -388,32 +388,29 @@ describe("§NNN §160 §214 §220 a lapsed declaration hold gives its provisiona
   });
 });
 
-describe("§NNN §160 once registration has closed, a lapsed declaration hold is kept even while somebody waits", () => {
-  it("because the waiting list can never be offered a place after the close (BR-REQ-035-02 criterion 3)", async () => {
+describe("§NNN §160 once registration has closed, a lapsed declaration hold still goes to the queue — for the desk to give", () => {
+  it("released while somebody waits, offered to nobody by email, and the desk promotes into the place (BR-REQ-035-02 criterion 3)", async () => {
+    const staff = await admin();
     const event = await createEvent({ capacity: 1 });
     const ana = await allocated(event, "Ana");
     // Nobody has this capacity's one place until Ana's hold is resolved, so Bogdan queues.
     const bogdan = await allocated(event, "Bogdan", at(5));
     expect(bogdan.status).toBe("WAITLISTED");
 
-    // Registration is closed, and Ana's thirty-minute hold is long past its own deadline. The
-    // old rule released it anyway because somebody waits (§160); the fix here is that an offer
-    // made now to that somebody would itself be born already lapsed (`fillAvailableSpots`'s own
-    // check), so releasing the hold would free a place nobody can ever be given.
+    // Registration is closed, and Ana's thirty-minute hold is long past its own deadline. Somebody
+    // waits, so the hold is released as §160 says (its number with it, §220) — only the offer is
+    // withheld, by `fillAvailableSpots`, because it would be born lapsed.
     await runRegistrationMaintenance(db, at(60, CLOSES_AT));
-
-    const stillHeld = await reread(ana.id);
-    expect(stillHeld.status).toBe("PENDING_DECLARATION");
-    expect(stillHeld.expiryReason).toBeNull();
-    // Bogdan is not offered the place either — there was never one to give.
+    const released = await reread(ana.id);
+    expect([released.status, released.expiryReason, released.provisionalBibNumber]).toEqual(["EXPIRED", "DECLARATION_HOLD_LAPSED", null]);
     expect((await reread(bogdan.id)).status).toBe("WAITLISTED");
+    expect(await outbox("WAITLIST_SPOT_OFFER")).toHaveLength(0);
 
-    // The desk can still re-allocate the row on race day (the reason this is a nit, not a bug):
-    // a paper declaration still confirms Ana, past the deadline her online hold ever had.
-    const staff = await admin();
-    const raceMorning = at(-30, STARTS_AT);
-    const done = await confirmByStaff(db, event, ana.id, staff, raceMorning);
-    expect(done.status).toBe("CONFIRMED");
+    // Race week at the desk: the place is free, so Bogdan is given it. Were the hold kept after the
+    // close, this would be "the event is full" for a place nobody is holding.
+    const promoted = await promoteFromWaitlistByStaff(db, event, bogdan.id, staff, at(90, CLOSES_AT));
+    expect(promoted.status).toBe("CONFIRMED");
+    expect(promoted.bibNumber).not.toBeNull();
   });
 });
 

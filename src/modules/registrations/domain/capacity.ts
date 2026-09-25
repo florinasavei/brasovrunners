@@ -55,7 +55,7 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
  * deadline first.
  *
  * The forecast on `/admin/emails` decides the same question by its own arithmetic instead
- * (`notifications/domain/automatic-sends.ts#nextInLineOffers`: one lapse offers one place while
+ * (`notifications/domain/automatic-sends.ts#nextInLineReleases`: one lapse releases one place while
  * anybody still waits), because at the instant a hold is forecast to lapse the forecast has no
  * "free" count to ask for — nothing has actually lapsed yet for a query to count. The two agree
  * whenever free is 0, which is the case this formula and the forecast both cover: a lapse is only

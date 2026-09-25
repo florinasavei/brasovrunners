@@ -122,6 +122,10 @@ export async function latestAcceptance(registrationId: string): Promise<{
  * same purpose, which would supersede this one if it landed second. A message still pending after
  * the wait (a deferred send) mints nothing until something drains it again, which is later than
  * any spec needs the link.
+ *
+ * `REGISTER_ANOTHER_PERSON` is the exception (§389, §NNN): every such link stays live beside the
+ * others, as `issueActionToken` leaves them — the partial unique index no longer covers that
+ * purpose — so minting one here supersedes nothing, exactly as the real send does not.
  */
 export async function mintActionLink(
   registration: Pick<RegistrationRow, "id" | "participantId">,
@@ -144,12 +148,16 @@ export async function mintActionLink(
     const hash = createHash("sha256").update(secret, "utf8").digest("hex");
     await client.query("BEGIN");
     try {
-      // One live token per registration and purpose (the partial unique index): supersede, then add.
-      await client.query(
-        `UPDATE email_action_tokens SET invalidated_at = now()
-          WHERE registration_id = $1 AND purpose = $2 AND used_at IS NULL AND invalidated_at IS NULL`,
-        [registration.id, purpose],
-      );
+      // One live token per registration and purpose (the partial unique index): supersede, then add —
+      // for every purpose but the family link, which the index leaves out and the real send never
+      // supersedes (§389, §NNN).
+      if (purpose !== "REGISTER_ANOTHER_PERSON") {
+        await client.query(
+          `UPDATE email_action_tokens SET invalidated_at = now()
+            WHERE registration_id = $1 AND purpose = $2 AND used_at IS NULL AND invalidated_at IS NULL`,
+          [registration.id, purpose],
+        );
+      }
       await client.query(
         `INSERT INTO email_action_tokens (participant_id, registration_id, purpose, token_hash, expires_at)
          VALUES ($1, $2, $3, $4, now() + interval '2 hours')`,

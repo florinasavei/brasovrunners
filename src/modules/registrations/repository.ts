@@ -12,12 +12,10 @@ import {
 } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
-import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
-import { computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
 import { registrationNameKey } from "./domain/name-key";
 import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
 import { allowedFromStatuses, holdsAPlace, PLACE_HOLDING_STATUSES } from "./domain/state-machine";
@@ -667,8 +665,6 @@ export type EventForExpiry = {
   startsAt: Date;
   eventStatus: "SCHEDULED" | "CANCELLED" | "COMPLETED";
   capacity: number | null;
-  /** When registration itself closes (§NNN) — every real caller's event row already carries this. */
-  registrationClosesAt: Date | null;
 };
 
 /**
@@ -696,19 +692,18 @@ export type EventForExpiry = {
  * until the race while everybody after them was turned away. Counted like one more person
  * waiting: one newcomer, one hold, the oldest deadline first.
  *
- * Also nobody, once registration itself has closed (§NNN): `fillAvailableSpots` already refuses
- * to make an offer whose own deadline would be born in the past — capped by
- * `registrationClosesAt` the same way this event's next offer would be — so releasing a hold
- * here would free a place the allocator can then give to nobody (`countEligibleWaitlisted`
- * still counts a `WAITLISTED` row that can never be offered anything). Checked the same way
- * `fillAvailableSpots` checks it: an offer made right now against `deadlines.offerHours`.
+ * The same after registration has closed (§NNN). `fillAvailableSpots` then makes no offer — one
+ * would be born lapsed — but the place a lapsed hold gives back is still wanted: the desk gives it
+ * to somebody waiting (`promoteFromWaitlistByStaff`) or to the runner standing there with a paper
+ * (`confirmByStaff`), both under the same lock and both after this sweep. Keeping the hold here
+ * would leave them "the event is full" for a place nobody is holding. The guard against dead
+ * offers lives in `fillAvailableSpots` alone.
  */
 async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForExpiry,
   now: Date,
   wanting: number,
-  deadlines: Pick<Deadlines, "offerHours">,
 ): Promise<string[]> {
   const lapsed = await db
     .select({ id: registrations.id })
@@ -724,14 +719,6 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
   if (lapsed.length === 0) return [];
 
   if (event.eventStatus !== "SCHEDULED" || event.startsAt <= now) return lapsed.map((row) => row.id);
-
-  const nextOfferExpiresAt = computeWaitlistOfferExpiry({
-    now,
-    registrationClosesAt: event.registrationClosesAt,
-    eventStartsAt: event.startsAt,
-    deadlines,
-  });
-  if (nextOfferExpiresAt.getTime() <= now.getTime()) return [];
 
   const waiting = (await countEligibleWaitlisted(db, event.id)) + wanting;
   if (waiting === 0) return [];
@@ -759,19 +746,13 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  *
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
  * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
- *
- * `deadlines` is the club's own settings (§377, `currentDeadlines`) — every caller already reads
- * them for the hold or offer it is about to create, so this never issues a second query; it is
- * only `offerHours` that `lapsedDeclarationHoldsToRelease` needs, to answer the same "would an
- * offer made right now already be born lapsed" question `fillAvailableSpots` asks.
  */
 export async function expireStaleHolds<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForExpiry,
   now: Date,
-  options: { wanting?: number; deadlines: Pick<Deadlines, "offerHours"> },
+  { wanting = 0 }: { wanting?: number } = {},
 ): Promise<void> {
-  const { wanting = 0, deadlines } = options;
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free.
   const lapsedOffers = await db
@@ -787,7 +768,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     )
     .returning({ id: registrations.id });
 
-  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting, deadlines);
+  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting);
   if (releasing.length > 0) {
     await db
       .update(registrations)
