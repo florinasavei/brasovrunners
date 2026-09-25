@@ -65,7 +65,16 @@ export function registrationHasClosed(
   event: Pick<RegistrationWindowInput, "registrationClosesAt" | "startsAt">,
   now: Date,
 ): boolean {
-  return now >= (event.registrationClosesAt ?? event.startsAt);
+  return now >= registrationClosingInstant(event);
+}
+
+/**
+ * The instant `registrationHasClosed` turns true: the close, or the start when there is none —
+ * which is also when the race numbers settle and "here is your race number" goes (§214), as the
+ * forecast on `/admin/emails` says it (§NNN).
+ */
+export function registrationClosingInstant(event: Pick<RegistrationWindowInput, "registrationClosesAt" | "startsAt">): Date {
+  return event.registrationClosesAt ?? event.startsAt;
 }
 
 /**

@@ -35,6 +35,8 @@ import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmailsPanel";
+import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
+import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
@@ -117,7 +119,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   */
   const maySeeQueue = canReadRegistrations(staff.role);
   const mayEditEmail = canManageRegistrations(staff.role);
-  const [plan, volume, recipients, queue, notices, written, deadlines] = await Promise.all([
+  // The club's deadlines (§377), straight through like the words: the panel that sets them, the
+  // when-lines that state them, the previews that print them and the forecast (§NNN), as they now stand.
+  const deadlinesRead = readDeadlines(db);
+  const [plan, volume, recipients, queue, notices, written, deadlines, forecast] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -132,9 +137,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       preview, and showing them what they saved thirty seconds ago would read as a lost edit.
     */
     readEmailCopy(db),
-    // The club's deadlines (§377), straight through like the words: the panel that sets them, the
-    // when-lines that state them and the previews that print them, as they now stand.
-    readDeadlines(db),
+    deadlinesRead,
+    /*
+      What the platform will send on its own in the coming days (§NNN), in the club's deadlines as
+      read above — one read, both uses. Counts and event titles only, never a recipient, so every
+      reader of this page sees it.
+    */
+    deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
   ]);
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
@@ -266,6 +275,17 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
 
       {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
       <DeadlinesPanel locale={locale} state={deadlines} mayEdit={mayEditEmail} openWhen={{ saved: saved === "deadlines" }} />
+
+      {/*
+        What goes out on its own next (§NNN), directly above the cards each row links to. The
+        club-copy line names the club's addresses, so it is for the readers the club's lists are for.
+      */}
+      <UpcomingEmailsPanel
+        locale={locale}
+        rows={forecast}
+        horizonDays={FORECAST_HORIZON_DAYS}
+        clubCopies={notices ? notices.participants.bcc : null}
+      />
 
       <ParticipantEmailsPanel
         title={t("emails.title")}

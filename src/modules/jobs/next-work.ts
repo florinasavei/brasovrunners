@@ -6,7 +6,8 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "@/modules/notifications/domain/retry";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { reminderHoursFor, reminderOpensAt } from "@/modules/deadlines/domain/deadlines";
+import { declarationLastCallDueAt, eventReminderDueAt } from "@/modules/notifications/domain/automatic-sends";
+import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
 import type { JobName } from "./schedule";
@@ -155,14 +156,18 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       eventInstants.push(ahead((toDate(event.registrationClosesAt) ?? startsAt).getTime()));
     }
     const mailed = event.eventStatus === "SCHEDULED" && event.registrationMode === "INTERNAL";
-    const reminderAt = reminderOpensAt(startsAt, reminderHoursFor({ reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings));
+    // The reminder's lead is the last call's too (`domain/automatic-sends.ts`, one formula with the job, §NNN).
+    const reminderAt = declarationLastCallDueAt({ startsAt, reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings);
     if (mailed && reminderAt && (event.confirmed || event.pendingDeclaration)) {
       eventInstants.push(ahead(reminderAt.getTime()));
     }
-    const opens = Number(event.opensDays ?? 0);
-    const deadline = Number(event.deadlineDays ?? 0);
-    if (mailed && event.pendingDeclaration && opens > 0 && opens > deadline) {
-      eventInstants.push(ahead(start - opens * DAY));
+    const window = confirmationWindow({
+      startsAt,
+      confirmationOpensDaysBefore: toCount(event.opensDays),
+      confirmationDeadlineDaysBefore: toCount(event.deadlineDays),
+    });
+    if (mailed && event.pendingDeclaration && window) {
+      eventInstants.push(ahead(window.opensAt.getTime()));
     }
   }
 
@@ -188,11 +193,9 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     const confirmedAt = toDate(row.confirmedAt);
     const startsAt = toDate(row.startsAt);
     if (!confirmedAt || !startsAt) return null;
-    // No reminder at all for an event that sends none (§377).
-    const opensAt = reminderOpensAt(startsAt, reminderHoursFor({ reminderHoursBefore: toCount(row.reminderHoursBefore) }, settings));
-    if (!opensAt) return null;
-    const at = Math.max(opensAt.getTime(), confirmedAt.getTime() + DAY);
-    return at > now.getTime() && at < startsAt.getTime() ? new Date(at) : null;
+    // The job's own formula (`eventReminderDueAt`): none for an event that sends none (§377).
+    const at = eventReminderDueAt({ startsAt, confirmedAt, reminderHoursBefore: toCount(row.reminderHoursBefore) }, settings);
+    return at && at.getTime() > now.getTime() ? at : null;
   });
 
   /*
