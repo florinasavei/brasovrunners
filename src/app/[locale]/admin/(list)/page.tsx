@@ -275,8 +275,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {next.event.locationToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.placeToBeAnnounced")} />
               )}
-              {/* Held with a partner (§379): the same 🤝 marker the listing card wears, never
-                  the list of partners themselves — that is the event page's own cards. */}
+              {/* Held with a partner (§379, §NNN): the same handshake marker the listing card
+                  wears, never the list of partners themselves — that is the event page's own
+                  cards. */}
               <PartnerChip event={event} />
             </Stack>
             {/* The route's pills, exactly as the listing's compact card draws them —
