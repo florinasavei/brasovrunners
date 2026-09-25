@@ -471,9 +471,9 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
   const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
   // The real rows only (§30): each was cancelled and sent its email, the number the dialog stated.
   const real = cancelled - test;
-  await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed) });
+  await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed), test: String(test) });
   redirect(
-    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}${voidedQuery}#admin-alert`,
+    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}&test=${test}${voidedQuery}#admin-alert`,
   );
 }
 

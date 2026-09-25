@@ -93,7 +93,11 @@ function sentenceKeyOf(saved: string, notice: string | number | undefined): stri
 }
 
 /** The toast keys chosen here rather than written by an action — each needs its sentence too (`feedback-catalogue.test.ts`). */
-export const DERIVED_TOAST_KEYS: readonly string[] = [...Object.keys(SENTENCES).filter((key) => key !== "eventSeries"), "eventCancelledQuiet"];
+export const DERIVED_TOAST_KEYS: readonly string[] = [
+  ...Object.keys(SENTENCES).filter((key) => key !== "eventSeries"),
+  "eventCancelledQuiet",
+  "registrationsCancelledTest",
+];
 
 /**
  * The provider's answers that mean the verb happened (§171, §288). A staff verb that reaches
@@ -125,13 +129,18 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
     const answer = outcome[field];
     if (answer !== undefined && !PROVIDER_DONE.has(String(answer))) return null;
   }
-  const key = sentenceKeyOf(saved, outcome.notice);
+  let key = sentenceKeyOf(saved, outcome.notice);
   const numberOf = (name: string): string | undefined => {
     const value = outcome[name];
     if (value === undefined) return undefined;
     const text = String(value);
     return /^\d{1,9}$/.test(text) ? text : undefined;
   };
+  // A bulk cancel that also cancelled test rows (§30, §NNN): the club's own count stays the real
+  // rows only, and a variant sentence — never the plain one — says the test rows moved too, so
+  // "0 anulate" is not read as nothing having happened.
+  const testCount = key === "registrationsCancelled" ? numberOf("test") : undefined;
+  if (testCount !== undefined && testCount !== "0") key = "registrationsCancelledTest";
   const sentence = SENTENCES[key];
   const values: Record<string, string> = {};
   const counted = sentence?.count ?? COUNT_PARAMETERS.find((name) => numberOf(name) !== undefined);
@@ -141,7 +150,8 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
     const value = numberOf(name);
     if (value !== undefined) values[placeholder] = value;
   }
-  const kind: NoticeKind = count === "0" || NOTHING_HAPPENED.has(key) ? "info" : "success";
+  if (key === "registrationsCancelledTest" && testCount !== undefined) values.test = testCount;
+  const kind: NoticeKind = (count === "0" && key !== "registrationsCancelledTest") || NOTHING_HAPPENED.has(key) ? "info" : "success";
   return { kind, key, ...(Object.keys(values).length > 0 ? { values } : {}) };
 }
 

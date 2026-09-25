@@ -117,6 +117,28 @@ describe("§NNN the notice a redirect's outcome becomes", () => {
     expect(noticeOf({ saved: "interestNotFound" })?.kind).toBe("info");
     expect(noticeOf({ saved: "neonLimitsSame" })?.kind).toBe("info");
   });
+
+  it("a bulk cancel of test rows alone still toasts success, naming the test rows apart (§30)", () => {
+    // Real rows too: the plain sentence, unchanged.
+    expect(noticeOf({ saved: "registrationsCancelled", cancelled: "3", failed: "0", test: "0" })).toEqual({
+      kind: "success",
+      key: "registrationsCancelled",
+      values: { count: "3" },
+    });
+    // Test rows only: the club's own count stays 0, but the toast is still success and names
+    // the test rows — "0 anulate" here is not "nothing happened".
+    expect(noticeOf({ saved: "registrationsCancelled", cancelled: "0", failed: "0", test: "2" })).toEqual({
+      kind: "success",
+      key: "registrationsCancelledTest",
+      values: { count: "0", test: "2" },
+    });
+    // No test rows in the batch: the plain sentence, and a zero real count is info as usual.
+    expect(noticeOf({ saved: "registrationsCancelled", cancelled: "0", failed: "0", test: "0" })).toEqual({
+      kind: "info",
+      key: "registrationsCancelled",
+      values: { count: "0" },
+    });
+  });
 });
 
 describe("§NNN the flash cookie", () => {

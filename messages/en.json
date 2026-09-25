@@ -742,7 +742,7 @@
       "bulkArchiveTitle": "Archive the ticked events?",
       "bulkArchiveBody": "They disappear from the site in both languages. You can bring them back later, one at a time.",
       "saveNoticeTitle": "Save and tell the participants?",
-      "saveNoticeBody": "The changes are saved, and the participants receive “Details updated”, each in their language — if the place, the start or the programme changed, or you wrote a note.",
+      "saveNoticeBody": "The changes are saved, and the participants receive “Details updated”, each in their language — if the place, the start or the programme changed, the event was reinstated, or you wrote a note.",
       "cancelEventTitle": "Cancel “{title}”?",
       "cancelEventBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants receive “Event cancelled” with your reason.",
       "cancelEventQuietBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants are not told.",
@@ -3970,6 +3970,11 @@
         "one": "{count} registration cancelled; {count} email queued.",
         "few": "{count} registrations cancelled; {count} emails queued.",
         "other": "{count} registrations cancelled; {count} emails queued."
+      },
+      "registrationsCancelledTest": {
+        "one": "{count} registration cancelled; {count} email queued. Also cancelled, counted nowhere: {test} test registrations.",
+        "few": "{count} registrations cancelled; {count} emails queued. Also cancelled, counted nowhere: {test} test registrations.",
+        "other": "{count} registrations cancelled; {count} emails queued. Also cancelled, counted nowhere: {test} test registrations."
       },
       "registrationsErased": {
         "one": "{count} registration erased.",

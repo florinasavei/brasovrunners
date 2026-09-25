@@ -742,7 +742,7 @@
       "bulkArchiveTitle": "Arhivezi evenimentele bifate?",
       "bulkArchiveBody": "Dispar de pe site în ambele limbi. Le poți readuce mai târziu, una câte una.",
       "saveNoticeTitle": "Salvezi și anunți participanții?",
-      "saveNoticeBody": "Modificările se salvează, iar participanții primesc „Detalii actualizate”, fiecare în limba lui — dacă s-a schimbat locul, ora sau programul, sau ai scris o notă.",
+      "saveNoticeBody": "Modificările se salvează, iar participanții primesc „Detalii actualizate”, fiecare în limba lui — dacă s-a schimbat locul, ora sau programul, evenimentul nu mai este anulat, sau ai scris o notă.",
       "cancelEventTitle": "Anulezi „{title}”?",
       "cancelEventBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții primesc „Eveniment anulat” cu motivul tău.",
       "cancelEventQuietBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții nu sunt anunțați.",
@@ -3970,6 +3970,11 @@
         "one": "{count} înscriere anulată; {count} email pus la coadă.",
         "few": "{count} înscrieri anulate; {count} emailuri puse la coadă.",
         "other": "{count} de înscrieri anulate; {count} de emailuri puse la coadă."
+      },
+      "registrationsCancelledTest": {
+        "one": "{count} înscriere anulată; {count} email pus la coadă. Anulate și ele, nenumărate nicăieri: {test} înscrieri de test.",
+        "few": "{count} înscrieri anulate; {count} emailuri puse la coadă. Anulate și ele, nenumărate nicăieri: {test} înscrieri de test.",
+        "other": "{count} de înscrieri anulate; {count} de emailuri puse la coadă. Anulate și ele, nenumărate nicăieri: {test} înscrieri de test."
       },
       "registrationsErased": {
         "one": "{count} înscriere ștearsă definitiv.",

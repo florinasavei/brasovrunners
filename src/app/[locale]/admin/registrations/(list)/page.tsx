@@ -118,7 +118,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
   // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
   // and commas only, whatever the address bar says, and a race's worth at most.
   // A repeated key (`?voided=1&voided=2`) arrives as a list at runtime; only digits are ever read back.
@@ -504,6 +504,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               cancelled: cancelled ?? "0",
               failed: failed ?? "0",
             })}
+          </Alert>
+        )}
+        {/* Test rows cancelled alongside the real ones (§30): the club's own count above stays
+            the real rows only, and this says the test rows moved too, so "0 anulate" for a
+            batch of test rows alone is not read as nothing having happened. */}
+        {saved === "registrationsCancelled" && Number(test) > 0 && (
+          <Alert severity="info" sx={{ mt: 1 }} data-testid="registrations-cancelled-test">
+            {t("participantMessages.testLine", { test: test ?? "0" })}
           </Alert>
         )}
         {/* The bibs this press has just made void, named where the club is looking (§311). */}
@@ -1151,7 +1159,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {mayManage && deriveAllowedResendMessageType(row.status) && (
               <ActionForm
                 action={resendRegistrationEmailAction}
-                confirm={{ title: t("confirm.resendTitle"), body: t("confirm.resendBody", { name: row.registeredName }), email: words.email(1), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel }}
+                confirm={{ title: t("confirm.resendTitle"), body: t("confirm.resendBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel }}
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
@@ -1274,7 +1282,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                           row.guardianName && minorSigns[row.locale]
                             ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
                             : t("registrations.confirmOnPaperBody"),
-                        email: words.email(1),
+                        ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                         confirmLabel: t("desk.confirmOnPaper"),
                         cancelLabel: words.cancel,
                       }}
@@ -1287,7 +1295,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`place-${row.id}`}
                       action={promoteRegistrationAction}
                       hidden
-                      confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), email: words.email(1), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+                      confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
                     >
                       {hidden}
                     </ActionForm>
@@ -1313,7 +1321,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         // A printed bib is named before the press (§311): after this the number stays
                         // retired and the paper has to come out of the pile.
                         body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} ` : ""}${t("registrations.cancelBody")}`,
-                        email: words.email(1),
+                        ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                         confirmLabel: t("registrations.cancel"),
                         cancelLabel: words.cancel,
                         destructive: true,
@@ -1385,10 +1393,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               </Typography>
               {/*
                 The printed bibs this form could make void, named before the press (§311) — the
-                single cancel's dialog does it per row, and this is the race-morning path. The ticked
-                set exists only in the browser (plain checkboxes, no client island to count them),
-                so the sentence names the printed numbers among the rows on this page, which is
-                every row the form can reach; the banner afterwards names the ones it did void.
+                single cancel's dialog does it per row, and this is the race-morning path. This
+                warning names every printed number on the page, which is every row the form can
+                reach, whether or not it is ticked; the banner afterwards names the ones it did
+                void. The email line beside it in the dialog is counted differently — from the
+                ticks themselves, read at the press (`bulkCancelEmailCount`, `resolveEmailCount`).
               */}
               {printedOnPage.length > 0 && (
                 <Alert severity="warning" data-testid="bulk-cancel-printed">

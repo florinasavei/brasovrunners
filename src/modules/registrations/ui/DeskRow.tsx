@@ -291,7 +291,7 @@ export default async function DeskRow({
                 title: t("desk.confirmOnPaper"),
                 // A minor's paper carries two signatures, and the press attests both (§330).
                 body: row.guardianName && minorSigns[row.locale] ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName }) : t("registrations.confirmOnPaperBody"),
-                email: words.email(1),
+                ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
                 confirmLabel: t("desk.confirmHere"),
                 cancelLabel: words.cancel,
               }}
@@ -330,7 +330,7 @@ export default async function DeskRow({
           {!readOnly && row.status === "WAITLISTED" && (
             <ActionForm
               action={promoteRegistrationAction}
-              confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), email: words.email(1), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+              confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
               data-testid="desk-place-form"
             >
               {hidden}
@@ -360,7 +360,7 @@ export default async function DeskRow({
                 <ActionForm
                   action={setBibNumberAction}
                   messages={await bibRefusalMessages(t("desk.bibField"))}
-                  confirm={{ title: t("confirm.setBibTitle"), body: t("confirm.setBibBody"), email: words.email(1), confirmLabel: t("desk.saveBib"), cancelLabel: words.cancel }}
+                  confirm={{ title: t("confirm.setBibTitle"), body: t("confirm.setBibBody"), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.saveBib"), cancelLabel: words.cancel }}
                   scope={`bib-${row.id}`}
                 >
                   {hidden}

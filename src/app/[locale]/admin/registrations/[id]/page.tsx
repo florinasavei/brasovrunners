@@ -271,7 +271,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {mayManage && (
           <ActionForm
             action={resendRegistrationEmailAction}
-            confirm={{ title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), email: words.email(1), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel }}
+            confirm={{ title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel }}
             data-testid="resend-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
@@ -285,7 +285,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {mayManage && canResendReminder(registration.status, registration.eventStartsAt, new Date()) && (
           <ActionForm
             action={resendRegistrationEmailAction}
-            confirm={{ title: tr("confirm.reminderTitle"), body: tr("confirm.reminderBody", { name: registration.registeredName }), email: words.email(1), confirmLabel: tr("registrations.sendReminder"), cancelLabel: words.cancel }}
+            confirm={{ title: tr("confirm.reminderTitle"), body: tr("confirm.reminderBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.sendReminder"), cancelLabel: words.cancel }}
             data-testid="reminder-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
@@ -380,7 +380,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               confirm={{
                 title: tr("desk.confirmOnPaper"),
                 body: registration.guardianName && minorSigns ? tr("registrations.confirmOnPaperBodyMinor", { guardian: registration.guardianName }) : tr("registrations.confirmOnPaperBody"),
-                email: words.email(1),
+                ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
                 confirmLabel: tr("desk.confirmHere"),
                 cancelLabel: words.cancel,
               }}
@@ -403,7 +403,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {registration.status === "WAITLISTED" && (
             <ActionForm
               action={promoteRegistrationAction}
-              confirm={{ title: tr("confirm.givePlaceTitle"), body: tr("confirm.givePlaceBody", { name: registration.registeredName }), email: words.email(1), confirmLabel: tr("desk.givePlace"), cancelLabel: words.cancel }}
+              confirm={{ title: tr("confirm.givePlaceTitle"), body: tr("confirm.givePlaceBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("desk.givePlace"), cancelLabel: words.cancel }}
               data-testid="promote-form"
             >
               {deskHidden}
@@ -447,7 +447,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   <ActionForm
                     action={setBibNumberAction}
                     messages={bibRefusal}
-                    confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), email: words.email(1), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
+                    confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
                     scope="bib"
                     data-testid="set-bib-form"
                   >
@@ -625,7 +625,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 printedBib !== null
                   ? `${tr("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${tr("confirm.cancelRegistrationBody")}`
                   : tr("confirm.cancelRegistrationBody"),
-              email: words.email(1),
+              ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
               confirmLabel: tr("registrations.cancelAction"),
               cancelLabel: words.cancel,
               destructive: true,
