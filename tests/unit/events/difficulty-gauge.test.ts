@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 /**
  * `DECISIONS.md` §NNN — five levels and a gauge (the owner, 2026-09-25: "vreau să fie foarte
  * ușor, ușor, mediu, greu și foarte greu — sau un gauge icon custom mai degrabă"), replacing §399's
- * scale of dumbbells.
+ * scale of weights.
  *
  * `DifficultyGaugeIcon.tsx` draws one half-dial in one `<svg>` for every level: five arc segments,
  * the first `level` lit (`currentColor`, no opacity override) and the rest faint
@@ -63,7 +63,7 @@ describe("§NNN DifficultyGaugeIcon — a half-dial, the needle at one of five p
       const html = renderToStaticMarkup(createElement(DIFFICULTY_ICONS[level]));
       expect((html.match(/<svg\b/g) ?? []).length).toBe(1);
       expect(html).toContain('viewBox="0 0 24 24"');
-      // No width of its own: the scale of dumbbells widened its chip clone to `3em`; the gauge is one glyph.
+      // No width of its own: §399's scale of weights widened its chip clone to `3em`; the gauge is one glyph.
       expect(html).not.toMatch(/width:\s*(?!1em)[\d.]+em/);
     }
   });

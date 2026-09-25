@@ -7,9 +7,13 @@ import { DIFFICULTY_LEVELS } from "../domain/difficulty";
 /**
  * The difficulty as a gauge (§NNN; the owner, 2026-09-25: "vreau să fie foarte ușor, ușor, mediu,
  * greu și foarte greu — sau un gauge icon custom mai degrabă"), replacing §399's scale of
- * dumbbells. One half-dial on the same 24-unit grid as every other glyph (`RoadIcon`), one
+ * weights. One half-dial on the same 24-unit grid as every other glyph (`RoadIcon`), one
  * `<svg>` — what `GlyphChip`'s clone and `.MuiChip-icon`'s sizing expect — and one icon-width
- * wide, where five dumbbells would have been five.
+ * wide, where §399's scale was one icon-width per level and five would have been five.
+ *
+ * `"use client"` because each faint segment reads the theme through an `sx` callback, and a
+ * function cannot cross from a Server Component to MUI's client `Box`; the registry's
+ * `difficulty-glyphs.ts` (no directive) is what a Server Component imports.
  *
  * The dial is `DIFFICULTY_LEVELS.length` arc segments from left (the easiest) to right (the
  * hardest), with a needle from the hub to the middle of the level's own segment. The segments up

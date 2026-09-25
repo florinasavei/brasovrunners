@@ -5,7 +5,7 @@ import { openEditorBox } from "./support/fold";
 /**
  * `DECISIONS.md` §NNN — five difficulty levels and a gauge (the owner, 2026-09-25: "vreau să fie
  * foarte ușor, ușor, mediu, greu și foarte greu — sau un gauge icon custom mai degrabă"),
- * replacing §399's scale of dumbbells. One glyph, drawn by `DifficultyGaugeIcon.tsx` and shared
+ * replacing §399's scale of weights. One glyph, drawn by `DifficultyGaugeIcon.tsx` and shared
  * through `RoutePills` (§388) by every surface: the event page's pill, the listing card's, the
  * backoffice's own list, and the editor's select.
  *

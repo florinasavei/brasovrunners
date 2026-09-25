@@ -41,7 +41,7 @@ export type Glyph = ComponentType<SvgIconProps>;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
  * mixed the fork in the path; difficulty is a gauge, its needle at one of five positions
  * (§NNN; the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu — sau un gauge icon
- * custom mai degrabă", replacing §399's dumbbells — drawn in `DifficultyGaugeIcon.tsx`);
+ * custom mai degrabă", replacing §399's scale of weights — drawn in `DifficultyGaugeIcon.tsx`);
  * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
  * platform takes none of the three itself.
  */
