@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { signOut } from "@/auth";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
@@ -87,7 +88,8 @@ function text(form: FormData, name: string): string {
 }
 
 /** Where the browser goes next, with either a success flag or an error code. */
-function backTo(path: string, outcome: Record<string, string | undefined>): never {
+async function backTo(path: string, outcome: Record<string, string | undefined>): Promise<never> {
+  await flashOutcome(outcome);
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
@@ -329,7 +331,7 @@ function selectedEventRefs(form: FormData): Array<{ eventId: string; expectedVer
 }
 
 /** Publication is per event now, so this moves the event and not one of its languages. */
-export async function transitionEventAction(form: FormData): Promise<void> {
+export async function transitionEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
@@ -348,7 +350,7 @@ export async function transitionEventAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -375,7 +377,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   const selected = selectedEventRefs(form);
 
   if (selected.length === 0) {
-    backTo(listPath, { error: "NOTHING_SELECTED" });
+    return backTo(listPath, { error: "NOTHING_SELECTED" });
   }
 
   let archived = 0;
@@ -394,9 +396,10 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
       }
     }
   } catch (error) {
-    backTo(listPath, outcomeOf(error));
+    return backTo(listPath, outcomeOf(error));
   }
 
+  await flashOutcome({ saved: "eventsArchived", archived: String(archived), failed: String(failed) });
   redirect(`${listPath}?saved=eventsArchived&archived=${archived}&failed=${failed}#admin-alert`);
 }
 
@@ -413,7 +416,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   const listPath = getPathname({ locale, href: "/admin" });
 
   const selected = selectedEventRefs(form);
-  if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
+  if (selected.length === 0) return backTo(listPath, { error: "NOTHING_SELECTED" });
 
   let published = 0;
   let failed = 0;
@@ -443,9 +446,10 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
       }
     }
   } catch (error) {
-    backTo(listPath, outcomeOf(error));
+    return backTo(listPath, outcomeOf(error));
   }
 
+  await flashOutcome({ saved: "eventsPublished", published: String(published), failed: String(failed) });
   redirect(`${listPath}?saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
 }
 
@@ -460,7 +464,7 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
   const listPath = getPathname({ locale, href: "/admin" });
 
   const selected = selectedEventRefs(form);
-  if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
+  if (selected.length === 0) return backTo(listPath, { error: "NOTHING_SELECTED" });
 
   let deleted = 0;
   let failed = 0;
@@ -479,9 +483,10 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
       }
     }
   } catch (error) {
-    backTo(listPath, outcomeOf(error));
+    return backTo(listPath, outcomeOf(error));
   }
 
+  await flashOutcome({ saved: "eventsDeleted", deleted: String(deleted), failed: String(failed) });
   redirect(`${listPath}?saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
 }
 
@@ -559,7 +564,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -633,10 +638,10 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
     return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
-  backTo(editorPath(locale, createdId), outcome);
+  return backTo(editorPath(locale, createdId), outcome);
 }
 
-export async function duplicateEventAction(form: FormData): Promise<void> {
+export async function duplicateEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
   let copyId: string | undefined;
@@ -649,8 +654,8 @@ export async function duplicateEventAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  if (outcome) backTo(getPathname({ locale, href: "/admin" }), outcome);
-  backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
+  if (outcome) return backTo(getPathname({ locale, href: "/admin" }), outcome);
+  return backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
 }
 
 /** The ticked days of the week, ISO numbered, from the repeat fields (`RepeatFields`). */
@@ -693,11 +698,11 @@ export async function repeatEventAction(_previous: FormOutcome | null, form: For
   }
 
   // Back to the source: it now says how it repeats, and the list has the dates.
-  backTo(editorPath(locale, eventId), outcome);
+  return backTo(editorPath(locale, eventId), outcome);
 }
 
 /** The series ends here: no further dates are made; the ones that exist stay (§122). */
-export async function stopRepeatAction(form: FormData): Promise<void> {
+export async function stopRepeatAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   let outcome: { error?: string; saved?: string };
@@ -708,7 +713,7 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(editorPath(locale, eventId), outcome);
+  return backTo(editorPath(locale, eventId), outcome);
 }
 
 /**
@@ -726,7 +731,7 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
  * never an address, so nothing posted can choose where the redirect goes — anything else is the
  * editor, as before.
  */
-export async function setRepeatPublishAction(form: FormData): Promise<void> {
+export async function setRepeatPublishAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const publish = text(form, "publish") === "on";
@@ -739,14 +744,14 @@ export async function setRepeatPublishAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(back, outcome);
+  return backTo(back, outcome);
 }
 
 /**
  * Race numbers for every confirmed registration of the event that has none yet
  * (BR-REQ-038-01). Lands back on the editor, where the sheet is downloaded from.
  */
-export async function assignBibNumbersAction(form: FormData): Promise<void> {
+export async function assignBibNumbersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
@@ -765,7 +770,7 @@ export async function assignBibNumbersAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(editorPath(locale, eventId), outcome);
+  return backTo(editorPath(locale, eventId), outcome);
 }
 
 /**
@@ -786,10 +791,10 @@ export async function sendEventThanksAction(_previous: FormOutcome | null, form:
   } catch (error) {
     return refused(error, form);
   }
-  backTo(editorPath(locale, eventId), outcome);
+  return backTo(editorPath(locale, eventId), outcome);
 }
 
-export async function deleteEventAction(form: FormData): Promise<void> {
+export async function deleteEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
@@ -806,7 +811,7 @@ export async function deleteEventAction(form: FormData): Promise<void> {
 
   // Deleted or not, the event list is where there is something to look at — the editor for a
   // deleted event is a 404.
-  backTo(getPathname({ locale, href: "/admin" }), outcome);
+  return backTo(getPathname({ locale, href: "/admin" }), outcome);
 }
 
 /**
@@ -844,6 +849,7 @@ export async function hardDeleteEventAction(_previous: FormOutcome | null, form:
     return refused(error, form);
   }
 
+  await flashOutcome({ saved: "eventErased", erased: String(erased) });
   redirect(
     `${getPathname({ locale, href: "/admin" })}?saved=eventErased&erased=${erased}#admin-alert`,
   );
@@ -873,11 +879,11 @@ export async function addTestRegistrationsAction(_previous: FormOutcome | null, 
   }
 
   // Stopped part-way at the waiting list's limit (§348): how many went in, and why the rest did not.
-  if (stoppedAt !== null) backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
-  backTo(path, { saved: "testRegistrationsAdded" });
+  if (stoppedAt !== null) return backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
+  return backTo(path, { saved: "testRegistrationsAdded" });
 }
 
-export async function removeTestRegistrationsAction(form: FormData): Promise<void> {
+export async function removeTestRegistrationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
@@ -891,7 +897,7 @@ export async function removeTestRegistrationsAction(form: FormData): Promise<voi
     outcome = outcomeOf(error);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -915,7 +921,7 @@ export async function withdrawInterestAction(_previous: FormOutcome | null, form
     return refused(error, form);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /** Adding a colleague (§123). A refused address or name comes back in its box (§315). */
@@ -945,11 +951,11 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
     return refused(error, form);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /** The invitation again, for somebody whose first one is lost (§123). */
-export async function resendStaffInviteAction(form: FormData): Promise<void> {
+export async function resendStaffInviteAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
@@ -962,7 +968,7 @@ export async function resendStaffInviteAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -971,7 +977,7 @@ export async function resendStaffInviteAction(form: FormData): Promise<void> {
  * Zitadel sends the mail and owns the code. Nothing here reads, sets or transports a password,
  * and the allowlist is untouched: this is about the account, not about who is staff.
  */
-export async function sendStaffPasswordResetAction(form: FormData): Promise<void> {
+export async function sendStaffPasswordResetAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
@@ -985,7 +991,7 @@ export async function sendStaffPasswordResetAction(form: FormData): Promise<void
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -995,7 +1001,7 @@ export async function sendStaffPasswordResetAction(form: FormData): Promise<void
  * what stops the backoffice letting somebody in (`AGENTS.md` §13), and it is the right verb for
  * a colleague who changed job inside the club. This one is for a colleague who left.
  */
-export async function setStaffAccountActiveAction(form: FormData): Promise<void> {
+export async function setStaffAccountActiveAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
@@ -1014,10 +1020,10 @@ export async function setStaffAccountActiveAction(form: FormData): Promise<void>
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
-export async function changeStaffRoleAction(form: FormData): Promise<void> {
+export async function changeStaffRoleAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
 
@@ -1030,10 +1036,10 @@ export async function changeStaffRoleAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
-export async function revokeStaffAction(form: FormData): Promise<void> {
+export async function revokeStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
 
@@ -1046,7 +1052,7 @@ export async function revokeStaffAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -1073,8 +1079,8 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  if (outcome) backTo(getPathname({ locale, href: "/sign-in" }), outcome);
-  backTo(getPathname({ locale, href: "/admin" }), {});
+  if (outcome) return backTo(getPathname({ locale, href: "/sign-in" }), outcome);
+  return backTo(getPathname({ locale, href: "/admin" }), {});
 }
 
 /**
@@ -1094,5 +1100,5 @@ export async function signOutAction(form: FormData): Promise<void> {
     await signOut({ redirectTo: getPathname({ locale, href: "/sign-in" }) });
   }
 
-  backTo(getPathname({ locale, href: "/sign-in" }), {});
+  return backTo(getPathname({ locale, href: "/sign-in" }), {});
 }

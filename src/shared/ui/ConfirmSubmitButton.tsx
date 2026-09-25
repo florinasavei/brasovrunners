@@ -1,12 +1,9 @@
 "use client";
 
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import { useRef, useState } from "react";
+import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
 type Props = {
@@ -15,6 +12,8 @@ type Props = {
   body: string;
   confirmLabel: string;
   cancelLabel: string;
+  /** "An email will be sent to N participants", worded on the server (`ConfirmSpec.email`). */
+  email?: string;
   color?: "primary" | "error" | "warning";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium";
@@ -36,16 +35,18 @@ type Props = {
    * to a form it is not inside.
    */
   form?: string;
+  disabled?: boolean;
 };
 
 /**
- * A submit button that asks first.
+ * A submit button that asks first — for a form with **several verbs** (§NNN).
  *
- * Deleting an event, duplicating one, clearing a queue of test registrations and archiving are
- * all one click away in the backoffice, and three of the four are hard to undo. This wraps the
- * button in a confirmation without changing anything behind it: the dialog is a Client
- * Component, and what it finally does is `requestSubmit()` on the form it already sits inside,
- * so the same Server Action receives the same fields.
+ * A single-verb form asks through `ActionForm`'s `confirm` prop, which is where the question
+ * belongs when there is one; this button is for the bulk bars, where one selection feeds two or
+ * three Server Actions and each verb needs its own question: the events list's publish, archive
+ * and delete, the registrations list's cancel and erase. The dialog is the same `ConfirmDialog`
+ * every other question uses, and what it finally does is `requestSubmit()` on the form with this
+ * button as the submitter, so the same Server Action receives the same fields.
  *
  * **Confirmation is UX and only UX.** Every server-side check stays exactly where it is — the
  * role, the version guard, the refusal to delete an event with registrations against it. This
@@ -59,15 +60,18 @@ export default function ConfirmSubmitButton({
   body,
   confirmLabel,
   cancelLabel,
+  email,
   color = "primary",
   variant = "outlined",
   size = "small",
   icon,
   form,
+  disabled,
 }: Props) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
   const Icon = icon ? ACTION_ICONS[icon] : null;
+  const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, email, destructive: color === "error" };
 
   return (
     <>
@@ -84,6 +88,7 @@ export default function ConfirmSubmitButton({
         variant={variant}
         color={color}
         size={size}
+        disabled={disabled}
         sx={{ minHeight: 44 }}
         startIcon={Icon ? <Icon fontSize="small" /> : undefined}
         onClick={(event) => {
@@ -94,35 +99,24 @@ export default function ConfirmSubmitButton({
         {label}
       </Button>
 
-      <Dialog open={open} onClose={() => setOpen(false)} aria-labelledby="confirm-title">
-        <DialogTitle id="confirm-title">{title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{body}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} sx={{ minHeight: 44 }}>
-            {cancelLabel}
-          </Button>
-          <Button
-            color={color}
-            variant="contained"
-            sx={{ minHeight: 44 }}
-            onClick={() => {
-              setOpen(false);
-              // `requestSubmit` rather than `submit()`: it runs the form's own validation and
-              // fires the submit event React's Server Action handler is listening for. The
-              // plain `submit()` bypasses both and posts nothing useful.
-              // With a second action, the *button* is the submitter React reads it from — so the
-              // form is asked to submit through this control rather than by itself (§287).
-              const form = anchor.current?.form;
-              if (formAction && anchor.current) form?.requestSubmit(anchor.current);
-              else form?.requestSubmit();
-            }}
-          >
-            {confirmLabel}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {open && (
+        <ConfirmDialog
+          spec={spec}
+          open
+          onCancel={() => setOpen(false)}
+          onConfirm={() => {
+            setOpen(false);
+            // `requestSubmit` rather than `submit()`: it runs the form's own validation and
+            // fires the submit event React's Server Action handler is listening for. The
+            // plain `submit()` bypasses both and posts nothing useful.
+            // With a second action, the *button* is the submitter React reads it from — so the
+            // form is asked to submit through this control rather than by itself (§287).
+            const target = anchor.current?.form;
+            if (formAction && anchor.current) target?.requestSubmit(anchor.current);
+            else target?.requestSubmit();
+          }}
+        />
+      )}
     </>
   );
 }

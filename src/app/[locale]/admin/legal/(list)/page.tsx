@@ -34,7 +34,9 @@ import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
 
 type Props = {
@@ -130,6 +132,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const { saved, error } = current;
 
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const versions = await listVersionsForBackoffice(getDb());
   // The one press (§132): offered while any of the three has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
@@ -335,7 +338,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           {missingFacts.length > 0 ? (
             <Alert severity="warning">{t("legal.platform.blocked", { variables: missingFacts.join(", ") })}</Alert>
           ) : (
-            <form action={approvePlatformTemplatesAction}>
+            <ActionForm
+              action={approvePlatformTemplatesAction}
+              confirm={{ title: t("confirm.approvePlatformTitle"), body: t("confirm.approvePlatformBody"), confirmLabel: t("legal.platform.button"), cancelLabel: words.cancel, destructive: true }}
+              data-testid="approve-platform-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <Stack spacing={1}>
                 <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
@@ -343,7 +350,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                   <GlyphSubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
                 </Box>
               </Stack>
-            </form>
+            </ActionForm>
           )}
         </Box>
       )}
@@ -482,7 +489,10 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                     // below already says what deleting would mean, once.
                     null
                   ) : (
-                    <Box component="form" action={withdrawLegalVersionAction}>
+                    <ActionForm
+                      action={withdrawLegalVersionAction}
+                      confirm={{ title: t("legal.withdrawTitle"), body: t("legal.withdrawBody"), confirmLabel: t("legal.withdraw"), cancelLabel: words.cancel, destructive: true }}
+                    >
                       <input type="hidden" name="uiLocale" value={locale} />
                       <input type="hidden" name="versionId" value={version.id} />
                       {/*
@@ -491,16 +501,10 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                         otherwise in the one place somebody reads before pressing would be the
                         wrong kind of honest.
                       */}
-                      <ConfirmSubmitButton
-                        label={t("legal.withdraw")}
-                        icon="unpublish"
-                        title={t("legal.withdrawTitle")}
-                        body={t("legal.withdrawBody")}
-                        confirmLabel={t("legal.withdraw")}
-                        cancelLabel={t("confirm.cancel")}
-                        color="warning"
-                      />
-                    </Box>
+                      <GlyphButton icon="unpublish" type="submit" size="small" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
+                        {t("legal.withdraw")}
+                      </GlyphButton>
+                    </ActionForm>
                   )}
                   {obstacle?.kind === "termsAccepted" ? (
                     reason(
@@ -534,19 +538,16 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
             if (!mayDestroy) return reason(t("legal.deleteMeans", { version: version.version }));
 
             return (
-              <Box component="form" action={deleteLegalVersionAction}>
+              <ActionForm
+                action={deleteLegalVersionAction}
+                confirm={{ title: t("legal.deleteTitle"), body: t("legal.deleteBody"), confirmLabel: t("legal.delete"), cancelLabel: words.cancel, destructive: true }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="versionId" value={version.id} />
-                <ConfirmSubmitButton
-                  label={t("legal.delete")}
-                  icon="delete"
-                  title={t("legal.deleteTitle")}
-                  body={t("legal.deleteBody")}
-                  confirmLabel={t("legal.delete")}
-                  cancelLabel={t("confirm.cancel")}
-                  color="error"
-                />
-              </Box>
+                <GlyphButton icon="delete" type="submit" size="small" variant="outlined" color="error" sx={{ minHeight: 44 }}>
+                  {t("legal.delete")}
+                </GlyphButton>
+              </ActionForm>
             );
           }}
         />

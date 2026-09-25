@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -96,6 +97,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
     // Both languages go live together (`AGENTS.md` §11.2), each at its own address.
@@ -170,6 +172,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/error=VALIDATION_ERROR/);
   });
 

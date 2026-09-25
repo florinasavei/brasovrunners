@@ -21,7 +21,9 @@ import { canEditEventFields, isEditorial } from "@/modules/staff-identity/domain
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { deletePictureAction } from "../actions";
 
 type Props = {
@@ -50,6 +52,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
   const current = await searchParams;
   const { saved, error } = current;
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const format = await getFormatter();
   const rows = isStorageConfigured() ? await listMediaAssetsForAdmin(getDb(), locale) : [];
   const query = parseListQuery(current, { sortable: [], defaultSort: "createdAt", defaultPerPage: 50 });
@@ -222,19 +225,16 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
           mayDelete
             ? (row) =>
                 row.references.length === 0 ? (
-                  <form action={deletePictureAction}>
+                  <ActionForm
+                    action={deletePictureAction}
+                    confirm={{ title: t("pictures.deleteConfirm"), body: row.originalFilename, confirmLabel: t("pictures.delete"), cancelLabel: words.cancel, destructive: true }}
+                  >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="assetId" value={row.id} />
-                    <ConfirmSubmitButton
-                      label={t("pictures.delete")}
-                      icon="delete"
-                      title={t("pictures.deleteConfirm")}
-                      body={row.originalFilename}
-                      confirmLabel={t("pictures.delete")}
-                      cancelLabel={t("confirm.cancel")}
-                      color="error"
-                    />
-                  </form>
+                    <GlyphButton icon="delete" type="submit" size="small" variant="outlined" color="error" sx={{ minHeight: 44 }}>
+                      {t("pictures.delete")}
+                    </GlyphButton>
+                  </ActionForm>
                 ) : null
             : undefined
         }

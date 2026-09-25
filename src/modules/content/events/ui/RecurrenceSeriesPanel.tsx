@@ -4,7 +4,9 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 
@@ -36,8 +38,8 @@ type Props = {
   /** Creating, stopping and switching the flag: `canCreateEvent`, asked again by the service. */
   mayChange: boolean;
   actions: {
-    setRepeatPublish: (form: FormData) => Promise<void>;
-    stopRepeat: (form: FormData) => Promise<void>;
+    setRepeatPublish: ActionFormAction;
+    stopRepeat: ActionFormAction;
   };
 };
 
@@ -58,6 +60,7 @@ type Props = {
  */
 export default async function RecurrenceSeriesPanel(props: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const { locale, eventId, sourceId, seriesTitle, position, count, previous, next, ruleSentence, publish, sourceLive, ended, upcoming, lastCreated, mayChange, actions } =
     props;
   const running = ruleSentence !== null && !ended;
@@ -129,7 +132,8 @@ export default async function RecurrenceSeriesPanel(props: Props) {
               {publishState}
             </Typography>
             {mayChange && (
-              <form action={actions.setRepeatPublish}>
+              // A switch, undone by the same switch: a toast and no question (§NNN).
+              <ActionForm action={actions.setRepeatPublish} data-testid="repeat-publish-form">
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={eventId} />
                 <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
@@ -138,26 +142,24 @@ export default async function RecurrenceSeriesPanel(props: Props) {
                   </CheckboxField>
                   <GlyphSubmitButton label={t("editor.repeatPublishSave")} pendingLabel={t("editor.repeatPublishPending")} icon="save" variant="outlined" size="small" />
                 </Stack>
-              </form>
+              </ActionForm>
             )}
           </Box>
         )}
 
         {running &&
           (mayChange ? (
-            <form action={actions.stopRepeat}>
+            <ActionForm
+              action={actions.stopRepeat}
+              confirm={{ title: t("editor.repeatStop"), body: t("editor.repeatStopHelp"), confirmLabel: t("editor.repeatStop"), cancelLabel: words.cancel, destructive: true }}
+              data-testid="repeat-stop-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={eventId} />
-              <ConfirmSubmitButton
-                label={t("editor.repeatStop")}
-                icon="repeatStop"
-                title={t("editor.repeatStop")}
-                body={t("editor.repeatStopHelp")}
-                confirmLabel={t("editor.repeatStop")}
-                cancelLabel={t("confirm.cancel")}
-                color="warning"
-              />
-            </form>
+              <GlyphButton icon="repeatStop" type="submit" variant="outlined" color="warning" size="small" sx={{ minHeight: 44 }}>
+                {t("editor.repeatStop")}
+              </GlyphButton>
+            </ActionForm>
           ) : (
             <Typography variant="body2" color="text.secondary">
               {t("editor.repeatAdminOnly")}

@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
 import { fillDateField, fillTimeField, hydrated, pickerGroup, programmeRow, signIn } from "./support/featured-event";
@@ -406,6 +407,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await page.goto(editorUrl);
     await hydrated(page);
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });
@@ -425,6 +427,7 @@ test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event
 
     // Unpublish: the public page must stop existing, in both languages together.
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Modificările au fost salvate.")).toBeVisible();
 
     expect((await page.goto(`/ro/evenimente/${event.slug}`))?.status()).toBe(404);
@@ -464,6 +467,7 @@ test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
 
     expect((await page.goto(`/ro/evenimente/${event.slug}`))?.status()).toBe(200);
@@ -704,10 +708,11 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await page.goto(editorUrl);
     await hydrated(page);
     await page.getByTestId("recurrence-series").getByRole("button", { name: "Oprește recurența" }).click();
-    await page.getByRole("dialog", { name: "Oprește recurența" }).getByRole("button", { name: "Oprește recurența" }).click();
+    await confirmDialog(page, "Oprește recurența");
     await expect(page.locator("#admin-alert")).toContainText("Seria e oprită", { timeout: 15_000 });
     await hydrated(page);
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });

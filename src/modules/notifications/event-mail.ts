@@ -202,6 +202,21 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
 }
 
 /**
+ * Who the thank-you reaches: everyone checked in at the event. One condition for the send below
+ * and for the count the confirmation dialog states before the press (§NNN), so the number the
+ * organizer reads is the number of rows the send writes.
+ */
+function thanksRecipientsOf(eventId: string) {
+  return and(eq(registrations.eventId, eventId), isNotNull(registrations.checkedInAt));
+}
+
+/** How many the thank-you would reach right now — the dialog's number, from the send's own condition. */
+export async function countEventThanksRecipients<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(registrations).where(thanksRecipientsOf(eventId));
+  return row?.count ?? 0;
+}
+
+/**
  * The thank-you, sent once per event by an organizer to everyone who was checked in
  * (`DECISIONS.md` §82). Manual and never automatic; audited with the event and the count,
  * never the recipients; `events.thanks_sent_at` is what makes it once.
@@ -243,7 +258,7 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
       })
       .from(registrations)
       .innerJoin(participants, eq(participants.id, registrations.participantId))
-      .where(and(eq(registrations.eventId, input.eventId), isNotNull(registrations.checkedInAt)));
+      .where(thanksRecipientsOf(input.eventId));
 
     for (const row of rows) {
       await enqueueEmail(tx, {

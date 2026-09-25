@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
@@ -818,6 +819,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await page.goto(editorUrl);
       await hydrated(page);
       await page.getByRole("button", { name: "Mută în ciornă" }).click();
+      await confirmDialog(page);
       await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
     }
   });

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { signIn, hydrated } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
@@ -35,6 +36,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     await main.getByLabel("Planul pe care e contul Mailgun").selectOption("BASIC");
     await main.getByLabel("Notă (de ce, până când)").fill("Basic pentru cursa din octombrie");
     await main.getByRole("button", { name: "Salvează planul" }).click();
+    await confirmDialog(page);
 
     await expect(main.getByText("Planul a fost salvat", { exact: false })).toBeVisible();
     // Its own save opens it by itself (§336), so what was saved is in view.
@@ -45,6 +47,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     // And back, so the next test on this database starts from the default.
     await main.getByLabel("Planul pe care e contul Mailgun").selectOption("FREE");
     await main.getByRole("button", { name: "Salvează planul" }).click();
+    await confirmDialog(page);
     await expect(main.getByText(/Planul Free: \d+ din 100 mesaje trimise azi/)).toBeVisible();
   });
 
@@ -150,6 +153,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // "Către" is not also Bcc'd, so only the archive mailbox is kept from this box.
     await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("Club@example.com, arhiva@example.org");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
+    await confirmDialog(page);
 
     await expect(main.getByText("Destinatarii formularului de contact au fost salvați.")).toBeVisible();
     // Its own save opens it (§336), and the closed summary would now say the new address.
@@ -165,6 +169,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // in its box to be corrected, and the refusal is said inside the form it is about (§315).
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("nope");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
+    await confirmDialog(page);
     await expect(main.getByTestId("contact-recipients-form").getByTestId("form-refusal")).toBeVisible();
     // The fold the Administrator opened to press is still open: a kept form's refusal re-renders
     // nothing around it (§336, §315).
@@ -181,6 +186,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("");
     await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
+    await confirmDialog(page);
     await expect(main.getByText(/Nu le primește nimeni|din variabila CONTACT_FORM_TO/)).toBeVisible();
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("");
   });
@@ -202,6 +208,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await openFold(contacts);
     await contacts.getByLabel(to).fill("nope");
     await contacts.getByRole("button", { name: "Salvează destinatarii" }).click();
+    await confirmDialog(page);
     await expect(contacts.getByTestId("form-refusal")).toBeVisible();
     await expect(contacts).toHaveAttribute("open", "");
     expect(page.url()).not.toContain("saved=");

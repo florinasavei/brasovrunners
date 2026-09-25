@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import sharp from "sharp";
 import { fillDateField, signIn } from "./support/featured-event";
 
@@ -51,6 +52,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
@@ -94,7 +96,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     const thumbSrc = (await page.locator("main img[src*='/api/media/']").first().getAttribute("src")) as string;
 
     await page.getByRole("button", { name: "Șterge albumul" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Șterge albumul" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/\/admin\/gallery\?saved=deleted/);
 
     expect((await page.goto(`/ro/galerie/${slug}`))?.status()).toBe(404);

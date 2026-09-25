@@ -84,7 +84,8 @@ describe("§351 SeriesDraftLine — the words, the dates and the fix on one line
   });
 
   it("switches the SOURCE's rule on and comes back to the list — never the editor, never an address", () => {
-    const html = render({ autoPublish: { action: noop, sourceId: "source-id", label: "Publică automat de acum", ...confirmed } });
+    // The switch's form is an `ActionForm` since §NNN, whose action takes `useActionState`'s two arguments.
+    const html = render({ autoPublish: { action: async () => null, sourceId: "source-id", label: "Publică automat de acum", ...confirmed } });
     const [auto] = forms(html);
     expect(Object.fromEntries([...auto.fields].map(([name, values]) => [name, values.join(",")]))).toEqual({
       uiLocale: "ro",
@@ -251,7 +252,8 @@ describe("§341 the editor's repeat-publish switch", () => {
 
   it("posts the tick as the rule's new flag, ticked as the rule is now", () => {
     expect(panel).toContain('<CheckboxField name="publish" defaultChecked={publish}>');
-    expect(panel).toContain("<form action={actions.setRepeatPublish}>");
+    // An `ActionForm` since §NNN, so the save toasts — and with no question: a switch is its own undo.
+    expect(panel).toContain('<ActionForm action={actions.setRepeatPublish} data-testid="repeat-publish-form">');
     expect(editor).toContain("actions={{ setRepeatPublish: setRepeatPublishAction, stopRepeat: stopRepeatAction }}");
     // The box posts no `returnTo`, so its press still lands on the editor (§351).
     expect(panel).not.toContain('name="returnTo"');

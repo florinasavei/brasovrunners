@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -25,6 +26,7 @@ test.describe("§315 a refused form keeps what was typed", () => {
     await panel.getByLabel(/Adresă de email/).fill("amalia@club");
     await panel.getByLabel(/^Nume/).fill("Amalia Probă");
     await panel.getByRole("button", { name: "Adaugă" }).click();
+    await confirmDialog(page);
 
     const refusal = panel.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();

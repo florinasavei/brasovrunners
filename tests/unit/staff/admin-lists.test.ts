@@ -46,7 +46,8 @@ describe("§256 the backoffice lists are the same shape", () => {
     // The pictures list deletes and does nothing else; a menu there would be a press for
     // nothing, and the confirmation is what actually matters.
     const pictures = source(LISTS.pictures);
-    expect(pictures).toContain("ConfirmSubmitButton");
+    // The form asks (`ActionForm confirm`, §NNN); the button is a plain submit.
+    expect(pictures).toMatch(/<ActionForm\s*action=\{deletePictureAction\}\s*confirm=\{\{/);
     expect(pictures).not.toContain("RowMenu");
   });
 

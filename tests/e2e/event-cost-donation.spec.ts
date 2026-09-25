@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -109,6 +110,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await page.goto(editorUrl);
     await hydrated(page);
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });

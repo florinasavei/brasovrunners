@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
@@ -38,6 +39,7 @@ type Props = {
  */
 export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const unlimited = t("emails.plan.unlimited");
   const ceiling = (value: number | null) => (value === null ? unlimited : value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB"));
   /*
@@ -130,6 +132,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           note: t("emails.plan.note"),
         })}
         // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        confirm={{ title: t("confirm.emailPlanTitle"), body: t("confirm.emailPlanBody"), confirmLabel: t("emails.plan.save"), cancelLabel: words.cancel }}
         scope="plan"
         data-testid="email-plan-form"
       >

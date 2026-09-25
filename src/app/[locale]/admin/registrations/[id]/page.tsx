@@ -36,7 +36,7 @@ import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
@@ -95,6 +95,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
+  // Every verb here asks first and says who is emailed (§NNN); the service decides, as before.
+  const words = await confirmWords();
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
@@ -264,24 +266,32 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {/* Sending a participant a message is the Administrator's (§15.8, §289). */}
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
         {mayManage && (
-          <form action={resendRegistrationEmailAction}>
+          <ActionForm
+            action={resendRegistrationEmailAction}
+            confirm={{ title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), email: words.email(1), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel }}
+            data-testid="resend-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <GlyphButton icon="resend" type="submit" variant="outlined" disabled={!canResend}>
               {tr("registrations.resend")}
             </GlyphButton>
-          </form>
+          </ActionForm>
         )}
         {/* The reminder by hand (§81): confirmed, and the event still ahead. */}
         {mayManage && canResendReminder(registration.status, registration.eventStartsAt, new Date()) && (
-          <form action={resendRegistrationEmailAction}>
+          <ActionForm
+            action={resendRegistrationEmailAction}
+            confirm={{ title: tr("confirm.reminderTitle"), body: tr("confirm.reminderBody", { name: registration.registeredName }), email: words.email(1), confirmLabel: tr("registrations.sendReminder"), cancelLabel: words.cancel }}
+            data-testid="reminder-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <input type="hidden" name="messageType" value="EVENT_REMINDER" />
             <GlyphButton icon="send" type="submit" variant="outlined">
               {tr("registrations.sendReminder")}
             </GlyphButton>
-          </form>
+          </ActionForm>
         )}
         {personHref && (
           <GlyphButton icon="personData" href={personHref} variant="text" sx={{ minHeight: 44 }}>
@@ -362,7 +372,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Typography>
         <Stack spacing={2}>
           {canConfirmNow && (
-            <form action={confirmRegistrationNowAction}>
+            <ActionForm
+              action={confirmRegistrationNowAction}
+              confirm={{
+                title: tr("desk.confirmOnPaper"),
+                body: registration.guardianName && minorSigns ? tr("registrations.confirmOnPaperBodyMinor", { guardian: registration.guardianName }) : tr("registrations.confirmOnPaperBody"),
+                email: words.email(1),
+                confirmLabel: tr("desk.confirmHere"),
+                cancelLabel: words.cancel,
+              }}
+              data-testid="confirm-now-form"
+            >
               {deskHidden}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
                 <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" sx={{ minHeight: 44 }}>
@@ -375,15 +395,19 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
                 </Typography>
               </Stack>
-            </form>
+            </ActionForm>
           )}
           {registration.status === "WAITLISTED" && (
-            <form action={promoteRegistrationAction}>
+            <ActionForm
+              action={promoteRegistrationAction}
+              confirm={{ title: tr("confirm.givePlaceTitle"), body: tr("confirm.givePlaceBody", { name: registration.registeredName }), email: words.email(1), confirmLabel: tr("desk.givePlace"), cancelLabel: words.cancel }}
+              data-testid="promote-form"
+            >
               {deskHidden}
               <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
                 {tr("desk.givePlace")}
               </GlyphButton>
-            </form>
+            </ActionForm>
           )}
           {registration.status === "CONFIRMED" && (
             <>
@@ -417,7 +441,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {/* The box spans the section, whatever the Stack does with its other children.
                       A refused number comes back in its box with the fold open (§315). */}
                   <Box sx={{ alignSelf: "stretch" }}>
-                  <ActionForm action={setBibNumberAction} messages={bibRefusal} scope="bib" data-testid="set-bib-form">
+                  <ActionForm
+                    action={setBibNumberAction}
+                    messages={bibRefusal}
+                    confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), email: words.email(1), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
+                    scope="bib"
+                    data-testid="set-bib-form"
+                  >
                   <RecallDetails sx={BOXED_DISCLOSURE_SX}>
                     <Typography component="summary" variant="body2" color="primary">
                       {tr("registrations.bibChange")}
@@ -467,7 +497,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   </GlyphButton>
                 </Stack>
               )}
-              <form action={checkInAction}>
+              <ActionForm
+                action={checkInAction}
+                confirm={{ when: [{ field: "direction", equals: "in" }], title: tr("confirm.checkInTitle"), body: tr("confirm.checkInBody", { name: registration.registeredName }), confirmLabel: tr("desk.checkIn"), cancelLabel: words.cancel }}
+                data-testid="checkin-form"
+              >
                 {deskHidden}
                 <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
@@ -489,7 +523,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       : tr("registrations.notCheckedIn")}
                   </Typography>
                 </Stack>
-              </form>
+              </ActionForm>
               {registration.checkinCode && (
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
                   {/* Hosted, not inlined — the same image the email links to, so what the
@@ -538,7 +572,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
           {tr("registrations.correctName")}
         </Typography>
-        <ActionForm action={correctRegisteredNameAction} messages={refusal} scope="rename" data-testid="correct-name-form">
+        <ActionForm
+          action={correctRegisteredNameAction}
+          messages={refusal}
+          confirm={{ title: tr("confirm.renameTitle"), body: tr("confirm.renameBody"), confirmLabel: tr("registrations.saveName"), cancelLabel: words.cancel }}
+          scope="rename"
+          data-testid="correct-name-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="registrationId" value={registration.id} />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
@@ -573,7 +613,24 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
             {tr("registrations.cancelTitle")}
           </Typography>
-          <ActionForm action={cancelRegistrationAction} messages={refusal} scope="cancel" data-testid="cancel-registration-form">
+          <ActionForm
+            action={cancelRegistrationAction}
+            messages={refusal}
+            confirm={{
+              title: tr("confirm.cancelRegistrationTitle"),
+              // The printed bib is named before the press (§311), not discovered in the pile.
+              body:
+                printedBib !== null
+                  ? `${tr("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${tr("confirm.cancelRegistrationBody")}`
+                  : tr("confirm.cancelRegistrationBody"),
+              email: words.email(1),
+              confirmLabel: tr("registrations.cancelAction"),
+              cancelLabel: words.cancel,
+              destructive: true,
+            }}
+            scope="cancel"
+            data-testid="cancel-registration-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
@@ -587,20 +644,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 slotProps={{ htmlInput: { maxLength: 500 } }}
                 sx={{ flex: 1 }}
               />
-              <ConfirmSubmitButton
-                label={tr("registrations.cancelAction")}
-                icon="cancel"
-                title={tr("confirm.cancelRegistrationTitle")}
-                // The printed bib is named before the press (§311), not discovered in the pile.
-                body={
-                  printedBib !== null
-                    ? `${tr("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${tr("confirm.cancelRegistrationBody")}`
-                    : tr("confirm.cancelRegistrationBody")
-                }
-                confirmLabel={tr("registrations.cancelAction")}
-                cancelLabel={tr("confirm.cancel")}
-                color="error"
-              />
+              <GlyphButton icon="cancel" type="submit" variant="outlined" color="error" sx={{ minHeight: 44 }}>
+                {tr("registrations.cancelAction")}
+              </GlyphButton>
             </Stack>
           </ActionForm>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -622,7 +668,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             {tr("registrations.withdraw.title")}
           </Typography>
           {withdrawable.health || withdrawable.socials || withdrawable.results ? (
-            <form action={withdrawConsentAction}>
+            <ActionForm
+              action={withdrawConsentAction}
+              confirm={{ title: tr("confirm.withdrawConsentTitle"), body: tr("confirm.withdrawConsentBody"), confirmLabel: tr("registrations.withdraw.action"), cancelLabel: words.cancel, destructive: true }}
+              data-testid="withdraw-consent-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="registrationId" value={registration.id} />
               <Stack spacing={1.5}>
@@ -649,7 +699,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   </GlyphButton>
                 </Stack>
               </Stack>
-            </form>
+            </ActionForm>
           ) : (
             <Typography variant="body2" color="text.secondary">
               {tr("registrations.withdraw.nothing")}
@@ -675,7 +725,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {/* The shared box, red: the one fold on the screen that destroys, and its border says so.
               A refusal keeps the reason and asks for the "I understand" tick again (§315); the
               form holds the fold, so the fold opens with the refusal rather than hiding it. */}
-          <ActionForm action={deleteRegistrationAction} messages={eraseRefusal} scope="erase" data-testid="erase-registration-form">
+          <ActionForm
+            action={deleteRegistrationAction}
+            messages={eraseRefusal}
+            confirm={{ title: tr("confirm.eraseRegistrationTitle"), body: tr("confirm.eraseRegistrationBody"), confirmLabel: tr("registrations.deleteAction"), cancelLabel: words.cancel, destructive: true }}
+            scope="erase"
+            data-testid="erase-registration-form"
+          >
           <RecallDetails sx={{ ...BOXED_DISCLOSURE_SX, mt: 3, borderColor: "error.light" }}>
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}

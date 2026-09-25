@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -93,7 +94,7 @@ async function publishSeries(page: Page): Promise<string> {
   await fillDateField(page, "Până la (opțional)", ymd(new Date(first.getTime() + 14 * DAY)));
   await expect(recurrence.getByRole("checkbox", { name: "Publică datele noi automat" })).toBeChecked();
   await recurrence.getByRole("button", { name: "Creează datele" }).click();
-  await page.getByRole("dialog", { name: "Creezi datele?" }).getByRole("button", { name: "Creează datele" }).click();
+  await confirmDialog(page, "Creezi datele?");
   await expect(page.locator("#admin-alert")).toContainText("2 date create acum", { timeout: 15_000 });
 
   await page.context().clearCookies();
@@ -110,7 +111,7 @@ async function removeSeries(page: Page, title: string): Promise<void> {
   const row = main.locator("tr, li").filter({ visible: true }).filter({ has: page.getByRole("link", { name: title, exact: true }) });
   await row.getByRole("checkbox", { name: `Selectează „${title}”` }).check();
   await main.getByRole("button", { name: "Șterge cele bifate" }).click();
-  await page.getByRole("dialog", { name: "Ștergi evenimentele bifate?" }).getByRole("button", { name: "Șterge cele bifate" }).click();
+  await confirmDialog(page, "Ștergi evenimentele bifate?");
   await expect(page.locator("#admin-alert")).toContainText("3 evenimente șterse", { timeout: 15_000 });
   await page.context().clearCookies();
 }

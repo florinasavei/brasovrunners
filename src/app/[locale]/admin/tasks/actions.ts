@@ -12,6 +12,7 @@ import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
@@ -28,7 +29,7 @@ function localeOf(form: FormData): Locale {
  * The panel posts the state it wants rather than a toggle, so two people pressing at once end
  * up where the second one aimed instead of flipping each other's decision.
  */
-export async function updateBotCheckAction(form: FormData): Promise<void> {
+export async function updateBotCheckAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/tasks" });
 
@@ -44,6 +45,7 @@ export async function updateBotCheckAction(form: FormData): Promise<void> {
     const which = form.get("which") === "honeypot" ? "honeypot" : "enabled";
     await updateBotCheck(getDb(), actor, { [which]: wanted }, new Date());
     outcome = `saved=${which === "honeypot" ? (wanted ? "honeypotOn" : "honeypotOff") : wanted ? "botCheckOn" : "botCheckOff"}`;
+    await flashOutcome({ saved: outcome.slice("saved=".length) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     outcome = `error=${error.code}`;
@@ -77,6 +79,7 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
     return refused(error, form);
   }
   revalidatePath(path);
+  await flashOutcome({ saved: "neonPlan" });
   redirect(`${path}?panel=costs&saved=neonPlan#admin-alert`);
 }
 
@@ -100,6 +103,7 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   } catch (error) {
     return refused(error, form);
   }
+  await flashOutcome({ saved: "jobCadence" });
   redirect(`${path}?panel=costs&saved=jobCadence#admin-alert`);
 }
 
@@ -141,5 +145,6 @@ export async function updateNeonLimitsAction(_previous: FormOutcome | null, form
     return error instanceof NeonLimitsRefusal ? { ...failure, error: error.reason } : failure;
   }
   revalidatePath(path);
+  await flashOutcome({ saved: changed ? "neonLimits" : "neonLimitsSame" });
   redirect(`${path}?panel=costs&saved=${changed ? "neonLimits" : "neonLimitsSame"}#admin-alert`);
 }

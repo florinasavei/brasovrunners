@@ -39,6 +39,7 @@ import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { TranslationHiddenFields } from "@/modules/content/events/ui/TranslationFields";
 import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
+import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
 import { countEventNoticeRecipients } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
@@ -66,9 +67,10 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { eventFormFieldLabels, identicalTextLabels } from "@/modules/content/events/ui/field-labels";
 import { identicalTexts, storedTextReader } from "@/modules/content/events/ui/publish-check";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import { countBibs } from "@/modules/registrations/bibs";
@@ -348,6 +350,60 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const box = { event, mayEditSettings: maySaveSettings } as const;
   const heading = orderedTranslations[0]?.title || t("editor.untitled");
   const thanksDue = canManageRegistrations(staffUser.role) && internal && event.eventStatus !== "CANCELLED" && event.startsAt.getTime() <= now.getTime();
+  // The thank-you's recipients, counted with the send's own condition (§NNN): the dialog says
+  // "an email will be sent to N participants" from this number and no other.
+  const thanksRecipients = thanksDue && !event.thanksSentAt ? await countEventThanksRecipients(db, event.id) : 0;
+  const words = await confirmWords();
+  /*
+    What each verb asks before it runs (§NNN). The publication steps that face outward — publish,
+    take a live event off the site, archive — ask; "send for review" changes nothing anybody sees
+    and asks nothing. The save asks only when it writes to people: the notice box ticked, or the
+    status set to cancelled — with the count of who is emailed, from `countEventNoticeRecipients`,
+    the same query the notices are queued from (`event-notices.ts`). Every dialog is a courtesy;
+    the service asserts the role and the version as before (BR-REQ-060-01).
+  */
+  const transitionConfirm = (to: (typeof transitions)[number]): ConfirmSpec | undefined => {
+    const base = { confirmLabel: EDITORIAL_TRANSITION_LABEL[to], cancelLabel: words.cancel };
+    if (to === "PUBLISHED") return { ...base, title: t("confirm.publishTitle", { title: heading }), body: t("confirm.publishBody") };
+    if (to === "DRAFT" && live) return { ...base, title: t("confirm.unpublishTitle", { title: heading }), body: t("confirm.unpublishBody"), destructive: true };
+    if (to === "ARCHIVED") return { ...base, title: t("confirm.archiveTitle"), body: t("confirm.archiveBody"), destructive: true };
+    return undefined;
+  };
+  const noticeEmail = noticeRecipients.real > 0 ? words.email(noticeRecipients.real) : undefined;
+  const saveConfirm: ConfirmSpec[] = [
+    ...(event.eventStatus !== "CANCELLED"
+      ? [
+          {
+            when: [
+              { field: "event.eventStatus", equals: "CANCELLED" },
+              { field: "cancel.notify", equals: "on" },
+            ],
+            title: t("confirm.cancelEventTitle", { title: heading }),
+            body: t("confirm.cancelEventBody"),
+            email: noticeEmail,
+            confirmLabel: t("editor.save"),
+            cancelLabel: words.cancel,
+            destructive: true,
+          },
+          {
+            when: [{ field: "event.eventStatus", equals: "CANCELLED" }],
+            title: t("confirm.cancelEventTitle", { title: heading }),
+            body: t("confirm.cancelEventQuietBody"),
+            confirmLabel: t("editor.save"),
+            cancelLabel: words.cancel,
+            destructive: true,
+          },
+        ]
+      : []),
+    {
+      when: [{ field: "notice.notify", equals: "on" }],
+      title: t("confirm.saveNoticeTitle"),
+      body: t("confirm.saveNoticeBody"),
+      email: noticeEmail,
+      confirmLabel: t("editor.save"),
+      cancelLabel: words.cancel,
+    },
+  ];
 
   return (
     <SeriesScopeProvider key={seriesKey} dates={scopeDates} currentId={event.id}>
@@ -493,27 +549,16 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   {transitions.length > 0 ? (
                     <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
                       {transitions.map((to) => (
-                        <form action={transitionEventAction} key={to}>
+                        // Publishing, taking off the site and archiving ask first (§NNN); review asks nothing.
+                        <ActionForm action={transitionEventAction} key={to} confirm={transitionConfirm(to)} data-testid={`transition-${to}`}>
                           <input type="hidden" name="uiLocale" value={locale} />
                           <input type="hidden" name="eventId" value={event.id} />
                           <input type="hidden" name="expectedVersion" value={event.version} />
                           <input type="hidden" name="to" value={to} />
-                          {/* Archiving takes the event off the site in both languages; it asks first. */}
-                          {to === "ARCHIVED" ? (
-                            <ConfirmSubmitButton
-                              label={EDITORIAL_TRANSITION_LABEL[to]}
-                              icon={EDITORIAL_TRANSITION_ICON[to]}
-                              title={t("confirm.archiveTitle")}
-                              body={t("confirm.archiveBody")}
-                              confirmLabel={EDITORIAL_TRANSITION_LABEL[to]}
-                              cancelLabel={t("confirm.cancel")}
-                            />
-                          ) : (
-                            <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
-                              {EDITORIAL_TRANSITION_LABEL[to]}
-                            </GlyphButton>
-                          )}
-                        </form>
+                          <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                            {EDITORIAL_TRANSITION_LABEL[to]}
+                          </GlyphButton>
+                        </ActionForm>
                       ))}
                     </Stack>
                   ) : (
@@ -559,6 +604,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           weekday: t("editor.repeatWeekdays"),
                         })}
                         scope="repeat"
+                        confirm={{ title: t("confirm.repeatTitle"), body: t("confirm.repeatBody"), confirmLabel: t("editor.repeat"), cancelLabel: words.cancel }}
                         data-testid="repeat-form"
                       >
                         <input type="hidden" name="uiLocale" value={locale} />
@@ -570,14 +616,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             draftSource={!live}
                           />
                           <Box sx={{ mt: 2 }}>
-                            <ConfirmSubmitButton
-                              label={t("editor.repeat")}
-                              icon="repeat"
-                              title={t("confirm.repeatTitle")}
-                              body={t("confirm.repeatBody")}
-                              confirmLabel={t("editor.repeat")}
-                              cancelLabel={t("confirm.cancel")}
-                            />
+                            <GlyphButton icon="repeat" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                              {t("editor.repeat")}
+                            </GlyphButton>
                           </Box>
                         </RepeatToggle>
                       </ActionForm>
@@ -599,7 +640,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           main={
             <>
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
-              <ActionForm action={saveEventAndTranslationsAction} messages={refusal} id="event-save-form" data-testid="event-save-form">
+              <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 {/* The event row's version — and its presence is the signal that this save touches the
@@ -712,7 +753,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 </Stack>
               </ActionForm>
               {/* The bib card's two immediate actions post these, never the save above. */}
-              {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} />}
+              {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} cancelLabel={words.cancel} />}
             </>
           }
           below={
@@ -797,7 +838,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                               {t("queue.interestHelp")}
                             </Typography>
                             {/* An address the service refuses comes back in its box (§315). */}
-                            <ActionForm action={withdrawInterestAction} messages={await refusalMessages({ email: t("queue.interestEmail") })} scope="interest" data-testid="interest-withdraw-form">
+                            <ActionForm
+                              action={withdrawInterestAction}
+                              messages={await refusalMessages({ email: t("queue.interestEmail") })}
+                              confirm={{ title: t("confirm.interestWithdrawTitle"), body: t("confirm.interestWithdrawBody"), confirmLabel: t("queue.interestRemove"), cancelLabel: words.cancel, destructive: true }}
+                              scope="interest"
+                              data-testid="interest-withdraw-form"
+                            >
                               <input type="hidden" name="uiLocale" value={locale} />
                               <input type="hidden" name="eventId" value={event.id} />
                               <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1 }}>
@@ -820,7 +867,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             </Typography>
                           ) : (
                             // A refused link comes back in its box (§315).
-                            <ActionForm action={sendEventThanksAction} messages={await refusalMessages({ url: t("thanks.url") })} scope="thanks" data-testid="thanks-form">
+                            <ActionForm
+                              action={sendEventThanksAction}
+                              messages={await refusalMessages({ url: t("thanks.url") })}
+                              confirm={{ title: t("thanks.confirmTitle"), body: t("thanks.confirmBody"), email: words.email(thanksRecipients), confirmLabel: t("thanks.send"), cancelLabel: words.cancel }}
+                              scope="thanks"
+                              data-testid="thanks-form"
+                            >
                               <input type="hidden" name="uiLocale" value={locale} />
                               <input type="hidden" name="eventId" value={event.id} />
                               <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
@@ -836,15 +889,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                                   slotProps={{ htmlInput: { pattern: "[Hh][Tt][Tt][Pp][Ss]://.*", maxLength: 2048 } }}
                                 />
                                 <Box>
-                                  <ConfirmSubmitButton
-                                    label={t("thanks.send")}
-                                    icon="send"
-                                    title={t("thanks.confirmTitle")}
-                                    body={t("thanks.confirmBody")}
-                                    confirmLabel={t("thanks.send")}
-                                    cancelLabel={t("confirm.cancel")}
-                                    variant="contained"
-                                  />
+                                  <GlyphButton icon="send" type="submit" variant="contained" size="small" sx={{ minHeight: 44 }}>
+                                    {t("thanks.send")}
+                                  </GlyphButton>
                                 </Box>
                               </Stack>
                             </ActionForm>
@@ -879,19 +926,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                                 </GlyphButton>
                               </Stack>
                             </ActionForm>
-                            <form action={removeTestRegistrationsAction}>
+                            <ActionForm
+                              action={removeTestRegistrationsAction}
+                              confirm={{ title: t("confirm.removeTestTitle"), body: t("confirm.removeTestBody"), confirmLabel: t("testRegistrations.remove"), cancelLabel: words.cancel, destructive: true }}
+                              data-testid="remove-test-form"
+                            >
                               <input type="hidden" name="uiLocale" value={locale} />
                               <input type="hidden" name="eventId" value={event.id} />
-                              <ConfirmSubmitButton
-                                label={t("testRegistrations.remove")}
-                                icon="delete"
-                                title={t("confirm.removeTestTitle")}
-                                body={t("confirm.removeTestBody")}
-                                confirmLabel={t("testRegistrations.remove")}
-                                cancelLabel={t("confirm.cancel")}
-                                color="warning"
-                              />
-                            </form>
+                              <GlyphButton icon="delete" type="submit" variant="outlined" color="warning" size="small" sx={{ minHeight: 44 }}>
+                                {t("testRegistrations.remove")}
+                              </GlyphButton>
+                            </ActionForm>
                           </Stack>
                         </Panel>
                       )}
@@ -905,18 +950,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 <Panel collapsible tone="danger" id="box-copy-delete" title={t("editor.boxes.copyDelete.title")} aside={t("editor.boxes.copyDelete.summary")}>
                   <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
                     {mayChangeSeries && (
-                      <form action={duplicateEventAction}>
+                      <ActionForm
+                        action={duplicateEventAction}
+                        confirm={{ title: t("confirm.duplicateTitle"), body: t("confirm.duplicateBody"), confirmLabel: t("editor.duplicate"), cancelLabel: words.cancel }}
+                        data-testid="duplicate-form"
+                      >
                         <input type="hidden" name="uiLocale" value={locale} />
                         <input type="hidden" name="eventId" value={event.id} />
-                        <ConfirmSubmitButton
-                          label={t("editor.duplicate")}
-                          icon="duplicate"
-                          title={t("confirm.duplicateTitle")}
-                          body={t("confirm.duplicateBody")}
-                          confirmLabel={t("editor.duplicate")}
-                          cancelLabel={t("confirm.cancel")}
-                        />
-                      </form>
+                        <GlyphButton icon="duplicate" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                          {t("editor.duplicate")}
+                        </GlyphButton>
+                      </ActionForm>
                     )}
                     {/* Deletion is refused for any event with a registration: the count replaces the
                         button (§170), and archiving is the answer for an event that happened. */}
@@ -928,19 +972,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             : t("events.deleteBlocked", { count: registered.total })}
                         </Alert>
                       ) : (
-                        <form action={deleteEventAction}>
+                        <ActionForm
+                          action={deleteEventAction}
+                          confirm={{ title: t("confirm.deleteTitle"), body: t("confirm.deleteBody"), confirmLabel: t("editor.delete"), cancelLabel: words.cancel, destructive: true }}
+                          data-testid="delete-event-form"
+                        >
                           <input type="hidden" name="uiLocale" value={locale} />
                           <input type="hidden" name="eventId" value={event.id} />
-                          <ConfirmSubmitButton
-                            label={t("editor.delete")}
-                            icon="delete"
-                            title={t("confirm.deleteTitle")}
-                            body={t("confirm.deleteBody")}
-                            confirmLabel={t("editor.delete")}
-                            cancelLabel={t("confirm.cancel")}
-                            color="error"
-                          />
-                        </form>
+                          <GlyphButton icon="delete" type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44 }}>
+                            {t("editor.delete")}
+                          </GlyphButton>
+                        </ActionForm>
                       ))}
                   </Stack>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

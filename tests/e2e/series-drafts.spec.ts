@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -79,7 +80,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(field("publish")).toBeChecked();
     await recurrence.getByRole("checkbox", { name: "Publică datele noi automat" }).uncheck();
     await recurrence.getByRole("button", { name: "Creează datele" }).click();
-    await page.getByRole("dialog", { name: "Creezi datele?" }).getByRole("button", { name: "Creează datele" }).click();
+    await confirmDialog(page, "Creezi datele?");
     // Two dates after the source, both drafts: the alert already reads as Romanian ("2 date").
     await expect(page.locator("#admin-alert")).toContainText("2 date create acum", { timeout: 15_000 });
     await hydrated(page);
@@ -147,7 +148,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const autoDialog = page.getByRole("dialog", { name: "Pornești publicarea automată?" });
     await expect(autoDialog).toContainText("De acum, fiecare dată nouă pe care o creează seria apare singură pe site.");
     await expect(autoDialog).toContainText("pe acelea le publici cu „Publică”");
-    await autoDialog.getByRole("button", { name: "Pornește", exact: true }).click();
+    await confirmDialog(page, "Pornești publicarea automată?");
     await expect(page).toHaveURL(/\/ro\/admin\?saved=repeatPublishOn/, { timeout: 15_000 });
     await expect(page.locator("#admin-alert")).toContainText("Publicarea automată e pornită");
     await hydrated(page);
@@ -159,7 +160,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await publish.click();
     const publishDialog = page.getByRole("dialog", { name: "Publici 2 date?" });
     await expect(publishDialog).toContainText("se deschid înscrierile");
-    await publishDialog.getByRole("button", { name: "Publică", exact: true }).click();
+    await confirmDialog(page, "Publici 2 date?");
     await expect(page.locator("#admin-alert")).toContainText("2 evenimente publicate.", { timeout: 15_000 });
     // Nothing was refused, so the banner says nothing about refusals (never "0 nu au putut fi publicate").
     await expect(page.locator("#admin-alert")).not.toContainText("nu au putut");

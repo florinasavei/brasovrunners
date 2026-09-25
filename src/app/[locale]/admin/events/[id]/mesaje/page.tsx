@@ -28,6 +28,7 @@ import ParticipantMessageComposer, { type ComposerAudience } from "@/modules/not
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import Panel from "@/shared/ui/Panel";
@@ -127,6 +128,20 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     };
   });
 
+  const words = await confirmWords();
+  /*
+    Send asks first, per group (§NNN): the question names how many, and the email line the same
+    number — `countParticipantMessageAudiences`, the count the send itself queues from. One spec
+    per radio choice, picked by the `audience` the form posts, so the dialog is the group's own.
+  */
+  const sendConfirm = audiences.map((choice) => ({
+    when: [{ field: "audience", equals: choice.value }],
+    title: choice.confirmTitle,
+    body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
+    email: words.email(choice.real),
+    confirmLabel: t("participantMessages.confirmSend"),
+    cancelLabel: words.cancel,
+  }));
   const languageRo = tSite("languageName.ro");
   const languageEn = tSite("languageName.en");
   const placeholderList = ORGANIZER_MESSAGE_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
@@ -183,7 +198,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       )}
 
       <Panel static id="box-participant-message" title={t("participantMessages.compose")}>
-        <ActionForm key={sendId} action={sendParticipantMessageAction} messages={refusal} data-testid="participant-message-form">
+        <ActionForm key={sendId} action={sendParticipantMessageAction} messages={refusal} confirm={sendConfirm} data-testid="participant-message-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
           <input type="hidden" name="sendId" value={sendId} />
@@ -217,9 +232,6 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               previewUnknown: t.raw("participantMessages.previewUnknown") as string,
               previewSubject: t("emails.subject"),
               send: t("participantMessages.send"),
-              confirmBody: t("participantMessages.confirmBody"),
-              confirmSend: t("participantMessages.confirmSend"),
-              cancel: t("confirm.cancel"),
             }}
           />
         </ActionForm>

@@ -50,6 +50,7 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { NeverKeptField } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -208,6 +209,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       ? declarationAsksMinorToSignByLocale(db, new Date())
       : Promise.resolve({ ro: false, en: false }),
   ]);
+  // Every verb that writes asks first and says who is emailed (§NNN).
+  const words = await confirmWords();
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -924,7 +927,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             never offered — the count and the plan above are the read, and that is the whole
             panel for them. */}
         {!mayManage ? null : volume.waitingMessages > 0 && (volume.remaining === null || volume.remaining > 0) ? (
-          <Box component="form" action={sendOutboxNowAction}>
+          <ActionForm
+            action={sendOutboxNowAction}
+            confirm={{ title: t("confirm.sendNowTitle"), body: t("confirm.sendNowBody"), email: words.queue(volume.waitingMessages), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
+            data-testid="send-now-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="listQuery" value={listQueryString} />
             <GlyphSubmitButton
@@ -934,7 +941,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               icon="send"
               variant="contained"
             />
-          </Box>
+          </ActionForm>
         ) : (
           <Typography variant="body2" color="text.secondary">
             {volume.waitingMessages === 0 ? t("outbox.nothingWaiting") : t("outbox.allowanceSpent")}
@@ -1125,7 +1132,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               />
             )}
             {mayManage && deriveAllowedResendMessageType(row.status) && (
-              <Box component="form" action={resendRegistrationEmailAction}>
+              <ActionForm
+                action={resendRegistrationEmailAction}
+                confirm={{ title: t("confirm.resendTitle"), body: t("confirm.resendBody", { name: row.registeredName }), email: words.email(1), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
                 {/*
@@ -1146,7 +1156,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   // accessible name.
                   compact
                 />
-              </Box>
+              </ActionForm>
             )}
             {/*
               The rest of the verbs behind "⋮" (§178). Each is a hidden form the Server Component
@@ -1181,16 +1191,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   icon: "confirm",
                   label: t("desk.confirmOnPaper"),
                   formId: `confirm-${row.id}`,
-                  confirm: {
-                    title: t("desk.confirmOnPaper"),
-                    // A minor's paper carries two signatures, and the press attests both (§330) —
-                    // where the declaration in effect asks the minor to sign; else the one sentence.
-                    body:
-                      row.guardianName && minorSigns[row.locale]
-                        ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
-                        : t("registrations.confirmOnPaperBody"),
-                    confirmLabel: t("desk.confirmOnPaper"),
-                  },
                 });
               }
               if (verbs.includes("givePlace")) {
@@ -1219,23 +1219,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("cancel")) {
-                // A printed bib is named before the press (§311): after this the number stays
-                // retired and the paper has to come out of the pile.
-                const printedWarning =
-                  row.bibPrintedAt !== null && row.bibNumber !== null
-                    ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} `
-                    : "";
                 items.push({
                   kind: "submit",
                   icon: "cancel",
                   label: t("registrations.cancel"),
                   formId: `cancel-${row.id}`,
                   color: "error",
-                  confirm: {
-                    title: t("registrations.cancel"),
-                    body: `${printedWarning}${t("registrations.cancelBody")}`,
-                    confirmLabel: t("registrations.cancel"),
-                  },
                 });
               }
               /*
@@ -1258,25 +1247,63 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               return (
                 <>
                   {verbs.includes("confirmOnPaper") && (
-                    <Box component="form" id={`confirm-${row.id}`} action={confirmRegistrationNowAction} sx={{ display: "none" }}>
+                    <ActionForm
+                      id={`confirm-${row.id}`}
+                      action={confirmRegistrationNowAction}
+                      hidden
+                      confirm={{
+                        title: t("desk.confirmOnPaper"),
+                        body:
+                          row.guardianName && minorSigns[row.locale]
+                            ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
+                            : t("registrations.confirmOnPaperBody"),
+                        email: words.email(1),
+                        confirmLabel: t("desk.confirmOnPaper"),
+                        cancelLabel: words.cancel,
+                      }}
+                    >
                       {hidden}
-                    </Box>
+                    </ActionForm>
                   )}
                   {verbs.includes("givePlace") && (
-                    <Box component="form" id={`place-${row.id}`} action={promoteRegistrationAction} sx={{ display: "none" }}>
+                    <ActionForm
+                      id={`place-${row.id}`}
+                      action={promoteRegistrationAction}
+                      hidden
+                      confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), email: words.email(1), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+                    >
                       {hidden}
-                    </Box>
+                    </ActionForm>
                   )}
                   {(verbs.includes("checkIn") || verbs.includes("undoCheckIn")) && (
-                    <Box component="form" id={`checkin-${row.id}`} action={checkInAction} sx={{ display: "none" }}>
+                    <ActionForm
+                      id={`checkin-${row.id}`}
+                      action={checkInAction}
+                      hidden
+                      confirm={{ when: [{ field: "direction", equals: "in" }], title: t("confirm.checkInTitle"), body: t("confirm.checkInBody", { name: row.registeredName }), confirmLabel: t("desk.checkIn"), cancelLabel: words.cancel }}
+                    >
                       {hidden}
                       <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
-                    </Box>
+                    </ActionForm>
                   )}
                   {verbs.includes("cancel") && (
-                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationFromRowAction} sx={{ display: "none" }}>
+                    <ActionForm
+                      id={`cancel-${row.id}`}
+                      action={cancelRegistrationFromRowAction}
+                      hidden
+                      confirm={{
+                        title: t("registrations.cancel"),
+                        // A printed bib is named before the press (§311): after this the number stays
+                        // retired and the paper has to come out of the pile.
+                        body: `${row.bibPrintedAt !== null && row.bibNumber !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} ` : ""}${t("registrations.cancelBody")}`,
+                        email: words.email(1),
+                        confirmLabel: t("registrations.cancel"),
+                        cancelLabel: words.cancel,
+                        destructive: true,
+                      }}
+                    >
                       {hidden}
-                    </Box>
+                    </ActionForm>
                   )}
                   {(verbs.includes("markBibPrinted") || verbs.includes("unmarkBibPrinted")) && (
                     <Box component="form" id={`bib-printed-${row.id}`} action={setBibPrintedAction} sx={{ display: "none" }}>
@@ -1286,7 +1313,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   )}
                   <RegistrationRowMenu
                     ariaLabel={t("registrations.rowActions", { name: row.registeredName })}
-                    cancelLabel={t("confirm.cancel")}
                     items={items}
                   />
                   {/*
@@ -1361,10 +1387,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 required
               />
               <Box>
-                <GlyphSubmitButton
+                {/* Two verbs in one form (§287): each button asks its own question (§NNN). */}
+                <ConfirmSubmitButton
                   label={t("registrations.bulkCancelAction")}
-                  pendingLabel={t("registrations.bulkCancelPending")}
                   icon="cancel"
+                  title={t("confirm.bulkCancelTitle")}
+                  body={t("confirm.bulkCancelBody")}
+                  email={words.each}
+                  confirmLabel={t("registrations.bulkCancelAction")}
+                  cancelLabel={words.cancel}
                   color="warning"
                   variant="contained"
                 />
@@ -1408,7 +1439,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     title={t("confirm.bulkEraseTitle")}
                     body={t("confirm.bulkEraseBody")}
                     confirmLabel={t("registrations.bulkEraseAction")}
-                    cancelLabel={t("confirm.cancel")}
+                    cancelLabel={words.cancel}
                     color="error"
                     variant="contained"
                   />

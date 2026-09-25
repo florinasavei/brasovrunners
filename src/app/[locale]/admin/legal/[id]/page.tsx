@@ -25,6 +25,8 @@ import { canManageStaff, canReadContent } from "@/modules/staff-identity/domain/
 import { requireStaff } from "@/modules/staff-identity/session";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -81,6 +83,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
   const mayWrite = canManageStaff(actor.role);
 
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const db = getDb();
   const document = await findVersionWithTranslations(db, id);
   if (!document) notFound();
@@ -182,7 +185,12 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {t("legal.approveHelp")}
             </Typography>
-            <form action={approveLegalVersionAction}>
+            {/* Approval asks first (§NNN): the one act on this page that cannot be undone. */}
+            <ActionForm
+              action={approveLegalVersionAction}
+              confirm={{ title: t("confirm.approveVersionTitle", { version: document.version }), body: t("confirm.approveVersionBody"), confirmLabel: t("legal.approveAction"), cancelLabel: words.cancel, destructive: true }}
+              data-testid="approve-version-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="versionId" value={document.id} />
               <Stack spacing={2}>
@@ -195,7 +203,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
                   </GlyphButton>
                 </Box>
               </Stack>
-            </form>
+            </ActionForm>
           </Paper>
         </>
       ) : (

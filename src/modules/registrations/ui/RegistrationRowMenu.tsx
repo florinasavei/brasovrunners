@@ -1,13 +1,7 @@
 "use client";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import Divider from "@mui/material/Divider";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
@@ -29,9 +23,10 @@ import { ACTION_ICONS, type ActionIconName } from "@/shared/ui/action-icons";
  * (BR-REQ-060-01).
  *
  * The same shape as `EventRowMenu` and for the same reasons: the Server Component renders a
- * hidden `<form>` per verb, already carrying its action and its fields, and this island calls
- * `requestSubmit()` on the one that was chosen. Nothing about authorization lives here; what
- * lives here is which form to post and whether to ask first.
+ * hidden form per verb, already carrying its action and its fields, and this island calls
+ * `requestSubmit()` on the one that was chosen. Nothing about authorization lives here, and
+ * since §NNN nothing about asking either: a verb that asks first is an `ActionForm` with its own
+ * `confirm`, and the one `ConfirmDialog` of the backoffice opens from the form, not from here.
  */
 /*
   The glyphs are the one registry's (§318): the desk's "Dă-i un loc" and this menu's wear the
@@ -61,25 +56,14 @@ export type RegistrationMenuItem =
       /** The id of a hidden form the page already rendered, whose Server Action this submits. */
       formId: string;
       color?: "primary" | "error" | "warning";
-      /** Present for a verb that is hard to undo; absent for one that is a press away from being reversed. */
-      confirm?: { title: string; body: string; confirmLabel: string };
     } & MenuSeparation);
 
-export default function RegistrationRowMenu({
-  ariaLabel,
-  cancelLabel,
-  items,
-}: {
-  ariaLabel: string;
-  cancelLabel: string;
-  items: readonly RegistrationMenuItem[];
-}) {
+export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: string; items: readonly RegistrationMenuItem[] }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const [confirming, setConfirming] = useState<Extract<RegistrationMenuItem, { kind: "submit" }> | null>(null);
 
   const submit = (formId: string) => {
     // `requestSubmit`, never `submit()`: it runs the form's own validation and fires the event
-    // React's Server Action handler listens for.
+    // the form's own question (`ActionForm confirm`) and React's Server Action handler listen for.
     (document.getElementById(formId) as HTMLFormElement | null)?.requestSubmit();
   };
 
@@ -122,8 +106,7 @@ export default function RegistrationRowMenu({
                 key={item.label}
                 onClick={() => {
                   setAnchor(null);
-                  if (item.confirm) setConfirming(item);
-                  else submit(item.formId);
+                  submit(item.formId);
                 }}
                 sx={{ minHeight: 44, ...tint }}
               >
@@ -137,30 +120,6 @@ export default function RegistrationRowMenu({
           return rule ? [rule, entry] : [entry];
         })}
       </Menu>
-
-      <Dialog open={confirming !== null} onClose={() => setConfirming(null)} aria-labelledby="registration-confirm-title">
-        <DialogTitle id="registration-confirm-title">{confirming?.confirm?.title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{confirming?.confirm?.body}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirming(null)} sx={{ minHeight: 44 }}>
-            {cancelLabel}
-          </Button>
-          <Button
-            color={confirming?.color ?? "primary"}
-            variant="contained"
-            sx={{ minHeight: 44 }}
-            onClick={() => {
-              const item = confirming;
-              setConfirming(null);
-              if (item) submit(item.formId);
-            }}
-          >
-            {confirming?.confirm?.confirmLabel}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 }
