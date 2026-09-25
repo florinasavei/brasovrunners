@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.87-2026-09-25 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.85-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.87-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1311,7 +1311,7 @@ Rules:
 - existing eligible waiting entries always have priority over later direct registrations;
 - one active registration per participant/event;
 - promotion creates `WAITLIST_OFFERED` and `hold_expires_at`;
-- offer deadline default 24h, capped by close/start;
+- offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start;
 - signing declaration confirms;
 - decline/cancel/expiry releases hold;
 - expiry leaves active queue; user may rejoin at end;
@@ -2576,7 +2576,7 @@ BR-REQ-037-05):
    `cancellation_source = ADMIN`, so the place is released inside the locked transaction and
    offered to the front of the waiting list (§15.5, §15.6). A status §10.5 gives no edge to
    CANCELLED from — `PENDING_EMAIL_CONFIRMATION` — is refused with a sentence rather than a bare
-   conflict; such a row holds no place and lapses after 48 hours on its own.
+   conflict; such a row holds no place and lapses on its own after the club's email-link window (§377; 48 hours by default, written on the row as `email_link_expires_at`).
 
 4. **Erasing.** Administrator only, and not the same thing as cancelling. Cancelling keeps the
    row — the name, the address, the signed declaration — which is right for a runner who
@@ -2761,7 +2761,7 @@ go to every active registration of that event (`PENDING_DECLARATION`, `WAITLIST_
 transaction and audited with the count, never who.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
-event 48 hours before its start, once per registration (`registration:<id>:reminder`), with
+event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with
 the facts line, the QR and the manage link; never to a waiting-list entry, never for a
 cancelled or completed event (`DECISIONS.md` §81). `EVENT_THANKS` is sent by an organizer,
 once per event, to everyone checked in, with an optional link; never automatically, audited

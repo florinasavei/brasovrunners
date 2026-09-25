@@ -4,6 +4,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { emailFieldLegend } from "@/modules/notifications/email-copy-fields";
 import FieldLegend, { type FieldLegendMark } from "@/shared/ui/FieldLegend";
 import Panel from "@/shared/ui/Panel";
@@ -14,6 +15,8 @@ type Props = {
   /** The language being edited: the examples are this language's sample (§96). */
   emailLocale: EmailLocale;
   messageType: EmailMessageType;
+  /** The club's deadlines in force (§377), so the four deadline rows show what the preview prints. */
+  deadlines?: Deadlines;
 };
 
 /**
@@ -42,9 +45,9 @@ type Props = {
  * ones this message uses ("12 câmpuri · 4 folosite aici"). A Server Component: the fold is
  * `<details>`, the rows are text, and the summary is `Panel`'s 44-pixel bar.
  */
-export default async function EmailFieldLegend({ locale, emailLocale, messageType }: Props) {
+export default async function EmailFieldLegend({ locale, emailLocale, messageType, deadlines }: Props) {
   const t = await getTranslations("Admin");
-  const entries = emailFieldLegend(messageType, emailLocale);
+  const entries = emailFieldLegend(messageType, emailLocale, deadlines);
   const used = entries.filter((entry) => entry.used).length;
   const summary = [
     t(`emails.copy.legend.count.${countForm(entries.length, locale)}`, { count: entries.length }),

@@ -6,6 +6,8 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -49,7 +51,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
           {t("confirm.title")}
         </Typography>
         <Alert severity="warning" data-testid="confirm-waitlist-full">
-          {full === "closed" ? t("confirm.noWaitlist") : t("confirm.waitlistFull")}
+          {/* How long the link stays good: the club's hours (§377), which a link sent now was given. */}
+          {t(full === "closed" ? "confirm.noWaitlist" : "confirm.waitlistFull", {
+            confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
+          })}
         </Alert>
       </Container>
     );

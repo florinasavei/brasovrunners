@@ -30,6 +30,8 @@ import {
   listPublishedEventsBetween,
   listUpcomingEvents,
 } from "@/modules/events/repository";
+import { readDeadlines } from "@/modules/deadlines/deadlines";
+import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { findCurrentApprovedDocument, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -361,6 +363,21 @@ export async function cachedBotCheckSiteKey(): Promise<string | undefined> {
     enabled = DEFAULT_BOT_CHECK.enabled;
   }
   return enabled ? turnstileSiteKey() : undefined;
+}
+
+/**
+ * The club's deadlines (§377) for the public pages that state them — the form's five steps, the
+ * countdown on the listing, the "check your email" screen, the terms and the privacy notice — from
+ * the data cache, so a visitor reading "the link is valid 48 hours" wakes nothing. A save expires
+ * it (`updateDeadlines`). When the database cannot answer, today's constants: the same numbers an
+ * unset setting has, and never a page that fails over a sentence.
+ */
+export async function cachedDeadlines(): Promise<Deadlines> {
+  try {
+    return (await publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb()))).deadlines;
+  } catch {
+    return { ...DEFAULT_DEADLINES };
+  }
 }
 
 // --- The language switch ----------------------------------------------------------------------

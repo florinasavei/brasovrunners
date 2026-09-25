@@ -11,9 +11,14 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  *
  * §372, the owner, 2026-09-24: one row on a phone, keeping every item but not every word. Eight
  * items with their words need ~370 pixels and a phone has 288–328, so below `sm` the privacy
- * notice is a lock and RO/EN are flags, and every item on the bar is a square of the bar's
+ * notice is a glyph and RO/EN are flags, and every item on the bar is a square of the bar's
  * target: 24px below 360 (WCAG 2.2 SC 2.5.8, AA), 28px from 360, 44px from `sm` — a
- * footer-bar-only exception to criterion 6. From `sm` up nothing moved.
+ * footer-bar-only exception to criterion 6.
+ *
+ * §378, the owner, 2026-09-25: the glyph is a question mark, not a lock; the notice comes right
+ * after the fold, ahead of the marks, at every width; its word from `sm` is "GDPR"; and a phone's
+ * items are `FOOTER_GAP_PHONE` (6px) apart — the largest gap at which the English row still fits
+ * at 320px with its summary uncut, measured and recorded in `SiteFooter.tsx`.
  *
  * The widths are set here rather than taken from the project: 320 is the requirement's floor,
  * 360 the owner's screenshot and the second size's first width, 393 the Pixel phone, 640 and
@@ -42,8 +47,8 @@ async function boxOf(locator: Locator, name: string): Promise<Box> {
 
 /** The two pages the row is measured on, with what each locale calls the bar's items. */
 const PAGES = [
-  { path: "/ro/evenimente", privacyName: "Nota de confidențialitate (GDPR)", privacyWord: "Confidențialitate", language: "Limbă", summary: /despre club/i, other: "English" },
-  { path: "/en/events", privacyName: "Privacy notice", privacyWord: "Privacy", language: "Language", summary: /about the club/i, other: "Română" },
+  { path: "/ro/evenimente", privacyName: "Nota de confidențialitate (GDPR)", language: "Limbă", summary: /despre club/i, other: "English" },
+  { path: "/en/events", privacyName: "Privacy notice (GDPR)", language: "Language", summary: /about the club/i, other: "Română" },
 ] as const;
 
 function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
@@ -54,10 +59,10 @@ function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
     fold: page.getByTestId("footer-about-fold"),
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă|theme/i }),
-    // On the bar since §323, named for the notice at every width (WCAG 2.5.3); a lock on a phone
-    // and the word from `sm` (§372).
+    // On the bar since §323, named for the notice at every width; a question mark on a phone
+    // and the word "GDPR" from `sm` (§378).
     privacy: footer.getByRole("link", { name: where.privacyName, exact: true }),
-    lock: page.getByTestId("footer-privacy-lock"),
+    mark: page.getByTestId("footer-privacy-mark"),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
     language,
     current: language.locator('[aria-current="true"]'),
@@ -98,24 +103,55 @@ function expectDisjoint(boxes: Array<[string, Box]>, width: number) {
  */
 const panelContent = (fold: Locator) => fold.getByTestId("footer-about-panel").locator(":scope > *").first();
 
-/** Every item on the row, by name, measured: the switch first. */
+/**
+ * Every item on the row, by name, measured, in the order the owner asked for (§378): the switch,
+ * the summary, the privacy notice, the three marks, then — on a phone — RO and EN.
+ */
 async function rowItems(page: Page, where: (typeof PAGES)[number], phone: boolean): Promise<Array<[string, Box]>> {
-  const { toggle, summary, privacy, marks, current, other } = controls(page, where);
+  const { toggle, summary, privacy, marks, language } = controls(page, where);
   const items: Array<[string, Box]> = [
     ["the scheme switch", await boxOf(toggle, "the scheme switch")],
     ["the summary", await boxOf(summary, "the summary")],
+    ["the privacy notice", await boxOf(privacy, "the privacy notice")],
   ];
   for (let i = 0; i < (await marks.count()); i++) {
     const mark = marks.nth(i);
     const name = (await mark.getAttribute("aria-label")) ?? `mark ${i}`;
     items.push([name, await boxOf(mark, name)]);
   }
-  items.push(["the privacy notice", await boxOf(privacy, "the privacy notice")]);
   if (phone) {
-    items.push(["the current language", await boxOf(current, "the current language")]);
-    items.push(["the other language", await boxOf(other, "the other language")]);
+    // RO then EN, whichever is the current one.
+    for (const [i, name] of [[0, "RO"], [1, "EN"]] as const) {
+      items.push([name, await boxOf(language.locator(":scope > *").nth(i), name)]);
+    }
   }
   return items;
+}
+
+/** A phone's gap between neighbouring items on the bar (`FOOTER_GAP_PHONE`, §378). */
+const PHONE_GAP = 6;
+
+/**
+ * The row's items stand left to right in their order, and on a phone each is `PHONE_GAP` from
+ * the next — except after the summary, whose fold takes whatever room the row has left, so the
+ * space from the summary's words to the privacy mark is at least the gap. The last item ends
+ * inside the viewport.
+ */
+function expectOrderedAndSpaced(items: Array<[string, Box]>, width: number, phone: boolean) {
+  for (let i = 1; i < items.length; i++) {
+    const [before, a] = items[i - 1]!;
+    const [after, b] = items[i]!;
+    const gap = b.x - (a.x + a.width);
+    expect(gap, `${after} is to the right of ${before} at ${width}px`).toBeGreaterThanOrEqual(-0.5);
+    if (!phone) continue;
+    if (before === "the summary") {
+      expect(gap, `at least ${PHONE_GAP}px from the summary to ${after} at ${width}px`).toBeGreaterThanOrEqual(PHONE_GAP - 0.5);
+    } else {
+      expect(Math.abs(gap - PHONE_GAP), `${before} to ${after} is ${PHONE_GAP}px at ${width}px (was ${gap})`).toBeLessThan(0.6);
+    }
+  }
+  const [lastName, last] = items.at(-1)!;
+  expect(last.x + last.width, `${lastName} ends inside ${width}px`).toBeLessThanOrEqual(width + 0.5);
 }
 
 test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
@@ -123,7 +159,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
     test(`at ${width}px every item is on one row, nothing overlaps, and every target is its size`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, summary, privacy, lock, marks, language, current, other, panelBadge, pinnedBadge } = controls(page);
+      const { footer, summary, privacy, mark, marks, language, current, other, panelBadge, pinnedBadge } = controls(page);
       const count = await marks.count();
       test.skip(count === 0, "no social address is configured for this server");
       await restAtTheEnd(page);
@@ -152,11 +188,14 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       if (phone) await other.click({ trial: true });
 
       // §323: the notice is reachable from every page without opening anything. On a phone a
-      // lock whose name and tooltip are the notice's (§372); from `sm` the word, uncut.
+      // question mark whose name and tooltip are the notice's (§378); from `sm` the word "GDPR".
       await expect(privacy).toHaveAttribute("title", "Nota de confidențialitate (GDPR)");
+      await expect(privacy).toHaveAttribute("href", /\/ro\/confidentialitate$/);
+      // Right after the fold, ahead of the marks, and on a phone every item 6px from the next.
+      expectOrderedAndSpaced(items, width, phone);
       if (phone) {
-        await expect(lock).toBeVisible();
-        await expect(privacy.getByText("Confidențialitate", { exact: true })).toBeHidden();
+        await expect(mark).toBeVisible();
+        await expect(privacy.getByText("GDPR", { exact: true })).toBeHidden();
         // Flags only: no letters on screen — each code is clipped to a pixel, still read by a
         // screen reader — and the current one ringed.
         for (const [code, item] of [["RO", current], ["EN", other]] as const) {
@@ -166,8 +205,8 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
         const ring = await current.locator("span").first().evaluate((el) => getComputedStyle(el).outlineStyle);
         expect(ring, "the current language is ringed").toBe("solid");
       } else {
-        await expect(lock).toBeHidden();
-        await expect(privacy.getByText("Confidențialitate", { exact: true })).toBeVisible();
+        await expect(mark).toBeHidden();
+        await expect(privacy.getByText("GDPR", { exact: true })).toBeVisible();
       }
 
       // One row, always: every item's top is the switch's.
@@ -202,15 +241,19 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
  * widths ("About the club" is longer than "Despre club"), and opening the fold is what broke the
  * row twice before: the fold's panel is inside the `<details>` again (review finding 4), and
  * every row item keeps the switch's top however tall the open fold grows.
+ *
+ * §378: at the four widths the gap was measured at — 320, 360, 390 and 412 — in the owner's order
+ * (the privacy question mark right after the fold), every item `PHONE_GAP` from the next, the
+ * English summary uncut at 320 with the 6px gap, and the last flag inside the viewport.
  */
-test.describe("§372 one row on a phone, in both languages, fold closed and open", () => {
+test.describe("§372 §378 one row on a phone, in both languages, fold closed and open", () => {
   for (const where of PAGES) {
-    for (const width of [320, 360] as const) {
+    for (const width of [320, 360, 390, 412] as const) {
       for (const state of ["closed", "open"] as const) {
-        test(`${where.path} at ${width}px, fold ${state}: every item on the switch's row, nothing cut`, async ({ page }) => {
+        test(`${where.path} at ${width}px, fold ${state}: every item on the switch's row, in order, spaced, nothing cut`, async ({ page }) => {
           await page.setViewportSize({ width, height: 720 });
           await page.goto(where.path, { waitUntil: "networkidle" });
-          const { fold, summary, marks, current, other } = controls(page, where);
+          const { fold, summary, marks, current, other, mark, privacy } = controls(page, where);
           test.skip((await marks.count()) === 0, "no social address is configured for this server");
           const target = targetAt(width);
 
@@ -226,8 +269,17 @@ test.describe("§372 one row on a phone, in both languages, fold closed and open
           for (const [name, box] of items) {
             expect(Math.abs(box.y - switchTop), `${name}'s top is the switch's at ${width}px, fold ${state}`).toBeLessThan(1.5);
             expect(box.height, `${name} is ${target}px tall`).toBeGreaterThanOrEqual(target - 0.5);
+            if (name !== "the summary") {
+              expect(box.width, `${name} is ${target}px wide at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+            }
           }
           expectDisjoint(items, width);
+          expectOrderedAndSpaced(items, width, true);
+
+          // The question mark, named for the notice in this language, its word not on screen.
+          await expect(mark).toBeVisible();
+          await expect(privacy).toHaveAttribute("title", where.privacyName);
+          await expect(privacy.getByText("GDPR", { exact: true })).toBeHidden();
 
           // Both languages, each the bar's target in width and height (review finding 2).
           for (const [name, locator] of [["the current language", current], ["the other language", other]] as const) {

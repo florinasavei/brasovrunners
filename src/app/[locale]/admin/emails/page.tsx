@@ -19,6 +19,9 @@ import {
 import { getDb } from "@/db/client";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
+import { readDeadlines } from "@/modules/deadlines/deadlines";
+import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import DeadlinesPanel from "@/modules/deadlines/ui/DeadlinesPanel";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -34,6 +37,7 @@ import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -113,7 +117,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   */
   const maySeeQueue = canReadRegistrations(staff.role);
   const mayEditEmail = canManageRegistrations(staff.role);
-  const [plan, volume, recipients, queue, notices, written] = await Promise.all([
+  const [plan, volume, recipients, queue, notices, written, deadlines] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -128,11 +132,45 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       preview, and showing them what they saved thirty seconds ago would read as a lost edit.
     */
     readEmailCopy(db),
+    // The club's deadlines (§377), straight through like the words: the panel that sets them, the
+    // when-lines that state them and the previews that print them, as they now stand.
+    readDeadlines(db),
   ]);
+  const t = await getTranslations("Admin");
+  // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
+  const pageWords = deadlineWords(locale, deadlines.deadlines);
+  const whenValues = {
+    confirmation: pageWords.confirmation,
+    hold: pageWords.hold,
+    offer: pageWords.offer,
+    reminder: pageWords.reminder ?? "",
+  };
+  /*
+    When each message goes, in the club's numbers (§377). The reminder's lines say "off by default"
+    when the club sends none — an event may still choose one — and the declaration's last call is a
+    sentence of its own after its when-line, for the same reason.
+  */
+  const reminderOff = pageWords.reminder === null;
+  const whenOf = (type: EmailMessageType): string => {
+    if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
+    const line = t(`emails.when.${type}`, whenValues);
+    if (type !== "COMPLETE_DECLARATION") return line;
+    return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
+  };
+  const whenShortOf = (type: EmailMessageType): string =>
+    type === "EVENT_REMINDER" && reminderOff ? t("emails.reminderOff.whenShort") : t(`emails.whenShort.${type}`, whenValues);
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
-  const t = await getTranslations("Admin");
   const emailsPath = getPathname({ locale, href: "/admin/emails" });
+  // The club's deadlines (§377), as the outbox gives every message: the numbers the words say.
+  const timings = {
+    confirmationHours: deadlines.deadlines.confirmationHours,
+    holdMinutes: deadlines.deadlines.holdMinutes,
+    offerHours: deadlines.deadlines.offerHours,
+    reminderHours: deadlines.deadlines.reminderHours,
+    // The window a new event gets unless its organizer changes it (§104), as the column does.
+    confirmationOpensDays: DEFAULT_CONFIRMATION_OPENS_DAYS,
+  };
   const actionUrl = emailSampleActionUrl(emailLocale);
   const mayWrite = canEditTexts(staff.role);
 
@@ -144,6 +182,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       email follow-up: the legend under the editor dims them, and the preview says the same).
     */
     const sample = emailSampleFor(messageType, emailLocale);
+    // The club's deadlines in force (§377), which the send gives every message as numbers.
+    sample.timings = timings;
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is
     // what a participant will actually receive rather than what the platform ships.
@@ -181,6 +221,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
+        {saved === "deadlines" && <Alert severity="success">{t("emails.deadlines.saved")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
       </Box>
 
@@ -223,6 +264,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "contactRecipients" }}
       />
 
+      {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
+      <DeadlinesPanel locale={locale} state={deadlines} mayEdit={mayEditEmail} openWhen={{ saved: saved === "deadlines" }} />
+
       <ParticipantEmailsPanel
         title={t("emails.title")}
         intro={t("emails.intro")}
@@ -246,13 +290,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           return {
             type: messageType,
             name: t(`emails.types.${messageType}`),
-            whenShort: t(`emails.whenShort.${messageType}`),
+            whenShort: whenShortOf(messageType),
             // The three types nothing queues any more are said to be so on the closed card (§331).
             ...(NEVER_QUEUED.has(messageType) ? { neverSent: t("emails.neverSent") } : {}),
             ...(sampleLanguages.length > 0
               ? { sampleValues: t("emails.copy.sampleMarker", { languages: sampleLanguages.map((language) => language.toUpperCase()).join(", ") }) }
               : {}),
-            when: t(`emails.when.${messageType}`),
+            when: whenOf(messageType),
             subjectLine: `${t("emails.subject")}: ${content.subject}`,
             html: content.html,
             // The card whose words were just saved opens with the card around it, so the preview
@@ -274,6 +318,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                    values (§359): what the box starts from while the club has written nothing. */
                 shipped={emailCopyPrefill(messageType, emailLocale)}
                 samples={samples}
+                // The deadlines the preview above prints (§377), for the legend's four rows.
+                deadlines={deadlines.deadlines}
               />
             ) : undefined,
           };

@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.87-2026-09-25 -->
 
-**Baseline `BR-V1.85-2026-09-25`**
+**Baseline `BR-V1.87-2026-09-25`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -32,6 +32,7 @@ literal, or a hex colour outside `src/theme/brand.ts`.
 | You want to change… | Go to |
 | --- | --- |
 | A page a visitor sees | `src/app/[locale]/…/page.tsx` (Server Component; `"use client"` islands only where a click needs JS) |
+| A deadline (hold, offer, link, reminder, check-in, race week, horizon) | `src/modules/deadlines/`; the words via `duration-words.ts` (§377) |
 | The words on it | `messages/ro.json` and `messages/en.json` — both, same keys, no ICU plurals |
 | A backoffice screen | `src/app/[locale]/admin/…`; its Server Actions in the sibling `actions.ts` |
 | A route handler (PDF, image, API) | `src/app/api/…/route.ts` |

@@ -94,8 +94,11 @@ import {
   transitionEventAction,
 } from "../../actions";
 import { countForm } from "@/i18n/count-form";
+import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
-import { HORIZON_DAYS, readRepeatRule } from "@/modules/events/domain/repeat";
+import { readRepeatRule } from "@/modules/events/domain/repeat";
+import { readDeadlines } from "@/modules/deadlines/deadlines";
+import { seriesHorizonEnd, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 
 type Props = {
@@ -171,6 +174,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const now = new Date();
+  // The club's deadlines (§377), straight through: the reminder card's "as usual", race week, the series horizon.
+  const { deadlines } = await readDeadlines(db);
   // "1 dată", "7 date", "20 de date" (§341), for the banners that count a series' dates. The
   // count arrives in the query string, so anything that is not a number reads as none.
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
@@ -494,7 +499,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <Alert severity="success">
               {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
                 dates: datesWords(created),
-                until: formatDay(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { locale, timeZone: event.timezone, style: "short", position: "inline" }),
+                until: formatDay(seriesHorizonEnd(now, deadlines), { locale, timeZone: event.timezone, style: "short", position: "inline" }),
+                horizon: daysPhrase(locale, deadlines.seriesHorizonDays),
               })}
             </Alert>
           )}
@@ -659,7 +665,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     )}
                     <Panel collapsible level={3} title={t("editor.repeatHelpSummary")}>
                       <Typography variant="body2" color="text.secondary">
-                        {t("editor.repeatHelp")}
+                        {t("editor.repeatHelp", { horizon: daysPhrase(locale, deadlines.seriesHorizonDays) })}
                       </Typography>
                     </Panel>
                   </Stack>
@@ -707,6 +713,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     bibCounts={bibCounts}
                     locale={locale}
                     now={now}
+                    clubDeadlines={deadlines}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard
@@ -715,7 +722,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           unprinted={bibCounts.unprinted}
                           mayAssign={canManageRegistrations(staffUser.role)}
                           onlyTest={registered.total > 0 && registered.test === registered.total}
-                          attention={bibCounts.unprinted > 0 && event.startsAt.getTime() - now.getTime() <= 7 * 86_400_000 && event.startsAt.getTime() >= now.getTime()}
+                          attention={bibCounts.unprinted > 0 && withinRaceWeek(event, now, deadlines)}
                         />
                       ) : null
                     }

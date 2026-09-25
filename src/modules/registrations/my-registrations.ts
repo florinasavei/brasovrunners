@@ -14,7 +14,8 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import { findRegistrationById } from "./repository";
 import { checkIn, type EventForRegistration, unregister } from "./service";
-import { SELF_CHECKIN_OPENS_HOURS } from "./token-actions";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 
 /**
  * "My registrations" — one link, every active registration for an address (BR-REQ-036-04;
@@ -78,7 +79,7 @@ export type MyRegistration = {
   bibNumber: number | null;
   /** The number held before the settle (§214); what the runner is shown until then. */
   provisionalBibNumber: number | null;
-  /** "I am here" is offered from the day before the start, confirmed registrations only — never at a cancelled event. */
+  /** "I am here" is offered from the club's check-in lead before the start ("Termene", §377), confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
   /**
    * The event was cancelled (§331). The registration keeps its own status — it is the record of
@@ -135,14 +136,17 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
     )
     .orderBy(asc(events.startsAt), asc(registrations.id));
 
+  // "I am here" opens the club's hours before the start (§377), read once for the whole list.
+  const deadlines = rows.length > 0 ? await currentDeadlines(db) : null;
   return rows.map(({ listOptOut, eventStatus, ...row }) => ({
     ...row,
     listed: !listOptOut,
     eventCancelled: eventStatus === "CANCELLED",
     selfCheckinOpen:
+      deadlines !== null &&
       row.status === "CONFIRMED" &&
       eventStatus !== "CANCELLED" &&
-      now.getTime() >= row.eventStartsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000,
+      now.getTime() >= selfCheckinOpensAt(row.eventStartsAt, deadlines).getTime(),
   }));
 }
 
@@ -243,7 +247,7 @@ export async function checkInSelfFromMyRegistrations<T extends Record<string, un
   const item = context.items.find((row) => row.id === registrationId);
   if (!item) throw new DomainError("NOT_FOUND", "not one of this participant's registrations");
   if (!item.selfCheckinOpen) {
-    throw new DomainError("VALIDATION_ERROR", "self check-in opens the day before the event");
+    throw new DomainError("VALIDATION_ERROR", "self check-in is not open yet: it opens the club's check-in lead before the start");
   }
   const registration = await checkIn(db, item.id, null, now);
   return { ok: true as const, registration };

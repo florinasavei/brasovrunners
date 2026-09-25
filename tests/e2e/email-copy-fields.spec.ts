@@ -40,13 +40,13 @@ test.describe("the fields of an email's words, as a legend", () => {
     await expect(legend).not.toHaveAttribute("open", "");
     const summary = legend.locator(":scope > summary");
     await expect(summary).toContainText("Câmpurile pe care le poți folosi");
-    await expect(summary).toContainText("12 câmpuri · 4 câmpuri folosite aici");
+    await expect(summary).toContainText("16 câmpuri · 4 câmpuri folosite aici");
     // A thumb opens it (BR-REQ-041-01 criterion 6).
     expect((await summary.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await openFold(legend);
 
     const terms = legend.locator("dt");
-    await expect(terms).toHaveCount(12);
+    await expect(terms).toHaveCount(16);
     await expect(terms.nth(0)).toContainText("{eventTitle}");
     await expect(terms.nth(0)).toContainText("folosit în textul platformei");
     // The example is the preview's: the sample's title, in italics beside what the field is.
@@ -55,8 +55,8 @@ test.describe("the fields of an email's words, as a legend", () => {
     const role = legend.locator("dt", { hasText: "{staffRole}" });
     await expect(role.locator("xpath=..")).toHaveAttribute("data-muted", "true");
     await expect(role).not.toHaveCSS("opacity", "0.6");
-    await expect(legend.locator("dd").nth(10)).toContainText("nu se completează în acest mesaj");
-    await expect(terms.nth(11)).toContainText("{inviterName}");
+    await expect(legend.locator("dd").nth(14)).toContainText("nu se completează în acest mesaj");
+    await expect(terms.nth(15)).toContainText("{inviterName}");
 
     // The old sentence is gone, and the phone keeps its width with the card open (criterion 1).
     await expect(main.getByTestId("email-copy-placeholders")).toHaveCount(0);
@@ -111,7 +111,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     await expect(words).not.toContainText("Crosul de toamnă");
     // The fields are a legend under the box now (§373, email follow-up), the one this text uses first.
     const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");
-    await expect(legend).toContainText("12 câmpuri · 1 câmp folosit aici");
+    await expect(legend).toContainText("16 câmpuri · 1 câmp folosit aici");
     await openFold(legend);
     await expect(legend.locator("dt").first()).toContainText("{eventTitle}");
     await expect(legend.locator("dt").first()).toContainText("folosit în textul platformei");

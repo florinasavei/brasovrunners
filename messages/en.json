@@ -78,7 +78,7 @@
     "raceWeek": {
       "today": "Today, {when}",
       "tomorrow": "Tomorrow, {when}",
-      "inDays": "In {days} days, {when}"
+      "inDays": "In {days}, {when}"
     },
     "pastCountOfType": "Past — {type} ({count})"
   },
@@ -621,8 +621,8 @@
       "registrationModeTitle": "The registration mode, from the event's settings",
       "columnDate": "Date",
       "seriesDates": "The dates of this series",
-      "seriesRenewsUntil": "Renews itself: the platform creates the dates {weeks} weeks ahead, until {until}.",
-      "seriesRenewsForever": "Renews itself: the platform creates the dates {weeks} weeks ahead, for ever.",
+      "seriesRenewsUntil": "Renews itself: the platform creates the dates {horizon} ahead, until {until}.",
+      "seriesRenewsForever": "Renews itself: the platform creates the dates {horizon} ahead, for ever.",
       "seriesEdit": "Edit the next date",
       "seriesDeleteNote": "A series is deleted from the bar above the list: tick it, then “Delete the ticked ones”.",
       "deskCounts": "{confirmed} confirmed · {checkedIn} here",
@@ -645,8 +645,8 @@
       },
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
-      "eventsRepeatedOne": "The series is running: {dates} created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
-      "eventsRepeatedMany": "The series is running: {dates} created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
+      "eventsRepeatedOne": "The series is running: {dates} created now, up to {until} — the next {horizon}. The platform creates the rest by itself, always {horizon} ahead, until the chosen date or for ever; there is nothing more to press.",
+      "eventsRepeatedMany": "The series is running: {dates} created now, up to {until} — the next {horizon}. The platform creates the rest by itself, always {horizon} ahead, until the chosen date or for ever; there is nothing more to press.",
       "seriesDraftsOne": "{dates} in draft, not on the site:",
       "seriesDraftsMany": "{dates} in draft, not on the site:",
       "seriesNewDates": {
@@ -659,7 +659,7 @@
       "seriesDraftsSourceOne": "{dates} of the series is not on the site — the series is not published:",
       "seriesDraftsSourceMany": "{dates} of the series are not on the site — the series is not published:",
       "seriesDraftsMore": "and {count} more",
-      "seriesDraftsHintNew": "The series creates its own dates for the next {weeks} weeks; with automatic publication off, each new date stays a draft until you publish it.",
+      "seriesDraftsHintNew": "The series creates its own dates for the next {horizon}; with automatic publication off, each new date stays a draft until you publish it.",
       "seriesDraftsHintSource": "The series starts from an event that is not published; until you publish it, the dates it creates stay drafts too.",
       "seriesDraftsPublish": "Publish",
       "seriesDraftsPublishTitle": "Publish {dates}?",
@@ -823,7 +823,7 @@
       "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all.",
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
-      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own after 48 hours.",
+      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own when the confirmation link runs out (under “Deadlines”, on the Emails page).",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field the platform can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
@@ -922,7 +922,7 @@
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
       "capacity": "Capacity",
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
-      "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, 24 h each.",
+      "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, {offer} each.",
       "waitlistCapacity": "Maximum waiting-list length",
       "waitlistCapacityHelp": "Leave empty for unlimited. 0 means no waiting list: once the places are gone, registration stops. It only counts with a number of places. Lowered below how many already wait, it removes nobody from the list — it only takes nobody new.",
       "registrationOpensAt": "Registration opens",
@@ -953,7 +953,7 @@
       "notStated": "Not stated",
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
-      "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next eight weeks are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
+      "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next {horizon} are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
       "repeatRuleForever": "{sentence} — for ever",
@@ -973,7 +973,7 @@
       "savedSeriesOfferedOne": "Saved — also on {dates} of the series; places offered to the waiting list: {offered}.",
       "savedSeriesOfferedMany": "Saved — also on {dates} of the series; places offered to the waiting list: {offered}.",
       "savedOffered": "Saved — places offered to the waiting list: {offered}.",
-      "placeAnnouncedLive": "The location is announced: it now shows on the event page, the cards, the calendar and in every email sent from now on. People already registered are not emailed about it automatically; the reminder 48 hours before the event will carry it.",
+      "placeAnnouncedLive": "The location is announced: it now shows on the event page, the cards, the calendar and in every email sent from now on. People already registered are not emailed about it automatically; the reminder before the start will carry it, if the event sends one.",
       "placeAnnouncedDraft": "The location is announced: it will show on every page once the event is published. Nobody is emailed about it.",
       "scope": {
         "title": "Save for:",
@@ -1077,7 +1077,7 @@
       "bodyHelp": "Optional, in both languages or neither. The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
-      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
+      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once ({hold}), as for the weekly runs — which are within a week anyway.",
       "typeHelpSummary": "What each type means",
       "typeNotes": {
         "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
@@ -1096,6 +1096,14 @@
       "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
       "minAge": "Minimum age (years)",
+      "reminder": {
+        "label": "The reminder before the start",
+        "usual": "As usual ({lead})",
+        "before": "{lead} before the start",
+        "none": "No reminder",
+        "clubNone": "no reminder by default",
+        "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
+      },
       "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers them. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
@@ -1195,13 +1203,13 @@
       "repeatPublishOffHelp": "Off: new dates are created as drafts; you publish them from the events list.",
       "repeatPublishDraftSource": "While the event is a draft, new dates are drafts too.",
       "repeatNextDates": "Next dates",
-      "repeatRenewal": "The platform always keeps the next eight weeks created; the last one created: {date}.",
+      "repeatRenewal": "The platform always keeps the next {horizon} created; the last one created: {date}.",
       "repeatPublishSave": "Save this setting",
       "repeatAdminOnly": "Only an administrator can start or stop the recurrence.",
       "repeatAllInList": "All the dates ({count}) in the events list",
       "repeatRuleLiveForever": " — for ever.",
       "repeatRuleLiveUntil": " — until {until}.",
-      "repeatRuleLiveHorizon": "The dates of the next eight weeks are created now.",
+      "repeatRuleLiveHorizon": "The dates of the next {horizon} are created now.",
       "groups": {
         "event": "The event",
         "day": "The day and who takes part",
@@ -1222,9 +1230,9 @@
           "few": "{count} registered",
           "other": "{count} registered"
         },
-        "when": "Registrations for this date: {count}, for {date}. A new date does not cancel them; the 48-hour reminder, the confirmation window and the calendar entry follow it. To tell them, tick “Tell the participants” under Save.",
+        "when": "Registrations for this date: {count}, for {date}. A new date does not cancel them; the reminder before the start, the confirmation window and the calendar entry follow it. To tell them, tick “Tell the participants” under Save.",
         "place": "Registrations: {count}, who know the place “{place}”. If you change it, tick “Tell the participants” under Save.",
-        "programme": "The 48-hour reminder repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
+        "programme": "The reminder before the start repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
         "registration": "Registrations already made stay. Places added are offered to the waiting list on save, in order.",
         "status": "Cancelling stops registration and, if you leave the box ticked, tells those registered ({count}) with the reason written here."
       },
@@ -1269,6 +1277,9 @@
           "title": "Who may enter and what they sign",
           "legalLink": "Legal documents — where a new version of the declaration is approved"
         },
+        "reminder": {
+          "title": "The reminder before the start"
+        },
         "confirmation": {
           "title": "Confirmation window",
           "dates": "For {date}: asked from {opens}, due {due}."
@@ -1307,7 +1318,7 @@
         "save": {
           "title": "Save",
           "createDraft": "Created as a draft",
-          "createWithSeries": "with the series' dates of the next eight weeks."
+          "createWithSeries": "with the series' dates of the next {horizon}."
         },
         "pickDates": {
           "title": "Pick dates one by one"
@@ -1541,7 +1552,7 @@
       "holds": "Held",
       "free": "Free",
       "waiting": "Waiting",
-      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place, when somebody registers whom the waiting list has no room for, or when the event starts. Free = places − confirmed − held, exactly the formula the public sees; while the waiting list is full, the public also sees the place of a lapsed hold as free, because the next person to register gets it.",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration ({hold}, or until the confirmation deadline for events further away than their window) or answers a waiting-list offer ({offer}). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place, when somebody registers whom the waiting list has no room for, or when the event starts. Free = places − confirmed − held, exactly the formula the public sees; while the waiting list is full, the public also sees the place of a lapsed hold as free, because the next person to register gets it.",
       "lineTitle": "Waiting list ({count})",
       "lineTitleLimited": "Waiting list ({count} of {limit})",
       "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
@@ -1555,7 +1566,7 @@
       "interestRemove": "Remove from the list",
       "interestRemoved": "The address was removed from the notification list.",
       "interestNotFound": "That address was not on this event's list. Check whether they wrote from another one.",
-      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (as 30-minute holds), the rest queue here, in order. Cancel a confirmed one, let a hold lapse (the maintenance job runs every 15 minutes) or raise the number of places and the first in line gets the offer; its email shows in the Outbox on that registration."
+      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (held for {hold} each), the rest queue here, in order. Cancel a confirmed one, let a hold lapse (the maintenance job runs every 15 minutes) or raise the number of places and the first in line gets the offer; its email shows in the Outbox on that registration."
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -1674,7 +1685,7 @@
       },
       "tokens": {
         "title": "The fields that fill themselves in",
-        "intro": "In the declaration only. Leave them exactly as they are in the text — they are replaced at signing, for each person and each race. The club's own facts are not here: those are already written into the text.",
+        "intro": "Leave them exactly as they are in the text. The participant's and the event's — in the declaration only — are replaced at signing, for each person and each race; the four deadlines, in any of the three texts, with the values under “Deadlines” on the Emails page. The club's own facts are not here: those are already written into the text.",
         "inText": "in this text",
         "participant": "The name the participant registered under",
         "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
@@ -1685,7 +1696,11 @@
         "event": "The event's title",
         "eventDate": "The event's date, in its own zone",
         "eventLocation": "The meeting point",
-        "signedAt": "When it was signed"
+        "signedAt": "When it was signed",
+        "confirmationHours": "How long the address confirmation link is valid, from “Deadlines”",
+        "holdMinutes": "How long a place is held for signing, from “Deadlines”",
+        "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
+        "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2581,7 +2596,7 @@
         "REGISTRATION_MANAGE_LINK": "Your registration link",
         "PROFILE_MANAGE_LINK": "My registrations",
         "REGISTRATION_STATE_NOTICE": "Registration status",
-        "EVENT_REMINDER": "Reminder 48 hours before",
+        "EVENT_REMINDER": "The reminder before the start",
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
         "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)",
@@ -2594,17 +2609,17 @@
         "ORGANIZER_MESSAGE": "Message from the organizers"
       },
       "when": {
-        "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
-        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held 30 minutes. The deadline counts only when somebody is waiting: otherwise the place stays the person's until the start, and the declaration is signed online or on paper at the desk. Two days before the start it goes one last time, to whoever has not signed.",
+        "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts {confirmation}.",
+        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held {hold}. The deadline counts only when somebody is waiting: otherwise the place stays the person's until the start, and the declaration is signed online or on paper at the desk.",
         "WAITLIST_JOINED": "After the address is confirmed, when the event is full.",
-        "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. 24 hours to sign.",
+        "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. {offer} to sign.",
         "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
         "REGISTRATION_CANCELLED": "When the participant withdraws or an organizer cancels the registration.",
-        "WAITLIST_OFFER_EXPIRED": "Not sent any more: when an offered place's 24 hours pass without a signature, the place moves to the next person in line with no email to the one who did not sign.",
+        "WAITLIST_OFFER_EXPIRED": "Not sent any more: when an offered place's {offer} pass without a signature, the place moves to the next person in line with no email to the one who did not sign.",
         "REGISTRATION_MANAGE_LINK": "Not sent any more: “Resend the link” sends the whole confirmation (with the manage link, the QR code and the number), and “My registrations” has its own message.",
         "PROFILE_MANAGE_LINK": "On request, when somebody wants to see all their registrations.",
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
-        "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
+        "EVENT_REMINDER": "Automatic, {reminder} before the start (or as the event chooses), to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
         "DECLARATION_ARCHIVE": "Together with the signed declaration, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, when none is set here) — only for real registrations. No action link; in the attached PDF the identity document's series and number are masked.",
@@ -2623,11 +2638,11 @@
         "WAITLIST_SPOT_OFFER": "when a place frees up",
         "REGISTRATION_CONFIRMED": "after the declaration is signed",
         "REGISTRATION_CANCELLED": "on a withdrawal or a cancellation",
-        "WAITLIST_OFFER_EXPIRED": "when the offer's 24 hours pass",
+        "WAITLIST_OFFER_EXPIRED": "when the offer's {offer} pass",
         "REGISTRATION_MANAGE_LINK": "on request, “Resend the link”",
         "PROFILE_MANAGE_LINK": "on request, every registration",
         "REGISTRATION_STATE_NOTICE": "resent by an organizer",
-        "EVENT_REMINDER": "two days before the start",
+        "EVENT_REMINDER": "{reminder} before the start",
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
         "DECLARATION_ARCHIVE": "with each signed declaration, to the archive",
@@ -2719,7 +2734,11 @@
             "signedAtFormatted": "When the declaration was signed",
             "eventChecklist": "What to bring — the event's line, in this text's language",
             "staffRole": "The invited colleague's role on the team",
-            "inviterName": "Who invited them to the team"
+            "inviterName": "Who invited them to the team",
+            "confirmationHours": "How long the link that confirms the address lives, from “Deadlines” — the unit comes with it, so do not add “hours” after it",
+            "holdMinutes": "How long a place is held while the declaration is signed, from “Deadlines”, with its unit",
+            "offerHours": "How long a waiting-list offer stays open, from “Deadlines”, with its unit",
+            "reminderHours": "How long before the start the reminder goes — this event's own, else the club's from “Deadlines” — with its unit; none when the event sends no reminder"
           }
         },
         "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the platform's: they carry tokens and files, not words.",
@@ -2802,6 +2821,43 @@
         "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
       },
       "neverSent": "not sent any more",
+      "lastCall": "With the reminder — {reminder} before the start, or as the event chooses — it goes one last time, to whoever has not signed.",
+      "lastCallOff": "For an event that chose a reminder, it goes one last time with it, to whoever has not signed.",
+      "reminderOff": {
+        "when": "Off by default, under “Deadlines”: it goes only for the events that chose a reminder in the editor, to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
+        "whenShort": "only where the event chose a reminder"
+      },
+      "deadlines": {
+        "title": "Deadlines",
+        "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
+        "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
+        "reminderOff": "none",
+        "bounds": "Between {min} and {max}; {default} by default.",
+        "fields": {
+          "confirmationHours": "The address confirmation link is valid for (hours)",
+          "holdMinutes": "A place is held for signing the declaration (minutes)",
+          "offerHours": "A waiting-list offer stays open (hours)",
+          "reminderHours": "The reminder goes before the start by (hours)",
+          "selfCheckinHours": "“I have arrived” can be pressed before the start by (hours)",
+          "raceWeekDays": "The homepage countdown starts (days before)",
+          "seriesHorizonDays": "A series keeps its dates created ahead by (days)"
+        },
+        "help": {
+          "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
+          "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
+          "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
+          "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
+          "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
+          "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
+          "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it."
+        },
+        "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the platform's template, which reads them from here.",
+        "updatedAt": "Set {when}.",
+        "save": "Save the deadlines",
+        "saving": "Saving…",
+        "saved": "The deadlines were saved; they apply from now on.",
+        "readOnly": "The Administrator changes the deadlines; you see the values in force."
+      },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here."
     },
     "guide": {
@@ -2831,10 +2887,10 @@
           "title": "Participant — what it looks like from their side",
           "who": "No account. Everything by email.",
           "steps": [
-            "They register from the event page and get a verification email; they press the link and the place is held (30 minutes, or until the confirmation deadline for an event more than a week away). The deadline applies only if somebody is waiting for a place by then; otherwise the place stays theirs until the start.",
+            "They register from the event page and get a verification email; they press the link and the place is held ({hold}, or until the confirmation deadline for an event further away than its window). The deadline applies only if somebody is waiting for a place by then; otherwise the place stays theirs until the start.",
             "They read and sign the declaration online, typing their name — or on paper, at the desk, on race day, before picking up their number. The registration becomes “confirmed” and they get the confirmation email with the QR code.",
-            "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from the day before the start, press “I have arrived”.",
-            "Event full: they join the waiting list and get an email when a place frees up, with 24 hours to sign the declaration.",
+            "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from {checkin} before the start, press “I have arrived”.",
+            "Event full: they join the waiting list and get an email when a place frees up, with {offer} to sign the declaration.",
             "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot.",
             "In their calendar: every event has “Google Calendar” and “Add to calendar (.ics)”; on the events page, “Subscribe” puts the club's whole calendar on the phone and it updates by itself when you publish something new."
           ],
@@ -3042,7 +3098,8 @@
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
     "privacyLinkLabel": "Privacy",
-    "privacyLinkName": "Privacy notice",
+    "privacyLinkName": "Privacy notice (GDPR)",
+    "privacyLinkShort": "GDPR",
     "termsLinkLabel": "Racing TOS",
     "botCheckNotice": "The “I'm not a robot” check is run by Cloudflare, which sees your IP address and browser details for that purpose only.",
     "inForce": "Version {version}, in force since {date}",
@@ -3068,12 +3125,12 @@
       "next": {
         "open": {
           "title": "Open the email and press the link",
-          "body": "That is all. The link is valid for {hours} hours."
+          "body": "That is all. The link is valid for {confirmation}."
         },
         "declare": {
           "title": "Sign the declaration",
           "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
-          "bodyLater": "The place is yours. {opensDays} days before the start we ask you to confirm: sign the declaration online — or on paper, at the registration desk on race day. You can sign earlier, from the registration email."
+          "bodyLater": "The place is yours. We ask you to confirm {opens} before the start: sign the declaration online — or on paper, at the registration desk on race day. You can sign earlier, from the registration email."
         },
         "confirmed": {
           "title": "You are in",
@@ -3081,7 +3138,7 @@
         }
       },
       "delay": "It usually arrives within a minute, five at the most.",
-      "notArrived": "Not there? Look in Spam too. The link is valid for {hours} hours, so there is time.",
+      "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
       "backToEvent": "Back to the event"
     },
     "deliveryNotice": {
@@ -3205,16 +3262,17 @@
       },
       "email": {
         "title": "Confirm your email address",
-        "body": "You get a link. Open it within {hours} hours — otherwise the registration expires and the place stays free."
+        "body": "You get a link. Open it within {confirmation} — otherwise the registration expires and the place stays free."
       },
       "declaration": {
         "title": "Sign the declaration",
-        "body": "From that same email, read the declaration and type your name — online, or on paper at the registration desk on race day. The registration is complete only with the signed declaration. Your place is held for {minutes} minutes; if a waiting list forms, after that it goes to the next in line.",
-        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opensDays} days before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {deadlineDays} days before the start; after that it goes to the next in line."
+        "body": "From that same email, read the declaration and type your name — online, or on paper at the registration desk on race day. The registration is complete only with the signed declaration. Your place is held for {hold}; if a waiting list forms, after that it goes to the next in line.",
+        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {deadline} before the start; after that it goes to the next in line."
       },
       "confirmed": {
         "title": "You are in",
-        "body": "You get the confirmation email, with your QR code and race number. Two days before, we send a reminder."
+        "body": "You get the confirmation email, with your QR code and race number. We send a reminder {reminder} before the start.",
+        "bodyNoReminder": "You get the confirmation email, with your QR code and race number."
       },
       "raceDay": {
         "title": "On race day",
@@ -3222,7 +3280,7 @@
       },
       "waitingList": {
         "title": "If it is full",
-        "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offerHours} hours to sign the declaration."
+        "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offer} to sign the declaration."
       }
     },
     "journey": {
@@ -3304,8 +3362,8 @@
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed",
       "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
-      "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for 48 hours from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
-      "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for 48 hours from when you sent the form: if a place frees up in the meantime, open it again."
+      "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
+      "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place frees up in the meantime, open it again."
     },
     "declare": {
       "title": "Event declaration",
@@ -3329,7 +3387,7 @@
       "nextTitle": "What happens next",
       "nextConfirmed": [
         "The confirmation email is on its way, with your QR code and your access code — keep it for race day.",
-        "Two days before the start you get a reminder with the time, the place, what to bring and, if assigned, your race number.",
+        "You get a reminder {reminder} before the start, with the time, the place, what to bring and, if assigned, your race number.",
         "If you can no longer come, cancel from the link in the email: your place goes to somebody on the waiting list."
       ],
       "nextWaitlisted": [
@@ -3443,7 +3501,7 @@
       "codeIntro": "Show this code at the number pickup desk. It is in your confirmation email too.",
       "qrAlt": "Your QR code {code}",
       "selfCheckIn": "I have arrived — mark me as here",
-      "selfCheckInHelp": "You can do this from the day before the start. You still pick up your number at the desk.",
+      "selfCheckInHelp": "You can do this from {checkin} before the start. You still pick up your number at the desk.",
       "selfCheckInDone": "You are marked as here. Pick up your number at the desk.",
       "selfCheckInClosed": "Check-in opens on {date}.",
       "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out."

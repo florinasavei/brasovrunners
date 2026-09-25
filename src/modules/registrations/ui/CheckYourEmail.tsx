@@ -6,11 +6,12 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { daysPhrase, hoursPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { SubmittedFacts } from "../form-draft";
-import { EMAIL_CONFIRMATION_HOLD_HOURS } from "../repository";
 
 /**
  * What happens next, in three steps — the same three glyphs `RegistrationSteps` gives the
@@ -47,8 +48,9 @@ type Props = {
  *
  * Warmth, not cuteness: a first name in the heading when there is one, the event and its date,
  * the address the message went to (§224), three short steps with a glyph each, the wait in
- * bold and once (§224), the spam folder, how long the link lives — the lifecycle's own constant,
- * so this cannot promise what the allocator does not keep — and the sentence that keeps it true
+ * bold and once (§224), the spam folder, how long the link lives — the club's own hours (§377),
+ * the very number the link just sent was given, so this cannot promise what the platform does
+ * not keep — and the sentence that keeps it true
  * for somebody who was already registered (§229). Then the two ways out when nothing arrives
  * (§205), and the way back to the event.
  *
@@ -63,9 +65,10 @@ type Props = {
  */
 export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window }: Props) {
   const t = await getTranslations("Registration");
+  const locale = await getLocale();
   const values = {
-    hours: EMAIL_CONFIRMATION_HOLD_HOURS,
-    opensDays: window?.opensDays ?? 0,
+    confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
+    opens: daysPhrase(locale, window?.opensDays ?? 0),
   };
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);

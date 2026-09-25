@@ -15,16 +15,17 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| "Termene": every participant-facing deadline a club setting | `feat/deadlines-config` | migration `0069`; its own release |
+| The partner card on the event page has a border and a gray background; the card's time is bold | `fix/partner-card-surface` | |
+| A "headlamp required" checkbox in the editor and a headlamp pill on the card, the page and the calendar entry (migration `0070`) | `feat/headlamp-required` | its own release |
 | Toasts after every backoffice action and a confirmation dialog before every irreversible or outward-facing one — an action that emails participants says so, with the count | `feat/toasts-and-confirms` | |
 | Tighter spacing on phones for the public pages | `fix/mobile-density` | after `BR-V1.83` |
-| "Următoarele emailuri automate": the next 14 days of automatic sends per event, with recipient counts, on `/admin/emails` | `feat/email-forecast` | after the deadlines land |
+| "Următoarele emailuri automate": the next 14 days of automatic sends per event, with recipient counts, on `/admin/emails` | `feat/email-forecast` | after `BR-V1.86` |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.85` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.87` |
 
 ## Next, queued
 
@@ -35,6 +36,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | What is needed |
 | --- | --- |
+| "Termene" defaults (`BR-V1.86`) | say if any should change: the panel lives on `/admin/emails`; the bounds (link 12–168 h, hold 10–120 min, offer 6–72 h, reminder 0–168 h, check-in 1–72 h, race week 0–21 days, horizon 14–182 days); "no reminder" on an event also silences the last call to sign; race week also opens the editor's bib card; leads read with digits ("cu 2 zile înainte"); the legal templates' reminder clause reads ", un memento cu 2 zile înainte (sau cât alege evenimentul)" / ", a reminder before the start where the event sends one" when the default is none; the approved production texts keep their literal numbers until re-approved |
 | Who may write to participants | "Trimite un mesaj participanților" is open to the Organizator and the Administrator (`BR-V1.81`); say if the Tehnic role should have it too |
 | The three emails marked "nu se mai trimite" on `/admin/emails` | choose: fold them into one "Nu se mai trimit (3)" card, and/or send an email again when a waiting-list offer expires |
 | The English "Happy Monday" description | its English box holds the Romanian text — replace it in the editor |
@@ -55,6 +57,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.87` | the footer's privacy notice is a question mark after "Despre club" on a phone and the word "GDPR" from `sm`, the phone bar's items 6 px apart · the partner marker is the 🤝 emoji |
+| `BR-V1.86` | "Termene": every participant-facing deadline is one club setting on `/admin/emails` — the email link, the declaration hold, the waiting-list offer, the reminder (per event or the club's), self check-in, race week, a series' horizon — Administrator-only, audited, applied to new holds and offers only; emails, pages and legal templates take their words from it; migration `0069` |
 | `BR-V1.85` | the listing card: one handshake glyph and never a partner's name, the next date and its time on one line on a phone, the pills in the order surface, difficulty, distance, elevation, cost · the `/admin/legal` notice folds closed on the legal page and says what the code enforces; a malformed admin id answers 404 everywhere in the backoffice |
 | `BR-V1.84` | the phone footer in one row from 320 px — every item on it, a lock for the privacy notice, the languages as flags, 24-px targets below 360 and 28 up to `sm` · the email editor's placeholder legend and preview sample, the save guard, a bilingual email's second half entirely in its own language with the status in words · the dispatcher guards its own context, `yarn ship` continues past a merged batch PR, a worktree-sweep card, a resumed branch still gets its review |
 | `BR-V1.83` | the club's name from one source and the last hardcoded values gone — a donation event reads as free to attend with a `DonateAction`, the queue panel in the event's zone, the legal editor keeps its height · the backoffice works under `yarn dev` again, a source-walk test refuses element props into client components, `yarn test:e2e:dev` · a save press paints "Se salvează…" first, every measured press under 200 ms at 4× CPU |

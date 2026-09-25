@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.87-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.85-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.87-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15316,3 +15316,197 @@ No DECISIONS.md edit made (repo convention: docs:land fills §376 placeholders l
 The legal-versions fold's `id` moved from the wrapping `Box` to the `Panel` component itself (its rendered `<details>`), so that `openFoldsAround` — which walks up the DOM from `#legal-versions` — finds the fold to open rather than an inert spacing wrapper. The Box is kept only for its margin-bottom spacing. `tests/unit/legal/legal-notice-fold.test.ts` now asserts the id appears on the `<Panel id="legal-versions" ...>` element rather than a bare `<Box id="legal-versions"`, and separately asserts the RO and EN `Admin.legalNotice.title` strings read from `messages/ro.json` and `messages/en.json` match the expected headings, rather than checking only that the translation key `legalNotice.title` is referenced.
 
 Baseline `BR-V1.85-2026-09-25`.
+
+## 377. The club's deadlines are a setting, "Termene", and every sentence that states one says the setting's number
+
+**2026-09-24.** The owner read "Reminder cu 48 de ore înainte" on `/admin/emails` and asked: "Why is this reminder hardcoded?", then "this needs to be a configuration!". Asked which deadlines, he answered: all of them. His standing rule is that documents and emails carry placeholders, not hardcoded values.
+
+Seven participant-facing timings were constants, and their numbers were also written out as words in the catalogues, the email templates, the five-step panel (§91), the guide, the when-lines and the legal templates:
+- `EMAIL_CONFIRMATION_HOLD_HOURS` 48
+- `DECLARATION_HOLD_MINUTES` 30
+- `WAITLIST_OFFER_HOLD_HOURS` 24
+- `REMINDER_HOURS_BEFORE` 48, duplicated as a literal in `jobs/schedule.ts`
+- `SELF_CHECKIN_OPENS_HOURS` 24
+- `RACE_WEEK_DAYS` 7
+- `HORIZON_DAYS` 56
+
+**Decision.** One club setting, `platform_settings.deadlines`, in the §100/§164/§244 shape:
+- one row and a strict schema;
+- the Administrator's role, asserted in `updateDeadlines` as well as at the action;
+- an audit row, `deadlines.changed` on entity `…e008`, naming only the deadlines that moved, each from and to.
+
+Unset, every value is the constant it replaced, so nothing changes on any deployment until somebody saves. A stored value this code cannot read falls back field by field.
+
+| Deadline | Unit | Default | Bounds |
+| --- | --- | --- | --- |
+| Email link | hours | 48 | 12–168 |
+| Declaration hold | minutes | 30 | 10–120 |
+| Waiting-list offer | hours | 24 | 6–72 |
+| Reminder lead | hours | 48 | 0–168, 0 = none |
+| "I am here" | hours before the start | 24 | 1–72 |
+| Race week | days | 7 | 0–21, 0 = race day only |
+| Series horizon | days | 56 | 14–182 |
+
+The hold's ceiling stays well under a day. That margin is what `render.ts` and `queueParticipationConfirmations` rely on to tell a declaration hold from a participation window's hold (§104). A blank box is refused rather than read as zero, because zero means "no reminder".
+
+**Where it lives.** A closed "Termene" fold on `/admin/emails`, directly above "Emailurile trimise participanților". Three reasons:
+- That is where the hardcoded reminder was found.
+- Five of the seven deadlines are stated in the messages previewed on that page, so a changed number shows again in the next card down.
+- The club's other email settings already live there.
+
+The fold also names the three deadlines that are not about email (check-in, race week, horizon) and where each one shows. Readers who may not change the setting see its values and no form (§291). Two alternatives were rejected: `/admin/tasks` → Costuri (that is the platform's cost, not a participant's promise), and a new tab (too much navigation for one panel).
+
+**One function per deadline, and how it is read.** `deadlines/domain/deadlines.ts` holds the only arithmetic on these numbers:
+- `emailLinkExpiresAt`, `declarationHoldEndsAt`, `offerEndsAt`;
+- `reminderHoursFor` and `reminderOpensAt`;
+- `selfCheckinOpensAt`, `withinRaceWeek`, `seriesHorizonEnd`.
+
+`raceWeek`, `horizonEnd` and the two hold-expiry functions now take the setting as an argument. The seven constants are gone from `src/`. `maintenanceDueFor` takes the event's reminder lead, so the duplicated literal is gone too.
+
+How the setting is read depends on the caller:
+- **Allocator and hot paths:** a one-minute memo per server instance, so a registration costs no extra round trip.
+- **Maintenance run:** one fresh read, handed to the memo, so the work and its next-work plan (§334) agree on one value.
+- **Public pages:** through the data cache (§333).
+- **Backoffice pages:** once per render.
+- **On save:** the memo is dropped, the public `settings` tag expires, and the maintenance job is woken.
+
+**The allocator (AGENTS.md §10.5–§10.6).** A hold or offer created after a change gets the new length. One already given keeps its stored deadline. The lock, the capacity formula, read-time expiry and `kind` are untouched. For up to a minute after a save, another server instance may still give the previous length; that length is still one the club chose, and no existing deadline is rewritten. `tests/concurrency/capacity.test.ts` passes.
+
+**The email link, now stored.** Its lapse used to be computed at sweep time as `submitted_at` plus the constant, so changing the setting would have moved every link already sent. Now `registrations.email_link_expires_at` is written whenever a registration enters `PENDING_EMAIL_CONFIRMATION`, on a first submission and on a restart. The sweep and the job's plan share one SQL expression, `coalesce(email_link_expires_at, submitted_at + hours)`. Rows written before the column keep the old rule.
+
+This also fixes a defect: a restart never rewrote `submitted_at`, so an unverified registration restarted days later lapsed at the job's very next run.
+
+**The reminder, per event.** `events.reminder_hours_before` is a nullable smallint with a CHECK of 0–168:
+- null means "as usual", the club's number;
+- 0 means no reminder;
+- any other value is the event's own lead.
+
+It is chosen in a new card in the editor's registration box: "as usual", 24, 48, 72 hours, or none. A number a script stored is kept rather than refused. The card works on create and edit, and a series edit and copies carry the choice.
+
+It governs the reminder and the last call to sign (§160); for an event with no reminder, neither goes out. The job's plan wakes at the same instant. The idempotency key still allows one reminder per registration.
+
+**Words follow the values.** Every sentence that stated a deadline now receives it as a phrase whose noun agrees with the number, using `countForm`'s three Romanian forms (§341): "o oră", "2 ore", "20 de ore". Countdowns stay in hours ("48 de ore"); leads use days or weeks when they divide evenly ("2 zile"). The phrases come from `duration-words.ts`, the one bilingual copy of these words, because the outbox worker and the PDF render outside a request.
+
+Where the phrases now appear:
+- the five steps (§91), with no reminder sentence when there is none;
+- "Aproape gata", and the confirm, declare and manage pages;
+- the guide, the queue panel, the editor's helps, the series lines and the countdown;
+- the `/admin/emails` when-lines. When the club sets no reminder by default they say so; the reminder type is now labelled "Reminderul dinaintea startului";
+- the email templates: the reminder's lead ("se apropie" when there is none), the participation window's opening in the event's own days, and the "my registrations" link lifetime, read from the constant it is minted with;
+- the club's own copy (§247), through four additive placeholders: `{confirmationHours}`, `{holdMinutes}`, `{offerHours}`, `{reminderHours}`.
+
+**Legal texts.** The platform's templates of the terms and the privacy notice now state these deadlines through merge fields: `{{confirmationHours}}`, `{{holdMinutes}}`, `{{offerHours}}`, `{{reminderHours}}`.
+- They are filled at display time: on the public pages (not bolded there), on the declaration page, and in the PDF. They are also listed in the token legend.
+- The content hash stays over the unmerged text (§12.5).
+- **Texts already approved on production keep their literal numbers** until the club approves a new version from the template.
+- **The privacy notice's retention periods** (three years, seven days, thirty days) are the club's legal commitment and stay as written.
+
+**Not in this setting:**
+- the participation window (§104) and the minimum age (§329), which belong to the event;
+- the job cadence (§334), which is the platform's cost;
+- an action token's lifetime (§12.8), which is a security property; its sentence now reads the constant;
+- the "not in the last day" guard (§126).
+
+**Rejected:**
+- An environment variable, which would be invisible and need a deploy per change.
+- Recomputing an existing lapse from the new setting, which would move a deadline a participant had already been told.
+- A per-event override for the other six deadlines; only the reminder was asked for.
+- A second copy of the duration words in the message catalogues.
+
+**Known limits:**
+- The confirm page's "link valid {confirmation} from the form" states the setting in force, which can differ from the row's stored deadline if the setting changed after submission.
+- With the club's reminder set to 0, the privacy notice's `{{reminderHours}}` reads "0 ore".
+
+**Consequences.**
+- Migration `0068` (expand only): `events.reminder_hours_before` with its CHECK, and `registrations.email_link_expires_at`.
+- New code in `src/modules/deadlines/`: `domain/deadlines.ts`, `domain/duration-words.ts`, `deadlines.ts`, `memo.ts`, `request.ts`, `ui/DeadlinesPanel.tsx`.
+- `public-cache/reads.ts#cachedDeadlines`.
+- Audit action `deadlines.changed`.
+- `PUBLIC_COLUMNS` and `findEventNotificationDetails` gain `reminderHoursBefore`.
+
+**Tests.**
+- **Unit** (`tests/unit/deadlines/`):
+  - `deadlines`, `duration-words`;
+  - `no-literal-deadlines`, a grep guard over `src/`, the catalogues, the email templates and the legal templates;
+  - `deadlines-panel`, `registration-steps`, `email-words`.
+- **Unit, updated:** `hold-deadlines`, `schedule`, `race-week`, `editor-helpers`, `emails-page-folds`, `series-drafts-line`.
+- **Integration** (`tests/integration/deadlines/`):
+  - `setting`: Administrator-only, audited, the memo, one read per run;
+  - `allocator`: new holds, offers and links use the setting; existing ones are never rewritten; legacy rows; the restart fix;
+  - `reminder`: per-event, club default and off; the last call; the plan; the email's words; the editor; copies.
+- **Integration, updated:** `cms/series-edit` (the choice is carried), `cms/repeat`, `notifications/event-mail`.
+- **E2E:** `deadlines.spec.ts`, a round trip that ends back on the defaults, plus reworded assertions in `email-plan` and `cms-publish`.
+
+Migration: `0068_deadlines.sql`.
+
+Round 2 (2026-09-24), after review and a merge of origin/qa (BR-V1.79–V1.82).
+
+The migration is now 0069_reminder_override, not 0068. qa's 0068_organizer_message took that number, and production runs it. The SQL is unchanged and still expand-only: events.reminder_hours_before (smallint, nullable) with events_reminder_hours_before_in_range (NULL or 0–168), and registrations.email_link_expires_at (timestamptz, nullable).
+
+The legal texts do not take the reminder as a number. They take it as a clause, {{reminderClause}}: ", un memento cu 2 zile înainte" / ", a reminder 2 days before", with its leading comma, placed straight after "lista de așteptare" / "the waiting list". When the club sends no reminder by default (0), the value is "" and the clause drops out of the sentence. Merge fields gain one idea: an omittable field (OMITTABLE_MERGE_FIELDS) given "" leaves nothing, with no dotted blank and no emphasis. Given no value at all, it still shows the blank like any other field, so a text previewed without the setting still reads as unfilled. The legal field {{reminderHours}} is gone, since no approved text uses it yet, so no text can promise "un memento cu 0 ore înainte".
+
+The reminder email says the event "se apropie" / "is coming up", never a number of days. This keeps §357 from qa: a runner confirmed after the lead opened gets the reminder nearer the start than the lead says. The lead still decides when the reminder goes, and the event's own lead or the club's still wins as before. In the club's own email words, {reminderHours} is a conditional fact, like the bib number and the desk code (§359). A paragraph whose only field is the lead is not sent when the event sends no reminder.
+
+Race week in the backoffice (the bib card's attention) is counted the way the public countdown counts it: whole calendar days on the event's wall clock, the start still ahead. "0 = on race day only" is therefore true of both, and they open on the same morning.
+
+The reminder clause in the privacy notice no longer disappears when the club's default is none. Each event may still pick its own reminder (24, 48 or 72 hours), so a notice that left the reminder out of the messages "we send only" would make a claim a single event breaks. When the default is 0, `{{reminderClause}}` reads ", un memento înainte de start, dacă evenimentul trimite unul" / ", a reminder before the start where the event sends one": no number, no promise for any one event, and never a dotted blank. When the default is above 0, it still states the lead (", un memento cu 2 zile înainte").
+
+The declaration email for a hold kept until the participation window says "or when we remind you, N days before the start" only while the window is still ahead. Once the window is open, the message is itself the reminder: the send when the window opens, or a staff resend after it. So it says only "Semnează acum, din linkul de mai jos." / "Sign now, from the link below.". The renderer decides this from the event's start and its `confirmation_opens_days_before` when the message is rendered (`participationWindowOpen`, §104), so every send and resend gives the same answer without a flag in the payload.
+
+A "Termene" save that changes no number writes nothing: no row, no audit entry, no expiry of the public settings cache and no wake of the maintenance job. The audit log records changes, not clicks on Save.
+
+The participation window's defaults (7 days to open, 2 days to the deadline) are named constants in `registrations/domain/hold-deadlines.ts`, which the `/admin/emails` preview and the editor read. A unit test holds them equal to the column defaults, so no email preview carries a bare 7.
+
+The reminder clause in the legal texts is now hedged in both cases. The club's default lead is never a promise one event can break, because each event may pick 24, 48 or 72 hours, or none, in "Participare și înscrieri". With a default above zero, `{{reminderClause}}` reads ", un memento cu 2 zile înainte (sau cât alege evenimentul)" / ", a reminder 2 days before (or as the event chooses)". With a default of none it still reads ", un memento înainte de start, dacă evenimentul trimite unul" / ", a reminder before the start where the event sends one", never "0 ore" and never a dotted blank. The owner should review the wording. The token legend in /admin/legal gives each deadline token's example in both languages, like every other token since §369, each written by the same deadlineMergeValues that fills the text in that language.
+
+A raised capacity in the editor, for one date or for every date of a series, offers the new places using the club's deadlines as they stood before the save's transaction opened. The save reads the setting once, before the transaction, and passes it to the allocator. As a result, `platform_settings` is never read while the event row lock is held, even when this instance's one-minute memo has run out. The maintenance job still reads the setting once at the start of its run (`readDeadlinesForRun`).
+
+After the merge with §373, the four deadline fields of the emails' closed set are ordinary legend rows. The fields are `{confirmationHours}`, `{holdMinutes}`, `{offerHours}` and `{reminderHours}`. Each has its own sentence in both catalogues saying what it is and that the unit comes with it, so the club does not add "ore" after it. `{reminderHours}` is marked "poate lipsi", because a paragraph whose only field is the lead is dropped when the event sends no reminder. qa's rule that every placeholder has a sample value holds for them too. `emailSampleDeadlines` gives each one the words of `DEFAULT_DEADLINES` through the branch's one words helper (`deadlineWords`), in each language: "48 de ore" / "48 hours", "30 de minute", "24 de ore", "2 zile". These are the same words `templates.ts` fills the field with at send time. They are not literals the save refuses: a running club writes "48 de ore" in its own sentences.
+
+The legend promises "the example beside a field is the value it gets in the preview above", and the preview on `/admin/emails` prints the deadlines in force. So the page hands the setting to the legend (`emailFieldLegend(messageType, locale, deadlines)`), and the four rows show the club's numbers, not the defaults. With no setting passed, they show the sample's. Each message's preview still uses its own sample (§373) and carries the club's deadlines as `timings`.
+
+`fillAvailableSpots` now requires the deadlines, and nothing is read inside it. Every caller reads them before its transaction and passes them in:
+- each path in the registration service;
+- the editor's capacity raise, for one date or a series;
+- the maintenance job, once per run through `readDeadlinesForRun`.
+
+The optional parameter and its memo fallback were a hole in exactly the property the previous round was about: a caller that forgot to pass the deadlines would have read `platform_settings` under the event row lock. Typecheck now refuses such a caller.
+
+Baseline `BR-V1.86-2026-09-25`.
+
+## 378. The footer's privacy notice: a question mark after the fold, "GDPR" from sm, a 6-pixel phone gap
+
+**Asked (the owner, 2026-09-25, of §372's one-row footer):** "it should be a question mark, not a lock, and it should be after the about accordion; the mobile footer icons can be a bit more spaced out", and "Use GDPR for desktop as well."
+
+**Decided.**
+
+- **One DOM order at every width, with no CSS `order`:** the theme switch, the "Despre club" fold, the privacy notice, Facebook / Instagram / Strava, then the languages. The desktop uses the same order.
+- **Below `sm` the privacy link is `HelpOutlineOutlined`** (the circled `help_outline`, which `Hint` already uses) instead of §372's lock. It is not the bare `QuestionMark`: at 20 px in a 24 px square the bare mark is a thin stroke that reads as a stray character, while the circle has the same round weight as the social marks beside it.
+- **From `sm` the visible word is "GDPR" in both languages** (`Legal.privacyLinkShort`). It replaces "Confidențialitate" / "Privacy" and stays a 44 px target.
+- **The accessible name is the notice's own in both languages:** "Nota de confidențialitate (GDPR)" and "Privacy notice (GDPR)". The English name gained "(GDPR)" in review, because "Privacy notice" alone did not contain the visible word (WCAG 2.5.3, label in name, level A; BR-REQ-041-01 criterion 21). A unit test checks both catalogues.
+- **A phone's bar items are 6 px apart** (`FOOTER_GAP_PHONE`, `footer-target.ts`): between the row's own items, between the marks and between the flags. From `sm` nothing changed.
+
+**The gap, measured.** On the built listing in headless Chromium (Pixel 5 emulation and desktop Chrome gave the same numbers), with the fold closed and open. There are eight items and seven gaps. The squares are 24 px at 320 and 28 from 360. The summary is 90.3 px as "Despre club" and 105.8 px as "About the club". With no gap, the English summary at 320 had 46.2 px to spare, and 46.2 / 7 = 6.6.
+
+| width | gap | fold | spare beside "Despre club" | spare beside "About the club" |
+| --- | --- | --- | --- | --- |
+| 320 | 6 | 110 | 19.7 | 4.2 |
+| 360 | 6 | 122 | 31.7 | 16.2 |
+| 390 | 6 | 152 | 61.7 | 46.2 |
+| 412 | 6 | 174 | 83.7 | 68.2 |
+
+At 7 px the English summary at 320 is cut (84 px of words in 81 px), so 6 px is the largest whole gap. **Risk, recorded:** 4.2 px is thin. A fallback font that renders a little wider could ellipsise "About the club" at 320. Pull requests run e2e on the desktop project only (§209), so the phone-project `footer.spec.ts` should run before a release. The fallback is 5 px, which leaves about 11 px to spare.
+
+**Replaces:** §372's lock glyph and its place at the end of the row, and §323 / §324's "Confidențialitate" / "Privacy" word from `sm`. BR-REQ-041-01 criteria 21 and 23 are rewritten to match.
+
+Baseline `BR-V1.87-2026-09-25`.
+
+## 379. Partner marker: the 🤝 emoji, not the handshake icon
+
+Amends §367 and §375. The owner, 2026-09-25: "I hate the partnership handshake icon, use the emoji 🤝." Every surface the marker draws on — the listing card's chip, the series card, the featured hero, the calendar's grid chip and agenda mark, and the event page's overline — now shows 🤝 as text instead of the Material `Handshake` SVG, in the same box (`sx.fontSize`), with the same generic label ("Eveniment în parteneriat" / "Partnered event") and the same tooltip and accessible name §367 and §375 gave it. The facts' "Împreună cu" row (§168), a different feature naming the actual partners, is unchanged and keeps its own handshake icon.
+
+Implementation note for the next reader: the marker's glyph is `GLYPHS.partner` in `src/modules/events/ui/glyphs.ts`, now a small `PartnerEmoji` component (`src/modules/events/ui/PartnerEmoji.tsx`) rather than an `@mui/icons-material` import — everywhere that read it by name needed no change of its own.
+
+PartnerEmoji, the emoji replacement for the partner glyph (introduced 2026-09-25 to replace the handshake icon), now matches SvgIcon's own accessibility default: aria-hidden is true unless the caller supplies its own aria-label or role, with an explicit caller aria-hidden still taking precedence — closing the gap where GlyphChip's bare rendering (no label or role of its own) read "handshake" aloud ahead of the chip's own visible text. The GLYPHS.partner registry entry now carries the one forwardRef-vs-SvgIconProps cast the component needs, rather than each call site casting it separately, and PartnerEmoji's fontSize prop now maps SvgIcon's keyword sizes to the rem values Material draws them at instead of forwarding the keyword directly as CSS.
+
+Baseline `BR-V1.87-2026-09-25`.

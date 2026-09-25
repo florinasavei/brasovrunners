@@ -86,9 +86,15 @@ const page = async (overrides: Partial<PublicEvent> = {}) =>
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 
-/** The `<dl>`'s rows, in order: each label (the `<dt>`'s words) with its `<dt>` and `<dd>` markup. */
+/** The `<dl>`'s rows, in order: each label (the `<dt>`'s words, its leading glyph aside — an
+ * `<svg>` for every Material row and a `<span>` for the partner's 🤝, which is text itself and
+ * would otherwise land inside the label) with its `<dt>` and `<dd>` markup. */
 function rows(html: string) {
-  return [...withoutStyles(html).matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt><dd\b[^>]*>([\s\S]*?)<\/dd>/g)].map(([, dt, dd]) => ({ label: text(dt), dt, dd }));
+  return [...withoutStyles(html).matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt><dd\b[^>]*>([\s\S]*?)<\/dd>/g)].map(([, dt, dd]) => ({
+    label: text(dt.replace(/^<(svg|span)\b[^>]*>[\s\S]*?<\/\1>/, "")),
+    dt,
+    dd,
+  }));
 }
 
 function row(html: string, label: string) {
@@ -274,17 +280,21 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 
   it("one glyph per row, all of one size, one colour and one alignment", async () => {
+    // Five Material rows draw an <svg>; the partner's is PartnerEmoji's <span> (§379) — a
+    // different element and Emotion class, so each row's own rule is checked rather than one
+    // shared class name, but every rule carries the same twenty pixels, colour and alignment.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
-    const glyphs = rows(html).map((r) => /<svg\b[^>]*>/.exec(r.dt)?.[0] ?? "");
+    const glyphs = rows(html).map((r) => /<(?:svg|span)\b[^>]*>/.exec(r.dt)?.[0] ?? "");
     expect(glyphs).toHaveLength(6);
     for (const glyph of glyphs) expect(glyph).toContain('aria-hidden="true"');
-    const classes = glyphs.map((glyph) => /class="([^"]*)"/.exec(glyph)?.[1]);
-    expect(new Set(classes).size).toBe(1);
-    // …and that one class is twenty pixels, the secondary text colour, centred on the label's line.
-    const rule = new RegExp(`\\.${classes[0]?.split(" ").at(-1)}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
-    expect(rule).toContain("font-size:20px");
-    expect(rule).toContain("vertical-align:middle");
-    expect(rule).toContain("color:rgba(0, 0, 0, 0.6)");
+    const classes = glyphs.map((glyph) => /class="([^"]*)"/.exec(glyph)?.[1]?.split(" ").at(-1));
+    expect(classes.every(Boolean)).toBe(true);
+    for (const cls of classes) {
+      const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
+      expect(rule).toContain("font-size:20px");
+      expect(rule).toContain("vertical-align:middle");
+      expect(rule).toContain("color:rgba(0, 0, 0, 0.6)");
+    }
   });
 
   it("keeps a link's 44 pixels while it sits on a line as tall as its text", async () => {

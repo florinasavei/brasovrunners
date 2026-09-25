@@ -25,6 +25,8 @@ import {
 } from "@/modules/participants/repository";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { type Deadlines, emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { maintenanceDueFor } from "@/modules/jobs/schedule";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -85,9 +87,14 @@ export type EventForRegistration = {
   capacity: number | null;
   raceId: string | null;
   publishedAt: Date | null;
-  /** The participation window (§104); absent on a partial row means the thirty-minute hold. */
+  /** The participation window (§104); absent on a partial row means the club's declaration hold (§377). */
   confirmationOpensDaysBefore?: number | null;
   confirmationDeadlineDaysBefore?: number | null;
+  /**
+   * The event's own reminder lead (`events.reminder_hours_before`, §377), for when the job next
+   * has work (§334) — null or absent is the club's number. It moves no place and no deadline.
+   */
+  reminderHoursBefore?: number | null;
   /**
    * The event's own zone (`events.timezone`), for the day the minimum age is counted against
    * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
@@ -225,14 +232,15 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
  * this file forgot costs the hour-long cap, never the work: every deadline here is also evaluated
  * on every read (§10.6).
  */
-function wakeMaintenance(event: EventForRegistration, now: Date, ...deadlines: (Date | null | undefined)[]): void {
-  const dueAt = maintenanceDueFor(event, now, ...deadlines);
+function wakeMaintenance(
+  event: EventForRegistration,
+  now: Date,
+  settings: Deadlines,
+  ...deadlines: (Date | null | undefined)[]
+): void {
+  // The event's own reminder lead, or the club's (§377): a partial row without the column reads as the club's.
+  const dueAt = maintenanceDueFor({ ...event, reminderHours: reminderHoursFor(event, settings) }, now, ...deadlines);
   if (dueAt) wakeJobs("registration-maintenance", dueAt, now);
-}
-
-/** When an unconfirmed email link lapses (`repository.ts`, 48 hours): the deadline a new submission creates. */
-function emailLinkLapses(now: Date): Date {
-  return new Date(now.getTime() + repo.EMAIL_CONFIRMATION_HOLD_HOURS * 60 * 60_000);
 }
 
 /**
@@ -240,8 +248,8 @@ function emailLinkLapses(now: Date): Date {
  * same arithmetic it uses, so a place freed an hour before the close wakes the job for an offer
  * that lapses at the close, and one freed a month ahead does not.
  */
-function offerDeadline(event: EventForRegistration, now: Date): Date {
-  return computeWaitlistOfferExpiry({ now, registrationClosesAt: event.registrationClosesAt, eventStartsAt: event.startsAt });
+function offerDeadline(event: EventForRegistration, now: Date, settings: Deadlines): Date {
+  return computeWaitlistOfferExpiry({ now, registrationClosesAt: event.registrationClosesAt, eventStartsAt: event.startsAt, deadlines: settings });
 }
 
 /**
@@ -291,9 +299,11 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   event: LockedEventForRegistration,
   registrationId: string,
   now: Date,
+  /** The club's deadlines (§377), read by the caller before its transaction: a new hold's length comes from here. */
+  settings: Deadlines,
 ): Promise<Registration> {
   await repo.expireStaleHolds(db, event, now);
-  await fillAvailableSpots(db, event, now);
+  await fillAvailableSpots(db, event, now, settings);
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -331,8 +341,9 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
             now,
             registrationClosesAt: event.registrationClosesAt,
             eventStartsAt: event.startsAt,
-            // A week-before confirmation for a race still far off (§104); thirty minutes otherwise.
+            // A week-before confirmation for a race still far off (§104); the club's minutes otherwise (§377).
             window: confirmationWindow(event),
+            deadlines: settings,
           }),
         },
         now,
@@ -355,7 +366,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   // registration when it is alone there. Nothing is released when no hold has lapsed, so on
   // an event that is simply full this is one read and no write.
   if (updated.status === "WAITLISTED") {
-    await fillAvailableSpots(db, event, now);
+    await fillAvailableSpots(db, event, now, settings);
     return (await repo.findRegistrationById(db, registrationId)) ?? updated;
   }
 
@@ -412,6 +423,13 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   db: Transaction<T>,
   event: EventForRegistration,
   now: Date,
+  /**
+   * The club's deadlines (§377), required: every caller reads them before its transaction and
+   * passes them in — each path in this file, the editor's capacity raise before it locks the event,
+   * and the maintenance job once per run through `readDeadlinesForRun`. Nothing is read here, so
+   * no offer can be dated from a memo older than the caller's own reading.
+   */
+  settings: Deadlines,
 ): Promise<number> {
   /*
     A cancelled event's queue stands still (§331). Nobody is offered a place in a race that will
@@ -436,11 +454,14 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
 
   let offers = 0;
   const candidates = await repo.lockOldestWaitlisted(db, event.id, availablePlaces);
+  if (candidates.length === 0) return 0;
   for (const candidate of candidates) {
     const holdExpiresAt = computeWaitlistOfferExpiry({
       now,
       registrationClosesAt: event.registrationClosesAt,
       eventStartsAt: event.startsAt,
+      // The club's offer window (§377) at the moment the offer is made; an offer already out keeps its own.
+      deadlines: settings,
     });
 
     const offered = await repo.transitionRegistration(db, {
@@ -1071,6 +1092,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
   /** The deadlines this submission created, for the maintenance job (§334); none on a resend. */
   let createdDeadlines = undefined as (Date | null)[] | undefined;
+  /*
+    The club's deadlines (§377), read before the transaction and from the instance's memo when it
+    is fresh, so a registration costs no extra round trip: the email link's lapse is written on
+    the row from them, and a hold or an offer the allocator makes on the way takes its length
+    from them.
+  */
+  const settings = await currentDeadlines(db);
 
   await db.transaction(async (tx) => {
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
@@ -1207,14 +1235,21 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // the waiting list and never lands directly on Confirmed — `allocateOrWaitlist` is the
       // same allocator a first-time registration uses.
       if (!participant.emailVerifiedAt) {
+        /*
+          The link of this cycle lapses from now (§377), with the club's hours in force now. Before
+          the column, the lapse was measured from `submitted_at`, which a restart does not rewrite —
+          so a row restarted days after its first submission lapsed at the very next run of the job,
+          minutes after its new verification email went out.
+        */
+        const linkExpiresAt = emailLinkExpiresAt(now, settings);
         const restarted = await repo.transitionRegistration(tx, {
           id: existing.id,
           to: "PENDING_EMAIL_CONFIRMATION",
-          changes: carriedFields,
+          changes: { ...carriedFields, emailLinkExpiresAt: linkExpiresAt },
           now,
         });
         if (restarted && !atTheDesk) await enqueueVerificationEmail(tx, participant, restarted, now);
-        createdDeadlines = [emailLinkLapses(now)];
+        createdDeadlines = [linkExpiresAt];
         return;
       }
 
@@ -1229,11 +1264,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // (`DECISIONS.md` §151).
       const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
       if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
-      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), existing.id, now);
+      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), existing.id, now, settings);
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
       // A hold, a place on the waiting list, or an offer made on the way to somebody else when
       // the allocator released a lapsed hold (§160) — the same deadlines `confirmEmail` wakes for.
-      createdDeadlines = [allocated.holdExpiresAt, joinedQueue(allocated) ? offerDeadline(event, now) : null];
+      createdDeadlines = [allocated.holdExpiresAt, joinedQueue(allocated) ? offerDeadline(event, now, settings) : null];
       return;
     }
 
@@ -1253,7 +1288,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const lockedForCreate = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedForCreate) throw new DomainError("NOT_FOUND", "no such event");
 
+    // When the link lapses unconfirmed, written on the row (§377): the club's hours now, kept however they change.
+    const linkExpiresAt = emailLinkExpiresAt(now, settings);
     const created = await repo.insertPendingEmailRegistration(tx, {
+      emailLinkExpiresAt: linkExpiresAt,
       eventId: event.id,
       participantId: participant.id,
       kind,
@@ -1284,11 +1322,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     if (!atTheDesk) await enqueueVerificationEmail(tx, participant, created, now);
-    createdDeadlines = [emailLinkLapses(now)];
+    createdDeadlines = [linkExpiresAt];
   });
 
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
-  if (createdDeadlines !== undefined) wakeMaintenance(event, now, ...createdDeadlines);
+  if (createdDeadlines !== undefined) wakeMaintenance(event, now, settings, ...createdDeadlines);
 
   return { ok: true };
 }
@@ -1302,6 +1340,8 @@ export async function confirmEmail<T extends Record<string, unknown>>(
   registrationId: string,
   now: Date,
 ): Promise<Registration> {
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
+  const settings = await currentDeadlines(db);
   const result = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
@@ -1320,13 +1360,13 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       race that will not happen — so nothing is written and nothing is sent. The registration is
       returned still unconfirmed, which is how the confirmation page knows to say why rather
       than "confirmed, now sign" (`registrations/confirm/[token]/actions.ts`), and it lapses with
-      the other unconfirmed ones after 48 hours. Read under the event lock, so a cancellation
-      that lands between the click and this line is the one that counts.
+      the other unconfirmed ones when its link does (§377). Read under the event lock, so a
+      cancellation that lands between the click and this line is the one that counts.
     */
     if (lockedEvent.eventStatus !== "SCHEDULED") return { registration: current, allocated: false };
 
     await markEmailVerified(tx, current.participantId, now);
-    const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
+    const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
     await enqueueAllocationEmail(
       tx,
       allocated,
@@ -1337,10 +1377,10 @@ export async function confirmEmail<T extends Record<string, unknown>>(
 
     return { registration: allocated, allocated: true };
   });
-  // A hold (thirty minutes, or the window's deadline), a place on the waiting list, or an offer
-  // made on the way (§160): each is a deadline the job acts on.
+  // A hold (the club's minutes, or the window's deadline), a place on the waiting list, or an
+  // offer made on the way (§160): each is a deadline the job acts on.
   if (result.allocated) {
-    wakeMaintenance(event, now, result.registration.holdExpiresAt, joinedQueue(result.registration) ? offerDeadline(event, now) : null);
+    wakeMaintenance(event, now, settings, result.registration.holdExpiresAt, joinedQueue(result.registration) ? offerDeadline(event, now, settings) : null);
   }
   return result.registration;
 }
@@ -1382,6 +1422,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     );
   }
 
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
+  const settings = await currentDeadlines(db);
   const signed = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
@@ -1482,7 +1524,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (current.status === "EXPIRED") {
       // The hold lapsed at the very moment of signing (§15.3 step 7): re-run allocation
       // rather than simply refusing a place that might still be free.
-      current = await allocateOrWaitlist(tx, locked, registrationId, now);
+      current = await allocateOrWaitlist(tx, locked, registrationId, now, settings);
       if (current.status === "WAITLISTED") return { registration: current, offered: 1 }; // no declaration requested yet
     }
 
@@ -1545,13 +1587,13 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     // The expiry above may have released somebody *else's* lapsed hold to the queue — this
     // signature is the capacity-changing transaction that saw it, and no other will until the
     // job's next tick. Offer what it freed before the lock is let go (AGENTS.md §10.6).
-    const offered = await fillAvailableSpots(tx, locked, now);
+    const offered = await fillAvailableSpots(tx, locked, now, settings);
 
     return { registration: confirmed, offered };
   });
-  // A confirmation is a reminder two days out; a re-allocation onto the waiting list may have
+  // A confirmation is a reminder the club's reminder lead out (§377); a re-allocation onto the waiting list may have
   // made an offer, and so may a released hold (§334).
-  wakeMaintenance(event, now, signed.registration.holdExpiresAt, signed.offered > 0 ? offerDeadline(event, now) : null);
+  wakeMaintenance(event, now, settings, signed.registration.holdExpiresAt, signed.offered > 0 ? offerDeadline(event, now, settings) : null);
   return signed.registration;
 }
 
@@ -1738,6 +1780,8 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
   actor: StaffActor,
   now: Date,
 ): Promise<Registration> {
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
+  const settings = await currentDeadlines(db);
   const confirmed = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
@@ -1756,12 +1800,12 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
         .update(registrations)
         .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: actor.id, updatedAt: now })
         .where(eq(registrations.id, current.id));
-      current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
+      current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
     }
     // A hold the event's own start released, and nothing else: the allocator decides again,
     // exactly as `signDeclaration` does for a signature that arrives at the same moment.
     if (current.status === "EXPIRED" && current.expiryReason === "DECLARATION_HOLD_LAPSED") {
-      current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
+      current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
     }
     if (current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED") {
       return acceptDeclarationOnPaper(tx, withLockedRow(event, lockedEvent), current, actor, now);
@@ -1769,7 +1813,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
     if (current.status === "WAITLISTED") return current;
     throw new DomainError("CONFLICT", `a registration in status ${current.status} cannot be confirmed`);
   });
-  wakeMaintenance(event, now, confirmed.holdExpiresAt, joinedQueue(confirmed) ? offerDeadline(event, now) : null);
+  wakeMaintenance(event, now, settings, confirmed.holdExpiresAt, joinedQueue(confirmed) ? offerDeadline(event, now, settings) : null);
   return confirmed;
 }
 
@@ -1786,6 +1830,8 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
   actor: StaffActor,
   now: Date,
 ): Promise<Registration> {
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
+  const settings = await currentDeadlines(db);
   const promoted = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
@@ -1816,10 +1862,10 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     const confirmed = await acceptDeclarationOnPaper(tx, locked, offered, actor, now);
     // As in `signDeclaration`: the expiry above may have released another person's lapsed
     // hold to the queue, and this transaction is the one holding the lock that can offer it.
-    const offersMade = await fillAvailableSpots(tx, locked, now);
+    const offersMade = await fillAvailableSpots(tx, locked, now, settings);
     return { registration: confirmed, offersMade };
   });
-  wakeMaintenance(event, now, promoted.offersMade > 0 ? offerDeadline(event, now) : null);
+  wakeMaintenance(event, now, settings, promoted.offersMade > 0 ? offerDeadline(event, now, settings) : null);
   return promoted.registration;
 }
 
@@ -1890,6 +1936,8 @@ export async function unregister<T extends Record<string, unknown>>(
    */
   options: { notify?: boolean } = {},
 ): Promise<Registration> {
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
+  const settings = await currentDeadlines(db);
   const unregistered = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
@@ -1928,11 +1976,11 @@ export async function unregister<T extends Record<string, unknown>>(
       });
     }
 
-    const offered = await fillAvailableSpots(tx, withLockedRow(event, lockedEvent), now);
+    const offered = await fillAvailableSpots(tx, withLockedRow(event, lockedEvent), now, settings);
 
     return { registration: cancelled, offered };
   });
   // The freed place went to the front of the queue as an offer, whose deadline the job keeps.
-  wakeMaintenance(event, now, unregistered.offered > 0 ? offerDeadline(event, now) : null);
+  wakeMaintenance(event, now, settings, unregistered.offered > 0 ? offerDeadline(event, now, settings) : null);
   return unregistered.registration;
 }

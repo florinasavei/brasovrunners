@@ -256,6 +256,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         <Box sx={{ mt: 2 }}>
           <RegistrationSteps
             folded
+            reminderHoursBefore={event.reminderHoursBefore}
             window={
               (() => {
                 // "Confirm a week before" only while that week is ahead (§104).

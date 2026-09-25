@@ -7,9 +7,10 @@ import QrCode2Icon from "@mui/icons-material/QrCode2";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
-import { DECLARATION_HOLD_MINUTES, WAITLIST_OFFER_HOLD_HOURS } from "../domain/hold-deadlines";
-import { EMAIL_CONFIRMATION_HOLD_HOURS } from "../repository";
+import { getLocale, getTranslations } from "next-intl/server";
+import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 const STEPS = [
@@ -25,9 +26,11 @@ const STEPS = [
  * and, folded, on the event page (`DECISIONS.md` §91; the owner: "it must be super clear for
  * users what the flow is").
  *
- * The numbers are the lifecycle's own constants, so this can never promise a deadline the
- * allocator does not keep. Each step has a glyph, because the same five appear in the emails
- * and at the desk and a reader should recognise where they are.
+ * The numbers are the club's own deadlines (§377) — the very values the allocator gives a new
+ * hold or offer, read from the data cache so a visitor wakes no database (§333) — so this can never
+ * promise a deadline the allocator does not keep, and they are words that agree with the number
+ * ("30 de minute", "o oră"). Each step has a glyph, because the same five appear in the emails and
+ * at the desk and a reader should recognise where they are.
  */
 type Props = {
   folded?: boolean;
@@ -36,19 +39,33 @@ type Props = {
    * step then says "confirm a week before" rather than "sign within thirty minutes".
    */
   window?: { opensDays: number; deadlineDays: number } | null;
+  /**
+   * The event's own reminder lead (`events.reminder_hours_before`, §377): null is the club's, zero
+   * is none — then the fourth step promises no reminder.
+   */
+  reminderHoursBefore?: number | null;
 };
 
-export default async function RegistrationSteps({ folded = false, window = null }: Props) {
+export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null }: Props) {
   const t = await getTranslations("Registration");
+  const locale = await getLocale();
+  const deadlines = await cachedDeadlines();
+  const words = deadlineWords(locale, deadlines);
+  const reminderHours = reminderHoursFor({ reminderHoursBefore }, deadlines);
   const values = {
-    hours: EMAIL_CONFIRMATION_HOLD_HOURS,
-    minutes: DECLARATION_HOLD_MINUTES,
-    offerHours: WAITLIST_OFFER_HOLD_HOURS,
-    opensDays: window?.opensDays ?? 0,
-    deadlineDays: window?.deadlineDays ?? 0,
+    confirmation: words.confirmation,
+    hold: words.hold,
+    offer: words.offer,
+    reminder: reminderHours > 0 ? leadPhrase(locale, reminderHours) : "",
+    opens: daysPhrase(locale, window?.opensDays ?? 0),
+    deadline: daysPhrase(locale, window?.deadlineDays ?? 0),
   };
   const stepBody = (key: string) =>
-    key === "declaration" && window ? t("steps.declaration.bodyLater", values) : t(`steps.${key}.body`, values);
+    key === "declaration" && window
+      ? t("steps.declaration.bodyLater", values)
+      : key === "confirmed" && reminderHours === 0
+        ? t("steps.confirmed.bodyNoReminder")
+        : t(`steps.${key}.body`, values);
 
   const list = (
     <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>

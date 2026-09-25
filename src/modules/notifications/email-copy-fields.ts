@@ -25,12 +25,14 @@ import {
   EMAIL_SAMPLE_FORMER_INVITER,
   EMAIL_SAMPLE_FORMER_WHEN,
   type EmailSampleHit,
+  emailSampleDeadlines,
   emailSampleLiteralsIn,
   emailSampleReplacementOf,
   emailSampleValueOf,
   replaceEmailSampleLiterals,
 } from "./domain/email-sample";
 import { ORGANIZER_MESSAGE_PLACEHOLDERS } from "./domain/organizer-message";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
 
 /**
@@ -159,7 +161,7 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  *   saved text on a thank-you sent without one; the button, which names itself, is the machinery;
  * - **the programme's lines, the organizer's note and the cancellation's reason are absent**: they
  *   have no field, and the platform adds the note and the reason after the words whoever wrote them;
- * - **the declaration's first wording is the thirty-minute hold's**, as the preview shows it; a
+ * - **the declaration's first wording is the club's hold's (§377)**, as the preview shows it; a
  *   saved text replaces both wordings, as it always has (§247);
  * - **the reply line of the cancellation follows the deployment's reply address**, as the send does.
  */
@@ -347,9 +349,19 @@ export type EmailFieldLegendEntry = {
  * (§373, email follow-up): the ones the platform's text for this message uses first, then the rest
  * this message can carry, then the ones it never carries — each group in the closed set's order.
  */
-export function emailFieldLegend(messageType: EmailMessageType, locale: EmailLocale): EmailFieldLegendEntry[] {
+export function emailFieldLegend(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  /**
+   * The club's deadlines in force, which the page's preview prints (§377): the four deadline fields'
+   * examples are then these, not the sample's defaults, so a row never shows "48 de ore" beside a
+   * preview that says "36 de ore". Left out, the sample's (`EMAIL_SAMPLE`).
+   */
+  deadlines?: Deadlines,
+): EmailFieldLegendEntry[] {
   const used = new Set(placeholdersUsedBy(messageType, locale));
   const filled = new Set(placeholdersFilledBy(messageType));
+  const inForce: Partial<Record<EmailCopyPlaceholder, string>> = deadlines ? emailSampleDeadlines(locale, deadlines) : {};
   const rank = (entry: EmailFieldLegendEntry) => (entry.used ? 0 : entry.filled ? 1 : 2);
   return EMAIL_COPY_PLACEHOLDERS.map(
     (name): EmailFieldLegendEntry => ({
@@ -358,7 +370,7 @@ export function emailFieldLegend(messageType: EmailMessageType, locale: EmailLoc
       filled: filled.has(name),
       mayBeMissing: filled.has(name) && EMAIL_COPY_CONDITIONAL_FACTS.has(name),
       dropsParagraph: !filled.has(name) && EMAIL_COPY_CONDITIONAL_FACTS.has(name),
-      example: emailSampleValueOf(name, locale),
+      example: inForce[name] ?? emailSampleValueOf(name, locale),
     }),
   ).sort((a, b) => rank(a) - rank(b));
 }

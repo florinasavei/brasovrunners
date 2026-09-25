@@ -10,7 +10,8 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import { legalPageMetadata, readLegalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
-import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
+import { deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
 
@@ -72,7 +73,8 @@ export default async function TermsPage({ params }: Props) {
               date: formatDay(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
             })}
           </Typography>
-          <LegalDocumentBody body={document.body} />
+          {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text itself. */}
+          <LegalDocumentBody body={document.body} values={deadlineMergeValues(locale, await cachedDeadlines())} emphasizeFilled={false} />
         </>
       ) : (
         <>

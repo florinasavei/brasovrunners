@@ -5,10 +5,14 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
+import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
+import { capitalizeFirst } from "@/i18n/dates";
+import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -86,9 +90,15 @@ export default async function RegistrationBox({
   bibPrint,
   locale,
   now,
+  clubDeadlines,
 }: BoxProps & {
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
+  /**
+   * The club's deadlines (§377), read by the page: the reminder an event left "as usual" gets, the
+   * hold the confirmation card names, and the race week that opens the bib card by itself (§311).
+   */
+  clubDeadlines: Pick<Deadlines, "reminderHours" | "holdMinutes" | "offerHours" | "raceWeekDays">;
   declarations: readonly DeclarationOption[];
   /** How many wait for a place (§147); the create form has nobody. */
   waiting?: number;
@@ -118,6 +128,23 @@ export default async function RegistrationBox({
   const footerOn = (["showEventInFooter", "showPartners", "showWebsite", "showEmail"] as const)
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.footer.${field}`));
+
+  // The reminder card (§377): the club's lead in words, the owner's choices plus a number a script
+  // stored, and the closed line — "Ca de obicei (cu 2 zile înainte de start)", "Cu 3 zile înainte
+  // de start", "Fără reminder".
+  const before = (hours: number) => t("editor.reminder.before", { lead: leadPhrase(locale, hours) });
+  const clubReminder = clubDeadlines.reminderHours > 0 ? before(clubDeadlines.reminderHours) : t("editor.reminder.clubNone");
+  const storedReminder = event?.reminderHoursBefore ?? null;
+  const reminderChoices = [
+    ...EVENT_REMINDER_CHOICES,
+    ...(storedReminder !== null && storedReminder > 0 && !(EVENT_REMINDER_CHOICES as readonly number[]).includes(storedReminder) ? [storedReminder] : []),
+  ].sort((a, b) => a - b);
+  const reminderSummary =
+    storedReminder === null
+      ? t("editor.reminder.usual", { lead: clubReminder })
+      : storedReminder === 0
+        ? t("editor.reminder.none")
+        : capitalizeFirst(before(storedReminder), locale);
 
   const summary = registrationSummary(words, event, {
     takesRegistrations: takesRegistrations(initialType),
@@ -232,7 +259,11 @@ export default async function RegistrationBox({
                     <RecallField
                       name="event.capacity"
                       label={t("editor.capacity")}
-                      helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
+                      helperText={
+                        waiting > 0
+                          ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting, offer: hoursPhrase(locale, clubDeadlines.offerHours) })}`
+                          : t("editor.capacityHelp")
+                      }
                       defaultValue={event?.capacity ?? ""}
                       {...box("capacity", { inputMode: "numeric" })}
                       sx={{ flex: 1 }}
@@ -306,21 +337,21 @@ export default async function RegistrationBox({
                     level={3}
                     id="box-confirmation"
                     title={t("editor.boxes.confirmation.title")}
-                    aside={confirmationSummary(words, event?.confirmationOpensDaysBefore ?? 7, event?.confirmationDeadlineDaysBefore ?? 2)}
+                    aside={confirmationSummary(words, event?.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS, event?.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS)}
                   >
                     <Stack spacing={1}>
                       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                         <RecallField
                           name="event.confirmationOpensDaysBefore"
                           label={t("editor.confirmationOpensDaysBefore")}
-                          defaultValue={event?.confirmationOpensDaysBefore ?? 7}
+                          defaultValue={event?.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS}
                           {...box("confirmationOpensDaysBefore", { inputMode: "numeric" })}
                           fullWidth
                         />
                         <RecallField
                           name="event.confirmationDeadlineDaysBefore"
                           label={t("editor.confirmationDeadlineDaysBefore")}
-                          defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
+                          defaultValue={event?.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS}
                           {...box("confirmationDeadlineDaysBefore", { inputMode: "numeric" })}
                           fullWidth
                         />
@@ -334,7 +365,35 @@ export default async function RegistrationBox({
                           })}
                         </Typography>
                       )}
-                      <BoxNote>{t("editor.confirmationWindowHelp")}</BoxNote>
+                      <BoxNote>{t("editor.confirmationWindowHelp", { hold: minutesPhrase(locale, clubDeadlines.holdMinutes) })}</BoxNote>
+                    </Stack>
+                  </Panel>
+
+                  {/*
+                    8.3b — the reminder before the start (§81, §377): the club's lead unless this
+                    event says otherwise. A native select of the owner's four choices — "as usual",
+                    24, 48, 72 hours, none — and the stored number too when a script set another,
+                    so a save never quietly changes it.
+                  */}
+                  <Panel collapsible level={3} id="box-reminder" title={t("editor.boxes.reminder.title")} aside={reminderSummary}>
+                    <Stack spacing={1}>
+                      <RecallField
+                        select
+                        name="event.reminderHoursBefore"
+                        label={t("editor.reminder.label")}
+                        defaultValue={event?.reminderHoursBefore ?? ""}
+                        slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                        sx={{ width: { sm: 320 } }}
+                      >
+                        <option value="">{t("editor.reminder.usual", { lead: clubReminder })}</option>
+                        {reminderChoices.map((hours) => (
+                          <option key={hours} value={hours}>
+                            {capitalizeFirst(before(hours), locale)}
+                          </option>
+                        ))}
+                        <option value="0">{t("editor.reminder.none")}</option>
+                      </RecallField>
+                      <BoxNote>{t("editor.reminder.help", { lead: clubReminder })}</BoxNote>
                     </Stack>
                   </Panel>
 
@@ -346,7 +405,7 @@ export default async function RegistrationBox({
                     id="box-bibs"
                     title={t("editor.boxes.bibs.title")}
                     aside={bibsSummary(words, event?.bibStartNumber ?? 1, colourLabel, bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null)}
-                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && raceWeek(event.startsAt, now)) }}
+                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -407,10 +466,4 @@ export default async function RegistrationBox({
       )}
     </Panel>
   );
-}
-
-/** Whether the event starts within the next seven days (the bib card's "attention", §311). */
-function raceWeek(startsAt: Date, now: Date): boolean {
-  const until = startsAt.getTime() - now.getTime();
-  return until >= 0 && until <= 7 * 86_400_000;
 }
