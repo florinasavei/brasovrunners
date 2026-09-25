@@ -971,8 +971,10 @@
       "routeDescriptionEmpty": "(nothing yet — press to write it)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
-      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
+      "programmeHelpSummary": "How the programme works",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. Every row starts on the event's day; a row with no time and no text is ignored. If you change the event's start date, the rows' dates move with it. Leave “Where” empty when it is the event's own place.",
       "programmeRows": {
+        "row": "Row",
         "date": "Date",
         "time": "Time",
         "endTime": "Until",

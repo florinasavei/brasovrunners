@@ -971,8 +971,10 @@
       "routeDescriptionEmpty": "(nimic încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
-      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
+      "programmeHelpSummary": "Cum funcționează programul",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Fiecare rând pornește din ziua evenimentului; un rând fără oră și fără text este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea. Lasă „Unde” gol când e chiar locul evenimentului.",
       "programmeRows": {
+        "row": "Rândul",
         "date": "Data",
         "time": "Ora",
         "endTime": "Până la",

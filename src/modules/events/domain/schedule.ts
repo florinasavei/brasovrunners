@@ -91,6 +91,19 @@ export function shiftProgrammeDates<Row extends { date: string }>(rows: readonly
   });
 }
 
+/**
+ * What the editor's rows do when the event's start date box moves from `fromDate` to `toDate`
+ * (§117, §NNN): a row with a date moves by the same number of days (`shiftProgrammeDates`), and a
+ * row with no date yet — the spare line on the create page, where the programme can be opened
+ * before the start is typed — takes the new start date, the programme's default day. A `toDate`
+ * that is not a date changes nothing: a box being retyped reads "" for a moment, and no row is
+ * emptied for it. A `fromDate` that is not a date (the first date typed) moves no dated row.
+ */
+export function followStartDate<Row extends { date: string }>(rows: readonly Row[], fromDate: string, toDate: string): Row[] {
+  if (calendarDay(toDate) === null) return [...rows];
+  return shiftProgrammeDates(rows, fromDate, toDate).map((row) => (row.date === "" ? { ...row, date: toDate } : row));
+}
+
 const ISO_DATE = /^(\d{4,})-(\d{2})-(\d{2})$/;
 const DAY_MS = 86_400_000;
 
