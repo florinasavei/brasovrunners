@@ -9,6 +9,11 @@ import { expect, test } from "@playwright/test";
  * The mobile project runs at 320px, the narrowest width criterion 1 names.
  */
 
+// CI's Chromium sometimes measures a tap target a hair under a whole pixel (43.9999…), a
+// sub-pixel layout rounding artefact rather than a real miss — round to a tenth of a pixel
+// before comparing against a minimum.
+const roundToTenth = (value: number) => Math.round(value * 10) / 10;
+
 test.describe("BR-REQ-041-01 the event list on a phone", () => {
   test("has no horizontal scrolling and no clipped text", async ({ page }) => {
     await page.goto("/ro/evenimente");
@@ -151,7 +156,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     for (let i = 0; i < (await titles.count()); i += 1) {
       const box = await titles.nth(i).boundingBox();
       if (!box) continue;
-      expect.soft(box.height, `title link ${i} height`).toBeGreaterThanOrEqual(44);
+      expect.soft(roundToTenth(box.height), `title link ${i} height`).toBeGreaterThanOrEqual(44);
     }
     const links = page.locator("main a");
     const count = await links.count();
@@ -171,7 +176,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     for (let i = 0; i < count; i += 1) {
       const box = await links.nth(i).boundingBox();
       if (!box) continue; // not rendered, e.g. visually hidden
-      expect.soft(box.height, `link ${i} height`).toBeGreaterThanOrEqual(minimum);
+      expect.soft(roundToTenth(box.height), `link ${i} height`).toBeGreaterThanOrEqual(minimum);
     }
   });
 });
@@ -453,7 +458,7 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     // the menu button and the item behind it when the row is too narrow for the entry.
     const control = (await events.isVisible()) ? events : menu;
     const box = await control.boundingBox();
-    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(roundToTenth(box?.height ?? 0)).toBeGreaterThanOrEqual(44);
 
     if (await events.isVisible()) {
       await events.click();
@@ -462,7 +467,7 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
       const item = page.getByRole("menuitem", { name: "Evenimente" });
       // Polled: the menu grows in, and a box read mid-animation is the scaled-down one.
       await expect
-        .poll(async () => (await item.boundingBox())?.height ?? 0)
+        .poll(async () => roundToTenth((await item.boundingBox())?.height ?? 0))
         .toBeGreaterThanOrEqual(44);
       await item.click();
     }
