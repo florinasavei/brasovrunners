@@ -165,7 +165,7 @@ export default function CalendarEventChip({
 
 /**
  * The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Colaborare" /
- * "Partnership". No colour of its own (§NNN): `currentColor` carries the chip's own ink in,
+ * "Partnership". No colour of its own (§391): `currentColor` carries the chip's own ink in,
  * `primary.contrastText` on a filled (race) entry, `text.primary` otherwise.
  */
 function PartnerGlyph({ size }: { size: number }) {

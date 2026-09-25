@@ -279,7 +279,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 
   it("one glyph per row, all of one size, one colour and one alignment", async () => {
-    // Every row, the partner's included (§NNN, reverting §379's <span> emoji to the `Handshake`
+    // Every row, the partner's included (§391, reverting §379's <span> emoji to the `Handshake`
     // `<svg>`), draws its glyph the same way — one shared shape, so each row's own rule is
     // checked rather than one shared class name, but every rule carries the same twenty pixels,
     // colour and alignment.

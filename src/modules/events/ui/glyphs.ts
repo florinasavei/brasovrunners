@@ -89,7 +89,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  *
  * `partner` marks an event held with another organization, on the listing card's chip, the
  * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): Material's
- * `Handshake` glyph everywhere (§NNN, reverting §379/§386's 🤝 emoji — the owner, 2026-09-25:
+ * `Handshake` glyph everywhere (§391, reverting §379/§386's 🤝 emoji — the owner, 2026-09-25:
  * "wow shit handshake icon is super ugly! Use the MUI icon ASAP", of the emoji rendered through
  * a grayscale filter, which read as a dark smudge rather than a desaturated hand). Drawn with no
  * colour of its own, so it takes `currentColor` from wherever it sits — the chip's icon ink, the

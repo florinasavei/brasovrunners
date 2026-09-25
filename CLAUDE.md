@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.95-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.94-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.95-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -289,6 +289,8 @@ sections and in `CHANGELOG.md`.
 - **Batch 18 (2026-09-25, `BR-V1.94`):** the family flow is open — the contract migration `0073` drops the old one-registration-per-address
   index; the gate reads the catalogue, so the flow switched itself on with no setting; the privacy-notice template says whose data is entered
   and whose inbox receives the messages; `migrations:check` still misses `DROP CONSTRAINT` as a contract (a chore) (§390).
+- **Batch 19 (2026-09-25, `BR-V1.95`):** the partner marker is Material's `Handshake` glyph again, drawn in each surface's own ink — the
+  grayscale-filtered 🤝 of §379/§386 read as a smudge (§391).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

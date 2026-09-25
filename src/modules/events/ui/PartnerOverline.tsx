@@ -8,7 +8,7 @@ import { GLYPHS } from "./glyphs";
  * The partner marker on the event page's overline (§367, amended §375 — the owner, 2026-09-24:
  * "For the partnership, I just need 1 icon, I do not need to show the full partners list, there
  * might be multiple partners"), and again (§379 — "the chip is too long, just say 'colaborare'
- * in the Romanian one"), and again (§NNN — reverting §379/§386's emoji back to Material's
+ * in the Romanian one"), and again (§391 — reverting §379/§386's emoji back to Material's
  * `Handshake` icon, the owner: "wow shit handshake icon is super ugly! Use the MUI icon ASAP"):
  * after the type and the surface, a "·", the handshake and a generic "Colaborare" — the words the
  * listing card's chip and the calendar entry say, from the one phrase (`partnerPhrase`). It never
