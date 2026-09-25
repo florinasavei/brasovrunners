@@ -13,6 +13,7 @@ import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-error
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { consumeAndSignDeclaration } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { idDocumentFrom } from "@/modules/registrations/id-document-input";
 
 export async function signDeclarationAction(form: FormData): Promise<void> {
   const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
@@ -153,19 +154,4 @@ function declarationDraftOf(form: FormData): Record<string, string> {
     if (typeof value === "string" && value !== "") draft[name] = value;
   }
   return draft;
-}
-
-/**
- * The chosen kind and the typed series, as the one string the declaration carries (§283) — for
- * the declarant's document (`idDocument`, `idDocumentType`) or a minor's (`minorIdDocument`,
- * `minorIdDocumentType`, §330): the kind's box is the series box's name with `Type` after it.
- */
-function idDocumentFrom(form: FormData, t: (key: string) => string, field: "idDocument" | "minorIdDocument"): string | undefined {
-  const series = String(form.get(field) ?? "").trim();
-  if (series === "") return undefined;
-  const kind = String(form.get(`${field}Type`) ?? "");
-  // An unknown kind is nobody's document: the series alone is what was true before §283, and it
-  // is better than a declaration naming a document the person did not choose.
-  const known = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"].includes(kind);
-  return known ? `${t(`declare.idDocumentTypes.${kind}`)} ${series}` : series;
 }

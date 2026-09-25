@@ -11,6 +11,7 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 type DateLink = { id: string; label: string };
 
@@ -68,6 +69,10 @@ export default async function RecurrenceSeriesPanel(props: Props) {
     props;
   const running = ruleSentence !== null && !ended;
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
+  // The robot (§398; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu că se
+  // reînnoiește automat"), leading this card's own two mentions of the switch — the same glyph
+  // as the events list's renewal sentence (`ACTION_ICONS.renew`), decorative and aria-hidden.
+  const RenewIcon = ACTION_ICONS.renew;
   // How far ahead the job keeps the dates created — the club's number (§377), in words.
   const horizon = daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays);
 
@@ -125,17 +130,29 @@ export default async function RecurrenceSeriesPanel(props: Props) {
           </Box>
         )}
 
-        <Typography variant="body2" color="text.secondary">
-          {running ? t("editor.repeatRenewal", { date: lastCreated ?? "—", horizon }) : t("editor.repeatStopped")}
-        </Typography>
+        {running ? (
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: "flex-start" }}>
+            <RenewIcon aria-hidden fontSize="small" sx={{ color: "text.secondary", mt: "2px", flexShrink: 0 }} />
+            <Typography variant="body2" color="text.secondary">
+              {t("editor.repeatRenewal", { date: lastCreated ?? "—", horizon })}
+            </Typography>
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {t("editor.repeatStopped")}
+          </Typography>
+        )}
 
         {/* Whether the dates made from now on go live by themselves (the hints branch's switch, §350),
             as a tick and its own "Salvează setarea" — on the source's rule, from any date. */}
         {running && (
           <Box data-testid="repeat-publish">
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {publishState}
-            </Typography>
+            <Stack direction="row" spacing={0.5} sx={{ alignItems: "flex-start", mb: 1 }}>
+              <RenewIcon aria-hidden fontSize="small" sx={{ color: "text.secondary", mt: "2px", flexShrink: 0 }} />
+              <Typography variant="body2" color="text.secondary">
+                {publishState}
+              </Typography>
+            </Stack>
             {mayChange && (
               /*
                 Turning it on puts every date the series creates from now on on the site by itself:

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canOpenTasks } from "@/modules/diagnostics/domain/task-panels";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 export const dynamic = "force-dynamic";
@@ -20,10 +20,14 @@ export const dynamic = "force-dynamic";
  *
  * This section has no child routes, so its `loading.tsx` covers only its own page and no route
  * group is needed to scope it.
+ *
+ * `canOpenTasks` (`modules/diagnostics/domain/task-panels.ts`, `DECISIONS.md` §397) is wider
+ * than the old `canManageRegistrations` alone, since 2026-09-25: Tehnic may open this page too,
+ * for the "Aplicația" panel only — the page itself asserts which panel each role may reach.
  */
 export default async function TasksLayout({ children }: { children: ReactNode }) {
   const actor = await requireStaff();
-  if (!canManageRegistrations(actor.role)) notFound();
+  if (!canOpenTasks(actor.role)) notFound();
 
   return <>{children}</>;
 }

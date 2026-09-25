@@ -12,6 +12,7 @@ import {
   identicalLocales,
   incompleteLocales,
   BLANK,
+  initialCostTypeOf,
   kindSummary,
   linksSummary,
   placeSummary,
@@ -170,6 +171,18 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(programmeSummary(words, { timezone: ZONE, scheduleItems: null } as never, true, [], "ro")).toBe("Fără program");
   });
 
+  it("§398 — a new event's cost select preselects FREE; an edited one keeps what it has", () => {
+    // The create page: no event yet.
+    expect(initialCostTypeOf(null)).toBe("FREE");
+    // An edited event with a stated cost keeps it, whatever it is.
+    expect(initialCostTypeOf({ costType: "PAID" })).toBe("PAID");
+    expect(initialCostTypeOf({ costType: "DONATION" })).toBe("DONATION");
+    expect(initialCostTypeOf({ costType: "FREE" })).toBe("FREE");
+    // An edited event whose cost was never stated stays "Nespecificat" — never turned into
+    // "Gratuit" behind the club's back just because the editor opened.
+    expect(initialCostTypeOf({ costType: null })).toBe("");
+  });
+
   it("Participare și înscrieri: by mode, the places counted in Romanian, the declaration, the list", () => {
     const internal = {
       type: "RACE",
@@ -216,10 +229,14 @@ describe("§350 each box's summary, empty and filled", () => {
 
   it("Traseul, Linkuri, Parteneri, Evidențiere — and the empty state of each", () => {
     expect(courseSummary(words, null, { surface: null, difficulty: null })).toBe("Nimic completat");
-    expect(courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: 450, routeUrl: "https://x.test", headlampRequired: false }, { surface: "Trail", difficulty: "Mediu" })).toBe(
-      "Trail · Mediu · 12 km · +450 m · traseu",
+    // §394: automatic and no night fact given (`labels.night` absent, so not `true`) still names
+    // the day, «de zi (automat)» — the nit's fix, so the card says something rather than nothing.
+    expect(courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: 450, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail", difficulty: "Mediu" })).toBe(
+      "Trail · Mediu · 12 km · +450 m · de zi (automat) · traseu",
     );
-    expect(courseSummary(words, { distanceMeters: 21_100, elevationGainMeters: null, routeUrl: null, headlampRequired: false }, { surface: null, difficulty: null })).toBe("21,1 km");
+    expect(courseSummary(words, { distanceMeters: 21_100, elevationGainMeters: null, routeUrl: null, nightOverride: null }, { surface: null, difficulty: null })).toBe(
+      "21,1 km · de zi (automat)",
+    );
     expect(linksSummary(words, null, {}, "ro")).toBe("Niciun link");
     expect(
       linksSummary(
@@ -284,7 +301,7 @@ describe("§350 each box's summary, empty and filled", () => {
       distanceMeters: 10_000,
       elevationGainMeters: 450,
       routeUrl: "https://r.test",
-      headlampRequired: false,
+      nightOverride: null,
       stravaEventUrl: null,
       facebookEventUrl: "https://f.test",
       links: [{ kind: "GPX", url: "https://g.test" }],

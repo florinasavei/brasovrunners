@@ -56,6 +56,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import {
   bulkArchiveEventsAction,
   bulkDeleteEventsAction,
@@ -297,12 +298,19 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {(() => {
               const renewal = renewalOf(members.map((member) => member.event.repeatRule));
               if (!renewal) return null;
+              // The robot (§398; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu
+              // că se reînnoiește automat"), leading the sentence unchanged — decorative, since
+              // the sentence itself already says "automat".
+              const RenewIcon = ACTION_ICONS.renew;
               return (
-                <Typography variant="body2" color="text.secondary">
-                  {renewal.until
-                    ? t("events.seriesRenewsUntil", { horizon, until: formatCalendarDay(renewal.until, { locale, style: "long", position: "inline" }) })
-                    : t("events.seriesRenewsForever", { horizon })}
-                </Typography>
+                <Stack direction="row" spacing={0.5} sx={{ alignItems: "flex-start" }}>
+                  <RenewIcon aria-hidden fontSize="small" sx={{ color: "text.secondary", mt: "2px", flexShrink: 0 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {renewal.until
+                      ? t("events.seriesRenewsUntil", { horizon, until: formatCalendarDay(renewal.until, { locale, style: "long", position: "inline" }) })
+                      : t("events.seriesRenewsForever", { horizon })}
+                  </Typography>
+                </Stack>
               );
             })()}
             {members.length > 1 ? (

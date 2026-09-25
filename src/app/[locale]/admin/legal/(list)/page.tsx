@@ -10,7 +10,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesListStates } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
@@ -39,6 +39,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
+import { LEGAL_DOCUMENT_KEYS, REGISTRATION_LEGAL_KEYS } from "@/modules/legal-documents/domain/keys";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -141,11 +142,18 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const now = new Date();
   const missingKeys = (
     await Promise.all(
-      (["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map(async (key) =>
+      REGISTRATION_LEGAL_KEYS.map(async (key) =>
         (await findCurrentApprovedDocument(getDb(), key, "ro", now)) ? null : key,
       ),
     )
-  ).filter((key): key is "PRIVACY_NOTICE" | "TERMS" | "EVENT_DECLARATION" => key !== null);
+  ).filter((key) => key !== null);
+  /*
+    §396: the public list shows each runner's stage, and the pending and waiting groups, only
+    while the notice in force names `{{participantListStates}}`. Said here, where the text that
+    would switch it on is approved, only while a notice is in force and does not — with none at
+    all, the "one step" box above is the thing to do, and registration is closed anyway.
+  */
+  const listStatesMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListStates(getDb(), now));
   /*
     What the service would answer about each row, asked of the service before anything is drawn
     (§290, §316): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
@@ -366,7 +374,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         {/* What each of the three is, in one line (the owner, 2026-09-19: "it is not clear what
             these documents are — is the privacy notice GDPR? and what is the other one?"). */}
         <Box component="dl" sx={{ m: 0, mt: 1, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" }, columnGap: 2, rowGap: 0.5 }}>
-          {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key) => (
+          {LEGAL_DOCUMENT_KEYS.map((key) => (
             <Fragment key={key}>
               <Typography component="dt" variant="body2" sx={{ fontWeight: 600 }}>
                 {t(`legal.keys.${key}`)}
@@ -378,6 +386,12 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           ))}
         </Box>
       </Stack>
+
+      {listStatesMissing && (
+        <Alert severity="info" data-testid="legal-list-states-missing">
+          {t("legal.listStatesMissing")}
+        </Alert>
+      )}
 
       {/*
         The rule this section lives by, folded shut by default (§336) — it explains, it does not
@@ -400,7 +414,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           {/* The platform's own texts, complete but for the club's four facts (§95). */}
           <Typography variant="body2" sx={{ mt: 1.5 }}>
             {t("legal.templatesIntro")}{" "}
-            {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key, index) => (
+            {LEGAL_DOCUMENT_KEYS.map((key, index) => (
               <span key={key}>
                 {index > 0 ? " · " : ""}
                 <Link href={{ pathname: "/admin/legal/new", query: { template: key } }}>{t(`legal.keys.${key}`)}</Link>

@@ -287,7 +287,10 @@ export default async function DevsPage({ params, searchParams }: Props) {
       {/*
         The panels (§265), and the anti-bot switch beside them: that switch belongs to the club's
         own to-do screen (§254), where the club works, and "where do I turn the captcha off" is a
-        configuration question wherever the answer is kept.
+        configuration question wherever the answer is kept. The switch is `canManageRegistrations`
+        work, so it is offered only to a role that can actually reach it (§397) — a Tehnic who
+        followed it used to land on «Aplicația» instead, under a label that named the wrong panel.
+        The «Aplicația» link is that role's own way back to the tab it opened `/admin/tasks` on.
       */}
       <SubNav
         label={t("title")}
@@ -297,7 +300,10 @@ export default async function DevsPage({ params, searchParams }: Props) {
             label: t(`panel.${name}`),
             active: panel === name,
           })),
-          { href: `${tasksPath}?panel=botCheck`, label: t("panel.botCheck") },
+          ...(canManageRegistrations(actor.role)
+            ? [{ href: `${tasksPath}?panel=botCheck`, label: t("panel.botCheck") }]
+            : []),
+          { href: `${tasksPath}?panel=app`, label: t("panel.app") },
         ]}
       />
 

@@ -26,6 +26,7 @@ import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domai
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
+import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOffer";
 import ShareLinks from "@/modules/events/ui/ShareLinks";
 import { instagramFileName } from "@/modules/events/instagram-share";
 import { absoluteUrl, eventPageUrl } from "@/modules/events/share-links";
@@ -240,6 +241,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
       <EventFacts event={event} now={now} stacked />
+
+      {/* A group run's optional self-declaration (§393), under the route's pills at `#declaratie`:
+          only where the organizer offered it and the club has approved the text of its surface. */}
+      <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />

@@ -6,10 +6,12 @@ import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 
 /**
@@ -18,6 +20,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
  * Every window this sweep enforces, in the order it runs them (§322):
  *
  *     identity document, health note   7 days after the event's start (cleared, the rows stay)
+ *     a group run's self-declarations  7 days after the event's start (the rows go; §393)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
  *     throttle buckets                 1 day
@@ -109,6 +112,17 @@ export const RETENTION = {
    * keeps the PDF that was emailed with the number in it.
    */
   identityAndHealthDaysAfterEvent: 7,
+  /**
+   * A group run's optional self-declaration (§393) goes whole seven days after the run's start —
+   * the row, the name, the identity document and the address, and the messages that carry them.
+   * It exists for the run: nobody registered, no kit was handed out, and there is no three-year
+   * record of a registration for it to be the evidence of. The signer keeps the PDF that was
+   * emailed; the club's archive copy has the document masked (§320). The same seven days as the
+   * identity document above, so the run's page and the privacy notice can say one number. The
+   * number itself lives in `group-run-declarations/domain.ts`, where the pages and the emails
+   * read it too.
+   */
+  groupRunDeclarationsDaysAfterEvent: GROUP_RUN_DECLARATION_RETENTION_DAYS,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
 } as const;
@@ -128,6 +142,8 @@ export type PruneCounts = {
   healthNotes: number;
   /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
   minorSocials: number;
+  /** A group run's self-declarations, gone seven days after the run (§393). */
+  groupRunDeclarations: number;
   auditLogs: number;
 };
 
@@ -137,6 +153,7 @@ export type PruneCounts = {
  */
 export const PRUNE_STEPS = [
   "identity-and-health",
+  "group-run-declarations",
   "minor-socials",
   "job-runs",
   "rate-limit-buckets",
@@ -195,6 +212,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     identityDocuments: 0,
     healthNotes: 0,
     minorSocials: 0,
+    groupRunDeclarations: 0,
     auditLogs: 0,
   };
   const failures: PruneFailure[] = [];
@@ -237,6 +255,35 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: registrations.id });
     counts.identityDocuments = clearedDocuments.length;
     counts.healthNotes = clearedHealth.length;
+  });
+
+  /*
+    A group run's optional self-declarations (§393), seven days after the run: the whole row, and
+    first the outbox rows about it, which carry the signer's address — a message not sent by then
+    has nothing left to send. Second, beside the identity documents, for the same reason: an
+    identity number is the data whose window matters most.
+  */
+  await step("group-run-declarations", async (tx) => {
+    const stale = tx
+      .select({ id: groupRunDeclarations.id })
+      .from(groupRunDeclarations)
+      .innerJoin(events, eq(events.id, groupRunDeclarations.eventId))
+      .where(lt(events.startsAt, daysBefore(now, RETENTION.groupRunDeclarationsDaysAfterEvent)));
+    // Compared as text, so a payload of any other shape is simply not matched.
+    await tx
+      .delete(emailOutbox)
+      .where(
+        inArray(
+          sql`${emailOutbox.payloadJson}->>'groupRunDeclarationId'`,
+          tx
+            .select({ id: sql<string>`${groupRunDeclarations.id}::text` })
+            .from(groupRunDeclarations)
+            .innerJoin(events, eq(events.id, groupRunDeclarations.eventId))
+            .where(lt(events.startsAt, daysBefore(now, RETENTION.groupRunDeclarationsDaysAfterEvent))),
+        ),
+      );
+    const deleted = await tx.delete(groupRunDeclarations).where(inArray(groupRunDeclarations.id, stale)).returning({ id: groupRunDeclarations.id });
+    counts.groupRunDeclarations = deleted.length;
   });
 
   /*
@@ -407,6 +454,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.identityDocuments +
     counts.healthNotes +
     counts.minorSocials +
+    counts.groupRunDeclarations +
     counts.auditLogs
   );
 }

@@ -10,6 +10,7 @@ import * as jobRunsSchema from "./schema/job-runs";
 import * as legalDocumentsSchema from "./schema/legal-documents";
 import * as pagesSchema from "./schema/pages";
 import * as gallerySchema from "./schema/gallery";
+import * as groupRunDeclarationsSchema from "./schema/group-run-declarations";
 import * as participantsSchema from "./schema/participants";
 import * as rateLimitSchema from "./schema/rate-limit";
 import * as registrationsSchema from "./schema/registrations";
@@ -26,6 +27,7 @@ export const schema = {
   ...gallerySchema,
   ...registrationsSchema,
   ...declarationAcceptancesSchema,
+  ...groupRunDeclarationsSchema,
   ...jobRunsSchema,
   ...auditLogsSchema,
   ...rateLimitSchema,
