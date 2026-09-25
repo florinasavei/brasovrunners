@@ -10,8 +10,10 @@ import { describe, expect, it, vi } from "vitest";
  * RO and EN side by side, and the privacy notice and the language on the always-visible bar.
  *
  * The owner, 2026-09-24: one row on a phone, every item kept but not every word — the privacy
- * notice a lock, the languages flags, every item a square of 24px below 360, 28px from 360 and
- * 44px from `sm` (`footer-target.ts`), where §365 had two lines. The e2e suite measures the bar in a browser
+ * notice a glyph, the languages flags, every item a square of 24px below 360, 28px from 360 and
+ * 44px from `sm` (`footer-target.ts`), where §365 had two lines. The owner, 2026-09-25 (§NNN):
+ * the glyph a question mark rather than a lock, the notice right after the fold, "GDPR" as its
+ * word from `sm`, and a phone's items 6px apart. The e2e suite measures the bar in a browser
  * (`footer.spec.ts`, `build-badge.spec.ts`); pull requests run it on the desktop project only
  * (§209), and the phone is where the complaint was. This runs in `yarn check`, on every commit,
  * and pins the facts the phone depends on to the markup and the styles the server renders.
@@ -55,6 +57,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
 const { NextIntlClientProvider } = await import("next-intl");
 const messages = (await import("../../../messages/ro.json")).default;
 const { default: SiteFooter } = await import("@/shared/ui/SiteFooter");
+const { FOOTER_GAP_PHONE } = await import("@/shared/ui/footer-target");
 
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -185,18 +188,44 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(bar).toMatch(/bottom:0;/);
     expect(bar).not.toMatch(/bottom:-/);
 
-    // Both on the bar, outside the fold: after `</details>`, not inside it. The marks come
-    // before the notice, and the language last (review finding 7).
+    // Both on the bar, outside the fold: after `</details>`, not inside it.
     const detailsEnd = markup.indexOf("</details>");
-    const marks = markup.indexOf('aria-label="Facebook"');
     const privacy = markup.indexOf('aria-label="Nota de confidențialitate (GDPR)"');
     const language = markup.indexOf('aria-label="Limbă"');
-    expect(marks).toBeGreaterThan(detailsEnd);
-    expect(privacy).toBeGreaterThan(marks);
+    expect(privacy).toBeGreaterThan(detailsEnd);
     expect(language).toBeGreaterThan(privacy);
   });
 
-  it("names the privacy notice on the phone's lock: the tooltip and the accessible name are the notice's", async () => {
+  it("puts the bar's items in one DOM order: switch, summary, privacy notice, the three marks, the languages", async () => {
+    // §NNN, the owner, 2026-09-25: the privacy notice "should be after the about accordion" —
+    // ahead of the marks now, where §372 had it after them. One order at every width, desktop
+    // included, and no `order` in the CSS (asserted above) to rearrange it on screen.
+    const markup = markupOnly(await renderFooter());
+    const at = (needle: string) => {
+      const index = markup.indexOf(needle);
+      expect(index, `${needle} is in the footer`).toBeGreaterThanOrEqual(0);
+      return index;
+    };
+    const sequence: Array<[string, number]> = [
+      ["the switch", at('aria-label="Temă întunecată"')],
+      ["the summary", at("<summary")],
+      ["the privacy notice", at('aria-label="Nota de confidențialitate (GDPR)"')],
+      ["Facebook", at('aria-label="Facebook"')],
+      ["Instagram", at('aria-label="Instagram"')],
+      ["Strava", at('aria-label="Strava"')],
+      ["the languages", at('aria-label="Limbă"')],
+    ];
+    for (let i = 1; i < sequence.length; i++) {
+      const [before, a] = sequence[i - 1]!;
+      const [after, b] = sequence[i]!;
+      expect(b, `${after} comes after ${before}`).toBeGreaterThan(a);
+    }
+    // Directly after the fold: no other named item of the row stands between them.
+    const between = markup.slice(markup.indexOf("</details>"), markup.indexOf('aria-label="Nota de confidențialitate (GDPR)"'));
+    expect(between).not.toMatch(/aria-label="/);
+  });
+
+  it("marks the privacy notice with a question mark on a phone and the word GDPR from sm, named for the notice", async () => {
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
@@ -204,12 +233,39 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(link, "the privacy link").not.toBeNull();
     expect(link![0]).toMatch(/href="\/ro\/legal\/privacy"/);
     expect(link![0]).toMatch(/title="Nota de confidențialitate \(GDPR\)"/);
-    // The lock, decorative, shown below `sm`; the word from `sm`.
-    expect(link![1]).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="footer-privacy-lock"|<svg[^>]*data-testid="footer-privacy-lock"[^>]*aria-hidden="true"/);
-    expect(link![1]).toContain("Confidențialitate");
-    const lock = rulesOf(css, emotionClassOf(markup, 'data-testid="footer-privacy-lock"'));
-    expect(lock).toMatch(/display:block;/);
-    expect(lock).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
+    // The question mark (`HelpOutlineOutlined`, the circled `help_outline`), decorative, shown
+    // below `sm`: the glyph's own path, so a different icon under the same test id fails here.
+    expect(link![1]).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="footer-privacy-mark"|<svg[^>]*data-testid="footer-privacy-mark"[^>]*aria-hidden="true"/);
+    expect(link![1], "the help_outline glyph's own path").toContain('d="M11 18h2v-2h-2zm1-16C6.48');
+    const mark = rulesOf(css, emotionClassOf(markup, 'data-testid="footer-privacy-mark"'));
+    expect(mark).toMatch(/display:block;/);
+    expect(mark).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
+
+    // From `sm` the word is "GDPR" (the owner: "Use GDPR for desktop as well"), hidden below it.
+    const word = /<span([^>]*)>GDPR<\/span>/.exec(link![1]);
+    expect(word, "the word GDPR inside the link").not.toBeNull();
+    const wordRules = rulesOf(css, /class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(word![1])![1]!);
+    expect(wordRules).toMatch(/(^|[;{])display:none;/);
+    expect(wordRules).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:inline;/);
+  });
+
+  it("spaces a phone's bar items 6px apart — the row, the marks and the flags — and leaves `sm` as it was", async () => {
+    // §NNN: the largest whole gap at which the bar is still one row with every item at 320px in
+    // both languages (`footer-target.ts`, measured in `SiteFooter.tsx`).
+    expect(FOOTER_GAP_PHONE).toBe(6);
+    const html = await renderFooter();
+    const markup = markupOnly(html);
+    const css = cssOnly(html);
+    const rowClass = /<footer[^>]*>\s*<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(markup);
+    expect(rowClass, "the row, the footer's first child").not.toBeNull();
+    const row = rulesOf(css, rowClass![1]!);
+    expect(row).toMatch(/(^|[;{])column-gap:6px;/);
+    expect(row).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:0(px)?;/);
+    const marks = rulesOf(css, emotionClassOf(markup, 'aria-label="Clubul pe rețelele sociale"'));
+    expect(marks).toMatch(/(^|[;{])column-gap:6px;/);
+    expect(marks).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:0(px)?;/);
+    const flags = rulesOf(css, emotionClassOf(markup, 'aria-label="Limbă"'));
+    expect(flags).toMatch(/(^|[;{])gap:6px;/);
   });
 
   it("reserves room for what the browser scrolls into view", () => {
