@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
+import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { env } from "@/shared/config/env";
@@ -48,6 +49,13 @@ export default async function CourseBox({
   // The event's own start on its own clock, for the night line's first paint (§NNN).
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const wall = toWallTimeInput(event?.startsAt ?? null, zone);
+  // The span's end for the first paint, by the server's rule (§NNN): «Durata» (the saved end), else
+  // the programme's rows on the event's clock — the island reads both from the form after.
+  const savedMinutes = event?.endsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : null;
+  const savedProgramme = readScheduleItems(event?.scheduleItems).map((row) => {
+    const from = toWallTimeInput(new Date(row.startsAt), zone);
+    return { date: from.slice(0, 10), time: from.slice(11, 16), endTime: row.endsAt ? toWallTimeInput(new Date(row.endsAt), zone).slice(11, 16) : "" };
+  });
   const card = {
     level: 3,
     id: "box-course",
@@ -136,6 +144,8 @@ export default async function CourseBox({
             place={env.CLUB_COORDINATES}
             zone={zone}
             start={{ date: wall.slice(0, 10), time: wall.slice(11, 16) }}
+            durationMinutes={savedMinutes && savedMinutes > 0 ? savedMinutes : null}
+            programme={savedProgramme}
             inSeries={inSeries}
             // The repeat toggle is a field in the same form only on the create page — "repeat.on"
             // inside the one `ActionForm` this card also lives in. On the edit page, "Repetă" is a
@@ -151,7 +161,8 @@ export default async function CourseBox({
               autoLineNoDate: t("editor.night.autoLineNoDate"),
               verdictNight: t("editor.night.verdictNight"),
               verdictDay: t("editor.night.verdictDay"),
-              endLine: t("editor.night.endLine"),
+              endLine: t.raw("editor.night.endLine") as string,
+              endLineProgramme: t.raw("editor.night.endLineProgramme") as string,
               series: t("editor.night.series"),
               day: calendarDayWords(locale),
             }}

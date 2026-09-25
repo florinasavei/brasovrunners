@@ -305,11 +305,11 @@ export const events = pgTable(
      * "Eveniment de noapte" — the organizer's override of the computed answer (§NNN, replacing
      * §382's "Necesită frontală" checkbox; the owner, 2026-09-25: "«Necesită frontală» ar trebui
      * să fie cumva «eveniment de noapte» setat automat în funcție de ora de start și când apune
-     * soarele"). `null` is "Automat": the start against civil dusk of its own date at the club's
-     * place (`events/domain/night.ts`); `true` is "Da" and `false` is "Nu", whatever the sun does.
+     * soarele"). `null` is "Automat": the start and the end against civil dusk and dawn of its own
+     * date at the club's place (`events/domain/night.ts`); `true` is "Da" and `false` is "Nu", whatever the sun does.
      *
      * The column keeps §382's name — renaming it would be a contract migration for a word — and
-     * the code calls it `nightOverride`. Migration `0075_night_override` dropped the NOT NULL and
+     * the code calls it `nightOverride`. Migration `0076_night_override` dropped the NOT NULL and
      * the default and turned every `false` into `null`: nobody had said "Nu", only not ticked a box.
      */
     nightOverride: boolean("headlamp_required"),

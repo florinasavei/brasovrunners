@@ -116,12 +116,19 @@ export function nightPill(
   // «Eveniment de noapte» on every other type (§NNN).
   const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
   // The end is only named when the start alone would not have been dark (§NNN): a run that
-  // starts in daylight and finishes after dusk.
-  const tooltipKey = facts.endSource ? "night.tooltipEnd" : "night.tooltip";
+  // starts in daylight and finishes after dusk — with its time, and in the words of where it
+  // came from (the event's own end, or the day's last programme row).
+  const tooltip = !facts.sunset
+    ? null
+    : facts.end && facts.endSource === "programme"
+      ? t("night.tooltipEndProgramme", { time: facts.sunset, end: facts.end })
+      : facts.end
+        ? t("night.tooltipEnd", { time: facts.sunset, end: facts.end })
+        : t("night.tooltip", { time: facts.sunset });
   return {
     glyph: "headlamp",
     label,
-    ...(facts.sunset ? { tooltip: t(tooltipKey, { time: facts.sunset }) } : {}),
+    ...(tooltip ? { tooltip } : {}),
   };
 }
 

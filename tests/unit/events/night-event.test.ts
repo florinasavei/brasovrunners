@@ -184,6 +184,7 @@ describe("§NNN nightEvent — the override before the sun", () => {
       source: "automatic",
       sunset: "16:44",
       endSource: null,
+      end: null,
     });
     expect(nightEvent({ nightOverride: null, timezone: ZONE }, JUNE_19, BRASOV)).toMatchObject({ night: false, source: "automatic" });
   });
@@ -195,6 +196,7 @@ describe("§NNN nightEvent — the override before the sun", () => {
       source: "override",
       sunset: "16:44",
       endSource: null,
+      end: null,
     });
   });
 
@@ -382,10 +384,11 @@ describe("§NNN the calendar entry names it after the place, with the sunset", (
     expect(lines).toEqual(["19:00 Running up that hill", moved.text, "Eveniment de noapte — apusul la 16:44", "Colaborare"]);
   });
 
+  // The fixture is a group run: «Alergare de noapte» in the month view too, as on its card (§NNN).
   it("the calendar hands each date its own answer, in the reader's language", async () => {
     for (const [locale, words] of [
-      ["ro", "Eveniment de noapte — apusul la 16:44"],
-      ["en", "Night event — sunset at 16:44"],
+      ["ro", "Alergare de noapte — apusul la 16:44"],
+      ["en", "Night run — sunset at 16:44"],
     ] as const) {
       currentLocale = locale;
       const html = renderToStaticMarkup(
@@ -510,6 +513,8 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     autoLineNoDate: catalogue.Admin.editor.night.autoLineNoDate,
     verdictNight: catalogue.Admin.editor.night.verdictNight,
     verdictDay: catalogue.Admin.editor.night.verdictDay,
+    endLine: catalogue.Admin.editor.night.endLine,
+    endLineProgramme: catalogue.Admin.editor.night.endLineProgramme,
     day: calendarDayWords(locale),
   });
 
@@ -537,20 +542,59 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     it("dark at the start: night whatever the duration says", () => {
       const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "23:00", timeZone: ZONE }, BRASOV, 30);
       expect(verdict.line).toContain("eveniment de noapte");
-      expect(verdict.hasEnd).toBe(false);
+      expect(verdict.endLine).toBeNull();
     });
 
     // 19:00 in June is daylight, but civil dusk is well before 22:00: two hours later is dark.
     it("light at the start, dark by the end: the duration alone makes it a night run", () => {
       const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "19:00", timeZone: ZONE }, BRASOV, 180);
       expect(verdict.line).toContain("eveniment de noapte");
-      expect(verdict.hasEnd).toBe(true);
+      // The end is named with its time, in the words of «Durata» (§NNN, review round 3).
+      expect(verdict.endLine).toBe("Startul e înainte de amurg, dar alergarea ține până la 22:00 și prinde întunericul — tot eveniment de noapte.");
+    });
+
+    // The server's own fallback: no «Durata», but timed programme rows on the start's own date —
+    // the latest one's end (or start) is the span's end, exactly as `nightEvent` reads it.
+    it("no duration, programme rows on the day: the last row decides, and the line says so", () => {
+      const rows = [
+        { date: "2026-11-18", time: "16:00", endTime: "" },
+        { date: "2026-11-18", time: "17:00", endTime: "17:45" },
+        // Another day's row is not this date's own.
+        { date: "2026-11-19", time: "23:00", endTime: "" },
+      ];
+      const start = { date: "2026-11-18", time: "15:30", timeZone: ZONE };
+      const ro1 = nightAutoLine(lineWords(ro, "ro"), start, BRASOV, null, rows);
+      expect(ro1.line).toContain("— eveniment de noapte");
+      expect(ro1.endLine).toBe(
+        "Startul e înainte de amurg, dar programul zilei ține până la 17:45 (ultimul punct) și prinde întunericul — tot eveniment de noapte.",
+      );
+      expect(nightAutoLine(lineWords(en, "en"), start, BRASOV, null, rows).endLine).toBe(
+        "The start is before dusk, but the day's programme runs until 17:45 (its last row) and reaches the dark — still a night event.",
+      );
+      // «Durata» wins over the programme, as on the server: 30 minutes ends at 16:00, in the light.
+      const short = nightAutoLine(lineWords(ro, "ro"), start, BRASOV, 30, rows);
+      expect(short.line).toContain("nu e eveniment de noapte");
+      expect(short.endLine).toBeNull();
+      // And the island agrees with the server's `nightEvent` on the same rows.
+      const server = nightEvent(
+        {
+          nightOverride: null,
+          timezone: ZONE,
+          scheduleItems: [
+            { startsAt: at("2026-11-18T16:00").toISOString(), endsAt: null, label: { ro: "Start", en: "Start" }, place: null },
+            { startsAt: at("2026-11-18T17:00").toISOString(), endsAt: at("2026-11-18T17:45").toISOString(), label: { ro: "Final", en: "Finish" }, place: null },
+          ],
+        },
+        at("2026-11-18T15:30"),
+        BRASOV,
+      );
+      expect(server).toMatchObject({ night: true, endSource: "programme", end: "17:45" });
     });
 
     it("light throughout: not a night run, and the end is never named", () => {
       const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "10:00", timeZone: ZONE }, BRASOV, 60);
       expect(verdict.line).toContain("nu e eveniment de noapte");
-      expect(verdict.hasEnd).toBe(false);
+      expect(verdict.endLine).toBeNull();
     });
   });
 
@@ -564,6 +608,7 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     const darkEnd = nightEvent({ nightOverride: null, timezone: ZONE, endsAt: new Date("2026-06-17T19:00:00Z") }, new Date("2026-06-17T16:00:00Z"), BRASOV);
     expect(darkEnd.night).toBe(true);
     expect(darkEnd.endSource).toBe("event");
+    expect(darkEnd.end).toBe("22:00");
 
     // Light throughout, no end stated beyond the start.
     const lightThroughout = nightEvent({ nightOverride: null, timezone: ZONE }, new Date("2026-06-17T07:00:00Z"), BRASOV);
@@ -585,6 +630,43 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     );
     expect(facts.night).toBe(true);
     expect(facts.endSource).toBe("programme");
+    expect(facts.end).toBe("22:00");
+  });
+
+  // §NNN (review round 3): «any part of that span». An overnight ultra that starts at 16:00 in June
+  // and finishes at 08:00 the next morning has both ends in daylight and a whole night inside.
+  it("nightEvent: a span with both ends in daylight but the night inside it is a night event", () => {
+    const overnight = nightEvent(
+      { nightOverride: null, timezone: ZONE, endsAt: at("2026-06-18T08:00") },
+      at("2026-06-17T16:00"),
+      BRASOV,
+    );
+    expect(overnight).toMatchObject({ night: true, source: "automatic", endSource: "event", end: "08:00" });
+    // The same start ending at 18:00 the same day: light throughout.
+    expect(nightEvent({ nightOverride: null, timezone: ZONE, endsAt: at("2026-06-17T18:00") }, at("2026-06-17T16:00"), BRASOV).night).toBe(false);
+    // And the island says the same about the same span: 16 hours from 16:00.
+    const island = nightAutoLine(lineWords(en, "en"), { date: "2026-06-17", time: "16:00", timeZone: ZONE }, BRASOV, 16 * 60);
+    expect(island.line).toContain("— a night event");
+    expect(island.endLine).toBe("The start is before dusk, but the run lasts until 08:00 and reaches the dark — still a night event.");
+  });
+
+  it("the pill's tooltip names the end, by where it came from, in both languages (§NNN)", async () => {
+    // 16:00 on 18 November, ninety minutes: dusk falls inside the run.
+    const late = event({ startsAt: at("2026-11-18T16:00"), endsAt: at("2026-11-18T17:30") });
+    const roHtml = renderToStaticMarkup(await EventFacts({ event: late, now: NOW, stacked: true }));
+    expect(tooltips(roHtml)).toContain("Apusul la 16:44, sfârșitul la 17:30 — ia o frontală");
+    currentLocale = "en";
+    const enHtml = renderToStaticMarkup(await EventFacts({ event: late, now: NOW, stacked: true }));
+    expect(tooltips(enHtml)).toContain("Sunset at 16:44, the finish at 17:30 — bring a headlamp");
+    currentLocale = "ro";
+    const fromProgramme = event({
+      startsAt: at("2026-11-18T16:00"),
+      scheduleItems: [
+        { startsAt: at("2026-11-18T16:00").toISOString(), endsAt: at("2026-11-18T17:40").toISOString(), label: { ro: "Tura", en: "The loop" }, place: null },
+      ],
+    } as Partial<PublicEvent>);
+    const programmeHtml = renderToStaticMarkup(await EventFacts({ event: fromProgramme, now: NOW, stacked: true }));
+    expect(tooltips(programmeHtml)).toContain("Apusul la 16:44, ultimul punct din program la 17:40 — ia o frontală");
   });
 
   it("carries every word in both catalogues", () => {
@@ -601,12 +683,13 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
         "verdictNight",
         "verdictDay",
         "endLine",
+        "endLineProgramme",
         "series",
         "help",
       ] as const) {
         expect(night[key].length, key).toBeGreaterThan(0);
       }
-      for (const key of ["pill", "runPill", "tooltip", "tooltipEnd", "calendar", "ics"] as const) expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
+      for (const key of ["pill", "runPill", "tooltip", "tooltipEnd", "tooltipEndProgramme", "calendar", "calendarRun", "ics", "icsRun"] as const) expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
     }
     expect(ro.Admin.editor.night.auto).toBe("Automat (după apus)");
     expect(ro.Event.night.pill).toBe("Eveniment de noapte");

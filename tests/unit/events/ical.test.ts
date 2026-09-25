@@ -276,6 +276,36 @@ describe("the calendar file", () => {
     expect(internal).not.toContain("la organizator");
   });
 
+  // §NNN (review round 3): the file reads the span as the pill and the reminder do — a daylight
+  // start whose own end, or whose programme's last row, falls after dusk is a night event here too.
+  it("says the night line for a daylight start that ends after dusk, from the end or the programme (§NNN)", () => {
+    // 16:00 on 18 November in Brașov, ninety minutes: dusk (~17:15) falls inside.
+    const november = {
+      ...event,
+      type: "RACE" as const,
+      timezone: "Europe/Bucharest",
+      startsAt: new Date("2026-11-18T14:00:00.000Z"),
+      endsAt: new Date("2026-11-18T15:30:00.000Z"),
+      nightOverride: null,
+    };
+    expect(calendarDescription(november, labelsRo)).toContain("Eveniment de noapte — apusul la 16:44, ia o frontală");
+    expect(calendarDescription(november, labelsEn)).toContain("Night event — sunset at 16:44, bring a headlamp");
+    // The same start ending at 16:45: in the light throughout, no line.
+    expect(calendarDescription({ ...november, endsAt: new Date("2026-11-18T14:45:00.000Z") }, labelsRo)).not.toContain("de noapte");
+
+    // No end of its own: the programme's last row of the day (17:45) carries it past dusk.
+    const programme = [
+      { startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: null, label: "Start", place: null },
+      { startsAt: new Date("2026-11-18T15:30:00.000Z"), endsAt: new Date("2026-11-18T15:45:00.000Z"), label: "Premiere", place: null },
+    ];
+    expect(calendarDescription({ ...november, endsAt: null, programme }, labelsRo)).toContain("Eveniment de noapte — apusul la 16:44");
+
+    // A group run is «Alergare de noapte» in the file, as on its card and in its reminder.
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).toContain("Alergare de noapte — apusul la 16:44, ia o frontală");
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsEn)).toContain("Night run — sunset at 16:44, bring a headlamp");
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).not.toContain("Eveniment de noapte");
+  });
+
   it("writes one line per partner, the label said once, each keeping its own page (§168)", () => {
     const three = calendarDescription(
       {

@@ -30,6 +30,8 @@ export type NightEventFacts = {
    * for the editor's line and the pill's tooltip to name.
    */
   endSource: "event" | "programme" | "start" | null;
+  /** That end on the occurrence's wall clock, "18:15", whenever `endSource` names one — the words' `{end}`. */
+  end: string | null;
 };
 
 export type NightEventSource = {
@@ -48,6 +50,11 @@ export type NightEventSource = {
    * occurrence's own. Absent from a caller that has not read it.
    */
   scheduleItems?: unknown;
+  /**
+   * The same rows already read as instants — the calendar's `programme` (§117) — for a caller that
+   * holds them rather than the raw column; read in place of `scheduleItems` when given.
+   */
+  programme?: readonly { startsAt: Date; endsAt: Date | null }[];
 };
 
 /**
@@ -63,25 +70,53 @@ function occurrenceSpanEnd(
   if (!occurrenceStartsAt) return { end: null, source: null };
   if (event.endsAt) return { end: event.endsAt, source: "event" };
   const day = localDay(occurrenceStartsAt, event.timezone);
-  const latest = readScheduleItems(event.scheduleItems)
-    .filter((row) => localDay(new Date(row.startsAt), event.timezone) === day)
+  const rows =
+    event.programme ??
+    readScheduleItems(event.scheduleItems).map((row) => ({ startsAt: new Date(row.startsAt), endsAt: row.endsAt ? new Date(row.endsAt) : null }));
+  const latest = rows
+    .filter((row) => localDay(row.startsAt, event.timezone) === day)
     .reduce<Date | null>((max, row) => {
-      const end = new Date(row.endsAt ?? row.startsAt);
+      const end = row.endsAt ?? row.startsAt;
       return !max || end.getTime() > max.getTime() ? end : max;
     }, null);
   return latest ? { end: latest, source: "programme" } : { end: occurrenceStartsAt, source: "start" };
 }
 
+/**
+ * Whether any part of the span from `start` to `end` is in the dark (§NNN) — the one rule the
+ * server and the editor's island both ask: the start after dusk or before dawn; the end likewise;
+ * or the span running through the dark between them — it contains the start day's civil dusk, or
+ * it ends on a later day of the wall clock than it starts (an overnight ultra that starts at 16:00
+ * and finishes after the next morning's dawn has both ends in the light and a whole night inside).
+ * `nightAtStart` tells the callers whether the end had to be named at all.
+ */
+export function nightSpan(
+  start: Date | null,
+  end: Date | null,
+  place: Coordinates,
+  timeZone: string,
+): { night: boolean; nightAtStart: boolean } {
+  const nightAtStart = isNightEvent(start, place, timeZone);
+  if (nightAtStart) return { night: true, nightAtStart };
+  if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end.getTime() <= start.getTime()) {
+    return { night: false, nightAtStart };
+  }
+  if (isNightEvent(end, place, timeZone)) return { night: true, nightAtStart };
+  if (localDay(end, timeZone) > localDay(start, timeZone)) return { night: true, nightAtStart };
+  const dusk = sunTimes(localDay(start, timeZone), place)?.civilDusk ?? null;
+  return { night: dusk !== null && start.getTime() < dusk.getTime() && dusk.getTime() <= end.getTime(), nightAtStart };
+}
+
 export function nightEvent(event: NightEventSource, occurrenceStartsAt: Date | null, place: Coordinates): NightEventFacts {
   const sunsetAt = occurrenceStartsAt ? sunTimes(localDay(occurrenceStartsAt, event.timezone), place)?.sunset ?? null : null;
   const sunset = sunsetAt ? wallClockTime(sunsetAt, event.timezone) : null;
-  if (event.nightOverride !== null) return { night: event.nightOverride, source: "override", sunset, endSource: null };
-  const nightAtStart = isNightEvent(occurrenceStartsAt, place, event.timezone);
-  const { end, source: endSource } = occurrenceSpanEnd(event, occurrenceStartsAt);
-  const nightAtEnd = isNightEvent(end, place, event.timezone);
+  if (event.nightOverride !== null) return { night: event.nightOverride, source: "override", sunset, endSource: null, end: null };
+  const { end, source } = occurrenceSpanEnd(event, occurrenceStartsAt);
+  const { night, nightAtStart } = nightSpan(occurrenceStartsAt, end, place, event.timezone);
   // The end is only named when it is the reason: a start already after dusk needs no mention of
   // when the run finishes (§NNN).
-  return { night: nightAtStart || nightAtEnd, source: "automatic", sunset, endSource: !nightAtStart && nightAtEnd ? endSource : null };
+  const named = night && !nightAtStart && end ? source : null;
+  return { night, source: "automatic", sunset, endSource: named, end: named && end ? wallClockTime(end, event.timezone) : null };
 }
 
 /** The editor's three choices, as the radio posts them and the column stores them. */

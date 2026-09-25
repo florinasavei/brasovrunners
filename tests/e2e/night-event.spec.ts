@@ -152,7 +152,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await page.goto(`/ro/calendar?month=${MONTH}`);
     await expect(page.locator(`#main [role=table] a[aria-label*="${title}"]`)).toHaveAttribute(
       "aria-label",
-      new RegExp(`^19:00 ${title}\\. Eveniment de noapte — apusul la 16:\\d\\d$`),
+      new RegExp(`^19:00 ${title}\\. Alergare de noapte — apusul la 16:\\d\\d$`),
     );
   });
 
@@ -202,13 +202,14 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await page.locator('[name="event.durationMinutes"]').fill("90");
     await openEditorBox(page, "Traseul");
     await expect(autoLine(page)).toHaveText(/— eveniment de noapte$/);
-    await expect(page.getByTestId("night-end-line")).toBeVisible();
+    // The end is named with its time and its source, «Durata» (§NNN, review round 3).
+    await expect(page.getByTestId("night-end-line")).toHaveText(/alergarea ține până la 17:30 și prinde întunericul/);
     await saveWithChoice(page, "Automat (după apus)", true);
 
     await page.goto(`/ro/evenimente/${slug}`);
     const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await pill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/se termină după apus/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^Apusul la 16:\d\d, sfârșitul la 17:30 — ia o frontală$/);
   });
 });

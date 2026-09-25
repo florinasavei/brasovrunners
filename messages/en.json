@@ -144,9 +144,12 @@
       "pill": "Night event",
       "runPill": "Night run",
       "tooltip": "Sunset at {time} — bring a headlamp",
-      "tooltipEnd": "Sunset at {time} — finishes after dark, bring a headlamp",
+      "tooltipEnd": "Sunset at {time}, the finish at {end} — bring a headlamp",
+      "tooltipEndProgramme": "Sunset at {time}, the programme's last row at {end} — bring a headlamp",
       "calendar": "Night event — sunset at {time}",
-      "ics": "Night event — sunset at {time}, bring a headlamp"
+      "ics": "Night event — sunset at {time}, bring a headlamp",
+      "calendarRun": "Night run — sunset at {time}",
+      "icsRun": "Night run — sunset at {time}, bring a headlamp"
     },
     "difficulty": "Difficulty",
     "cost": "Cost",
@@ -982,9 +985,10 @@
         "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
         "verdictNight": "a night event",
         "verdictDay": "not a night event",
-        "endLine": "The start is before dusk, but the run finishes after it — still a night event.",
+        "endLine": "The start is before dusk, but the run lasts until {end} and reaches the dark — still a night event.",
+        "endLineProgramme": "The start is before dusk, but the day's programme runs until {end} (its last row) and reaches the dark — still a night event.",
         "series": "In a series, each date follows its own day's sunset: the winter dates are night events, the summer ones are not.",
-        "help": "Automatic: it is a night event when the start or the end is after dusk (the sun 6° below the horizon) or before dawn. Shown on the event's card, page and calendar, and in the reminder email."
+        "help": "Automatic: it is a night event when any part of it, from the start to the end, falls after dusk (the sun 6° below the horizon) or before dawn. The end comes from “Duration” or, without it, the day's last programme row. Shown on the event's card, page and calendar, and in the reminder email."
       },
       "registrationSection": "Registration",
       "registrationMode": "Registration mode",

@@ -248,6 +248,19 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(night.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
     expect(night.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
 
+    // §NNN (review round 3): a daylight start whose own end («Durata», no programme rows) is after
+    // dusk — 16:00 to 17:30 on 18 November — carries the line too; ending at 16:45, it does not.
+    await db
+      .update(events)
+      .set({ startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: new Date("2026-11-18T15:30:00.000Z"), scheduleItems: null })
+      .where(eq(events.id, event.id));
+    const late = await render();
+    expect(late.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(late.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
+    await db.update(events).set({ endsAt: new Date("2026-11-18T14:45:00.000Z") }).where(eq(events.id, event.id));
+    expect((await render()).text).not.toContain("Alergare de noapte");
+    await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z"), endsAt: null }).where(eq(events.id, event.id));
+
     // «Nu» wins over the sun, and «Da» over the daylight.
     await db.update(events).set({ nightOverride: false }).where(eq(events.id, event.id));
     expect((await render()).text).not.toContain("Alergare de noapte");

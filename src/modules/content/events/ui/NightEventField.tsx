@@ -7,8 +7,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { type CalendarDayWords, composeCalendarDay } from "@/i18n/dates";
-import { NIGHT_CHOICES, type NightChoice } from "@/modules/events/domain/night";
-import { type Coordinates, isNightEvent, sunTimes, wallClockTime } from "@/modules/events/domain/sun";
+import { NIGHT_CHOICES, type NightChoice, nightSpan } from "@/modules/events/domain/night";
+import { type Coordinates, sunTimes, wallClockTime } from "@/modules/events/domain/sun";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { fillIn } from "@/shared/forms/fill-in";
@@ -26,40 +26,88 @@ export type NightEventWords = {
   autoLineNoDate: string;
   verdictNight: string;
   verdictDay: string;
-  /** "Alergarea se termină după apus." — shown only when the start alone was not dark (§NNN). */
+  /** "… alergarea ține până la {end} …" — shown only when the start alone was not dark and the end came from «Durata» (§NNN). */
   endLine: string;
+  /** "… programul zilei ține până la {end} (ultimul punct) …" — the same, when the end is the day's last programme row. */
+  endLineProgramme: string;
   /** "Într-o serie, fiecare dată urmează apusul zilei ei …" */
   series: string;
   /** The day's words, written on the server (§324): the island formats no date itself. */
   day: CalendarDayWords;
 };
 
+/** One programme row as the form posts it (`event.schedule[i].<box>`, §117): wall-clock strings. */
+export type NightProgrammeRow = { date: string; time: string; endTime: string };
+
+const WALL_TIME = /^\d{2}:\d{2}$/;
+/** One array for "no rows", so the effect's dependency does not change on every render. */
+const NO_ROWS: readonly NightProgrammeRow[] = [];
+
+/**
+ * The span's end as the form stands, by the server's own rule (`night.ts#occurrenceSpanEnd`,
+ * §NNN): «Durata»'s minutes added to the start when the box has a number — the event's own end;
+ * else the latest programme row on the start's own date (its end time, or its start when it has
+ * none); else none.
+ */
+function formSpanEnd(
+  startsAt: Date,
+  start: { date: string; timeZone: string },
+  durationMinutes: number | null | undefined,
+  programme: readonly NightProgrammeRow[],
+): { end: Date; source: "event" | "programme" } | null {
+  if (durationMinutes && durationMinutes > 0) return { end: new Date(startsAt.getTime() + durationMinutes * 60_000), source: "event" };
+  const latest = programme
+    .filter((row) => row.date === start.date && WALL_TIME.test(row.time))
+    .map((row) => fromWallTimeInput(`${row.date}T${WALL_TIME.test(row.endTime) ? row.endTime : row.time}`, start.timeZone))
+    .reduce<Date | null>((max, end) => (end && (!max || end.getTime() > max.getTime()) ? end : max), null);
+  return latest ? { end: latest, source: "programme" } : null;
+}
+
 /**
  * The automatic answer's line, from the boxes as they stand: the event's day in words, its sunset
- * and the verdict (§NNN) — decided by the **whole span**, not the start alone: a run that starts
- * in daylight and finishes after dusk (the "Cât durează" box's minutes, added to the start) is a
- * night run, and `endLine` (returned separately, `hasEnd`) says so. Pure — the island reads the
- * form and hands the strings here — and the same `sun.ts` the server's pill asks, so the line
- * cannot promise what the page will not show.
+ * and the verdict (§NNN) — decided by the **whole span**, not the start alone, with the server's
+ * own end rule (`formSpanEnd`) and its own span test (`nightSpan`): a run that starts in daylight
+ * and finishes after dusk is a night run, and `endLine` (null otherwise) says until when and
+ * whether «Durata» or the programme said so. Pure — the island reads the form and hands the
+ * strings here — and the same `sun.ts` the server's pill asks, so the line cannot promise what
+ * the page will not show.
  */
 export function nightAutoLine(
-  words: Pick<NightEventWords, "autoLine" | "autoLineNoTime" | "autoLineNoDate" | "verdictNight" | "verdictDay" | "day">,
+  words: Pick<NightEventWords, "autoLine" | "autoLineNoTime" | "autoLineNoDate" | "verdictNight" | "verdictDay" | "endLine" | "endLineProgramme" | "day">,
   start: { date: string; time: string; timeZone: string },
   place: Coordinates,
   durationMinutes?: number | null,
-): { line: string; hasEnd: boolean } {
+  programme: readonly NightProgrammeRow[] = [],
+): { line: string; endLine: string | null } {
   const day = composeCalendarDay(start.date, words.day);
   const sun = day ? sunTimes(start.date, place) : null;
-  if (!day || !sun) return { line: words.autoLineNoDate, hasEnd: false };
+  if (!day || !sun) return { line: words.autoLineNoDate, endLine: null };
   const time = sun.sunset ? wallClockTime(sun.sunset, start.timeZone) : "—";
-  if (!/^\d{2}:\d{2}$/.test(start.time)) return { line: fillIn(words.autoLineNoTime, { day, time }), hasEnd: false };
+  if (!WALL_TIME.test(start.time)) return { line: fillIn(words.autoLineNoTime, { day, time }), endLine: null };
   const startsAt = fromWallTimeInput(`${start.date}T${start.time}`, start.timeZone);
-  const nightAtStart = isNightEvent(startsAt, place, start.timeZone);
-  const endsAt = startsAt && durationMinutes && durationMinutes > 0 ? new Date(startsAt.getTime() + durationMinutes * 60_000) : null;
-  const nightAtEnd = endsAt ? isNightEvent(endsAt, place, start.timeZone) : false;
-  const verdict = nightAtStart || nightAtEnd ? words.verdictNight : words.verdictDay;
-  return { line: fillIn(words.autoLine, { day, time, verdict }), hasEnd: !nightAtStart && nightAtEnd };
+  const spanEnd = startsAt ? formSpanEnd(startsAt, start, durationMinutes, programme) : null;
+  const { night, nightAtStart } = nightSpan(startsAt, spanEnd?.end ?? null, place, start.timeZone);
+  const line = fillIn(words.autoLine, { day, time, verdict: night ? words.verdictNight : words.verdictDay });
+  if (!night || nightAtStart || !spanEnd) return { line, endLine: null };
+  const end = wallClockTime(spanEnd.end, start.timeZone);
+  return { line, endLine: fillIn(spanEnd.source === "programme" ? words.endLineProgramme : words.endLine, { end }) };
 }
+
+/** The programme rows the form posts, gathered by index — `ScheduleRowsEditor`'s own names. */
+function programmeRowsOf(data: FormData): NightProgrammeRow[] | null {
+  const rows = new Map<number, NightProgrammeRow>();
+  for (const [name, value] of data.entries()) {
+    const match = /^event\.schedule\[(\d+)\]\.(date|time|endTime)$/.exec(name);
+    if (!match) continue;
+    const row = rows.get(Number(match[1])) ?? { date: "", time: "", endTime: "" };
+    row[match[2] as keyof NightProgrammeRow] = String(value).trim();
+    rows.set(Number(match[1]), row);
+  }
+  return rows.size > 0 ? [...rows.values()] : null;
+}
+
+const sameRows = (a: readonly NightProgrammeRow[], b: readonly NightProgrammeRow[]) =>
+  a.length === b.length && a.every((row, i) => row.date === b[i].date && row.time === b[i].time && row.endTime === b[i].endTime);
 
 /**
  * "Eveniment de noapte" in the "Traseul" card (§NNN, replacing §382's "Necesită frontală"
@@ -77,6 +125,8 @@ export default function NightEventField({
   place,
   zone,
   start,
+  durationMinutes = null,
+  programme = NO_ROWS,
   inSeries = false,
   seriesToggleName,
   words,
@@ -88,6 +138,10 @@ export default function NightEventField({
   zone: string;
   /** The start as the page rendered it (the editor's), `YYYY-MM-DD` and `HH:mm`; read from the form after. */
   start: { date: string; time: string };
+  /** «Durata» as the page rendered it (the saved end minus the start), for the first paint; read from the form after. */
+  durationMinutes?: number | null;
+  /** The saved programme rows on the event's clock, for the first paint and a form without the programme's boxes. */
+  programme?: readonly NightProgrammeRow[];
   inSeries?: boolean;
   /** On create: the box that turns the series on, whose tick shows the series sentence. */
   seriesToggleName?: string;
@@ -95,7 +149,7 @@ export default function NightEventField({
 }) {
   const recall = useRecall();
   const root = useRef<HTMLDivElement>(null);
-  const [live, setLive] = useState({ date: start.date, time: start.time, timeZone: zone, series: inSeries, durationMinutes: null as number | null });
+  const [live, setLive] = useState({ date: start.date, time: start.time, timeZone: zone, series: inSeries, durationMinutes, programme });
 
   useEffect(() => {
     const form = root.current?.closest("form");
@@ -112,6 +166,9 @@ export default function NightEventField({
         // "Cât durează" (§71), added to the start (§NNN): a run that finishes after dusk is a
         // night run even from a daylight start. No box, or not a number, means no end to name.
         durationMinutes: Number.isFinite(duration) && duration > 0 ? duration : null,
+        // The programme's rows (§117), the end when «Durata» is empty — the server's own order
+        // (§NNN). A form without the programme's boxes keeps the saved rows.
+        programme: programmeRowsOf(data) ?? programme,
       };
       // The same answer keeps the same object, so a keystroke elsewhere in the form renders nothing here.
       setLive((current) =>
@@ -119,7 +176,8 @@ export default function NightEventField({
         current.time === next.time &&
         current.timeZone === next.timeZone &&
         current.series === next.series &&
-        current.durationMinutes === next.durationMinutes
+        current.durationMinutes === next.durationMinutes &&
+        sameRows(current.programme, next.programme)
           ? current
           : next,
       );
@@ -134,11 +192,11 @@ export default function NightEventField({
       form.removeEventListener("input", scheduler.schedule);
       scheduler.cancel();
     };
-  }, [start.date, start.time, zone, inSeries, seriesToggleName]);
+  }, [start.date, start.time, zone, inSeries, seriesToggleName, programme]);
 
   const posted = recall.value(name);
   const initial = recall.has && posted && (NIGHT_CHOICES as readonly string[]).includes(posted) ? (posted as NightChoice) : defaultChoice;
-  const auto = nightAutoLine(words, live, place, live.durationMinutes);
+  const auto = nightAutoLine(words, live, place, live.durationMinutes, live.programme);
 
   return (
     <Stack ref={root} spacing={0.5} data-testid="night-event-field">
@@ -153,9 +211,9 @@ export default function NightEventField({
       <Typography variant="body2" color="text.secondary" data-testid="night-auto-line" role="status">
         {auto.line}
       </Typography>
-      {auto.hasEnd && (
+      {auto.endLine && (
         <Typography variant="body2" color="text.secondary" data-testid="night-end-line">
-          {words.endLine}
+          {auto.endLine}
         </Typography>
       )}
       {live.series && (

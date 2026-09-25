@@ -108,7 +108,9 @@ export default async function EventCalendar({
   const nightLine = (event: PublicEvent) => {
     const facts = clubNightEvent(event);
     if (!facts.night) return null;
-    return facts.sunset ? tEvent("night.calendar", { time: facts.sunset }) : tEvent("night.pill");
+    // A group run is «Alergare de noapte», as on its card and in its reminder (§NNN).
+    const run = event.type === "GROUP_RUN";
+    return facts.sunset ? tEvent(run ? "night.calendarRun" : "night.calendar", { time: facts.sunset }) : tEvent(run ? "night.runPill" : "night.pill");
   };
 
   // The chip is a client island (the tooltip); everything crosses as strings and names (§112).

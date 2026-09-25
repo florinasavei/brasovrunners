@@ -505,6 +505,9 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,
       startsAt: events.startsAt,
+      // The event's own end (§NNN): the night line's span reads it before the programme's rows,
+      // as the pill does — a run whose «Durata» carries it past dusk is a night run here too.
+      endsAt: events.endsAt,
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,

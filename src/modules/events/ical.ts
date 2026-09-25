@@ -95,7 +95,8 @@ export type CalendarEvent = {
   elevationGainMeters?: number | null;
   /**
    * The organizer's night override (§NNN): true "Da", false "Nu", null or absent "Automat" — the
-   * start against dusk at the club's place. A night event gets a line of its own under the facts
+   * start and the end against civil dusk and dawn at the club's place (the end is `endsAt`, else
+   * the programme's last row of the day). A night event gets a line of its own under the facts
    * line, "Eveniment de noapte — apusul la 16:36, ia o frontală" in the calendar's language.
    */
   nightOverride?: boolean | null;
@@ -389,8 +390,22 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   })();
 
   // A night event (§NNN): this date's own answer, from the one function every surface asks.
-  const night = clubNightEvent({ nightOverride: event.nightOverride ?? null, timezone: timeZone, startsAt: event.startsAt });
-  const nightLine = night.night ? (night.sunset ? t("night.ics", { time: night.sunset }) : t("night.pill")) : "";
+  // The span decides (§NNN): the event's own end, else the programme's last row of the day —
+  // the same inputs the pill and the reminder read, so the file cannot stay silent where they speak.
+  const night = clubNightEvent({
+    nightOverride: event.nightOverride ?? null,
+    timezone: timeZone,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    programme: event.programme,
+  });
+  // A group run is «Alergare de noapte», as on its card and in its reminder (§NNN).
+  const run = event.type === "GROUP_RUN";
+  const nightLine = night.night
+    ? night.sunset
+      ? t(run ? "night.icsRun" : "night.ics", { time: night.sunset })
+      : t(run ? "night.runPill" : "night.pill")
+    : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);
