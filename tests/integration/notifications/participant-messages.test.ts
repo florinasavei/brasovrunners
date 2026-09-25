@@ -326,33 +326,44 @@ describe("§364 the organizer's message to an event's participants", () => {
     expect(bogdan.text).toContain("Your number:.");
   });
 
-  it("gives the club its copy of each real recipient's message (§320), and none of a test row's", async () => {
+  it("gives the club one copy of the whole send — the words and the count, no names (§NNN) — and counts no test row", async () => {
     const event = await seedEvent();
     const rows = await seedRegistrations(event.id, EVERYONE);
-    const byName = (name: string) => rows.find((row) => row.registeredName === name)!;
     const admin = await staff("ADMIN", "admin@dev.test");
-    await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
+    await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test", "presedinte@club.test"] } }, NOW);
     await send(event.id, { audience: "CONFIRMED" });
 
     const copies = await db
       .select()
       .from(emailOutbox)
       .where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), isNull(emailOutbox.participantId)));
-    // Two real confirmed registrants, one copy each; the test row gets none.
-    expect(copies).toHaveLength(2);
+    // Two real confirmed registrants and a test one: one copy per club address, not one per registrant.
+    expect(copies.map((copy) => copy.recipientEmail).sort()).toEqual(["arhiva@club.test", "presedinte@club.test"]);
     for (const copy of copies) {
-      expect(copy.recipientEmail).toBe("arhiva@club.test");
-      expect(copy.payloadJson).toEqual({ ...WORDS, clubCopy: true });
+      // About nobody: no registration, the event's id and how many real participants it reached.
+      expect(copy.registrationId).toBeNull();
+      expect(copy.payloadJson).toEqual({ ...WORDS, clubCopy: true, eventId: event.id, recipients: 2 });
     }
-    // Each copy is the registrant's own message, in their language — picked by registration, since
-    // neither the send nor this select orders the rows.
-    const copyOf = (name: string) => copies.find((copy) => copy.registrationId === byName(name).id)!;
-    const romanian = await renderOutboxMessage(copyOf("ana"), db, NOW);
-    expect(romanian.subject.startsWith("[Copie club] ")).toBe(true);
-    expect(romanian.text).toContain("Startul se mută la 10:00.");
-    const english = await renderOutboxMessage(copyOf("bogdan"), db, NOW);
-    expect(english.subject.startsWith("[Club copy] ")).toBe(true);
-    expect(english.text).toContain("The start moves to 10:00.");
+    const message = await renderOutboxMessage(copies[0], db, NOW);
+    expect(message.subject.startsWith("[Copie club] ")).toBe(true);
+    expect(message.subject).toContain(" / [Club copy] ");
+    expect(message.text).toContain("Copie pentru club a mesajului trimis la 2 participanți");
+    expect(message.text).toContain("Club copy of the message sent to 2 participants");
+    expect(message.text).toContain("Startul se mută la 10:00.");
+    expect(message.text).toContain("The start moves to 10:00.");
+    // It greets the club and names none of the recipients.
+    expect(message.text.startsWith("Salut,\n")).toBe(true);
+    for (const row of rows) {
+      expect(message.text).not.toContain(`Salut, ${row.registeredName}`);
+      expect(message.text).not.toContain(`Hi ${row.registeredName}`);
+      expect(message.text).not.toContain(`${row.registeredName}@example.test`);
+    }
+    expect(message.to).toBe(copies[0].recipientEmail);
+
+    // The same send again queues nothing twice.
+    const before = (await db.select().from(emailOutbox)).length;
+    await send(event.id, { audience: "CONFIRMED" });
+    expect((await db.select().from(emailOutbox)).length).toBe(before);
   });
 
   it("previews the message a registrant in either language would receive, and names the placeholders it cannot fill", async () => {

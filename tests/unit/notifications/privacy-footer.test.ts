@@ -8,8 +8,8 @@ import { env } from "@/shared/config/env";
  * BR-REQ-080-01 — every participant message says who sends it and where the privacy notice is
  * (GDPR art. 13; `DECISIONS.md` §323).
  *
- * The line is the last thing in each language's half: "Primești acest mesaj de la <club> pentru
- * înscrierea ta. Cum folosim datele tale: <the notice>" — the notice in that half's own
+ * The line is the last thing in each language's half: "Primești acest mesaj de la <club> pentru o
+ * înscriere făcută cu această adresă de e-mail. Cum folosim datele: <the notice>" (§NNN) — the notice in that half's own
  * language, from `APP_BASE_URL`. The club's own mail (the archive copy, the confirmation
  * notice) and the staff invitation are not a participant's message about their data and carry
  * none; the invitation says what the club keeps about its team in its own body instead.
@@ -51,20 +51,22 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§323)", 
           expect(email.text, `no full stop after the ${half} address`).not.toContain(`${url}.`);
           expect(email.html, `html links the ${half} notice`).toContain(`href="${url}"`);
         }
-        expect(email.text).toContain("Cum folosim datele tale:");
-        expect(email.text).toContain("How we use your data:");
+        expect(email.text).toMatch(/Cum folosim datele( tale)?:/);
+        expect(email.text).toMatch(/How we use (your|the) data:/);
       });
     }
   }
 
   it("says the message is about the registration, and for the opening notice that it was asked for", () => {
     const confirmation = render("REGISTRATION_CONFIRMED", "ro");
-    expect(confirmation.text).toMatch(/Primești acest mesaj de la .+ pentru înscrierea ta\./);
-    expect(confirmation.text).toMatch(/This message comes from .+ about your registration\./);
+    // Neutral since §NNN: the registration may be a child's or a family member's made with this address.
+    expect(confirmation.text).toMatch(/Primești acest mesaj de la .+ pentru o înscriere făcută cu această adresă de e-mail\. Cum folosim datele:/);
+    expect(confirmation.text).toMatch(/You are receiving this message from .+ about a registration made with this email address\. How we use the data:/);
+    expect(confirmation.text).not.toContain("pentru înscrierea ta");
     // "Registration is open" answers an address left on the event page, not a registration.
     const opened = render("REGISTRATION_OPENED", "en");
     expect(opened.text).toMatch(/because you asked to be told\./);
-    expect(opened.text).not.toContain("about your registration");
+    expect(opened.text).not.toContain("about a registration");
   });
 
   it("names the club's legal name when the deployment has it, the club's name otherwise", () => {
@@ -75,8 +77,8 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§323)", 
   for (const messageType of CLUB_MAIL) {
     it(`${messageType} carries no participant privacy line`, () => {
       const email = render(messageType, "ro");
-      expect(email.text).not.toContain("Cum folosim datele tale:");
-      expect(email.text).not.toContain("How we use your data:");
+      expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);
+      expect(email.text).not.toMatch(/How we use (your|the) data:/);
     });
   }
 
@@ -91,9 +93,9 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§323)", 
         messageType,
         data: { ...DATA, clubCopy: true },
       });
-      expect(email.text).not.toContain("Cum folosim datele tale:");
-      expect(email.text).not.toContain("How we use your data:");
-      expect(email.text).not.toContain("pentru înscrierea ta");
+      expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);
+      expect(email.text).not.toMatch(/How we use (your|the) data:/);
+      expect(email.text).not.toContain("pentru o înscriere făcută");
     });
   }
 

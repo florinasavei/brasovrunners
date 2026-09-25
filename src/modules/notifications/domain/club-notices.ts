@@ -209,6 +209,47 @@ export function isParticipantMessage(messageType: EmailMessageType): boolean {
 }
 
 /**
+ * Participant messages the club gets **no copy of per message** (§NNN, the counsel's review of
+ * 2026-09-25, GDPR art. 5(1)(c) and (e), art. 25(2)) — still participant messages in every other
+ * respect (the privacy line, no envelope copies), only never copied one by one:
+ *
+ * - `VERIFY_REGISTRATION_EMAIL` and `REGISTER_ANOTHER_PERSON` go to an address **nobody has
+ *   confirmed** for the person they are about: a registration whose address lapses unconfirmed
+ *   is deleted after thirty days (§322), while a copy in a club mailbox stays three years. Nothing
+ *   the club needs is in either of them;
+ * - `ORGANIZER_MESSAGE` and `EVENT_UPDATE_NOTICE` go to everybody registered at once: the club
+ *   gets **one** copy per send instead — the words and how many received them, no names
+ *   (`BULK_CLUB_COPY_MESSAGES`, `enqueueBulkClubCopies` in `outbox.ts`).
+ */
+const NO_CLUB_COPY_PER_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>([
+  // Unconfirmed addresses: no copy at all.
+  "VERIFY_REGISTRATION_EMAIL",
+  "REGISTER_ANOTHER_PERSON",
+  // Bulk sends: one copy per send, not one per registration.
+  "ORGANIZER_MESSAGE",
+  "EVENT_UPDATE_NOTICE",
+]);
+
+/** The bulk sends whose club copy is one per send, with the count of recipients and no names (§NNN). */
+export const BULK_CLUB_COPY_MESSAGES = ["ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE"] as const satisfies readonly EmailMessageType[];
+export type BulkClubCopyMessage = (typeof BULK_CLUB_COPY_MESSAGES)[number];
+
+/** Whether each message of this type gets a club copy of its own when it is queued (§320, §NNN). */
+export function isCopiedPerMessage(messageType: EmailMessageType): boolean {
+  return isParticipantMessage(messageType) && !NO_CLUB_COPY_PER_MESSAGE.has(messageType);
+}
+
+/** The payload key that carries, on a bulk send's one club copy, how many real participants it went to (§NNN). */
+export const BULK_COPY_RECIPIENTS = "recipients";
+
+/** How many participants a bulk send's club copy says it went to, or `null` for any other row. */
+export function bulkCopyRecipients(payload: unknown): number | null {
+  if (!isClubCopy(payload)) return null;
+  const value = (payload as Record<string, unknown>)[BULK_COPY_RECIPIENTS];
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+/**
  * Who receives a club copy of one participant message (§320): the club's list, minus the
  * participant's own address, one spelling each, compared without regard to case (§74's rule, as
  * everywhere in this file). A participant whose address is also on the club's list gets their
@@ -261,6 +302,12 @@ export function clubCopyPayload(payload: Record<string, unknown>): Record<string
 export function declarationPdfAudience(messageType: EmailMessageType, clubCopy: boolean): "participant" | "club" | null {
   if (clubCopy) return null;
   if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE") return "club";
-  if (messageType === "REGISTRATION_CONFIRMED" || messageType === "DECLARATION_SIGNED" || messageType === "GROUP_RUN_DECLARATION_SIGNED") return "participant";
+  /*
+    A group run's signer's copy is masked too (§NNN): the declaration is signed on a page and its
+    address is never confirmed first, so the copy may reach a stranger through one typo. A race's
+    PDF goes only to an address the runner confirmed with the link (§12.8), and stays whole.
+  */
+  if (messageType === "GROUP_RUN_DECLARATION_SIGNED") return "club";
+  if (messageType === "REGISTRATION_CONFIRMED" || messageType === "DECLARATION_SIGNED") return "participant";
   return null;
 }

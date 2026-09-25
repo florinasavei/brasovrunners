@@ -29,7 +29,8 @@ import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
 import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
 import { findSignedGroupRunDeclaration, groupRunDeclarationIdOf } from "@/modules/group-run-declarations/repository";
-import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
@@ -167,6 +168,12 @@ async function renderRow(
     participant would still mint nothing.
   */
   const clubCopy = isClubCopy(row.payloadJson);
+  /*
+    A bulk send's one club copy (§NNN, `enqueueBulkClubCopies`): no registration and no participant
+    behind it, the event's id and the number of recipients in its payload. It greets the club and
+    names nobody.
+  */
+  const bulkRecipients = row.registrationId ? null : bulkCopyRecipients(row.payloadJson);
 
   const [registration] = row.registrationId
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
@@ -180,7 +187,9 @@ async function renderRow(
 
   // The event comes from the registration — or, for the one message about an event and
   // nobody's registration (§146), from the payload's id, so a renamed event renders right.
-  const payloadEventId = row.messageType === "REGISTRATION_OPENED" ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
+  // A bulk send's club copy names its event the same way (§NNN).
+  const payloadEventId =
+    row.messageType === "REGISTRATION_OPENED" || bulkRecipients !== null ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
   const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
   // Every language's texts of the event, from the batch's one read of it (`createOutboxRenderer`).
   const eventTexts = eventId ? await eventRows(db, eventId) : [];
@@ -275,20 +284,45 @@ async function renderRow(
   }
   // The subject's "[Copie club]" and the line that says the personal links were taken out.
   if (clubCopy) data.clubCopy = true;
+  // A bulk send's one copy: how many it went to, and nobody's name (§NNN).
+  if (bulkRecipients !== null) data.clubCopyRecipients = bulkRecipients;
+  /*
+    A minor's registration (§108): the address is the parent's or guardian's, so the message greets
+    them and says whose registration it is about (§NNN; GDPR art. 12(1), 14; Codul civil art.
+    41–43). "A minor" is `guardian_name` set, the truthiness every other part of the platform reads.
+    The declaration request also says who signs: both, when the declaration in force in the
+    registration's language asks the minor to sign as well (§330), else the parent alone.
+  */
+  if (registration?.guardianName) {
+    data.guardianName = registration.guardianName;
+    if (row.messageType === "COMPLETE_DECLARATION" || row.messageType === "WAITLIST_SPOT_OFFER") {
+      data.minorSigns = await declarationAsksMinorToSign(db, registration.locale as Locale, now);
+    }
+  }
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
-  // The hold's deadline on the declaration email (§104), and whether it is the window's — a
-  // deadline more than a day away is the week-before confirmation, not the club's hold (§377). A
-  // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
-  if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
+  /*
+    The hold's deadline on the declaration email (§104), and whether it is the window's — a
+    deadline more than a day away is the week-before confirmation, not the club's hold (§377) — and
+    the offer's on the freed place (§NNN: the message that starts the clock names when it stops;
+    Codul civil art. 1191, 1193). A deadline already behind us (a resend after it) is not named:
+    the declaration's place is being kept (§160), and the offer says its length instead.
+  */
+  if (
+    (row.messageType === "COMPLETE_DECLARATION" || row.messageType === "WAITLIST_SPOT_OFFER") &&
+    registration?.holdExpiresAt &&
+    registration.holdExpiresAt.getTime() > now.getTime()
+  ) {
     // Each half of the bilingual message in its own words (§96, §349).
     const holdZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
     data.holdExpiresAtFormatted = formatInSentence(registration.holdExpiresAt, holdZone, locale);
     data.holdExpiresAtFormattedOther = formatInSentence(registration.holdExpiresAt, holdZone, otherLocale(locale));
-    data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
-    // Once the participation window is open this message is itself the reminder (the send when
-    // the window opens, or a resend after it), so it must not promise "or when we remind you".
-    if (eventDetails) {
-      data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
+    if (row.messageType === "COMPLETE_DECLARATION") {
+      data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
+      // Once the participation window is open this message is itself the reminder (the send when
+      // the window opens, or a resend after it), so it must not promise "or when we remind you".
+      if (eventDetails) {
+        data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
+      }
     }
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
@@ -337,7 +371,13 @@ async function renderRow(
     // The settled number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`): a provisional one would print
     // without the line that says it can still move (§237).
     if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
-    // "Înscrierile mele" by address, not by token: this message mints nothing (§77).
+  }
+  /*
+    "Înscrierile mele" by address, not by token: neither message mints anything (§77). On the
+    update notice too (§NNN): a runner whom the new date or place does not suit withdraws there, so
+    the place goes to the waiting list instead of staying blocked.
+  */
+  if (row.messageType === "ORGANIZER_MESSAGE" || row.messageType === "EVENT_UPDATE_NOTICE") {
     data.myRegistrationsUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`;
   }
   // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
@@ -678,8 +718,8 @@ async function renderRow(
  * A group run's optional self-declaration (§393): the signer's copy or the club's archive copy.
  *
  * About a declaration row, not a registration: no participant, no token, no manage link — there is
- * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95): whole on
- * the signer's copy, the identity document masked on the club's (§320). A row whose declaration is
+ * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95), the
+ * identity document masked on both copies (§320; the signer's since §NNN). A row whose declaration is
  * gone (erased, or swept seven days after the run) cannot be rendered, and says so: a failed render
  * is final (`AGENTS.md` §16.1), which is right — there is nothing left to send.
  */
@@ -722,7 +762,16 @@ async function renderGroupRunDeclarationRow(
     if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
   }
 
-  const pdf = await renderGroupRunDeclarationPdf(db, signed, archive ? "club" : "participant", now);
+  /*
+    Both emailed copies with the identity document masked (§NNN; GDPR art. 5(1)(f), 25, 32): the
+    signer's address was never confirmed — the declaration is signed on a page, no link is sent
+    first — so one typo hands a stranger a national identification number. The backoffice keeps the
+    whole document for its seven days (`participant`). The signer's message says so, and only when
+    the text asked for a document at all; it always says how to have a declaration one did not
+    sign deleted.
+  */
+  const pdf = await renderGroupRunDeclarationPdf(db, signed, declarationPdfAudience(row.messageType, false) ?? "club", now);
+  if (!archive && signed.idDocument !== null) data.idDocumentMasked = true;
   // The archive copy's own copies (§244), read from the payload as the race's archive reads them.
   const payload = (archive ? (row.payloadJson ?? {}) : {}) as { cc?: unknown; bcc?: unknown };
   const addresses = (value: unknown): string[] =>

@@ -6,6 +6,9 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
+import { formatDay } from "@/i18n/dates";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -474,5 +477,83 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     // Not the lapsed hold deadline (NOW + 30 minutes, already in the past) — the default
     // lifetime instead, so the token itself is still issuable.
     expect(token.expiresAt.getTime()).toBeGreaterThan(renderedAt.getTime());
+  });
+
+  /** One outbox row of this type for the registration above, as the worker hands it over. */
+  const rowOf = (messageType: "VERIFY_REGISTRATION_EMAIL" | "WAITLIST_SPOT_OFFER" | "COMPLETE_DECLARATION", key: string) => ({
+    id: `row-${key}`,
+    participantId,
+    registrationId,
+    messageType,
+    locale: "ro" as const,
+    recipientEmail: "ana@example.ro",
+    payloadJson: {},
+    idempotencyKey: `test:${key}`,
+    requestedByStaffUserId: null,
+    isManualResend: false,
+    status: "PROCESSING" as const,
+    attemptCount: 1,
+    nextAttemptAt: null,
+    lockedAt: NOW,
+    providerMessageId: null,
+    lastError: null,
+    createdAt: NOW,
+    sentAt: null,
+  });
+
+  it("§NNN the address confirmation names whose registration it is, how long the link lives, and where the data came from", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const message = await renderOutboxMessage(rowOf("VERIFY_REGISTRATION_EMAIL", "verify"), db, NOW);
+    const hours = { ro: hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours), en: hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours) };
+    expect(message.text).toContain("Am primit o înscriere la Crosul pe numele Ana Pop, trimisă cu această adresă de email. Pentru a continua, confirmă adresa.");
+    expect(message.text).toContain(`Linkul este valabil ${hours.ro}; dacă nu confirmi adresa până atunci, înscrierea expiră.`);
+    expect(message.text).toContain("Datele din înscriere ni le-a trimis cine a completat formularul cu această adresă. Dacă nu Ana Pop l-a completat");
+    expect(message.text).toContain("Dacă nu ai solicitat această înscriere, poți ignora acest mesaj.");
+    expect(message.text).toContain(`The link is valid for ${hours.en}; if you do not confirm your address by then, the registration expires.`);
+    expect(message.text).toContain("If you did not request this registration, you can ignore this message.");
+  });
+
+  it("§NNN the freed place's offer names its deadline and its length, and a lapsed one only its length", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const offerDeadline = new Date(NOW.getTime() + 24 * 60 * 60_000);
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED", holdExpiresAt: offerDeadline }).where(eq(registrations.id, registrationId));
+    const offerHours = hoursPhrase("ro", DEFAULT_DEADLINES.offerHours);
+
+    const live = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer"), db, NOW);
+    const when = formatDay(offerDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    expect(live.text).toContain(
+      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până la ${when} (ai la dispoziție ${offerHours}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
+    );
+    expect(live.text).toContain("It is yours if you sign the self-declaration by ");
+    expect(live.text).not.toContain("timp limitat");
+
+    const lapsed = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-late"), db, new Date(offerDeadline.getTime() + 60_000));
+    expect(lapsed.text).toContain(`S-a eliberat un loc la Crosul. Ai la dispoziție ${offerHours} de la ofertă să semnezi declarația pe propria răspundere`);
+    expect(lapsed.text).not.toContain("până la");
+  });
+
+  it("§NNN a minor's messages greet the parent, say whose registration it is and who signs", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    await db.update(registrations).set({ guardianName: "Maria Pop" }).where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("COMPLETE_DECLARATION", "minor"), db, NOW);
+    expect(message.text.startsWith("Salut, Maria Pop,\n")).toBe(true);
+    expect(message.text).not.toContain("Salut, Ana Pop,");
+    expect(message.text).toContain("Mesajul privește înscrierea pe care ai făcut-o, ca părinte sau tutore, pentru Ana Pop.");
+    expect(message.text).toContain("This message is about the registration you made, as parent or guardian, for Ana Pop.");
+    // No declaration in force names the minor's own document: the parent signs alone (§330).
+    expect(message.text).toContain("Declarația o semnezi tu, ca părinte sau tutore, pentru Ana Pop.");
+    expect(message.text).toContain("You sign the declaration as parent or guardian for Ana Pop.");
+    // One neutral privacy line for everybody.
+    expect(message.text).toMatch(/pentru o înscriere făcută cu această adresă de e-mail\. Cum folosim datele:/);
+
+    // An adult's message is unchanged.
+    await db.update(registrations).set({ guardianName: null }).where(eq(registrations.id, registrationId));
+    const adult = await renderOutboxMessage(rowOf("COMPLETE_DECLARATION", "adult"), db, NOW);
+    expect(adult.text.startsWith("Salut, Ana Pop,\n")).toBe(true);
+    expect(adult.text).not.toContain("ca părinte sau tutore");
   });
 });

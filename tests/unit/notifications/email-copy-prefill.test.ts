@@ -50,10 +50,12 @@ const LOCALES = ["ro", "en"] as const;
 
 /** What each message's platform text is made of, field by field, in both languages. */
 const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
-  VERIFY_REGISTRATION_EMAIL: ["eventTitle"],
+  // Whose registration, and how long the link lives (§NNN).
+  VERIFY_REGISTRATION_EMAIL: ["participantName", "eventTitle", "confirmationHours"],
   COMPLETE_DECLARATION: ["eventTitle", "holdExpiresAtFormatted"],
   WAITLIST_JOINED: ["eventTitle"],
-  WAITLIST_SPOT_OFFER: ["eventTitle"],
+  // The offer's moment and its length (§NNN).
+  WAITLIST_SPOT_OFFER: ["eventTitle", "holdExpiresAtFormatted", "offerHours"],
   REGISTRATION_CONFIRMED: ["eventTitle", "bibNumber", "checkinCode", "eventChecklist"],
   REGISTRATION_CANCELLED: ["eventTitle"],
   WAITLIST_OFFER_EXPIRED: ["eventTitle"],
@@ -151,6 +153,7 @@ const P = '<p style="margin:0 0 14px;font-size:16px;line-height:1.5">';
  */
 const OWN_PARAGRAPH: Partial<Record<EmailMessageType, Record<(typeof LOCALES)[number], string>>> = {
   COMPLETE_DECLARATION: { ro: "Dacă se formează lista de așteptare", en: "If a waiting list forms" },
+  WAITLIST_SPOT_OFFER: { ro: "Este al tău dacă", en: "It is yours if" },
   BIB_ASSIGNED: { ro: "Îl ridici la masă", en: "Collect it at the desk" },
   CLUB_CONFIRMATION_NOTICE: { ro: "Numărul de concurs:", en: "Race number:" },
 };
