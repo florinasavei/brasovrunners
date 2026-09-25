@@ -966,11 +966,11 @@ const T = {
     nightEvent: (night: NightReminderLine) => {
       const label = night.isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
       if (!night.sunset) return `${label}: ia o frontală.`;
-      // Every time named, the start first (§NNN): «începe la 19:00, apusul e la 19:00» is not «apusul începe».
+      // Every time named, the start first (§NNN): «începe la 19:00, apusul la 19:00» is not «apusul începe» — the same wording as the pill and the calendar (§NNN nit).
       const start = night.start ? `începe la ${night.start}, ` : "";
       if (night.after) return `${label}: ${start}după apusul de la ${night.sunset}. Ia o frontală.`;
       const end = night.end ? (night.endSource === "programme" ? `, ultimul punct din program la ${night.end}` : `, se termină la ${night.end}`) : "";
-      return `${label}: ${start}apusul e la ${night.sunset}${end}. Ia o frontală.`;
+      return `${label}: ${start}apusul la ${night.sunset}${end}. Ia o frontală.`;
     },
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,

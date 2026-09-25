@@ -31,6 +31,13 @@ export type NightEventFacts = {
   /** Sunset of the occurrence's own day on its wall clock, "16:36" — for the pill's tooltip and the lines. */
   sunset: string | null;
   /**
+   * Sunrise of the occurrence's own day on its wall clock, "07:14" (§NNN) — so a start before it
+   * (an automatic night event with no named end, chosen by the start alone rather than the span
+   * running into the dark) can be told from one after sunset: the pill then says the run starts
+   * before that sunrise, never "after the sunset", which an early-morning date is not.
+   */
+  sunrise: string | null;
+  /**
    * Where the span's own end came from, when the automatic answer used one (§394): the event's
    * own end, the latest timed programme row of the occurrence's own date, or the start alone —
    * for the editor's line and the pill's tooltip to name.
@@ -114,16 +121,17 @@ export function nightSpan(
 }
 
 export function nightEvent(event: NightEventSource, occurrenceStartsAt: Date | null, place: Coordinates): NightEventFacts {
-  const sunsetAt = occurrenceStartsAt ? sunTimes(localDay(occurrenceStartsAt, event.timezone), place)?.sunset ?? null : null;
-  const sunset = sunsetAt ? wallClockTime(sunsetAt, event.timezone) : null;
+  const dayTimes = occurrenceStartsAt ? sunTimes(localDay(occurrenceStartsAt, event.timezone), place) : null;
+  const sunset = dayTimes?.sunset ? wallClockTime(dayTimes.sunset, event.timezone) : null;
+  const sunrise = dayTimes?.sunrise ? wallClockTime(dayTimes.sunrise, event.timezone) : null;
   const start = occurrenceStartsAt && !Number.isNaN(occurrenceStartsAt.getTime()) ? wallClockTime(occurrenceStartsAt, event.timezone) : null;
-  if (event.nightOverride !== null) return { night: event.nightOverride, source: "override", start, sunset, endSource: null, end: null };
+  if (event.nightOverride !== null) return { night: event.nightOverride, source: "override", start, sunset, sunrise, endSource: null, end: null };
   const { end, source } = occurrenceSpanEnd(event, occurrenceStartsAt);
   const { night, nightAtStart } = nightSpan(occurrenceStartsAt, end, place, event.timezone);
   // The end is only named when it is the reason: a start already after dusk needs no mention of
   // when the run finishes (§394).
   const named = night && !nightAtStart && end ? source : null;
-  return { night, source: "automatic", start, sunset, endSource: named, end: named && end ? wallClockTime(end, event.timezone) : null };
+  return { night, source: "automatic", start, sunset, sunrise, endSource: named, end: named && end ? wallClockTime(end, event.timezone) : null };
 }
 
 /** The editor's three choices, as the radio posts them and the column stores them. */

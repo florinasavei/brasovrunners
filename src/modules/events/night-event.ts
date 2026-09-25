@@ -14,20 +14,27 @@ export function clubNightEvent(event: NightEventSource & { startsAt: Date }, occ
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * Which of the four shapes a night event's sentence takes (§NNN): the start and the sunset
+ * Which of the five shapes a night event's sentence takes (§NNN): the start and the sunset
  * always, and the end only when it is why the date is dark — «Durata»'s end (`End`) or the day's
  * last programme row (`EndProgramme`). The start is named first so the sunset is never read as it
  * — the owner, 2026-09-25, "evenimentul începe atunci, nu apusul începe atunci!". When the sun
- * alone made the call and the start was already past sunset, no end was ever named (`night.ts`'s
- * `named`), and the plain shape would read as if the sunset were the reason without saying so:
- * `After` says the start came after that sunset instead.
+ * alone made the call and no end was ever named (`night.ts`'s `named`), the plain shape would
+ * read as if the sunset were the reason without saying so: `After` says the start came after that
+ * sunset instead — unless the start is actually before that day's sunrise (`isNightEvent` calls a
+ * start before civil dawn a night event too), in which case naming the sunset as "after" would be
+ * backwards for an early-morning run; `Dawn` names the sunrise instead.
  */
 function nightShape(
   facts: NightEventFacts,
-): { suffix: "" | "End" | "EndProgramme" | "After"; values: Record<string, string> } | null {
+): { suffix: "" | "End" | "EndProgramme" | "After" | "Dawn"; values: Record<string, string> } | null {
   if (!facts.sunset || !facts.start) return null;
   const values = { start: facts.start, sunset: facts.sunset };
-  if (!facts.end) return { suffix: facts.source === "automatic" ? "After" : "", values };
+  if (!facts.end) {
+    if (facts.source === "automatic" && facts.sunrise && facts.start < facts.sunrise) {
+      return { suffix: "Dawn", values: { start: facts.start, sunrise: facts.sunrise } };
+    }
+    return { suffix: facts.source === "automatic" ? "After" : "", values };
+  }
   return { suffix: facts.endSource === "programme" ? "EndProgramme" : "End", values: { ...values, end: facts.end } };
 }
 

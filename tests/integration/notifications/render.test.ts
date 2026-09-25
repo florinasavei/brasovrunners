@@ -257,7 +257,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       .set({ startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: new Date("2026-11-18T15:30:00.000Z"), scheduleItems: null })
       .where(eq(events.id, event.id));
     const late = await render();
-    expect(late.text).toContain("Alergare de noapte: începe la 16:00, apusul e la 16:44, se termină la 17:30. Ia o frontală.");
+    expect(late.text).toContain("Alergare de noapte: începe la 16:00, apusul la 16:44, se termină la 17:30. Ia o frontală.");
     expect(late.text).toContain("Night run: starts at 16:00, sunset at 16:44, ends at 17:30. Bring a headlamp.");
     await db.update(events).set({ endsAt: new Date("2026-11-18T14:45:00.000Z") }).where(eq(events.id, event.id));
     expect((await render()).text).not.toContain("Alergare de noapte");
@@ -267,7 +267,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     await db.update(events).set({ nightOverride: false }).where(eq(events.id, event.id));
     expect((await render()).text).not.toContain("Alergare de noapte");
     await db.update(events).set({ nightOverride: true, startsAt: new Date("2026-10-01T09:00:00.000Z") }).where(eq(events.id, event.id));
-    expect((await render()).text).toMatch(/Alergare de noapte: începe la 12:00, apusul e la \d\d:\d\d\. Ia o frontală\./);
+    expect((await render()).text).toMatch(/Alergare de noapte: începe la 12:00, apusul la \d\d:\d\d\. Ia o frontală\./);
 
     // Never on another message about the same night event: the sunset and the light are the
     // reminder's line alone. The confirmation's facts block draws the page's route pills, so it

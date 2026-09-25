@@ -186,6 +186,7 @@ describe("§394 nightEvent — the override before the sun", () => {
       source: "automatic",
       start: "19:00",
       sunset: "16:44",
+      sunrise: "07:20",
       endSource: null,
       end: null,
     });
@@ -199,6 +200,7 @@ describe("§394 nightEvent — the override before the sun", () => {
       source: "override",
       start: "19:00",
       sunset: "16:44",
+      sunrise: "07:20",
       endSource: null,
       end: null,
     });
@@ -460,7 +462,7 @@ describe("§394 the reminder's line", () => {
     buildTemplateContent("EVENT_REMINDER", locale, data, undefined, overrides).paragraphs.join("\n");
 
   it("says the sunset and to bring a light, in each language, only when the renderer set it", () => {
-    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44" })).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44" })).toContain("Eveniment de noapte: apusul la 16:44. Ia o frontală.");
     expect(paragraphs("en", { ...base, nightEventSunset: "16:44" })).toContain("Night event: sunset at 16:44. Bring a headlamp.");
     expect(paragraphs("ro", base)).not.toContain("Eveniment de noapte");
     expect(paragraphs("ro", { ...base, nightEventSunset: "" })).toContain("Eveniment de noapte: ia o frontală.");
@@ -470,7 +472,7 @@ describe("§394 the reminder's line", () => {
     const overrides = { "EVENT_REMINDER:ro": { subject: "Pe curând", paragraphs: ["Ne vedem la start."] } };
     const text = paragraphs("ro", { ...base, nightEventSunset: "16:44" }, overrides);
     expect(text).toContain("Ne vedem la start.");
-    expect(text).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(text).toContain("Eveniment de noapte: apusul la 16:44. Ia o frontală.");
   });
 
   it("is never on another message, even when handed the field", () => {
@@ -479,10 +481,10 @@ describe("§394 the reminder's line", () => {
   });
 
   it("«Alergare de noapte» on a group run — the owner calls a run a run (§394)", () => {
-    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Alergare de noapte: apusul la 16:44. Ia o frontală.");
     expect(paragraphs("en", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Night run: sunset at 16:44. Bring a headlamp.");
     // Every other type keeps "Eveniment de noapte" / "Night event" (already proven above).
-    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: false })).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: false })).toContain("Eveniment de noapte: apusul la 16:44. Ia o frontală.");
   });
 });
 
@@ -693,7 +695,23 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
       ] as const) {
         expect(night[key].length, key).toBeGreaterThan(0);
       }
-      for (const key of ["pill", "runPill", "tooltip", "tooltipEnd", "tooltipEndProgramme", "times", "timesEnd", "timesEndProgramme", "calendar", "ics"] as const) expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
+      for (const key of [
+        "pill",
+        "runPill",
+        "tooltip",
+        "tooltipEnd",
+        "tooltipEndProgramme",
+        "tooltipAfter",
+        "tooltipDawn",
+        "times",
+        "timesEnd",
+        "timesEndProgramme",
+        "timesAfter",
+        "timesDawn",
+        "calendar",
+        "ics",
+      ] as const)
+        expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
     }
     expect(ro.Admin.editor.night.auto).toBe("Automat (după apus)");
     expect(ro.Event.night.pill).toBe("Eveniment de noapte");
@@ -730,17 +748,16 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
 
   it("the sunset of 30 September 2026 at the club's place is the sky's, not the run's start", () => {
     /*
-      Published: meteogram.org's Brașov table (45°36'N 25°36'E) gives sunrise 07:14 and sunset 19:00
-      for 30 September 2026 (read 2026-09-25); sunrise.maplogs.com gives 19:04:31 for 2 October 2026
-      and gaisma.com 18:56 for 2 October. The computed 19:00 is the true sunset that day — the
-      coincidence with the run's 19:00 start is the calendar's, not a bug: `sunset` comes from
-      `sunTimes` of the day, the start from the occurrence, and they are separate fields.
+      Published: meteogram.org's Brașov table (45°36'N 25°36'E) gives sunset 19:00 for 30
+      September 2026 (read 2026-09-25). The computed 19:00 agrees — the coincidence with the
+      run's 19:00 start is the calendar's, not a bug: `sunset` comes from `sunTimes` of the day,
+      the start from the occurrence, and they are separate fields.
     */
     const sun = sunTimes("2026-09-30", BRASOV)!;
     const sunset = wallClockTime(sun.sunset!, ZONE);
     expect(sunset).toBe("19:00");
-    // NOAA gives about 19:00:48 for the instant itself — the wall-clock minute above is not enough
-    // proof on its own, since it would also read "19:00" anywhere within that minute.
+    // The wall-clock minute above reads "19:00" anywhere within that minute; this pins the
+    // computed instant itself inside it, against `sunTimes`'s own value.
     const sept30Start = at("2026-09-30T19:00:00");
     const sept30End = at("2026-09-30T19:01:00");
     expect(sun.sunset!.getTime()).toBeGreaterThanOrEqual(sept30Start.getTime());
@@ -755,6 +772,7 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
       source: "automatic",
       start: "19:00",
       sunset: "19:00",
+      sunrise: "07:14",
       endSource: "event",
       end: "20:40",
     });
@@ -773,15 +791,33 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
       SEPT_30_19,
       BRASOV,
     ),
+    // §NNN: civil dawn on 30 September is 06:44, sunrise 07:14 — a 06:30 start is a night event
+    // (before civil dawn) with no end ever named, and before that day's sunrise too, so the
+    // `After` shape ("after the sunset") would read backwards for this early-morning run.
+    dawn: nightEvent({ nightOverride: null, timezone: ZONE }, at("2026-09-30T06:30"), BRASOV),
   };
+
+  it("an automatic night event whose start is before civil dawn carries the day's sunrise too, with no end named (§NNN)", () => {
+    expect(shapes.dawn).toEqual({
+      night: true,
+      source: "automatic",
+      start: "06:30",
+      sunset: "19:00",
+      sunrise: "07:14",
+      endSource: null,
+      end: null,
+    });
+  });
 
   it.each([
     ["ro", "start", "Începe la 20:00, după apusul de la 19:00 — ia o frontală"],
     ["ro", "end", "Începe la 19:00, apusul la 19:00, se termină la 20:40 — ia o frontală"],
     ["ro", "programme", "Începe la 19:00, apusul la 19:00, ultimul punct din program la 20:15 — ia o frontală"],
+    ["ro", "dawn", "Începe la 06:30, înainte de răsăritul de la 07:14 — ia o frontală"],
     ["en", "start", "Starts at 20:00, after the 19:00 sunset — bring a headlamp"],
     ["en", "end", "Starts at 19:00, sunset at 19:00, ends at 20:40 — bring a headlamp"],
     ["en", "programme", "Starts at 19:00, sunset at 19:00, the programme's last row at 20:15 — bring a headlamp"],
+    ["en", "dawn", "Starts at 06:30, before sunrise at 07:14 — bring a headlamp"],
   ] as const)("the pill's tooltip, %s, %s", (locale, shape, words) => {
     expect(nightTooltip(shapes[shape], tr(locale === "ro" ? ro : en, locale))).toBe(words);
   });
@@ -793,6 +829,8 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
     ["en", "start", "ics", true, "Night run: starts at 20:00, after the 19:00 sunset — bring a headlamp"],
     ["en", "end", "calendar", false, "Night event: starts at 19:00, sunset at 19:00, ends at 20:40"],
     ["en", "programme", "calendar", true, "Night run: starts at 19:00, sunset at 19:00, the programme's last row at 20:15"],
+    ["ro", "dawn", "ics", true, "Alergare de noapte: începe la 06:30, înainte de răsăritul de la 07:14 — ia o frontală"],
+    ["en", "dawn", "calendar", false, "Night event: starts at 06:30, before sunrise at 07:14"],
   ] as const)("the calendar and .ics lines, %s, %s, %s", (locale, shape, kind, run, words) => {
     expect(nightLine(shapes[shape], tr(locale === "ro" ? ro : en, locale), run, kind)).toBe(words);
   });
@@ -808,9 +846,9 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
     const line = (locale: "ro" | "en", data: TemplateData) =>
       buildTemplateContent("EVENT_REMINDER", locale, data, undefined).paragraphs.find((paragraph) => typeof paragraph === "string" && /noapte|Night/.test(paragraph));
     it.each([
-      ["ro", {}, "Eveniment de noapte: începe la 19:00, apusul e la 19:00. Ia o frontală."],
-      ["ro", { nightEventEnd: "20:40", nightEventEndSource: "event" }, "Eveniment de noapte: începe la 19:00, apusul e la 19:00, se termină la 20:40. Ia o frontală."],
-      ["ro", { nightEventEnd: "20:15", nightEventEndSource: "programme", nightEventIsGroupRun: true }, "Alergare de noapte: începe la 19:00, apusul e la 19:00, ultimul punct din program la 20:15. Ia o frontală."],
+      ["ro", {}, "Eveniment de noapte: începe la 19:00, apusul la 19:00. Ia o frontală."],
+      ["ro", { nightEventEnd: "20:40", nightEventEndSource: "event" }, "Eveniment de noapte: începe la 19:00, apusul la 19:00, se termină la 20:40. Ia o frontală."],
+      ["ro", { nightEventEnd: "20:15", nightEventEndSource: "programme", nightEventIsGroupRun: true }, "Alergare de noapte: începe la 19:00, apusul la 19:00, ultimul punct din program la 20:15. Ia o frontală."],
       // The start already past sunset, no end ever named (§NNN): the sunset alone would read as
       // the reason, so the line says the start came after it.
       ["ro", { nightEventAfter: true }, "Eveniment de noapte: începe la 19:00, după apusul de la 19:00. Ia o frontală."],
