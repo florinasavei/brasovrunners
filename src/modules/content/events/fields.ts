@@ -3,6 +3,7 @@ import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { isYoutubeLink } from "@/modules/events/domain/video";
+import { parseTypedCoordinates } from "@/modules/weather/domain/place";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { DIFFICULTY_LEVELS } from "@/modules/events/domain/difficulty";
@@ -634,6 +635,27 @@ export const eventFieldsSchema = z
      */
     costUrl: httpsUrl("a cost link must start with https://").optional(),
     mapUrl: httpsUrl("a map link must start with https://"),
+    /**
+     * «Coordonate» (§NNN, amending §402): the meeting point as "latitude, longitude", read for the
+     * weather only when the map link carries no pin of its own (`weather/domain/place.ts`). Absent
+     * means this caller is not editing it — a fixture, a script, an older form — and leaves the
+     * stored pair alone, the discipline `costAmount` and `links` follow; `""` clears it; anything
+     * else must be two numbers in range, or the save is refused naming the box.
+     */
+    coordinates: z
+      .string()
+      .trim()
+      .max(60)
+      .optional()
+      .transform((value, ctx) => {
+        if (value === undefined) return undefined;
+        const pair = parseTypedCoordinates(value);
+        if (pair === undefined) {
+          ctx.addIssue({ code: "custom", message: "coordinates must be a latitude and a longitude, e.g. 45.6427, 25.5887" });
+          return z.NEVER;
+        }
+        return pair;
+      }),
     // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
     // and never a file: media storage is deferred (`AGENTS.md` §17).
     routeUrl: httpsUrl("a route link must start with https://"),

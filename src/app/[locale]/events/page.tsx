@@ -3,13 +3,15 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
+import { forecastForEvent, forecastsForEvents } from "@/modules/weather/source";
+import WeatherCredit from "@/modules/weather/ui/WeatherCredit";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections } from "@/modules/events/domain/listing";
 import {
@@ -239,6 +241,9 @@ async function ListingLead({
   // what the page shows — read off every row, the hero's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
   const offer = offeredFilters(events, filter, facts);
+  // The hero's «Vremea» (§NNN — the owner: "aș vrea să văd vremea și pe cardul principal"): at its own
+  // place, within seven days of its start, null otherwise and on any failure — never a wake (§402).
+  const featuredWeather = featured ? await forecastForEvent(featured, now) : null;
 
   return (
     <>
@@ -267,7 +272,7 @@ async function ListingLead({
         </Alert>
       )}
 
-      {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} />}
+      {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} weather={featuredWeather} />}
     </>
   );
 }
@@ -427,6 +432,26 @@ async function ListingBody({
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
+  /*
+    The weather at each card's start (§NNN; the owner: "aș vrea să văd vremea și pe cardul
+    principal"): read once for every card — a series by its next date, the one whose facts it shows —
+    each at its own place, one request per rounded place and none outside the seven days
+    (`forecastsForEvents`). Open-Meteo is credited once, under the cards, when any card carries one.
+  */
+  const forecasts = await forecastsForEvents(
+    cards.map((series) => series.members[0]),
+    now,
+  );
+  const locale = (await getLocale()) as "ro" | "en";
+  const card = (series: (typeof cards)[number], index: number) => {
+    const weather = forecasts.get(series.members[0].id)?.start ?? null;
+    return series.members.length > 1 ? (
+      <SeriesCard key={series.key} members={series.members} index={index} now={now} weather={weather} />
+    ) : (
+      <EventCard key={series.key} event={series.members[0]} index={index} now={now} weather={weather} />
+    );
+  };
+  const credit = forecasts.size > 0 ? <WeatherCredit locale={locale} /> : null;
 
   if (featured) {
     if (listed.length === 0) return null;
@@ -470,14 +495,9 @@ async function ListingBody({
             // As above (§275): one row, one height.
             alignItems: "stretch",
           }}>
-          {cards.map((series, index) =>
-            series.members.length > 1 ? (
-              <SeriesCard key={series.key} members={series.members} index={index} now={now} />
-            ) : (
-              <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
-            ),
-          )}
+          {cards.map(card)}
         </Box>
+        {credit}
       </Box>
     );
   }
@@ -487,7 +507,8 @@ async function ListingBody({
   if (listed.length === 0) return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
 
   return (
-    <Box component="ul" sx={{
+    <>
+      <Box component="ul" sx={{
             listStyle: "none",
             p: 0,
             m: 0,
@@ -497,13 +518,9 @@ async function ListingBody({
             // As above (§275): one row, one height.
             alignItems: "stretch",
           }}>
-      {cards.map((series, index) =>
-        series.members.length > 1 ? (
-          <SeriesCard key={series.key} members={series.members} index={index} now={now} />
-        ) : (
-          <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
-        ),
-      )}
-    </Box>
+        {cards.map(card)}
+      </Box>
+      {credit}
+    </>
   );
 }

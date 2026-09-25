@@ -7,6 +7,7 @@ import { formatDay } from "@/i18n/dates";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { raceWeek } from "../domain/race-week";
+import type { EventForecast } from "@/modules/weather/domain/forecast";
 import type { PublicEvent } from "../repository";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
@@ -34,11 +35,14 @@ export default async function FeaturedEventHero({
   event,
   now,
   raceWeekDays,
+  weather = null,
 }: {
   event: PublicEvent;
   now: Date;
   /** How many days before the start the countdown shows — the club's "Termene" (§377), read by the page. */
   raceWeekDays: number;
+  /** The forecast at the start, read by the listing (§NNN): «Vremea» among the hero's facts, within seven days of it. */
+  weather?: EventForecast | null;
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
@@ -114,7 +118,7 @@ export default async function FeaturedEventHero({
         </Typography>
       )}
 
-      <EventFacts event={event} now={now} />
+      <EventFacts event={event} now={now} weather={weather} />
 
       {/*
         Registration first, details second.

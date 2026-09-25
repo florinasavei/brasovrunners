@@ -950,6 +950,13 @@
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
+      "coordinates": "Coordinates (lat, lng)",
+      "coordinatesHelp": "Optional: latitude, longitude — e.g. 45.6427, 25.5887. Copy them from Google Maps: right-click the point → the first line. Used only for the weather, when the map link does not carry them (a short link, a venue's page).",
+      "weatherPlace": {
+        "map": "The weather is read for the point in the map link ({coordinates}).",
+        "typed": "The weather is read for these coordinates ({coordinates}).",
+        "club": "The weather is read for {place} ({coordinates}): the map link carries no coordinates and none are typed."
+      },
       "locationHelp": "The place, as you would tell a friend: a name, a street, or both — in Romanian and in English, each for its own language's page. If it is called the same in both, press “Same name in English”: while the two say the same, what you type in Romanian is written in English too.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
@@ -3934,7 +3941,7 @@
     "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
     "weather": {
       "title": "Weather forecast",
-      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast.",
+      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
       "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
       "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
       "stale": "Open-Meteo (public, keyless) — last answer at {when}, too old to show. The pages and the reminders show no weather until it answers.",
@@ -4248,6 +4255,18 @@
     "wind": "wind {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
+    "feelsLike": "feels like {degrees} °C",
+    "precipitation": "{amount} mm of precipitation",
+    "gusts": "gusts {speed} km/h",
+    "humidity": "humidity {percent}%",
+    "uv": "UV index {index}",
+    "rainShort": "{percent}% rain",
+    "hours": "Hour by hour, from the start",
+    "atStart": "Weather at the start",
+    "place": {
+      "event": "For the event's place",
+      "club": "For {place}"
+    },
     "codes": {
       "clear": "Clear",
       "mainlyClear": "Mostly clear",

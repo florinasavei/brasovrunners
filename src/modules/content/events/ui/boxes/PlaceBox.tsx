@@ -4,7 +4,9 @@ import { getTranslations } from "next-intl/server";
 import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import Panel from "@/shared/ui/Panel";
-import { placeInBox } from "@/modules/events/domain/place";
+import { CLUB_LOCALITY, placeInBox } from "@/modules/events/domain/place";
+import { coordinatesText, forecastPlace, typedCoordinates } from "@/modules/weather/domain/place";
+import { env } from "@/shared/config/env";
 import { eventInputConstraints } from "../../constraints";
 import { placeSummary } from "../box-summaries";
 import PlaceToBeAnnounced from "../PlaceToBeAnnounced";
@@ -40,6 +42,11 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
   const own = (locale: "ro" | "en") => translations.find((translation) => translation.locale === locale)?.locationName;
   const inBox = (locale: "ro" | "en") => (event ? placeInBox(event, own(locale)) : "");
   const place = inBox("ro");
+  // «Coordonate» (§NNN): the stored pair as the box shows it, and — for a saved event — which place
+  // the weather reads now, by the one rule the page reads it by (`forecastPlace`): the map link's
+  // pin, else this pair, else the club's place. Said as it was saved; a change shows after a save.
+  const typed = event ? typedCoordinates(event) : null;
+  const weatherPlace = event ? forecastPlace({ ...event, locationToBeAnnounced: false }, env.CLUB_COORDINATES) : null;
   // What publication still needs from this box, in each language (§406): the meeting point.
   const required = await requiredLine("place", event, languages);
 
@@ -89,6 +96,23 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
             defaultValue={event?.mapUrl ?? ""}
             {...textFieldConstraints(eventInputConstraints("mapUrl"), { inputMode: "url" })}
           />
+          {/* Where the weather is read when the link carries no pin (§NNN, amending §402): a short
+              share link or a venue's page names no place a server can read without asking the map. */}
+          <RecallField
+            name="event.coordinates"
+            label={t("editor.coordinates")}
+            helperText={t("editor.coordinatesHelp")}
+            defaultValue={typed ? coordinatesText(typed) : ""}
+            {...textFieldConstraints(eventInputConstraints("coordinates"), { inputMode: "decimal" })}
+          />
+          {weatherPlace && (
+            <Typography variant="caption" color="text.secondary" component="p" data-testid="weather-place" sx={{ px: 1.75 }}>
+              {t(`editor.weatherPlace.${weatherPlace.source}`, {
+                coordinates: coordinatesText(weatherPlace.coordinates),
+                place: CLUB_LOCALITY,
+              })}
+            </Typography>
+          )}
         </PlaceToBeAnnounced>
       ) : (
         <Stack spacing={2}>

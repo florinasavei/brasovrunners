@@ -1,4 +1,4 @@
-import { DIFFICULTY_LEVELS, type DifficultyLevel } from "../ui/difficulty-levels";
+import { DIFFICULTY_LEVELS, type DifficultyLevel } from "./difficulty";
 import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_COST_TYPES, type EventCostType } from "./cost";
 import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "./event-type";

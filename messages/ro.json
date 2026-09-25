@@ -950,6 +950,13 @@
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "coordinates": "Coordonate (lat, lng)",
+      "coordinatesHelp": "Opțional: latitudine, longitudine — de ex. 45.6427, 25.5887. Copiază-le din Google Maps: clic dreapta pe punct → prima linie. Folosite doar pentru vreme, când linkul hărții nu le conține (un link scurt, pagina unui loc).",
+      "weatherPlace": {
+        "map": "Vremea se citește acum pentru punctul din linkul hărții ({coordinates}).",
+        "typed": "Vremea se citește acum pentru aceste coordonate ({coordinates}).",
+        "club": "Vremea se citește acum pentru {place} ({coordinates}): linkul hărții nu conține coordonate și nu sunt scrise altele."
+      },
       "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă — în română și în engleză, fiecare pe pagina limbii lui. Dacă se numește la fel în ambele, apasă „Același nume și în engleză”: cât timp cele două spun același lucru, ce scrii în română se scrie și în engleză.",
       "locationCopyToEnglish": "Același nume și în engleză",
       "locationEnglishLeftBehind": "În engleză scrie tot „{place}”. Dacă s-a mutat locul, schimbă-l și aici.",
@@ -3934,7 +3941,7 @@
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
     "weather": {
       "title": "Prognoza vremii",
-      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
       "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",
@@ -4248,6 +4255,18 @@
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
+    "feelsLike": "se simte ca {degrees} °C",
+    "precipitation": "{amount} mm precipitații",
+    "gusts": "rafale {speed} km/h",
+    "humidity": "umiditate {percent}%",
+    "uv": "indice UV {index}",
+    "rainShort": "{percent}% ploaie",
+    "hours": "Pe ore, de la start",
+    "atStart": "Vremea la start",
+    "place": {
+      "event": "Pentru locul evenimentului",
+      "club": "Pentru {place}"
+    },
     "codes": {
       "clear": "Senin",
       "mainlyClear": "Predominant senin",
