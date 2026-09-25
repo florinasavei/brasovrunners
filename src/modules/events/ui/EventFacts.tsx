@@ -24,6 +24,7 @@ import CoHostLinkGlyph from "./co-host-glyphs";
 import GlyphChip from "./GlyphChip";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
 import { orderRoutePills, type Pill } from "./route-pills";
+import { DENSITY } from "@/theme/density";
 
 /**
  * The leading glyph of every row on the event page's facts (§356): one size, one colour, one
@@ -692,7 +693,7 @@ export default async function EventFacts({
           // still shares one line, which is what saves the height.
           gridTemplateColumns: "auto 1fr",
           columnGap: 2,
-          rowGap: 1,
+          rowGap: { xs: DENSITY.gapSm, sm: 1 },
           alignItems: "baseline",
         }}
       >

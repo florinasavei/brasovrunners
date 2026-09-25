@@ -210,7 +210,7 @@ async function ListingLead({
   return (
     <>
       {!hasUpcoming && events.length > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("noUpcoming")}
         </Alert>
       )}

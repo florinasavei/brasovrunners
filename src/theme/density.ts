@@ -5,7 +5,7 @@
  * "There is a bit too much padding and whitespace on mobile, the space could be used more
  * efficiently").
  *
- * Six named steps, each an MUI spacing unit (1 = 8px), used only for the **xs** side of a
+ * Seven named steps, each an MUI spacing unit (1 = 8px), used only for the **xs** side of a
  * breakpoint object (`{ xs: DENSITY.x, sm: <the value the page already had> }`). `sm` and up
  * are never touched — a tablet or a desktop had no complaint — so every place this is used
  * keeps its wider value from `sm` unchanged.
@@ -38,7 +38,9 @@ export const DENSITY = {
   heroPad: 2,
   /**
    * A short gap between one element and the next below it — a "back to events" row, a folded
-   * step, a share row — on a phone. Was 2 (16px).
+   * step, a share row — on a phone. Was 2 (16px); also replaces the listing intro's 2.5 (20px,
+   * `events/page.tsx`'s intro paragraph) and the calendar page's own intro paragraph — both were
+   * closer to this step than to `sectionGap`, so neither got a token of its own.
    */
   gapSm: 1,
   /** A section's own separation from what precedes it — an alert, a divider, a filter row — on

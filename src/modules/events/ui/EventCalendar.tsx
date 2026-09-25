@@ -5,6 +5,7 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { fadeInSoft } from "@/theme/motion";
+import { DENSITY } from "@/theme/density";
 import {
   type CalendarDay,
   dayKey,
@@ -125,7 +126,7 @@ export default async function EventCalendar({
 
   /** The agenda of some days: the weekday and the number, then the day's events; `dense` in a month box. */
   const agenda = (days: CalendarDay[], byDay: Map<string, PublicEvent[]>, dense = false) => (
-    <Stack component="ol" spacing={dense ? 1 : 1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+    <Stack component="ol" spacing={dense ? 1 : { xs: DENSITY.gapSm, sm: 1.5 }} sx={{ listStyle: "none", p: 0, m: 0 }}>
       {days.map((day) => {
         const items = byDay.get(day.key) ?? [];
         const isToday = day.key === today;
@@ -161,7 +162,7 @@ export default async function EventCalendar({
           /* One box per month (the owner: "the year calendar is not boxed enough"): a card
              each, in columns from `sm` up, so a year reads as a shelf of months rather than
              one long list; on a phone the boxes stack. */
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 2, alignItems: "start" }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "start" }}>
             {months.map((ym) => {
               const items = byMonth.get(monthParam(ym)) ?? [];
               const byDay = groupByDay(items);

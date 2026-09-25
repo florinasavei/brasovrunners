@@ -105,7 +105,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
         {t("calendar.pageTitle")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
         {t("calendar.pageIntro")}
       </Typography>
 

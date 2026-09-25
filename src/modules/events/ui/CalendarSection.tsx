@@ -19,6 +19,7 @@ import { CalendarBodySkeleton } from "@/shared/ui/PublicSkeleton";
 import InfoTip from "@/shared/ui/InfoTip";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
+import { DENSITY } from "@/theme/density";
 
 /**
  * The club's month, and the three doors into a reader's own calendar (`DECISIONS.md` §107,
@@ -62,7 +63,7 @@ export default async function CalendarSection({
   const feed = `${env.APP_BASE_URL}/${locale}/events/calendar.ics`;
 
   return (
-    <Box sx={{ mt: 2, mb: 4 }}>
+    <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
         <CalendarHeader view={view} now={now} query={query} layout={layout} />
         <Suspense
