@@ -288,6 +288,51 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
     expect(message.html).not.toContain("#links");
     expect(message.text).not.toContain("Linkuri și fișiere");
+
+    // The positive case: a route description plus the GPX (taken into the route section) plus
+    // a DOCUMENT link (which is not a route kind, so `partitionEventLinks` leaves it in `other`)
+    // — the page still has a `#links` section, and the reminder must still point at it. A
+    // regression that keys off `hasRouteDescription` alone, rather than the page's own split,
+    // would drop this line even though the anchor is there.
+    const doc = ["https:/", "drive.example.test", "file", "d", "doc1", "view"].join("/");
+    await db
+      .update(events)
+      .set({
+        links: [
+          { kind: "GPX", url: drive, labelRo: null, labelEn: null },
+          { kind: "DOCUMENT", url: doc, labelRo: null, labelEn: null },
+        ],
+      })
+      .where(eq(events.id, event.id));
+    const withDoc = await renderOutboxMessage(
+      {
+        id: "row-l4",
+        participantId,
+        registrationId,
+        messageType: "EVENT_REMINDER" as const,
+        locale: "ro" as const,
+        recipientEmail: "ana@example.ro",
+        payloadJson: {},
+        idempotencyKey: "test:l4",
+        requestedByStaffUserId: null,
+        isManualResend: false,
+        status: "PROCESSING" as const,
+        attemptCount: 1,
+        nextAttemptAt: null,
+        lockedAt: NOW,
+        providerMessageId: null,
+        lastError: null,
+        createdAt: NOW,
+        sentAt: null,
+      },
+      db,
+      NOW,
+    );
+    expect(withDoc.html).toMatch(/crosul-traseu#links"/);
+    expect(withDoc.text).toContain("Linkuri și fișiere: pe pagina evenimentului");
+    expect(withDoc.text).toContain("Links and files: on the event's page");
+    expect(withDoc.html).not.toContain(doc);
+    expect(withDoc.text).not.toContain(doc);
   });
 
   it("renders a message with no token and no action link", async () => {
