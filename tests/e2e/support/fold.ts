@@ -81,11 +81,10 @@ export async function openFold(fold: Locator) {
  * That fold starts open only when there are four or fewer other events (`app/[locale]/events/
  * page.tsx`, `open={cards.length <= 4}`) and closed on a phone otherwise — a seeded database
  * that has grown past four leaves it closed, and a spec that looked for a card by text alone
- * (§375's own family, §401's partners fold) found nothing there and failed, flakily, only once
- * enough sample events had accumulated. `difficulty-scale.spec.ts`, `event-cost-external-
- * discount.spec.ts`, `night-event.spec.ts` and `partner-marker.spec.ts` each grew their own copy
- * of the fix; this is the one helper for all four, called after the caller's own `page.goto` to
- * the listing.
+ * (§375's own family) found nothing there and failed, flakily, only once enough sample events
+ * had accumulated. `difficulty-scale.spec.ts`, `event-cost-external-discount.spec.ts`, `night-
+ * event.spec.ts` and `partner-marker.spec.ts` each grew their own copy of the fix; this is the
+ * one helper for all four, called after the caller's own `page.goto` to the listing (§NNN).
  *
  * Waits for the list to have streamed in past the shell first (§166) — the fold and the cards
  * inside it are attached only once it has — then opens the fold, then filters by heading, the

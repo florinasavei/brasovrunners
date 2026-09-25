@@ -33,6 +33,8 @@ async function cards(page: Page, locale: "ro" | "en" = "ro"): Promise<Locator> {
   // not visible until the fold is opened here.
   const first = main.locator("ul > li h2").first();
   await expect(first).toBeAttached();
+  // Every card, not one: this returns the whole list for callers that measure across all of
+  // them, so `cardOnListing` (`support/fold.ts`, a single card by heading) does not fit here.
   await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
   await expect(first).toBeVisible();
   return main.locator("ul > li").filter({ has: page.locator("h2") });
