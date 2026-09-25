@@ -20,7 +20,8 @@ import { COLOR } from "@/theme/brand";
  * `routePillParts`/`orderRoutePills`, the source `buildRoutePills` reads, never a second list; then
  * the route link, the Strava event and the Facebook event), **Cost** (§343: what a paid event costs
  * and where, a donation and where; nothing for a free event or an unstated cost) and **Linkuri**
- * (the anchors of this language's page that exist: `#schedule`, `#rules`, `#route`, `#links`).
+ * (the event's own page, then the anchors of this language's page that exist: `#schedule`,
+ * `#rules`, `#route`, `#links`).
  * A row the event has nothing for is not drawn.
  *
  * One function for the three messages that carry it — the confirmation, the reminder and the
@@ -146,16 +147,18 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale): Event
     });
   }
 
-  // Linkuri: the sections this language's page has, by the page's own rules — never an anchor that is not there.
+  // Linkuri: the event's own page first, then the sections this language's page has, by the
+  // page's own rules — never an anchor that is not there.
   if (details.pageUrl) {
     const page = details.pageUrl;
     const anchors: Piece[] = [
+      { text: t("pageLabel"), url: page },
       ...(details.hasSchedule ? [{ text: t("calendar.programme"), url: `${page}#schedule` }] : []),
       ...(details.hasRules ? [{ text: t("calendar.rules"), url: `${page}#rules` }] : []),
       ...(details.hasRouteDescription ? [{ text: t("routeSection"), url: `${page}#route` }] : []),
       ...(details.hasOtherLinks ? [{ text: t("links.heading"), url: `${page}#links` }] : []),
     ];
-    if (anchors.length > 0) rows.push({ label: t("linksLabel"), lines: [anchors] });
+    rows.push({ label: t("linksLabel"), lines: [anchors] });
   }
 
   return { html: blockHtml(rows), text: blockText(rows) };

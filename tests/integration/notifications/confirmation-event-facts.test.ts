@@ -154,7 +154,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     return renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
   }
 
-  it("carries the six rows in Romanian, the facts under the QR and above the button, each anchor once", async () => {
+  it("carries the six rows in Romanian, the facts above the QR and below the club's text, each anchor once", async () => {
     const event = await seedEvent();
     const message = await render(event.id, "ro", "REGISTRATION_CONFIRMED");
     const [ro, en] = halves(message);
@@ -166,17 +166,22 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     // The page's pills, in the page's order, the page's words; the route link lives under #route with a description.
     expect(ro).toContain(`Traseu: Trail · Avansat · 21,1 km · 900 m D+ · Frontală\n  Evenimentul pe Strava: ${STRAVA}`);
     expect(ro).toContain(`Cost: 50 lei\n  plata pe pay.example: ${PAY}`);
-    expect(ro).toMatch(new RegExp(`Linkuri:\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`));
+    expect(ro).toMatch(
+      new RegExp(`Linkuri:\\n  Pagina evenimentului: \\S+${page}\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`),
+    );
 
-    // The confirmation first, then the QR, then the facts, then the button and the links (the brief's order).
-    const [qr, when, button] = ["Codul tău:", "Când:", "Vezi înscrierea:"].map((marker) => ro.indexOf(marker));
-    expect(qr).toBeGreaterThan(ro.indexOf("este confirmată"));
-    expect(when).toBeGreaterThan(qr);
-    expect(button).toBeGreaterThan(when);
+    // The confirmation first, then the facts, then the QR, then the button (the brief's order:
+    // the block above the QR and below the club's text — §81's bold date/place line gave way to it).
+    const [when, qr, button] = ["Când:", "Codul tău:", "Vezi înscrierea:"].map((marker) => ro.indexOf(marker));
+    expect(when).toBeGreaterThan(ro.indexOf("este confirmată"));
+    expect(qr).toBeGreaterThan(when);
+    expect(button).toBeGreaterThan(qr);
     // The one bold line of §81 gave way to the block: the date and the place are said once.
     expect(ro).not.toContain("Sâmbătă, 21 nov. 2026, 09:00 · Parcul Tractorul");
-    // Each of the page's sections is linked once, in the block, not again in the list under the button.
+    // Each of the page's sections — and the page itself — is linked once, in the block, not
+    // again in the list under the button.
     for (const anchor of ["#schedule", "#rules", "#links"]) expect(ro.split(anchor).length - 1).toBe(1);
+    expect(ro.split("Pagina evenimentului").length - 1).toBe(1);
     // The addresses the page keeps behind its sections never reach a message.
     expect(message.text).not.toContain(GPX);
     expect(message.text).not.toContain(DOC);
@@ -190,7 +195,10 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
     expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Headlamp");
     expect(en).toContain(`Cost: 50 lei\n  payment on pay.example: ${PAY}`);
-    expect(en).toMatch(new RegExp(`Links:\\n  Programme: \\S+${enPage}#schedule\\n  Rules: \\S+${enPage}#rules\\n  The route: \\S+${enPage}#route\\n  Links and files: \\S+${enPage}#links`));
+    expect(en).toMatch(
+      new RegExp(`Links:\\n  The event's page: \\S+${enPage}\\n  Programme: \\S+${enPage}#schedule\\n  Rules: \\S+${enPage}#rules\\n  The route: \\S+${enPage}#route\\n  Links and files: \\S+${enPage}#links`),
+    );
+    expect(en.split("The event's page").length - 1).toBe(1);
   });
 
   it("carries the six rows in English first for an English registrant", async () => {
@@ -201,10 +209,10 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
     expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Headlamp");
     expect(en).toContain("Cost: 50 lei");
-    expect(en).toMatch(/Links:\n {2}Programme: \S+\/en\/events\/the-cross-\S+#schedule/);
+    expect(en).toMatch(/Links:\n {2}The event's page: \S+\/en\/events\/the-cross-\S+\n {2}Programme: \S+\/en\/events\/the-cross-\S+#schedule/);
     expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
     expect(ro).toContain("Unde: Parcul Tractorul");
-    expect(ro).toMatch(/Linkuri:\n {2}Program: \S+\/ro\/evenimente\/crosul-\S+#schedule/);
+    expect(ro).toMatch(/Linkuri:\n {2}Pagina evenimentului: \S+\/ro\/evenimente\/crosul-\S+\n {2}Program: \S+\/ro\/evenimente\/crosul-\S+#schedule/);
   });
 
   it("says the page's sentence where the place would be while it is to be announced (§328)", async () => {
@@ -269,6 +277,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(ro).toMatch(/Numărul tău de concurs: \d+\./);
     expect(ro).toContain("Nu poți veni?");
     for (const anchor of ["#schedule", "#rules", "#links"]) expect(ro.split(anchor).length - 1).toBe(1);
+    expect(ro.split("Pagina evenimentului").length - 1).toBe(1);
   });
 
   it("gives the declaration request — the participation confirmation (§104) — the block under its words", async () => {

@@ -6,7 +6,9 @@ import { openFold } from "./support/fold";
  * §NNN (the owner, 2026-09-25: "la mailul de «Înscrierea este confirmată» am nevoie de mai multe
  * detalii, gen locație, program, etc.") — the preview of the confirmed email on `/admin/emails`
  * draws the event's facts block with the sample event's values, in both halves, each in its own
- * language, under the QR and above the button. It reads nothing but the page, so both projects run it.
+ * language, above the QR and below the club's text (§81's bold date/place line gives way to it,
+ * drawn first so the eye finds it on a phone on race morning). It reads nothing but the page, so
+ * both projects run it.
  */
 test.describe("the event's facts in the confirmed email's preview", () => {
   test("every row, from the sample event, in both halves", async ({ page }) => {
@@ -29,6 +31,9 @@ test.describe("the event's facts in the confirmed email's preview", () => {
     await expect(ro).toContainText("30 lei");
     await expect(ro.getByRole("link", { name: "Vezi pe hartă" })).toBeVisible();
     await expect(ro.getByRole("link", { name: "Traseul" })).toHaveAttribute("href", /\/ro\/EXAMPLE-event#route$/);
+    // The Linkuri row names the event's own page first (fix round §NNN), and the list under the
+    // button does not repeat it.
+    await expect(ro.getByRole("link", { name: "Pagina evenimentului" })).toHaveAttribute("href", /\/ro\/EXAMPLE-event$/);
 
     const en = facts.nth(1);
     for (const label of ["When", "Where", "Programme", "Route", "Cost", "Links"]) await expect(en).toContainText(label);
@@ -36,8 +41,9 @@ test.describe("the event's facts in the confirmed email's preview", () => {
     await expect(en).toContainText("Number pickup");
     await expect(en).toContainText("Trail · Moderate · 12 km · 450 m climb");
     await expect(en.getByRole("link", { name: "The route" })).toHaveAttribute("href", /\/en\/EXAMPLE-event#route$/);
+    await expect(en.getByRole("link", { name: "The event's page" })).toHaveAttribute("href", /\/en\/EXAMPLE-event$/);
 
-    // Under the QR, above the button: the confirmation first, the facts under it.
+    // Above the QR, below the club's text: the facts first, the confirmation's QR under them.
     const order = await frame.locator("body").evaluate((body) => {
       const html = body.innerHTML;
       return {
@@ -47,8 +53,9 @@ test.describe("the event's facts in the confirmed email's preview", () => {
       };
     });
     expect(order.qr).toBeGreaterThan(-1);
-    expect(order.facts).toBeGreaterThan(order.qr);
-    expect(order.button).toBeGreaterThan(order.facts);
+    expect(order.facts).toBeGreaterThan(-1);
+    expect(order.qr).toBeGreaterThan(order.facts);
+    expect(order.button).toBeGreaterThan(order.qr);
 
     // The phone keeps its width with the card open (BR-REQ-041-01 criterion 1).
     const overflow = await page.evaluate(() => ({

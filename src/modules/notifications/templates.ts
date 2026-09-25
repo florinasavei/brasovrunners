@@ -99,8 +99,8 @@ export function renderContent(
     ...content.paragraphs.flatMap((part) =>
       typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1")] : part.text,
     ),
-    ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
+    ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
     "",
@@ -144,6 +144,9 @@ export function renderContent(
     ...content.paragraphs.map((part) =>
       typeof part === "string" ? paragraph(emphasise(escapeHtml(part))) : part.html,
     ),
+    // The event's facts under the club's text and above the QR — what the eye finds on a phone
+    // on race morning (§81, restored by the fix round; §NNN).
+    ...(content.eventFacts ? [content.eventFacts.html] : []),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
     ...(content.image
@@ -152,8 +155,6 @@ export function renderContent(
           paragraph(escapeHtml(content.image.caption)),
         ]
       : []),
-    // The event's facts under the confirmation and its QR, above the button (§NNN).
-    ...(content.eventFacts ? [content.eventFacts.html] : []),
     // The one action as a button (§96): a link a thumb finds, in the club's blue.
     ...(content.action
       ? [
@@ -1271,13 +1272,15 @@ export function buildTemplateContent(
     The event's facts as one block (§NNN), in this half's language, on the three messages a runner
     keeps to know where and when: the confirmation, the reminder, the declaration request (which is
     also the participation confirmation, §104). It says the date, the place and the map, so the one
-    bold line of §81 gives way to it there, and it carries the page's sections (`#schedule`,
-    `#rules`, `#route`, `#links`), so the list under the button does not name them a second time.
-    A club copy keeps it: every fact in it is on the public page (§320 takes only what is the
-    participant's own).
+    bold line of §81 gives way to it there, and it carries the event's own page and its sections
+    (`#schedule`, `#rules`, `#route`, `#links`), so the list under the button does not name them a
+    second time. A club copy keeps it: every fact in it is on the public page (§320 takes only what
+    is the participant's own).
   */
   const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale) : undefined;
-  const linkData: TemplateData = factsBlock ? { ...data, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined } : data;
+  const linkData: TemplateData = factsBlock
+    ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
+    : data;
 
   return {
     // Each half of a bilingual subject carries its own language's mark, so a mailbox filter on
@@ -1388,17 +1391,17 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
 }
 
 /**
- * The messages that are not to a participant about their own data (§323), and so carry no
- * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
- * and the staff invitation says what it keeps about the team in its own body.
- */
-/**
  * The messages that carry the event's facts block (§NNN): the confirmation, the reminder, and the
  * declaration request — which, for a race with a participation window, is the participation
  * confirmation itself (§104), sent at once and again when the window opens.
  */
 const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION"]);
 
+/**
+ * The messages that are not to a participant about their own data (§323), and so carry no
+ * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
+ * and the staff invitation says what it keeps about the team in its own body.
+ */
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
