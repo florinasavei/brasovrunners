@@ -78,12 +78,18 @@ export async function fillDateField(scope: Page | Locator, label: string, value:
   await group.page().keyboard.type(`${day}${month}${year}`);
 }
 
-/** The time half of the same picker family, always on the 24-hour clock (§345). */
+/**
+ * The time half, the platform's own `<input type="time">` since §345 was amended, 2026-09-25 —
+ * MUI's picker before that, which `fillDateField` above still drives (the date half of §345 is
+ * untouched). `.fill()` on a native time box takes `HH:mm` directly and posts exactly that,
+ * always on the 24-hour clock (`type="time"`'s own value has no AM/PM to disagree about).
+ *
+ * Found by its accessible label, `.first()` for the same reason `fillDateField` reads the first
+ * `spinbutton` group: "Ora" is not unique on a page carrying the event's own start time and a
+ * programme row's, so a caller scopes to the row (`programmeRow`) when it means one.
+ */
 export async function fillTimeField(scope: Page | Locator, label: string, value: string /* HH:mm */) {
-  const [hour, minute] = value.split(":");
-  const group = pickerGroup(scope, label);
-  await group.getByRole("spinbutton").first().click();
-  await group.page().keyboard.type(`${hour}${minute}`);
+  await scope.getByLabel(label, { exact: true }).first().fill(value);
 }
 
 /**
