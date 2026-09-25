@@ -829,6 +829,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
                   ? t("weather.ok", {
                       when: formatDay(weather.fetchedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
                       hours: weather.hours,
+                      // How many places the forecast was read for this hour (§NNN): one per rounded meeting point.
+                      places: weather.places,
                     })
                   : weather.reason === "stale" && weather.failedAt
                     ? t("weather.stale", {

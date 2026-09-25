@@ -1,6 +1,6 @@
 {
-  "id": "07fc02c4-8569-4c4f-ba3e-ed0942258531",
-  "prevId": "702b9941-49e2-4168-84ba-f1e057cd6690",
+  "id": "d57c31ad-302e-41bf-bb90-c48f868ffb2d",
+  "prevId": "9e82ba3e-7b20-4ba9-9bc4-548234eb1d2d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -401,7 +401,7 @@
             }
           ],
           "isUnique": true,
-          "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"registration_id\" IS NOT NULL",
+          "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"registration_id\" IS NOT NULL AND \"purpose\" <> 'REGISTER_ANOTHER_PERSON'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -1086,6 +1086,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
         "route_url": {
           "name": "route_url",
           "type": "text",
@@ -1603,6 +1615,10 @@
         "events_map_url_is_https": {
           "name": "events_map_url_is_https",
           "value": "\"events\".\"map_url\" IS NULL OR \"events\".\"map_url\" LIKE 'https://%'"
+        },
+        "events_coordinates_pair_in_range": {
+          "name": "events_coordinates_pair_in_range",
+          "value": "(\"events\".\"latitude\" IS NULL AND \"events\".\"longitude\" IS NULL) OR (\"events\".\"latitude\" IS NOT NULL AND \"events\".\"longitude\" IS NOT NULL AND \"events\".\"latitude\" BETWEEN -90 AND 90 AND \"events\".\"longitude\" BETWEEN -180 AND 180)"
         },
         "events_cost_url_is_https": {
           "name": "events_cost_url_is_https",

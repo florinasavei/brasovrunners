@@ -551,8 +551,22 @@
     {
       "idx": 78,
       "version": "7",
-      "when": 1790359354651,
-      "tag": "0078_registration_audit",
+      "when": 1790351112536,
+      "tag": "0078_difficulty_five",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1790360613048,
+      "tag": "0079_event_coordinates",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1790366496093,
+      "tag": "0080_registration_audit",
       "breakpoints": true
     }
   ]

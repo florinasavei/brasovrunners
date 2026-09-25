@@ -45,7 +45,7 @@ import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInt
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
-import { weatherForEvent } from "@/modules/weather/source";
+import { forecastForEvent } from "@/modules/weather/source";
 import { env } from "@/shared/config/env";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -166,7 +166,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   // The forecast for the start (§402): read on the server, from Open-Meteo through the data cache,
   // only within seven days of it; null — and no row — otherwise or when the service did not answer.
-  const weather = await weatherForEvent(event, now);
+  const weather = await forecastForEvent(event, now);
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <JsonLd
