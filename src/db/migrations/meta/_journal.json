@@ -512,6 +512,13 @@
       "when": 1790318267639,
       "tag": "0072_family_registration",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1790323182150,
+      "tag": "0073_drop_registration_participant_unique",
+      "breakpoints": true
     }
   ]
 }
