@@ -375,6 +375,10 @@ async function renderRow(
       if (night.end && night.endSource && night.endSource !== "start") {
         data.nightEventEnd = night.end;
         data.nightEventEndSource = night.endSource;
+      } else if (night.source === "automatic") {
+        // No end was ever named: the sun alone made the call and the start was already past
+        // sunset (§NNN) — say so, instead of leaving the sunset looking like the reason alone.
+        data.nightEventAfter = true;
       }
     }
   }

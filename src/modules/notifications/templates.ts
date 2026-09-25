@@ -320,10 +320,15 @@ export function renderBilingual(
   };
 }
 
-/** What every template needs beyond the locale — never a rendered body, never a token. */
-/** The reminder's night line's facts (§394, §NNN): empty strings for what is not named. */
-type NightReminderLine = { sunset: string; start: string; end: string; endSource: "event" | "programme" | null; isGroupRun: boolean };
+/**
+ * The reminder's night line's facts (§394, §NNN): empty strings for what is not named. `after`
+ * marks the shape where the sun alone made the call and the start was already past sunset — no
+ * end was ever named, and the line says the start came after that sunset instead of leaving the
+ * sunset looking like the reason on its own.
+ */
+type NightReminderLine = { sunset: string; start: string; end: string; endSource: "event" | "programme" | null; isGroupRun: boolean; after: boolean };
 
+/** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
   /**
@@ -398,6 +403,12 @@ export type TemplateData = {
    */
   nightEventEnd?: string;
   nightEventEndSource?: "event" | "programme";
+  /**
+   * Set alongside `nightEventSunset` (§NNN): the sun alone made the call and the start was
+   * already past that sunset, so no end was ever named — the line says the start came *after*
+   * the sunset instead of leaving the sunset looking like the reason on its own.
+   */
+  nightEventAfter?: boolean;
   /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
@@ -957,6 +968,7 @@ const T = {
       if (!night.sunset) return `${label}: ia o frontală.`;
       // Every time named, the start first (§NNN): «începe la 19:00, apusul e la 19:00» is not «apusul începe».
       const start = night.start ? `începe la ${night.start}, ` : "";
+      if (night.after) return `${label}: ${start}după apusul de la ${night.sunset}. Ia o frontală.`;
       const end = night.end ? (night.endSource === "programme" ? `, ultimul punct din program la ${night.end}` : `, se termină la ${night.end}`) : "";
       return `${label}: ${start}apusul e la ${night.sunset}${end}. Ia o frontală.`;
     },
@@ -1259,6 +1271,7 @@ const T = {
       const label = night.isGroupRun ? "Night run" : "Night event";
       if (!night.sunset) return `${label}: bring a headlamp.`;
       const start = night.start ? `starts at ${night.start}, ` : "";
+      if (night.after) return `${label}: ${start}after the ${night.sunset} sunset. Bring a headlamp.`;
       const end = night.end ? (night.endSource === "programme" ? `, the programme's last row at ${night.end}` : `, ends at ${night.end}`) : "";
       return `${label}: ${start}sunset at ${night.sunset}${end}. Bring a headlamp.`;
     },
@@ -1510,6 +1523,7 @@ export function buildTemplateContent(
               end: data.nightEventEnd ?? "",
               endSource: data.nightEventEndSource ?? null,
               isGroupRun: data.nightEventIsGroupRun === true,
+              after: data.nightEventAfter === true,
             }),
           ]
         : []),

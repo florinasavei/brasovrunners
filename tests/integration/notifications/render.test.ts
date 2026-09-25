@@ -247,8 +247,8 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     // halves. The fixture's type is GROUP_RUN (§394), so the run's own words: «Alergare de noapte».
     await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
     const night = await render();
-    expect(night.text).toContain("Alergare de noapte: începe la 19:00, apusul e la 16:44. Ia o frontală.");
-    expect(night.text).toContain("Night run: starts at 19:00, sunset at 16:44. Bring a headlamp.");
+    expect(night.text).toContain("Alergare de noapte: începe la 19:00, după apusul de la 16:44. Ia o frontală.");
+    expect(night.text).toContain("Night run: starts at 19:00, after the 16:44 sunset. Bring a headlamp.");
 
     // §394 (review round 3): a daylight start whose own end («Durata», no programme rows) is after
     // dusk — 16:00 to 17:30 on 18 November — carries the line too; ending at 16:45, it does not.

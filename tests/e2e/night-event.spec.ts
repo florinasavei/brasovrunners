@@ -132,7 +132,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
     // The start named first, then the sunset (§NNN): the sunset is never read as the start.
-    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 19:00, apusul la 16:\d\d — ia o frontală$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 19:00, după apusul de la 16:\d\d — ia o frontală$/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
@@ -141,7 +141,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(englishPill).toHaveCount(1);
     await expect(englishPill.locator(TORCH)).toHaveCount(1);
     await englishPill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 19:00, sunset at 16:\d\d — bring a headlamp$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 19:00, after the 16:\d\d sunset — bring a headlamp$/);
     await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
   });
 
@@ -155,7 +155,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await page.goto(`/ro/calendar?month=${MONTH}`);
     await expect(page.locator(`#main [role=table] a[aria-label*="${title}"]`)).toHaveAttribute(
       "aria-label",
-      new RegExp(`^19:00 ${title}\\. Alergare de noapte: începe la 19:00, apusul la 16:\\d\\d$`),
+      new RegExp(`^19:00 ${title}\\. Alergare de noapte: începe la 19:00, după apusul de la 16:\\d\\d$`),
     );
   });
 

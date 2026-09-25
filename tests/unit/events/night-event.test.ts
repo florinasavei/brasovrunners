@@ -276,7 +276,7 @@ describe("§394 orderRoutePills — the night event where §382 put the headlamp
   const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
   const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
-  const night: Pill = { glyph: "headlamp", label: "Eveniment de noapte", tooltip: "Începe la 19:00, apusul la 16:44 — ia o frontală" };
+  const night: Pill = { glyph: "headlamp", label: "Eveniment de noapte", tooltip: "Începe la 19:00, după apusul de la 16:44 — ia o frontală" };
 
   it("surface, difficulty, distance, elevation, then the night event — whatever order it is handed in", () => {
     expect(orderRoutePills({ headlamp: night, elevation, distance, difficulty, surface })).toEqual([surface, difficulty, distance, elevation, night]);
@@ -299,17 +299,17 @@ describe("§394 the event page's facts", () => {
     const route = rows(html).find((row) => row.label === "Traseu");
     expect(route).toBeDefined();
     expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte"]);
-    expect(tooltips(route!.dd)).toEqual(["Începe la 19:00, apusul la 16:44 — ia o frontală"]);
+    expect(tooltips(route!.dd)).toEqual(["Începe la 19:00, după apusul de la 16:44 — ia o frontală"]);
     expect(route!.dd).toContain('data-testid="FlashlightOnIcon"');
     expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
   });
 
-  it("says «Night run» and «Starts at 19:00, sunset at 16:44 — bring a headlamp» in English", async () => {
+  it("says «Night run» and «Starts at 19:00, after the 16:44 sunset — bring a headlamp» in English", async () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Route")!;
     expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night run"]);
-    expect(tooltips(route.dd)).toEqual(["Starts at 19:00, sunset at 16:44 — bring a headlamp"]);
+    expect(tooltips(route.dd)).toEqual(["Starts at 19:00, after the 16:44 sunset — bring a headlamp"]);
   });
 
   it("says «Eveniment de noapte» on every other type", async () => {
@@ -391,8 +391,8 @@ describe("§394 the calendar entry names it after the place, with the sunset", (
   // The fixture is a group run: «Alergare de noapte» in the month view too, as on its card (§394).
   it("the calendar hands each date its own answer, in the reader's language", async () => {
     for (const [locale, words] of [
-      ["ro", "Alergare de noapte: începe la 19:00, apusul la 16:44"],
-      ["en", "Night run: starts at 19:00, sunset at 16:44"],
+      ["ro", "Alergare de noapte: începe la 19:00, după apusul de la 16:44"],
+      ["en", "Night run: starts at 19:00, after the 16:44 sunset"],
     ] as const) {
       currentLocale = locale;
       const html = renderToStaticMarkup(
@@ -439,10 +439,10 @@ describe("§394 the calendar file's description", () => {
 
   it("carries the night event on a line of its own under the facts, in the reader's language", () => {
     const roLines = calendarDescription(calendarEvent, { locale: "ro", t: translator(ro) }).split("\n");
-    const line = "Eveniment de noapte: începe la 19:00, apusul la 16:44 — ia o frontală";
+    const line = "Eveniment de noapte: începe la 19:00, după apusul de la 16:44 — ia o frontală";
     expect(roLines).toContain(line);
     expect(roLines.indexOf(line)).toBe(roLines.findIndex((entry) => entry.includes("8 km")) + 1);
-    expect(calendarDescription(calendarEvent, { locale: "en", t: translator(en) }).split("\n")).toContain("Night event: starts at 19:00, sunset at 16:44 — bring a headlamp");
+    expect(calendarDescription(calendarEvent, { locale: "en", t: translator(en) }).split("\n")).toContain("Night event: starts at 19:00, after the 16:44 sunset — bring a headlamp");
   });
 
   it("says nothing on a day date, nor on a night the organizer said «Nu» for; «Da» in June says it", () => {
@@ -731,17 +731,20 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
   it("the sunset of 30 September 2026 at the club's place is the sky's, not the run's start", () => {
     /*
       Published: meteogram.org's Brașov table (45°36'N 25°36'E) gives sunrise 07:14 and sunset 19:00
-      for 30 September 2026 (read 2026-09-25); sunrise.maplogs.com gives 19:04:31 and gaisma.com
-      18:56 for 2 October. The computed 19:00 is the true sunset that day — the coincidence with the
-      run's 19:00 start is the calendar's, not a bug: `sunset` comes from `sunTimes` of the day, the
-      start from the occurrence, and they are separate fields.
+      for 30 September 2026 (read 2026-09-25); sunrise.maplogs.com gives 19:04:31 for 2 October 2026
+      and gaisma.com 18:56 for 2 October. The computed 19:00 is the true sunset that day — the
+      coincidence with the run's 19:00 start is the calendar's, not a bug: `sunset` comes from
+      `sunTimes` of the day, the start from the occurrence, and they are separate fields.
     */
     const sun = sunTimes("2026-09-30", BRASOV)!;
     const sunset = wallClockTime(sun.sunset!, ZONE);
     expect(sunset).toBe("19:00");
-    expect(minutes(sunset, "19:00")).toBeLessThanOrEqual(2);
-    // Not the start: the instant differs from the run's own, and moving the start does not move it.
-    expect(sun.sunset!.getTime()).not.toBe(SEPT_30_19.getTime());
+    // NOAA gives about 19:00:48 for the instant itself — the wall-clock minute above is not enough
+    // proof on its own, since it would also read "19:00" anywhere within that minute.
+    const sept30Start = at("2026-09-30T19:00:00");
+    const sept30End = at("2026-09-30T19:01:00");
+    expect(sun.sunset!.getTime()).toBeGreaterThanOrEqual(sept30Start.getTime());
+    expect(sun.sunset!.getTime()).toBeLessThan(sept30End.getTime());
     expect(nightEvent({ nightOverride: true, timezone: ZONE }, at("2026-09-30T17:30"), BRASOV)).toMatchObject({ start: "17:30", sunset: "19:00" });
     expect(nightEvent({ nightOverride: true, timezone: ZONE }, at("2026-09-30T21:15"), BRASOV)).toMatchObject({ start: "21:15", sunset: "19:00" });
   });
@@ -773,10 +776,10 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
   };
 
   it.each([
-    ["ro", "start", "Începe la 20:00, apusul la 19:00 — ia o frontală"],
+    ["ro", "start", "Începe la 20:00, după apusul de la 19:00 — ia o frontală"],
     ["ro", "end", "Începe la 19:00, apusul la 19:00, se termină la 20:40 — ia o frontală"],
     ["ro", "programme", "Începe la 19:00, apusul la 19:00, ultimul punct din program la 20:15 — ia o frontală"],
-    ["en", "start", "Starts at 20:00, sunset at 19:00 — bring a headlamp"],
+    ["en", "start", "Starts at 20:00, after the 19:00 sunset — bring a headlamp"],
     ["en", "end", "Starts at 19:00, sunset at 19:00, ends at 20:40 — bring a headlamp"],
     ["en", "programme", "Starts at 19:00, sunset at 19:00, the programme's last row at 20:15 — bring a headlamp"],
   ] as const)("the pill's tooltip, %s, %s", (locale, shape, words) => {
@@ -784,10 +787,10 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
   });
 
   it.each([
-    ["ro", "start", "calendar", false, "Eveniment de noapte: începe la 20:00, apusul la 19:00"],
+    ["ro", "start", "calendar", false, "Eveniment de noapte: începe la 20:00, după apusul de la 19:00"],
     ["ro", "end", "calendar", true, "Alergare de noapte: începe la 19:00, apusul la 19:00, se termină la 20:40"],
     ["ro", "programme", "ics", false, "Eveniment de noapte: începe la 19:00, apusul la 19:00, ultimul punct din program la 20:15 — ia o frontală"],
-    ["en", "start", "ics", true, "Night run: starts at 20:00, sunset at 19:00 — bring a headlamp"],
+    ["en", "start", "ics", true, "Night run: starts at 20:00, after the 19:00 sunset — bring a headlamp"],
     ["en", "end", "calendar", false, "Night event: starts at 19:00, sunset at 19:00, ends at 20:40"],
     ["en", "programme", "calendar", true, "Night run: starts at 19:00, sunset at 19:00, the programme's last row at 20:15"],
   ] as const)("the calendar and .ics lines, %s, %s, %s", (locale, shape, kind, run, words) => {
@@ -808,9 +811,13 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
       ["ro", {}, "Eveniment de noapte: începe la 19:00, apusul e la 19:00. Ia o frontală."],
       ["ro", { nightEventEnd: "20:40", nightEventEndSource: "event" }, "Eveniment de noapte: începe la 19:00, apusul e la 19:00, se termină la 20:40. Ia o frontală."],
       ["ro", { nightEventEnd: "20:15", nightEventEndSource: "programme", nightEventIsGroupRun: true }, "Alergare de noapte: începe la 19:00, apusul e la 19:00, ultimul punct din program la 20:15. Ia o frontală."],
+      // The start already past sunset, no end ever named (§NNN): the sunset alone would read as
+      // the reason, so the line says the start came after it.
+      ["ro", { nightEventAfter: true }, "Eveniment de noapte: începe la 19:00, după apusul de la 19:00. Ia o frontală."],
       ["en", {}, "Night event: starts at 19:00, sunset at 19:00. Bring a headlamp."],
       ["en", { nightEventEnd: "20:40", nightEventEndSource: "event", nightEventIsGroupRun: true }, "Night run: starts at 19:00, sunset at 19:00, ends at 20:40. Bring a headlamp."],
       ["en", { nightEventEnd: "20:15", nightEventEndSource: "programme" }, "Night event: starts at 19:00, sunset at 19:00, the programme's last row at 20:15. Bring a headlamp."],
+      ["en", { nightEventAfter: true }, "Night event: starts at 19:00, after the 19:00 sunset. Bring a headlamp."],
     ] as const)("%s %j", (locale, extra, words) => {
       expect(line(locale, { ...base, ...extra })).toBe(words);
     });

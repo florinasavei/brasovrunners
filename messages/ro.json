@@ -146,9 +146,11 @@
       "tooltip": "Începe la {start}, apusul la {sunset} — ia o frontală",
       "tooltipEnd": "Începe la {start}, apusul la {sunset}, se termină la {end} — ia o frontală",
       "tooltipEndProgramme": "Începe la {start}, apusul la {sunset}, ultimul punct din program la {end} — ia o frontală",
+      "tooltipAfter": "Începe la {start}, după apusul de la {sunset} — ia o frontală",
       "times": "începe la {start}, apusul la {sunset}",
       "timesEnd": "începe la {start}, apusul la {sunset}, se termină la {end}",
       "timesEndProgramme": "începe la {start}, apusul la {sunset}, ultimul punct din program la {end}",
+      "timesAfter": "începe la {start}, după apusul de la {sunset}",
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — ia o frontală"
     },
