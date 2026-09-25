@@ -15,6 +15,8 @@ import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { env } from "@/shared/config/env";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import { weatherWords } from "@/modules/weather/words";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -406,6 +408,12 @@ export type TemplateData = {
   eventScheduleUrl?: string;
   /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§332); on the confirmation and the reminder. */
   eventLinksUrl?: string;
+  /**
+   * The forecast for the start (§402), on the reminder only: the hour's numbers and its kind, which
+   * each half of the bilingual message words in its own language (`weatherWords`). Absent beyond
+   * seven days and whenever Open-Meteo did not answer — the facts block's «Vremea» row is then simply not there.
+   */
+  eventWeather?: WeatherReading;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the update notice (§331). */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
@@ -1424,7 +1432,13 @@ export function buildTemplateContent(
     second time. A club copy keeps it: every fact in it is on the public page (§320 takes only what
     is the participant's own).
   */
-  const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale) : undefined;
+  /*
+    The reminder's forecast (§402) is a row of that block, in this half's words — the pieces the
+    event page's «Vremea» row says. Only on the reminder, the message a runner opens the day
+    before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
+  */
+  const weatherRow = messageType === "EVENT_REMINDER" && data.eventWeather ? weatherWords(data.eventWeather, locale) : undefined;
+  const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale, weatherRow) : undefined;
   const linkData: TemplateData = factsBlock
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
     : data;

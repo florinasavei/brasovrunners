@@ -71,6 +71,7 @@ function renderBlock(block: RichTextBlock, floats = false, links = true): ReactN
         <RichTextVideo
           videoId={block.attrs.videoId}
           caption={block.attrs.caption}
+          poster={block.attrs.poster}
           widthPercent={block.attrs.widthPercent}
           align={block.attrs.align}
           floats={floats}

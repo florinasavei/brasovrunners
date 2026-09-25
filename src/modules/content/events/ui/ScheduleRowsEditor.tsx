@@ -171,8 +171,8 @@ function ScheduleRowsEditorIsland({
                 clearable={false}
                 sx={{ width: 150 }}
               />
-              {/* Picked, not typed, like the start time (`WallTimeField`): MUI's own 24-hour
-                  clock, posting `HH:mm` in either language of the backoffice. */}
+              {/* The platform's own `<input type="time">`, like the start time (`WallTimeField`),
+                  posting `HH:mm` in either language of the backoffice (§345, amended). */}
               <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" clearable={false} sx={{ width: 140 }} />
               <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" clearable={false} sx={{ width: 140 }} />
             </Box>
