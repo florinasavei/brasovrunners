@@ -29,6 +29,15 @@ export async function findParticipantByCanonicalEmail<T extends Record<string, u
   return row;
 }
 
+/** The participant a token or a registration names (§389: the address the link for another person is fixed to). */
+export async function findParticipantById<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+): Promise<Participant | undefined> {
+  const [row] = await db.select().from(participants).where(eq(participants.id, id)).limit(1);
+  return row;
+}
+
 /**
  * Find the participant this canonical email already identifies, or create one.
  *

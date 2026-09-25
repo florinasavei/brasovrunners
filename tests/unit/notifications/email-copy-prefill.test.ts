@@ -70,6 +70,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],
   EVENT_UPDATE_NOTICE: ["eventTitle"],
   EVENT_CANCELLED: ["eventTitle", "eventStartsAtFormatted"],
+  // The link's shape (§389): the event and the link's lifetime, which is the club's email-link window.
+  REGISTER_ANOTHER_PERSON: ["eventTitle", "confirmationHours"],
 };
 
 /**

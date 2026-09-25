@@ -104,7 +104,7 @@ export async function latestAcceptance(registrationId: string): Promise<{
  */
 export async function mintActionLink(
   registration: Pick<RegistrationRow, "id" | "participantId">,
-  purpose: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION",
+  purpose: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION" | "REGISTER_ANOTHER_PERSON",
 ): Promise<string> {
   return withDatabase(async (client) => {
     for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -112,6 +112,7 @@ export async function mintActionLink(
         `SELECT count(*) AS n FROM email_outbox
           WHERE registration_id = $1 AND message_type = $2 AND status IN ('PENDING', 'PROCESSING')
             AND (next_attempt_at IS NULL OR next_attempt_at <= now())`,
+        // The message type and the purpose share their name for all three.
         [registration.id, purpose],
       );
       if (Number(rows[0].n) === 0) break;
@@ -132,6 +133,78 @@ export async function mintActionLink(
         `INSERT INTO email_action_tokens (participant_id, registration_id, purpose, token_hash, expires_at)
          VALUES ($1, $2, $3, $4, now() + interval '2 hours')`,
         [registration.participantId, registration.id, purpose, hash],
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    }
+    return secret;
+  });
+}
+
+/**
+ * Whether one address may carry a family yet (§389, `registrations/family-gate.ts`): the old
+ * one-registration-per-address constraint is gone once the contract release has run. A read of the
+ * catalogue, never a change to it — a spec that needs the flow skips, and says why, when it is closed.
+ */
+export async function familyFlowOpen(): Promise<boolean> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query(
+      "SELECT 1 FROM pg_constraint WHERE conname = 'registrations_event_participant_unique' AND conrelid = 'registrations'::regclass",
+    );
+    return rows.length === 0;
+  });
+}
+
+/** Every registration a public address holds, oldest first (§389: a family on one address). */
+export async function registrationsByEmail(email: string): Promise<RegistrationRow[]> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query<RegistrationRow>(
+      `SELECT r.id, r.participant_id AS "participantId", r.registered_name AS "registeredName", r.status
+         FROM registrations r JOIN participants p ON p.id = r.participant_id
+        WHERE lower(p.delivery_email) = lower($1)
+        ORDER BY r.created_at ASC`,
+      [email],
+    );
+    return rows;
+  });
+}
+
+/** The payloads of one message type queued about a registration, oldest first. */
+export async function queuedPayloads(registrationId: string, messageType: string): Promise<unknown[]> {
+  return withDatabase(async (client) => {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const { rows } = await client.query<{ payload: unknown }>(
+        "SELECT payload_json AS payload FROM email_outbox WHERE registration_id = $1 AND message_type = $2 ORDER BY created_at ASC",
+        [registrationId, messageType],
+      );
+      if (rows.length > 0) return rows.map((row) => row.payload);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    return [];
+  });
+}
+
+/**
+ * A live "my registrations" link for a participant (§77): `MANAGE_PROFILE`, scoped to the address
+ * and to no registration, minted as `mintActionLink` mints the others.
+ */
+export async function mintProfileLink(participantId: string): Promise<string> {
+  return withDatabase(async (client) => {
+    const secret = randomBytes(32).toString("base64url");
+    const hash = createHash("sha256").update(secret, "utf8").digest("hex");
+    await client.query("BEGIN");
+    try {
+      await client.query(
+        `UPDATE email_action_tokens SET invalidated_at = now()
+          WHERE participant_id = $1 AND registration_id IS NULL AND purpose = 'MANAGE_PROFILE' AND used_at IS NULL AND invalidated_at IS NULL`,
+        [participantId],
+      );
+      await client.query(
+        `INSERT INTO email_action_tokens (participant_id, registration_id, purpose, token_hash, expires_at)
+         VALUES ($1, NULL, 'MANAGE_PROFILE', $2, now() + interval '2 hours')`,
+        [participantId, hash],
       );
       await client.query("COMMIT");
     } catch (error) {

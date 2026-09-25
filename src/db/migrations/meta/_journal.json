@@ -505,6 +505,13 @@
       "when": 1790309412842,
       "tag": "0071_route_description",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1790318267639,
+      "tag": "0072_family_registration",
+      "breakpoints": true
     }
   ]
 }

@@ -44,6 +44,8 @@ import {
   listPublicStartListOthers,
 } from "@/modules/registrations/repository";
 import { readPublicPlaces } from "@/modules/registrations/service";
+import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
+import { EXPECTED_MIGRATION } from "@/db/schema-version";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
 import { type PublicContent, publicRead } from "./cache";
@@ -410,6 +412,21 @@ export async function cachedDeadlines(): Promise<Deadlines> {
     return (await publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb()))).deadlines;
   } catch {
     return { ...DEFAULT_DEADLINES };
+  }
+}
+
+/**
+ * Whether one address may carry a family at an event yet (§389, `registrations/family-gate.ts`),
+ * for the one line of the five steps that says how — never promised before the schema allows it.
+ * Keyed by the migration this build was compiled against, so the release that drops the old
+ * constraint asks afresh rather than reading yesterday's "no"; the day's ceiling bounds the rest.
+ * When the database cannot answer, "not yet": the line is left out, and nothing is promised.
+ */
+export async function cachedFamilyRegistrationOpen(): Promise<boolean> {
+  try {
+    return await publicRead(["registrations.family-open", EXPECTED_MIGRATION.tag ?? ""], ["settings"], () => familyRegistrationOpen(getDb()));
+  } catch {
+    return false;
   }
 }
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.92-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.93-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15806,3 +15806,37 @@ One function builds the route's five pills from the event's own columns — `rou
 Cite as DECISIONS.md §388 (numbered at landing).
 
 Baseline `BR-V1.92-2026-09-25`.
+
+## 389. A family on one address, through the inbox
+
+The owner, 2026-09-25: families register under one email, with a maximum number of people per address and a flow that runs through the inbox ("you are already registered, register for another person?").
+
+**The flow.** When the public form is sent again with a registered address and a different runner's name, it creates nothing. The screen is the same "check your inbox" every submission gets (§39: the form never says who is registered). The address then receives one message, `REGISTER_ANOTHER_PERSON`. It carries a single-use link, hashed at rest (§12.8) and valid for the club's email-link window, to the event's own form with the address fixed. Opening the page changes nothing. Submitting it registers the other person under the same participant, and the token is spent in the same transaction, so a refused submission leaves the link working. At the limit, the message says so, carries no link, and no token is minted. The same runner sent again stays the silent re-send (§199). From there each person confirms, signs their own declaration, gets their own number and QR code, and is erased alone. "Înscrierile mele" names each runner, and the emails greet the registration's own runner.
+
+**Identity.** The participant is still the canonical address (§10.4). A registration is keyed by (event, participant, the runner's name folded with `foldName`), stored in `registrations.name_key` and backed by the unique index `registrations_event_participant_name_unique`. **Migration 0073** is expand-only: two enum values, the column, a backfill that approximates the fold in SQL, and the index.
+
+**Dormant until the contract release.** The old one-per-address constraint, `registrations_event_participant_unique`, stays until its own contract migration (AGENTS.md §7.6). `family-gate.ts` reads `pg_constraint`: while the constraint stands, the form behaves exactly as before and no link is offered. The contract migration is `ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique;`, in the batch after the one that carries 0073 reaches production. The day it runs, the flow opens on that environment with no deploy of its own, the way the minor's second signature opens with the declaration's text (§330).
+
+**The limit.** "Maxim de înscrieri pe o adresă (pe eveniment)": default 4, range 1–10. It lives in the "Termene" fold and follows the deadlines pattern (§377): Administrator only, audited, a no-op save writes nothing, a one-minute memo. The save asks first (§384). The limit is enforced under the event's lock.
+
+**The lock, wider.** `submitRegistration` now locks the event row at the top of every public submission's transaction, before it reads which runners the address holds. Before, only the insert and the restart took the lock (§214). That covers the silent re-send and the "another person" email too, so a busy event's submissions run one at a time. This is accepted: the lock order is event then participant, the same as `confirmEmail`, so the two cannot deadlock.
+
+**The throttle behind the link.** §19.4's per-address limit holds behind the emailed link too, and Turnstile is checked there as on the form. The link uses its own bucket, `registration-link-submit` (10 an hour, the highest cap an event may set), keyed on the same hashed canonical identity. Sharing the form's five an hour would have made a family of four spend seven: the form, three re-sends for a link, three links. A Turnstile refusal from the family form returns to that form with the link kept, because the token was not spent.
+
+**Staff entry** is unchanged: an address with an active registration is refused out loud ("this address already has a registration for this event"). Whether staff may add a second runner on one address is an open owner question.
+
+The family migration is `0072_family_registration`, directly on `0071_route_description`, because the dispatcher lands this branch first, right after V1.92. `feat/group-run-declaration` renumbers its migration to `0073` when it lands after this branch. The migration only adds (expand-only). The one-registration-per-address constraint is still dropped by a separate contract migration in a later release, as before.
+
+The concurrency proof for the per-address cap (five emailed links pressed at once with one slot left) now runs every time `yarn test:concurrency` runs. It no longer waits for the contract release. On the concurrency database, the test drops `registrations_event_participant_unique` itself, checks that `familyRegistrationOpen` now answers yes, and restores the constraint in teardown once its own rows are deleted. The first test in that file (two members of one family on the public form at once) still runs against today's schema, before the drop.
+
+A staff correction of a registered name now takes the event's lock, the same one `submitRegistration` takes before it reads which runners an address holds. It then checks for another registration on the same address with the same folded name and updates the name inside that locked transaction. So when a rename and a family-link registration of the same name race each other, one of them gets the refusal ("another registration on this address at this event already carries that name", on the name field) rather than a unique-index error from the database.
+
+This round of fixes answers three review findings on the family-registration branch, all already covered by §389 (the feature's own pending decision number) rather than opening a new section:
+
+1. The privacy notice — both the Romanian and English templates in `src/modules/legal-documents/templates/privacy-notice.ts` — now says, in section 2 ("Ce date păstrăm și de ce" / "What we keep and why"), that an address may register more than one person (a family) up to the limit the club sets, and that each person stays a separate registration with their own data, declaration and place. No number is hardcoded: the club's own per-address limit is never quoted in the approved text, consistent with the "no hardcoded values in legal texts" rule (§357) the template's own docstring already states. Producing a text: this is a template edit only — production keeps whatever version the club already approved until it approves a new one in `/admin/legal` (unchanged behavior, per the template's own docstring at lines 9–11).
+
+2. The release that opens the family flow — the batch that ships a contract migration dropping `registrations_event_participant_unique` once no deployed code reads "one row per address" any more — is now named as `BR-V1.94` in three places: the `family-gate.ts` doc comment (both of its two prose mentions), and the staff-facing `Admin.guide.familyPending` string in both `messages/ro.json` and `messages/en.json`. The public-facing steps line (`Admin.steps.family.title`/`.body`, read by `RegistrationSteps.tsx`) is left generic, as decided, since it is read by participants who have no reason to know a release number.
+
+3. `tests/concurrency/family.test.ts`'s `afterAll` no longer trusts a local `droppedLegacyConstraint` flag to decide whether to put the legacy constraint back. It now re-reads the constraint catalogue with `familyRegistrationOpen(db)` after deleting the suite's own rows, so a run that crashed between dropping the constraint and reaching this teardown — this run's crash or an earlier run's — still leaves the shared concurrency database with the constraint restored the next time anything runs against it. The now-unused `droppedLegacyConstraint` variable and its one assignment were removed along with it.
+
+Baseline `BR-V1.93-2026-09-25`.
