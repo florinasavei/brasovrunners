@@ -118,8 +118,10 @@ const BAR_HEIGHT = 44;
  * From `sm` the content's width is the viewport's less 80 pixels — more than a classic desktop
  * scrollbar (17 pixels on Windows) plus the widest switch and a margin need — capped at 40rem, so
  * it never reaches past the page's edge nor runs under the scrollbar on a narrow desktop window.
- * On a phone it is less 60 below 360 and less 68 from 360 (§NNN), which still ends the panel 20
- * and 22 pixels short of the edge, since the switch there is 24 or 28 pixels rather than 44.
+ * On a phone it is less 60 below 360 and less 68 from 360 (§NNN). The box is border-box
+ * (CssBaseline), so the panel's indent is inside that width, not added to it: starting 28 and
+ * 34 pixels in, the panel ends 32 pixels short of the edge below 360 and 34 from 360 — the switch
+ * there is 24 or 28 pixels rather than 44.
  *
  * ## The build stamp: in the fold below `md`, pinned to the bar's corner from `md`
  *
@@ -274,9 +276,10 @@ export default async function SiteFooter() {
             */}
             <Box
               sx={{
-                // The content's width; the indent below is added to it. On a phone the panel starts
-                // 28 pixels in below 360 and 34 from 360 (the switch and a gap), so it ends 20 and 22
-                // pixels short of the screen's right edge — clear of a 17-pixel classic scrollbar on
+                // The panel's width, border-box (CssBaseline): the indent below is inside it, not
+                // added to it. On a phone the panel starts 28 pixels in below 360 and 34 from 360 (the
+                // switch and a gap), so it ends 32 and 34 pixels short of the screen's right edge
+                // (288 of 320, 326 of 360) — clear of a 17-pixel classic scrollbar on
                 // a narrow desktop window; a phone's own scrollbar overlays. That is 20 and 12
                 // pixels wider than the 80-pixel reserve gave, which is what puts "Write to us:
                 // <address>" on one line at 320 and the stamp on one line at 360. From `sm` as
