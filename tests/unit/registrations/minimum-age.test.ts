@@ -278,13 +278,26 @@ describe("§329 every sentence about the minimum age says the event's number, th
   it("puts the event's minimum in Romanian with the grammar the helper gives it", () => {
     const t = createTranslator({ locale: "ro", messages: ro, namespace: "Registration" });
     expect(t("ageRule.minimumAndGuardian", { age: yearsPhrase(14, "ro") })).toBe(
-      "Participanți de la 14 ani; sub 18 ani, înscrierea o face un părinte.",
+      "Vârsta minimă: 14 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
     );
-    expect(t("ageRule.minimumOnly", { age: yearsPhrase(21, "ro") })).toBe("Participanți de la 21 de ani.");
+    expect(t("ageRule.minimumOnly", { age: yearsPhrase(21, "ro") })).toBe("Vârsta minimă: 21 de ani.");
     expect(t("errors.tooYoung", { age: yearsPhrase(16, "ro") })).toBe(
       "Vârsta minimă de participare la acest eveniment este 16 ani împliniți în ziua cursei.",
     );
-    expect(t("ageRule.guardianOnly")).toBe("Sub 18 ani, înscrierea o face un părinte.");
+    expect(t("ageRule.guardianOnly")).toBe(
+      "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+    );
+  });
+
+  it("puts the event's minimum in English with the same exact wording", () => {
+    const t = createTranslator({ locale: "en", messages: en, namespace: "Registration" });
+    expect(t("ageRule.minimumAndGuardian", { age: yearsPhrase(14, "en") })).toBe(
+      "Minimum age: 14 years. Under 18, a parent registers the runner, with their consent.",
+    );
+    expect(t("ageRule.minimumOnly", { age: yearsPhrase(21, "en") })).toBe("Minimum age: 21 years.");
+    expect(t("ageRule.guardianOnly")).toBe(
+      "Under 18, a parent registers the runner, with their consent.",
+    );
   });
 
   it("gives the volunteer the chosen event's number in the backoffice's sentence, in both languages", () => {

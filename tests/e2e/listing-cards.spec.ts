@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-041-01 (§366) — the listing's cards, measured in a browser at 320 pixels (the mobile
@@ -33,6 +33,8 @@ async function cards(page: Page, locale: "ro" | "en" = "ro"): Promise<Locator> {
   // not visible until the fold is opened here.
   const first = main.locator("ul > li h2").first();
   await expect(first).toBeAttached();
+  // Every card, not one: used by the tests that read or measure every card at once, so
+  // `cardOnListing` (`support/fold.ts`, a single card by heading) does not fit here.
   await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
   await expect(first).toBeVisible();
   return main.locator("ul > li").filter({ has: page.locator("h2") });
@@ -192,6 +194,63 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
   await languageTab(page, "address", "en").click();
   await field("translations.en.slug").fill(`${words.slugEn}-${suffix}`);
   await summary("en", "A trial event, for the card's date row.");
+  await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
+  await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+  created.push({ title, dates: 1 });
+  await hydrated(page);
+
+  await page.context().clearCookies();
+  return { ro: title, en: titleEn };
+}
+
+/**
+ * A race that takes registrations here, open now with twelve places, not featured — so it stands
+ * on the listing as a card, not as the hero — published through the backoffice and signed out of
+ * (§409). Nobody registers: an event with registrations cannot be deleted, and the spec must leave
+ * the listing as it found it. The waiting-list and full states are the integration test's
+ * (`card-registration.test.ts`), on a real database.
+ */
+async function publishOpenRace(page: Page, created: Created): Promise<{ ro: string; en: string }> {
+  const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+  const title = `Cursă cu locuri ${suffix}`;
+  const titleEn = `Race with places ${suffix}`;
+  const field = (name: string) => page.locator(`[name="${name}"]`);
+  const today = new Date();
+  const day = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 10, 9));
+  // A summary in both languages is what publishing asks for first.
+  const summary = async (locale: "ro" | "en", text: string) => {
+    const panel = languagePanel(page, "title", locale);
+    await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+    await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+    await page.keyboard.type(text);
+  };
+
+  await signIn(page, "Dev Administrator");
+  await page.goto("/ro/admin/events/new");
+  await hydrated(page);
+  await page.getByRole("combobox", { name: "Tip eveniment" }).click();
+  await page.getByRole("option", { name: "Concurs" }).click();
+  await fillDateField(page, "Începutul evenimentului", ymd(day));
+  await fillTimeField(page, "Ora", "09:00");
+  await field("event.locationName").fill("Stadionul Tineretului");
+  await field("event.locationNameEn").fill("Youth Stadium");
+  // Everything about registration is one box, and the declaration is in its own card (§350).
+  await openEditorBox(page, "Participare și înscrieri");
+  await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+  await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+  await field("event.capacity").fill("12");
+  await openEditorBox(page, "Condiții de participare și declarația");
+  await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
+  await page.getByRole("option").nth(1).click();
+  await field("translations.ro.title").fill(title);
+  await field("translations.ro.slug").fill(`cursa-cu-locuri-${suffix}`);
+  await summary("ro", "O cursă cu locuri, pentru ușa de înscriere de pe card.");
+  await languageTab(page, "title", "en").click();
+  await field("translations.en.title").fill(titleEn);
+  await languageTab(page, "address", "en").click();
+  await field("translations.en.slug").fill(`race-with-places-${suffix}`);
+  await summary("en", "A race with places, for the card's registration door.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
   await confirmDialog(page, "Creezi și publici evenimentul?");
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
@@ -421,9 +480,9 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
   });
 
   test("draw the route and the cost as pills, in order — surface, difficulty, distance, elevation, cost — with no middle dots and no partner among them", async ({ page }) => {
-    const list = await cards(page);
+    await page.goto("/ro/evenimente");
     // The seeded Tâmpa run: 14 km, 600 m of climb, moderate, on trail, free.
-    const tampa = list.filter({ hasText: "Tură pe Tâmpa" }).first();
+    const tampa = await cardOnListing(page, "Tură pe Tâmpa");
     const pills = tampa.locator('[data-fact="pills"] .MuiChip-root');
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
     // terrain type, difficulty, distance, elevation" (§366, amended §375); the cost pill follows.
@@ -454,6 +513,65 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       // The door's own margin, four pixels, and no more: what a row leaves over is below it.
       expect.soft(gap, `card ${i}: the door follows the facts`).toBeLessThanOrEqual(8);
       expect.soft(gap, `card ${i}: the door does not overlap the facts`).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  test("carry a race's registration door on its card: the state in bold with the free places, and the page's own button to the form (§409)", async ({ page }) => {
+    /*
+      The owner, 2026-09-25: "trebuie să văd butonul de înscrieri pe card pentru evenimentele de tip
+      concurs; să fac bold pe asta cu înscrierile și să văd câte locuri sunt disponibile". A race of
+      its own, open now with twelve places and nobody on them, so the count is known: "12 locuri
+      libere din 12". Every state of the door — the waiting list, a full list, a window not open,
+      a closed one, the organizer's site — is `card-registration.test.ts`'s, on a real database;
+      this measures what a reader sees and presses, in both languages, at 320 pixels and on a desktop.
+    */
+    test.setTimeout(150_000);
+    const created: Created = [];
+    let passed = false;
+    try {
+      const race = await publishOpenRace(page, created);
+      for (const locale of ["ro", "en"] as const) {
+        const list = await cards(page, locale);
+        const card = list.filter({ has: page.getByRole("link", { name: race[locale], exact: true }) });
+        await expect(card, `the race's card (${locale})`).toHaveCount(1);
+
+        // The line: the state, then the free places after a middle dot, in bold.
+        const line = card.locator('[data-fact="registration"]');
+        await expect(line).toContainText(locale === "ro" ? /^Înscrieri(le sunt)? deschise.* · 12 locuri libere din 12$/ : /^Registration (is )?open.* · 12 places left out of 12$/);
+        await expect(line.getByTestId("card-places")).toHaveText(locale === "ro" ? "12 locuri libere din 12" : "12 places left out of 12");
+        expect(await line.evaluate((element) => getComputedStyle(element).fontWeight)).toBe("700");
+
+        // The button: the page's own words, to the same form, a whole tap target.
+        const button = card.locator('[data-fact="door"] a');
+        await expect(button).toHaveCount(1);
+        await expect(button).toHaveText(locale === "ro" ? "Înscrie-te la eveniment" : "Register for this event");
+        await expect(button).toHaveAttribute("href", locale === "ro" ? /^\/ro\/evenimente\/cursa-cu-locuri-[^/]+\/inscriere$/ : /^\/en\/events\/race-with-places-[^/]+\/register$/);
+        const box = await button.boundingBox();
+        expect(Math.round((box?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
+
+        // Nothing on the listing wider than the page, the button included (BR-REQ-041-01 criterion 1).
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(0);
+
+        // No other card offers a door its line does not announce: a card with a button says the
+        // state in bold, and a card with no registration line (a group run, §111) has no button.
+        const count = await list.count();
+        for (let i = 0; i < count; i += 1) {
+          const other = list.nth(i);
+          if ((await other.locator('[data-fact="door"]').count()) === 0) continue;
+          const weight = await other.locator('[data-fact="registration"]').evaluate((element) => getComputedStyle(element).fontWeight);
+          expect.soft(weight, `card ${i}: a door under a bold line (${locale})`).toBe("700");
+        }
+      }
+
+      // The button leads to the race's form.
+      const list = await cards(page);
+      const card = list.filter({ has: page.getByRole("link", { name: race.ro, exact: true }) });
+      await card.locator('[data-fact="door"] a').click();
+      await expect(page).toHaveURL(/\/ro\/evenimente\/cursa-cu-locuri-[^/]+\/inscriere$/);
+      passed = true;
+    } finally {
+      await removeCreated(page, created, !passed);
     }
   });
 

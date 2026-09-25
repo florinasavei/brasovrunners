@@ -21,6 +21,32 @@ import {
   type PublishGapLabels,
 } from "./publish-check";
 
+const NO_GAPS: readonly PublishGap[] = [];
+
+/** How `usePublishGaps` starts and where it reads (§406). */
+export type PublishGapsOptions = {
+  /**
+   * The server's answer for the first paint: the saved event on the editor, the blank form on the
+   * create page — the same function over the same values, so nothing moves when the script
+   * arrives. Nothing, for a list that may start empty.
+   */
+  initial?: readonly PublishGap[];
+  /** The form to read, by id, for an island that sits outside it (the editor's map, §406). */
+  formId?: string;
+  /**
+   * The saved value of each box the check reads, for a box the form does not draw: a language the
+   * reader may not write, the place for a role that may not change the settings. Absent from the
+   * form is not blank — it is what is stored (`storedPublishReader`).
+   */
+  stored?: Readonly<Record<string, string>>;
+};
+
+/** A box's value as the check reads it: what the form posts, or what is stored when the form has no such box. */
+function readBox(form: HTMLFormElement, data: FormData, name: string, stored: Readonly<Record<string, string>> | undefined): string {
+  if (stored && form.elements.namedItem(name) === null) return stored[name] ?? "";
+  return String(data.get(name) ?? "");
+}
+
 /**
  * The publication gaps of the form an element sits in, re-read as the form is typed into (§350).
  *
@@ -31,14 +57,16 @@ import {
  * and a keystroke is owed its letter first. The list is replaced only when it changed, so a
  * keystroke that closes no gap re-renders nothing.
  */
-export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: readonly string[]): PublishGap[] {
-  const [gaps, setGaps] = useState<PublishGap[]>([]);
+export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: readonly string[], options: PublishGapsOptions = {}): PublishGap[] {
+  const { initial = NO_GAPS, formId, stored } = options;
+  const [gaps, setGaps] = useState<PublishGap[]>(() => [...initial]);
   useEffect(() => {
-    const form = anchor.current?.closest("form");
+    const byId = formId ? document.getElementById(formId) : null;
+    const form = byId instanceof HTMLFormElement ? byId : anchor.current?.closest("form");
     if (!form) return;
     const measure = () => {
       const data = new FormData(form);
-      const next = missingForPublish((name) => String(data.get(name) ?? ""), locales);
+      const next = missingForPublish((name) => readBox(form, data, name, stored), locales);
       setGaps((current) => (sameNames(current, next) ? current : next));
     };
     const scheduler = paintedScheduler(measure);
@@ -50,7 +78,7 @@ export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: r
       form.removeEventListener("change", scheduler.schedule);
       scheduler.cancel();
     };
-  }, [anchor, locales]);
+  }, [anchor, locales, formId, stored]);
   return gaps;
 }
 

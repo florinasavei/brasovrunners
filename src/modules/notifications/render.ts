@@ -20,6 +20,7 @@ import {
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
+import { nightShape } from "@/modules/events/domain/night";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
@@ -37,7 +38,7 @@ import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
-import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
+import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { weatherForEvent } from "@/modules/weather/source";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailEventFacts } from "./domain/event-facts";
@@ -282,8 +283,20 @@ async function renderRow(
   if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
     // Each half of the bilingual message in its own words (§96, §349).
     const holdZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
-    data.holdExpiresAtFormatted = formatInSentence(registration.holdExpiresAt, holdZone, locale);
-    data.holdExpiresAtFormattedOther = formatInSentence(registration.holdExpiresAt, holdZone, otherLocale(locale));
+    /*
+      A hold that ends at the start itself — a deadline of zero days (§407) — reads "până la start,
+      sâm., 21 nov. 2026, 09:00" / "by the start, Sat, 21 Nov 2026, 09:00": the "until the start"
+      form beside the date, decided by the one helper, in the value itself, so a text the club
+      wrote with `{holdExpiresAtFormatted}` (§359) says it too.
+    */
+    const holdEndsAt = registration.holdExpiresAt;
+    const due = eventDetails ? { at: holdEndsAt, startsAt: eventDetails.startsAt } : null;
+    const dated = (inLocale: Locale) => {
+      const formatted = formatInSentence(holdEndsAt, holdZone, inLocale);
+      return due ? confirmationDueMoment(inLocale, due, formatted) : formatted;
+    };
+    data.holdExpiresAtFormatted = dated(locale);
+    data.holdExpiresAtFormattedOther = dated(otherLocale(locale));
     data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
     // Once the participation window is open this message is itself the reminder (the send when
     // the window opens, or a resend after it), so it must not promise "or when we remind you".
@@ -371,6 +384,22 @@ async function renderRow(
     if (night.night) {
       data.nightEventSunset = night.sunset ?? "";
       data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
+      // The start named before the sunset, and the end when it is the reason (§404) — the shape
+      // decided by `nightShape`, the same rule as the pill, the calendar and the `.ics`.
+      if (night.start) data.nightEventStart = night.start;
+      const shape = nightShape(night);
+      if ((shape?.suffix === "End" || shape?.suffix === "EndProgramme") && night.end) {
+        data.nightEventEnd = night.end;
+        data.nightEventEndSource = shape.suffix === "EndProgramme" ? "programme" : "event";
+      } else if (shape?.suffix === "After") {
+        // No end was ever named: the sun alone made the call and the start was already past
+        // sunset (§404) — say so, instead of leaving the sunset looking like the reason alone.
+        data.nightEventAfter = true;
+      } else if (shape?.suffix === "Dawn" && night.sunrise) {
+        // An early-morning start before that day's sunrise (§404): the line names the sunrise,
+        // never «după apusul» of the evening before it.
+        data.nightEventSunrise = night.sunrise;
+      }
     }
   }
   // The programme's rows in the update notice when the programme is what changed (§331), each half

@@ -9,7 +9,7 @@ import { BLANK, programmeSummary } from "../box-summaries";
 import OnlyForType from "../OnlyForType";
 import ScheduleRowsEditor from "../ScheduleRowsEditor";
 import { ProgrammeTextFields } from "../TranslationFields";
-import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import { BoxNote, type BoxProps, type LanguageEntry, SettingsReadOnly, summaryWords } from "./box-kit";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { LanguageTabs } from "./TextBoxes";
 
@@ -24,7 +24,7 @@ import { LanguageTabs } from "./TextBoxes";
  * A group run has no programme (§111): the sentence replaces the rows and the notes, hidden and
  * never removed, and only "Ce să aduci" remains — every type has something to bring.
  */
-export default async function ProgrammeBox({ event, mayEditSettings, risk, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
+export default async function ProgrammeBox({ event, mayEditSettings, risk, languages, heading }: BoxProps & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = languages[0]?.translation.locale ?? "ro";
@@ -36,6 +36,9 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
     const end = item.endsAt ? toWallTimeInput(new Date(item.endsAt), zone) : "";
     return { date: start.slice(0, 10), time: start.slice(11, 16), endTime: end.slice(11, 16), ro: item.label.ro, en: item.label.en, place: item.place ?? "" };
   });
+  // The day a new row opens on (§405): the event's own start date, as its start box shows it —
+  // "" on the create page, where the rows take it once it is typed.
+  const startDate = toWallTimeInput(event?.startsAt ?? null, zone).slice(0, 10);
   const programmeTypes = EVENT_TYPES.filter(hasProgramme);
   const turnUpTypes = EVENT_TYPES.filter((type) => !hasProgramme(type));
 
@@ -43,12 +46,10 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
     <Panel
       collapsible
       id="box-programme"
-      title={t("editor.boxes.programme.title")}
+      title={heading ?? t("editor.boxes.programme.title")}
       aside={programmeSummary(words, event, hasProgramme(initialType), languages.map((entry) => entry.translation), locale)}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
-      {risk && <RiskLine>{t("editor.risk.programme")}</RiskLine>}
       <Stack spacing={2}>
         <OnlyForType type={turnUpTypes} selectName="event.type" initialType={initialType}>
           <BoxNote testId="group-run-no-programme">{t("editor.groupRunNoProgramme")}</BoxNote>
@@ -56,14 +57,30 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
         <OnlyForType type={programmeTypes} selectName="event.type" initialType={initialType}>
           {mayEditSettings ? (
             <Stack spacing={1}>
-              <Typography variant="body2" color="text.secondary">
-                {t("editor.programmeHelp")}
-              </Typography>
+              {/* How the rows work, as the compact «i» fold (§398, reused; §405), closed by default
+                  (§336) — the paragraph that used to stand above the rows. With people registered,
+                  the box stays amber and wears the count like the other four boxes a change reaches
+                  (§350), and the sentence that went with it joins this fold: it said what the help
+                  says — the reminder repeats the rows, each is a calendar entry — plus which save
+                  tells them. */}
+              <Panel collapsible variant="help" legendIcon="info" title={t("editor.programmeHelpSummary")} data-testid="programme-help">
+                <Stack spacing={1}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("editor.programmeHelp")}
+                  </Typography>
+                  {risk && (
+                    <Typography variant="body2" color="text.secondary" data-testid="programme-risk">
+                      {t("editor.risk.programme")}
+                    </Typography>
+                  )}
+                </Stack>
+              </Panel>
               {/* The rows follow the start date: `WallTimeField` posts `event.startsAtDate`, and the
-                  rows island listens to the date box by that name. */}
+                  rows island listens to the date box by that name. A new row opens on it (§405). */}
               <ScheduleRowsEditor
                 initial={scheduleRows}
                 startDateName="event.startsAtDate"
+                startDate={startDate}
                 labels={{
                   date: t("editor.programmeRows.date"),
                   time: t("editor.programmeRows.time"),
@@ -74,6 +91,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
                   add: t("editor.programmeRows.add"),
                   remove: t("editor.programmeRows.remove"),
                   empty: t("editor.programmeRows.empty"),
+                  row: t("editor.programmeRows.row"),
                 }}
               />
             </Stack>
