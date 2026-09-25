@@ -9,7 +9,7 @@ import {
   roundPlace,
   typedCoordinates,
 } from "@/modules/weather/domain/place";
-import { placeKey, placesReadWithinHour, readForecast } from "@/modules/weather/source";
+import { placeKey, placesReadWithinHour, readClubForecast, readForecast } from "@/modules/weather/source";
 import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
 import { eventFieldsSchema } from "@/modules/content/events/fields";
 
@@ -151,6 +151,20 @@ describe("§NNN one cached forecast per rounded place", () => {
     expect(placesReadWithinHour(now)).toBe(2);
     // An hour and a minute on, neither is counted.
     expect(placesReadWithinHour(now + HOUR + 60_000)).toBe(0);
+  });
+
+  it("a `record: false` read (the status panel's own check) never inflates the count (§NNN)", async () => {
+    const now = new Date("2100-01-02T00:00:00Z").getTime();
+    const fetchImpl = (async () => {
+      const time = Array.from({ length: 3 }, (_, index) => now / 1000 + index * 3600);
+      const column = time.map(() => 1);
+      return new Response(JSON.stringify({ hourly: { time, temperature_2m: column, precipitation_probability: column, weather_code: column, wind_speed_10m: column } }));
+    }) as unknown as typeof fetch;
+    await readClubForecast({ fetch: fetchImpl, source: "open-meteo", now, record: false });
+    expect(placesReadWithinHour(now)).toBe(0);
+    // A read with no `record` at all still counts, exactly as before.
+    await readForecast(CLUB, { fetch: fetchImpl, source: "open-meteo", now: now + 1 });
+    expect(placesReadWithinHour(now + 1)).toBe(1);
   });
 });
 

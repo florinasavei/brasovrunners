@@ -262,6 +262,13 @@ export type ForecastDeps = {
   now?: number;
   timeoutMs?: number;
   cached?: () => Promise<HourlyForecast>;
+  /**
+   * False keeps this read out of `placesRead` (§NNN, a review finding): `readWeatherStatus`'s own
+   * check of the club's place is the panel asking, never a visitor's page, so it must not count
+   * toward "how many places were read this hour" — that figure is for real traffic. Every other
+   * caller leaves this at its default (true).
+   */
+  record?: boolean;
 };
 
 /** The club's own place's forecast (§394's `CLUB_COORDINATES`) — what the system panel reads. */
@@ -299,7 +306,7 @@ export async function readForecast(at: Coordinates, deps: ForecastDeps = {}): Pr
   try {
     let forecast = cached ? await cached() : await ask();
     if (isForecastStale(forecast, now)) forecast = await ask();
-    placesRead.set(placeKey(place), now);
+    if (deps.record !== false) placesRead.set(placeKey(place), now);
     return { ok: true, forecast };
   } catch (error) {
     const reason: WeatherFailure = error instanceof WeatherUnavailable ? error.reason : "unreadable";
@@ -403,11 +410,12 @@ export type WeatherStatus =
 export async function readWeatherStatus(): Promise<WeatherStatus> {
   const source = env.WEATHER_SOURCE;
   if (source !== "open-meteo") return { source };
-  const read = await readClubForecast();
+  // `record: false` (§NNN, a review finding): the panel's own check of the club's place is not a
+  // visitor's page, so it must not inflate "how many places were read this hour" below.
+  const read = await readClubForecast({ record: false });
   if (read.ok) {
     const fetchedAt = read.forecast.fetchedAt;
     if (isForecastStale(read.forecast, Date.now())) return { source, ok: false, reason: "stale", failedAt: new Date(fetchedAt) };
-    // The club's own place was just read above, so the count is at least one (§NNN).
     return { source, ok: true, fetchedAt: new Date(fetchedAt), hours: read.forecast.time.length, places: placesReadWithinHour(Date.now()) };
   }
   return {
