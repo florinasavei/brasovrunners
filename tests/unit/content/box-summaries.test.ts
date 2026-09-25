@@ -12,6 +12,7 @@ import {
   identicalLocales,
   incompleteLocales,
   BLANK,
+  initialCostTypeOf,
   kindSummary,
   linksSummary,
   placeSummary,
@@ -168,6 +169,18 @@ describe("§350 each box's summary, empty and filled", () => {
       "Fără program (alergare de grup) · ce să aduci: RO, EN · EN identic cu RO",
     );
     expect(programmeSummary(words, { timezone: ZONE, scheduleItems: null } as never, true, [], "ro")).toBe("Fără program");
+  });
+
+  it("§NNN — a new event's cost select preselects FREE; an edited one keeps what it has", () => {
+    // The create page: no event yet.
+    expect(initialCostTypeOf(null)).toBe("FREE");
+    // An edited event with a stated cost keeps it, whatever it is.
+    expect(initialCostTypeOf({ costType: "PAID" })).toBe("PAID");
+    expect(initialCostTypeOf({ costType: "DONATION" })).toBe("DONATION");
+    expect(initialCostTypeOf({ costType: "FREE" })).toBe("FREE");
+    // An edited event whose cost was never stated stays "Nespecificat" — never turned into
+    // "Gratuit" behind the club's back just because the editor opened.
+    expect(initialCostTypeOf({ costType: null })).toBe("");
   });
 
   it("Participare și înscrieri: by mode, the places counted in Romanian, the declaration, the list", () => {

@@ -27,6 +27,7 @@ import {
   bibsSummary,
   confirmationSummary,
   conditionsSummary,
+  initialCostTypeOf,
   registrationSummary,
   registrationWindowSummary,
   startListSummary,
@@ -82,6 +83,12 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * The cost's amount and its payment or donation link sit with the cost, at the top (§343,
  * `CostFields`, which shows them only while the chosen kind needs them); the waiting list's length
  * sits beside the capacity (§350, the waiting-list cap), and "not here" stores no length either.
+ *
+ * **A new event starts free** (§NNN; the owner: "by default toate evenimentele sunt gratuite"):
+ * the cost select preselects `FREE` only when `event === null` (the create page); an edited
+ * event, unstated cost included, keeps exactly what it has. Because the select always posts —
+ * folded or not, `<details>` still submits what is inside it — a save that never opened this box
+ * on the create page still writes `FREE`, with no change needed to the schema or the column.
  */
 export default async function RegistrationBox({
   event,
@@ -121,9 +128,12 @@ export default async function RegistrationBox({
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
+  // A new event starts on "Gratuit" (§NNN, `initialCostTypeOf`); an existing one keeps what it has.
+  const initialCostType = initialCostTypeOf(event);
   // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind
-  // that has one (§343) — what the page will say, on the box's closed line.
-  const costAmount = event?.costType === "PAID" || event?.costType === "DONATION" ? (event.costAmount ?? "").trim() : "";
+  // that has one (§343) — what the page will say, on the box's closed line. `initialCostType`
+  // rather than `event?.costType` so the create page's own "Gratuit" default reads here too.
+  const costAmount = initialCostType === "PAID" || initialCostType === "DONATION" ? (event?.costAmount ?? "").trim() : "";
   // "cu reducere" (`DECISIONS.md` §NNN): the closed cost line names the club's discount when the
   // event is `EXTERNAL` + `PAID` and at least one language carries a note — read off the strip's
   // own rows, never a query of its own.
@@ -156,8 +166,8 @@ export default async function RegistrationBox({
       }}
     />
   );
-  const costLabel = event?.costType
-    ? `${t(`editor.costValues.${event.costType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
+  const costLabel = initialCostType
+    ? `${t(`editor.costValues.${initialCostType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
     : null;
   const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
   const needsDeclaration = initialMode === "INTERNAL" && declaration === null && event !== null;
@@ -222,7 +232,7 @@ export default async function RegistrationBox({
             name="event.costType"
             label={t("editor.fields.costType")}
             helperText={t("editor.costHelp")}
-            defaultValue={event?.costType ?? ""}
+            defaultValue={initialCostType}
             options={[
               { value: "", label: t("editor.notStated") },
               ...EVENT_COST_TYPES.map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
@@ -237,7 +247,7 @@ export default async function RegistrationBox({
             twice; shown only while the chosen kind needs one of them, values kept otherwise.
           */}
           <CostFields
-            initialCostType={event?.costType ?? ""}
+            initialCostType={initialCostType}
             initialMode={initialMode}
             costAmount={{ defaultValue: event?.costAmount ?? "", box: box("costAmount") }}
             costUrl={{ defaultValue: event?.costUrl ?? "", box: box("costUrl", { inputMode: "url" }) }}

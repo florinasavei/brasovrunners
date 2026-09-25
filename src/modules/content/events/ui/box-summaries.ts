@@ -328,6 +328,17 @@ type RegistrationEvent = Pick<
   "type" | "registrationMode" | "capacity" | "minAge" | "declarationDocumentId" | "participantListVisibility" | "externalProvider" | "costType"
 >;
 
+/**
+ * The cost select's own starting value (§NNN; the owner: "by default toate evenimentele sunt
+ * gratuite"). A new event (`event === null`, the create page before a first save) preselects
+ * `FREE`; an edited event keeps exactly what it has — an unset cost included, which stays "" and
+ * reads as "Nespecificat", the same as before this decision. `RegistrationBox` posts this value
+ * whether or not its box is opened, so a save that never touches the cost still writes `FREE`.
+ */
+export function initialCostTypeOf(event: Pick<RegistrationEvent, "costType"> | null): string {
+  return event === null ? "FREE" : (event.costType ?? "");
+}
+
 /** Box 8: `Pe site · 150 locuri · de la 14 ani · gratuit · declarația v3 · lista ascunsă`. */
 export function registrationSummary(
   words: SummaryWords,

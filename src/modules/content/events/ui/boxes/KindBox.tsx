@@ -103,7 +103,9 @@ export default async function KindBox({
                 warning
               />
             )}
-            <Panel collapsible level={3} title={t("editor.typeHelpSummary")}>
+            {/* A compact help fold, not a card (§NNN; the owner: "«Ce înseamnă fiecare tip?» ar
+                trebui să fie un card mai mic"): a clickable line, closed by default (§336). */}
+            <Panel collapsible variant="help" title={t("editor.typeHelpSummary")}>
               <Typography variant="body2" color="text.secondary">
                 {t("editor.typeHelp")}
               </Typography>

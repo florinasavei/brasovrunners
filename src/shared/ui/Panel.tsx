@@ -1,3 +1,5 @@
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
@@ -30,6 +32,33 @@ const NESTED_FOLD_SX = {
   "& > summary": { ...BOXED_SUMMARY, mx: { xs: -1.5, sm: -2 }, px: NESTED_PADDING },
 } as const;
 
+/**
+ * The `help` variant's own line (§NNN): no card, no border, no elevation — a caret and a
+ * sentence, the way a footnote reads rather than a card. Tight spacing, the density the public
+ * pages' `DENSITY.gapXs`/`gapSm` name for the same reason (§380), typed here rather than pulled
+ * from that file, which the backoffice does not import.
+ */
+const HELP_SUMMARY_SX = {
+  display: "inline-flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  rowGap: 0,
+  gap: 0.75,
+  minHeight: 44,
+  cursor: "pointer",
+  listStyle: "none",
+  "&::-webkit-details-marker": { display: "none" },
+  "&::marker": { display: "none" },
+} as const;
+
+/** The caret that turns when the `<details>` it sits inside opens — CSS alone, no script. */
+const HELP_CARET_SX = {
+  color: "text.secondary",
+  transition: "transform 120ms ease",
+  flexShrink: 0,
+  "[open] > summary &": { transform: "rotate(180deg)" },
+} as const;
+
 type Props = {
   /** The heading, and — when the panel folds — the words that open it. */
   title: string;
@@ -57,6 +86,25 @@ type Props = {
   level?: 2 | 3 | 4;
   /** The border's meaning (`PanelTone`); the plain box when absent. */
   tone?: PanelTone;
+  /**
+   * The look this panel draws as (§NNN). `"card"` (the default, and every existing call) is the
+   * boxed folder `BOXED_DISCLOSURE_SX` draws. `"help"` is a small clickable line instead — no
+   * border, no elevation, `body2` in the secondary ink, a caret that turns — for an explainer
+   * nobody needs a heading to find: "Ce înseamnă fiecare tip?" under the event editor's type
+   * select, and the field legend on `/admin/emails`, which also takes `legendIcon="info"`.
+   * `level` and `tone` are ignored on this variant; there is no card to nest or to warn about.
+   * `badge` is ignored too — there is no heading line to carry a chip. The line always folds
+   * (`collapsible` and `static` are read only by the `card` variant): a `help` line's whole
+   * point is a caret, so there is no reading to give it that leaves the caret behind.
+   */
+  variant?: "card" | "help";
+  /**
+   * A glyph leading a `help` panel's line, `aria-hidden`: `"info"` for a legend. Not `icon` —
+   * that name is `action-icons.ts`'s own lookup-by-name prop (§318), and this is a plain MUI
+   * icon Panel renders itself; the two must never be read as the same thing by the source walk
+   * that keeps that table honest.
+   */
+  legendIcon?: "info";
   /**
    * A short state beside the title, as a chip, readable while the fold is shut — "23 înscriși"
    * on a box whose change reaches them. Plain text: the chip is drawn here.
@@ -120,6 +168,8 @@ export default function Panel({
   level = 2,
   tone = "default",
   badge,
+  variant = "card",
+  legendIcon,
   static: isStatic = false,
   id,
   "data-testid": testId,
@@ -127,6 +177,27 @@ export default function Panel({
 }: Props) {
   const folds = collapsible && !isStatic;
   const nested = level > 2;
+
+  if (variant === "help") {
+    return (
+      <Box component="details" id={id} data-testid={testId} open={opensByItself(openWhen) || undefined}>
+        <Box component="summary" sx={HELP_SUMMARY_SX}>
+          {legendIcon === "info" && <InfoOutlinedIcon aria-hidden fontSize="small" sx={{ color: "text.secondary", flexShrink: 0 }} />}
+          <ExpandMoreIcon aria-hidden fontSize="small" sx={HELP_CARET_SX} />
+          <Typography component="span" variant="body2" color="text.secondary">
+            {title}
+            {aside ? <Box component="span" sx={{ ml: 0.5 }}>{aside}</Box> : null}
+          </Typography>
+        </Box>
+        {intro && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, pl: 3.25 }}>
+            {intro}
+          </Typography>
+        )}
+        {children != null && children !== false && <Box sx={{ pl: 3.25, pt: 0.5 }}>{children}</Box>}
+      </Box>
+    );
+  }
   // The open section and the fold are the same box — the fold's border, radius, surface and
   // padding come from the shared object, so a screen of both reads as one system.
   const frame = folds

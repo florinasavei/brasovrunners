@@ -6,7 +6,7 @@ import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { costPaidToExternalOrganizer } from "@/modules/events/domain/cost";
+import { costPaidToExternalOrganizer, type EventCostType } from "@/modules/events/domain/cost";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
@@ -373,11 +373,19 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
   }
 }
 
+/**
+ * The cost type a create stores when it was given none (the field absent): the owner's "by default
+ * toate evenimentele sunt gratuite". `eventColumnsFrom` writes it and `createEvent` gates the discount
+ * note on it — one value, so the insert and the gate cannot disagree.
+ */
+const COST_TYPE_ON_CREATE: EventCostType = "FREE";
+
 /** The columns of `events` a form writes, in one place, so create and save cannot drift. */
-function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
+function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, options?: { isCreate?: boolean }) {
   return {
     type: fields.type,
     surface: fields.surface,
+    difficulty: fields.difficulty,
     eventStatus: fields.eventStatus,
     timezone: fields.timezone,
     startsAt: times.startsAt,
@@ -411,8 +419,14 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     locationToBeAnnounced: fields.locationToBeAnnounced,
-    difficulty: fields.difficulty,
-    costType: fields.costType,
+    // §NNN — the owner: "by default toate evenimentele sunt gratuite". A create that posts no
+    // cost type at all (the field absent — `costType` is optional, like `costAmount`/`costUrl`
+    // above) stores `FREE`, the same default the form's own select preselects
+    // (`initialCostTypeOf`); an edit that posts none leaves the stored value alone, exactly the
+    // discipline `costAmount`/`costUrl` already follow. This is the only place either can
+    // default it, since `eventColumnsFrom` is what create and save both write through — and a
+    // caller that posts an explicit value, including `null` for "not stated", always writes it.
+    ...(fields.costType === undefined ? (options?.isCreate ? { costType: COST_TYPE_ON_CREATE } : {}) : { costType: fields.costType }),
     // Absent means this caller is not editing the cost fields (§343), the discipline `links`
     // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
     // is in the boxes even while the chosen kind does not need one of them.
@@ -645,6 +659,9 @@ async function writePlaceNames<T extends Record<string, unknown>>(tx: Transactio
  * row through `applyTranslationSave`. Without this, switching the mode away from `EXTERNAL` +
  * `PAID` on the settings panel alone would leave a stale note nobody with text rights posted
  * again and nobody can read on the page any more.
+ *
+ * Handed the event row as the save left it, never the parsed fields: a save that omits `costType`
+ * is not editing the cost, and the stored value `eventColumnsFrom` left untouched is what decides.
  */
 async function clearDiscountNoteIfNotAllowed<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -1364,7 +1381,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     const translationsBefore = await listTranslationsForEvent(tx, input.eventId);
     const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
     await writePlaceNames(tx, input.eventId, names);
-    await clearDiscountNoteIfNotAllowed(tx, input.eventId, fields);
+    await clearDiscountNoteIfNotAllowed(tx, input.eventId, saved);
     if (announcing) {
       // No words are saved here; only the place's names moved, and the notice compares those.
       await announceSave(tx, {
@@ -1892,7 +1909,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       // it, `translationsAfter` would compare that stale value against itself, see no change,
       // and a series save (scope `following`/`all`) would leave every other date's note in
       // place (`DECISIONS.md` §NNN).
-      discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, parsedEventFields);
+      discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, savedEvent);
     }
 
     for (const submitted of input.translations) {
@@ -1909,8 +1926,11 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
             fields: submitted.fields,
             acknowledgeLiveEdit: input.acknowledgeLiveEdit,
             eventType: parsedEventFields?.type ?? current.type,
-            registrationMode: parsedEventFields?.registrationMode ?? current.registrationMode,
-            costType: parsedEventFields?.costType ?? current.costType,
+            // As saved (`savedEvent` is `current` when the fields are not part of this save), the
+            // same answer the gate above read: an omitted cost is the stored one, and "not stated"
+            // is null rather than the value it replaced.
+            registrationMode: savedEvent.registrationMode,
+            costType: savedEvent.costType,
             now,
           }),
         ),
@@ -2035,10 +2055,15 @@ export async function createEvent<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
   // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
-  // then inserted exactly as checked.
+  // then inserted exactly as checked. The discount note is gated on the cost the insert stores: an
+  // absent cost type is `COST_TYPE_ON_CREATE`, exactly as `eventColumnsFrom` writes it.
+  const discountAllowed = costPaidToExternalOrganizer({
+    registrationMode: parsed.registrationMode,
+    costType: parsed.costType === undefined ? COST_TYPE_ON_CREATE : parsed.costType,
+  });
   const translationColumns = {
-    ro: translationColumnsFrom(parsed.translations.ro, parsed.type, costPaidToExternalOrganizer(parsed)),
-    en: translationColumnsFrom(parsed.translations.en, parsed.type, costPaidToExternalOrganizer(parsed)),
+    ro: translationColumnsFrom(parsed.translations.ro, parsed.type, discountAllowed),
+    en: translationColumnsFrom(parsed.translations.en, parsed.type, discountAllowed),
   };
   assertOptionalTextsInBothLanguages(translationColumns);
   // Each language's name for the place, from the Locul box (§362); a caller that posts no English
@@ -2051,7 +2076,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     const [event] = await tx
       .insert(events)
       .values({
-        ...eventColumnsFrom(parsed, times),
+        ...eventColumnsFrom(parsed, times, { isCreate: true }),
         editorialStatus: "DRAFT",
         createdByStaffUserId: input.actor.id,
         updatedByStaffUserId: input.actor.id,

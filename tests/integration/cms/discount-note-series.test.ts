@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { duplicateEvent, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
+import { duplicateEvent, repeatEvent, saveEventAndTranslations, saveEventFields } from "@/modules/content/events/service";
 import { createEvent } from "@/modules/content/events/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -352,5 +352,86 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
 
     const siblingRows = await translationsOf(sibling.id);
     expect(siblingRows.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+  });
+});
+
+/**
+ * `costType` is optional on the parsed fields: absent means "this caller is not editing the cost",
+ * never "free" — and `""` ("not stated") is an explicit `null`. The discount note's gate reads the
+ * cost as the save leaves it, so an omission keeps the note and a real change still clears it.
+ */
+describe("the discount note when a save omits the cost type", () => {
+  /** `FIELDS` with no `costType` key at all, as a caller that is not editing the cost posts them. */
+  function withoutCostType(): Record<string, unknown> {
+    const fields: Record<string, unknown> = { ...FIELDS };
+    delete fields.costType;
+    return fields;
+  }
+
+  it("a whole-event save that omits costType keeps the stored cost and the note on an EXTERNAL + PAID event", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    const row = await reloadEvent(source.id);
+
+    await saveEventAndTranslations(db, {
+      actor: admin,
+      eventId: source.id,
+      fields: { ...withoutCostType(), costAmount: "80 lei" },
+      expectedVersion: row.version,
+      translations: [],
+      now: NOW,
+    });
+
+    const saved = await reloadEvent(source.id);
+    expect(saved.costType).toBe("PAID");
+    expect(saved.costAmount).toBe("80 lei");
+    const after = await translationsOf(source.id);
+    expect(after.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+    expect(after.find((r) => r.locale === "en")?.discountNote).toBe("40 lei for BR members");
+  });
+
+  it("the event-row save (saveEventFields) that omits costType keeps the note too", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    const row = await reloadEvent(source.id);
+
+    await saveEventFields(db, { actor: admin, eventId: source.id, expectedVersion: row.version, fields: withoutCostType(), now: NOW });
+
+    expect((await reloadEvent(source.id)).costType).toBe("PAID");
+    const after = await translationsOf(source.id);
+    expect(after.find((r) => r.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+    expect(after.find((r) => r.locale === "en")?.discountNote).toBe("40 lei for BR members");
+  });
+
+  it("a save that sets the cost to 'not stated' clears the note, even with both languages still posting it", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    const row = await reloadEvent(source.id);
+    const translations = await translationsOf(source.id);
+    const ro = translations.find((t) => t.locale === "ro")!;
+    const en = translations.find((t) => t.locale === "en")!;
+
+    await saveEventAndTranslations(db, {
+      actor: admin,
+      eventId: source.id,
+      fields: { ...FIELDS, costType: "", costAmount: "" },
+      expectedVersion: row.version,
+      translations: [
+        { translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro, { discountNote: "40 lei pentru membri BR" }) },
+        { translationId: en.id, expectedVersion: en.version, fields: wordsFor(en, { discountNote: "40 lei for BR members" }) },
+      ],
+      now: NOW,
+    });
+
+    expect((await reloadEvent(source.id)).costType).toBeNull();
+    const after = await translationsOf(source.id);
+    expect(after.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+    expect(after.find((r) => r.locale === "en")?.discountNote).toBeNull();
+  });
+
+  it("a create that omits costType stores FREE and so writes no note, whatever the form posted for it", async () => {
+    const created = await createEvent(db, { actor: admin, fields: { ...withoutCostType(), costAmount: "", translations: TRANSLATIONS }, now: NOW });
+
+    expect(created.costType).toBe("FREE");
+    const rows = await translationsOf(created.id);
+    expect(rows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+    expect(rows.find((r) => r.locale === "en")?.discountNote).toBeNull();
   });
 });
