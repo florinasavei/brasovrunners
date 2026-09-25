@@ -348,16 +348,15 @@ async function renderRow(
       already capped at registration close or the event start (`capHoldExpiry`), and the club's
       "Termene" may since have changed (§377 applies a change to new offers only) — so the words
       are worked out from this offer's own span, `offerCreatedAt` to `holdExpiresAt`, never from
-      the setting in force now: in hours, or in minutes when the cap left less than an hour, so a
-      20-minute offer never says "o oră". Without an `offerCreatedAt` (a row from before this
-      column, or a test fixture) the club's current setting is kept, as before.
+      the setting in force now: whole hours only when the span is exactly that many, minutes
+      otherwise (`minutesPhrase`, `timingWords`) — so a 20-minute offer never says "o oră" and a
+      1 h 31 min one never says "2 ore" either; the stated length never claims more than the real
+      span. Without an `offerCreatedAt` (a row from before this column, or a test fixture) the
+      club's current setting is kept, as before.
     */
     if (row.messageType === "WAITLIST_SPOT_OFFER" && registration.offerCreatedAt && data.timings) {
       const offerMinutes = Math.max(1, Math.round((holdEndsAt.getTime() - registration.offerCreatedAt.getTime()) / 60_000));
-      data.timings =
-        offerMinutes < 60
-          ? { ...data.timings, offerMinutes }
-          : { ...data.timings, offerHours: Math.round(offerMinutes / 60) };
+      data.timings = { ...data.timings, offerMinutes };
     }
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;

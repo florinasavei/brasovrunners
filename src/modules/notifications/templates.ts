@@ -492,8 +492,10 @@ export type TemplateData = {
     holdMinutes: number;
     offerHours: number;
     /**
-     * This offer's own length in minutes, when the cap (`capHoldExpiry`) left it under an hour
-     * (`render.ts`, §NNN): `{offerHours}` then says "20 de minute", never "o oră".
+     * This offer's own length in minutes, from `offerCreatedAt` to the (possibly capped)
+     * `holdExpiresAt` (`render.ts`, §NNN): `{offerHours}` then says whole hours only when the
+     * span is exactly that many, and minutes otherwise — "20 de minute", "91 de minute" — never a
+     * length longer than the real span.
      */
     offerMinutes?: number;
     /** This event's lead — its own, or the club's (`reminderHoursFor`); zero is none. */
@@ -1787,9 +1789,7 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
     confirmationHours: hoursPhrase(locale, numbers.confirmationHours),
     holdMinutes: minutesPhrase(locale, numbers.holdMinutes),
     offerHours:
-      timings?.offerMinutes !== undefined && timings.offerMinutes < 60
-        ? minutesPhrase(locale, timings.offerMinutes)
-        : hoursPhrase(locale, numbers.offerHours),
+      timings?.offerMinutes !== undefined ? minutesPhrase(locale, timings.offerMinutes) : hoursPhrase(locale, numbers.offerHours),
     reminderHours: numbers.reminderHours > 0 ? leadPhrase(locale, numbers.reminderHours) : "",
     confirmationOpens: timings?.confirmationOpensDays ? daysPhrase(locale, timings.confirmationOpensDays) : undefined,
     // The link's own lifetime (`domain/token-lifetime.ts`), the constant the token is minted with.

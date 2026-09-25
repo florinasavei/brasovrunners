@@ -585,6 +585,58 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).not.toContain("one hour");
   });
 
+  it("§NNN a capped offer never states more than its real span (review finding)", async () => {
+    /*
+      §355's `Math.round(offerMinutes / 60)` said "2 ore" for a 91-minute offer — a runner reading
+      "you have 2 hours" beside a deadline 90 or 91 minutes away is told more time than the
+      deadline actually gives. The stated length now says whole hours only when the span is
+      exactly that many, minutes otherwise, for 90, 91 and 120 minutes.
+    */
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+
+    const cases: Array<{ key: string; minutes: number; ro: string; en: string }> = [
+      { key: "90", minutes: 90, ro: "90 de minute", en: "90 minutes" },
+      { key: "91", minutes: 91, ro: "91 de minute", en: "91 minutes" },
+      { key: "120", minutes: 120, ro: "2 ore", en: "2 hours" },
+    ];
+
+    for (const { key, minutes, ro, en } of cases) {
+      const cappedDeadline = new Date(NOW.getTime() + minutes * 60_000);
+      await db
+        .update(registrations)
+        .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt: NOW })
+        .where(eq(registrations.id, registrationId));
+
+      const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", `offer-${key}`), db, NOW);
+      expect(message.text).toContain(`(ai la dispoziție ${ro})`);
+      expect(message.text).toContain(`(you have ${en})`);
+      expect(message.text).not.toContain("o oră"); // never rounds 90 or 91 minutes up to a full hour
+      expect(message.text).not.toContain("one hour");
+    }
+  });
+
+  it("§NNN an offer capped at the event's own start reads «până la start» / \"by the start\" (§407)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    // `capHoldExpiry` never lets a hold outlive the start; an offer made two hours before it and
+    // capped there has holdExpiresAt === event.startsAt, so `confirmationDueMoment` reads the
+    // "until the start" form beside the date rather than a redundant "until <the start's own
+    // moment>".
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: event.startsAt, offerCreatedAt: new Date(event.startsAt.getTime() - 2 * 60 * 60_000) })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-at-start"), db, NOW);
+    const when = formatDay(event.startsAt, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    const whenEn = formatDay(event.startsAt, { locale: "en", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    expect(message.text).toContain(`până la start, ${when}`);
+    expect(message.text).toContain(`by the start, ${whenEn}`);
+    expect(message.text).toContain("(ai la dispoziție 2 ore)");
+    expect(message.text).toContain("(you have 2 hours)");
+  });
+
   it("§NNN a minor's messages greet the parent, say whose registration it is and who signs", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
