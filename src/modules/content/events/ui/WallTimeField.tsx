@@ -6,15 +6,17 @@ import TimeField from "@/shared/forms/pickers/TimeField";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * A date and a time, as two boxes, each on MUI's picker (BR-REQ-050-02, `DECISIONS.md` §70,
- * §303 and §345).
+ * A date and a time, as two boxes (BR-REQ-050-02, `DECISIONS.md` §70, §303, §345 and its
+ * 2026-09-25 amendment).
  *
  * `<input type="datetime-local">` showed the *browser's* clock and date order — "06:30 PM" and a
  * month-first calendar on an English-language Chrome — and no attribute changes that. §70 split
- * the two, §303 made the time `<input type="time">`, which still *showed* "07:00 PM" wherever the
- * operating system did. The owner, over exactly that: "vreau ca timpul să fie mereu în format de
- * 24H, nu cu AM și PM ca aici". So both halves are pickers now (`shared/forms/pickers`): the date
- * reads `30.09.2026`, the time `19:00`, in either language of the backoffice.
+ * the two; §303 made the time `<input type="time">`, then §345 replaced both with MUI's pickers
+ * over the same AM/PM complaint. The date stays a picker (`shared/forms/pickers/DateField`):
+ * `30.09.2026`, day first, in either language. The time went back to the platform's own `<input
+ * type="time">` (`TimeField`) once the owner asked for it, 2026-09-25 — "I simply hate this time
+ * picker" — trading the picker's guaranteed 24-hour *display* for the control every runner
+ * already has on their phone; what it *posts* is still `HH:mm` either way.
  *
  * **Nothing below the form changed.** The two still post as `<name>Date` (`YYYY-MM-DD`) and
  * `<name>Time` (`HH:mm`), from hidden inputs beside the pickers; `admin/actions.ts` joins them

@@ -15,18 +15,14 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The difficulty pill as a scale of dumbbells (Material FitnessCenter), the word beside it and in the accessible name | `feat/difficulty-weights` | queued |
-| The backoffice time field: a native HH:MM 24-hour input instead of the MUI wheel picker (the date picker stays) | `fix/time-field-native` | queued |
-| «Împreună cu» on the event page as a collapsible block with the partner cards inside | `feat/partners-fold` | queued |
 | Create and publish offered the same way on every new event, whatever its type or series | `fix/create-publish-consistent` | queued |
-| The YouTube player: a poster from the club's store before the click, mute and volume after it | `feat/youtube-poster-volume` | queued |
 | The event editor mirrors the page: one card per section in page order, a page map, numbered titles with «apare pe pagină» | `feat/editor-page-flow` | queued |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.96` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.97` |
 
 ## Next, queued
 
@@ -62,6 +58,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.97` | the difficulty pill is a scale of dumbbells, the word beside it and in the accessible name (§399) · a YouTube film shows the club's own stored poster before the click and a mute/volume bar after it, the facade server-rendered, no poster fetch inside a transaction (§403, migration `0077`) · the backoffice's time field is the platform's own `<input type="time">`, 24-hour, any minute — §345's wheel picker gone, its date picker kept (§400) · «Împreună cu» is a collapsible block on the event page, the listing's filter row sits a step above the grid and offers a «Colaborare» chip while a partnered event is on the calendar (§401) · the weather for the event's date and hour from Open-Meteo (free, keyless) on the page within seven days and in the reminder (§402) |
 | `BR-V1.96` | the confirmed email's facts block (§392) · the optional group-run declaration, asphalt and trail, migration `0074` (§393) · night events from civil dusk, migration `0076` (§394) · the external discount note, migration `0075` (§395) · the public list's states behind the notice (§396) · the editor's help fold, free by default, the robot glyph (§398) · «Aplicația» on /admin/tasks renders docs/QUEUE.md (§397) |
 | `BR-V1.95` | the partner marker is Material's Handshake glyph again, in each surface's own ink (§391) |
 | `BR-V1.94` | the family flow is open: the contract migration `0073` drops the old one-registration-per-address index; the notice template says whose data and whose inbox (§390) |

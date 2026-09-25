@@ -1,5 +1,5 @@
 import { and, desc, eq, lt, not, sql } from "drizzle-orm";
-import { eventTranslations } from "@/db/schema/events";
+import { eventTranslations, events } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -34,22 +34,35 @@ export const ORPHAN_ASSET_DAYS = 7;
 const TOUCH_INTERVAL_HOURS = 1;
 
 /**
+ * `key_prefix` as a `LIKE` needle, with `_` escaped so it is never read as a single-character
+ * wildcard (found by re-review, `DECISIONS.md` §403). Every prefix used to be a UUID, which
+ * cannot contain one — a poster's is `yt-<videoId>` (`modules/media/video-poster.ts`), and a
+ * YouTube video id may carry an underscore, which without escaping matches any character there
+ * and over-retains an orphan poster the sweep should have taken.
+ */
+const keyPrefixNeedle = sql`'%' || REPLACE(${mediaAssets.keyPrefix}, '_', '\\_') || '%'`;
+
+/**
  * Whether one event translation carries the asset in any of its rich texts. Every text the editor
  * lets a picture into is here — the summary, the description, the rules, the programme's notes and
  * the route description (§387) — because a text left out is a picture the sweep deletes from a
  * page that shows it. The rules and the programme's notes were missing until §387.
  */
-const inEventTranslation = sql`(${eventTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
-    OR ${eventTranslations.excerptJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
-    OR ${eventTranslations.rulesJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
-    OR ${eventTranslations.scheduleJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
-    OR ${eventTranslations.routeDescriptionJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%')`;
+const inEventTranslation = sql`(${eventTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
+    OR ${eventTranslations.excerptJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
+    OR ${eventTranslations.rulesJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
+    OR ${eventTranslations.scheduleJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
+    OR ${eventTranslations.routeDescriptionJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\')`;
 
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
-  OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${pageTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%')
+  OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${pageTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\')
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
+  -- An event's own film poster (DECISIONS.md §403): the address is stored on the event row
+  -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
+  -- the same substring check every other body uses.
+  OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.videoPosterUrl} LIKE ${keyPrefixNeedle} ESCAPE '\\')
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -187,7 +200,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const inPages = await db
     .select({ assetId: mediaAssets.id, id: pageTranslations.pageId, title: pageTranslations.title, locale: pageTranslations.locale })
     .from(mediaAssets)
-    .innerJoin(pageTranslations, sql`${pageTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'`);
+    .innerJoin(pageTranslations, sql`${pageTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'`);
 
   const inEvents = await db
     .select({ assetId: mediaAssets.id, id: eventTranslations.eventId, title: eventTranslations.title, locale: eventTranslations.locale })

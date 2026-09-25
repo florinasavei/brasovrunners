@@ -50,7 +50,9 @@ import {
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
-import { hasRichTextContent, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
+import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
+import { youtubeVideoId } from "@/modules/events/domain/video";
+import { attachYoutubePosters, resolveEventVideoPoster } from "@/modules/media/video-poster";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
@@ -730,6 +732,8 @@ export type SaveTranslationInput = {
    */
   acknowledgeLiveEdit?: boolean;
   now?: Date;
+  /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
+  fetchImpl?: typeof fetch;
 };
 
 /**
@@ -769,6 +773,10 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
+  // No poster fetch here, ever (`DECISIONS.md` §403): this runs inside the whole-event save's
+  // transaction, behind `lockEventForCapacity`. Every caller attaches the posters to what it
+  // posts first, with `attachPostersToPostedTexts`, before any transaction opens; a film whose
+  // fetch failed there stays without a poster until the next save.
   const fields = parseOrThrow(translationFieldsSchema, input.fields);
 
   /**
@@ -833,6 +841,59 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
     ...(discountAllowed ? {} : { discountNote: null }),
   };
+}
+
+/** The five rich-text boxes of one language — every one of them may carry a film. */
+const RICH_TEXT_BOXES = ["body", "rules", "schedule", "routeDescription", "excerptBody"] as const;
+
+type PosterOptions = { now?: Date; fetchImpl?: typeof fetch };
+
+/**
+ * Every film in one language's posted boxes gets the club's own poster (`DECISIONS.md` §403),
+ * before any transaction opens: `attachYoutubePosters` may make up to three sequential requests
+ * to `i.ytimg.com` per film, a `sharp` encode and an R2 put, and none of that belongs behind
+ * `lockEventForCapacity`, the lock every registration waits on.
+ *
+ * Works on the posted shape — each box a JSON string, as the editor sends it and
+ * `translationFieldsSchema` reads it — so the one real validation still runs, unchanged, in
+ * `applyTranslationSave`. A box that is not a valid document is left exactly as posted, for that
+ * validation to refuse; a box with no film to attach is left byte for byte. Best effort: a film
+ * whose fetch fails keeps `poster: null` and the page shows the text facade — never a refusal.
+ */
+async function attachPostersToPostedTexts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  posted: unknown,
+  options: PosterOptions,
+): Promise<unknown> {
+  if (!posted || typeof posted !== "object" || Array.isArray(posted)) return posted;
+  const boxes = posted as Record<string, unknown>;
+  const withPosters = { ...boxes };
+  for (const key of RICH_TEXT_BOXES) {
+    const raw = boxes[key];
+    if (typeof raw !== "string" || raw.trim() === "") continue;
+    let doc: RichTextDoc;
+    try {
+      doc = parseRichText(JSON.parse(raw));
+    } catch {
+      continue;
+    }
+    const attached = await attachYoutubePosters(db, doc, options);
+    if (attached !== doc) withPosters[key] = JSON.stringify(attached);
+  }
+  return withPosters;
+}
+
+/** The same for a language already parsed — the create form's, where `newEventSchema` ran first. */
+async function attachPostersToParsedTexts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  fields: TranslationFields,
+  options: PosterOptions,
+): Promise<TranslationFields> {
+  const withPosters = { ...fields };
+  for (const key of RICH_TEXT_BOXES) {
+    withPosters[key] = await attachYoutubePosters(db, fields[key], options);
+  }
+  return withPosters;
 }
 
 /** The optional texts of one language, as the row will hold them — the columns, not the posted boxes. */
@@ -905,13 +966,16 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
 
   const record = await findTranslationWithEventById(db, input.translationId);
   if (!record) throw new DomainError("NOT_FOUND", "no such event translation");
+  // Who may write this text is asked before a single poster is fetched on their behalf.
+  assertMayEdit(input.actor, record.event, record.translation);
+  const fields = await attachPostersToPostedTexts(db, input.fields, { now, fetchImpl: input.fetchImpl });
 
   const saved = await applyTranslationSave(db, {
     actor: input.actor,
     event: record.event,
     current: record.translation,
     expectedVersion: input.expectedVersion,
-    fields: input.fields,
+    fields,
     acknowledgeLiveEdit: input.acknowledgeLiveEdit,
     eventType: record.event.type,
     registrationMode: record.event.registrationMode,
@@ -1317,6 +1381,8 @@ export type SaveEventFieldsInput = {
   /** Required when the save moves the event to CANCELLED (§331). */
   cancellation?: EventCancellationRequest;
   now?: Date;
+  /** Only for tests: a `fetch` stand-in for the YouTube poster fetch, never a live default. */
+  fetchImpl?: typeof fetch;
 };
 
 /**
@@ -1346,6 +1412,16 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
+  // Outside the transaction below: this is a network fetch to YouTube, never something that
+  // should hold the event's row lock or the capacity check open (`DECISIONS.md` §403).
+  const posterColumns = await resolveEventVideoPoster(db, {
+    nextVideoUrl: fields.videoUrl,
+    currentVideoUrl: current.videoUrl,
+    currentPosterUrl: current.videoPosterUrl,
+    videoIdOf: youtubeVideoId,
+    now,
+    fetchImpl: input.fetchImpl,
+  });
 
   /**
    * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -1371,7 +1447,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       tx,
       input.eventId,
       input.expectedVersion,
-      { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
+      { ...eventColumnsFrom(fields, times), ...posterColumns, updatedByStaffUserId: input.actor.id },
       now,
     );
     // The place's name in each language is the event's (§362): written with the row, under its version.
@@ -1434,6 +1510,8 @@ export type SaveEventAndTranslationsInput = {
    */
   placeNamesAsTyped?: boolean;
   now?: Date;
+  /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
+  fetchImpl?: typeof fetch;
 };
 
 /** As Google Calendar asks: this date, this and the following ones, or every date of the series. */
@@ -1851,6 +1929,33 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
+  // A network fetch, kept out of the transaction below for the same reason as `saveEventFields`.
+  const posterColumns = parsedEventFields
+    ? await resolveEventVideoPoster(db, {
+        nextVideoUrl: parsedEventFields.videoUrl,
+        currentVideoUrl: current.videoUrl,
+        currentPosterUrl: current.videoPosterUrl,
+        videoIdOf: youtubeVideoId,
+        now,
+        fetchImpl: input.fetchImpl,
+      })
+    : {};
+  /*
+    Every translation's YouTube posters, fetched before the transaction opens (`DECISIONS.md`
+    §403): `applyTranslationSave` runs inside the transaction below, behind `lockEventForCapacity`
+    — the serialization point every registration takes — and fetches nothing itself. Who may
+    write each text is asked first, so nobody's save fetches a poster for a text it may not change.
+  */
+  for (const submitted of input.translations) {
+    const existing = existingTranslations.find((row) => row.id === submitted.translationId);
+    if (existing) assertMayEdit(input.actor, current, existing);
+  }
+  const enrichedTranslations = await Promise.all(
+    input.translations.map(async (submitted) => ({
+      ...submitted,
+      fields: await attachPostersToPostedTexts(db, submitted.fields, { now, fetchImpl: input.fetchImpl }),
+    })),
+  );
   /*
     The club's deadlines the offers of a raised capacity are made with (§377), read here, before the
     transaction: inside it the event row is locked, and a stale memo would otherwise read
@@ -1895,7 +2000,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         tx,
         input.eventId,
         input.expectedVersion as number,
-        { ...eventColumnsFrom(parsedEventFields, times), updatedByStaffUserId: input.actor.id },
+        { ...eventColumnsFrom(parsedEventFields, times), ...posterColumns, updatedByStaffUserId: input.actor.id },
         now,
       );
       // Before the words, so each row a text save writes back already carries its new name.
@@ -1912,7 +2017,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, savedEvent);
     }
 
-    for (const submitted of input.translations) {
+    for (const submitted of enrichedTranslations) {
       const existing = existingTranslations.find((row) => row.id === submitted.translationId);
       if (!existing) throw new DomainError("NOT_FOUND", "no such event translation");
 
@@ -2032,21 +2137,34 @@ export type CreateEventInput = {
   actor: Actor;
   fields: unknown;
   now?: Date;
+  /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
+  fetchImpl?: typeof fetch;
+};
+
+type PreparedEventCreate = {
+  parsed: ReturnType<typeof normalizeForMode>;
+  times: ReturnType<typeof resolveTimes>;
+  posterColumns: Awaited<ReturnType<typeof resolveEventVideoPoster>>;
+  translationColumns: { ro: ReturnType<typeof translationColumnsFrom>; en: ReturnType<typeof translationColumnsFrom> };
+  names: PlaceNames;
 };
 
 /**
- * A new event, with a translation in every locale, as a DRAFT.
+ * Everything a create needs from outside the database — parsing, the two rules-based checks, and
+ * every YouTube poster fetch (the event's own `video_url` and any film pasted into a body) — run
+ * once, before any transaction opens.
  *
- * Never created published: publication is a transition an Editor makes after reading the page,
- * and an event that appeared live the instant it was saved would put an unreviewed draft on the
- * landing page. `src/db/seeds/pilot.ts` is no longer how an event is configured — this is.
+ * Split out of `createEvent` (found by re-review, `DECISIONS.md` §403): `createEventAndPublish`
+ * used to call `createEvent(tx, …)` from *inside* its own transaction, so this exact same fetch
+ * work ran while that outer transaction — and, once publication runs, the event row's own lock —
+ * was open. This function takes a plain, non-transactional `db` handle so a caller can never make
+ * that mistake again; only `insertPreparedEvent` touches a transaction.
  */
-export async function createEvent<T extends Record<string, unknown>>(
+async function prepareEventCreate<T extends Record<string, unknown>>(
   db: Database<T>,
   input: CreateEventInput,
-): Promise<EditableEvent> {
-  const now = input.now ?? new Date();
-
+  now: Date,
+): Promise<PreparedEventCreate> {
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not create an event`);
   }
@@ -2054,6 +2172,19 @@ export async function createEvent<T extends Record<string, unknown>>(
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
+  // A film pasted straight into any of a new event's five rich texts, in either language, gets
+  // the club's own poster too (`DECISIONS.md` §403), before any transaction opens.
+  const posterOptions = { now, fetchImpl: input.fetchImpl };
+  parsed.translations.ro = await attachPostersToParsedTexts(db, parsed.translations.ro, posterOptions);
+  parsed.translations.en = await attachPostersToParsedTexts(db, parsed.translations.en, posterOptions);
+  const posterColumns = await resolveEventVideoPoster(db, {
+    nextVideoUrl: parsed.videoUrl,
+    currentVideoUrl: null,
+    currentPosterUrl: null,
+    videoIdOf: youtubeVideoId,
+    now,
+    fetchImpl: input.fetchImpl,
+  });
   // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
   // then inserted exactly as checked. The discount note is gated on the cost the insert stores: an
   // absent cost type is `COST_TYPE_ON_CREATE`, exactly as `eventColumnsFrom` writes it.
@@ -2070,40 +2201,66 @@ export async function createEvent<T extends Record<string, unknown>>(
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);
 
-  const created = await db.transaction(async (tx) => {
-    if (parsed.featured) await clearFeaturedExcept(tx, null, now);
+  return { parsed, times, posterColumns, translationColumns, names };
+}
 
-    const [event] = await tx
-      .insert(events)
-      .values({
-        ...eventColumnsFrom(parsed, times, { isCreate: true }),
-        editorialStatus: "DRAFT",
-        createdByStaffUserId: input.actor.id,
-        updatedByStaffUserId: input.actor.id,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
+/** The insert half of a create: no network fetch, safe to run inside any transaction or savepoint. */
+async function insertPreparedEvent<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  actor: Actor,
+  prepared: PreparedEventCreate,
+  now: Date,
+): Promise<EditableEvent> {
+  const { parsed, times, posterColumns, translationColumns, names } = prepared;
+  if (parsed.featured) await clearFeaturedExcept(tx, null, now);
 
-    // Through the same function a save writes with: the rich summary's words become the
-    // plain `excerpt`, the empty documents become null, a group run gets no programme.
-    await tx.insert(eventTranslations).values(
-      routing.locales.map((locale) => ({
-        eventId: event.id,
-        locale,
-        ...translationColumns[locale],
-        locationName: names[locale] ?? null,
-        authorStaffUserId: input.actor.id,
-        createdAt: now,
-        updatedAt: now,
-      })),
-    );
+  const [event] = await tx
+    .insert(events)
+    .values({
+      ...eventColumnsFrom(parsed, times, { isCreate: true }),
+      ...posterColumns,
+      editorialStatus: "DRAFT",
+      createdByStaffUserId: actor.id,
+      updatedByStaffUserId: actor.id,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
 
-    return event;
-  });
+  // Through the same function a save writes with: the rich summary's words become the
+  // plain `excerpt`, the empty documents become null, a group run gets no programme.
+  await tx.insert(eventTranslations).values(
+    routing.locales.map((locale) => ({
+      eventId: event.id,
+      locale,
+      ...translationColumns[locale],
+      locationName: names[locale] ?? null,
+      authorStaffUserId: actor.id,
+      createdAt: now,
+      updatedAt: now,
+    })),
+  );
+
+  return event;
+}
+
+/**
+ * A new event, with a translation in every locale, as a DRAFT.
+ *
+ * Never created published: publication is a transition an Editor makes after reading the page,
+ * and an event that appeared live the instant it was saved would put an unreviewed draft on the
+ * landing page. `src/db/seeds/pilot.ts` is no longer how an event is configured — this is.
+ */
+export async function createEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: CreateEventInput,
+): Promise<EditableEvent> {
+  const now = input.now ?? new Date();
+  const prepared = await prepareEventCreate(db, input, now);
+  const created = await db.transaction((tx) => insertPreparedEvent(tx, input.actor, prepared, now));
   // A draft shows nowhere — but a featured one has just taken the flag from the event the
   // listing leads with, and that one is public.
-  if (parsed.featured) revalidatePublicContent("events");
+  if (prepared.parsed.featured) revalidatePublicContent("events");
   return created;
 }
 
@@ -2155,9 +2312,14 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
   input: CreateEventInput & { publish: boolean; repeat?: NewEventRepeatRule | null },
 ): Promise<CreateAndPublishResult> {
   const now = input.now ?? new Date();
+  // Every YouTube poster fetch, before any transaction opens (`DECISIONS.md` §403, found by
+  // re-review): this used to run inside `createEvent(tx, …)`, itself called from inside this
+  // function's own transaction, so the fetches ran with the transaction — and, once
+  // `publishNewEvent` moves the row through its transitions, that row's own lock — already open.
+  const prepared = await prepareEventCreate(db, { actor: input.actor, fields: input.fields, now, fetchImpl: input.fetchImpl }, now);
 
-  return db.transaction(async (tx) => {
-    const created = await createEvent(tx, { actor: input.actor, fields: input.fields, now });
+  const result = await db.transaction(async (tx) => {
+    const created = await insertPreparedEvent(tx, input.actor, prepared, now);
     const { event, published, refusal } = await publishNewEvent(tx, input.actor, created, input.publish, now);
     if (!input.repeat) return { event, published, refusal, repeated: 0 };
 
@@ -2168,6 +2330,12 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
     const series = await namedUnder("repeat", () => repeatEvent(tx, { actor: input.actor, eventId: event.id, rule, now }));
     return { event, published, refusal, repeated: series.created };
   });
+  // Only once the whole create — including a repeat rule that could still have refused it — has
+  // actually committed: a featured flag on an event a rolled-back savepoint undid must never
+  // clear the public cache for a draft nobody is going to see. (A publish already revalidates
+  // through `transitionEvent`.)
+  if (prepared.parsed.featured) revalidatePublicContent("events");
+  return result;
 }
 
 /** The publication half of `createEventAndPublish`: its own savepoint, so a refusal keeps the draft. */

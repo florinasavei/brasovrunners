@@ -119,5 +119,9 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     youtubeInvalid: rt("youtubeInvalid"),
     youtubeCaption: rt("youtubeCaption"),
     youtubeRemove: rt("youtubeRemove"),
+    youtubePoster: rt("youtubePoster"),
+    youtubePosterUploading: rt("youtubePosterUploading"),
+    youtubePosterFailed: rt("youtubePosterFailed"),
+    youtubePosterUseYoutube: rt("youtubePosterUseYoutube"),
   };
 }

@@ -9,6 +9,7 @@ import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
@@ -23,7 +24,13 @@ import { headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[]; view?: string | string[] }>;
+  searchParams: Promise<{
+    month?: string | string[];
+    year?: string | string[];
+    type?: string | string[];
+    view?: string | string[];
+    partner?: string | string[];
+  }>;
 };
 
 /**
@@ -61,7 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CalendarPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam } = await searchParams;
+  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam, partner: partnerParam } = await searchParams;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -73,7 +80,14 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
   const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
-  const query: Record<string, string> = { ...(type ? { type } : {}), ...(layout === "list" ? { view: "list" } : {}) };
+  // The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`, kept the
+  // same way through the month's own links.
+  const partner = (Array.isArray(partnerParam) ? partnerParam[0] : partnerParam) === "1";
+  const query: Record<string, string> = {
+    ...(type ? { type } : {}),
+    ...(layout === "list" ? { view: "list" } : {}),
+    ...(partner ? { partner: "1" } : {}),
+  };
   const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
   const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
   const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
@@ -88,7 +102,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
     // From the public cache (§333): the range is the key, and an event save expires it.
     () =>
       cachedPublishedEventsBetween(locale, range.from, range.to).then((rows) =>
-        rows.filter((event) => !type || event.type === type),
+        rows.filter((event) => (!type || event.type === type) && (!partner || readCoHosts(event).length > 0)),
       ),
     now,
   );
@@ -113,7 +127,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
         <CalendarStaleNotice events={events} />
       </Suspense>
 
-      <CalendarSection locale={locale} view={view} layout={layout} type={type} query={query} now={now} events={events.then((read) => read.value)} />
+      <CalendarSection locale={locale} view={view} layout={layout} type={type} partner={partner} query={query} now={now} events={events.then((read) => read.value)} />
     </Container>
   );
 }

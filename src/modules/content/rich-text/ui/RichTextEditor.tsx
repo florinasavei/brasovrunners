@@ -277,6 +277,11 @@ function RichTextEditorIsland({
     youtubeInvalid: string;
     youtubeCaption: string;
     youtubeRemove: string;
+    /** The club's own poster choice (§403, "să pot pune thumbnail"): pick, replace, or fall back to YouTube's own. */
+    youtubePoster: string;
+    youtubePosterUploading: string;
+    youtubePosterFailed: string;
+    youtubePosterUseYoutube: string;
   };
 }) {
   const initialDoc = readRichText(initialBody);
@@ -286,6 +291,8 @@ function RichTextEditorIsland({
   const [youtubeDraft, setYoutubeDraft] = useState<string | null>(null);
   const [youtubeInvalid, setYoutubeInvalid] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
+  const [posterState, setPosterState] = useState<"idle" | "uploading" | "failed">("idle");
+  const posterFileInputRef = useRef<HTMLInputElement>(null);
   /**
    * The picture bar (§NNN): the toolbar's picture control opens it rather than the file dialog,
    * so the quality is chosen beside the upload; the file input itself stays mounted, and a paste
@@ -543,6 +550,28 @@ function RichTextEditorIsland({
       setImageState("idle");
     } catch {
       setImageState("failed");
+    }
+  };
+
+  /**
+   * The club's own poster for the selected film (§403, "să pot pune thumbnail"): the same
+   * shrink-and-upload `insertImage` uses, written to the *selected* youtube node's `poster`
+   * rather than inserted as a picture of its own. `posterSource: "club"` is what keeps
+   * `attachYoutubePosters` from ever replacing it with YouTube's own thumbnail on a later save.
+   */
+  const pickPoster = async (file: File) => {
+    setPosterState("uploading");
+    try {
+      const body = new FormData();
+      body.append("file", await shrinkImageInBrowser(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
+      body.append("originalFilename", file.name);
+      const response = await fetch("/api/admin/media", { method: "POST", body });
+      if (!response.ok) throw new Error(String(response.status));
+      const uploaded = (await response.json()) as { src: string };
+      editor?.chain().focus().updateAttributes("youtube", { poster: uploaded.src, posterSource: "club" }).run();
+      setPosterState("idle");
+    } catch {
+      setPosterState("failed");
     }
   };
 
@@ -1502,6 +1531,46 @@ function RichTextEditorIsland({
                 ))}
               </ToggleButtonGroup>
             </Box>
+            {/*
+              The club's own poster (§403, "să pot pune thumbnail"): the same upload `insertImage`
+              uses, written to this node's `poster` rather than inserted as a picture of its own.
+              "Use YouTube's" only shows once a club poster is picked — it clears `posterSource`
+              so `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
+            */}
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <Button
+                size="small"
+                onClick={() => posterFileInputRef.current?.click()}
+                disabled={posterState === "uploading"}
+              >
+                {posterState === "uploading" ? labels.youtubePosterUploading : labels.youtubePoster}
+              </Button>
+              {videoAttrs?.posterSource === "club" ? (
+                <Button
+                  size="small"
+                  color="inherit"
+                  onClick={() => editor?.chain().focus().updateAttributes("youtube", { poster: null, posterSource: null }).run()}
+                >
+                  {labels.youtubePosterUseYoutube}
+                </Button>
+              ) : null}
+            </Stack>
+            {posterState === "failed" && (
+              <Typography variant="body2" color="error">
+                {labels.youtubePosterFailed}
+              </Typography>
+            )}
+            <input
+              ref={posterFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void pickPoster(file);
+              }}
+            />
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.youtubeRemove}
@@ -1682,6 +1751,10 @@ const YoutubeNode = Node.create({
       // The defaults emit nothing: a film stored before §266 keeps its exact JSON.
       widthPercent: { default: 100 },
       align: { default: "block" },
+      // The club's own poster (§403) — declared here so it survives the editor's round trip
+      // (`getJSON`/`setContent`) instead of being dropped as an attribute Tiptap never heard of.
+      poster: { default: null },
+      posterSource: { default: null },
     };
   },
   parseHTML() {
@@ -1691,6 +1764,9 @@ const YoutubeNode = Node.create({
     const id = String(node.attrs.videoId ?? "");
     const percent = Number(node.attrs.widthPercent ?? 100);
     const align = String(node.attrs.align ?? "block");
+    // A club-chosen poster shows here too — an organizer who picked one should see it while
+    // placing the film, not YouTube's own thumbnail underneath it.
+    const posterSrc = typeof node.attrs.poster === "string" && node.attrs.poster ? node.attrs.poster : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
     /*
       The page's geometry, in the one form this DOM accepts. A floated film gets the gutter the
       text wraps against on its inner side, which is what `imageFigureSx` does with `mr`/`ml`.
@@ -1704,7 +1780,7 @@ const YoutubeNode = Node.create({
     return [
       "div",
       { class: "rt-youtube", "data-youtube": id, "data-width": String(percent), "data-align": align, style: box },
-      ["img", { src: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, alt: "", style: "display:block;width:100%;border-radius:4px" }],
+      ["img", { src: posterSrc, alt: "", style: "display:block;width:100%;border-radius:4px" }],
       ["span", { style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 0 8px #000" }, "▶"],
       ["div", { style: "font-size:0.875rem;color:#666;text-align:center;margin-top:4px" }, String(node.attrs.caption ?? "")],
     ];

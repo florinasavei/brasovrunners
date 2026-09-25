@@ -13,7 +13,7 @@ import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
-import { listingSections, presentEventTypes } from "@/modules/events/domain/listing";
+import { listingSections, partnerFilterOffered, presentEventTypes } from "@/modules/events/domain/listing";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
@@ -36,7 +36,13 @@ import { headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[]; view?: string | string[] }>;
+  searchParams: Promise<{
+    month?: string | string[];
+    year?: string | string[];
+    type?: string | string[];
+    view?: string | string[];
+    partner?: string | string[];
+  }>;
 };
 
 /**
@@ -92,12 +98,15 @@ type Listing = Awaited<ReturnType<typeof loadListing>>;
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { type: typeParam, view: viewParam } = await searchParams;
+  const { type: typeParam, view: viewParam, partner: partnerParam } = await searchParams;
   // The type filter (§89): one of the closed set, or everything.
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
   // The layout the month links keep (§137); `ListingLead` passes it to the filter's own links.
   const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
+  // The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`: the owner,
+  // 22:15, 2026-09-25: "I want to see that «colaboration» event in the filters as well".
+  const partner = (Array.isArray(partnerParam) ? partnerParam[0] : partnerParam) === "1";
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -154,7 +163,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       </Typography>
 
       <Suspense fallback={<ListingLeadSkeleton label={t("loading")} />}>
-        <ListingLead listing={listing} type={type} layout={layout} locale={locale} now={now} />
+        <ListingLead listing={listing} type={type} partner={partner} layout={layout} locale={locale} now={now} />
       </Suspense>
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
@@ -162,7 +171,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
       <Suspense fallback={<EventListSkeleton label={t("loading")} />}>
-        <ListingBody listing={listing} type={type} now={now} />
+        <ListingBody listing={listing} type={type} partner={partner} now={now} />
       </Suspense>
 
       {/* What the club has already held, at the foot and folded (§267). Its own query and its
@@ -186,12 +195,15 @@ export default async function EventsPage({ params, searchParams }: Props) {
 async function ListingLead({
   listing,
   type,
+  partner,
   layout,
   locale,
   now,
 }: {
   listing: Promise<Resilient<Listing>>;
   type?: EventType;
+  /** The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`. */
+  partner: boolean;
   layout: CalendarLayout;
   locale: "ro" | "en";
   now: Date;
@@ -202,12 +214,22 @@ async function ListingLead({
   // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
-  const { featured } = listingSections(events, type, hasUpcoming);
+  const { featured } = listingSections(events, type, hasUpcoming, partner);
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
   // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
   const presentTypes = presentEventTypes(events, type);
+  // Same rule, for "Colaborare" (§401): offered only while a partnered event is among what the
+  // page shows, or the address already narrows by it. Read off what the filter can actually
+  // narrow — the list, not the hero, which the filter never touches (§376 fix round finding 7):
+  // offering the chip on the hero's partner alone would empty the grid on a press.
+  const partnerOffered = partnerFilterOffered(
+    featured ? events.filter((event) => event.id !== featured.id) : events,
+    partner,
+  );
+  const filterQuery = (extra: Record<string, string>) =>
+    getPathname({ locale, href: { pathname: "/events", query: { ...extra, ...(layout === "list" ? { view: "list" } : {}) } } });
 
   return (
     <>
@@ -219,22 +241,51 @@ async function ListingLead({
 
       {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} />}
 
-      {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133).
-          Fewer than two kinds is nothing to filter. */}
-      {presentTypes.length > 1 && (
-        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
-          {[undefined, ...presentTypes].map((candidate) => {
-            const active = candidate === type;
-            // A string href: a component reference cannot cross into MUI's client component —
-            // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
-            const href = getPathname({ locale, href: { pathname: "/events", query: { ...(candidate ? { type: candidate } : {}), ...(layout === "list" ? { view: "list" } : {}) } } });
-            // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
-            return candidate ? (
-              <ChipLink key={candidate} href={href} label={tEvent(`type.${candidate}`)} glyph={`type:${candidate}`} active={active} current={active ? "page" : undefined} />
-            ) : (
-              <ChipLink key="all" href={href} label={t("filter.all")} active={active} current={active ? "page" : undefined} />
-            );
-          })}
+      {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133),
+          plus "Colaborare" / "Partnership" (§401, the owner, 22:15, 2026-09-25) when the club has
+          a partnered event to show — AND-combined with the kind above it, its own state in the
+          address (`?partner=1`), never replacing the kind's own chip row. Fewer than two kinds
+          and no partnered event is nothing to filter.
+
+          The gap under this row and above the grid (§401 — the owner: "filters still need to be
+          a bit above the grid") is `DENSITY.sectionGap`, one density-token step: measured on the
+          built listing at 320/360/390/412 and desktop, 0px before this change at every width
+          (the filter row carried no `mb` and the grid no `mt`), 16px on a phone and 24px from
+          `sm` after it — the same numbers this row's own `mt` above already uses, so the space
+          above and below the row now matches. It sits on this row's own `mb` (§376 fix round
+          finding 3), not on `ListingBody`'s three shapes: fewer than two kinds and no partnered
+          event, this row does not render, and nothing on the listing may move for that — the
+          grid then sits directly under the intro or the hero, as it always has. */}
+      {(presentTypes.length > 1 || partnerOffered) && (
+        <Stack
+          component="nav"
+          aria-label={t("filter.label")}
+          direction="row"
+          sx={{ flexWrap: "wrap", columnGap: 0.5, mt: { xs: DENSITY.sectionGap, sm: 3 }, mb: { xs: DENSITY.sectionGap, sm: 3 } }}
+        >
+          {presentTypes.length > 1 &&
+            [undefined, ...presentTypes].map((candidate) => {
+              const active = candidate === type;
+              // A string href: a component reference cannot cross into MUI's client component —
+              // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
+              const href = filterQuery({ ...(candidate ? { type: candidate } : {}), ...(partner ? { partner: "1" } : {}) });
+              // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
+              return candidate ? (
+                <ChipLink key={candidate} href={href} label={tEvent(`type.${candidate}`)} glyph={`type:${candidate}`} active={active} current={active ? "page" : undefined} />
+              ) : (
+                <ChipLink key="all" href={href} label={t("filter.all")} active={active} current={active ? "page" : undefined} />
+              );
+            })}
+          {partnerOffered && (
+            <ChipLink
+              key="partner"
+              href={filterQuery({ ...(type ? { type } : {}), ...(partner ? {} : { partner: "1" }) })}
+              label={t("filter.partner")}
+              glyph="partner"
+              active={partner}
+              current={partner ? "page" : undefined}
+            />
+          )}
         </Stack>
       )}
     </>
@@ -342,12 +393,23 @@ async function PastEvents({
  * `::details-content` is told to stay visible and the marker is hidden — because a wide
  * screen has room, and a reader there cannot tell a heading from a control.
  */
-async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<Listing>>; type?: EventType; now: Date }) {
+async function ListingBody({
+  listing,
+  type,
+  partner,
+  now,
+}: {
+  listing: Promise<Resilient<Listing>>;
+  type?: EventType;
+  /** The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`. */
+  partner: boolean;
+  now: Date;
+}) {
   const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
   // The same division the lead made, and it has to be given the same third argument or the
   // two disagree: a past event the lead refused to hero must appear in the list (§167).
-  const { featured, listed } = listingSections(events, type, hasUpcoming);
+  const { featured, listed } = listingSections(events, type, hasUpcoming, partner);
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);

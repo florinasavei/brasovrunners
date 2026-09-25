@@ -45,6 +45,7 @@ export default async function CalendarSection({
   view,
   layout,
   type,
+  partner = false,
   query,
   now,
   events,
@@ -54,6 +55,8 @@ export default async function CalendarSection({
   layout: CalendarLayout;
   /** The type filter the address carries, so the month's own links keep it. */
   type?: EventType;
+  /** The "Colaborare" / "Partnership" filter the address carries (§133, §401), AND-combined with `type`. */
+  partner?: boolean;
   query: Record<string, string>;
   now: Date;
   /** Started by the page and awaited inside the boundary below, never in the page body (§166). */
@@ -67,7 +70,7 @@ export default async function CalendarSection({
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
         <CalendarHeader view={view} now={now} query={query} layout={layout} />
         <Suspense
-          key={calendarBoundaryKey(view, layout, type)}
+          key={calendarBoundaryKey(view, layout, type, partner)}
           fallback={
             <CalendarBodySkeleton
               label={t("loading")}

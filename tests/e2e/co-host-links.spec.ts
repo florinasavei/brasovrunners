@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languageTab, openEditorBox } from "./support/fold";
+import { languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344 and §352) — a partner is a
@@ -112,16 +112,25 @@ test("the editor adds a partner with its description and three links, refuses th
   await page.goto(`/ro/previzualizare/evenimente/${eventId}`);
   await hydrated(page);
 
-  await expect(page.getByText("Împreună cu")).toBeVisible();
+  // Since §401 the partners are no longer a `dt`/`dd` row of the facts: they are their own
+  // `<section id="partners">` after the `<dl>` closes, a native `<details>` whose summary says
+  // "Împreună cu" and the names — closed by default on a phone, forced open from `sm` up by CSS
+  // only where the browser supports `::details-content`. Opened here on every project, by its
+  // summary (`openFold`, idempotent), so the spec never depends on that selector's support.
+  const partners = page.locator("section#partners");
+  await openFold(partners.getByTestId("partners-fold"));
+  await expect(partners.getByText("Împreună cu")).toBeVisible();
   // Exact: the registration link says the partner's name too ("Înscriere la …").
-  await expect(page.getByText(partnerName, { exact: true })).toBeVisible();
+  await expect(partners.getByText(partnerName, { exact: true })).toBeVisible();
 
-  // Scoped to the facts' own "Împreună cu" row: the footer carries its own Facebook mark
-  // (`SocialIcon`), and the partner's link must not be confused with it.
-  const coHostValue = page.locator("dt", { hasText: "Împreună cu" }).locator("xpath=following-sibling::dd[1]");
-  // What the partnership is, in Romanian on the Romanian page, and never the English sentence.
+  // Scoped to the partner's own card: the footer carries its own Facebook mark (`SocialIcon`),
+  // and the partner's link must not be confused with it.
+  const coHostValue = partners.getByTestId("partner-card");
+  await expect(coHostValue).toHaveCount(1);
+  // What the partnership is, in Romanian on the Romanian page, and never the English sentence —
+  // nowhere in the partners' section, the summary included.
   await expect(coHostValue.getByText(ABOUT_RO)).toBeVisible();
-  await expect(coHostValue).not.toContainText(ABOUT_EN);
+  await expect(partners).not.toContainText(ABOUT_EN);
 
   // Where to register with the partner comes first, named with the partner, as a link.
   const register = coHostValue.getByRole("link").first();
@@ -147,9 +156,12 @@ test("the editor adds a partner with its description and three links, refuses th
   // The English page: the English sentence, and the registration link in English.
   await page.goto(`/en/preview/events/${eventId}`);
   await hydrated(page);
-  const coHostValueEn = page.locator("dt", { hasText: "Together with" }).locator("xpath=following-sibling::dd[1]");
+  const partnersEn = page.locator("section#partners");
+  await openFold(partnersEn.getByTestId("partners-fold"));
+  await expect(partnersEn.getByText("Together with")).toBeVisible();
+  const coHostValueEn = partnersEn.getByTestId("partner-card");
   await expect(coHostValueEn.getByText(ABOUT_EN)).toBeVisible();
-  await expect(coHostValueEn).not.toContainText(ABOUT_RO);
+  await expect(partnersEn).not.toContainText(ABOUT_RO);
   const registerEn = coHostValueEn.getByRole("link").first();
   await expect(registerEn).toHaveAttribute("href", REGISTER_URL);
   await expect(registerEn).toContainText(`Register with ${partnerName}`);
