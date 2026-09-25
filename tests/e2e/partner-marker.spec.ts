@@ -140,8 +140,11 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
 
     // Since §376 the partner card sits in its own `<section id="partners">` after the `<dl>`
     // closes, behind a `<details>` fold closed by default on a phone (`ListingBody`'s "other
-    // events" device) and forced open from `sm` up. Open it before reaching in on mobile.
-    if (test.info().project.name === "mobile") await page.locator('[data-testid="partners-fold"]').locator("summary").click();
+    // events" device) and forced open from `sm` up by CSS — only where the browser supports
+    // `::details-content` (§401). Opened on every project, by its summary (`openFold`,
+    // idempotent, by keyboard: from `sm` up the summary takes no pointer), so the spec never
+    // depends on that selector's support.
+    await openFold(page.locator("section#partners").getByTestId("partners-fold"));
     // The partner's own card — description and a link, not a name alone — stays inside its
     // `<section>` at the narrowest viewport the suite runs (§375 amended, finding 5): the name
     // has no `overflowWrap` of its own (the description and the link labels do), so this is the
