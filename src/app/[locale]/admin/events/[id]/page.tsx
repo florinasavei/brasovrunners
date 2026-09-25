@@ -12,13 +12,12 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
-import { PLACE_NAME_FIELD } from "@/modules/events/domain/place";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
-import { describeIncompleteLocales, missingPublicEventFields } from "@/modules/content/events/service";
 import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/BibPrint";
 import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
+import CostBox from "@/modules/content/events/ui/boxes/CostBox";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
@@ -27,12 +26,18 @@ import PlaceBox from "@/modules/content/events/ui/boxes/PlaceBox";
 import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
+import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
 import StatusBox from "@/modules/content/events/ui/boxes/StatusBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
+import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
-import EventEditorLayout, { EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
+import EventEditorLayout, { AutomaticSection, EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
 import { IdenticalTextsList, RevealLink } from "@/modules/content/events/ui/MissingForPublish";
+import { pageFlow } from "@/modules/content/events/ui/page-flow";
+import { PublishCheckProvider, PublishGapsSummary, PublishGateButton } from "@/modules/content/events/ui/PublishCheck";
+import SectionMap from "@/modules/content/events/ui/SectionMap";
+import RegisteredLine from "@/modules/content/events/ui/RegisteredLine";
 import { EventNoticeUpdateFields } from "@/modules/content/events/ui/EventNoticeFields";
 import RecurrenceSeriesPanel from "@/modules/content/events/ui/RecurrenceSeriesPanel";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
@@ -66,8 +71,17 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
 import { eventFormFieldLabels, identicalTextLabels } from "@/modules/content/events/ui/field-labels";
-import { identicalTexts, storedTextReader } from "@/modules/content/events/ui/publish-check";
+import {
+  identicalTexts,
+  missingForPublish,
+  publishCheckValues,
+  publishGapLabel,
+  type PublishGapLabels,
+  storedPublishReader,
+  storedTextReader,
+} from "@/modules/content/events/ui/publish-check";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { clubNightEvent } from "@/modules/events/night-event";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -117,14 +131,15 @@ export const dynamic = "force-dynamic";
  * The one editing screen (BR-REQ-050-01, BR-REQ-051-01), as boxes (§350; the owner asked for "a
  * WordPress-like editor", and then for it to read like the event's fact sheet).
  *
- * **The same page as the create form** (`EventEditorLayout`): a side column — Publicare and
- * Recurență, first on a phone, pinned on the right from `md` up — and a main column of boxes in
- * three labelled groups: "Evenimentul" (what kind — with its three cards inside it, the status, the
- * course and the links and files, §358 — title and summary, description), "Ziua evenimentului și
- * participanții" (date and time, place, programme, rules, registration), "Parteneri și prezentare"
- * (partners, promotion, page address), then the always-open Salvare. The create page nests the
- * same three cards in the same box. Each box answers one question and its closed line shows the answer, so the
- * editor opens as a fact sheet and one opens only the box to change. Every box with per-language
+ * **The same page as the create form** (`EventEditorLayout`): a side column — Publicare, Recurență
+ * and the page's map, first on a phone, pinned on the right from `md` up — and a main column that is
+ * **the public page, top to bottom** (§406; the owner: "am nevoie de mai multe căsuțe la editor ca
+ * să văd exact ce flow am în pagină"): one card per section the page draws, in the page's order
+ * (`events/domain/page-sections.ts`), each numbered and headed by whether the page shows it, the
+ * share links named where the page puts them; then, apart, what is not a section of the page — the
+ * status, the promotion, the page address; then the always-open Salvare. Each box answers one
+ * question and its closed line shows the answer — and, for a box publication needs, what it still
+ * lacks, per language — so the editor opens as a fact sheet and one opens only the box to change. Every box with per-language
  * text has its own Română | English tabs; there is no page-wide language switch, so a shared
  * setting never hides behind a language tab.
  *
@@ -138,9 +153,7 @@ export const dynamic = "force-dynamic";
  *
  * **Once people have registered** (real ones: a test row is counted nowhere the club looks,
  * §12.6), the five boxes whose change reaches them — date, place, programme, registration, and
- * the status card inside "Ce fel de eveniment" — are amber, wear the count, and say in one line
- * what a change does. "Ce fel de eveniment" is amber and wears the count too, closed, because the
- * status card is inside it (§358); the sentence stays in the card.
+ * the status — are amber, wear the count, and say in one line what a change does.
  *
  * The interface hides what a role may not do, and that is a courtesy rather than the rule — every
  * button here is checked again in the action behind it (BR-REQ-060-01). A role that may not read
@@ -200,9 +213,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   );
   const live = isLiveContent(event.editorialStatus);
   const slugLocked = event.publishedAt !== null;
-  const incomplete = describeIncompleteLocales(translations);
-  // The meeting point in every language, asked in the Locul box (`DECISIONS.md` §36, §362).
-  const missingOnEvent = missingPublicEventFields(event, translations);
   const maySaveSettings = canEditEventFields(staffUser.role);
   const mayChangeSeries = canCreateEvent(staffUser.role);
 
@@ -242,7 +252,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     test: await countTestRegistrationsForEvent(db, event.id),
   };
   const realCount = registered.total - registered.test;
-  const risk = await riskMark(realCount, locale);
+  const risk = riskMark(realCount);
 
   /** Romanian first, then English — `routing.locales` order, the order the club works in. */
   const orderedTranslations = routing.locales
@@ -302,25 +312,34 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   /*
     "Ce lipsește pentru publicare", in the words on the screen (§170, §350): each gap named by the
-    box and the tab that hold it, and linked to the box itself.
+    box and the tab that hold it, and linked to the box itself. Since §406 from the one check the
+    create page runs as it is typed (`missingForPublish`), over what is saved — the check each
+    card's closed line, the map's chips and "Publică" read too; it reads the row the way the
+    publication guard does (`storedPublishReader`), so the list names what the guard would refuse.
   */
   const languageName = (code: string) => tSite(`languageName.${code as "ro" | "en"}`);
-  const gapLines = [
-    ...incomplete.flatMap((entry) =>
-      entry.missing.map((field) => {
-        if (field === "slug") return { label: `${t("editor.boxes.address.title")} › ${languageName(entry.locale)} › ${t("editor.fields.slug")}`, name: `translations.${entry.locale}.slug` };
-        if (field === "excerpt") return { label: `${t("editor.boxes.titleSummary.title")} › ${languageName(entry.locale)} › ${t("editor.boxes.summaryLabel")}`, name: `translations.${entry.locale}.excerptBody` };
-        if (field === "title") return { label: `${t("editor.boxes.titleSummary.title")} › ${languageName(entry.locale)} › ${t("editor.fields.title")}`, name: `translations.${entry.locale}.title` };
-        return { label: `${t("editor.boxes.titleSummary.title")} › ${languageName(entry.locale)} › ${t("editor.tabMissing")}`, name: `translations.${entry.locale}.title` };
-      }),
-    ),
-    // "Locul › English › Punct de întâlnire": the language whose box is empty (§362).
-    ...missingOnEvent.map((field) => {
-      const language = field === PLACE_NAME_FIELD.en ? "en" : "ro";
-      return { label: `${t("editor.boxes.place.title")} › ${languageName(language)} › ${t("editor.fields.locationName")}`, name: `event.${field}` };
-    }),
-  ];
+  const gapLabels: PublishGapLabels = {
+    boxes: {
+      titleSummary: t("editor.boxes.titleSummary.title"),
+      place: t("editor.boxes.place.title"),
+      address: t("editor.boxes.address.title"),
+    },
+    fields: {
+      title: t("editor.fields.title"),
+      excerpt: t("editor.boxes.summaryLabel"),
+      locationName: t("editor.fields.locationName"),
+      slug: t("editor.fields.slug"),
+    },
+    languages: Object.fromEntries(routing.locales.map((code) => [code, languageName(code)])),
+  };
+  const storedRead = storedPublishReader(event, orderedTranslations);
+  const storedGaps = missingForPublish(storedRead, routing.locales);
+  const gapLines = storedGaps.map((gap) => ({ label: publishGapLabel(gap, gapLabels), name: gap.name }));
   const missingDetail = gapLines.map((line) => line.label).join(" · ");
+  // The page this event makes, section by section (§406): the cards' numbers and states, the map.
+  // Night (§394) is the occurrence's own start against the sun, the same answer the headlamp pill
+  // and the card's closed line draw — not a stored column, so it is read here, not in the data.
+  const flow = await pageFlow({ event, texts: orderedTranslations, night: clubNightEvent(event).night });
   /*
     And what publication does not refuse but a reader would notice (§354, bilingual everywhere):
     a long text whose English says the Romanian word for word — the English "Happy Monday" date
@@ -563,6 +582,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           )}
         </Box>
 
+        {/* What publication still needs, read once for every card line and chip (§406): from the
+            saved event on arrival, then from the save form's boxes as they are typed. */}
+        <PublishCheckProvider formId="event-save-form" locales={routing.locales} initial={storedGaps} stored={publishCheckValues(storedRead, routing.locales)}>
         <EventEditorLayout
           side={
             <>
@@ -613,9 +635,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           <input type="hidden" name="eventId" value={event.id} />
                           <input type="hidden" name="expectedVersion" value={event.version} />
                           <input type="hidden" name="to" value={to} />
-                          <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
-                            {EDITORIAL_TRANSITION_LABEL[to]}
-                          </GlyphButton>
+                          {to === "PUBLISHED" ? (
+                            /* The same button on every event (§406): while the saved event lacks a
+                               box publication needs, the press opens the summary instead of posting. */
+                            <PublishGateButton label={EDITORIAL_TRANSITION_LABEL[to]} blocked={storedGaps.length > 0} summaryId="publish-gaps" />
+                          ) : (
+                            <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                              {EDITORIAL_TRANSITION_LABEL[to]}
+                            </GlyphButton>
+                          )}
                         </ActionForm>
                       ))}
                     </Stack>
@@ -693,6 +721,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   </Stack>
                 </Panel>
               )}
+
+              {/* S3 — the page, top to bottom (§408): a chip per section, each opening its card —
+                  and under it, once, how many are registered (§408): the amber outline on a card
+                  says a change there reaches them; the number is said here, not on every card. */}
+              <Panel static id="box-map" title={flow.label}>
+                <Stack spacing={1.5}>
+                  <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
+                  <RegisteredLine
+                    count={realCount}
+                    locale={locale}
+                    registrationsHref={canReadRegistrations(staffUser.role) ? `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}` : null}
+                  />
+                </Stack>
+              </Panel>
             </>
           }
           main={
@@ -711,24 +753,28 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 ))}
 
                 <Stack spacing={2}>
-                  <EditorGroup label={t("editor.groups.event")} />
-                  {/* 1 — the type, and inside it the three cards about the event itself (§358):
-                      1.1 the status, 1.2 the course, 1.3 the links and files. */}
-                  <KindBox {...box} risk={risk} registered={realCount} locale={locale}>
-                    <StatusBox {...box} risk={risk} notice={notice} />
-                    <CourseBox {...box} languages={languages} inSeries={inSeries} />
-                    <LinksBox {...box} locale={locale} />
-                  </KindBox>
-                  <TitleSummaryBox languages={languages} creating={false} />
-                  <DescriptionBox languages={languages} />
-
-                  <EditorGroup label={t("editor.groups.day")} />
-                  <WhenBox {...box} risk={risk} inSeries={inSeries} />
-                  <PlaceBox {...box} risk={risk} languages={languages} />
-                  <ProgrammeBox {...box} risk={risk} languages={languages} />
-                  <RulesBox languages={languages} />
+                  {/* "Publică" pressed while the saved event lacks what publication needs (§406). */}
+                  <PublishGapsSummary
+                    id="publish-gaps"
+                    title={t("editor.publishGaps.title")}
+                    intro={t("editor.publishGaps.introSaved")}
+                    labels={gapLabels}
+                    gaps={storedGaps}
+                  />
+                  {/* The page, top to bottom (§406): each card where the page draws the first thing
+                      it holds, numbered and headed by whether the page shows it — the order of
+                      `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
+                  <EditorGroup label={t("editor.groups.page")} />
+                  <KindBox {...box} heading={flow.headings.kind} registered={realCount} />
+                  <TitleSummaryBox languages={languages} creating={false} heading={flow.headings.title} />
+                  <DescriptionBox languages={languages} heading={flow.headings.description} />
+                  <WhenBox {...box} risk={risk} inSeries={inSeries} heading={flow.headings.when} />
+                  <PlaceBox {...box} risk={risk} languages={languages} heading={flow.headings.place} />
+                  <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} />
+                  <CostBox {...box} languages={languages} heading={flow.headings.cost} />
                   <RegistrationBox
                     {...box}
+                    heading={flow.headings.registration}
                     risk={risk}
                     declarations={declarations}
                     waiting={waiting}
@@ -736,7 +782,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     locale={locale}
                     now={now}
                     clubDeadlines={deadlines}
-                    languages={languages}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard
@@ -750,9 +795,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       ) : null
                     }
                   />
+                  <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
+                  <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
+                  <LinksBox {...box} locale={locale} heading={flow.headings.links} />
+                  <ProgrammeBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} />
+                  <RulesBox languages={languages} heading={flow.headings.rules} />
+                  <VideoBox {...box} heading={flow.headings.video} />
+                  <StartListBox {...box} heading={flow.headings.startList} />
 
-                  <EditorGroup label={t("editor.groups.details")} />
-                  <CoHostsBox {...box} locale={locale} />
+                  {/* What makes the page without being a section of it: the status (a notice over
+                      the title only once cancelled or finished), the marks, the address. */}
+                  <EditorGroup label={t("editor.groups.offPage")} />
+                  <StatusBox {...box} risk={risk} notice={notice} />
                   <PromotionBox {...box} />
                   <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />
 
@@ -1065,6 +1119,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Stack>
           }
         />
+        </PublishCheckProvider>
       </Stack>
     </SeriesScopeProvider>
   );

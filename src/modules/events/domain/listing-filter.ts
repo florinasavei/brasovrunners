@@ -2,8 +2,7 @@ import { DIFFICULTY_LEVELS, type DifficultyLevel } from "../ui/difficulty-levels
 import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_COST_TYPES, type EventCostType } from "./cost";
 import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "./event-type";
-import { registrationCta, type RegistrationCtaInput } from "./registration-cta";
-import { registrationState, type RegistrationWindowInput } from "./registration-window";
+import type { RegistrationCta } from "./registration-cta";
 
 /**
  * The listing's filters (§NNN, amending §133 and §401 — the owner, 2026-09-25: "un buton de
@@ -19,7 +18,7 @@ import { registrationState, type RegistrationWindowInput } from "./registration-
  * Pure — no clock, no environment, no read — so the two questions that need one of them are the
  * caller's predicates (`FilterFacts`): whether a date is a night event (§394, `clubNightEvent`, the
  * club's place and the clock) and whether the page has a registration door (`registrationDoorOpen`
- * over the cached availability, `registration-doors.ts`). A unit test can hand either anything.
+ * over `readRegistrationDoor`'s answer, §409). A unit test can hand either anything.
  */
 
 /**
@@ -86,9 +85,8 @@ export const NO_FILTER: ListingFilter = {
 };
 
 /**
- * What a filter has to know of an event: its closed-set columns, whatever `readCoHosts` reads,
- * and the columns the registration door is decided on (all on the public row already —
- * `RegistrationCta` reads the same ones for the same event).
+ * What a filter has to know of an event: its closed-set columns and whatever `readCoHosts` reads.
+ * The registration door is not among them — it is the caller's answer (`FilterFacts.door`).
  */
 export type FilterableEvent = {
   type: string;
@@ -96,8 +94,7 @@ export type FilterableEvent = {
   difficulty: string | null;
   distanceMeters: number | null;
   costType: string | null;
-} & CoHostSource &
-  RegistrationDoorEvent;
+} & CoHostSource;
 
 /** The two answers a filter cannot give from the row alone — the caller's, per event (see the file's head). */
 export type FilterFacts<T> = {
@@ -107,43 +104,28 @@ export type FilterFacts<T> = {
   door: (event: T) => boolean;
 };
 
-/** An event's own columns the page's registration door reads — everything but the free places. */
-export type RegistrationDoorEvent = RegistrationWindowInput & Pick<RegistrationCtaInput, "externalRegistrationUrl" | "externalProvider">;
-
-/** The free places and the waiting list, as `cachedPublicAvailability` answers them; null for an uncapped event. */
-export type DoorAvailability = { available: number; waitlistRoom: number | null; waitlistCapacity: number | null } | null;
-
 /**
- * Whether the page's door needs the free places to be decided: an internal event whose window is
- * open — the one case `RegistrationCta` reads them in, and so the one case a listing pays a
- * (cached) read for. Every other event's door is decided by its own columns.
+ * The page's door as `readRegistrationDoor` answers it (`ui/registration-door.ts`, §409) — the
+ * `registrationCta` state over the cached availability, or `UNKNOWN` when the count could not be
+ * read (§281). Only the part this module reads, so the domain stays free of the read itself.
  */
-export function doorNeedsAvailability(event: RegistrationWindowInput, now: Date): boolean {
-  return event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN";
-}
+export type DoorAnswer = { kind: "KNOWN"; cta: { kind: RegistrationCta["kind"] } } | { kind: "UNKNOWN" };
 
 /** The `registrationCta` states that draw a button on the event's page (`RegistrationCta.tsx`). */
-const DOOR_KINDS: ReadonlySet<ReturnType<typeof registrationCta>["kind"]> = new Set(["OPEN", "FULL", "EXTERNAL"]);
+const DOOR_KINDS: ReadonlySet<RegistrationCta["kind"]> = new Set(["OPEN", "FULL", "EXTERNAL"]);
 
 /**
- * «Înscrieri deschise» (§NNN): the event's page offers a way to register right now — the same
- * `registrationCta` the page renders its door from, over the same availability. A free place or an
+ * «Înscrieri deschise» (§NNN): the event's page offers a way to register right now — decided on
+ * the very answer the page renders its door from and the listing card draws its button from
+ * (`readRegistrationDoor`, §409), never on a second reading of the same rule. A free place or an
  * uncapped event (`OPEN`), no place but a waiting list that takes people (`FULL`), or the
  * organizer's own form (`EXTERNAL`) is a door; a full event with no waiting list or a full waiting
  * list (§348), a window not open yet or closed, a cancelled or finished event, or one that takes no
- * registration is not. `availability` is only read where `doorNeedsAvailability` says so.
+ * registration is not — and neither is a count that could not be read (`UNKNOWN`, §281): its page
+ * shows no button, so a filter for "where can I register" does not send a reader there.
  */
-export function registrationDoorOpen(event: RegistrationDoorEvent, availability: DoorAvailability, now: Date): boolean {
-  const cta = registrationCta(
-    {
-      ...event,
-      availablePlaces: availability?.available ?? null,
-      waitlistRoom: availability?.waitlistRoom ?? null,
-      waitlistCapacity: availability?.waitlistCapacity ?? null,
-    },
-    now,
-  );
-  return DOOR_KINDS.has(cta.kind);
+export function registrationDoorOpen(door: DoorAnswer): boolean {
+  return door.kind === "KNOWN" && DOOR_KINDS.has(door.cta.kind);
 }
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -254,9 +236,9 @@ function flagOf<T extends FilterableEvent>(event: T, flag: FilterFlag, facts: Fi
     case "night":
       return facts.night(event);
     case "registration":
-      // The page's own door (`registrationDoorOpen`), decided by the caller over the same cached
-      // availability `RegistrationCta` reads — never the window alone: a full event with no
-      // waiting list is inside its window and offers no way in.
+      // The page's own door (`registrationDoorOpen`), decided by the caller over the very answer
+      // `RegistrationCta` renders (`readRegistrationDoor`, §409) — never the window alone: a full
+      // event with no waiting list is inside its window and offers no way in.
       return facts.door(event);
   }
 }

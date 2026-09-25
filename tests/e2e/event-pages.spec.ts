@@ -63,6 +63,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await page.goto("/ro/evenimente");
     // Folded or not, they are text: with more than four cards a phone folds them all (§78), which
     // another spec's events — `listing-cards.spec.ts`'s series among them — can make true for a moment.
+    // Every card's own text is read below, not one by heading, so `cardOnListing`
+    // (`support/fold.ts`) does not fit — every fold must open.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 2 and BR-REQ-070-03 criterion 2: facts as text, not styling or an image.
@@ -85,31 +87,28 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
    * before the next one arrived. And the whole page was one server render, so nothing could
    * appear until the month's query had answered.
    *
-   * Both halves are asserted here by what they leave behind. The controls are outside the
-   * streamed region and must not move a pixel across a month change — that is the difference
-   * between a soft navigation and a document one, measured. And the grid that comes back must
-   * be the same width as the one that left, because a skeleton of exactly that box stood
-   * there in between; a fallback of the wrong size would show up as a reflow right here.
-   *
-   * What is deliberately not asserted is the fallback *mid-flight*. Playwright's route
-   * interception delays a response as a whole and this one is a stream whose shell is already
-   * gone by the time the delay could bite, so a test for it would be a test of the harness's
-   * timing rather than of the page.
+   * §166 answered the second half with a streamed region and a skeleton; since §NNN the
+   * calendar page streams nothing — its month is read from the public cache (§333), awaited
+   * once, and sent in the first HTML, because a streamed region is revealed by a script and
+   * the filter panel above it must work without one. What still stands is the first half: a
+   * month change is a soft navigation that keeps the page on screen until the next month is
+   * ready, so the controls must not move a pixel across it — the difference between a soft
+   * navigation and a document one, measured — and the grid that comes back must be the same
+   * width as the one that left.
    *
    * Every measurement here is taken **after the page has settled**, and that is load-bearing
    * (§167). Written without it the test compared a render with itself: `toBeVisible()` on the
-   * grid passes on the first poll because a soft navigation keeps the old grid mounted, and
-   * the streamed regions reveal independently, so the "before" could be measured with a
-   * skeleton still standing above the arrow. The two waits below — the month in the address
-   * and the title, and no `role="status"` left anywhere under `main` — are what give the
-   * geometry assertions teeth.
+   * grid passes on the first poll because a soft navigation keeps the old grid mounted. The
+   * waits below — the month in the address and the title, and no `role="status"` under
+   * `main` (none is expected any more; the wait keeps the test honest should a loading state
+   * ever come back) — are what give the geometry assertions teeth.
    */
   test("changes month without moving the controls or reflowing the grid", async ({ page }) => {
     await page.goto("/ro/calendar");
     const main = page.locator("#main");
     await expect(main.getByRole("table")).toBeVisible();
-    // Every streamed region has arrived: a fallback still on screen would be measured as the
-    // page's layout and the swap after the click read as a reflow that is not there.
+    // No loading state on screen (§NNN streams none): one would be measured as the page's
+    // layout and the swap after the click read as a reflow that is not there.
     await expect(main.locator('[role="status"]')).toHaveCount(0);
 
     const next = main.getByRole("link", { name: "Luna următoare" });
@@ -135,7 +134,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     const gridAfter = await main.getByRole("table").boundingBox();
     expect(Math.abs((gridAfter?.width ?? -1) - (gridBefore?.width ?? 0))).toBeLessThanOrEqual(1);
 
-    // Criterion 1 still holds with the loading states in the page.
+    // Criterion 1 still holds after the month change.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });
@@ -144,7 +143,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await page.goto("/ro/evenimente");
     // "Other events" folds on a phone once other specs have published a fifth event
     // (`DECISIONS.md` §78); a link in a closed fold measures 0×0 and is not a tap target yet.
-    // Open every fold, so the links are measured as a reader would see them.
+    // Open every fold, so the links are measured as a reader would see them — every title on the
+    // page, not one by heading, so `cardOnListing` (`support/fold.ts`) does not fit.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 6. Every card's title is its link (§366; no card is one whole link any more) — 44

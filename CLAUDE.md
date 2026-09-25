@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.97-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.98-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.97-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.98-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -152,7 +152,7 @@ sections and in `CHANGELOG.md`.
   registers a **minor**: the guardian's name, required under eighteen (§108); nobody under **the event's own minimum age** (default 14, 0 for none) on the race day, counted in the race's own zone, at every door (§321, §329).
 - The flow in five steps on the form and the event page (§91): form → email link (48 h) →
   the declaration → confirmed (QR, race number) → race day. **A free race is confirmed a week
-  before**: for an event further away than its participation window (per event, default asked
+  before**: for an event further away than its participation window (per event — 0 as the second number means the place never expires before the start (§407) — default asked
   7 days before, due 2 days before), the place is held until the deadline and the declaration —
   the confirmation — is asked at once and again when the window opens; inside the window and
   on a weekly run, the thirty-minute hold (§104). **Every such deadline is the club's "Termene" setting** on `/admin/emails` since `BR-V1.86` (§377; 30 min / 24 h / 48 h by default), the reminder per event or the club's.
@@ -215,6 +215,7 @@ sections and in `CHANGELOG.md`.
   two numbers (§104). Legal documents written, approved and never rewritten (§46, §53, §57), and a terms version deletable once nobody agreed to it while it was in force (§316);
   "start from the platform's text" prefills the club's three texts (§95). Standing pages in
   the editor, pictures in the text (§72–§73).
+- **The editor mirrors the page** (§406, amending §350 and §358): one card per public-page section in the page's order, a page map at the top that opens each card, every closed card's line naming the required fields still empty per language, and «Creează și publică» / «Publică» always at full look — pressed with something missing, they open the §47 refusal summary instead of dimming.
 - Registrations: list, filters (bounced too), timeline, resend, CSV with names, identity
   document, socials, guardian, check-in and bounce (`AGENTS.md` §15.10); enter, rename, cancel,
   erase — erase takes the declaration acceptance with the row in one transaction, the audit row
@@ -316,6 +317,7 @@ sections and in `CHANGELOG.md`.
   replacing §382's checkbox (§394, migration `0076`) · the club's discount note on an external event paid at the organizer's, «Cu taxă,
   la organizator», the ics cost line, JSON-LD offers at the organizer (§395, migration `0075`) · the public participant list says each runner's state and lists the ticked pending and waiting list, only while the notice in force names `{{participantListStates}}` (§396) · Panel's help variant («Ce înseamnă fiecare tip?», the email legend with an «i»), a new event free by default, the robot glyph on every automatic line (§398) · `/admin/tasks` → «Aplicația» renders `docs/QUEUE.md` read-only through the `/devs/docs` renderer, for Administrator, Superadministrator and Tehnic (§397).
 - **Batch 21 (2026-09-25, `BR-V1.97`):** the difficulty pill is a scale of dumbbells, the word beside it and in the accessible name (§399) · a YouTube film shows the club's own stored poster before the click and a mute/volume bar after it, the facade server-rendered, no poster fetch inside a transaction (§403, migration `0077`) · the backoffice's time field is the platform's own `<input type="time">`, 24-hour, any minute — §345's wheel picker gone, its date picker kept (§400) · «Împreună cu» is a collapsible block on the event page, the listing's filter row sits a step above the grid and offers a «Colaborare» chip while a partnered event is on the calendar (§401) · the weather for the event's date and hour from Open-Meteo (free, keyless) on the page within seven days and in the reminder (§402).
+- **Batch 22 (2026-09-25, `BR-V1.98`):** every night sentence names the start, the sunset and the end — «Începe la 19:00, apusul la 19:00, se termină la 20:40» — the tooltip, the month view, the .ics line, the reminder and the editor's line alike, a pre-dawn start with its own shape (§404) · the editor mirrors the page: one card per page section in the page's order with a page map, every closed card naming its missing required fields per language, create-and-publish always at full look and opening the refusal summary when something is missing (§406) · the programme card's rows are one grid with the help folded and a new row starting on the event's day (§405) · the confirmation window's second number accepts 0 — the place never expires before the start — and the card says when a runner can confirm (§407) · the registrants' count is said once under the editor's header, the orange outline alone marking the cards whose changes notify participants (§408) · the race's listing card carries the register button and a bold line with the free places, from the one availability count (§409) · the age sentence says the minimum and the parent's consent plainly — «Vârsta minimă: 14 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.» (§410) · the end-to-end specs read a listing card through its fold and the tasks page by its pathname, so the full two-project run no longer flakes on order (§411).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * Three small things on the public site the owner asked for, 2026-09-25 (`DECISIONS.md` §401):
@@ -184,9 +184,10 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     // than by a total count, since another project's run of this same spec may have left its own
     // partnered event in this database (each run's title carries the project name and a
     // timestamp, so the two never collide on the one this test actually looks for).
-    // (A CSS locator, not a role: on a phone the "other events" fold may be closed past four cards.)
-    const seededRun = page.locator("#main h2", { hasText: "Antrenament de intervale" });
-    await expect(seededRun).toBeAttached();
+    // `cardOnListing` opens the "other events" fold first, the way a reader on a phone with more
+    // than four cards would (§78, §411).
+    const seededRun = await cardOnListing(page, "Antrenament de intervale");
+    await expect(seededRun).toBeVisible();
 
     // Ticking it narrows the address and the list to partnered events only — at once, the fold
     // left open (the island applies each tick, §NNN).

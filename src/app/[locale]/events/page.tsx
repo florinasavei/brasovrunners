@@ -22,7 +22,7 @@ import {
   type ListingFilter,
 } from "@/modules/events/domain/listing-filter";
 import { clubNightEvent } from "@/modules/events/night-event";
-import { readRegistrationDoors } from "@/modules/events/registration-doors";
+import { readRegistrationDoors } from "@/modules/events/ui/registration-door";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -151,7 +151,8 @@ export default async function EventsPage({ params, searchParams }: Props) {
   ]);
   const { events, hasUpcoming } = read.value;
   // «Înscrieri deschise» is the page's own door (§NNN): one cached availability read per open
-  // internal event among these rows, and nothing for any other (`registration-doors.ts`).
+  // internal event among these rows, the entry its card and its page read too, and nothing for any
+  // other row (`readRegistrationDoor`, §409).
   const facts: FilterFacts<PublicEvent> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
 
   return (

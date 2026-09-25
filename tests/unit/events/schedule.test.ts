@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localizedSchedule, programmeLines, readScheduleItems, shiftProgrammeDates, shiftScheduleItems } from "@/modules/events/domain/schedule";
+import { followStartDate, localizedSchedule, programmeLines, readScheduleItems, shiftProgrammeDates, shiftScheduleItems } from "@/modules/events/domain/schedule";
 
 /** BR-REQ-020-01 criterion 11 (`DECISIONS.md` §117) — the programme as data. */
 const ZONE = "Europe/Bucharest";
@@ -101,5 +101,40 @@ describe("the programme's rows follow the event's date", () => {
   it("never reads the clock: the same input gives the same answer", () => {
     const rows = [box("2026-11-21")];
     expect(shiftProgrammeDates(rows, "2026-11-21", "2026-12-05")).toEqual(shiftProgrammeDates(rows, "2026-11-21", "2026-12-05"));
+  });
+});
+
+/**
+ * BR-REQ-050-02 criterion 13 (§117, §405): the editor's default day for a row is the event's start
+ * date — the spare line with no date yet takes it when the start is typed or moved, and the dated
+ * rows move by the same number of days as before.
+ */
+describe("the programme's default day is the event's start date", () => {
+  const box = (date: string, label = "") => ({ date, time: "", endTime: "", ro: label, en: label, place: "" });
+
+  it("gives a row with no date the start date the moment one is typed, on the create page", () => {
+    expect(followStartDate([box("")], "", "2027-05-10")).toEqual([box("2027-05-10")]);
+  });
+
+  it("moves the dated rows and dates the undated ones in the same move", () => {
+    const rows = [box("2027-05-09", "Kit pickup"), box("2027-05-10", "Start"), box("", "Awards")];
+    expect(followStartDate(rows, "2027-05-10", "2027-05-12").map((row) => row.date)).toEqual(["2027-05-11", "2027-05-12", "2027-05-12"]);
+  });
+
+  it("empties nothing while the start box is being retyped, and leaves a box that is not a date alone", () => {
+    const rows = [box("2027-05-10"), box(""), box("tomorrow")];
+    expect(followStartDate(rows, "2027-05-10", "")).toEqual(rows);
+    expect(followStartDate(rows, "2027-05-10", "2027-13-01")).toEqual(rows);
+    expect(followStartDate(rows, "2027-05-10", "2027-05-11").map((row) => row.date)).toEqual(["2027-05-11", "2027-05-11", "tomorrow"]);
+  });
+
+  it("dates the spare line through a half-typed year and still lands on the last date typed", () => {
+    let rows = [box("")];
+    let from = "";
+    for (const to of ["0002-11-21", "0020-11-21", "0202-11-21", "2027-11-21"]) {
+      rows = followStartDate(rows, from, to);
+      from = to;
+    }
+    expect(rows.map((row) => row.date)).toEqual(["2027-11-21"]);
   });
 });

@@ -18,7 +18,7 @@ import {
   type FilterFacts,
 } from "@/modules/events/domain/listing-filter";
 import { clubNightEvent } from "@/modules/events/night-event";
-import { readRegistrationDoors } from "@/modules/events/registration-doors";
+import { readRegistrationDoors } from "@/modules/events/ui/registration-door";
 import type { PublicEvent } from "@/modules/events/repository";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";

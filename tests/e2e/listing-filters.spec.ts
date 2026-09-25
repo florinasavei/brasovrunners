@@ -173,27 +173,38 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       await expect(page.locator("#main [role='status']")).toHaveCount(0);
     });
 
-    test("on the listing: open the fold, tick «Trail», press «Aplică», read the narrowed list", async ({ page }) => {
+    test("on the listing: open the fold, tick a box in two groups, press «Aplică», read the narrowed list", async ({ page }) => {
       await page.goto("/ro/evenimente");
       // Everything the page has is shown, not only present in the HTML: the list and the panel.
       await expect(heading(page, RACE)).toBeVisible();
+      await expect(heading(page, INTERVALS)).toBeAttached();
+      await expect(heading(page, TRAIL_RUN)).toBeAttached();
       const fold = panel(page);
       await expect(fold.locator("summary")).toBeVisible();
       await fold.locator("summary").click();
       await expect(fold).toHaveAttribute("open", "");
+      // Two groups, one box each: a group run AND on a trail (AND across groups, §NNN).
+      await fold.getByRole("checkbox", { name: "Alergare de grup", exact: true }).check();
       await fold.getByRole("checkbox", { name: "Trail", exact: true }).check();
       await fold.getByRole("button", { name: "Aplică", exact: true }).click();
 
-      await expect(page).toHaveURL(/\/ro\/evenimente\?surface=TRAIL$/);
+      // The form submits the groups in their order, one parameter each: the address a link would carry.
+      await expect(page).toHaveURL(/\/ro\/evenimente\?type=GROUP_RUN&surface=TRAIL$/);
+      // The trail run is both; the race is neither, the intervals are a group run on asphalt.
       await expect(heading(page, TRAIL_RUN)).toBeVisible();
       await expect(heading(page, RACE)).toHaveCount(0);
       await expect(heading(page, INTERVALS)).toHaveCount(0);
-      // The ticks say themselves, closed, as links: one press takes the tick away again.
-      await expect(panel(page).locator("summary")).toHaveText("Filtre (1)");
+      // The ticks say themselves, closed, as links, and the boxes come back ticked from the server.
+      await expect(panel(page).locator("summary")).toHaveText("Filtre (2)");
+      await expect(box(page, "type", "GROUP_RUN")).toBeChecked();
+      await expect(box(page, "surface", "TRAIL")).toBeChecked();
       const active = page.locator("#main").getByTestId("active-filters");
+      await expect(active.getByRole("link", { name: "Scoate filtrul: Alergare de grup" })).toBeVisible();
+      // One press takes one tick away again: the kind stays, the surface goes.
       await active.getByRole("link", { name: "Scoate filtrul: Trail" }).click();
-      await expect(page).toHaveURL(/\/ro\/evenimente$/);
-      await expect(heading(page, RACE)).toBeVisible();
+      await expect(page).toHaveURL(/\/ro\/evenimente\?type=GROUP_RUN$/);
+      await expect(heading(page, INTERVALS)).toBeAttached();
+      await expect(heading(page, RACE)).toHaveCount(0);
     });
 
     test("on the calendar: the same fold, tick «Concurs», press «Aplică», read the narrowed year", async ({ page }) => {

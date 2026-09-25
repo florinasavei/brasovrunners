@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   activeFilterCount,
   distanceBand,
-  doorNeedsAvailability,
   listingFilterQuery,
   matchesListingFilter,
   NO_FILTER,
@@ -14,6 +13,7 @@ import {
   type FilterableEvent,
   type FilterFacts,
 } from "@/modules/events/domain/listing-filter";
+import { registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
 
 /**
  * BR-REQ-041-01 — the listing's filters (`DECISIONS.md` §NNN, amending §133 and §401; the owner,
@@ -28,7 +28,8 @@ const PAST = new Date("2025-01-01T00:00:00Z");
 const FUTURE = new Date("2026-06-01T00:00:00Z");
 
 /** `night` and `door` stand for the caller's two answers (§394, the page's registration door). */
-type Row = FilterableEvent & { id: string; night?: boolean; door?: boolean };
+type Row = FilterableEvent &
+  Omit<RegistrationCtaInput, "availablePlaces" | "waitlistRoom" | "waitlistCapacity"> & { id: string; night?: boolean; door?: boolean };
 const row = (id: string, fields: Partial<Row> = {}): Row => ({
   id,
   type: "GROUP_RUN",
@@ -212,6 +213,24 @@ describe("matchesListingFilter: OR within a group, AND across groups", () => {
 });
 
 describe("«Înscrieri deschise» is the page's own registration door (§NNN), never the window alone", () => {
+  /**
+   * The answer `readRegistrationDoor` gives for this row and this availability (§409): the same
+   * `registrationCta` over the same cached free places — the one reader both the page's button and
+   * the filter now take their answer from.
+   */
+  const door = (event: Row, availability: { available: number; waitlistRoom: number | null; waitlistCapacity: number | null } | null = null) =>
+    registrationDoorOpen({
+      kind: "KNOWN",
+      cta: registrationCta(
+        {
+          ...event,
+          availablePlaces: availability?.available ?? null,
+          waitlistRoom: availability?.waitlistRoom ?? null,
+          waitlistCapacity: availability?.waitlistCapacity ?? null,
+        },
+        NOW,
+      ),
+    });
   const places = (available: number, waitlistRoom: number | null = null, waitlistCapacity: number | null = null) => ({
     available,
     waitlistRoom,
@@ -219,39 +238,35 @@ describe("«Înscrieri deschise» is the page's own registration door (§NNN), n
   });
 
   it("is a door while there is a place, or no count at all (an uncapped event)", () => {
-    expect(registrationDoorOpen(row("open"), places(3), NOW)).toBe(true);
-    expect(registrationDoorOpen(row("uncapped"), null, NOW)).toBe(true);
+    expect(door(row("open"), places(3))).toBe(true);
+    expect(door(row("uncapped"))).toBe(true);
   });
 
   it("is a door when the places are gone but the waiting list takes people", () => {
-    expect(registrationDoorOpen(row("full"), places(0), NOW)).toBe(true);
-    expect(registrationDoorOpen(row("full-room"), places(0, 2, 10), NOW)).toBe(true);
+    expect(door(row("full"), places(0))).toBe(true);
+    expect(door(row("full-room"), places(0, 2, 10))).toBe(true);
   });
 
   it("is no door when full with no waiting list, or with the waiting list full (§348) — the window is open, the page has no button", () => {
-    expect(registrationDoorOpen(row("no-list"), places(0, null, 0), NOW)).toBe(false);
-    expect(registrationDoorOpen(row("list-full"), places(0, 0, 5), NOW)).toBe(false);
+    expect(door(row("no-list"), places(0, null, 0))).toBe(false);
+    expect(door(row("list-full"), places(0, 0, 5))).toBe(false);
   });
 
   it("is the organizer's form for an external event, as the page's button is", () => {
-    expect(registrationDoorOpen(row("external", { registrationMode: "EXTERNAL", externalRegistrationUrl: "https://example.org/form" }), null, NOW)).toBe(true);
+    expect(door(row("external", { registrationMode: "EXTERNAL", externalRegistrationUrl: "https://example.org/form" }))).toBe(true);
     // No address to send anyone to: the page draws nothing, so neither is it a door.
-    expect(registrationDoorOpen(row("external-bare", { registrationMode: "EXTERNAL" }), null, NOW)).toBe(false);
+    expect(door(row("external-bare", { registrationMode: "EXTERNAL" }))).toBe(false);
   });
 
   it("is no door before the window opens, after it closes, for a cancelled event or one that takes no registration", () => {
-    expect(registrationDoorOpen(row("not-yet-open", { registrationOpensAt: FUTURE }), null, NOW)).toBe(false);
-    expect(registrationDoorOpen(row("closed", { registrationClosesAt: PAST, startsAt: PAST }), null, NOW)).toBe(false);
-    expect(registrationDoorOpen(row("cancelled", { eventStatus: "CANCELLED" }), null, NOW)).toBe(false);
-    expect(registrationDoorOpen(row("none", { registrationMode: "NONE" }), null, NOW)).toBe(false);
+    expect(door(row("not-yet-open", { registrationOpensAt: FUTURE }))).toBe(false);
+    expect(door(row("closed", { registrationClosesAt: PAST, startsAt: PAST }))).toBe(false);
+    expect(door(row("cancelled", { eventStatus: "CANCELLED" }))).toBe(false);
+    expect(door(row("none", { registrationMode: "NONE" }))).toBe(false);
   });
 
-  it("asks for the free places only for an internal event whose window is open — the one read a listing pays for", () => {
-    expect(doorNeedsAvailability(row("open"), NOW)).toBe(true);
-    expect(doorNeedsAvailability(row("external", { registrationMode: "EXTERNAL" }), NOW)).toBe(false);
-    expect(doorNeedsAvailability(row("none", { registrationMode: "NONE" }), NOW)).toBe(false);
-    expect(doorNeedsAvailability(row("not-yet-open", { registrationOpensAt: FUTURE }), NOW)).toBe(false);
-    expect(doorNeedsAvailability(row("cancelled", { eventStatus: "CANCELLED" }), NOW)).toBe(false);
+  it("is no door when the count could not be read (§281) — the page shows no button then either", () => {
+    expect(registrationDoorOpen({ kind: "UNKNOWN" })).toBe(false);
   });
 });
 

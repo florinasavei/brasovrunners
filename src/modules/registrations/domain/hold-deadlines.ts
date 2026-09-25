@@ -1,4 +1,5 @@
 import { declarationHoldEndsAt, type Deadlines, offerEndsAt } from "@/modules/deadlines/domain/deadlines";
+import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 
 /**
  * Hold deadlines (AGENTS.md §10.5, §15.1-§15.3; BR-REQ-033-01 criterion 4, BR-REQ-035-02
@@ -39,7 +40,9 @@ export const DEFAULT_CONFIRMATION_DEADLINE_DAYS = 2;
  *
  * Null when the event has no window: `opensDaysBefore` is zero (switched off), or the two
  * numbers are in the wrong order (a deadline before or at the opening is no window), or the
- * fields are absent — a caller built from a partial row keeps the club's hold (§377).
+ * fields are absent — a caller built from a partial row keeps the club's hold (§377). A deadline
+ * of zero is the start itself (§407): the place given before the window opens lapses nowhere
+ * before the race begins.
  */
 export function confirmationWindow(event: {
   startsAt: Date;
@@ -54,6 +57,40 @@ export function confirmationWindow(event: {
     opensAt: new Date(event.startsAt.getTime() - opens * day),
     deadline: new Date(event.startsAt.getTime() - deadlineDays * day),
   };
+}
+
+/**
+ * Whether a confirmation is owed at the start itself (§407, amending §104): a deadline of zero
+ * days before, or a hold that ends at the event's start. The owner, 2026-09-25: "fereastra de
+ * confirmare trebuie să fie 0 la final, să nu expire". Zero is not a new state — the window's
+ * deadline is simply the start, so the place lapses nowhere before it — but every sentence that
+ * states the deadline says "la start" / "until the start" rather than "cu 0 zile înainte". This is
+ * the one test they all ask: the editor's card, the five steps, the declaration email, the signing
+ * page and «Înscrierile mele».
+ */
+export function confirmationDueAtStart(due: { days: number } | { at: Date; startsAt: Date }): boolean {
+  return "days" in due ? due.days <= 0 : due.at.getTime() >= due.startsAt.getTime();
+}
+
+/**
+ * The deadline counted from the start, as the words after "până" / "until" (§407): "cu 2 zile
+ * înainte de start" / "la start", "2 days before the start" / "the start".
+ */
+export function confirmationDueWords(locale: string, days: number): string {
+  const en = locale === "en";
+  if (confirmationDueAtStart({ days })) return en ? "the start" : "la start";
+  return en ? `${daysPhrase(locale, days)} before the start` : `cu ${daysPhrase(locale, days)} înainte de start`;
+}
+
+/**
+ * The deadline as a moment, already formatted in the reader's zone and language, as the words
+ * after "până la" / "by" (§407): the date alone, or "start, sâm., 21 nov. 2026, 09:00" / "the
+ * start, Sat, 21 Nov 2026, 09:00" when it is the start itself — the "until the start" form beside
+ * the dated one, so a runner reads both that the place does not lapse before and when that is.
+ */
+export function confirmationDueMoment(locale: string, due: { at: Date; startsAt: Date }, formatted: string): string {
+  if (!confirmationDueAtStart(due)) return formatted;
+  return locale === "en" ? `the start, ${formatted}` : `start, ${formatted}`;
 }
 
 /**

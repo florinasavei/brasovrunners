@@ -13,6 +13,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { env } from "@/shared/config/env";
@@ -75,7 +76,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   }
 
   // One token read for the page — throttled per presented token.
-  const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, new Date());
+  const now = new Date();
+  const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -146,6 +148,27 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   {t("mine.eventCancelled")}
                 </Alert>
               )}
+              {/*
+                By when to confirm (§104, §407; the owner: "nu e clar când pot confirma"): a place
+                held for a declaration, still ahead of its deadline, says the date — and "până la
+                start" beside it when the deadline is the start itself (`confirmationDueMoment`).
+                Not a waiting-list offer: its email already says its day, and paper on race day
+                does not answer an offer.
+              */}
+              {!item.eventCancelled &&
+                item.status === "PENDING_DECLARATION" &&
+                item.holdExpiresAt &&
+                item.holdExpiresAt.getTime() > now.getTime() && (
+                  <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-confirm-by">
+                    {t("mine.confirmBy", {
+                      due: confirmationDueMoment(
+                        locale,
+                        { at: item.holdExpiresAt, startsAt: item.eventStartsAt },
+                        formatDay(item.holdExpiresAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true, position: "inline" }),
+                      ),
+                    })}
+                  </Typography>
+                )}
 
               {/* No desk code or QR for a race that will not run: the desk is closed (§331). */}
               {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (

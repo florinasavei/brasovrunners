@@ -186,10 +186,11 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
 
 /**
  * §350 — the event editor's boxes: cards within cards, named properly (the owner), so `Panel`
- * takes a heading level, a tone, a badge and a frame that never folds. Rendered the way the
+ * takes a heading level, a tone and a frame that never folds (its badge went in §408: the count
+ * is said once, not on every box). Rendered the way the
  * server sends it.
  */
-describe("§350 Panel's levels, tones, badge and static frame", () => {
+describe("§350 Panel's levels, tones and static frame", () => {
   const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
   const panel = (props: Record<string, unknown>) =>
     markup(renderToStaticMarkup(createElement(Panel, { title: "Numere de concurs (BIB)", ...props } as unknown as ComponentProps<typeof Panel>, "corpul")));
@@ -200,10 +201,10 @@ describe("§350 Panel's levels, tones, badge and static frame", () => {
     expect(panel({ collapsible: true, level: 4 })).toMatch(/<summary[^>]*><h4/);
   });
 
-  it("draws the badge as a chip beside the title, readable while the fold is shut", () => {
-    const html = panel({ collapsible: true, badge: "23 înscriși" });
-    expect(html).toContain("23 înscriși");
-    expect(html).toMatch(/MuiChip/);
+  it("draws no chip beside the title (§408): a box's mark is its tone, the count is said once elsewhere", () => {
+    const html = panel({ collapsible: true, tone: "risk" });
+    expect(html).not.toMatch(/MuiChip/);
+    expect(html).toMatch(/<summary[^>]*><h2[^>]*>Numere de concurs \(BIB\)<\/h2>/);
   });
 
   it("renders a static box as a section with a heading and no toggle at all", () => {
