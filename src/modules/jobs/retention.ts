@@ -13,6 +13,7 @@ import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { RETENTION_PERIODS } from "./domain/retention-periods";
 
 /**
  * Deleting the rows nobody will ever read again, and the personal data nobody may keep.
@@ -103,15 +104,18 @@ export const RETENTION = {
    * about the event could still be made and the declaration is the evidence — and then go,
    * with the participant row when it was their last registration (`DECISIONS.md` §95). The
    * privacy notice says exactly this, and this is what makes it true.
+   *
+   * Moved to `domain/retention-periods.ts` so a pure module — `notifications/templates.ts`
+   * included — can read it without pulling in `drizzle` and every schema this file touches.
    */
-  registrationsYearsAfterEvent: 3,
+  registrationsYearsAfterEvent: RETENTION_PERIODS.registrationsYearsAfterEvent,
   /**
    * The identity document's series and number, and the health note, go seven days after the
    * event's start — the kits are handed out by then, and the privacy notice says so (§95).
    * The declaration keeps the name, the signature, the version and the hash; the participant
    * keeps the PDF that was emailed with the number in it.
    */
-  identityAndHealthDaysAfterEvent: 7,
+  identityAndHealthDaysAfterEvent: RETENTION_PERIODS.identityAndHealthDaysAfterEvent,
   /**
    * A group run's optional self-declaration (§393) goes whole seven days after the run's start —
    * the row, the name, the identity document and the address, and the messages that carry them.

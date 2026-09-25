@@ -210,7 +210,10 @@ async function renderRow(
       The runner this message is about: the registration's own name when there is one (§389). One
       address may carry a family, and the participant's `default_name` is only whoever filled the
       form first — the confirmation of a second child must greet that child, and the club's archive
-      copy must name who signed. Without a registration (the "my registrations" link), the address's name.
+      copy must name who signed. Without a registration (the "my registrations" link), the address's
+      name. The one bulk club copy of an organizer's message reads it too — blank, as before — and
+      `organizerMessageParts` (`templates.ts`) is what turns that blank into a neutral word wherever
+      the organizer's own body used `{participantName}` (§NNN, review finding).
     */
     participantName: registration?.registeredName ?? participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
@@ -323,6 +326,20 @@ async function renderRow(
       if (eventDetails) {
         data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
       }
+    }
+    /*
+      An offer's stated length must agree with its stated moment (§NNN, following the finding
+      raised in review: counsel's own citation, Codul civil art. 1191, 1193, is contradicted by a
+      message that names a deadline and then a length that does not reach it). `holdExpiresAt` is
+      already capped at registration close or the event start (`capHoldExpiry`), and the club's
+      "Termene" may since have changed (§377 applies a change to new offers only) — so the words
+      are worked out from this offer's own span, `offerCreatedAt` to `holdExpiresAt`, never from
+      the setting in force now. Without an `offerCreatedAt` (a row from before this column, or a
+      test fixture) the club's current setting is kept, as before.
+    */
+    if (row.messageType === "WAITLIST_SPOT_OFFER" && registration.offerCreatedAt && data.timings) {
+      const offerHours = Math.max(1, Math.round((registration.holdExpiresAt.getTime() - registration.offerCreatedAt.getTime()) / (60 * 60_000)));
+      data.timings = { ...data.timings, offerHours };
     }
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;

@@ -11,7 +11,7 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
-import { RETENTION } from "@/modules/jobs/retention";
+import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
@@ -580,14 +580,28 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
 }
 
 /**
+ * A neutral word for the runner the one bulk club copy names nobody in particular (§NNN, review
+ * finding): the organizer's body may read "Salut, {participantName}!", and the bulk copy has no
+ * one registration to fill that with — never a blank ("Salut, !").
+ */
+function bulkParticipantWord(locale: EmailLocale): string {
+  return locale === "ro" ? "participantul" : "the participant";
+}
+
+/**
  * The organizer's own message (§364), after the platform's one framing sentence: the body they
  * typed, its placeholders filled with this half's facts, a blank line starting a paragraph and a
  * single line break kept. Escaped as plain text, and — like the note on an update (§331) — no
  * `**` or `__` read inside it: a pair of asterisks somebody typed prints as asterisks.
+ *
+ * On the one bulk club copy (`bulkCopy`), `{participantName}` and `{bibNumber}` — facts this
+ * copy has none of — read as a neutral word and nothing, rather than the blank a per-registration
+ * send's missing field would leave (§NNN, review finding: "Salut, !" is not a sentence).
  */
-function organizerMessageParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
+function organizerMessageParts(messageType: EmailMessageType, data: TemplateData, locale: EmailLocale, bulkCopy: boolean): EmailBodyPart[] {
   if (messageType !== "ORGANIZER_MESSAGE" || !data.organizerBody) return [];
-  const paragraphs = organizerParagraphs(fillPlaceholders(data.organizerBody, data as unknown as Record<string, unknown>));
+  const fields = bulkCopy ? { ...data, participantName: bulkParticipantWord(locale), bibNumber: undefined } : data;
+  const paragraphs = organizerParagraphs(fillPlaceholders(data.organizerBody, fields as unknown as Record<string, unknown>));
   return paragraphs.map((lines, index) => ({
     html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${lines.map(escapeHtml).join("<br>")}</p>`,
     // A blank line between paragraphs in the plain-text part too, so it reads as it was typed.
@@ -1625,7 +1639,7 @@ export function buildTemplateContent(
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
-      ...organizerMessageParts(messageType, data),
+      ...organizerMessageParts(messageType, data, locale, bulkCopy),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
@@ -1681,12 +1695,12 @@ function defaultLinkLifetime(locale: EmailLocale): string {
  * says cannot drift. The mailbox is not swept by the platform: the sentence is the reminder.
  */
 export function archivePeriod(locale: EmailLocale): string {
-  return durationPhrase(locale, RETENTION.registrationsYearsAfterEvent, "years");
+  return durationPhrase(locale, RETENTION_PERIODS.registrationsYearsAfterEvent, "years");
 }
 
 /** How long the backoffice keeps the whole identity document after the event (§95), from the same constants. */
 export function identityDays(locale: EmailLocale): string {
-  return durationPhrase(locale, RETENTION.identityAndHealthDaysAfterEvent, "days");
+  return durationPhrase(locale, RETENTION_PERIODS.identityAndHealthDaysAfterEvent, "days");
 }
 
 /**

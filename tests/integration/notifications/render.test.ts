@@ -534,6 +534,31 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(lapsed.text).not.toContain("până la");
   });
 
+  it("§NNN a capped offer states the length it was actually given, not the club's current setting (review finding)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    /*
+      `computeWaitlistOfferExpiry` (`hold-deadlines.ts`) caps a naive 24-hour offer at
+      registration close or the event start. Here the offer was made three hours before the
+      deadline it was actually given — capped well short of the club's 24-hour setting — and the
+      stated length must say three hours, or the moment and the length disagree (Codul civil
+      art. 1191, 1193, as counsel's own sentence cites).
+    */
+    const offerCreatedAt = NOW;
+    const cappedDeadline = new Date(NOW.getTime() + 3 * 60 * 60_000);
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-capped"), db, NOW);
+    const when = formatDay(cappedDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    expect(message.text).toContain(
+      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până la ${when} (ai la dispoziție ${hoursPhrase("ro", 3)}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
+    );
+    expect(message.text).not.toContain(hoursPhrase("ro", DEFAULT_DEADLINES.offerHours));
+  });
+
   it("§NNN a minor's messages greet the parent, say whose registration it is and who signs", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
