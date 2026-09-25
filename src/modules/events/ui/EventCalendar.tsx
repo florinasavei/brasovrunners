@@ -68,8 +68,8 @@ export default async function EventCalendar({
   /** Awaited here, so the boundary above suspends on the query rather than the page doing it. */
   events: PublicEvent[] | Promise<PublicEvent[]>;
   now: Date;
-  /** Other query parameters the month links keep — the type filter (§89), the layout (§137). */
-  query?: Record<string, string>;
+  /** Other query parameters the month links keep — the filters (§89, §NNN; a group ticked twice is an array), the layout (§137). */
+  query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
   const t = await getTranslations("Events");

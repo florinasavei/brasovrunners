@@ -46,12 +46,35 @@
     "featuredCallToAction": "See the race details",
     "others": "Other events",
     "othersCount": "All events ({count})",
+    "othersCountFiltered": "Matching events ({count})",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
+    "pastCountFiltered": "Past, filtered ({count})",
     "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
-      "label": "Event type",
-      "all": "All",
-      "partner": "Partnership"
+      "label": "Event filters",
+      "button": "Filters",
+      "buttonCount": "Filters ({count})",
+      "help": "Within a group any tick will do; across groups, every one must match.",
+      "groups": {
+        "type": "Type",
+        "surface": "Surface",
+        "difficulty": "Difficulty",
+        "distance": "Distance",
+        "cost": "Cost",
+        "more": "More"
+      },
+      "distance": {
+        "SHORT": "Up to 10 km",
+        "MEDIUM": "10–21 km",
+        "LONG": "Over 21 km"
+      },
+      "partner": "Partnership",
+      "night": "Night event",
+      "apply": "Show events",
+      "clear": "Clear filters",
+      "remove": "Remove filter",
+      "active": "Active filters",
+      "none": "No event matches the filters you chose."
     },
     "calendar": {
       "previous": "Previous month",

@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
@@ -13,13 +12,23 @@ import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
-import { listingSections, partnerFilterOffered, presentEventTypes } from "@/modules/events/domain/listing";
+import { listingSections } from "@/modules/events/domain/listing";
+import {
+  activeFilterCount,
+  matchesListingFilter,
+  offeredFilters,
+  offersAnything,
+  parseListingFilter,
+  type FilterableEvent,
+  type ListingFilter,
+} from "@/modules/events/domain/listing-filter";
+import { clubNightEvent } from "@/modules/events/night-event";
+import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
-import ChipLink from "@/shared/ui/ChipLink";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
@@ -27,8 +36,6 @@ import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkelet
 import type { listUpcomingEvents } from "@/modules/events/repository";
 import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 
-import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
-import { getPathname } from "@/i18n/navigation";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -42,8 +49,19 @@ type Props = {
     type?: string | string[];
     view?: string | string[];
     partner?: string | string[];
+    surface?: string | string[];
+    difficulty?: string | string[];
+    distance?: string | string[];
+    cost?: string | string[];
+    night?: string | string[];
   }>;
 };
+
+/**
+ * Whether a row is a night event (§394), for the filter's "Eveniment de noapte" box: the same answer
+ * the row's own pill gives, at the club's place, per date.
+ */
+const isNight = (event: FilterableEvent & Parameters<typeof clubNightEvent>[0]) => clubNightEvent(event).night;
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -60,7 +78,7 @@ export const dynamic = "force-dynamic";
 /**
  * The listing is one page per language, whatever the address adds (§342).
  *
- * `?type=` shows a subset of the same cards, each of which is an indexed page of its own, and
+ * `?type=` — and every other filter since §NNN — shows a subset of the same cards, each of which is an indexed page of its own, and
  * `?view=` changes nothing here at all since the calendar moved to its own page (§251) — the
  * filter links only carry it back there. Neither view has content of its own, so every one of
  * them names the plain listing as canonical and only the plain listing is in the sitemap.
@@ -98,15 +116,12 @@ type Listing = Awaited<ReturnType<typeof loadListing>>;
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { type: typeParam, view: viewParam, partner: partnerParam } = await searchParams;
-  // The type filter (§89): one of the closed set, or everything.
-  const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
-  const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
-  // The layout the month links keep (§137); `ListingLead` passes it to the filter's own links.
-  const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
-  // The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`: the owner,
-  // 22:15, 2026-09-25: "I want to see that «colaboration» event in the filters as well".
-  const partner = (Array.isArray(partnerParam) ? partnerParam[0] : partnerParam) === "1";
+  const query = await searchParams;
+  // The filters (§NNN, amending §133/§401): every group the panel offers, OR within a group and AND
+  // across groups, read off the address — `?type=RACE` and `?partner=1` mean what they always meant.
+  const filter = parseListingFilter(query);
+  // The layout the month links keep (§137); the panel's form and links carry it along.
+  const layout: CalendarLayout = (Array.isArray(query.view) ? query.view[0] : query.view) === "list" ? "list" : "grid";
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -163,7 +178,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       </Typography>
 
       <Suspense fallback={<ListingLeadSkeleton label={t("loading")} />}>
-        <ListingLead listing={listing} type={type} partner={partner} layout={layout} locale={locale} now={now} />
+        <ListingLead listing={listing} filter={filter} layout={layout} locale={locale} now={now} />
       </Suspense>
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
@@ -171,68 +186,83 @@ export default async function EventsPage({ params, searchParams }: Props) {
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
       <Suspense fallback={<EventListSkeleton label={t("loading")} />}>
-        <ListingBody listing={listing} type={type} partner={partner} now={now} />
+        <ListingBody listing={listing} filter={filter} now={now} />
       </Suspense>
 
       {/* What the club has already held, at the foot and folded (§267). Its own query and its
           own boundary, so it costs the page nothing until it answers — and nothing at all
           above it waits for it. */}
       <Suspense fallback={null}>
-        <PastEvents locale={locale} now={now} type={type} hasUpcoming={listing.then((read) => read.value.hasUpcoming)} />
+        <PastEvents
+          locale={locale}
+          now={now}
+          filter={filter}
+          shownAbove={listing.then((read) => (read.value.hasUpcoming ? undefined : read.value.events[0]?.id))}
+        />
       </Suspense>
     </Container>
   );
 }
 
 /**
- * The lead event and the filter above the calendar.
+ * The filter panel and the lead event.
  *
  * Streamed, because it is the first thing that costs a query and the last thing that should
- * hold up the page around it. On a month change this boundary is *not* re-keyed, so React
- * keeps the hero that is already on screen rather than blinking it — the club's next race
- * does not change because somebody looked at December.
+ * hold up the page around it. The boundary is never re-keyed, so a filter pressed with a script
+ * keeps the panel — open, as the reader left it — on screen while the new rows arrive.
+ *
+ * The panel sits **above** the hero since §NNN, because the hero follows the filters now: a
+ * control under the thing it hides would jump up under the thumb that pressed it.
  */
 async function ListingLead({
   listing,
-  type,
-  partner,
+  filter,
   layout,
   locale,
   now,
 }: {
   listing: Promise<Resilient<Listing>>;
-  type?: EventType;
-  /** The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`. */
-  partner: boolean;
+  /** The filters the address names (§NNN): OR within a group, AND across groups. */
+  filter: ListingFilter;
   layout: CalendarLayout;
   locale: "ro" | "en";
   now: Date;
 }) {
   const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
-  const tEvent = await getTranslations("Event");
   // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
-  const { featured } = listingSections(events, type, hasUpcoming, partner);
+  // The filter decides the hero too (§NNN): a lead event that does not match is not shown.
+  const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight), hasUpcoming);
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
-  // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
-  // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
-  const presentTypes = presentEventTypes(events, type);
-  // Same rule, for "Colaborare" (§401): offered only while a partnered event is among what the
-  // page shows, or the address already narrows by it. Read off what the filter can actually
-  // narrow — the list, not the hero, which the filter never touches (§376 fix round finding 7):
-  // offering the chip on the hero's partner alone would empty the grid on a press.
-  const partnerOffered = partnerFilterOffered(
-    featured ? events.filter((event) => event.id !== featured.id) : events,
-    partner,
-  );
-  const filterQuery = (extra: Record<string, string>) =>
-    getPathname({ locale, href: { pathname: "/events", query: { ...extra, ...(layout === "list" ? { view: "list" } : {}) } } });
+  // What the panel offers (§NNN, §133's rule generalised): a box only where ticking it would change
+  // what the page shows — read off every row, the hero's included, never off the filtered rows —
+  // or where the address already ticks it, so a filtered page can say what it is filtered by.
+  const offer = offeredFilters(events, filter, isNight);
 
   return (
     <>
+      {/* One "Filtre" button, closed by default (§NNN — the owner, 2026-09-25: "un buton de filtre,
+          collapsed by default, checkboxuri pe pill-uri și mai multe filtre"), replacing §133's row
+          of kind chips and §401's «Colaborare» chip beside them. Nothing to narrow and nothing
+          ticked, it does not render, and nothing on the listing moves for that.
+
+          The gap around it is `DENSITY.sectionGap` (§401 — the owner: "filters still need to be a
+          bit above the grid"): 16px on a phone and 24px from `sm`, above and below alike. */}
+      {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
+        <Box sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
+          <ListingFilterPanel
+            locale={locale}
+            pathname="/events"
+            filter={filter}
+            offer={offer}
+            keep={layout === "list" ? { view: "list" } : {}}
+          />
+        </Box>
+      )}
+
       {!hasUpcoming && events.length > 0 && (
         <Alert severity="info" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("noUpcoming")}
@@ -240,54 +270,6 @@ async function ListingLead({
       )}
 
       {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} />}
-
-      {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133),
-          plus "Colaborare" / "Partnership" (§401, the owner, 22:15, 2026-09-25) when the club has
-          a partnered event to show — AND-combined with the kind above it, its own state in the
-          address (`?partner=1`), never replacing the kind's own chip row. Fewer than two kinds
-          and no partnered event is nothing to filter.
-
-          The gap under this row and above the grid (§401 — the owner: "filters still need to be
-          a bit above the grid") is `DENSITY.sectionGap`, one density-token step: measured on the
-          built listing at 320/360/390/412 and desktop, 0px before this change at every width
-          (the filter row carried no `mb` and the grid no `mt`), 16px on a phone and 24px from
-          `sm` after it — the same numbers this row's own `mt` above already uses, so the space
-          above and below the row now matches. It sits on this row's own `mb` (§376 fix round
-          finding 3), not on `ListingBody`'s three shapes: fewer than two kinds and no partnered
-          event, this row does not render, and nothing on the listing may move for that — the
-          grid then sits directly under the intro or the hero, as it always has. */}
-      {(presentTypes.length > 1 || partnerOffered) && (
-        <Stack
-          component="nav"
-          aria-label={t("filter.label")}
-          direction="row"
-          sx={{ flexWrap: "wrap", columnGap: 0.5, mt: { xs: DENSITY.sectionGap, sm: 3 }, mb: { xs: DENSITY.sectionGap, sm: 3 } }}
-        >
-          {presentTypes.length > 1 &&
-            [undefined, ...presentTypes].map((candidate) => {
-              const active = candidate === type;
-              // A string href: a component reference cannot cross into MUI's client component —
-              // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
-              const href = filterQuery({ ...(candidate ? { type: candidate } : {}), ...(partner ? { partner: "1" } : {}) });
-              // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
-              return candidate ? (
-                <ChipLink key={candidate} href={href} label={tEvent(`type.${candidate}`)} glyph={`type:${candidate}`} active={active} current={active ? "page" : undefined} />
-              ) : (
-                <ChipLink key="all" href={href} label={t("filter.all")} active={active} current={active ? "page" : undefined} />
-              );
-            })}
-          {partnerOffered && (
-            <ChipLink
-              key="partner"
-              href={filterQuery({ ...(type ? { type } : {}), ...(partner ? {} : { partner: "1" }) })}
-              label={t("filter.partner")}
-              glyph="partner"
-              active={partner}
-              current={partner ? "page" : undefined}
-            />
-          )}
-        </Stack>
-      )}
     </>
   );
 }
@@ -300,6 +282,13 @@ async function ListingLead({
  * where the rest lives. The section says so in its own words rather than growing a pager.
  */
 const PAST_EVENTS_SHOWN = 12;
+
+/**
+ * How far back the past section looks while a filter is on (§NNN): about a year of weekly runs, so
+ * that "Trail" or "Cursă" finds its twelve in memory from one cached read rather than a query per
+ * combination of boxes. Past that, the calendar's months are where the rest lives, as before.
+ */
+const PAST_EVENTS_FILTER_WINDOW = 60;
 
 /**
  * The events that have already happened, at the bottom, in their own category (§267).
@@ -320,27 +309,36 @@ const PAST_EVENTS_SHOWN = 12;
 async function PastEvents({
   locale,
   now,
-  type,
-  hasUpcoming,
+  filter,
+  shownAbove,
 }: {
   locale: EventLocale;
   now: Date;
-  /** The kind the filter above is showing (§272), or nothing for every kind. */
-  type?: EventType;
-  hasUpcoming: Promise<boolean>;
+  /** The filters above (§272, §NNN) — the past narrows by them too. */
+  filter: ListingFilter;
+  /** The past event the lead already shows between seasons (§167), if any. */
+  shownAbove: Promise<string | undefined>;
 }) {
-  const [rows, upcoming] = await Promise.all([
-    cachedPastEvents(locale, now, PAST_EVENTS_SHOWN + 1, type),
-    hasUpcoming,
+  const filtered = activeFilterCount(filter) > 0;
+  // One kind ticked still narrows at the source, as `?type=` always did (§272); every other filter
+  // narrows in memory over a longer window of the same cached read (§NNN), so ticking "Trail"
+  // does not have to find its twelve among the last thirteen rows of any kind.
+  const sourceType = filter.type.length === 1 ? filter.type[0] : undefined;
+  const [rows, leadId] = await Promise.all([
+    cachedPastEvents(locale, now, filtered ? PAST_EVENTS_FILTER_WINDOW : PAST_EVENTS_SHOWN + 1, sourceType),
+    shownAbove,
   ]);
-  // The one the lead is already showing, when there is nothing to come (§167).
-  const events = upcoming ? rows : rows.slice(1);
+  // The one the lead is already showing, when there is nothing to come (§167) — by its id, not
+  // as "the first row": with a kind narrowed at the source, the first row is the latest of that
+  // kind, which is not the club's latest event the lead shows.
+  const events = rows.filter((event) => event.id !== leadId && matchesListingFilter(event, filter, isNight));
   if (events.length === 0) return null;
 
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
   const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
+  const onlyOneType = sourceType !== undefined && activeFilterCount(filter) === 1;
 
   return (
     <Box component="details" data-testid="past-events" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
@@ -349,7 +347,11 @@ async function PastEvents({
         variant="h2"
         sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 0.5 }}
       >
-        {type ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${type}`) }) : t("pastCount", { count: cards.length })}
+        {onlyOneType
+          ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${sourceType}`) })
+          : filtered
+            ? t("pastCountFiltered", { count: cards.length })
+            : t("pastCount", { count: cards.length })}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
         {t("pastHelp")}
@@ -395,21 +397,21 @@ async function PastEvents({
  */
 async function ListingBody({
   listing,
-  type,
-  partner,
+  filter,
   now,
 }: {
   listing: Promise<Resilient<Listing>>;
-  type?: EventType;
-  /** The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`. */
-  partner: boolean;
+  /** The filters the address names (§NNN), the same the lead was given. */
+  filter: ListingFilter;
   now: Date;
 }) {
   const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
-  // The same division the lead made, and it has to be given the same third argument or the
-  // two disagree: a past event the lead refused to hero must appear in the list (§167).
-  const { featured, listed } = listingSections(events, type, hasUpcoming, partner);
+  const filtered = activeFilterCount(filter) > 0;
+  // The same division the lead made, and it has to be given the same arguments or the two
+  // disagree: a past event the lead refused to hero must appear in the list (§167), and a lead
+  // event the filter hides must not reappear here as a card (§NNN).
+  const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight), hasUpcoming);
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
@@ -444,7 +446,7 @@ async function ListingBody({
             pointerEvents: { xs: "auto", sm: "none" },
           }}
         >
-          {t("othersCount", { count: cards.length })}
+          {filtered ? t("othersCountFiltered", { count: cards.length }) : t("othersCount", { count: cards.length })}
         </Typography>
         <Box component="ul" sx={{
             listStyle: "none",
@@ -468,7 +470,9 @@ async function ListingBody({
     );
   }
 
-  if (listed.length === 0) return <Alert severity="info">{t("empty")}</Alert>;
+  // Nothing matches the filters: say so in those words, not "nothing is published" (§NNN) — the
+  // panel above still names every tick and "Șterge filtrele" is one press away.
+  if (listed.length === 0) return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
 
   return (
     <Box component="ul" sx={{

@@ -10,7 +10,6 @@ import { Suspense } from "react";
 import type { Locale } from "@/i18n/routing";
 import { calendarBoundaryKey } from "@/modules/events/domain/listing";
 import { monthGrid } from "@/modules/events/domain/calendar";
-import type { EventType } from "@/modules/events/domain/event-type";
 import { webcalUrl } from "@/modules/events/ical";
 import type { PublicEvent } from "@/modules/events/repository";
 import CalendarHeader from "@/modules/events/ui/CalendarHeader";
@@ -44,8 +43,7 @@ export default async function CalendarSection({
   locale,
   view,
   layout,
-  type,
-  partner = false,
+  filterKey = "all",
   query,
   now,
   events,
@@ -53,11 +51,10 @@ export default async function CalendarSection({
   locale: Locale;
   view: CalendarView;
   layout: CalendarLayout;
-  /** The type filter the address carries, so the month's own links keep it. */
-  type?: EventType;
-  /** The "Colaborare" / "Partnership" filter the address carries (§133, §401), AND-combined with `type`. */
-  partner?: boolean;
-  query: Record<string, string>;
+  /** The filters the address carries, as `listingFilterKey`'s one string (§NNN): part of the boundary's key. */
+  filterKey?: string;
+  /** What the month's own links keep — the filters (a group ticked twice is an array) and the layout. */
+  query: Record<string, string | string[]>;
   now: Date;
   /** Started by the page and awaited inside the boundary below, never in the page body (§166). */
   events: Promise<PublicEvent[]>;
@@ -70,7 +67,7 @@ export default async function CalendarSection({
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
         <CalendarHeader view={view} now={now} query={query} layout={layout} />
         <Suspense
-          key={calendarBoundaryKey(view, layout, type, partner)}
+          key={calendarBoundaryKey(view, layout, filterKey)}
           fallback={
             <CalendarBodySkeleton
               label={t("loading")}

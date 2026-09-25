@@ -46,12 +46,35 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Toate evenimentele ({count})",
+    "othersCountFiltered": "Evenimentele alese ({count})",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "pastCountFiltered": "Din trecut, după filtre ({count})",
     "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
-      "label": "Tipul evenimentului",
-      "all": "Toate",
-      "partner": "Colaborare"
+      "label": "Filtrele evenimentelor",
+      "button": "Filtre",
+      "buttonCount": "Filtre ({count})",
+      "help": "Într-un grup ajunge oricare bifă; între grupuri trebuie să se potrivească toate.",
+      "groups": {
+        "type": "Tipul",
+        "surface": "Terenul",
+        "difficulty": "Dificultatea",
+        "distance": "Distanța",
+        "cost": "Costul",
+        "more": "Altele"
+      },
+      "distance": {
+        "SHORT": "Până la 10 km",
+        "MEDIUM": "10–21 km",
+        "LONG": "Peste 21 km"
+      },
+      "partner": "Colaborare",
+      "night": "Eveniment de noapte",
+      "apply": "Arată evenimentele",
+      "clear": "Șterge filtrele",
+      "remove": "Scoate filtrul",
+      "active": "Filtre active",
+      "none": "Niciun eveniment nu se potrivește filtrelor alese."
     },
     "calendar": {
       "previous": "Luna anterioară",

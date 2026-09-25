@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -8,8 +9,19 @@ import { Suspense } from "react";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
-import { EVENT_TYPES } from "@/modules/events/domain/event-type";
-import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import {
+  activeFilterCount,
+  listingFilterKey,
+  listingFilterQuery,
+  matchesListingFilter,
+  offeredFilters,
+  offersAnything,
+  parseListingFilter,
+  type ListingFilter,
+} from "@/modules/events/domain/listing-filter";
+import { clubNightEvent } from "@/modules/events/night-event";
+import type { PublicEvent } from "@/modules/events/repository";
+import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
@@ -30,8 +42,16 @@ type Props = {
     type?: string | string[];
     view?: string | string[];
     partner?: string | string[];
+    surface?: string | string[];
+    difficulty?: string | string[];
+    distance?: string | string[];
+    cost?: string | string[];
+    night?: string | string[];
   }>;
 };
+
+/** Whether a date is a night event (§394), for the filter's box — the answer its own entry's tooltip gives. */
+const isNight = (event: PublicEvent) => clubNightEvent(event).night;
 
 /**
  * The club's calendar, on a page of its own (`DECISIONS.md` §251; the owner: "the calendar
@@ -68,25 +88,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CalendarPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam, partner: partnerParam } = await searchParams;
+  const searched = await searchParams;
+  const { month: monthParam, year: yearParam, view: viewParam } = searched;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
   const t = await getTranslations("Events");
   const now = new Date();
 
-  // The same three readings of the address the listing made (§89, §116, §137), so a link that
-  // was in somebody's history still means what it meant.
-  const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
-  const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
+  // The same readings of the address the listing makes (§89, §116, §137, §NNN), so a link that
+  // was in somebody's history still means what it meant: the filters — `?type=RACE` and
+  // `?partner=1` among them — and the layout, all kept through the month's own links.
+  const filter = parseListingFilter(searched);
   const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
-  // The "Colaborare" / "Partnership" filter (§133, §401), AND-combined with `type`, kept the
-  // same way through the month's own links.
-  const partner = (Array.isArray(partnerParam) ? partnerParam[0] : partnerParam) === "1";
-  const query: Record<string, string> = {
-    ...(type ? { type } : {}),
+  const query: Record<string, string | string[]> = {
+    ...listingFilterQuery(filter),
     ...(layout === "list" ? { view: "list" } : {}),
-    ...(partner ? { partner: "1" } : {}),
   };
   const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
   const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
@@ -95,17 +112,19 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   /*
     Keyed by what is actually being shown (§281): a month, a year, and the language. Two months
     are two answers, and a copy of March must never be served as a copy of April.
+
+    The rows are kept and cached whole, and filtered after the read (§NNN). The filter used to
+    run inside the loader, so the last good copy of a month was whichever filter had last read
+    it — a copy of "races only" could answer an unfiltered visit while the database was away.
   */
   const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
-  const events = readWithLastGood(
-    key,
-    // From the public cache (§333): the range is the key, and an event save expires it.
-    () =>
-      cachedPublishedEventsBetween(locale, range.from, range.to).then((rows) =>
-        rows.filter((event) => (!type || event.type === type) && (!partner || readCoHosts(event).length > 0)),
-      ),
-    now,
-  );
+  // From the public cache (§333): the range is the key, and an event save expires it.
+  const period = readWithLastGood(key, () => cachedPublishedEventsBetween(locale, range.from, range.to), now);
+  const events = period.then((read) => ({ ...read, value: read.value.filter((event) => matchesListingFilter(event, filter, isNight)) }));
+  // The calendar's own panel (§NNN): what it offers is read off the period on view, the rows the
+  // filter narrows here — the same rule the listing applies to its own rows.
+  const monthOrYear: Record<string, string> =
+    view.kind === "year" ? { year: String(view.year) } : { month: `${view.month.year}-${String(view.month.month).padStart(2, "0")}` };
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -127,8 +146,50 @@ export default async function CalendarPage({ params, searchParams }: Props) {
         <CalendarStaleNotice events={events} />
       </Suspense>
 
-      <CalendarSection locale={locale} view={view} layout={layout} type={type} partner={partner} query={query} now={now} events={events.then((read) => read.value)} />
+      <Suspense fallback={null}>
+        <CalendarFilters
+          locale={locale}
+          filter={filter}
+          rows={period.then((read) => read.value)}
+          keep={{ ...monthOrYear, ...(layout === "list" ? { view: "list" } : {}) }}
+        />
+      </Suspense>
+
+      <CalendarSection
+        locale={locale}
+        view={view}
+        layout={layout}
+        filterKey={listingFilterKey(filter)}
+        query={query}
+        now={now}
+        events={events.then((read) => read.value)}
+      />
     </Container>
+  );
+}
+
+/**
+ * The listing's filter panel on the calendar (§NNN): the same button, the same boxes, the same
+ * address — so "races on a trail" is a month of races on a trail, not only a list of cards. It
+ * offers what would narrow the period on view, and keeps the month or year and the layout.
+ */
+async function CalendarFilters({
+  locale,
+  filter,
+  rows,
+  keep,
+}: {
+  locale: "ro" | "en";
+  filter: ListingFilter;
+  rows: Promise<PublicEvent[]>;
+  keep: Record<string, string>;
+}) {
+  const offer = offeredFilters(await rows, filter, isNight);
+  if (!offersAnything(offer) && activeFilterCount(filter) === 0) return null;
+  return (
+    <Box sx={{ mb: 1 }}>
+      <ListingFilterPanel locale={locale} pathname="/calendar" filter={filter} offer={offer} keep={keep} />
+    </Box>
   );
 }
 
