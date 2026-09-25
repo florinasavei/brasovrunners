@@ -64,7 +64,7 @@ describe("PartnerEmoji — gray ink (§379)", () => {
   it("carries a grayscale filter on the emoji span, one value in light and another under [data-dark]", () => {
     const html = renderToStaticMarkup(createElement(PartnerEmoji));
     expect(html).toContain('data-testid="PartnerEmoji"');
-    expect(html).toMatch(/filter:grayscale\(1\) brightness\(0\.55\)/);
-    expect(html).toMatch(/\[data-dark\] \.css-\S+\{[^}]*filter:grayscale\(1\) brightness\(1\.55\)/);
+    expect(html).toMatch(/filter:grayscale\(1\) brightness\(0\.45\)/);
+    expect(html).toMatch(/\[data-dark\] \.css-\S+\{[^}]*filter:grayscale\(1\) brightness\(0\.92\)/);
   });
 });

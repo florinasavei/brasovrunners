@@ -112,7 +112,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(chip).not.toContainText(partner);
     await expect(chip.locator(HANDSHAKE)).toHaveCount(1);
     // Gray ink (§379): the handshake is desaturated, not the emoji's own bright colours.
-    await expect(chip.locator(HANDSHAKE)).toHaveCSS("filter", /grayscale\(1\) brightness\(0\.55\)/);
+    await expect(chip.locator(HANDSHAKE)).toHaveCSS("filter", /grayscale\(1\) brightness\(0\.45\)/);
     // At 320 pixels the label wraps inside the card rather than widening the page.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
