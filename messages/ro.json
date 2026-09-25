@@ -2807,6 +2807,7 @@
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
+        "untitledOther": "(eveniment fără titlu) — {title} ({locale})",
         "clubCopy": {
           "none": "Copie club: niciuna. Clubul nu primește copii ale emailurilor către participanți.",
           "some": "Copie club: fiecare email de mai sus pleacă și, separat, cu „[Copie club]” în subiect, la {addresses}. Nu și pentru înscrierile de test și nici pentru „Înscrierile s-au deschis”, care nu ține de o înscriere.",

@@ -87,15 +87,23 @@ describe("§NNN the upcoming automatic emails card", () => {
     expect(html.indexOf("Crosul de toamnă")).toBeLessThan(html.indexOf("Semimaratonul"));
   });
 
-  it("says the same in English, and names an event by the other language's title when it has no English one", async () => {
+  it("says the same in English, and marks the other language's title — never an unmarked fallback — when it has no English one", async () => {
     const html = await render("en", ROWS);
     expect(html).toMatch(/href="\/en\/admin\/events\/event-a"[^>]*>The autumn cross</);
     expect(html).toMatch(/href="#email-COMPLETE_DECLARATION"[^>]*>/);
     expect(html).toContain("Sat, 10 Oct 2026, 12:00");
     expect(html).toContain("23 recipients now");
     expect(html).toContain("1 recipient now and 2 test registrations");
-    expect(html).toContain(">Semimaratonul<");
+    // (untitled event) — Semimaratonul (RO): never the bare title, and always labelled with its language.
+    expect(html).toContain("(untitled event) — Semimaratonul (RO)");
+    expect(html).not.toMatch(/>Semimaratonul</);
     expect(html).toContain(en.Admin.emails.forecast.sends.reminder);
+  });
+
+  it("shows only the untitled label when neither language has a title", async () => {
+    const rows: Rows = [{ ...ROWS[1], eventTitle: { ro: null, en: null } }];
+    const html = await render("en", rows);
+    expect(html).toContain(`>${en.Admin.emails.forecast.untitled}<`);
   });
 
   it("says in words when nothing is due, in both languages", async () => {
@@ -127,6 +135,8 @@ describe("§NNN the upcoming automatic emails card", () => {
       for (const send of ["reminder", "lastCall", "participation", "nextInLine", "bibs", "registrationOpened"] as const) {
         expect(forecast.sends[send], send).toBeTruthy();
       }
+      expect(forecast.untitled).toBeTruthy();
+      expect(forecast.untitledOther).toBeTruthy();
     }
   });
 });

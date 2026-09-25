@@ -10,6 +10,7 @@ import {
   participationConfirmationDueAt,
   registrationOpenedDueAt,
 } from "@/modules/notifications/domain/automatic-sends";
+import { wantedLapsedHoldReleases } from "@/modules/registrations/domain/capacity";
 
 const NOW = new Date("2026-10-09T09:00:00.000Z");
 const HOUR = 60 * 60_000;
@@ -75,6 +76,17 @@ describe("§NNN when an automatic email is due", () => {
     ]);
     expect(nextInLineOffers({ lapses, waiting: 0, startsAt: at(4 * DAY), now: NOW })).toEqual([]);
     expect(nextInLineOffers({ lapses: [at(5 * DAY)], waiting: 2, startsAt: at(4 * DAY), now: NOW })).toEqual([]);
+  });
+
+  it("counts the same releases as the job's own wantedLapsedHoldReleases when nothing is free (§160)", () => {
+    // A lapse is only ever released to a queue at all when the queue wants it — `free` is 0 at
+    // that instant — which is the one case `nextInLineOffers` (the forecast's own arithmetic) and
+    // `wantedLapsedHoldReleases` (the job's) both cover, so their counts must agree there.
+    const lapses = [at(20 * HOUR), at(DAY), at(2 * DAY)];
+    for (const waiting of [0, 1, 2, 3, 5]) {
+      const offered = nextInLineOffers({ lapses, waiting, startsAt: at(10 * DAY), now: NOW }).reduce((sum, offer) => sum + offer.count, 0);
+      expect(offered).toBe(wantedLapsedHoldReleases({ lapsed: lapses.length, waiting, free: 0 }));
+    }
   });
 
   it("announces an opened registration to the addresses left, once it is open and published (§146)", () => {

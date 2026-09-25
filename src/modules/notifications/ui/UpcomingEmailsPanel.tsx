@@ -59,11 +59,15 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
       ) : (
         <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {rows.map((row) => {
-            // A backoffice identifier, not the participant-facing content the "never a
-            // cross-language fallback" rule protects (§354): this only points a staff reader at
-            // the right event to edit, and a locale-less row would otherwise be unfindable in
-            // the list. Deliberate, and pinned by a unit test — flagged for the owner to confirm.
-            const title = row.eventTitle[locale] ?? row.eventTitle[other] ?? t("emails.forecast.untitled");
+            // No unmarked fallback (§354): a row without this locale's title reads "untitled",
+            // never silently the other language's words. The other title is still offered, so a
+            // staff reader can still find the right event to edit, but only marked with its own
+            // language code — never presented as this locale's title.
+            const ownTitle = row.eventTitle[locale];
+            const otherTitle = row.eventTitle[other];
+            const title = ownTitle ?? (otherTitle
+              ? t("emails.forecast.untitledOther", { title: otherTitle, locale: other.toUpperCase() })
+              : t("emails.forecast.untitled"));
             const moment = formatDay(row.at, { locale, timeZone: row.zone, style: "short", withTime: true });
             const editor = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: row.eventId } } });
             return (

@@ -141,11 +141,14 @@ export function registrationOpenedDueAt(event: InterestEvent, from: Date): Date 
  * `hold_expires_at` with the run's instant). A lapse already behind is the job's next run, `now`.
  * The lapse of an offer made *then* is not foreseen: whether that person signs is not known.
  *
- * How *many* of a full event's lapsed declaration holds are actually wanted by the queue is the
- * `wantedLapsedHoldReleases` formula in `registrations/domain/capacity.ts` — `repository.ts`
- * releases exactly that many, oldest deadline first, and `forecast.ts` uses this function on the
- * same lapses to know which ones are spoken for before a "last call to sign" row is built for
- * them (`DECISIONS.md` §160).
+ * This is a *different* formula from `wantedLapsedHoldReleases` in `registrations/domain/
+ * capacity.ts`, which is what the job itself uses (`repository.ts#lapsedDeclarationHoldsToRelease`,
+ * oldest deadline first) — that one reads how many places are already free without touching a
+ * hold, a count the forecast has no query for at a moment nothing has lapsed yet. `forecast.ts`
+ * uses *this* function on the same lapses instead, to know which ones are spoken for before a
+ * "last call to sign" row is built for them (`DECISIONS.md` §160). The two agree whenever free is
+ * 0, which holds wherever a lapse is released to a queue at all: nobody is offered a place that
+ * was already free.
  */
 export function nextInLineOffers(input: { lapses: Date[]; waiting: number; startsAt: Date; now: Date }): { at: Date; count: number }[] {
   const instants = input.lapses

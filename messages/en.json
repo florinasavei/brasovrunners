@@ -2807,6 +2807,7 @@
         },
         "zone": "{zone} time",
         "untitled": "(untitled event)",
+        "untitledOther": "(untitled event) — {title} ({locale})",
         "clubCopy": {
           "none": "Club copy: none. The club receives no copy of the emails to participants.",
           "some": "Club copy: every email above also goes, separately and with “[Club copy]” in the subject, to {addresses}. Not for test registrations, and not for “Registration is open”, which belongs to no registration.",

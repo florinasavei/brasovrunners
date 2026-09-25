@@ -52,9 +52,14 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
  * how many have lapsed, how many places the waiting list still wants and how many are free
  * without touching any hold. Never more than have lapsed, never more than the waiting list
  * needs — `repository.ts#lapsedDeclarationHoldsToRelease` releases exactly this many, oldest
- * deadline first, and `notifications/domain/automatic-sends.ts` reads the same number to know
- * which lapsed holds the maintenance job will release before it ever reaches them for a last
- * call. One formula; a change here reaches both.
+ * deadline first.
+ *
+ * The forecast on `/admin/emails` decides the same question by its own arithmetic instead
+ * (`notifications/domain/automatic-sends.ts#nextInLineOffers`: one lapse offers one place while
+ * anybody still waits), because at the instant a hold is forecast to lapse the forecast has no
+ * "free" count to ask for — nothing has actually lapsed yet for a query to count. The two agree
+ * whenever free is 0, which is the case this formula and the forecast both cover: a lapse is only
+ * ever released to a queue at all when something is waiting for it.
  */
 export function wantedLapsedHoldReleases(input: { lapsed: number; waiting: number; free: number }): number {
   return Math.min(input.lapsed, Math.max(input.waiting - input.free, 0));

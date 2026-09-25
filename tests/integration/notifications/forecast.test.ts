@@ -222,6 +222,41 @@ describe("§NNN the forecast of automatic emails", () => {
     expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("g1");
   });
 
+  /**
+   * §160 — a last call *earlier* than the lapse that will later consume its hold is still owed:
+   * the job reaches it first, so dropping it merely because the hold eventually lapses to the
+   * waiting list would promise a sign-reminder the job sends and the forecast never listed.
+   */
+  it("still promises a last call that falls before the lapse consuming its hold", async () => {
+    const h = await event("Crosul H", at(10 * DAY), { capacity: 1, reminderHoursBefore: 48 });
+    const h1 = await registration(h, "h1", "PENDING_DECLARATION", { holdExpiresAt: at(9 * DAY) });
+    await registration(h, "h2", "WAITLISTED");
+
+    const rows = (await forecast()).filter((row) => row.eventId === h);
+    const lastCall = rows.find((row) => row.send === "lastCall");
+    expect(lastCall?.at).toEqual(at(8 * DAY));
+    expect(lastCall?.registrationIds).toEqual([h1]);
+    expect(rows.find((row) => row.send === "nextInLine")?.at).toEqual(at(9 * DAY));
+
+    // The job agrees: at the last call's own instant, before the hold ever lapses, it is sent.
+    await runRegistrationMaintenance(db, at(8 * DAY));
+    expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).toContain("h1");
+  });
+
+  /** The mirror case: a lapse strictly *before* the last call's instant wins, as the original §160 case. */
+  it("drops a last call whose lapse comes strictly first", async () => {
+    const j = await event("Crosul J", at(10 * DAY), { capacity: 1, reminderHoursBefore: 48 });
+    await registration(j, "j1", "PENDING_DECLARATION", { holdExpiresAt: at(5 * DAY) });
+    await registration(j, "j2", "WAITLISTED");
+
+    const rows = (await forecast()).filter((row) => row.eventId === j);
+    expect(rows.some((row) => row.send === "lastCall")).toBe(false);
+    expect(rows.find((row) => row.send === "nextInLine")?.at).toEqual(at(5 * DAY));
+
+    await runRegistrationMaintenance(db, at(5 * DAY));
+    expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("j1");
+  });
+
   /** The labels (registered names) of the registrations the outbox rows of one type are for, whose key ends as given. */
   async function queued(type: EmailMessageType, keySuffix = "") {
     const rows = await db

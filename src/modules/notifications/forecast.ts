@@ -139,9 +139,13 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       ),
     );
   const nextInLinePending: Due[] = [];
-  // A declaration hold whose lapse is consumed by an offer to the next in line: it is released
-  // (`EXPIRED`) before it is ever owed a last call, so it must not also produce a "lastCall" row.
-  const consumedByNextInLine = new Set<string>();
+  // A declaration hold consumed by an offer to the next in line: released (`EXPIRED`) at its own
+  // lapse instant. It must not also produce a "lastCall" row, but only when that lapse actually
+  // comes first — `expireStaleHolds` runs before `queueEventReminders` in one job run (§160), so a
+  // lapse at the very same instant as the last call still wins, but a last call *earlier* than the
+  // lapse is still sent: the job reaches it first. Keyed by registration id to its lapse instant
+  // (`max(holdExpiresAt, now)`, never before the job's next run).
+  const consumedByNextInLine = new Map<string, Date>();
   if (holds.length > 0) {
     const eventIds = [...new Set(holds.map((row) => row.eventId))];
     // The line in the allocator's own order (`lockOldestWaitlisted`): who is offered first.
@@ -162,7 +166,9 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         now,
       });
       const consumed = offers.reduce((sum, offer) => sum + offer.count, 0);
-      for (const row of rows.slice(0, consumed)) consumedByNextInLine.add(row.registrationId);
+      for (const row of rows.slice(0, consumed)) {
+        if (row.holdExpiresAt) consumedByNextInLine.set(row.registrationId, notBeforeNow(row.holdExpiresAt));
+      }
       let next = 0;
       for (const offer of offers) {
         for (const person of waiting.slice(next, next + offer.count)) {
@@ -179,11 +185,15 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     if (inHorizon(confirmAt)) {
       keyed.push({ at: confirmAt, eventId: row.eventId, send: "participation", registrationId: row.registrationId, kind: row.kind });
     }
-    if (consumedByNextInLine.has(row.registrationId)) continue;
     const natural = declarationLastCallDueAt(row, deadlines);
     if (natural) {
       const at = notBeforeNow(natural);
-      if (inHorizon(at) && isDeclarationLastCallDue(row, at, deadlines)) {
+      // The lapse wins only when it is at or before the last call's own instant (the job runs
+      // `expireStaleHolds` before it ever reaches this registration for a last call); a last call
+      // due *before* the lapse is still sent.
+      const lapseAt = consumedByNextInLine.get(row.registrationId);
+      const releasedFirst = lapseAt !== undefined && lapseAt.getTime() <= at.getTime();
+      if (!releasedFirst && inHorizon(at) && isDeclarationLastCallDue(row, at, deadlines)) {
         keyed.push({ at, eventId: row.eventId, send: "lastCall", registrationId: row.registrationId, kind: row.kind });
       }
     }
