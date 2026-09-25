@@ -122,6 +122,17 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
     expect(staffRegistrationSubmissionSchema.safeParse({ ...values, termsAccepted: undefined }).success).toBe(true);
   });
 
+  /** §NNN, finding (7) — the version the tick names is posted, and read as absent when blank. */
+  it("reads the version the terms tick showed, absent when the page had none to show", () => {
+    const shown = readRegistrationForm(filledForm({ termsVersionShown: "3" }), "ro");
+    expect(shown.termsVersionShown).toBe("3");
+    expect(registrationSubmissionSchema.safeParse(shown).success).toBe(true);
+
+    const blank = readRegistrationForm(filledForm({ termsVersionShown: "" }), "ro");
+    expect(blank.termsVersionShown).toBeUndefined();
+    expect(registrationSubmissionSchema.safeParse(blank).success).toBe(true);
+  });
+
   it("never reads a results consent, whatever is posted", () => {
     const form = filledForm();
     form.set("resultsNameConsent", "on");

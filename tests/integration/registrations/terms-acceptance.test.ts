@@ -102,6 +102,35 @@ describe("§NNN the terms tick", () => {
     });
   });
 
+  /**
+   * §NNN, finding (7) of the fix round: the version shown and the version about to be recorded
+   * can differ when a new TERMS version is approved between the render and the submit. The tick
+   * names a version (`termsVersionShown`, posted alongside it); a mismatch is refused rather than
+   * silently recorded under a tick that never named the newer text. An absent one — an older
+   * client, or nothing approved at render — is not a mismatch, and still records the current
+   * version, as before this finding.
+   */
+  it("refuses a stale tick when the terms changed since the form was shown, and accepts a current or absent one", async () => {
+    await approve("PRIVACY_NOTICE", 1);
+    await approve("TERMS", 1);
+    const event = await createEvent();
+
+    expect(await refusal(submitRegistration(db, event, submission(NOW, { termsVersionShown: 2 }), NOW))).toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["termsAccepted"],
+    });
+    expect(await db.select().from(registrations)).toHaveLength(0);
+
+    await submitRegistration(db, event, submission(NOW, { termsVersionShown: 1 }), NOW);
+    const current = await onlyRow(event.id);
+    expect(current.termsVersion).toBe(1);
+
+    await db.delete(registrations);
+    await submitRegistration(db, event, submission(at(1), { termsVersionShown: undefined }), at(1));
+    const absent = await onlyRow(event.id);
+    expect(absent.termsVersion).toBe(1);
+  });
+
   it("records the version in force and the moment, and rewrites both when a cancelled registration is sent again", async () => {
     await approve("PRIVACY_NOTICE", 1);
     await approve("TERMS", 1);

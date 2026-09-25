@@ -86,6 +86,8 @@
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "editInBackoffice": "Editează",
+    "opensInNewTab": "se deschide într-o filă nouă",
+    "photosNotice": "La acest eveniment se fac fotografii, publicate în galerie și pe rețelele clubului. Te recunoști și vrei să scoatem o fotografie? <contact>Scrie-ne</contact> și o scoatem, fără să ne spui de ce — vezi <privacy>nota noastră de confidențialitate</privacy>.",
     "date": "Data",
     "startTime": "Ora de start",
     "gatheringTime": "Ora de întâlnire",
@@ -2611,7 +2613,7 @@
       "noPhotosYet": "Albumul nu are nicio fotografie. Încarcă cel puțin una ca să poată fi publicat.",
       "photos": "Fotografii ({count})",
       "upload": "Încarcă fotografii",
-      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se micșorează în telefon înainte de trimitere; prima devine coperta.",
+      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se micșorează în telefon înainte de trimitere; prima devine coperta. Odată publicate, pagina fiecărui eveniment spune cum poate cineva să ceară scoaterea unei fotografii.",
       "uploading": "Se încarcă {done} din {total}…",
       "uploaded": "{total} fotografii încărcate.",
       "uploadFailed": "Nu s-au putut încărca: {names}",

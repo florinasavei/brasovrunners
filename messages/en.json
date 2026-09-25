@@ -86,6 +86,8 @@
   "Event": {
     "backToEvents": "Back to events",
     "editInBackoffice": "Edit",
+    "opensInNewTab": "opens in a new tab",
+    "photosNotice": "Photos are taken at this event and published in the gallery and on the club's channels. Recognise yourself and want one taken down? <contact>Write to us</contact> and we remove it, no reason needed — see our <privacy>privacy notice</privacy>.",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
@@ -2611,7 +2613,7 @@
       "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
       "photos": "Photos ({count})",
       "upload": "Upload photos",
-      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover.",
+      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover. Once published, each event page names the way someone can ask for a photo to be taken down.",
       "uploading": "Uploading {done} of {total}…",
       "uploaded": "{total} photos uploaded.",
       "uploadFailed": "Could not upload: {names}",

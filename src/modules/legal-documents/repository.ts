@@ -157,6 +157,16 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
  * told about the states. So the pending and waiting groups list only the second kind — the
  * confirmed list is what every notice described, and is unchanged. Approved ahead of its date
  * counts too: nobody can have registered under a later number before it took effect.
+ *
+ * **Assumes the marker, once approved, is never dropped from a later version** (§NNN, finding
+ * (10) of the fix round on `feat/registration-consent-and-terms`). The gate this feeds
+ * (`registrations/repository.ts`) is `privacy_notice_version >= this lowest version`, which is
+ * only correct if every version from here on also describes the states. A club that approved v5
+ * with the marker, v6 without it and v7 with it again would have v6's registrants gated in —
+ * shown as pending or waiting though the notice they read never named the states. Nothing in
+ * `/admin/legal` stops that today; it is a documented assumption, not an enforced one. If it ever
+ * needs to be exact, return the *set* of approved versions that describe it and filter the gate
+ * with `inArray(privacyNoticeVersion, set)` instead of a single lower bound.
  */
 export async function findFirstStatesNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   const rows = await db

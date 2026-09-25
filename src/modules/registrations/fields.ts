@@ -164,6 +164,16 @@ const submissionFields = z.object({
   termsAccepted: z.literal(true),
 
   /**
+   * The version the form showed the tick as naming (§NNN, finding (7) of the fix round): a
+   * hidden field, posted alongside the tick, never typed. The service records the version *in
+   * force at submit* (`service.ts` ~1030/1143), which can differ from the one the page rendered
+   * if a new one is approved in between — this is what lets it tell the two apart and refuse
+   * rather than silently record a version the reader's tick never named. Optional because a
+   * staff or desk entry, which relaxes `termsAccepted` itself, posts nothing here either.
+   */
+  termsVersionShown: z.coerce.number().int().positive().optional(),
+
+  /**
    * "I have read the race's conditions" (§195). Required on the public form, like the statement
    * above and for the same reason: it is a thing the entrant says, not a thing the club checks.
    * The screen makes it hard to say without reading — the text opens in a panel and the box is
@@ -434,12 +444,13 @@ export const staffRegistrationSubmissionSchema = submissionFields
  */
 export const anotherPersonSubmissionSchema = submissionFields
   .partial({ phone: true })
-  // Asked of a minor's parent only (§NNN): `anotherPersonFitnessRule` decides which tick is owed.
+  // Asked of a minor's parent only (§NNN): `anotherPersonFitnessRule(now)` decides which tick is
+  // owed. Applied by the caller (`service.ts`, alongside `minimumAgeRule`), not baked in here, so
+  // one `now` decides it and `withoutAnotherAdultsConsents` alike (finding (9)).
   .extend({ fitnessDeclared: z.boolean().default(false) })
   .superRefine(healthConsentRule)
   .superRefine(guardianRule)
-  .superRefine(emergencyContactRule)
-  .superRefine((value, ctx) => anotherPersonFitnessRule(value, ctx));
+  .superRefine(emergencyContactRule);
 
 /**
  * Whether the runner on the family form is an adult (§NNN): eighteen or over today, by the same
@@ -457,16 +468,24 @@ function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
  * today (the parent acts for the child: art. 8 GDPR, Codul civil art. 41–43). For another adult
  * the address holder cannot make a first-person statement on their behalf, so the form asks them
  * to acknowledge that the person makes it themselves, in the declaration they sign.
+ *
+ * A factory over `now` (§NNN, finding (9) of the fix round), like `minimumAgeRule` beside it: the
+ * service's own `superRefine` used to reach for `new Date()` here while `withoutAnotherAdultsConsents`
+ * decided adult-or-minor from the service's `now` a few lines above it — two different instants
+ * that could disagree around an eighteenth birthday at midnight, or in a test with a fixed clock.
+ * One instant now decides both.
  */
-function anotherPersonFitnessRule(value: { birthDate?: string; fitnessDeclared?: boolean; fitnessAcknowledged?: boolean }, ctx: z.RefinementCtx): void {
-  if (!value.birthDate) return;
-  if (adultOnTheFamilyForm(value.birthDate, new Date())) {
-    if (value.fitnessAcknowledged !== true) {
-      ctx.addIssue({ code: "custom", path: ["fitnessAcknowledged"], message: "acknowledge that the person declares their own fitness when they sign" });
+export function anotherPersonFitnessRule(now: Date) {
+  return (value: { birthDate?: string; fitnessDeclared?: boolean; fitnessAcknowledged?: boolean }, ctx: z.RefinementCtx): void => {
+    if (!value.birthDate) return;
+    if (adultOnTheFamilyForm(value.birthDate, now)) {
+      if (value.fitnessAcknowledged !== true) {
+        ctx.addIssue({ code: "custom", path: ["fitnessAcknowledged"], message: "acknowledge that the person declares their own fitness when they sign" });
+      }
+    } else if (value.fitnessDeclared !== true) {
+      ctx.addIssue({ code: "custom", path: ["fitnessDeclared"], message: "the parent declares the minor fit to take part" });
     }
-  } else if (value.fitnessDeclared !== true) {
-    ctx.addIssue({ code: "custom", path: ["fitnessDeclared"], message: "the parent declares the minor fit to take part" });
-  }
+  };
 }
 
 /**

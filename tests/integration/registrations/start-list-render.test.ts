@@ -141,6 +141,11 @@ describe("§346 the rendered start list carries a name only for those who ticked
     expect(html).not.toContain("Clubul Ascuns");
     expect(html).not.toContain("Sibiu");
     expect(html).not.toContain("42");
+
+    // §NNN: `data-nosnippet` on a `<section>`, which Google honours — not on the `<details>`
+    // root, which it does not.
+    expect(html).toMatch(/<section[^>]*data-nosnippet=""/);
+    expect(html).not.toMatch(/<details[^>]*data-nosnippet=""/);
   });
 
   it("renders nothing at all when the club has not switched the list on", async () => {

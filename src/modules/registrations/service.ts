@@ -46,6 +46,7 @@ import { registrationNameKey, sameRunner } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
 import { familyRegistrationOpen } from "./family-gate";
 import {
+  anotherPersonFitnessRule,
   anotherPersonSubmissionSchema,
   declarationSigningSchema,
   isMinorOn,
@@ -933,13 +934,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     is written or the throttle is spent: a refused birth date leaves no trace but the refusal.
   */
   const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
-  const schema = (
+  const baseSchema = (
     origin.source === "STAFF"
       ? staffRegistrationSubmissionSchema
       : origin.anotherPerson
         ? anotherPersonSubmissionSchema
         : registrationSubmissionSchema
   ).superRefine(minimumAgeRule(eventDay, event.minAge ?? MIN_PARTICIPANT_AGE));
+  // Adult-or-minor decided from this same `now`, the instant `withoutAnotherAdultsConsents` below
+  // decides it from as well (finding (9) of the fix round on `feat/registration-consent-and-terms`).
+  const schema = origin.anotherPerson ? baseSchema.superRefine(anotherPersonFitnessRule(now)) : baseSchema;
   /*
     Another adult on the address (§389, §NNN): the consents only that adult can give — the health
     note, the socials, the public list, the first-person fitness statement — are dropped whatever
@@ -1030,6 +1034,18 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const terms = origin.source === "PUBLIC" ? await findCurrentApprovedDocument(db, "TERMS", input.locale, now) : undefined;
   if (origin.source === "PUBLIC" && !terms) {
     throw new DomainError("VALIDATION_ERROR", "no approved terms exist yet; registration cannot be accepted");
+  }
+  /*
+    The version shown and the version about to be recorded can differ (§NNN, finding (7)): a new
+    TERMS version may be approved between this page's render and this submit. `termsVersionShown`
+    is the version the tick actually named — posted only when the page had one to show — so a
+    mismatch is refused rather than silently recorded under a tick that never named the newer
+    text. The form re-renders and names the current version, which the next tick then agrees
+    with. Absent (an older client, or no approved terms at render) is not a mismatch: nothing to
+    compare against.
+  */
+  if (terms && input.termsVersionShown !== undefined && input.termsVersionShown !== terms.version) {
+    throw new DomainError("VALIDATION_ERROR", "the terms changed since the form was shown", ["termsAccepted"]);
   }
 
   const identity = canonicalizeEmail(input.email);

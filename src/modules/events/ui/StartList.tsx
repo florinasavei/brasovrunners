@@ -123,17 +123,18 @@ export default async function StartList({
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;
 
   return (
+    // Google honours `data-nosnippet` only on span, div and section elements (not on the
+    // `details` root below), so the wrapper — not the disclosure — carries it: names stay out of
+    // search snippets (§NNN); the page itself stays indexed.
+    <Box component="section" data-nosnippet="" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
     <Box
       component="details"
       aria-labelledby="start-list-title"
       data-testid="start-list"
-      // Names stay out of search snippets (§NNN); the page itself stays indexed.
-      data-nosnippet=""
       // Open when the reader asked for a page: arriving at a closed box from a page link is
       // the one thing a paginated disclosure must not do.
       open={view.page > 1 || undefined}
       sx={{
-        mt: { xs: DENSITY.sectionGapLg, sm: 4 },
         border: 1,
         borderColor: "divider",
         borderRadius: 2,
@@ -290,6 +291,7 @@ export default async function StartList({
           </Typography>
         </>
       )}
+    </Box>
     </Box>
   );
 }

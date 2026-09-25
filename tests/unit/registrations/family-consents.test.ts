@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anotherPersonSubmissionSchema, withoutAnotherAdultsConsents } from "@/modules/registrations/fields";
+import { anotherPersonFitnessRule, anotherPersonSubmissionSchema, withoutAnotherAdultsConsents } from "@/modules/registrations/fields";
 
 /**
  * §NNN — what the family form (§389) may carry for another adult: none of the consents only that
@@ -65,13 +65,32 @@ describe("§NNN the family form and another adult's consents", () => {
   });
 
   it("asks the acknowledgement of an adult and the statement of a minor's parent", () => {
-    const adult = anotherPersonSubmissionSchema.safeParse(withoutAnotherAdultsConsents(posted({ fitnessAcknowledged: false }), NOW));
+    // `anotherPersonFitnessRule` is applied by its caller (`service.ts`), with the same `now`
+    // `withoutAnotherAdultsConsents` above decides adult-or-minor from — not baked into the
+    // schema itself (finding (9) of the fix round: one instant decides both).
+    const schema = anotherPersonSubmissionSchema.superRefine(anotherPersonFitnessRule(NOW));
+    const adult = schema.safeParse(withoutAnotherAdultsConsents(posted({ fitnessAcknowledged: false }), NOW));
     expect(adult.error?.issues.map((issue) => issue.path.join("."))).toEqual(["fitnessAcknowledged"]);
-    expect(anotherPersonSubmissionSchema.safeParse(withoutAnotherAdultsConsents(posted(), NOW)).success).toBe(true);
+    expect(schema.safeParse(withoutAnotherAdultsConsents(posted(), NOW)).success).toBe(true);
 
     const child = { birthDate: "2011-05-10", guardianName: "Ana Pop" };
-    const unsaid = anotherPersonSubmissionSchema.safeParse(posted({ ...child, fitnessDeclared: false, fitnessAcknowledged: false }));
+    const unsaid = schema.safeParse(posted({ ...child, fitnessDeclared: false, fitnessAcknowledged: false }));
     expect(unsaid.error?.issues.map((issue) => issue.path.join("."))).toEqual(["fitnessDeclared"]);
-    expect(anotherPersonSubmissionSchema.safeParse(posted({ ...child, fitnessAcknowledged: false })).success).toBe(true);
+    expect(schema.safeParse(posted({ ...child, fitnessAcknowledged: false })).success).toBe(true);
+  });
+
+  it("agrees with itself on the eighteenth birthday, whatever now is asked from", () => {
+    // The regression finding (9) describes: `withoutAnotherAdultsConsents` deciding adult-or-minor
+    // from one `now` while the fitness rule asked `new Date()` for a second one could, around
+    // midnight on a birthday, drop the consents as an adult's and still ask for the minor's
+    // statement (or the reverse). Both now take the same `now`, so on the birthday itself they
+    // agree: consents dropped, and the acknowledgement — not the statement — is what is asked.
+    const birthday = new Date("2026-09-25T00:00:01.000Z");
+    const raw = posted({ birthDate: "2008-09-25", fitnessAcknowledged: false, fitnessDeclared: true });
+    const dropped = withoutAnotherAdultsConsents(raw, birthday);
+    expect(dropped).toMatchObject({ listOptOut: true, fitnessDeclared: undefined });
+    const schema = anotherPersonSubmissionSchema.superRefine(anotherPersonFitnessRule(birthday));
+    const result = schema.safeParse(dropped);
+    expect(result.error?.issues.map((issue) => issue.path.join("."))).toEqual(["fitnessAcknowledged"]);
   });
 });

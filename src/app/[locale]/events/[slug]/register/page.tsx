@@ -1225,10 +1225,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {/*
                 "Declar că sunt apt" (§171), required, and first among the consents because it
-                is the one every entrant makes about themselves. It is a statement, not health
-                data: no condition, no diagnosis, nothing Article 9 covers — which is why it can
-                be insisted on where the note above cannot. The declaration signed later says
-                the same thing at length; this is it asked at the moment of entering.
+                is the one every entrant makes about themselves. Treated as data concerning
+                health, kept as evidence under art. 9(2)(f) GDPR — only the moment it was made is
+                stored, never a condition or a diagnosis. The declaration signed later says the
+                same thing at length; this is it asked at the moment of entering.
               */}
               {/*
                 The race's own conditions, read before they can be agreed to (§195).
@@ -1266,6 +1266,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 branches above, never folded, naming the version in force and the unusual clauses.
                 The link opens in a tab of its own (§197), like the facts line's.
               */}
+              {/* The version this render's tick names, posted alongside it (§NNN, finding (7)):
+                  what lets the service tell this tick apart from a newer version approved
+                  between the render and the submit, rather than silently recording the newer
+                  one under an older tick. */}
+              {termsVersion !== null && <input type="hidden" name="termsVersionShown" value={termsVersion} />}
               <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required defaultChecked={prefill("termsAccepted") === "on"}>
                 {t.rich("terms.accept", {
                   version: termsVersion ?? "—",

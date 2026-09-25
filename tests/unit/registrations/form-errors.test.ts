@@ -77,7 +77,9 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
     // `listOptOut`, `resultsNameConsent` and `clubMemberDeclared` are deliberately absent: a
     // checkbox is either ticked or not, so it cannot fail validation and a summary entry for
     // one could never appear. `privacyAcknowledged` is the exception and is in the list,
-    // because `z.literal(true)` rejects an unticked one.
+    // because `z.literal(true)` rejects an unticked one. `termsVersionShown` (§NNN, finding (7))
+    // is a hidden field with no focusable box of its own — a stale version is refused by naming
+    // `termsAccepted`, the tick it names, never itself.
     const posted = Object.keys(readRegistrationForm(new FormData(), "ro"));
     const notShown = posted.filter(
       (name) => !(REGISTRATION_FORM_FIELDS as readonly string[]).includes(name),
@@ -89,6 +91,7 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
       "locale",
       "renderedAt",
       "resultsNameConsent",
+      "termsVersionShown",
     ]);
   });
 });
