@@ -272,24 +272,24 @@ export default async function EventFacts({
      above, on the compact card row only — the card's own caller passes it, the page's and the
      hero's do not. A race's two named times ("gather at 08:00", "start at 09:00") carry a word
      before the number, so bolding the plain-time key would bold that word too; `gatheringAtBold`
-     / `raceStartAtBold` wrap only `{time}` in `<b>`, so the launch race's card matches the
+     / `raceStartAtBold` wrap only `{time}` in `<strong>`, so the launch race's card matches the
      weekly-run cards without the word going bold with it. `ical.ts`'s calendar description
      keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line. */
   const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX, boldTime = false): ReactNode[] => {
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
-    const bold = (chunks: ReactNode) => <strong>{chunks}</strong>;
+    const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
     if (event.raceStartsAt) {
       return [
         day,
         <>
           {clock}
           {boldTime
-            ? t.rich("gatheringAtBold", { time: time(event.startsAt), b: bold })
+            ? t.rich("gatheringAtBold", { time: time(event.startsAt), strong })
             : t("gatheringAt", { time: time(event.startsAt) })}
         </>,
         boldTime
-          ? t.rich("raceStartAtBold", { time: time(event.raceStartsAt), b: bold })
+          ? t.rich("raceStartAtBold", { time: time(event.raceStartsAt), strong })
           : t("raceStartAt", { time: time(event.raceStartsAt) }),
       ];
     }
@@ -878,10 +878,10 @@ export default async function EventFacts({
     the page's own background otherwise, and a border with no fill read as one more row among the
     page's plain facts. The box is a `<div>`, never a MUI `Paper`, because `partnerFacts` returns
     inline content built to sit inside a `<dd>`; the surface shares its border and radius with
-    every outlined box on the site already (`CalendarSection`), and its wash — `action.selected`,
-    stronger than a mere hover tint — with `CalendarEventChip` and `RegistrationSteps`, only
-    bordering a block wide enough to keep the marker, the name, the description and the links
-    clear of its edge.
+    every outlined box on the site already (`CalendarSection`, which does not share its wash),
+    and its wash — `action.selected`, stronger than a mere hover tint — with `CalendarEventChip`
+    and `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name, the
+    description and the links clear of its edge.
   */
   if (coHosts.length > 0) {
     rows.push({
