@@ -39,6 +39,35 @@ export const EMAIL_SAMPLE_HOLD_EXPIRES_AT = new Date("2026-10-02T15:30:00Z");
 export const EMAIL_SAMPLE_SIGNED_AT = new Date("2026-09-28T16:42:00Z");
 
 /**
+ * The sample event's facts, for the facts block every affected preview draws (§NNN) — the same made-up
+ * race as the title and the place above, never a value typed into the page. None of these is a field
+ * of the closed set (§247): the block is the platform's, the club's words never carry it and the
+ * starting text never names it, so the save has nothing of it to refuse. The place's name is the
+ * sample's own (`EMAIL_SAMPLE[locale].eventLocationName`); the addresses are the page's (`/#map`,
+ * `/EXAMPLE-event`), built where `APP_BASE_URL` is read (`email-copy-fields.ts`).
+ */
+export const EMAIL_SAMPLE_EVENT = {
+  startsAt: EMAIL_SAMPLE_STARTS_AT,
+  /** A race's gun time half an hour after the gathering (§71): "întâlnire la 09:00 · start la 09:30". */
+  raceStartsAt: new Date("2026-10-04T06:30:00Z"),
+  timezone: CLUB_TIME_ZONE,
+  locationAddress: "Aleea Tiberiu Brediceanu",
+  /** The programme's rows (§117), each label in both languages, as the event row stores them. */
+  scheduleItems: [
+    { startsAt: "2026-10-04T05:00:00.000Z", endsAt: "2026-10-04T05:50:00.000Z", label: { ro: "Ridicarea numerelor", en: "Number pickup" }, place: null },
+    { startsAt: "2026-10-04T06:15:00.000Z", endsAt: null, label: { ro: "Briefing", en: "Briefing" }, place: null },
+    { startsAt: "2026-10-04T06:30:00.000Z", endsAt: null, label: { ro: "Startul", en: "The start" }, place: null },
+  ],
+  surface: "TRAIL",
+  difficulty: "MODERATE",
+  distanceMeters: 12_000,
+  elevationGainMeters: 450,
+  headlampRequired: false,
+  costType: "PAID",
+  costAmount: "30 lei",
+} as const;
+
+/**
  * One of the sample's moments as a message writes it inside a sentence (§349), through the same
  * `formatDay` call the send path makes (`render.ts`, `formatInSentence`): "duminică, 4 oct. 2026,
  * 09:00", "Sunday, 4 Oct 2026, 09:00".

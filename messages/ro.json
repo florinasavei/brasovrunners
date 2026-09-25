@@ -268,6 +268,8 @@
     },
     "route": "Traseu",
     "routeSection": "Traseul",
+    "linksLabel": "Linkuri",
+    "pageLabel": "Pagina evenimentului",
     "age": "Vârstă",
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",

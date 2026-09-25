@@ -36,6 +36,7 @@ import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
+import type { EmailEventFacts } from "./domain/event-facts";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
 /**
@@ -339,9 +340,24 @@ async function renderRow(
     const routeSection = hasRouteDescription(eventDetails.routeDescriptionJson);
     if (partitionEventLinks(eventDetails.links, routeSection).other.length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
   }
-  // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words —
-  // and in the update notice when the programme is what changed (§331).
-  if ((row.messageType === "EVENT_REMINDER" || updateChanges.includes("programme")) && eventDetails) {
+  /*
+    The event's facts block (§NNN): each half in its own language, from its own row — its place's
+    name, its page and that page's sections — with the event's own facts (the start, the address,
+    the route, the cost, the programme's rows) shared. The template draws it on the three messages
+    that carry it; the rows here are read once per event per batch already.
+  */
+  if (eventDetails) {
+    data.eventFacts = emailEventFacts(eventDetails, data.eventUrl ?? null);
+    if (otherDetails) {
+      const otherUrl = otherDetails.slug
+        ? `${env.APP_BASE_URL}${getPathname({ locale: otherLocale(locale), href: { pathname: "/events/[slug]", params: { slug: otherDetails.slug } } })}`
+        : null;
+      data.eventFactsOther = emailEventFacts(otherDetails, otherUrl);
+    }
+  }
+  // The programme's rows in the update notice when the programme is what changed (§331), each half
+  // of the bilingual mail in its own words; the reminder carries them in the facts block (§NNN).
+  if (updateChanges.includes("programme") && eventDetails) {
     const items = readScheduleItems(eventDetails.scheduleItems);
     if (items.length > 0) {
       const other = locale === "ro" ? "en" : "ro";
@@ -643,6 +659,42 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
+}
+
+/**
+ * One language's row of the event as the facts block reads it (§NNN): the anchors of that
+ * language's page by the page's own rules — `#route` only with a route description in that
+ * language (§387), `#links` only when the page's own split leaves "Linkuri și fișiere" something
+ * to show (`partitionEventLinks`, the rule `EventLinks` draws by).
+ */
+function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
+  const routeSection = hasRouteDescription(row.routeDescriptionJson);
+  return {
+    startsAt: row.startsAt,
+    raceStartsAt: row.raceStartsAt,
+    timezone: row.timezone,
+    locationToBeAnnounced: row.locationToBeAnnounced,
+    locationName: row.locationName,
+    locationAddress: row.locationAddress,
+    mapUrl: row.mapUrl,
+    scheduleItems: row.scheduleItems,
+    surface: row.surface,
+    difficulty: row.difficulty,
+    distanceMeters: row.distanceMeters,
+    elevationGainMeters: row.elevationGainMeters,
+    headlampRequired: row.headlampRequired,
+    routeUrl: row.routeUrl,
+    stravaEventUrl: row.stravaEventUrl,
+    facebookEventUrl: row.facebookEventUrl,
+    costType: row.costType,
+    costAmount: row.costAmount,
+    costUrl: row.costUrl,
+    pageUrl,
+    hasRules: row.hasRules === true,
+    hasSchedule: row.hasSchedule === true,
+    hasRouteDescription: routeSection,
+    hasOtherLinks: partitionEventLinks(row.links, routeSection).other.length > 0,
+  };
 }
 
 function otherLocale(locale: Locale): Locale {
