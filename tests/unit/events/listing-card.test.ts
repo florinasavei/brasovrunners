@@ -401,7 +401,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     const html = await single();
     // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.
     expect(chipLabels(html)).toEqual(["Alergare de grup", "Colaborare", "Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
-    expect(html).toContain('data-testid="PartnerEmoji"');
+    expect(html).toContain('data-testid="HandshakeIcon"');
     expect(chipLabels(fact(html, "pills"))).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
     // No middle dot between them and none of the old line's long words.
     expect(text(fact(html, "pills"))).not.toContain("·");
@@ -413,7 +413,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(block).not.toContain("Împreună cu");
     expect(block).not.toContain("Brașov Running Festival");
     expect(block).not.toContain("festival.example.test");
-    expect(block).not.toContain('data-testid="PartnerEmoji"');
+    expect(block).not.toContain('data-testid="HandshakeIcon"');
   });
 
   it("carries its marks at the top: special, cancelled, the partner marker never a name (§367, amended §375)", async () => {

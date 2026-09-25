@@ -127,7 +127,7 @@ describe("§199 the form filled a second time with the same address", () => {
       in a migration to make an unrelated error go away. The bib index is tested the same way
       for the same reason.
 
-      Since the contract migration (§NNN, migration 0073) the guarantee is keyed on the folded
+      Since the contract migration (§390, migration 0073) the guarantee is keyed on the folded
       name too — `registrations_event_participant_name_unique` — so this repeats the same name
       the existing row carries, the case the family flow does not open a second place for.
     */

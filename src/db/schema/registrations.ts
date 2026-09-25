@@ -433,7 +433,7 @@ export const registrations = pgTable(
   },
   (t) => [
     /*
-      One registration per address, per event, per runner (§NNN) — the runner's own name folded
+      One registration per address, per event, per runner (§389) — the runner's own name folded
       (`name_key`). This replaced `registrations_event_participant_unique` (one registration per
       address per event, with no room for a family) in the contract migration that closed out
       `registrations/family-gate.ts`: the service decides under the event's lock, and this refuses

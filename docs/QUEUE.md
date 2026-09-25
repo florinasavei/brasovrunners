@@ -15,7 +15,10 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The family flow's contract migration: drop `registrations_event_participant_unique` (`BR-V1.94`, the release right after `BR-V1.93` reaches production) | `feat/drop-participant-unique` | queued |
+| The difficulty pill as a scale of dumbbells (Material FitnessCenter), the word beside it and in the accessible name | `feat/difficulty-weights` | queued |
+| The backoffice time field: a native HH:MM 24-hour input instead of the MUI wheel picker (the date picker stays) | `fix/time-field-native` | queued |
+| «Împreună cu» on the event page as a collapsible block with the partner cards inside | `feat/partners-fold` | queued |
+| Create and publish offered the same way on every new event, whatever its type or series | `fix/create-publish-consistent` | queued |
 | The confirmed email (and the reminder, the participation confirmation) carry the event's facts: when, where, programme, route, cost, links — one shared block | `feat/confirmation-email-details` | queued |
 | The public participant list shows each person's state (confirmed · awaiting confirmation · waiting list), gated on the privacy notice in force | `feat/public-list-states` | queued |
 | Editor small: «Ce înseamnă fiecare tip?» as a compact help fold, cost «Gratuit» by default, a robot glyph on the series line, the email legend with an «i» | `fix/editor-small-2026-09-25` | queued |
@@ -30,7 +33,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.93` |
+| — | nothing waiting: the last ready item shipped in `BR-V1.95` |
 
 ## Next, queued
 
@@ -60,11 +63,14 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 - The reminder email's checklist could say «Frontală necesară» for a marked event, through a template placeholder (the `.ics` attached to the confirmation and reminder emails already carries the line) — say if you want it.
 - The public site's own toasts (the contact form's sent state, self-unregistration, the participation confirmation) — say if you want them.
 - `yarn ship` waits until no check is pending before judging; `docs:land` refuses a blank fix report (the tooling chores found tonight). `docs:land` also never takes a round's `changelogLine` for the CHANGELOG bullet, never accepts a blank `decisionsTitle`, and never lands a fixer's "carry forward" or "no edit made" text (the three defects V1.91's landing had).
+- `yarn migrations:check` classifies `DROP CONSTRAINT` and `DROP INDEX` as contracts (migration `0073` passed as neither and carries its `-- contract:` note by hand).
 
 ## Released
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.95` | the partner marker is Material's Handshake glyph again, in each surface's own ink (§391) |
+| `BR-V1.94` | the family flow is open: the contract migration `0073` drops the old one-registration-per-address index; the notice template says whose data and whose inbox (§390) |
 | `BR-V1.93` | a family on one address through the inbox, the club's limit per address, each person confirms and signs alone — dormant until `BR-V1.94`'s contract migration; migration `0072` (§389) · the share picture's button says «Descarcă poza» |
 | `BR-V1.92` | a route / training description per language under `#route`, with the route link, the GPX and the map inside it; migration `0071` (§387) · the backoffice event cards wear the public card's type chip, route pills and 🤝 marker (§388) · the phone tap-target e2e assertions round to a tenth of a pixel |
 | `BR-V1.91` | a toast after every backoffice action and one confirmation dialog before every irreversible or outward-facing one, naming how many real participants are emailed; check-in stays one tap; the bulk cancel's ticks belong to their form · the phone footer says "GDPR", a rule before RO/EN, a condensed fold, the version as a chip · the 🤝 marker in gray ink; the chip says "Colaborare" / "Partnership" |

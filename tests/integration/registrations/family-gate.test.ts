@@ -76,7 +76,7 @@ const submission = (firstName: string, at: Date = NOW) => ({
   renderedAt: new Date(at.getTime() - 30_000).toISOString(),
 });
 
-describe("§NNN after the contract migration: the flow is open by default", () => {
+describe("§389 after the contract migration: the flow is open by default", () => {
   it("says the flow is open now that migration 0073 has dropped the constraint", async () => {
     expect(await familyRegistrationOpen(db)).toBe(true);
   });
@@ -92,7 +92,7 @@ describe("§NNN after the contract migration: the flow is open by default", () =
   });
 });
 
-describe("§NNN if the legacy constraint were ever restored: one registration per address, as before 0073", () => {
+describe("§389 if the legacy constraint were ever restored: one registration per address, as before 0073", () => {
   beforeEach(async () => {
     await db.execute(sql`ALTER TABLE registrations ADD CONSTRAINT registrations_event_participant_unique UNIQUE (event_id, participant_id)`);
   });
