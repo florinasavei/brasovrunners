@@ -266,7 +266,7 @@ describe("BR-REQ-011-01 criterion 16 the listing card's facts leave the partners
     expect(html).not.toContain("Salvamont");
     expect(html).not.toContain("bm.example.test");
     expect(html).not.toContain("strava.com/clubs/1");
-    expect(html).not.toContain('data-testid="HandshakeIcon"');
+    expect(html).not.toContain('data-testid="PartnerEmoji"');
   });
 });
 

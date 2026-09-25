@@ -85,7 +85,8 @@ describe("§367 the listing card's chip, amended §375: one glyph, a generic lab
   it("is a small outlined chip with the handshake and the generic label, in both languages", async () => {
     currentLocale = "ro";
     const romanian = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival") } }));
-    expect(romanian).toContain('data-testid="HandshakeIcon"');
+    expect(romanian).toContain('data-testid="PartnerEmoji"');
+    expect(romanian).toContain("🤝");
     expect(romanian).toContain("Eveniment în parteneriat");
     expect(romanian).not.toContain("Brașov Running Festival");
     expect(romanian).toContain("MuiChip-sizeSmall");
@@ -109,7 +110,7 @@ describe("§367 the listing card's chip, amended §375: one glyph, a generic lab
     for (const html of [two, three, twoEn, threeEn]) {
       expect(html).not.toContain("Salvamont");
       expect(html).not.toContain("Clubul Alpin");
-      expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+      expect(count(html, 'data-testid="PartnerEmoji"')).toBe(1);
       expect(count(html, 'class="MuiChip-root ')).toBe(1);
     }
   });
@@ -171,9 +172,11 @@ describe("§367 the event page's overline, amended §375: one glyph, a generic l
       expect(html).toContain(`<span>${words}</span>`);
       expect(html).not.toContain("Brașov Running Festival");
       expect(html).not.toContain("Salvamont");
-      expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+      expect(count(html, 'data-testid="PartnerEmoji"')).toBe(1);
+      expect(html).toContain("🤝");
       // Decorative beside its words, the overline's own size, the "·" before it unread.
-      expect(html).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="HandshakeIcon"/);
+      const emojiTag = html.match(/<span[^>]*data-testid="PartnerEmoji"[^>]*>/)?.[0] ?? "";
+      expect(emojiTag).toContain('aria-hidden="true"');
       expect(html.startsWith('<span aria-hidden="true">·</span>')).toBe(true);
     }
   });
@@ -233,7 +236,7 @@ describe("§367 one tooltip per calendar entry", () => {
     const link = html.slice(html.indexOf("<a "));
     expect(count(link, "data-tooltip=")).toBe(0);
     expect(link).not.toContain('role="img"');
-    expect(link).toContain('data-testid="HandshakeIcon"');
+    expect(link).toContain('data-testid="PartnerEmoji"');
     expect(link).toContain('data-testid="WarningAmberIcon"');
   });
 
@@ -264,19 +267,21 @@ describe("§367 one tooltip per calendar entry", () => {
     expect(html).toContain(`aria-label="${PARTNER}"`);
     expect(html).toContain(`aria-label="${MOVED.text}"`);
     // Named images a screen reader can reach — not MUI's default `aria-hidden="true"` — and no SVG
-    // `<title>`, which would be the browser's own tooltip over MUI's.
-    const marks = [...html.matchAll(/<svg [^>]*role="img"[^>]*>/g)].map((match) => match[0]);
+    // `<title>`, which would be the browser's own tooltip over MUI's. The partner mark is now a
+    // `<span>` (the emoji), the date's note still an `<svg>` — both carry `role="img"` the same way.
+    const marks = [...html.matchAll(/<[a-z]+ [^>]*role="img"[^>]*>/g)].map((match) => match[0]);
     expect(marks).toHaveLength(2);
     for (const mark of marks) expect(mark).toContain('aria-hidden="false"');
     expect(html).not.toContain("<title>");
+    expect(html).toContain("🤝");
     // The handshake before the ⚠, at the end of the row.
-    expect(html.indexOf("HandshakeIcon")).toBeLessThan(html.indexOf("WarningAmberIcon"));
-    expect(html.indexOf("HandshakeIcon")).toBeGreaterThan(html.indexOf("Happy Monday"));
+    expect(html.indexOf('data-testid="PartnerEmoji"')).toBeLessThan(html.indexOf("WarningAmberIcon"));
+    expect(html.indexOf('data-testid="PartnerEmoji"')).toBeGreaterThan(html.indexOf("Happy Monday"));
   });
 
   it("draws no handshake for an event with no partner", () => {
-    expect(chip()).not.toContain("HandshakeIcon");
-    expect(chip({ dense: false })).not.toContain("HandshakeIcon");
+    expect(chip()).not.toContain("PartnerEmoji");
+    expect(chip({ dense: false })).not.toContain("PartnerEmoji");
   });
 });
 
@@ -313,7 +318,7 @@ describe("§367 the calendar, grid and agenda, wears the handshake beside a part
       const anchors = [...html.matchAll(/<a [^>]*aria-label="([^"]*)"[^>]*>/g)].map((match) => match[1]);
       expect(anchors).toContain("10:00 Trail to Road cu Brașov Running Festival. Eveniment în parteneriat");
       expect(anchors).toContain("18:30 Happy Monday");
-      expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+      expect(count(html, 'data-testid="PartnerEmoji"')).toBe(1);
     });
   }
 
@@ -344,7 +349,7 @@ describe("§367 the calendar, grid and agenda, wears the handshake beside a part
         expect(html).toContain(`aria-label="10:00 Trail to Road cu Brașov Running Festival. ${words}"`);
         expect(html).not.toContain("Salvamont");
         expect(html).not.toContain("Clubul Alpin");
-        expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+        expect(count(html, 'data-testid="PartnerEmoji"')).toBe(1);
       }
     }
   });

@@ -206,8 +206,8 @@ test.describe("the build badge", () => {
     const footer = page.getByRole("contentinfo");
     await expect(footer.getByRole("link", { name: /echipă|staff/i })).toHaveCount(0);
     // The two public legal routes are still there — AGENTS.md §9.2 requires them linked from the
-    // footer. The privacy notice is on the bar itself since §323 ("Confidențialitate" at every
-    // width since §324, named for the notice); the terms are behind the
+    // footer. The privacy notice is on the bar itself since §323 (a question mark on a phone and
+    // "GDPR" from `sm` since §378, named for the notice at every width); the terms are behind the
     // summary, which names them, and a closed <details> hides its content from the
     // accessibility tree, so open it first.
     await expect(footer.getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true })).toBeVisible();
@@ -231,8 +231,8 @@ test.describe("the build badge", () => {
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
     // it; it is in the fold below `md` (§365) and pinned beside the row from `md` (§372), and
-    // the link is on the bar's one row, on screen at every scroll position — a lock on a phone,
-    // named for the notice (§372). The privacy notice is on the bar since §323, so nothing has
+    // the link is on the bar's one row, on screen at every scroll position — a question mark on a
+    // phone, named for the notice (§378). The privacy notice is on the bar since §323, so nothing has
     // to be opened to reach it.
     await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);

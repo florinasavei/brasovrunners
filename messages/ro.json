@@ -3023,6 +3023,7 @@
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
     "privacyLinkLabel": "Confidențialitate",
     "privacyLinkName": "Nota de confidențialitate (GDPR)",
+    "privacyLinkShort": "GDPR",
     "termsLinkLabel": "Termeni de concurs",
     "botCheckNotice": "Verificarea „nu sunt robot” o face Cloudflare, care vede adresa IP și date tehnice ale browserului, doar pentru asta.",
     "inForce": "Versiunea {version}, în vigoare din {date}",
