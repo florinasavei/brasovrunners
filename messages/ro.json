@@ -50,7 +50,8 @@
     "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
       "label": "Tipul evenimentului",
-      "all": "Toate"
+      "all": "Toate",
+      "partner": "Colaborare"
     },
     "calendar": {
       "previous": "Luna anterioară",
@@ -307,7 +308,12 @@
     "video": {
       "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
-      "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi."
+      "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
+      "play": "Redă filmul",
+      "playNamed": "Redă filmul: {name}",
+      "mute": "Fără sunet",
+      "unmute": "Cu sunet",
+      "volume": "Volum"
     },
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
@@ -413,9 +419,8 @@
       "datePlaceholder": "AAAA-LL-ZZ",
       "dateTyped": "Data, ca 2026-11-21: anul, luna, ziua.",
       "dateIncomplete": "Completează data întreagă: ziua, luna și anul.",
-      "timePlaceholder": "hh:mm",
       "timeTyped": "Ora pe 24 de ore, ca 09:30 sau 19:00.",
-      "timeIncomplete": "Completează ora întreagă: ora și minutul."
+      "clearTime": "Șterge ora"
     },
     "nav": {
       "events": "Evenimente",
@@ -2451,6 +2456,10 @@
       "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
       "youtubeCaption": "Legendă (sub film)",
       "youtubeRemove": "Scoate filmul",
+      "youtubePoster": "Alege un thumbnail",
+      "youtubePosterUploading": "Se încarcă…",
+      "youtubePosterFailed": "Thumbnail-ul nu a putut fi încărcat; încearcă din nou.",
+      "youtubePosterUseYoutube": "Folosește thumbnail-ul de pe YouTube",
       "imageAlign": "Poziția în text",
       "imageAlignBlock": "În flux",
       "imageAlignLeft": "Stânga",
@@ -3856,6 +3865,15 @@
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "weather": {
+      "title": "Prognoza vremii",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
+      "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
+      "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
+      "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",
+      "stub": "prognoza de test (E2E_WEATHER_STUB) — aceeași oră fixă, fără nicio cerere către Open-Meteo.",
+      "off": "oprită în acest mediu."
+    },
     "schema": "Schema bazei de date",
     "overall": {
       "ok": "Totul este configurat coerent.",
@@ -4155,6 +4173,31 @@
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou"
+  },
+  "Weather": {
+    "label": "Vremea",
+    "temperature": "{degrees} °C",
+    "rain": "{percent}% șanse de ploaie",
+    "wind": "vânt {speed} km/h",
+    "source": "Open-Meteo",
+    "credit": "Prognoză: {source}",
+    "codes": {
+      "clear": "Senin",
+      "mainlyClear": "Predominant senin",
+      "partlyCloudy": "Parțial noros",
+      "overcast": "Înnorat",
+      "fog": "Ceață",
+      "drizzle": "Burniță",
+      "freezingDrizzle": "Burniță care îngheață",
+      "rain": "Ploaie",
+      "heavyRain": "Ploaie puternică",
+      "freezingRain": "Ploaie care îngheață",
+      "snow": "Ninsoare",
+      "showers": "Averse",
+      "snowShowers": "Averse de ninsoare",
+      "thunderstorm": "Furtună",
+      "thunderstormHail": "Furtună cu grindină"
+    }
   },
   "Feedback": {
     "close": "Închide",

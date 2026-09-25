@@ -12,15 +12,18 @@ import type { ReactNode } from "react";
 const ROMANIAN = roRO.components.MuiLocalizationProvider.defaultProps.localeText;
 
 /**
- * The date and time pickers' one provider, mounted once, by the backoffice's layout
- * (`DECISIONS.md` §345) — and nowhere a visitor goes: no public page asks for a date the club
- * types, and `tests/unit/shared/pickers-backoffice-only.test.ts` fails if one ever reaches this.
+ * The date picker's one provider, mounted once, by the backoffice's layout (`DECISIONS.md`
+ * §345) — and nowhere a visitor goes: no public page asks for a date the club types, and
+ * `tests/unit/shared/pickers-backoffice-only.test.ts` fails if one ever reaches this.
+ * `TimeField` no longer needs it: since §345's 2026-09-25 amendment it is the platform's own
+ * `<input type="time">`, but stays under `shared/forms/pickers` beside `DateField`, the box it
+ * still pairs with (`WallTimeField`).
  *
  * **Romanian** is Day.js's `ro` (months, weekdays, the week starting on Monday) with MUI's own
  * Romanian labels. **English** is Day.js's `en-gb`, not `en`: the same Monday-first week and
  * English month and day names, with MUI's built-in English labels. The *format* is not the
- * language's in either — every box passes `DD.MM.YYYY` and `HH:mm` itself (`wall-values.ts`), so
- * an English backoffice still reads `30.09.2026` and `19:00`: the club's dates, whoever reads them.
+ * language's — the date box passes `DD.MM.YYYY` itself (`wall-values.ts`), so an English
+ * backoffice still reads `30.09.2026`: the club's dates, whoever reads them.
  */
 export default function PickerProvider({ children }: { children: ReactNode }) {
   const locale = useLocale();

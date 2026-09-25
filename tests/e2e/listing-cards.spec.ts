@@ -180,9 +180,7 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
     // unique on the page, but its time shares "Ora" with `startsAt`'s — the second one, in
     // source order.
     await fillDateField(page, "Startul cursei", ymd(day));
-    const raceTime = page.getByRole("group", { name: "Ora", exact: true }).nth(1);
-    await raceTime.getByRole("spinbutton").first().click();
-    await page.keyboard.type("0900");
+    await page.getByRole("textbox", { name: "Ora", exact: true }).nth(1).fill("09:00");
   }
   await field("event.locationName").fill("Stadionul Tineretului");
   await field("event.locationNameEn").fill("Youth Stadium");
@@ -429,7 +427,10 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     const pills = tampa.locator('[data-fact="pills"] .MuiChip-root');
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
     // terrain type, difficulty, distance, elevation" (§366, amended §375); the cost pill follows.
-    await expect(pills).toHaveText(["Trail", "Mediu", "14 km", "600 m D+", "Gratuit"]);
+    // The difficulty pill's visible word carries a screen-reader-only "— Dificultate" suffix
+    // (`route-pills.ts` `srSuffix`, `DECISIONS.md` §394), so its element's own text is not just
+    // "Mediu" — the regex anchors on the visible word and still counts and orders every pill.
+    await expect(pills).toHaveText(["Trail", /^Mediu(?: — .+)?$/, "14 km", "600 m D+", "Gratuit"]);
     await expect(tampa.locator('[data-fact="pills"]')).not.toContainText("·");
     // The surface is said once on the card: as a pill, not also as a chip at the top.
     await expect(tampa.locator(".MuiChip-root", { hasText: /^Trail$/ })).toHaveCount(1);

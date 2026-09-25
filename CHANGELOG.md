@@ -8,6 +8,13 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.97-2026-09-25
+
+- **The difficulty is now a scale of dumbbells** — one through three lit, the rest faint, replacing the phone-signal bars, on the event page's route row, the listing card and the backoffice list alike, §399.
+- **Time boxes read cleaner and reach further:** the backoffice's native time input drops a duplicate clock icon in Chromium/Edge, its clear button is reachable by keyboard, and its message catalogue carries no orphaned keys. §400.
+- **Public site: the partners' block is collapsible, the filter row breathes, and a «Colaborare» chip finds every partnered event** — the event page's «Împreună cu» moved into its own closed-on-a-phone, open-from-`sm` `<details>` block; the listing's filter row now sits one density step above the grid; and a new "Colaborare" / "Partnership" chip, offered only when a partnered event exists, narrows the listing and the calendar's month view, AND-combined with the kind filter (§401). §401.
+- **The weather at the start**: when an event starts within seven days, its page (and preview) shows a «Vremea» / «Weather» row with the forecast's own glyph, its kind, the temperature, the chance of rain and the wind, and a credit to Open-Meteo. The reminder's facts block carries the same forecast as a row under «Când», each half in its own language. The server asks free, keyless Open-Meteo for the club's place (`CLUB_COORDINATES`) once an hour through Next's data cache. A cached answer more than two hours old is fetched again at once, and the row is left out only when Open-Meteo does not answer within three seconds. /devs names the service and its last answer §402.
+- **Fixed** the YouTube poster/volume feature's re-review blockers — the poster fetch no longer runs under the registration capacity lock, the volume bar no longer covers YouTube's own controls, and organizers can choose a film's poster by hand — plus a working no-JS fallback link, a postMessage-ready volume bar, and server-side poster validation. §403.
 ## BR-V1.96-2026-09-25
 
 - **The confirmed email, the reminder and the declaration request** now carry one shared facts block — Când · Unde · Program · Traseu · Cost · Linkuri — above the QR and under the club's own text, each half in its own language, with the event's own page linked first in Linkuri §392.

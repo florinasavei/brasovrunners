@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.96-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.97-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.96-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.97-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -130,6 +130,9 @@ sections and in `CHANGELOG.md`.
   it (the column of §382 became the tri-state override); the reminder says the sunset and «ia o frontală» only on a night date.
 - **An external event paid at the organizer's** (§395): the cost row reads «Cu taxă, la organizator», the club's discount note in the reader's
   language under it (both languages or neither, only for EXTERNAL + PAID), the ics cost line, JSON-LD `offers.url` at the organizer's form.
+- **The partners as a block** (§401): «Împreună cu» on the event page is a collapsible block with the partner cards inside; the listing's filter row keeps a step of space above the grid and offers a «Colaborare» / «Partnership» chip while a partnered event is on the calendar.
+- **The weather** (§402): the forecast for the event's date and start hour at the club's place, from Open-Meteo (free, keyless, fetched on the server and cached an hour), on the event page within seven days and in the reminder; nothing when unavailable.
+- **A film's poster and volume** (§403): the club's own stored copy of a YouTube thumbnail before the click (nothing from Google until then), a server-rendered facade that works without JavaScript, a mute/volume bar after the click.
 - The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
   dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph; every backoffice button's glyph by name from `shared/ui/action-icons.ts` through the admin-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never on a public page, and the club's runner on the public send buttons (§318).
@@ -229,7 +232,7 @@ sections and in `CHANGELOG.md`.
 - **Batch 3 (2026-09-24):** tooltips that explain, with a series naming the dates it left as drafts and a switch
   to publish new ones automatically (§341); a canonical and `hreflang` on every public page, the sitemap to match (§342);
   cost as Free / Paid with an amount / Donation on another site (§343); partners as cards of typed links (§344);
-  MUI date and time pickers in the backoffice, always 24-hour and day-first (§345); "12 înscriși din 50 de locuri"
+  the MUI date picker in the backoffice, always 24-hour and day-first (§345); the time field is the platform's own since §400; "12 înscriși din 50 de locuri"
   beside the register button, from the cached count (§346); integrated together in §347.
 - **Batch 4 (2026-09-24):** an event may cap its waiting list — empty is unlimited, 0 is none — counted under the
   allocator's lock at every door (§348); every date a person reads carries its weekday in the reader's language,
@@ -312,6 +315,7 @@ sections and in `CHANGELOG.md`.
   migration `0074`) · «Eveniment de noapte» computed from civil dusk at the club's place per date, the editor's Automat / Da / Nu override,
   replacing §382's checkbox (§394, migration `0076`) · the club's discount note on an external event paid at the organizer's, «Cu taxă,
   la organizator», the ics cost line, JSON-LD offers at the organizer (§395, migration `0075`) · the public participant list says each runner's state and lists the ticked pending and waiting list, only while the notice in force names `{{participantListStates}}` (§396) · Panel's help variant («Ce înseamnă fiecare tip?», the email legend with an «i»), a new event free by default, the robot glyph on every automatic line (§398) · `/admin/tasks` → «Aplicația» renders `docs/QUEUE.md` read-only through the `/devs/docs` renderer, for Administrator, Superadministrator and Tehnic (§397).
+- **Batch 21 (2026-09-25, `BR-V1.97`):** the difficulty pill is a scale of dumbbells, the word beside it and in the accessible name (§399) · a YouTube film shows the club's own stored poster before the click and a mute/volume bar after it, the facade server-rendered, no poster fetch inside a transaction (§403, migration `0077`) · the backoffice's time field is the platform's own `<input type="time">`, 24-hour, any minute — §345's wheel picker gone, its date picker kept (§400) · «Împreună cu» is a collapsible block on the event page, the listing's filter row sits a step above the grid and offers a «Colaborare» chip while a partnered event is on the calendar (§401) · the weather for the event's date and hour from Open-Meteo (free, keyless) on the page within seven days and in the reminder (§402).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -434,6 +438,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | Email | Mailgun, EU region, on the club's `mail.` subdomain — production with its key, QA with its own (§307); the US sandbox was the first step (§37) and is unused. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built | live: production `live`, QA `allowlist` with the star (§163), every QA subject tagged `[QA]`; both share the domain's daily allowance and its webhooks |
 | Storage | Cloudflare R2 behind the four-method adapter in `AGENTS.md` §17; one bucket, per-environment prefixes; public reads on the `r2.dev` address | live: bucket `brasovrunners-media` created 2026-09-18, variables on both Vercel projects (`SETUP.md` §32) |
 | Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile behind `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (`DECISIONS.md` §97); the privacy notice names it | built; Turnstile on when the keys are set; a contact message that passes every gate but looks automated is delivered marked `[posibil spam]`, never dropped (§310) |
+| Weather | Open-Meteo's hourly forecast — public, keyless, no account and no variable; fetched on the server for the club's coordinates, cached an hour, silent on any failure, credited on the page (CC BY) (§402) | built; nothing to set up; its last answer on `/devs` → Stare |
 
 **Before installing anything:** verify the current API against the library's documentation
 (Context7 or the official docs site). Next 16, MUI 9, next-intl 4 and Drizzle 0.45 are newer

@@ -1,6 +1,6 @@
 /**
- * What the backoffice's date and time boxes post, and what they show (`DECISIONS.md` §70, §303
- * and the § that put the pickers in, §345).
+ * What the backoffice's date and time boxes post, and what the date box shows (`DECISIONS.md`
+ * §70, §303, §345 and its 2026-09-25 amendment).
  *
  * Two different things, kept apart on purpose:
  *
@@ -8,14 +8,16 @@
  *   on the 24-hour clock, both wall-clock values with no zone. `admin/actions.ts` joins a pair
  *   into the `<field>WallTime` string the service reads in the event's own zone; a date alone
  *   (a series' end, an album's day) is read as it is. Nothing below the form moved.
- * - **What is shown** is the club's: `30.09.2026` and `19:00`, day first and on the 24-hour clock
- *   whatever language the browser speaks — the owner, over "09/30/2026" and "07:00 PM": "vreau
- *   ca timpul să fie mereu în format de 24H". The tokens are Day.js's, the adapter the pickers
- *   use (`DD`, not date-fns' `dd`).
+ * - **What the date box shows** is the club's: `30.09.2026`, day first, whatever language the
+ *   browser speaks — the owner, over "09/30/2026": "timepickerul ar trebui să fie tot element
+ *   MUI". The token is Day.js's, the adapter the picker uses (`DD`, not date-fns' `dd`). The time
+ *   box shows whatever the browser's own `<input type="time">` shows since §345's 2026-09-25
+ *   amendment (`TimeField`): no format token controls it any more, only `step={60}` and what it
+ *   *posts*, which is unchanged.
  *
- * The patterns are the scriptless box's (`DateField`, `TimeField` before the island takes over):
- * with JavaScript off the box is a plain text input, and the browser refuses anything the
- * server would not read — the same shape, so the parse on the server is untouched.
+ * The patterns are the scriptless box's (`DateField` before the island takes over, and
+ * `TimeField` always): with JavaScript off the box is a plain input, and the browser refuses
+ * anything the server would not read — the same shape, so the parse on the server is untouched.
  *
  * Imports nothing, like `registrations/domain/age.ts` (§188): the browser gets a few regular
  * expressions, not a date library, from this file.
@@ -37,9 +39,6 @@ export const TIME_PATTERN = "(?:[01]\\d|2[0-3]):[0-5]\\d";
 
 /** What the date picker shows, in Day.js tokens: `30.09.2026`, in Romanian and in English. */
 export const DATE_DISPLAY_FORMAT = "DD.MM.YYYY";
-
-/** What the time picker shows: `19:00`, never `07:00 PM`. */
-export const TIME_DISPLAY_FORMAT = "HH:mm";
 
 export function isDateValue(value: string): boolean {
   if (!DATE_VALUE.test(value)) return false;

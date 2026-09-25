@@ -2,9 +2,10 @@ import { type RefObject, useEffect, useRef, useSyncExternalStore } from "react";
 import type { SxProps, Theme } from "@mui/material/styles";
 
 /*
-  What `DateField` and `TimeField` share (`DECISIONS.md` §345): when the picker takes over from
-  the scriptless box, and how a picker behaves like the native input it replaced in front of the
-  rest of the form.
+  What `DateField` needs from a picker (`DECISIONS.md` §345): when it takes over from the
+  scriptless box, and how it behaves like the native input it replaced in front of the rest of
+  the form. `TimeField` no longer shares this — since §345's 2026-09-25 amendment it is the
+  platform's own `<input type="time">`, with no island to swap in.
 */
 
 const NOTHING_TO_WATCH = () => () => undefined;

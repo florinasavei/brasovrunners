@@ -35,7 +35,9 @@ describe("BR-REQ-011-01 criterion 9 a YouTube link on an event", () => {
     expect(isYoutubeLink(url)).toBe(false);
   });
 
-  it("builds the embed from the id alone, on the no-cookie host", () => {
-    expect(youtubeEmbedUrl("dQw4w9WgXcQ")).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0");
+  it("builds the embed from the id and the given origin, on the no-cookie host, with the js api enabled", () => {
+    expect(youtubeEmbedUrl("dQw4w9WgXcQ", "https://app.example.test")).toBe(
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&enablejsapi=1&origin=https%3A%2F%2Fapp.example.test",
+    );
   });
 });

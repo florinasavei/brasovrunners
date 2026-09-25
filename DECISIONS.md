@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.96-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.97-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.96-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.97-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -16111,3 +16111,166 @@ The renew (robot) glyph asked for on every mention of the auto-publish switch (�
 §398 (this round, 2026-09-25): the same "by default toate evenimentele sunt gratuite" change (2f5b8cf6) that added the create-time FREE default to `eventColumnsFrom` also dropped `difficulty: fields.difficulty` from the same function in the same diff hunk — a create stored `difficulty` as null and a save could never change it, undetected because the column is nullable. Restored, with a create/save round-trip test (`registration-cost-default.test.ts`) alongside the existing FREE-default tests. Separately, the event-cost-free-default e2e spec was re-verified against a genuinely fresh build and a migrated local database: it passes 4/4 on both mobile and desktop, twice in a row — the earlier "reads Nespecificat" review finding was against a stale reused Playwright server, not a defect in `RegistrationBox`/`GlyphSelect`/`initialCostTypeOf`.
 
 Baseline `BR-V1.96-2026-09-25`.
+
+## 399. The difficulty as a scale of dumbbells
+
+**Context.** The owner, 2026-09-25, of the phone-signal bars §112 first chose for EASY/MODERATE/HARD: "I want also for the difficulty to have a better icon system, like weights or something."
+
+**Decision.** `DifficultyIcon.tsx` draws all three of the closed set's dumbbells in one glyph per value — one `<svg>`, like every other file `glyphs.ts` imports or draws (`RoadIcon`) — so `GlyphChip`'s clone of its `icon` prop and `.MuiChip-icon`'s own sizing see exactly what they already expect (a composite of several nested icons was tried first and rejected: `Chip` clones one top-level element and the existing test suite's glyph-detection regex expects one `<svg class="MuiChip-icon">`, not a wrapping `<span>`). The first `level` dumbbells are drawn in the chip's own ink (`currentColor`, inherited — no colour written here); the rest are faint, at `theme.palette.action.disabledOpacity` (MUI's own 0.38, the fraction a disabled control already uses) reached through `sx` on each faint dumbbell's `<g>`, so neither the light nor the dark scheme needs a value of its own. Every dumbbell is `aria-hidden`; the word beside it, never the count of dumbbells, is what a screen reader hears, and `GlyphChip`'s accessible name stays the pill's word regardless.
+
+Material's own `FitnessCenterIcon` is also registered bare, as `GLYPHS.difficulty`, for a caller that wants the concept rather than one value's own level.
+
+**Wiring.** `DIFFICULTY_GLYPH` in `glyphs.ts` is the one place every surface already reads the difficulty glyph from, so pointing its three entries at `EASY_DIFFICULTY_ICON` / `MODERATE_DIFFICULTY_ICON` / `HARD_DIFFICULTY_ICON` wires the scale into the event page's route pill, the listing card's compact pill, the backoffice list's card (§388, through the same `buildRoutePills` / `RoutePills`) and `GlyphSelect`'s own dropdown option, with no change to any of those files. `RoutePills` stays the one shared drawing (§388): nothing new was added there.
+
+**The word, measured.** At 320px and 360px, the difficulty pill (word + the three-dumbbell scale) on the seeded "Tură pe Tâmpa" card measures 68px wide with zero page overflow at either width. The route/"Traseu" pills row already wraps freely (`flexWrap: "wrap"` in `RoutePills`) — unlike the "Când" row §375 measured against a fixed single-line budget, nothing constrains the pills row to one line — so the word stays beside the scale on every surface, including the compact listing pill; no surface needed to drop it.
+
+**Refused.** Reusing `FitnessCenterIcon` three times inside a `Box` wrapper for the scale itself: it breaks the "one `<svg>` per glyph" invariant `GlyphChip`'s clone and its test suite rely on.
+
+Amending the difficulty-scale entry: the pill's accessible name («Dificultate: Mediu» / «Difficulty: Medium») is a visually-hidden `<span>` inside the chip's own content (`GlyphChip`'s `srOnlySx`, the same 1px-clip technique as the external-discount-note branch's `srSuffix`), placed ahead of an `aria-hidden` span holding the visible word — never an `aria-label` attribute on MUI `Chip`'s plain, roleless `<div>` (not `clickable`), which ARIA 1.2 does not allow to be named and which browse-mode screen readers therefore ignored. `DifficultyIcon`'s chip-clone width (`sx.width`) and its `level` parameter both follow `DIFFICULTY_LEVELS.length` — a width in em per level and a runtime range check — rather than the hand-written `'3em'` and `1 | 2 | 3` a fourth level would have outgrown. Coverage of the pill's accessible name moved to `route-pills-build.test.ts`, tested through `buildRoutePills` itself for each of the three levels in both `ro` and `en`, so a wrong key or a missing locale in `routePillParts` is caught, rather than a hand-written `ariaLabel` passed straight into `GlyphChip`. `difficulty-scale.spec.ts` now asserts the lit/faint dumbbell counts (2 lit, 1 faint for `MODERATE`) at both 320px and 360px — the widths the brief named — rather than only checking for no sideways scroll at 320px, and attaches the compact pill's measured pixel width at each to the test report.
+
+Fix round (2026-09-25). The difficulty pill's extra words for a screen reader now use the one mechanism the batch already has, `GlyphChip`'s `srSuffix` (§394). Its visible word stays the level («Mediu» / «Moderate»), and a span clipped to one pixel follows it with «— Dificultate» / «— Difficulty». That text is the catalogue's own `Event.difficulty` label, never a string written in code. The separate `ariaLabel` prop, which replaced the chip's name with «Dificultate: Mediu», is gone, so there is one way to add words to a pill and no conflict with the batch. A roleless `<div>` Chip has no computed accessible name, so the words must be real text, not an attribute; the unit test and the e2e spec check the text itself (`toContainText("Mediu — Dificultate")`).
+
+The difficulty levels are written once, in `src/modules/events/ui/difficulty-levels.ts`, with a `satisfies` that keeps them in step with the `event_difficulty` enum without pulling Drizzle into a client bundle. `DifficultyIcon.tsx` is one client component, `DifficultyScaleIcon({ level })`. `difficulty-glyphs.ts` maps over the levels to build the registry's `difficulty:*` entries. That file deliberately has no `"use client"`, because `EventFacts` (a Server Component) reads `DIFFICULTY_GLYPH[level]` directly, and a record or per-level export from a client module would reach the server as a client reference that cannot be dotted into. Adding a fourth level to the tuple widens the scale, its type and the registry with no other edit.
+
+Measured on the production build, on both Playwright projects: the listing card's compact difficulty pill («Mediu», three dumbbells) is 103.9 px wide at a 320 px viewport and 103.9 px at 360 px. The width does not change with the viewport, and neither width causes a sideways scroll.
+
+The difficulty pill's `srSuffix` (" — Dificultate", read by a screen reader after "Mediu", `DECISIONS.md` §394) is content inside the chip's own text node, not a separate accessible-name attribute — so any Playwright assertion comparing a `.MuiChip-root`'s exact text must anchor on the visible word with a regex rather than assume the element's text equals the catalogue label alone. `listing-cards.spec.ts` and `event-pages.spec.ts` were updated accordingly; no behavior changed, only the two specs' expectations. `DifficultyIcon.tsx`'s `sx` prop is now composed as MUI's own array form so a caller passing an array or function `sx` (rather than a plain object) is no longer silently dropped.
+
+Baseline `BR-V1.97-2026-09-25`.
+
+## 400. The time field is the platform's own — MUI's wheel picker is gone (amends §345)
+
+**2026-09-25.** The owner, of MUI's mobile time picker: "I simply hate this time picker." §345 put both the date and time boxes on MUI's `@mui/x-date-pickers`, pinned `ampm={false}`, to stop an English-language browser showing "07:00 PM" instead of "19:00". That trade — the platform over a library (`AGENTS.md` §1.5) — is reversed for the time half only.
+
+**What changes.** `TimeField` (`src/shared/forms/pickers/TimeField.tsx`) is now a plain MUI `TextField` with `type="time"` and `step={60}`: the browser's own control, the OS wheel on a phone, typeable on a desktop, from the very first paint — no island, no hydration swap, no `PickerProvider` dependency, no `@mui/x-date-pickers` import in this file. It carries a clock glyph (`AccessTimeIcon`) as a start adornment and an optional 44-px clear button. What it *posts* is unchanged: `HH:mm` on the 24-hour clock, under the same field name, exactly as before — `type="time"`'s own value has no AM/PM shape to disagree about, whatever the browser draws.
+
+**What §345 keeps.** The date half is untouched: `DateField` still runs MUI's `DatePicker`, still 24-hour and day-first (`DD.MM.YYYY`), still behind `PickerProvider` and the island/hydration-swap machinery — none of that changed. `WallTimeField` still pairs a `DateField` and a `TimeField` side by side.
+
+**The accepted trade-off.** A native `<input type="time">` *shows* whatever the browser's own locale draws — on an English-language Chrome that can be a 12-hour face with AM/PM, the exact defect §303 and §345 both fought. The owner's 2026-09-25 preference overrides that concern for the time box specifically: the control every runner already has on their phone, over a guaranteed 24-hour *display*. The *posted* value is unaffected either way.
+
+**Dead code removed.** `pickerClock`/`postedClock` (picker-values.ts) and `TIME_DISPLAY_FORMAT` (wall-values.ts) are gone — nothing converts a posted time to and from a Day.js picker value any more, since there is no picker. `isTimeValue`/`TIME_VALUE`/`TIME_PATTERN` stay: the native input's own validation shape.
+
+**A test-helper bug found along the way, not a rule change of its own.** `tests/e2e/support/featured-event.ts#fillTimeField` used `getByLabel('Ora', { exact: true })`, which never matched a *required* "Ora" box: MUI marks a required label with an `aria-hidden` asterisk span, and `getByLabel`'s exact match reads the label's raw DOM text rather than its computed accessible name, so the asterisk broke the exact comparison for every required time box — which is the event's own start time, filled on every create-page test. Fixed with `getByRole('textbox', { name: label, exact: true })`, confirmed against the page's own `ariaSnapshot()` to read "Ora" exactly; `.filter({ visible: true })` stays, since a hidden race-gun-time or programme-row box sharing the label resolves just as readily as the visible one.
+
+Baseline: to be set by the orchestrator at landing.
+
+TimeField (src/shared/forms/pickers/TimeField.tsx) keeps Chromium/Edge's native type="time" calendar-picker-indicator visible instead of hiding it with CSS: clicking that indicator opens the browser's own time popup since Chrome 83, so hiding it removed a real affordance rather than decoration with "no popup of its own." The redundant AccessTimeIcon start adornment, which duplicated that same browser clock inside a 140-pixel box, is removed; the box now carries the browser's indicator and, where clearable, the existing clear button only.
+
+Baseline `BR-V1.97-2026-09-25`.
+
+## 401. The partners' block is a phone-closed, desktop-open `<details>`; the filter row gets its own margin; a «Colaborare» chip narrows the listing and the calendar
+
+The owner, 2026-09-25: of the event page's «Împreună cu» row, "this should be block, and collapsible"; of the listing, "filters still need to be a bit above the grid"; and, 22:15, "I want to see that «colaboration» event in the filters as well".
+
+**The partners' block.** `EventFacts.tsx`'s stacked form no longer pushes the partners into the `<dl>` as one more `dt`/`dd` row. They now sit in their own `<section id="partners">`, after the `<dl>` closes: a native `<details data-testid="partners-fold">`, no script needed, whose `<summary>` carries the Handshake glyph (`GLYPHS.partner`, by name), "Împreună cu" / "Together with" and every partner's name (`format.list`) — the same 44-pixel tap target (`DISCLOSURE_SUMMARY_SX`) every other public fold's summary has. §344/§352's partner cards render unchanged inside it.
+
+Closed by default on a phone: a partner's card is the tallest thing on the page, and a runner came for the race, not the partnership. From `sm` up the section is forced open on arrival — the same `"&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } }` device the listing's "other events" fold (§89, `app/[locale]/events/page.tsx`) already uses — because there is room for it beside the rest of the facts and a reader there cannot tell a heading from a control. The `PartnerOverline` marker on the overline (§367/§391) is unchanged.
+
+**The filter row's gap.** The listing's filter row (`Stack component="nav"`) carried an `mt` above it already; it had no `mb`, and the grid below it (both the featured "other events" `<details>` and the plain `<ul>`, plus the empty-state `Alert`) had no `mt` — 0px at every width. All three now carry `mt: { xs: DENSITY.sectionGap, sm: 3 }`, the same step the row's own top margin already uses, so the space above and below the row matches: 16px on a phone, 24px from `sm`. Measured in headless Chromium on the built listing at 320px: 0px before, 16px after.
+
+**The «Colaborare» / «Partnership» chip.** `presentEventTypes`'s own rule, extended: `partnerFilterOffered` (`modules/events/domain/listing.ts`) offers the chip while a partnered event is among what the page shows, or the address already narrows by it. `listingSections` gained a fourth argument, `partner`, AND-combined with `type` and never touching the hero — exactly the kind filter's own two rules. The chip sits beside the kind chips, its own state in the address (`?partner=1`), read the same way on `/events` and on `/calendar` (`calendarBoundaryKey` gained the same fourth argument, and `calendar/page.tsx` filters its rows by it too) — though the calendar page, which carries no visible kind-filter row of its own either, gets no visible chip; only `/events` does, since that is where "beside the type chips" names.
+
+**Rejected.** A per-page literal margin instead of a `DENSITY` token (the scale documents exactly this kind of gap, §380). A second, calendar-only chip UI (the calendar has no type-filter row to sit "beside" — out of scope for a small-things pass).
+
+Baseline `BR-V1.95-2026-09-25` (the batch this lands in bumps it and gives this section its number).
+
+Baseline `BR-V1.97-2026-09-25`.
+
+## 402. The weather at the start: Open-Meteo's forecast on the event page and in the reminder
+
+**Context.** The owner, 2026-09-25: "vreau să afișez și starea vremii bazat pe ceva API — API gratis evident."
+
+**Decision: Open-Meteo's hourly forecast, read on the server.**
+- **Why Open-Meteo.** It is free, needs no key and no account. There is nothing to sign up for, no secret on Vercel, no row on the task board and nothing to rotate. The alternatives (OpenWeatherMap, WeatherAPI, Tomorrow.io) all need an account and a key, which would mean a secret in two Vercel projects and one more thing that can expire. Open-Meteo's free tier is for non-commercial use under 10,000 calls a day. The club makes about 24 a day per environment. The data is licensed CC BY 4.0, so the page credits it with a link («Prognoză: Open-Meteo» / «Forecast: Open-Meteo») and the reminder names it.
+- **The request.** One constant holds the base, `OPEN_METEO_BASE = https://api.open-meteo.com`, in `weather/source.ts`. `api.open-meteo.com` and `open-meteo.com` join `PROVIDER_HOSTS` in `scripts/docs-check.mjs`. This is AGENTS.md §8's second exception: a third party's fixed host that the application calls, which no configuration could vary. The request asks for `temperature_2m, precipitation_probability, weather_code, wind_speed_10m`, hourly, in Unix time, km/h and GMT, for 8 days.
+- **Where.** All the club's events are in Brașov (§328, `CLUB_LOCALITY`), so one forecast for the club's coordinates serves every event page and every reminder. The coordinates are Piața Sfatului (45.6427, 25.5887), the same as the night-event decision's `DEFAULT_CLUB_COORDINATES`. A forecast grid cell is a few kilometres, so Tractorul, Tâmpa and Olimpia get the same forecast. `WEATHER_PLACE` should read `env.CLUB_COORDINATES` once that decision lands.
+- **Server only (§110).** The browser never contacts Open-Meteo. The page carries words, and the credit is an ordinary link.
+
+**The 7-day window.** A forecast is shown only when the start is ahead of now and at most 7 × 24 hours away (`withinWeatherWindow`). A race's start is its gun time when it has one, since that is when the runner is on the course. Open-Meteo forecasts 16 days, but a number three weeks out is a guess printed with the same confidence as tomorrow's. Seven days is the week the reminder, the countdown and the participation window already live in. The request asks for 8 days, so a start 7 days after a late-evening "now" is still inside the answer. The hour shown is the one nearest the start: 18:20 uses 18:00, and 18:30 uses 19:00.
+
+**The cache.** The forecast goes through Next's data cache under the tag `weather:forecast` for an hour, which is the forecast's own step. It is one entry of a few kilobytes. The pages still render per request (§333), but the forecast is not fetched per request. Once an entry is an hour old, the next reader gets it while the next one is fetched (stale-while-revalidate). The key is versioned (`v1`), so a deployment that changes the stored shape does not read the old entry. Outside a Next production server (tests, scripts, `next dev`, the build), the cache is skipped, following the public cache's rule.
+
+**The failure rule: silence.** Any of the following gives `null`, and then the page shows no row and the reminder has no line:
+- no answer within 3 seconds
+- a network error
+- an HTTP error
+- a body that is not a forecast (wrong shape, columns of different lengths, not JSON)
+- no hour for the start
+- a WMO code outside the documented list
+
+Nothing is ever shown in place of the forecast, not even «vremea nu este disponibilă», because a runner can do nothing with it. A failure is never cached: the load throws inside the cache. For 5 minutes after a failure the instance does not ask again, so an outage costs one visitor 3 seconds rather than every visitor. `/api/health` does not read the forecast: a page without one is a working page, and a monitor woken by someone else's API would be a false alarm about the club's site (§98). The system screen names the service and its last answer instead. That screen is `/devs` → Stare, which the «Sistem» tab of `/admin/tasks` opens. It shows when the forecast was read and how many hours it holds, or why it could not be read, in amber, never red.
+
+**Words and glyphs.** Each documented WMO code maps to a *kind* (15 of them, with words in the `Weather` catalogue in both languages) and a *glyph name* (11). The name becomes one single-file MUI icon only in a Server Component (`weather/ui/glyphs.ts`). The email reads the same table and draws no icon. Intensity is folded where a runner does not need it: light and moderate rain are both «Ploaie». Heavy rain and showers keep their own word, because they change what a runner packs. Numbers are whole numbers in the locale's format, and «-0 °C» is never printed.
+
+**Why the event page and the reminder only.**
+- *The page* is where a runner decides what to wear and whether to come. The row sits after the short facts and before the partner cards, which stay last (§356). The forecast's glyph takes the row-glyph slot, at the same 20 px as the others.
+- *The reminder* is the message a runner opens a day or two before, well inside the window. It is rendered at send time through the same cached request, and the line sits under the bold facts line as plain text, because it is a forecast and not a fact of the event.
+- *Not on the confirmation.* It is sent weeks ahead, and its forecast would be out of date by race day.
+- *Not on the listing card or the hero.* They are summaries above the fold (§169). A glyph there is the owner's question to answer.
+- *Not in the calendar entry.* An `.ics` file is written once and kept, so its forecast would go stale.
+
+**Test mode.** `WEATHER_SOURCE` is derived and never set by hand:
+- `stub` for the e2e server (`E2E_WEATHER_STUB`, set by `playwright.config.ts`, and applied under CI's APP_ENV=test too). It answers with one fixed hour: partly cloudy, 14 °C, 20% chance of rain, 11 km/h wind. It makes no request.
+- `off` under vitest.
+- `open-meteo` everywhere else. On production it is always `open-meteo`, whatever the flag says.
+
+**Rejected.**
+- *A key-based provider*: it needs an account and a secret.
+- *Fetching from the browser*: that is a third-party request from the visitor's page (§110).
+- *A forecast per event's own coordinates*: the events have no coordinates (migration `0023`), and they are all in one city.
+- *Showing the forecast 16 days out.*
+- *A "forecast unavailable" sentence.*
+- *Degrading `/api/health` on failure.*
+- *A forecast on the confirmation.*
+
+**Tests.**
+- Unit `weather/forecast.test.ts`: the code map is exhaustive and returns null for unknown codes; the glyph and both catalogues cover every kind; the nearest hour and the gun time; the 7-day window, with no request outside it; the request's address; the 3 s and 1 h constants; HTTP 503, an error object, mismatched columns, non-JSON, a network failure and a timeout all give null; `off` and `stub` make no request; the env derivation, with production refusing the stub; the words in both languages, including -0 and missing numbers.
+- Integration `events/event-weather.test.ts`: the row with a stubbed Open-Meteo, its position, the credit link, English; absent beyond 7 days and absent on failure; never on the card or the hero.
+- Integration `notifications/reminder-weather.test.ts`: the line in both halves, under the facts line; absent on failure; not on the confirmation.
+- E2E `event-weather.spec.ts` on both projects against a production build: the row on /ro and /en, the 44-px credit link, the 20-px glyph, no overflow at 320 px, and no row for the race three weeks out.
+
+**Consequences.**
+- New: `weather/domain/{wmo,forecast,credit}.ts`, `weather/source.ts`, `weather/words.ts`, `weather/ui/glyphs.ts`.
+- Changed: `events/ui/EventFacts.tsx` (the `weather` prop and row), the event page and the preview, `notifications/render.ts` and `templates.ts` (`eventWeather`, `facts.weather`), `/devs` (the status line), `env.ts` (`E2E_WEATHER_STUB`, `WEATHER_SOURCE`), the `Weather` and `Devs.weather` catalogue keys, `PROVIDER_HOSTS`, `playwright.config.ts`.
+
+**An old cached forecast is fetched again, not hidden (second review round).** Round 1 dropped any cached answer older than `MAX_FORECAST_AGE_MS` (two hours). But `unstable_cache`'s stale-while-revalidate hands that old entry to the first request after any quiet spell, such as a night or a weekend with no visitors. So the row went missing even though Open-Meteo would have answered at once. Now `readClubForecast` checks the entry's age. If the entry is past the bound, the request asks Open-Meteo itself within the same three-second timeout and shows that answer. The background revalidation runs as before. The forecast is left out only when that request also fails, which means an outage, and an outage's old answer is never shown as current. `freshReading` and the /devs status still read the same bound as a last guard.
+
+**The place is the club's own setting.** The forecast is asked for `CLUB_COORDINATES` (§394), the place the night-event decision reads. The coordinates are no longer copied into the weather module. They are passed as the arguments of the cached function, so they are part of the data cache's key, and a changed setting never reads the old place's entry.
+
+**One Open-Meteo host.** `src/modules/weather/domain/credit.ts` holds Open-Meteo's site (`OPEN_METEO_SITE`, the link the credit points to) as the only address written out. The API origin (`OPEN_METEO_API`) is built from it on the `api.` subdomain. `scripts/docs-check.mjs` lists only `open-meteo.com`.
+
+**On the reminder, the forecast is a row of the facts block.** The email facts block (§392) replaced the reminder's bold facts line, so the forecast is now a «Vremea» / «Weather» row of that block, right under «Când». It gives the kind, the temperature, the chance of rain and the wind, with «Prognoză: Open-Meteo» as a word under them (CC BY asks for the source to be named). Each half of the bilingual message uses its own language. The row appears only on the reminder. The confirmation and the declaration request never carry it.
+
+Baseline `BR-V1.97-2026-09-25`.
+
+## 403. A YouTube film's poster is the club's own copy, fetched once and stored; the player after the click carries a mute/volume bar over the IFrame API's postMessage protocol
+
+Second fix round on the YouTube poster + volume feature (§403 itself), closing the re-review's three blockers.
+
+The fetch that had been running inside `db.transaction`, behind the capacity lock, on the editor's whole-event save and on create-and-publish is now always run before any transaction opens: `saveEventAndTranslations` pre-fetches every translation's posters on the raw wire shape before its transaction; `createEvent` is split into a fetch-and-check half (`prepareEventCreate`) and a pure-insert half (`insertPreparedEvent`), and `createEventAndPublish` calls the fetch half before its own transaction instead of nesting a whole `createEvent(tx, …)` call inside it — that nesting was the actual bug, not merely `createEvent`'s own internal ordering. Every thumbnail fetch now times out at 3 seconds.
+
+The volume bar is a normal-flow row under the 16∶9 box now, not an overlay — it cannot cover YouTube's own controls. The poster button is a real link to the film's ordinary watch page (`youtube.com/watch?v=…`), intercepted with `preventDefault` when JavaScript runs; without it, the link works as a link. The poster itself is a real `<img alt="">`, both for a screen reader and to remove the CSS-injection surface a `background-image: url(…)` interpolation was.
+
+An organizer can now choose a film's poster from the rich-text panel — the owner's original "să pot pune thumbnail" — stored as `attrs.poster` + `attrs.posterSource`, which the automatic YouTube fetch leaves alone.
+
+A poster's address is validated server-side the way an image's `src` already was, closing the path where a crafted poster value could point at a third party or break out of a CSS `url(…)`.
+
+`resolveEventVideoPoster` now also tries once when `videoUrl` is not part of a save but the row already carries a YouTube `video_url` with no poster — the only way an event saved before this feature (or a save whose one fetch failed) was ever going to fill in.
+
+Not done, and left for whoever picks this up next: `VideoFacade` is still one `"use client"` component rather than a server component with a small client island — the anchor-based no-JS fallback answers the same practical complaint at much lower risk, but the RSC-payload concern the review raised is only partially addressed. The e2e spec's own save still makes a live request to `i.ytimg.com` rather than a mocked one; the `fetchImpl` seam now threaded through the save functions makes mocking possible, but wiring it into `playwright.config.ts` was not done.
+
+This round left applyTranslationSave's per-field attachYoutubePosters calls in place deliberately: they are dead-cheap no-ops once saveEventAndTranslations's pre-fetch pass (added in 70bfd3f3) has already attached a poster, and removing them would leave saveEventTranslation — the standalone single-translation entry point, which runs with no transaction at all — with no poster attachment of its own. The review's blocker is now backed by an integration test (tests/integration/cms/video-poster.test.ts, "no poster fetch ever runs inside a transaction") that spies on db.transaction and fails the moment a fetch happens while one is open, rather than only asserting the eventual poster address.
+
+VideoFacade moved from a client component to a Server Component built on a native <details>/<summary> disclosure (src/shared/ui/VideoFacade.tsx), with a new, single-purpose client island, VideoVolumeBar (src/shared/ui/VideoVolumeBar.tsx), for the one piece of the facade that genuinely needs a script: talking to the open iframe over postMessage. The two communicate through a plain id string (React's useId(), assigned to the iframe) — never an element or a DOM ref — keeping the server/client boundary rule intact. This also fixes the tabIndex={-1} and allow-list findings, since the iframe markup moved wholesale into the new component.
+
+tests/e2e/pages.spec.ts's dependency on a live i.ytimg.com request is resolved with a new environment flag, E2E_STUB_YOUTUBE_POSTER (src/shared/config/env.ts), mirroring E2E_DISABLE_NEON's shape exactly: read only by playwright.config.ts's own webServer, ignored (with a startup warning) if it ever reached a real deployment, and swapping the default fetchImpl in modules/media/video-poster.ts for an in-process sharp-built fixture — no fixture file, no network, deterministic across CI runners with no route to YouTube.
+
+The migration collision (0077_video_poster.sql vs. the group-run declaration migration at landing) is left untouched per the orchestrator's decision; it is a landing-time renumbering (0077 → 0077, since qa is now at 0076), not something this branch's own code should pre-empt.
+
+No poster fetch runs under a transaction, on any entry point (re-review, 2026-09-25). `applyTranslationSave` runs inside the whole-event save, behind `lockEventForCapacity`, so it does not fetch anything. Every entry point attaches posters in one pass before any transaction opens: `createEvent`, `createEventAndPublish`, `saveEventFields`, `saveEventAndTranslations`, `saveEventTranslation`, `createPage` and `savePage`. That pass covers all five rich texts of each language (body, rules, schedule, route description, summary), both on create and on save. It reads the boxes in the form they are posted, as JSON strings. A box that is not a valid document is left as posted, so the one real validation still refuses it; a box with no film is left byte for byte. A film whose fetch fails in that pass keeps `poster: null` until the next save, and nothing inside the transaction retries it. The test proves this by recording, not by throwing: `db.transaction` is wrapped to count open transactions, and the global `fetch` notes that count on every call. Every entry point asserts that no call ran with a transaction open, and one film that never answers is requested three times and no more. Who may write a text is checked before any poster is fetched for it, so a user who may not edit a text never triggers a fetch or an R2 write on its behalf.
+
+Once the film is open it replaces the poster instead of sitting under it: the facade hides its `<summary>` when the `<details>` is open. The volume bar speaks the IFrame API's handshake. An embedded player posts nothing, neither `onReady` nor `infoDelivery`, until its parent sends `{"event":"listening"}`. The bar sends that on mount, on the iframe's `load`, and every 250 ms after opening until the player answers, giving up after ten seconds. Its commands wait in a queue until then. The end-to-end suite serves a stand-in player at the embed's own address that follows the same rule. It reads the player's own `infoDelivery` reporting `muted: true` after the mute press, and it asserts that no request reaches the player before the press. The no-script fallback link to `youtube.com/watch` and its helper are gone, and so is `www.youtube.com` from the provider hosts: the native disclosure needs neither.
+
+The column that holds an event's poster, `events.video_poster_url`, arrives in migration `0077_video_poster`, after BR-V1.96's `0074_group_run_declaration`, `0075_discount_note` and `0076_night_override`. It is one expand-only column added on top of the 0076 snapshot. The branch first numbered it 0074, which clashed with the group-run declaration; drizzle-kit regenerated it as 0077 from the same schema. When the branch was merged onto the batch, event creation kept its two steps (posters are fetched before any transaction opens, then the insert) and took the batch's create-time rules into the first step. The discount note is gated on the cost the insert will store, and an absent cost type counts as `COST_TYPE_ON_CREATE`. `eventColumnsFrom` writes that cost type on create. `createEvent` and `createEventAndPublish` therefore store the same columns they did on the batch, and still fetch nothing inside a transaction (§403).
+
+Baseline `BR-V1.97-2026-09-25`.
