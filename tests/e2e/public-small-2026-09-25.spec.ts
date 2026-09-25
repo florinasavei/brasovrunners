@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * Three small things on the public site the owner asked for, 2026-09-25 (`DECISIONS.md` §401):
@@ -169,7 +169,6 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
   }) => {
     await page.goto("/ro/evenimente");
     await expect(page.locator("#main ul > li h2, #main h1").first()).toBeAttached();
-    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     const chip = page.locator("nav").filter({ hasText: "Colaborare" }).locator(".MuiChip-root", { hasText: "Colaborare" });
     await expect(chip).toHaveCount(1);
@@ -180,9 +179,9 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     // partnered, is what proves the narrowing — checked by name rather than by a total count,
     // since another project's run of this same spec may have left its own partnered event in
     // this database (each run's title carries the project name and a timestamp, so the two
-    // never collide on the one this test actually looks for).
-    const grid = page.locator('[data-testid="other-events"] ul, #main > ul').first();
-    const seededRun = grid.getByRole("heading", { name: "Antrenament de intervale" });
+    // never collide on the one this test actually looks for). `cardOnListing` opens the "other
+    // events" fold first, the way a reader on a phone with more than four cards would (§78).
+    const seededRun = await cardOnListing(page, "Antrenament de intervale");
     await expect(seededRun).toBeVisible();
 
     // Pressing it narrows the address and the grid to partnered events only.

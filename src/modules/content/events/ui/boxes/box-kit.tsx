@@ -1,9 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { countForm } from "@/i18n/count-form";
+import type { ReactElement } from "react";
+import { routing } from "@/i18n/routing";
 import type { EditableEvent } from "../../repository";
 import type { SummaryWords } from "../box-summaries";
+import { CardRequiredLine } from "../PublishCheck";
+import { type CardGapWords, missingForPublish, type PublishGapBox, storedPublishReader } from "../publish-check";
 import type { TranslationDraft } from "../TranslationFields";
 
 /**
@@ -23,14 +26,60 @@ export type BoxProps = {
    * route card's "Declarație opțională" is disabled for a surface without one. Absent: none.
    */
   groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", boolean>;
+  /**
+   * The card's heading as the page's section it writes (§406): "4 · Data și ora — apare pe
+   * pagină", from `pageFlow`. Absent: the card's own name alone.
+   */
+  heading?: string;
 };
 
 /**
- * "23 înscriși", and the box's own sentence about what a change does to them — only on the
- * editor, only with at least one real registration (a test row is counted nowhere the club looks,
- * `AGENTS.md` §12.6).
+ * A card's required line (§406): «lipsesc: Titlu (RO, EN) · Rezumat (RO)» or «complet», for a
+ * card that holds a box publication needs — first from what the card was drawn with (the saved
+ * event, or the blank create form), then as the form is typed (`PublishCheckProvider`). The one
+ * check the Publicare list and "Publică" run (`missingForPublish`), filtered to this card.
+ *
+ * A function the box awaits rather than a component it nests, so the element it hands the heading
+ * is ready when the box is (a string renderer cannot wait for an async component inside a tree).
  */
-export type RiskMark = { count: number; chip: string };
+export async function requiredLine(
+  box: PublishGapBox,
+  event: Pick<EditableEvent, "locationName" | "locationToBeAnnounced"> | null,
+  languages: readonly LanguageEntry[],
+): Promise<ReactElement> {
+  const read = storedPublishReader(
+    event ?? { locationName: null, locationToBeAnnounced: false },
+    languages.map((entry) => entry.translation),
+  );
+  const initial = missingForPublish(read, routing.locales).filter((gap) => gap.box === box);
+  return <CardRequiredLine box={box} initial={initial} words={await cardGapWords()} />;
+}
+
+/** The words of a card's required line, from the catalogue. */
+export async function cardGapWords(): Promise<CardGapWords> {
+  const t = await getTranslations("Admin");
+  return {
+    missing: t.raw("editor.required.missing") as string,
+    complete: t("editor.required.complete"),
+    fields: {
+      title: t("editor.fields.title"),
+      excerpt: t("editor.boxes.summaryLabel"),
+      locationName: t("editor.fields.locationName"),
+      slug: t("editor.fields.slug"),
+    },
+  };
+}
+
+/**
+ * A box whose change reaches people who registered: its amber outline and its own sentence about
+ * what a change does to them — only on the editor, only with at least one real registration (a
+ * test row is counted nowhere the club looks, `AGENTS.md` §12.6).
+ *
+ * The number itself is said once, on the line under the page map (`RegisteredLine`, §408; the
+ * owner: "informația «3 înscriși» se repetă de prea multe ori pe fiecare card"), never on a box:
+ * the outline is the mark, the line is the count.
+ */
+export type RiskMark = { count: number };
 
 /** One language of a per-language box: the text, whether the reader may write it, its name. */
 export type LanguageEntry = { translation: TranslationDraft; mayEdit: boolean; label: string };
@@ -46,10 +95,8 @@ export async function summaryWords(): Promise<{ words: SummaryWords }> {
 }
 
 /** The risk mark for a count of real registrations, or null when there are none. */
-export async function riskMark(count: number, locale: string): Promise<RiskMark | null> {
-  if (count <= 0) return null;
-  const t = await getTranslations("Admin");
-  return { count, chip: t(`editor.risk.chip.${countForm(count, locale)}`, { count }) };
+export function riskMark(count: number): RiskMark | null {
+  return count > 0 ? { count } : null;
 }
 
 /** The first line inside a box that reaches people: what a change here does to them. */

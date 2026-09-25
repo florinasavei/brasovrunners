@@ -7,6 +7,7 @@ import { hasOneLanguageCoHostDescription, hasOneLanguageCoHostLabel, readCoHosts
 import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/links";
 import { placeInBox } from "@/modules/events/domain/place";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
+import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
 
@@ -44,7 +45,7 @@ export type SummaryWords = {
   oneLanguage: string;
   /** "{language} identic cu {source}": the same words in both languages (§354). */
   identical: string;
-  titleSummary: { missingTitle: string; missingSummary: string; untitled: string };
+  titleSummary: { untitled: string };
   when: { none: string; raceStart: string; duration: string };
   timezone: { home: string };
   place: { tba: string; map: string; none: string; inLanguage: string };
@@ -66,7 +67,7 @@ export type SummaryWords = {
   };
   window: { range: string; fromPublication: string; untilStart: string };
   conditions: { noDeclaration: string };
-  confirmation: { sentence: string };
+  confirmation: { sentence: string; atStart: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
@@ -181,17 +182,17 @@ export const BLANK = {
   address: (translation: SummaryTranslation) => translation.slug.trim() === "",
 } as const;
 
-/** Box 2: `„Crosul Tâmpei” · „Tâmpa Cross”`, or what is missing and where. */
+/**
+ * Box 2: `„Crosul Tâmpei” · „Tâmpa Cross”`. What is missing is said before it, by the card's
+ * required line (§406: «lipsesc: Titlu (EN) · Rezumat (EN)», `publish-check.ts#cardGapLine`), from
+ * the check publication runs — not a second time here.
+ */
 export function titleSummarySummary(words: SummaryWords, translations: readonly SummaryTranslation[]): string {
   const titles = translations.map((translation) =>
     translation.title.trim() === "" ? `${code(translation.locale)}: ${words.titleSummary.untitled}` : `„${translation.title.trim()}”`,
   );
-  const missing = translations.flatMap((translation) => [
-    ...(translation.title.trim() === "" ? [fillIn(words.titleSummary.missingTitle, { language: code(translation.locale) })] : []),
-    ...(summaryBlank(translation) ? [fillIn(words.titleSummary.missingSummary, { language: code(translation.locale) })] : []),
-  ]);
   // The summary is the long text here (§354); two identical titles may honestly be a name.
-  return join(words, [...titles, ...missing, ...identicalMarks(words, translations, ["excerptBody"])]);
+  return join(words, [...titles, ...identicalMarks(words, translations, ["excerptBody"])]);
 }
 
 /**
@@ -345,26 +346,23 @@ export function registrationSummary(
   event: RegistrationEvent | null,
   options: {
     takesRegistrations: boolean;
-    costLabel: string | null;
     declarationVersion: number | null;
     defaultMinAge: number;
     locale: string;
     creating: boolean;
   },
 ): string {
-  const cost = options.costLabel;
-  if (!options.takesRegistrations) return join(words, [words.registration.groupRun, cost]);
+  if (!options.takesRegistrations) return join(words, [words.registration.groupRun]);
   const mode = event?.registrationMode ?? "NONE";
   if (mode === "EXTERNAL") {
     const provider = (event?.externalProvider ?? "").trim();
-    return join(words, [provider ? fillIn(words.registration.external, { provider }) : words.registration.externalUnnamed, cost]);
+    return join(words, [provider ? fillIn(words.registration.external, { provider }) : words.registration.externalUnnamed]);
   }
-  if (mode !== "INTERNAL") return join(words, [options.creating ? words.registration.noneInvite : words.registration.none, cost]);
+  if (mode !== "INTERNAL") return join(words, [options.creating ? words.registration.noneInvite : words.registration.none]);
   return join(words, [
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
     fillIn(words.registration.minAge, { age: event?.minAge ?? options.defaultMinAge }),
-    cost,
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
     event?.participantListVisibility === "NAMES" ? words.registration.listShown : words.registration.listHidden,
   ]);
@@ -395,9 +393,15 @@ export function conditionsSummary(
   ]);
 }
 
-/** Sub-card 8.3: `Cerută cu 7 zile înainte, termen cu 2 zile înainte`. */
+/**
+ * Sub-card 8.3: `Cerută cu 7 zile înainte, termen cu 2 zile înainte`; `…, termen la start` when the
+ * deadline is zero (§407 — the one test, `confirmationDueAtStart`); and the sentence for no window
+ * at all — the first number zero, or a deadline at or before the opening (§104's
+ * `confirmationWindow`) — rather than two numbers the allocator ignores.
+ */
 export function confirmationSummary(words: SummaryWords, opens: number, due: number): string {
-  return fillIn(words.confirmation.sentence, { opens, due });
+  if (opens <= 0 || opens <= due) return words.confirmation.off;
+  return fillIn(confirmationDueAtStart({ days: due }) ? words.confirmation.atStart : words.confirmation.sentence, { opens, due });
 }
 
 /** Sub-card 8.4: `De la 100 · verde · 42 alocate, 2 de tipărit`. */
@@ -486,37 +490,7 @@ export function courseSummary(
 type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links">;
 
 /**
- * Box 1, "Ce fel de eveniment", with its three cards inside it (§350, §358): `Alergare de grup ·
- * Programat · Asfalt · Ușor · 10 km · 2 linkuri`. The type, then a word or two from each card — the
- * status, the course's surface, difficulty and distance, and how many links the event carries
- * (Strava and Facebook counted with the rows) — so the closed box still reads as the top of the
- * fact sheet. Each card's own line says the rest: the climb, the route, which kinds of links.
- *
- * The one warning a card's line carries is repeated here, `etichetă într-o singură limbă` (§354):
- * the links card is folded inside this folded box, and a label in one language only is what the
- * next save refuses, so the organizer has to see it without opening two folds.
- */
-export function kindSummary(
-  words: SummaryWords,
-  event: (CourseEvent & LinksEvent) | null,
-  labels: { type: string; status: string; surface: string | null; difficulty: string | null },
-  locale: string,
-): string {
-  const rows = readEventLinks(event?.links ?? null);
-  const links = rows.length + (event?.stravaEventUrl ? 1 : 0) + (event?.facebookEventUrl ? 1 : 0);
-  return join(words, [
-    labels.type,
-    labels.status,
-    labels.surface,
-    labels.difficulty,
-    distanceWords(words, event?.distanceMeters),
-    links > 0 ? counted(words.links.files, links, locale) : null,
-    rows.some(hasOneLanguageLabel) ? words.links.labelOneLanguage : null,
-  ]);
-}
-
-/**
- * Sub-card 1.3: `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
+ * "Linkuri și fișiere": `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
  * `etichetă într-o singură limbă` when a row carries a label in one language only (§354): the
  * page shows the kind's own word for it in both languages, and the next save will refuse it.
  */

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.97-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.98-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.97-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.98-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -16274,3 +16274,269 @@ Once the film is open it replaces the poster instead of sitting under it: the fa
 The column that holds an event's poster, `events.video_poster_url`, arrives in migration `0077_video_poster`, after BR-V1.96's `0074_group_run_declaration`, `0075_discount_note` and `0076_night_override`. It is one expand-only column added on top of the 0076 snapshot. The branch first numbered it 0074, which clashed with the group-run declaration; drizzle-kit regenerated it as 0077 from the same schema. When the branch was merged onto the batch, event creation kept its two steps (posters are fetched before any transaction opens, then the insert) and took the batch's create-time rules into the first step. The discount note is gated on the cost the insert will store, and an absent cost type counts as `COST_TYPE_ON_CREATE`. `eventColumnsFrom` writes that cost type on create. `createEvent` and `createEventAndPublish` therefore store the same columns they did on the batch, and still fetch nothing inside a transaction (§403).
 
 Baseline `BR-V1.97-2026-09-25`.
+
+## 404. The night sentences name the start, the sunset and the end
+
+**Context.** The owner, 2026-09-25, on the pill's tooltip «Apusul la 19:00, sfârșitul la 20:40» for the Wednesday 19:00 run of 30 September: "evenimentul începe atunci, nu apusul începe atunci!" The sentence named two times, the sunset and the end, and a reader who knows the run starts at 19:00 took the first one for the start.
+
+**The value was right.** On 30 September 2026 at `CLUB_COORDINATES` (Brașov's centre, Europe/Bucharest), `sunTimes` computes the sunset at 19:00 and civil dusk at 19:29. meteogram.org's Brașov table gives 19:00 for the same day. sunrise.maplogs.com gives 19:04 and gaisma.com 18:56 for 2 October, all within §394's tolerance. So the run's start and that day's sunset really fall on the same minute. `sunset` comes from the day and `start` from the occurrence, and they are separate fields. A unit test pins the value and shows that moving the start does not move the sunset. Nothing in the computation changed.
+
+**Decision: every sentence names its times, the start first.** `NightEventFacts` gains `start`, the occurrence's start on the event's wall clock. `nightEvent` stays the one function, and the override path carries `start` too. There are three shapes, the same on every surface:
+- dark at the start: «Începe la {start}, apusul la {sunset} — ia o frontală» / «Starts at {start}, sunset at {sunset} — bring a headlamp»;
+- the end from «Durata» is the reason: «…, se termină la {end} — …» / «…, ends at {end} — …»;
+- the day's last programme row is the reason: «…, ultimul punct din program la {end} — …» / «…, the programme's last row at {end} — …».
+
+The alternative «după apusul de la {sunset}» for a start after sunset was rejected. It is true only for some dates, and one uniform shape is easier to read. Once the start comes first, the sunset can no longer be mistaken for it.
+
+**What each surface says now.** The helpers are `nightTooltip` and `nightLine` in `events/night-event.ts`, so the three public surfaces cannot drift apart.
+- The pill's tooltip: the sentence above.
+- The calendar entry: «Alergare de noapte: începe la 19:00, apusul la 19:00, se termină la 20:40». The label follows the type as in §394, and the old `calendarRun`/`icsRun` keys became a `{label}` parameter.
+- The `.ics` line: the same, then «— ia o frontală».
+- The reminder: «Alergare de noapte: începe la 19:00, apusul e la 19:00, se termină la 20:40. Ia o frontală.» / «Night run: starts at 19:00, sunset at 19:00, ends at 20:40. Bring a headlamp.»
+- The editor's automatic line: «Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}». The end line under it already named the end.
+- The closed «Traseul» card keeps «de noapte (automat)» / «de zi». It names no time, so it cannot be misread, and a time there would lengthen a one-line summary.
+
+The rule itself, civil dusk over the whole span, stays as §394 states it.
+
+§404 (this round): the automatic night-event sentence gains a fifth shape, Dawn, for a start before that day's sunrise with no end ever named — an early-morning date (isNightEvent already calls a start before civil dawn a night event) no longer reads as "starts after the sunset", which was backwards for it; NightEventFacts carries the day's sunrise alongside its sunset for this. The Romanian reminder's night line's wording ("apusul la {sunset}") now matches the tooltip, the calendar entry and the .ics line everywhere; it previously read "apusul e la {sunset}" on its own. Scope note: the reminder's own shape selection (render.ts / templates.ts's nightEventAfter flag) still has the same start-vs-sunset framing as the pill did before this fix — an early-morning reminder would still say "after the sunset" rather than naming the sunrise — but that surface was not named in this round's review and was left untouched to keep the change to what was asked.
+
+Review round (2026-09-25): the dawn shape now reaches every sentence. `nightShape` moved from `night-event.ts` into `domain/night.ts` and is exported. It is the only decision about which shape a night sentence takes: the pill's tooltip, the calendar entry, the `.ics` and the reminder all use it, so no two of them can disagree. The reminder's renderer used to set its own "after the sunset" flag whenever an automatic night event had no named end. It now takes the shape from `nightShape`, and a Dawn shape sets the reminder's sunrise. The reminder then reads «Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55. Ia o frontală.» / "Night run: starts at 05:30, before sunrise at 07:55. Bring a headlamp." It never says «după apusul de la 16:57» for an early-morning run.
+
+The editor's automatic line follows the same rule. When the verdict is night and the start is before that day's sunrise, it reads «Automat: pe {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}» (`Admin.editor.night.autoLineDawn`, in both catalogues). A later start on the same morning keeps the ordinary line with the sunset. The worked example throughout is a 05:30 group run on Wednesday 13 January 2027 at the club's place: sunrise 07:55, sunset 16:57.
+
+§404 gains one clause: the editor's automatic-answer line (`nightAutoLine` in NightEventField.tsx) computes no dawn/after/end shape of its own — it builds the same NightEventFacts the server assembles and asks `nightShape` from `domain/night.ts` for the answer, exactly as the pill, the calendar entry, the `.ics` line and the reminder already do. One function decides the sentence's shape everywhere it is asked; the editor merely fills in `words.autoLine`/`autoLineDawn`/`endLine`/`endLineProgramme` from that answer.
+
+§394's automatic night-event wording now also guards the plain-shape path on facts.night itself, not only on the start-vs-sunrise/sunset comparisons: a start after civil dawn and before that day's sunrise is not a night event, and nightShape() returns the plain (no-suffix) shape for it, matching nightEvent()'s own verdict, rather than reusing the Dawn branch's start-vs-sunrise check regardless of the verdict.
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 405. The programme card: one grid per row, its help in the «i» fold, every row on the event's day
+
+The owner, 2026-09-25, of the event editor's «Programul zilei și ce să aduci»: "This is super ugly and inconsistent."
+
+**What was inconsistent.**
+- Each row was a flex line of fixed widths (150 + 140 + 140). The three text boxes were squeezed in after it at `md` and stacked below it otherwise, so from one width to the next the row read in a different order.
+- The help was a paragraph standing over the rows. Every other explainer in the editor is a fold (§398).
+- With people registered, an amber `RiskLine` repeated what that paragraph already said: the reminder repeats the rows, and each row is a calendar entry.
+- The spare line opened with no date, so its calendar opened on today.
+
+**One grid per row.** `ScheduleRowsEditor` draws each row as a CSS grid and a named group ("Rândul N"). A box named in a refusal turns the row's border red, as `LinkRowsEditor` does. The layout follows the width of the list, through a container query (`programme-rows`), not the width of the window. From `md` up the side column (§350) is pinned beside the boxes, so on a 960-pixel window the list is narrower than on a 700-pixel one, and a viewport breakpoint would squeeze "Unde" exactly there. This is the one deliberate deviation from "from `sm` up".
+- From 40rem: Data · Ora · Până la · Unde · the bin on the first line, and «Ce (română)» · «Ce (engleză)» side by side on the second. That is §362's pair, the way "Linkuri și fișiere" puts a row's two labels under its address.
+- From 26rem: "Unde" takes a line of its own under the times.
+- On a phone: every box is stacked in the same order, with the bin last in the document and on screen.
+- At 36rem, measured on a production build, "Unde" was about 115 pixels wide beside the times on a 700-pixel window. That is why the wide threshold is 40rem.
+- The gaps are `DENSITY.gapSm`, the same step as the sibling lists' `spacing={1}`. The row padding is `{ xs: DENSITY.gapSm, sm: 1.5 }`, §380's pattern.
+- The time boxes are the native ones (§345 amended). The add button is the same text button as the other list cards'.
+
+**The help is the «i» fold.** The paragraph is now §398's `Panel variant="help"` with `legendIcon="info"`, "Cum funcționează programul", closed by default (§336). With people registered, the box keeps its amber border and count chip, like the other four boxes a change reaches (§350). The sentence that used to be the amber box joins the fold, because it explained how the programme works rather than warning of something.
+
+**The default date is the event's.**
+- The server seeds the spare line with the event's start date, in the event's zone.
+- A new row opens on whatever the start box holds now.
+- When the start moves, `schedule.ts#followStartDate` moves every dated row by the same number of days (`shiftProgrammeDates`, unchanged) and gives every undated row the new start. On the create page the spare line is therefore dated the moment the start is typed.
+- The service now treats a row whose only box is its date as the spare line and drops it. That date is the editor's default, not something the organizer typed. A date with a time is still a row, and is still refused by its number when a label is missing.
+
+**Tests.**
+- `tests/unit/content/programme-rows-editor.test.ts`: the fold is closed and has the «i»; the risk sentence is inside the fold; a row's boxes come in reading order with the bin last; the add button; the spare line is on the start date in the event's zone, and empty on create.
+- `tests/unit/events/schedule.test.ts`: `followStartDate`.
+- `tests/integration/cms/programme-rows.test.ts`: a row with only a date is dropped; a row with a date and a time is refused.
+- `tests/e2e/cms-publish.spec.ts`: a new spec measures the layout at 320, 1280 and 960 pixels, the fold, the default date, a new row and the follow. The existing "follows the start date" spec now also asserts the default.
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 406. The event editor is the page, top to bottom (amends §350 and §358)
+
+**Context.** The owner, 2026-09-25, with three asks:
+- "am nevoie de mai multe căsuțe la editor ca să văd exact ce flow am în pagină";
+- at 20:20, of a closed «Titlu și rezumat» whose tabs said only «incomplet»: "I need to see on the cards as well what info is required";
+- at 20:25: "I am missing the create and publish for some new events… this should be consistent!"
+
+§350 grouped the editor's boxes by subject, in three groups. §358 then put the status, the course and the links inside the first box. Neither order was the order of the page a runner reads.
+
+**1. One list, the page's order (amends §350's groups).** `events/domain/page-sections.ts#PAGE_SECTIONS` names the public page's sections top to bottom. Each entry has:
+- an id;
+- the editor card's `#box-…` anchor;
+- the page anchor where there is one (`route`, `links`, `schedule`, `rules`);
+- a glyph by name;
+- whether it is automatic;
+- a pure «drawn on the page» check over the stored event and its languages. A section is drawn when some language's page draws it (both-or-neither, §352, keeps the languages together).
+
+**The public page is the source of truth.** A section's place is where the page first draws something its card holds. The facts' rows count individually (when, where, route, cost, age, partners).
+
+`tests/unit/events/page-sections.test.ts` reads `events/[slug]/page.tsx` and EventFacts' page branch, and fails when the page's order parts from the list. We chose that test over making the page draw itself from the list: the page's blocks are rendered by a dozen components with different inputs, and a table of elements would be the dispatch table AGENTS.md §1.3 refuses. For the same reason the editor writes its cards out by hand in the list's order, and the same test holds both pages to it.
+
+**The numbers come from the list.** The resulting order is:
+1. Ce fel de eveniment (the overline)
+2. Titlu și rezumat
+3. Descriere
+4. Data și ora
+5. Locul
+6. Traseul: the route pills, the declaration offer and `#route`
+7. Participare și înscrieri: the cost row, who may enter and the button
+8. Parteneri
+9. Linkuri și fișiere (`#links`)
+10. Programul
+11. Regulamentul
+12. Filmul
+13. Lista publică
+
+The share links come between 8 and 9. They are automatic, with no card and no number, and the column names them in a dashed line where the page puts them.
+
+**Deviation from the brief.** The brief placed the links at 7, the film at 10 and the list at 12, which is twelve cards. The page draws the cost, the button and the partners' cards before `#links`, so there are thirteen, and the page wins.
+
+**2. The cards (amends §358).**
+- **One card per page section, in page order,** on the create page and the editor alike. Each is headed «N · Nume — apare pe pagină» or «N · Nume — gol, nu apare pe pagină», read on the server from what is saved; on the create page, from the blank event the create page opens with (`BLANK_PAGE_SECTION_DATA`).
+- **The status, the course and the links leave the first box.** They are drawn in three different places on the page, or, for the status, nowhere. Each moved whole: its fields, names, ids, closed lines and refusals.
+- **The first box is the type alone.** Its closed line is the type. It no longer wears the count of registered people.
+- **The status box wears the count itself.** It is still one of the five boxes a change reaches.
+- **The public list leaves the registration box** (it was card 8.5, owner requirement 1 of §350). It becomes the last card, `StartListBox`, because the page draws it last. It keeps the same checkbox, name and id, still following the type and the mode, with a sentence where there is nobody to list.
+- **A read-only film card** (`VideoBox`) names the page's video section (§69). It posts nothing and offers no box, keeping §266 and the owner's "link video should not be present anymore". It shows an older event's stored link, or says a film goes in the description, and links to it.
+
+**What stays apart:** Status, Promovare and Adresa paginii are not sections of the page. They sit last, under «Nu apar pe pagină». Publicare and Recurență stay at the top of the side column.
+
+**3. The map.** Under Publicare and Recurență, the page's sections appear as chips in page order, identical on create and edit, and they wrap on a phone.
+- Each chip shows the number, the glyph (drawn by name from `section-glyphs.ts` in a client island) and the page's short name, with a filled dot when the section is drawn and an empty one when it is not.
+- Each chip is a 44-px link to its card's `#box-…`. The fold opens through `OpenFoldFromHash` (§336), and at once on the press as well.
+- The share links are named «automat, fără card».
+
+**4. Required fields, seen from outside the card.** The three cards that hold a box publication needs (the title, the place, the address) begin their closed line with what is still missing, per language: «lipsesc: Titlu (RO, EN) · Rezumat (RO)» behind a warning glyph, or «complet». Their map chips wear the same glyph.
+
+The title and address tabs count what is missing instead of the bare mark: «Română · 2 obligatorii lipsă», «English · complet». Inside the cards, the asterisks and «obligatoriu înainte de publicare» stay.
+
+All of it is one check:
+- **The predicate:** `missingForPublish` (`publish-check.ts`), the one the Publicare list already ran on the create page.
+- **Grouped by card:** `cardGaps`, `cardGapLine` and `missingInLanguage`.
+- **Over the saved event:** `storedPublishReader` reads the row the way the publication guard does (`missingPublicFields`, `missingPublicEventFields`). The editor's Publicare list now comes from this same check.
+- **As typed:** one `PublishCheckProvider` re-reads the form, and a box the form does not draw (a language the reader may not write, the place for a role without the settings) counts as its saved value, never as blank.
+
+The duplicate «lipsește titlul/rezumatul» phrases leave the title card's own summary.
+
+**5. Create and publish, always there (amends §315).** «Creează și publică» used to dim to 38% while something was missing, and that read as no button. It and the editor's «Publică» now keep their full look on every event.
+
+Pressed while a publication gap remains, neither posts. Instead:
+- a focusable §47 summary opens at the top of the main column, naming each gap per box and language as a link;
+- the first card that lacks one is opened on the missing language and scrolled into view.
+
+The editor gates on what is saved, since «Publică» publishes the saved row, and says «completate și salvate». The browser's own refusal of an invalid box and the server's guard stay exactly as §315 has them. With JavaScript off, the press still posts and the server refuses as before. The summary's one-press `required` trick on the summary proxy is retired.
+
+**Rejected:**
+- Laying the cards out from a table of elements: the dispatch table AGENTS.md §1.3 refuses.
+- Numbering the chips' card names into the refusal and Publicare labels: those keep the card names, so no refusal changes.
+- A live «apare pe pagină» on the create page: the state is what is saved.
+- A second film input: the owner removed it.
+
+Tests:
+- unit: `events/page-sections.test.ts` (the list is the page's order, both editor pages follow it, numbering, card ids, the predicates), `content/editor-page-flow.test.ts` (one check per card kind, both catalogues' lines, the stored reader, the tab counts, headings in both catalogues, the map's links and 44 px, the undimmed button, the gate and the summary's names), updated `content/editor-first-card.test.ts`, `content/editor-order.test.ts`, `content/create-page.test.ts`, `content/box-summaries.test.ts`;
+- e2e: `editor-page-flow.spec.ts` (new), `cms-publish.spec.ts`, `event-route.spec.ts`, `forms-keep-values.spec.ts`; `support/fold.ts` finds a card by its name after «N · ».
+
+**The cost is a section and a card of its own (review round).** The page draws the cost as its own row in the facts, after the course and before who may enter and the button, so the list of the page's sections names it: `cost` sits between `course` and `registration` in `PAGE_SECTIONS`, drawn while a cost is stated (`costType !== null`), on every type. The cards now number 1 to 14 — the cost 7, registration 8, links 10, the public list 14. The fields moved whole out of «Participare și înscrieri» into a «Cost» card (`CostBox`, `#box-cost`): the same select, the same names, `CostFields` and the discount-note strip, the §398 FREE default, a closed line that says the cost («Cu taxă, 50 lei, cu reducere», «Nespecificat»), the numbered heading and state, and the map's chip «Costul» with the payments glyph. `CostFields` and the discount note already read the type and mode selects by name, so nothing about them changed. «Participare și înscrieri» is drawn only where the event registers people, and its closed line no longer repeats the cost. A words-only reader (Redactor, §103) sees the cost card's heading and line; on an `EXTERNAL` + `PAID` event the card still opens onto the discount note, which stays theirs to write (§394).
+
+**The tabs count with the publication check itself.** A strip that counts its missing required boxes («Română · 2 obligatorii lipsă») re-reads them as typed by running `missingForPublish` over the form and filtering to the card with `missingInLanguage` (`requiredCount.box`), the same rule the card's closed line, the map and «Publică» read. It is no longer a second, `isBlankValue`-per-name rule in the browser.
+
+**A read-only settings card is its heading and its line.** For a reader without settings rights, the public-list card, like Status and Links, is its heading and its closed line with nothing to open; the sentence that the settings are an Organizer's or an Administrator's is said once, in «Ce fel de eveniment».
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 407. A confirmation deadline of zero is «until the start», and every sentence says so
+
+**Context.** The owner, 2026-09-25: "fereastra de confirmare trebuie să fie 0 la final, să nu expire — nu e clar când pot confirma". §104 gave every event two numbers: when the confirmation is asked and when it is due, in days before the start. The editor already accepted 0 for the deadline (bounds 0–60, no CHECK), and the allocator already read it as the start. Nothing said so, though. The card showed "termen cu 0 zile înainte" or the start's own date as a deadline. The steps on the form said "până cu 0 zile înainte de start". The email said "until <date>". The card's help described the window without saying when a runner can confirm.
+
+**Decision.** This amends §104. A deadline of **0 means the start itself**:
+- `confirmationWindow` gives `deadline = startsAt`. A place given before the window opens is held until the start.
+- The maintenance job releases nothing before the start, even when somebody is on the waiting list.
+- The reminder still goes once, when the window opens.
+- A signature confirms at any point, online or on paper at the desk on the race morning (§67).
+- At the start the job does what it does for every race: it closes the waiting list and expires every unsigned hold (§160). Nobody holds a place in a race that has begun.
+
+Asked 0 and due 0 is still the weekly run's rule: there is no window, and the signature is asked within the club's hold (§377). The same applies to someone who registers after the window has opened. No new state and no migration.
+
+**The sentence rule.** Every sentence that states the deadline has two forms: the counted or dated one, and «la start» / «until the start». One helper decides which, `confirmationDueAtStart` in `hold-deadlines.ts`. It takes either the days (`0`) or the moment (a hold that ends at the start). Its two word helpers are `confirmationDueWords` ("cu 2 zile înainte de start" / "la start", "2 days before the start" / "the start") and `confirmationDueMoment` ("start, duminică, 11 oct. 2026, 09:00" beside the date).
+
+These surfaces ask it:
+- **The editor's card:** the closed line, the dates line and the second label ("0 = la start").
+- **The five steps** on the form and the event page (§91).
+- **The declaration email**, subject and body, both halves. Here the «until the start» form is written into the `holdExpiresAtFormatted` value itself, so a text the club wrote with that placeholder (§359) says it too.
+- **The signing page.**
+- **«Înscrierile mele»**, which gains one line on a place waiting for its declaration: "Confirmă semnând declarația … până la {due}".
+
+The card also says **"Fără fereastră"** when the first number is 0 or not above the deadline. That is the allocator's own `confirmationWindow` test, instead of two dates the allocator ignores.
+
+**The help** answers "când pot confirma" in four sentences, in both languages:
+1. The runner confirms by signing, any time after confirming their email: online or on paper at the desk.
+2. At the first number, we email the ask.
+3. Until the deadline the place is theirs, and with 0 it does not lapse before the start.
+4. Whoever registers inside the window, or when the first number is 0, has the club's hold.
+
+*Rejected:*
+- A separate "never expires" switch: zero already says it, and a third control would be a second way to say one thing.
+- Keeping unsigned holds after the start for the desk: a race that has begun has no place to hold, and §160 already decided that.
+- Reading the deadline as a time of day rather than whole days: the organizer did not ask for it.
+
+**Consequences.**
+- Code: `hold-deadlines.ts` (the three helpers), `box-summaries.ts` (`confirmation.atStart`, `confirmation.off`), `RegistrationBox.tsx`, `RegistrationSteps.tsx` (`steps.declaration.bodyLaterAtStart`, `{due}`), `render.ts`, the declare page (`declare.deadlineAtStart`), the «Înscrierile mele» page and `my-registrations.ts` (`holdExpiresAt`, `mine.confirmBy`), `messages/*.json`.
+- Tests: `tests/unit/registrations/hold-deadlines.test.ts`, `tests/unit/content/box-summaries.test.ts`, `tests/integration/registrations/confirmation-window.test.ts` (two cases), `tests/e2e/confirmation-window-zero.spec.ts`.
+- Unchanged, and noted for later: with a one-day window (asked 1, due 0), the reminder job's "more than a day left" test (`isParticipationConfirmationDue`) can skip the reminder. The registration email already asks for the signature.
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 408. The registrants' count is said once in the event editor, not on every card
+
+**2026-09-25.** The owner: "informația «3 înscriși» se repetă de prea multe ori pe fiecare card". §350 (and §358 for the status box) put a "N înscriși" chip on each of the five boxes where a change reaches people who registered: Data și ora, Locul, Participare și înscrieri, Programul, Starea evenimentului. The when, place and status boxes also repeated the number in their warning sentence when opened. On one screen, that was the same number up to eight times.
+
+**Decided.**
+
+1. **The number is said once, on the edit page, under the page map** (`RegisteredLine`, inside the `#box-map` panel). The line reads "3 înscriși · o schimbare în cardurile cu margine portocalie ajunge la ei", with the noun in its counted form (`countForm`, no ICU plural).
+   - Its "?" names the marked cards by the titles their headings use.
+   - For a role that may read registrations (`canReadRegistrations`; the list checks again on the server), a 44-pixel "Vezi înscrierile" button opens `/admin/registrations?eventId=…`.
+   - The count is the one the chips used: real registrations, every state. A test row is counted nowhere the club looks (§30, `AGENTS.md` §12.6). With none, there is no line. The create page has none.
+2. **The chip goes; the outline stays.** The five boxes keep the amber outline (`Panel` tone `risk`) from the same predicate, `riskMark`: at least one real registration. The outline still means that a change in the box reaches people already registered, and that the box's first line says what the change does to them. That sentence stays and no longer carries the number: "Cei înscriși știu locul «…». Dacă îl schimbi, bifează «Anunță participanții» la Salvare." This goes one step past the brief's "the chip goes": the sentences repeated the number too. `Panel`'s `badge` prop goes with its only callers.
+3. **Untouched.** The Salvare box's sentence about how many would receive "Detalii actualizate" (§331) is what a press will send, not a label. The "Înscrieri primite" box's closed line is the registrations' own box. The type box's warning about switching to a group run appears only when that switch is made.
+
+No migration, no new dependency.
+
+**Tests.** Unit: `content/registered-line.test.ts` covers:
+- the line's counted forms in both languages;
+- the tooltip naming the five cards;
+- the link and its absence for a role without read rights;
+- no line at zero;
+- no `badge` in `Panel` or any box;
+- the outline predicate on the five boxes;
+- the edit page drawing the line once, after the map, with `realCount`;
+- no `{count}` left in the boxes' sentences.
+
+`content/editor-first-card.test.ts` and `shared/boxed-disclosure.test.ts` were amended so no box wears the number. E2e: `event-notices.spec.ts` checks the line ("1 înscris"), its link and its 44-pixel height, no count on any box heading, and the place box's sentence without the number, on both projects.
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 409. The race card carries the page's own registration door and a bold availability line
+
+The listing card of an event whose page has a registration door now carries that door (§409). The owner, 2026-09-25: «trebuie să văd butonul de înscrieri pe card pentru evenimentele de tip concurs; să fac bold pe asta cu înscrierile și să văd câte locuri sunt disponibile».
+
+**The page's door, not a second one.** The event page and the card both read `readRegistrationDoor` (`src/modules/events/ui/registration-door.ts`), which was taken out of `RegistrationCta` whole. It returns `registrationCta`'s state plus how full the event is (`publicFill`), from one read of the public cache (§333). Only an open internal event costs that read, so the listing adds one cached entry per open race card and nothing for any other card. The button is `RegistrationDoorButton` with `doorButtonLabel`, the component and words the page uses. So a card offers a button exactly when the page does, in the same words and to the same form: «Înscrie-te la eveniment» while there is a place, «Intră pe lista de așteptare» once there is not, and «Înscrie-te pe {provider}» (a new tab, `nofollow`) for an event registered elsewhere. There is no button for a full waiting list or an event with no waiting list (§348), a window not open yet, a closed or cancelled event, or one with no registration. The rule is "where the page has a door", not "a race": a hike that takes registration on the site gets the button too, and a group run (§111) gets neither the line nor the button.
+
+**The line.** The card's registration line is bold (weight 700, primary ink) where there is something to do or wait for:
+- «Înscrieri deschise până pe sâm., 26 sept. 2026, 10:00 · 7 locuri libere din 10»;
+- «… · Lista de așteptare» once the places are gone;
+- «Înscrierile se deschid pe …» (§146);
+- the organizer's site;
+- a full list's sentence.
+
+It stays quiet (secondary ink, normal weight), as before, where the question is closed: registration over, the event cancelled or completed, or no registration needed. The count is `freePlacesPhrase`: `cta.freeOf.{one,few,other}` chosen by `countForm` on the free number, so Romanian reads «1 loc liber», «19 locuri libere», «20 de locuri libere». It is the allocator's number that the page shows beside its button, never a second count. An uncapped event shows no number (BR-REQ-034-01 criterion 4). When the count cannot be read (§281), the card shows the window with no number and no button, because a button would lead to a form whose first step is the read that just failed. The page keeps its own «could not count» block. The count sits in a `nowrap` span so it wraps as one piece at 320 px. The button sits one group gap under the line and is 44 px tall (BR-REQ-041-01 criterion 6). On a series card (§113) it is the next date's door, once.
+
+`ROW_ICON_SX` moved from `EventFacts` to `card-layout.ts` so the card's registration row draws the same glyph as every other fact row (§356).
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 410. The age sentence says the minimum and the parent's consent plainly
+
+The age-rule sentence read further, 2026-09-25: the owner's "scrie vârsta minimă și cu acordul părinților" pass  had put the minimum and the guardian clause in one long sentence joined by a semicolon. A same-day follow-up shortened it further, into two short sentences that read cleanly at any length: "Vârsta minimă: {age}." stands alone as its own clause, and — only where a minor may enter — a second, separate sentence names the parent and, explicitly, their consent: "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia." (English: "Minimum age: {age}." / "Under 18, a parent registers the runner, with their consent.") The three catalogue entries this draws from are unchanged in kind — `minimumAndGuardian` (both sentences), `minimumOnly` (age alone, eighteen or over), `guardianOnly` (the parent sentence alone, no minimum) — only their wording moved. It no longer names "or legal guardian" as a separate figure from "a parent"; the shorter form was the owner's preference for the intro line above the form and the event page's age fact.
+
+Baseline `BR-V1.98-2026-09-25`.
+
+## 411. The end-to-end specs read a listing card through its fold and the tasks page by its pathname
+
+This round finished the work-in-progress `cardOnListing` helper (`tests/e2e/support/fold.ts`, committed mid-brief at the PC restart, 78b72c40) and made it the one helper every listing-reading e2e spec uses, rather than one spec alone. `event-cost-external-discount.spec.ts`, `night-event.spec.ts` and `partner-marker.spec.ts` each carried their own local `card()`/inline copy of the same fix (goto, wait for the first card to attach, force every `<details>` open via `page.evaluate`, filter by heading) — all three now call `cardOnListing` instead, and the duplicated local helpers are gone. `cardOnListing` itself was widened to match what those three specs' own copies did: it waits for the list to have streamed in before it looks for the fold, and it filters by the card's own heading role (`getByRole("heading", ...)`) rather than by text anywhere in the `<li>`, so a card whose own description happens to quote another card's title cannot be matched by mistake. Re-review under load surfaced one real defect in the new shared helper — a bare `getByTestId("other-events")` is a Playwright strict-mode locator, and a read caught between the listing's Suspense fallback leaving and the real content settling can find two elements answering to that testid for one tick (§166's streaming), which the old per-spec copies never hit because they used a raw `document.querySelectorAll(...).forEach(...)`. Fixed with `.first()` on the fold's own locator, opening whichever the reader's eye would land on regardless. No DECISIONS.md, CHANGELOG.md, SPECS.md or PROJECT_BASELINE edit was made, per the branch's rules; the changelogLine and specsCriteria above are text for the orchestrator to place.
+
+This fix round finished the listing-fold consolidation the branch's prior commit started: `public-small-2026-09-25.spec.ts`'s "Colaborare"-chip spec still opened the public listing's "other events" fold with its own `page.evaluate`, the fifth stray copy after the four the earlier commit had already moved to `cardOnListing`. Its one single-card lookup now goes through that helper too. The `page.evaluate` calls that remain — in `listing-cards.spec.ts`'s `cards()`, `event-pages.spec.ts` (twice) and `listing-card-button.spec.ts` — each read or measure every card on the listing at once rather than looking up one by heading, so `cardOnListing`'s single-card contract does not fit them; each now carries a one-line comment saying so, so a later reader does not mistake it for a sixth stray copy. Separately, `cardOnListing`'s own doc comment had cited `§401` (the partners-fold decision) for this consolidation fix itself; it now cites the unnumbered `§411` the same way the branch's other new comments do, leaving `§375` and `§166` in place since those two do name the listing's own fold and its streaming.
+
+Baseline `BR-V1.98-2026-09-25`.

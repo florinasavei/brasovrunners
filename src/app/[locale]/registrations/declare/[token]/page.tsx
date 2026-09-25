@@ -31,6 +31,7 @@ import LegalLink from "@/shared/ui/LegalLink";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
+import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -219,6 +220,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       ? formatDay(registration.holdExpiresAt, { locale, timeZone: eventDetails.timezone, style: "long", withTime: true, position: "inline" })
       : undefined;
   /**
+   * A hold that ends at the start itself (§407, a deadline of zero days): "rezervat până la start,
+   * …: nu expiră înainte" rather than the waiting-list caveat, which the start makes moot — the
+   * waiting list closes then (§104). The one helper decides.
+   */
+  const deadlineAtStart =
+    registration?.holdExpiresAt && eventDetails
+      ? confirmationDueAtStart({ at: registration.holdExpiresAt, startsAt: eventDetails.startsAt })
+      : false;
+  /**
    * "The deadline has passed, but the place is still yours" — and only where that is true.
    *
    * A hold past its deadline is kept while nobody waits for the place (§160), so the sentence
@@ -349,7 +359,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {(eventDetails || deadline) && (
             <Alert severity="info" role="status" sx={{ mb: 3 }}>
               {eventDetails && <div>{t("declare.event", { event: eventDetails.title })}</div>}
-              {deadline && <div>{t(deadlinePassed ? "declare.deadlinePassed" : "declare.deadline", { deadline })}</div>}
+              {deadline && (
+                <div>
+                  {deadlinePassed
+                    ? t("declare.deadlinePassed", { deadline })
+                    : deadlineAtStart
+                      ? t("declare.deadlineAtStart", { deadline })
+                      : t("declare.deadline", { deadline })}
+                </div>
+              )}
             </Alert>
           )}
 

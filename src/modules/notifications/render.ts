@@ -20,6 +20,7 @@ import {
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
+import { nightShape } from "@/modules/events/domain/night";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
@@ -38,7 +39,7 @@ import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
-import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
+import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { weatherForEvent } from "@/modules/weather/source";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailEventFacts } from "./domain/event-facts";
@@ -317,10 +318,23 @@ async function renderRow(
   ) {
     // Each half of the bilingual message in its own words (§96, §349).
     const holdZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
-    data.holdExpiresAtFormatted = formatInSentence(registration.holdExpiresAt, holdZone, locale);
-    data.holdExpiresAtFormattedOther = formatInSentence(registration.holdExpiresAt, holdZone, otherLocale(locale));
+    /*
+      A hold that ends at the start itself — a deadline of zero days (§407) — reads "până la start,
+      sâm., 21 nov. 2026, 09:00" / "by the start, Sat, 21 Nov 2026, 09:00": the "until the start"
+      form beside the date, decided by the one helper, in the value itself, so a text the club
+      wrote with `{holdExpiresAtFormatted}` (§359) says it too. An offer capped at the start
+      (`capHoldExpiry`) reads the same way.
+    */
+    const holdEndsAt = registration.holdExpiresAt;
+    const due = eventDetails ? { at: holdEndsAt, startsAt: eventDetails.startsAt } : null;
+    const dated = (inLocale: Locale) => {
+      const formatted = formatInSentence(holdEndsAt, holdZone, inLocale);
+      return due ? confirmationDueMoment(inLocale, due, formatted) : formatted;
+    };
+    data.holdExpiresAtFormatted = dated(locale);
+    data.holdExpiresAtFormattedOther = dated(otherLocale(locale));
     if (row.messageType === "COMPLETE_DECLARATION") {
-      data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
+      data.confirmLater = holdEndsAt.getTime() - now.getTime() > 24 * 60 * 60_000;
       // Once the participation window is open this message is itself the reminder (the send when
       // the window opens, or a resend after it), so it must not promise "or when we remind you".
       if (eventDetails) {
@@ -334,12 +348,16 @@ async function renderRow(
       already capped at registration close or the event start (`capHoldExpiry`), and the club's
       "Termene" may since have changed (§377 applies a change to new offers only) — so the words
       are worked out from this offer's own span, `offerCreatedAt` to `holdExpiresAt`, never from
-      the setting in force now. Without an `offerCreatedAt` (a row from before this column, or a
-      test fixture) the club's current setting is kept, as before.
+      the setting in force now: in hours, or in minutes when the cap left less than an hour, so a
+      20-minute offer never says "o oră". Without an `offerCreatedAt` (a row from before this
+      column, or a test fixture) the club's current setting is kept, as before.
     */
     if (row.messageType === "WAITLIST_SPOT_OFFER" && registration.offerCreatedAt && data.timings) {
-      const offerHours = Math.max(1, Math.round((registration.holdExpiresAt.getTime() - registration.offerCreatedAt.getTime()) / (60 * 60_000)));
-      data.timings = { ...data.timings, offerHours };
+      const offerMinutes = Math.max(1, Math.round((holdEndsAt.getTime() - registration.offerCreatedAt.getTime()) / 60_000));
+      data.timings =
+        offerMinutes < 60
+          ? { ...data.timings, offerMinutes }
+          : { ...data.timings, offerHours: Math.round(offerMinutes / 60) };
     }
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
@@ -428,6 +446,22 @@ async function renderRow(
     if (night.night) {
       data.nightEventSunset = night.sunset ?? "";
       data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
+      // The start named before the sunset, and the end when it is the reason (§404) — the shape
+      // decided by `nightShape`, the same rule as the pill, the calendar and the `.ics`.
+      if (night.start) data.nightEventStart = night.start;
+      const shape = nightShape(night);
+      if ((shape?.suffix === "End" || shape?.suffix === "EndProgramme") && night.end) {
+        data.nightEventEnd = night.end;
+        data.nightEventEndSource = shape.suffix === "EndProgramme" ? "programme" : "event";
+      } else if (shape?.suffix === "After") {
+        // No end was ever named: the sun alone made the call and the start was already past
+        // sunset (§404) — say so, instead of leaving the sunset looking like the reason alone.
+        data.nightEventAfter = true;
+      } else if (shape?.suffix === "Dawn" && night.sunrise) {
+        // An early-morning start before that day's sunrise (§404): the line names the sunrise,
+        // never «după apusul» of the evening before it.
+        data.nightEventSunrise = night.sunrise;
+      }
     }
   }
   // The programme's rows in the update notice when the programme is what changed (§331), each half

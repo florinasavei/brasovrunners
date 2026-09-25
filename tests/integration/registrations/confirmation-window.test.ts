@@ -221,6 +221,68 @@ describe("the participation window (§104)", () => {
     expect(promoted.status).toBe("WAITLIST_OFFERED");
   });
 
+  /*
+    §407 (amending §104; the owner, 2026-09-25: "fereastra de confirmare trebuie să fie 0 la final,
+    să nu expire"): a deadline of zero days is the start itself. The place given before the window
+    opens lapses nowhere before the race begins — not even with somebody waiting — the email says
+    "până la start" beside the date, the desk confirms on paper on the race morning (§67), and at
+    the start the unsigned place ends and the waiting list closes, as for every race (§160).
+  */
+  it("a deadline of zero holds the place until the start, says so, and releases nothing before it (§407)", async () => {
+    await approve(db);
+    const event = await createEvent(db, { confirmationDeadlineDaysBefore: 0 }); // capacity 1
+    expect(confirmationWindow(event)).toEqual({ opensAt: new Date(START.getTime() - 7 * DAY), deadline: START });
+
+    const first = await verified(event, "first@example.ro");
+    expect(first.status).toBe("PENDING_DECLARATION");
+    expect(first.holdExpiresAt).toEqual(START);
+    const second = await verified(event, "second@example.ro");
+    expect(second.status).toBe("WAITLISTED");
+
+    const [queued] = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, first.id)).then((rows) => rows.filter((r) => r.messageType === "COMPLETE_DECLARATION"));
+    const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    expect(message.subject).toBe(
+      "Ești înscris — confirmă participarea până la start, duminică, 11 oct. 2026, 09:00 / You are registered — confirm your participation by the start, Sunday, 11 Oct 2026, 09:00",
+    );
+    expect(message.text).toContain("locul îți este ținut până la start, duminică, 11 oct. 2026, 09:00");
+    expect(message.text).toContain("the place is held for you until the start, Sunday, 11 Oct 2026, 09:00");
+
+    // The window opens: the reminder goes, as with any deadline.
+    expect((await runRegistrationMaintenance(db, new Date(START.getTime() - 7 * DAY + 60_000))).confirmationsQueued).toBe(1);
+
+    // Two days before, and a minute before the start: somebody waits, and still nothing lapses.
+    for (const at of [new Date(START.getTime() - 2 * DAY + 60_000), new Date(START.getTime() - 60_000)]) {
+      await runRegistrationMaintenance(db, at);
+      const [held] = await db.select().from(registrations).where(eq(registrations.id, first.id));
+      expect(held.status).toBe("PENDING_DECLARATION");
+      const [waiting] = await db.select().from(registrations).where(eq(registrations.id, second.id));
+      expect(waiting.status).toBe("WAITLISTED");
+    }
+
+    // A signature on the race morning confirms, like any other.
+    const raceMorning = new Date(START.getTime() - 30 * 60_000);
+    const confirmed = await signDeclaration(db, event, first.id, await signingInput(db, raceMorning, "Ana Popescu"), raceMorning);
+    expect(confirmed.status).toBe("CONFIRMED");
+  });
+
+  it("at the start of a zero-deadline race the unsigned place ends and the waiting list closes, as for every race (§407, §160)", async () => {
+    await approve(db);
+    const event = await createEvent(db, { confirmationDeadlineDaysBefore: 0 }); // capacity 1
+    const first = await verified(event, "first@example.ro");
+    const second = await verified(event, "second@example.ro");
+
+    // The first run after the start: at the start the unsigned hold expires and the waiting
+    // list closes (§160); the desk can still confirm on paper afterwards through the
+    // allocator (§67) — that is the earlier "race morning" test above, before the start.
+    await runRegistrationMaintenance(db, new Date(START.getTime() + 60_000));
+    const [lapsed] = await db.select().from(registrations).where(eq(registrations.id, first.id));
+    expect(lapsed.status).toBe("EXPIRED");
+    expect(lapsed.expiryReason).toBe("DECLARATION_HOLD_LAPSED");
+    const [closed] = await db.select().from(registrations).where(eq(registrations.id, second.id));
+    expect(closed.status).toBe("EXPIRED");
+    expect(closed.expiryReason).toBe("EVENT_STARTED");
+  });
+
   it("refuses a declaration signed against a cancelled race", async () => {
     await approve(db);
     const event = await createEvent(db);

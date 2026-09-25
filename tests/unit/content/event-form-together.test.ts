@@ -42,6 +42,7 @@ const FIELD_BOXES = [
   "PlaceBox",
   "ProgrammeBox",
   "RulesBox",
+  "CostBox",
   "RegistrationBox",
   "CourseBox",
   "LinksBox",
@@ -66,7 +67,8 @@ describe("§347 one event form for five features, on both pages", () => {
     }
     // Each in the box that answers its question: the cost's boxes with the cost, the partners'
     // cards in "Parteneri", the waiting list's length beside the places.
-    expect(read(`${BOX_DIR}/RegistrationBox.tsx`)).toContain("<CostFields");
+    expect(read(`${BOX_DIR}/CostBox.tsx`)).toContain("<CostFields");
+    expect(read(`${BOX_DIR}/RegistrationBox.tsx`)).not.toContain("<CostFields");
     expect(read(`${BOX_DIR}/CoHostsBox.tsx`)).toContain("<CoHostRowsEditor");
     const registration = read(`${BOX_DIR}/RegistrationBox.tsx`);
     const capacityRow = registration.slice(registration.indexOf('data-testid="capacity-row"'), registration.indexOf("</Stack>", registration.indexOf('data-testid="capacity-row"')));

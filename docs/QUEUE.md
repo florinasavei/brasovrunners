@@ -16,13 +16,12 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | Item | Branch | Notes |
 | --- | --- | --- |
 | Create and publish offered the same way on every new event, whatever its type or series | `fix/create-publish-consistent` | queued |
-| The event editor mirrors the page: one card per section in page order, a page map, numbered titles with «apare pe pagină» | `feat/editor-page-flow` | queued |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.97` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.98` |
 
 ## Next, queued
 
@@ -58,6 +57,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.98` | every night sentence names the start, the sunset and the end — «Începe la 19:00, apusul la 19:00, se termină la 20:40» — the tooltip, the month view, the .ics line, the reminder and the editor's line alike, a pre-dawn start with its own shape (§404) · the editor mirrors the page: one card per page section in the page's order with a page map, every closed card naming its missing required fields per language, create-and-publish always at full look and opening the refusal summary when something is missing (§406) · the programme card's rows are one grid with the help folded and a new row starting on the event's day (§405) · the confirmation window's second number accepts 0 — the place never expires before the start — and the card says when a runner can confirm (§407) · the registrants' count is said once under the editor's header, the orange outline alone marking the cards whose changes notify participants (§408) · the race's listing card carries the register button and a bold line with the free places, from the one availability count (§409) · the age sentence says the minimum and the parent's consent plainly — «Vârsta minimă: 14 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.» (§410) · the end-to-end specs read a listing card through its fold and the tasks page by its pathname, so the full two-project run no longer flakes on order (§411) |
 | `BR-V1.97` | the difficulty pill is a scale of dumbbells, the word beside it and in the accessible name (§399) · a YouTube film shows the club's own stored poster before the click and a mute/volume bar after it, the facade server-rendered, no poster fetch inside a transaction (§403, migration `0077`) · the backoffice's time field is the platform's own `<input type="time">`, 24-hour, any minute — §345's wheel picker gone, its date picker kept (§400) · «Împreună cu» is a collapsible block on the event page, the listing's filter row sits a step above the grid and offers a «Colaborare» chip while a partnered event is on the calendar (§401) · the weather for the event's date and hour from Open-Meteo (free, keyless) on the page within seven days and in the reminder (§402) |
 | `BR-V1.96` | the confirmed email's facts block (§392) · the optional group-run declaration, asphalt and trail, migration `0074` (§393) · night events from civil dusk, migration `0076` (§394) · the external discount note, migration `0075` (§395) · the public list's states behind the notice (§396) · the editor's help fold, free by default, the robot glyph (§398) · «Aplicația» on /admin/tasks renders docs/QUEUE.md (§397) |
 | `BR-V1.95` | the partner marker is Material's Handshake glyph again, in each surface's own ink (§391) |

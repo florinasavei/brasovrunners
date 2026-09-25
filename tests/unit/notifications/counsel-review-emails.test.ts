@@ -73,6 +73,36 @@ describe("BR-REQ-080-01 §NNN a minor's messages speak to the parent", () => {
     expect(legacy.text.startsWith("Salut, Ioana Pop,\n")).toBe(true);
     expect(legacy.text).not.toContain("ca părinte sau tutore");
   });
+
+  it("greets plainly on the link for another person, which is not about the minor's registration (review finding)", () => {
+    const email = render("REGISTER_ANOTHER_PERSON", minor);
+    expect(email.text.startsWith("Salut,\n")).toBe(true);
+    expect(email.text).not.toContain("Salut, Ioana Pop,");
+    expect(email.text).not.toContain("Salut, Maria Pop,");
+    expect(email.text).not.toContain("ca părinte sau tutore, pentru Ioana Pop");
+    const english = render("REGISTER_ANOTHER_PERSON", minor, "en");
+    expect(english.text.startsWith("Hello,\n")).toBe(true);
+    // The same plain greeting as an adult's: the message names nobody (§389).
+    expect(render("REGISTER_ANOTHER_PERSON", DATA).text.startsWith("Salut,\n")).toBe(true);
+  });
+});
+
+describe("BR-REQ-080-01 §NNN an offer capped under an hour says its minutes", () => {
+  const timings = { confirmationHours: 48, holdMinutes: 30, offerHours: 24, reminderHours: 48 };
+
+  it("says «20 de minute» beside the moment, never «o oră», for a 20-minute cap", () => {
+    const data: TemplateData = { ...DATA, holdExpiresAtFormatted: "duminică, 11 oct. 2026, 09:00", holdExpiresAtFormattedOther: "Sunday, 11 Oct 2026, 09:00", timings: { ...timings, offerHours: 1, offerMinutes: 20 } };
+    const email = render("WAITLIST_SPOT_OFFER", data);
+    expect(email.text).toContain("(ai la dispoziție 20 de minute)");
+    expect(email.text).toContain("(you have 20 minutes)");
+    expect(email.text).not.toContain("o oră");
+    expect(email.text).not.toContain("one hour");
+  });
+
+  it("keeps hours from an hour up", () => {
+    const data: TemplateData = { ...DATA, holdExpiresAtFormatted: "duminică, 11 oct. 2026, 09:00", holdExpiresAtFormattedOther: "Sunday, 11 Oct 2026, 09:00", timings: { ...timings, offerHours: 3 } };
+    expect(render("WAITLIST_SPOT_OFFER", data).text).toContain("(ai la dispoziție 3 ore)");
+  });
 });
 
 describe("BR-REQ-080-01 §NNN the words the counsel asked for", () => {
