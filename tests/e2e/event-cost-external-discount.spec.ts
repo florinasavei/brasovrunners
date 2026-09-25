@@ -9,7 +9,7 @@ import {
   signIn,
   withFeaturedEventLock,
 } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * `DECISIONS.md` §394 — the owner, 2026-09-25: "another friend's race where we just go as a
@@ -21,14 +21,6 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
  * hostname literal, and `docs:check` scans test files for one too.
  */
 const ORGANIZER_LINK = ["https:/", "alt-club.example.test", "inscriere"].join("/");
-
-/** The listing card with this title, every fold opened once the list has streamed in (§166, `headlamp.spec.ts`). */
-async function card(page: Page, path: string, heading: string) {
-  await page.goto(path);
-  await expect(page.locator("#main ul > li h2").first()).toBeAttached();
-  await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
-  return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
-}
 
 test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () => {
   // The second test below mutates the shared singleton `FEATURED` event for its own duration
@@ -151,12 +143,14 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () 
     // `aria-label` (`route-pills.ts`, `GlyphChip.tsx`). Asserted on the chip's own text, not
     // merely somewhere in the card's `li` — a card with other chips nearby could otherwise pass
     // this on unrelated text.
-    const roCard = await card(page, "/ro/evenimente", `Crosul partenerului ${suffix}`);
+    await page.goto("/ro/evenimente");
+    const roCard = await cardOnListing(page, `Crosul partenerului ${suffix}`);
     const roChip = roCard.locator(".MuiChip-root").filter({ hasText: "Cu taxă" });
     await expect(roChip).toHaveCount(1);
     await expect(roChip).toHaveText("Cu taxă — plătit la organizator, nu la club");
 
-    const enCard = await card(page, "/en/events", `The partner's race ${suffix}`);
+    await page.goto("/en/events");
+    const enCard = await cardOnListing(page, `The partner's race ${suffix}`);
     const enChip = enCard.locator(".MuiChip-root").filter({ hasText: "Paid" });
     await expect(enChip).toHaveCount(1);
     await expect(enChip).toHaveText("Paid — paid to the organizer, not to the club");

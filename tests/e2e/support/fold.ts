@@ -78,3 +78,37 @@ export async function openFold(fold: Locator) {
   if ((await fold.getAttribute("open")) === null) await fold.locator(":scope > summary").press("Enter");
   await expect(fold).toHaveAttribute("open", "");
 }
+
+/**
+ * A card on the public events listing, found by its own heading, with the "other events" fold
+ * around it (§89, `[data-testid="other-events"]`) opened first if it is closed.
+ *
+ * That fold starts open only when there are four or fewer other events (`app/[locale]/events/
+ * page.tsx`, `open={cards.length <= 4}`) and closed on a phone otherwise — a seeded database
+ * that has grown past four leaves it closed, and a spec that looked for a card by text alone
+ * (§375's own family) found nothing there and failed, flakily, only once enough sample events
+ * had accumulated. `difficulty-scale.spec.ts`, `event-cost-external-discount.spec.ts`, `night-
+ * event.spec.ts` and `partner-marker.spec.ts` each grew their own copy of the fix; this is the
+ * one helper for all four, called after the caller's own `page.goto` to the listing (§NNN).
+ *
+ * Waits for the list to have streamed in past the shell first (§166) — the fold and the cards
+ * inside it are attached only once it has — then opens the fold, then filters by heading, the
+ * card's own `<h2>`, rather than by text anywhere in the `<li>`: a card with another card's
+ * title in its own description text (an "excerpt" quoting a related run, say) would otherwise
+ * match the wrong one.
+ *
+ * A listing with no featured event has no fold at all — every card sits in a plain `<ul>` — so
+ * opening it is a no-op there.
+ *
+ * `.first()`, not the bare testid locator: the listing streams in behind a Suspense boundary
+ * (§166) and a read caught between the fallback leaving and the real content settling can find
+ * two elements answering to the same testid for one tick, which turned a plain `getByTestId`
+ * into a strict-mode violation under load. `openFold` on the first of them is what a reader's
+ * own eye would land on regardless.
+ */
+export async function cardOnListing(page: Page, heading: string | RegExp): Promise<Locator> {
+  await expect(page.locator("#main ul > li h2").first()).toBeAttached();
+  const fold = page.getByTestId("other-events").first();
+  if ((await fold.count()) > 0) await openFold(fold);
+  return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
+}

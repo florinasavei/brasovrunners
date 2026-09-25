@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-041-01 (§366) — the listing's cards, measured in a browser at 320 pixels (the mobile
@@ -33,6 +33,8 @@ async function cards(page: Page, locale: "ro" | "en" = "ro"): Promise<Locator> {
   // not visible until the fold is opened here.
   const first = main.locator("ul > li h2").first();
   await expect(first).toBeAttached();
+  // Every card, not one: used by the tests that read or measure every card at once, so
+  // `cardOnListing` (`support/fold.ts`, a single card by heading) does not fit here.
   await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
   await expect(first).toBeVisible();
   return main.locator("ul > li").filter({ has: page.locator("h2") });
@@ -478,9 +480,9 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
   });
 
   test("draw the route and the cost as pills, in order — surface, difficulty, distance, elevation, cost — with no middle dots and no partner among them", async ({ page }) => {
-    const list = await cards(page);
+    await page.goto("/ro/evenimente");
     // The seeded Tâmpa run: 14 km, 600 m of climb, moderate, on trail, free.
-    const tampa = list.filter({ hasText: "Tură pe Tâmpa" }).first();
+    const tampa = await cardOnListing(page, "Tură pe Tâmpa");
     const pills = tampa.locator('[data-fact="pills"] .MuiChip-root');
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
     // terrain type, difficulty, distance, elevation" (§366, amended §375); the cost pill follows.
