@@ -81,7 +81,7 @@ export const CARD_EXCERPT_SX = {
   flexDirection: "column",
   // The words' box carries its own `overflowWrap` (below), but a figure's caption sits outside
   // that box — this is the net under it too, so a long unbroken address in a caption still wraps
-  // inside a 320-pixel card (§412).
+  // inside a 320-pixel card (§NNN).
   overflowWrap: "anywhere",
   "& p": { fontSize: "0.875rem", lineHeight: 1.43, mb: 1 },
   "& p:last-of-type": { mb: 0 },
