@@ -1,4 +1,4 @@
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 import BuildBadge from "./BuildBadge";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
-import { footerTargetSx } from "./footer-target";
+import { FOOTER_GAP_PHONE, footerTargetSx } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
@@ -35,21 +35,47 @@ const BAR_HEIGHT = 44;
  *
  * - the theme switch, in the bar's own corner (criterion 11);
  * - the "Despre club" fold's summary, with its words — the one label on the row;
+ * - the privacy notice as a question mark, whose tooltip and accessible name are the notice's
+ *   name, the same page it always linked to; "GDPR" from `sm` (§NNN);
  * - Facebook, Instagram, Strava;
- * - the privacy notice as a lock, whose tooltip and accessible name are the notice's name, the
- *   same page it always linked to;
  * - RO and EN as flags only, the current one ringed and `aria-current` (`LocaleSwitcher`).
+ *
+ * §NNN (the owner, 2026-09-25): "it should be a question mark, not a lock, and it should be after
+ * the about accordion; the mobile footer icons can be a bit more spaced out" and "Use GDPR for
+ * desktop as well." So the notice moved ahead of the marks, the lock became `HelpOutlineOutlined`,
+ * the word from `sm` is "GDPR", and a phone's items are `FOOTER_GAP_PHONE` apart.
  *
  * Every item is a square target of the bar's size (`footer-target.ts`): 24 pixels below 360,
  * which is WCAG 2.2 SC 2.5.8's AA floor, 28 from 360, and 44 from `sm`, where nothing changed.
  * It is a footer-bar-only exception to criterion 6: the fold's panel is 44 pixels throughout.
+ *
+ * ## The gap, measured (§NNN)
+ *
+ * Measured on the built listing in headless Chromium (Pixel 5 emulation and desktop Chrome, the
+ * same numbers in both), fold closed and open (the same numbers: the panel's box is zero wide).
+ * Eight items, seven gaps: four between the row's own items and three inside the marks and the
+ * flags. The squares are 24 pixels at 320 and 28 from 360; the summary is 90.3 pixels with
+ * "Despre club" and 105.8 with "About the club", padding and marker included. With no gap the
+ * fold — which takes whatever the fixed items leave — had 46.2 pixels to spare around the English
+ * summary at 320, and 46.2 / 7 is 6.6. So:
+ *
+ * | width | gap | fold | spare beside "Despre club" | spare beside "About the club" |
+ * | ---   | --- | ---  | ---                        | ---                           |
+ * | 320   | 6   | 110  | 19.7                       | 4.2                           |
+ * | 360   | 6   | 122  | 31.7                       | 16.2                          |
+ * | 390   | 6   | 152  | 61.7                       | 46.2                          |
+ * | 412   | 6   | 174  | 83.7                       | 68.2                          |
+ *
+ * At 7 pixels the English summary at 320 is cut (84 pixels of words in 81), so 6 is the largest
+ * whole gap; every item is on the switch's row at every width, in both languages, and the last
+ * flag ends exactly at the row's right edge.
  *
  * ## The fold's panel is inside the fold, under the row
  *
  * The `<details>` owns what it discloses: its summary is on the row, and its panel follows the
  * summary inside it. Opened, the `<details>` grows downward — the row's items are aligned to its
  * top, so each of them stays on the switch's line — and the panel runs from under the summary to
- * the bar's right edge, over the empty space below the marks, the lock and the flags. It can,
+ * the bar's right edge, over the empty space below the privacy mark, the marks and the flags. It can,
  * because the panel's own box is zero pixels wide: its content is wider than it, visibly, and a
  * zero-width box adds nothing to the fold's width in the row's flex layout. Otherwise the fold
  * would take the panel's width as its own and push the marks off the row, which is what the
@@ -114,7 +140,15 @@ export default async function SiteFooter() {
     >
       {/* One row that never wraps: every item has its own width, and nothing is drawn over a
           sibling. Aligned to the top, so an open fold grows downward and leaves the rest here. */}
-      <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          // The phone's gap between neighbouring items (§NNN, `footer-target.ts`); from `sm` the
+          // items' own padding spaces them, as before.
+          columnGap: { xs: `${FOOTER_GAP_PHONE}px`, sm: 0 },
+        }}
+      >
         {/* The switch, in the bar's own corner (BR-REQ-041-01 criterion 11): the first item, exactly its width. */}
         <Box
           sx={{
@@ -233,14 +267,65 @@ export default async function SiteFooter() {
           </Box>
         </Box>
 
-        {/* The social marks, after the fold at every width: each a square of the bar's target,
-            the 20px glyph inside it. Their own width, never shrunk. */}
+        {/*
+          The privacy notice, on the bar itself rather than in the fold (§323): a person should
+          find how their data is used from any page without opening anything — GDPR art. 12 asks
+          for the information to be easy to reach, and a closed `<details>` hides it from sight
+          and from the accessibility tree alike. Right after the fold at every width (§NNN, the
+          owner: "it should be after the about accordion"), ahead of the social marks. Its own
+          width, never shrunk.
+
+          Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" and
+          "Privacy notice (GDPR)" (review finding: a screen reader once said "GDPR, link"). From
+          `sm` it shows the word "GDPR" (§NNN, the owner: "Use GDPR for desktop as well"), which
+          both names contain (WCAG 2.5.3, label in name; BR-REQ-041-01 criterion 21). On a phone
+          it is a question mark (§NNN, replacing §372's
+          lock): the name, and a tooltip saying the same, are the notice's; no word is rendered.
+
+          `HelpOutlineOutlined` — the circled question mark (`help_outline`), the glyph `Hint`
+          already uses — rather than the bare `QuestionMark`: at 20px inside a 24px square the
+          bare mark is a thin stroke that reads as a stray character, and the circle gives it the
+          same round weight as the three social marks beside it.
+        */}
+        <Box
+          sx={{
+            flex: "0 0 auto",
+            display: "flex",
+            alignItems: "center",
+            "& > a": {
+              ...footerTargetSx(["minHeight", "minWidth"]),
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              px: { xs: 0, sm: 1 },
+              color: "text.secondary",
+              fontSize: "0.8125rem",
+              whiteSpace: "nowrap",
+            },
+          }}
+        >
+          <Link href="/legal/privacy" aria-label={legal("privacyLinkName")} title={legal("privacyLinkName")}>
+            {/* An element rendered here, as a child, never a component passed as a prop. */}
+            <HelpOutlineOutlinedIcon
+              aria-hidden="true"
+              data-testid="footer-privacy-mark"
+              sx={{ display: { xs: "block", sm: "none" }, fontSize: 20 }}
+            />
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              {legal("privacyLinkShort")}
+            </Box>
+          </Link>
+        </Box>
+
+        {/* The social marks, after the privacy notice at every width: each a square of the bar's
+            target, the 20px glyph inside it, the phone's gap between them. Their own width,
+            never shrunk. */}
         {social.length > 0 && (
           <Stack
             direction="row"
             component="nav"
             aria-label={footer("about.socialLabel")}
-            sx={{ flex: "0 0 auto", ml: { sm: 1 }, alignItems: "center" }}
+            sx={{ flex: "0 0 auto", ml: { sm: 1 }, columnGap: { xs: `${FOOTER_GAP_PHONE}px`, sm: 0 }, alignItems: "center" }}
           >
             {social.map((entry) => (
               // Off-site, so each opens in a new tab and carries its own `rel` — the same rule
@@ -268,48 +353,6 @@ export default async function SiteFooter() {
             ))}
           </Stack>
         )}
-
-        {/*
-          The privacy notice, on the bar itself rather than in the fold (§323): a person should
-          find how their data is used from any page without opening anything — GDPR art. 12 asks
-          for the information to be easy to reach, and a closed `<details>` hides it from sight
-          and from the accessibility tree alike. Its own width, never shrunk.
-
-          Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" (review
-          finding: a screen reader once said "GDPR, link"). From `sm` it shows the word
-          "Confidențialitate", which that name contains (WCAG 2.5.3, label in name). On a phone
-          it is a lock (§372): the name, and a tooltip saying the same, are the notice's; the
-          word is not rendered there at all.
-        */}
-        <Box
-          sx={{
-            flex: "0 0 auto",
-            display: "flex",
-            alignItems: "center",
-            "& > a": {
-              ...footerTargetSx(["minHeight", "minWidth"]),
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              px: { xs: 0, sm: 1 },
-              color: "text.secondary",
-              fontSize: "0.8125rem",
-              whiteSpace: "nowrap",
-            },
-          }}
-        >
-          <Link href="/legal/privacy" aria-label={legal("privacyLinkName")} title={legal("privacyLinkName")}>
-            {/* An element rendered here, as a child, never a component passed as a prop. */}
-            <LockOutlinedIcon
-              aria-hidden="true"
-              data-testid="footer-privacy-lock"
-              sx={{ display: { xs: "block", sm: "none" }, fontSize: 20 }}
-            />
-            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-              {legal("privacyLinkLabel")}
-            </Box>
-          </Link>
-        </Box>
 
         {/* The language, on a phone only (§262: `sm` up keeps the header's own copy); the row's
             last item, two flags side by side. */}
