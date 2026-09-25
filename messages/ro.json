@@ -259,9 +259,11 @@
       "EVENT_COMPLETED": "Evenimentul s-a încheiat"
     },
     "difficultyValues": {
+      "VERY_EASY": "Foarte ușor",
       "EASY": "Ușor",
       "MODERATE": "Mediu",
-      "HARD": "Avansat"
+      "HARD": "Greu",
+      "VERY_HARD": "Foarte greu"
     },
     "costValues": {
       "FREE": "Gratuit",
@@ -1040,9 +1042,11 @@
       "delete": "Șterge",
       "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
       "difficultyValues": {
+        "VERY_EASY": "Foarte ușor",
         "EASY": "Ușor",
         "MODERATE": "Mediu",
-        "HARD": "Avansat"
+        "HARD": "Greu",
+        "VERY_HARD": "Foarte greu"
       },
       "costValues": {
         "FREE": "Gratuit",

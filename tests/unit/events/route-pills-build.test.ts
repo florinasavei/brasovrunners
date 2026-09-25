@@ -127,12 +127,17 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
   // screen reader is given — the chip's visible word, then the visually-hidden span — so a wrong
   // key or a missing locale in `routePillParts`'s `srSuffix` line fails here.
   it.each([
+    // Five levels since §NNN (the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu").
+    ["ro", "VERY_EASY", "Foarte ușor", "Dificultate"],
     ["ro", "EASY", "Ușor", "Dificultate"],
     ["ro", "MODERATE", "Mediu", "Dificultate"],
-    ["ro", "HARD", "Avansat", "Dificultate"],
+    ["ro", "HARD", "Greu", "Dificultate"],
+    ["ro", "VERY_HARD", "Foarte greu", "Dificultate"],
+    ["en", "VERY_EASY", "Very easy", "Difficulty"],
     ["en", "EASY", "Easy", "Difficulty"],
     ["en", "MODERATE", "Moderate", "Difficulty"],
     ["en", "HARD", "Hard", "Difficulty"],
+    ["en", "VERY_HARD", "Very hard", "Difficulty"],
   ] as const)("in %s, the %s pill reads «%s» and, hidden, «— %s»", async (locale, difficulty, word, field) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
@@ -147,7 +152,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const hidden = /<span class="MuiBox-root [^"]*">([^<]*)$/.exec(label)?.[1];
     expect(hidden).toBe(` — ${field}`);
     expect(html).not.toMatch(/aria-label=/);
-    expect(html).not.toMatch(/aria-hidden="true">[^<]*(Ușor|Mediu|Avansat|Easy|Moderate|Hard)/);
+    expect(html).not.toMatch(/aria-hidden="true">[^<]*(Foarte|Ușor|Mediu|Greu|Very|Easy|Moderate|Hard)/);
   });
 });
 

@@ -108,7 +108,8 @@ async function seed() {
       startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
-      difficulty: "EASY" as const,
+      // The two ends of the five-level scale (§NNN), so a seeded listing shows the gauge at both.
+      difficulty: "VERY_EASY" as const,
       costType: "FREE" as const,
       ro: {
         slug: "alergare-de-duminica-parcul-tractorul",
@@ -148,7 +149,7 @@ async function seed() {
       surface: "ASPHALT" as const,
       startsAt: atBrasov(nextWeekday(3, 1), 18, 30),
       locationName: "Stadionul Olimpia",
-      difficulty: "HARD" as const,
+      difficulty: "VERY_HARD" as const,
       costType: "FREE" as const,
       ro: {
         slug: "antrenament-de-intervale-olimpia",

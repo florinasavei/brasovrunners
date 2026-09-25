@@ -1,6 +1,7 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
+import type { DifficultyLevel } from "./domain/difficulty";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -101,7 +102,7 @@ export type CalendarEvent = {
    */
   nightOverride?: boolean | null;
   surface?: EventSurface | null;
-  difficulty?: "EASY" | "MODERATE" | "HARD" | null;
+  difficulty?: DifficultyLevel | null;
   costType?: EventCostType | null;
   /** What a paid event costs, or what a donation suggests (§343); free text, the club's own. */
   costAmount?: string | null;
