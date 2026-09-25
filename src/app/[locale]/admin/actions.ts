@@ -299,6 +299,9 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), posted from the
+    // cost card's own strip (`RegistrationBox`); cleared server-side outside EXTERNAL + PAID.
+    discountNote: value("discountNote"),
   };
 }
 

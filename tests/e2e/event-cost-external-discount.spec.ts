@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -44,6 +45,12 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     await field("translations.en.slug").fill(englishSlug);
     await excerpt("en", "We run together with another club, at their race.");
 
+    // The registration mode select only exists for a type that takes registrations at all
+    // (§111 excludes a group run); the create form defaults to one that does not.
+    await openEditorBox(page, "Ce fel de eveniment");
+    await page.getByRole("combobox", { name: "Tip eveniment" }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+
     await openEditorBox(page, "Participare și înscrieri");
 
     // Cost first: Cu taxă, with an amount — the discount note is not on screen yet, INTERNAL is
@@ -51,7 +58,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     await page.getByRole("combobox", { name: "Cost" }).click();
     await page.getByRole("option", { name: "Cu taxă", exact: true }).click();
     await field("event.costAmount").fill("75 lei");
-    await expect(page.getByLabel("Reducerea clubului")).toBeHidden();
+    await expect(page.getByLabel("Reducerea clubului").first()).toBeHidden();
 
     // Înscrieri la organizator: the discount note appears.
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
@@ -63,6 +70,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     // Both languages or neither: Romanian only is refused, naming the English box.
     await field("translations.ro.discountNote").fill("40 lei pentru membri BR");
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page);
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
     await expect(refusal.getByRole("link", { name: /Reducerea clubului/ })).toBeVisible();
@@ -71,6 +79,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     await languageTab(page, "discount-note", "en").click();
     await field("translations.en.discountNote").fill("40 lei for BR members");
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page);
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     const editorUrl = page.url();
 
@@ -86,8 +95,10 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     expect(jsonLd.isAccessibleForFree).toBe(false);
     expect(jsonLd.offers?.url).toBe(ORGANIZER_LINK);
 
-    // The .ics description carries the same fact, and the note.
-    const icsResponse = await page.request.get(`/ro/evenimente/${slug}/calendar.ics`);
+    // The .ics description carries the same fact, and the note. Its own path is not localized
+    // (`i18n/routing.ts` maps only the page and its register route), so it stays "/events/" under
+    // every locale prefix.
+    const icsResponse = await page.request.get(`/ro/events/${slug}/calendar.ics`);
     // RFC 5545 folds a long line at 75 octets, so the wrap is undone before reading it back —
     // `icalText` escapes the comma as `\,`, which the wrap could otherwise land inside.
     const ics = (await icsResponse.text()).replace(/\r\n /g, "");
@@ -104,6 +115,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     await page.goto(editorUrl);
     await hydrated(page);
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });
