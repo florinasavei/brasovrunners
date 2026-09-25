@@ -23,7 +23,7 @@ import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
-import { orderRoutePills, routePillParts, type Pill } from "./route-pills";
+import { buildRoutePills, orderRoutePills, routePillParts, type Pill } from "./route-pills";
 import RoutePills from "./RoutePills";
 import { DENSITY } from "@/theme/density";
 
@@ -508,27 +508,11 @@ export default async function EventFacts({
       pay are the page's). No pill for what the club has not stated: a null cost is unstated, not
       free (AGENTS.md §1.2).
     */
-    // Built from the same `routePillParts`/`orderRoutePills` pair `buildRoutePills` (`route-pills.ts`,
-    // §388) uses — the event page's compact card and the backoffice's own list still read the route
-    // in one order — but not through `buildRoutePills` itself: on an `EXTERNAL`-registration paid
-    // event, the cost pill needs the screen-reader-only suffix below, which the shared helper's own
-    // cost pill does not carry.
-    const cardPills: Pill[] = orderRoutePills({
-      surface: surfacePill,
-      difficulty: difficultyPill,
-      distance: distancePill,
-      elevation: elevationPill,
-      headlamp: headlampPill,
-    });
-    if (event.costType) {
-      // The word stays the closed set's own — "Cu taxă" — but on an `EXTERNAL`-registration paid
-      // event a screen reader is told the fee goes to the organizer, never to the club (§390).
-      cardPills.push({
-        glyph: `cost:${event.costType}`,
-        label: t(`costValues.${event.costType}`),
-        srSuffix: costPaidToExternalOrganizer(event) ? t("costPaidExternalSrSuffix") : undefined,
-      });
-    }
+    // The same helper the backoffice's own list calls (`buildRoutePills`, `route-pills.ts`,
+    // §388): surface, difficulty, distance, elevation, headlamp, then the cost pill — with the
+    // screen-reader-only organizer suffix on an `EXTERNAL`-registration `PAID` event — built in
+    // that one place, so the card and the backoffice list cannot read it differently.
+    const cardPills: Pill[] = buildRoutePills(event, t, format);
 
     /*
       Where: the place — the map link when the club pasted one, tight like the page's (§356) so
@@ -660,7 +644,7 @@ export default async function EventFacts({
     */
     if (event.costType === "PAID" && costPaidToExternalOrganizer(event)) {
       // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-      // form, not the club's (`DECISIONS.md` §390): the hero says so plainly, the same wording
+      // form, not the club's (`DECISIONS.md` §NNN): the hero says so plainly, the same wording
       // the page's cost row uses, and never links `costUrl` — the club's own address is not where
       // this fee goes. The club's own discount, if any, follows on its own piece.
       route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal")));
@@ -872,7 +856,7 @@ export default async function EventFacts({
   const costExtras: ReactNode[] = [];
   let costPill: Pill | null = null;
   // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-  // form, not the club's (`DECISIONS.md` §390): the pill says so plainly ("Cu taxă, la
+  // form, not the club's (`DECISIONS.md` §NNN): the pill says so plainly ("Cu taxă, la
   // organizator") rather than reading like a club fee, and the club's own discount, if any,
   // follows it with the tag glyph (§112).
   const externalPaid = costPaidToExternalOrganizer(event);

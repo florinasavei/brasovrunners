@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 
 /**
- * Found by re-review (`DECISIONS.md` §390): MUI's `sx` runs `width`, `height` and `margin`
+ * Found by re-review (`DECISIONS.md` §NNN): MUI's `sx` runs `width`, `height` and `margin`
  * through its spacing transform, which turns a number in `(0, 1]` into a *percentage* rather
  * than treating it as a raw pixel value — `width: 1` became `width:100%`, not `width:1px`, so
  * the chip's screen-reader-only suffix span was sized like ordinary content, a full chip wide

@@ -266,7 +266,7 @@ describe("BR-REQ-050-01 the event's optional texts: both languages or neither (�
   });
 });
 
-describe("the club's discount on an EXTERNAL-registration PAID event's own fee, both languages or neither (§390)", () => {
+describe("the club's discount on an EXTERNAL-registration PAID event's own fee, both languages or neither (§NNN)", () => {
   const EXTERNAL_PAID = {
     registrationMode: "EXTERNAL",
     externalProvider: "Alt club",

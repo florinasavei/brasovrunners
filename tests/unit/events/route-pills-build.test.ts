@@ -41,6 +41,7 @@ const FULL_ROUTE = {
   elevationGainMeters: 300,
   headlampRequired: true,
   costType: "FREE" as const,
+  registrationMode: "INTERNAL" as const,
 };
 
 /** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
@@ -75,7 +76,15 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, he
     const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, headlampRequired: false }, t, format);
     expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km", "Gratuit"]);
     const none = buildRoutePills(
-      { surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, headlampRequired: false, costType: null },
+      {
+        surface: null,
+        difficulty: null,
+        distanceMeters: null,
+        elevationGainMeters: null,
+        headlampRequired: false,
+        costType: null,
+        registrationMode: "INTERNAL",
+      },
       t,
       format,
     );
@@ -87,6 +96,19 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, he
     const format = await getFormatter();
     const pills = buildRoutePills({ ...FULL_ROUTE, costType: "PAID" }, t, format);
     expect(pills.at(-1)?.label).toBe("Cu taxă");
+    expect(pills.at(-1)?.srSuffix).toBeUndefined();
+  });
+
+  it("adds the organizer's screen-reader-only suffix only on EXTERNAL + PAID (§NNN)", async () => {
+    const t = await getTranslations("Event");
+    const format = await getFormatter();
+    const internalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "INTERNAL" }, t, format);
+    expect(internalPaid.at(-1)?.label).toBe("Cu taxă");
+    expect(internalPaid.at(-1)?.srSuffix).toBeUndefined();
+
+    const externalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "EXTERNAL" }, t, format);
+    expect(externalPaid.at(-1)?.label).toBe("Cu taxă");
+    expect(externalPaid.at(-1)?.srSuffix).toBe("plătit la organizator, nu la club");
   });
 });
 

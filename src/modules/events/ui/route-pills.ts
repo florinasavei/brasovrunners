@@ -1,4 +1,5 @@
 import type { events } from "@/db/schema/events";
+import { costPaidToExternalOrganizer } from "../domain/cost";
 import { distanceInKm } from "../domain/event-type";
 import type { GlyphName } from "./glyphs";
 
@@ -8,7 +9,7 @@ import type { GlyphName } from "./glyphs";
  * never shown, while the visible word stays the closed set's own — the listing card's cost pill
  * on an `EXTERNAL`-registration `PAID` event still reads "Cu taxă" so every card's pill says the
  * same short word, and a screen reader alone is told the fee goes to the organizer (`DECISIONS.md`
- * §390). Content, not an `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it
+ * §NNN). Content, not an `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it
  * is not clickable, and ARIA 1.2 does not allow naming a generic element, so the extra words have
  * to be in the chip's own text (visually hidden) rather than on the attribute.
  */
@@ -19,7 +20,7 @@ export type Pill = { glyph: GlyphName; label: string; srSuffix?: string };
  * (`EditableEvent`), so one function serves both without either module importing the other's. */
 export type RouteFactsSource = Pick<
   typeof events.$inferSelect,
-  "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "headlampRequired" | "costType"
+  "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "headlampRequired" | "costType" | "registrationMode"
 >;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -97,10 +98,21 @@ export function routePillParts(
  * the array this returns; it is the one function both surfaces (the listing card's compact facts
  * and the backoffice's own event list) call, so neither reads the route in a different order or
  * a different set from the other.
+ *
+ * The cost pill's word stays the closed set's own — "Cu taxă" — but on an `EXTERNAL`-registration
+ * `PAID` event a screen reader alone is told the fee goes to the organizer, never the club
+ * (`DECISIONS.md` §NNN, `GlyphChip`'s `srSuffix`): the one place that decides it, so the event
+ * page's compact card and the backoffice's own list cannot read the pill differently.
  */
 export function buildRoutePills(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill[] {
   const parts = routePillParts(event, t, format);
   const pills = orderRoutePills(parts);
-  if (event.costType) pills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+  if (event.costType) {
+    pills.push({
+      glyph: `cost:${event.costType}`,
+      label: t(`costValues.${event.costType}`),
+      srSuffix: costPaidToExternalOrganizer(event) ? t("costPaidExternalSrSuffix") : undefined,
+    });
+  }
   return pills;
 }

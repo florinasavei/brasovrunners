@@ -634,7 +634,7 @@ async function writePlaceNames<T extends Record<string, unknown>>(tx: Transactio
 
 /**
  * Clears `discountNote` on both languages' rows when the event's saved fields no longer allow
- * one (`DECISIONS.md` §390) — inside the event save's transaction, like `writePlaceNames` above,
+ * one (`DECISIONS.md` §NNN) — inside the event save's transaction, like `writePlaceNames` above,
  * because the settings save an Organizer without text rights makes never touches a translation
  * row through `applyTranslationSave`. Without this, switching the mode away from `EXTERNAL` +
  * `PAID` on the settings panel alone would leave a stale note nobody with text rights posted
@@ -728,7 +728,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     /** The type the event has after this save — the form's, when the settings are saved too. */
     eventType: EditableEvent["type"];
     /**
-     * Whether `discountNote` may be written after this save (`DECISIONS.md` §390) — the mode and
+     * Whether `discountNote` may be written after this save (`DECISIONS.md` §NNN) — the mode and
      * cost type the event has after it, the same discipline `eventType` follows above.
      */
     registrationMode: EditableEvent["registrationMode"];
@@ -805,7 +805,7 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
     // The route / training description (§387): on every type — a group run has a route too.
     routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
-    // The club's discount on an external event's own fee (`DECISIONS.md` §390): kept only while
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): kept only while
     // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
     ...(discountAllowed ? {} : { discountNote: null }),
   };
@@ -1489,7 +1489,7 @@ const SERIES_TRANSLATION_COLUMNS = [
   // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
   "seoTitle",
   "seoDescription",
-  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §390): a series
+  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §NNN): a series
   // edit's discount note carries the way its cost does.
   "discountNote",
 ] as const;
@@ -1834,6 +1834,11 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       );
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
+      // Before the translations loop: a settings-only save (an Organizer without text rights)
+      // never runs `applyTranslationSave`, so nothing else in this path clears a note the new
+      // mode no longer allows. A no-op when the mode still allows one, or when a submitted
+      // translation is about to write its own value through `translationColumnsFrom` below.
+      await clearDiscountNoteIfNotAllowed(tx, input.eventId, parsedEventFields);
     }
 
     for (const submitted of input.translations) {

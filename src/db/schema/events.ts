@@ -793,7 +793,7 @@ export const eventTranslations = pgTable(
     seoDescription: text("seo_description"),
 
     /**
-     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §390):
+     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §NNN):
      * shown only on an `EXTERNAL`-registration, `PAID` event — the organizer sets the price, the
      * club only knows what its members get off it. Free text, at most 200 characters (checked in
      * `content/events/fields.ts`, not here — the same discipline `checklist` follows), both

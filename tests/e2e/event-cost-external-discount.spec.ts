@@ -4,7 +4,7 @@ import { FEATURED, ensureRegistrationIsOpen, fillDateField, fillTimeField, hydra
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * `DECISIONS.md` §390 — the owner, 2026-09-25: "another friend's race where we just go as a
+ * `DECISIONS.md` §NNN — the owner, 2026-09-25: "another friend's race where we just go as a
  * group but we pay for it; they gave us a discount so that they appear on our calendar."
  *
  * An `EXTERNAL`-registration, `PAID` event's cost row says the fee is settled at the organizer's
@@ -22,7 +22,12 @@ async function card(page: Page, path: string, heading: string) {
   return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
 }
 
-test.describe("an EXTERNAL-registration PAID event's discount note (§390)", () => {
+test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () => {
+  // The second test below mutates the shared singleton `FEATURED` event for its own duration
+  // (see its own docstring); serial keeps it from ever overlapping the first test in this file,
+  // which reads nothing of `FEATURED`, so the two cannot race each other in the same worker.
+  test.describe.configure({ mode: "serial" });
+
   test("shows the note only for EXTERNAL + PAID, both languages or neither, and the page reads it in each language", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `cros-partener-${suffix}`;
@@ -62,7 +67,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§390)", () 
     await openEditorBox(page, "Participare și înscrieri");
 
     // Cost first: Cu taxă, with an amount — the discount note is not on screen yet, INTERNAL is
-    // still the mode (§390: shown only for EXTERNAL + PAID).
+    // still the mode (§NNN: shown only for EXTERNAL + PAID).
     await page.getByRole("combobox", { name: "Cost" }).click();
     await page.getByRole("option", { name: "Cu taxă", exact: true }).click();
     await field("event.costAmount").fill("75 lei");
@@ -127,14 +132,22 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§390)", () 
 
     // The listing card, both languages: the pill keeps the closed set's own word — "Cu taxă",
     // "Paid" — and a screen reader alone is told the fee goes to the organizer, never the club
-    // (§390, `GlyphChip`'s `srSuffix`).
+    // (§NNN, `GlyphChip`'s `srSuffix`).
+    // `toHaveAccessibleName` finds nothing here — MUI's `Chip` is a plain, roleless `<div>` when
+    // it is not clickable, and ARIA 1.2 gives a generic element no computed name at all, which is
+    // exactly why `GlyphChip`'s suffix is visually-hidden *text inside the chip* rather than an
+    // `aria-label` (`route-pills.ts`, `GlyphChip.tsx`). Asserted on the chip's own text, not
+    // merely somewhere in the card's `li` — a card with other chips nearby could otherwise pass
+    // this on unrelated text.
     const roCard = await card(page, "/ro/evenimente", `Crosul partenerului ${suffix}`);
-    await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Cu taxă" })).toHaveCount(1);
-    await expect(roCard).toContainText("plătit la organizator, nu la club");
+    const roChip = roCard.locator(".MuiChip-root").filter({ hasText: "Cu taxă" });
+    await expect(roChip).toHaveCount(1);
+    await expect(roChip).toHaveText("Cu taxă — plătit la organizator, nu la club");
 
     const enCard = await card(page, "/en/events", `The partner's race ${suffix}`);
-    await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Paid" })).toHaveCount(1);
-    await expect(enCard).toContainText("paid to the organizer, not to the club");
+    const enChip = enCard.locator(".MuiChip-root").filter({ hasText: "Paid" });
+    await expect(enChip).toHaveCount(1);
+    await expect(enChip).toHaveText("Paid — paid to the organizer, not to the club");
 
     // Off the site again.
     await page.goto(editorUrl);
@@ -146,7 +159,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§390)", () 
 
   /**
    * The listing's featured hero (`FeaturedEventHero`) reads the same cost pill and discount note
-   * as the event page (§390) — this is the one spot that has to borrow the *shared* singleton
+   * as the event page (§NNN) — this is the one spot that has to borrow the *shared* singleton
    * event (`ensureRegistrationIsOpen`'s own `FEATURED`, `DECISIONS.md` §28: "the database refuses
    * a second [featured event]"), so the change is made and read back inside a `try`/`finally`:
    * whatever this test finds, the featured event is always left exactly as every other spec
