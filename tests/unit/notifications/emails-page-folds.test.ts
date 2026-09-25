@@ -26,13 +26,17 @@ const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/st
 
 const TYPES = emailMessageType.enumValues as readonly EmailMessageType[];
 
+/** The page fills the club's deadlines into the when-lines (§377); these are the unset ones' words. */
+const DEADLINE_WORDS: Record<string, string> = { confirmation: "48 de ore", hold: "30 de minute", offer: "24 de ore", reminder: "2 zile" };
+const filled = (template: string) => template.replace(/\{(\w+)\}/g, (whole, name: string) => DEADLINE_WORDS[name] ?? whole);
+
 function card(type: EmailMessageType, justSaved = false, neverSent = false): ParticipantEmailCard {
   return {
     type,
     name: ro.Admin.emails.types[type],
-    whenShort: ro.Admin.emails.whenShort[type],
+    whenShort: filled(ro.Admin.emails.whenShort[type]),
     ...(neverSent ? { neverSent: ro.Admin.emails.neverSent } : {}),
-    when: ro.Admin.emails.when[type],
+    when: filled(ro.Admin.emails.when[type]),
     subjectLine: `Subiect: ${type}`,
     html: `<p>${type}</p>`,
     justSaved,
@@ -79,12 +83,12 @@ describe("§336 the emails participants receive: one card of cards", () => {
     const html = render([card("EVENT_REMINDER")]);
     expect(html).toMatch(/<summary[^>]*><h2[^>]*>Emailurile trimise participanților<span[^>]*>1 mesaje · Română<\/span><\/h2><\/summary>/);
     expect(html).toMatch(
-      /<summary[^>]*><h3[^>]*>Reminder cu 48 de ore înainte<span[^>]*>cu două zile înainte de start<\/span><\/h3><\/summary>/,
+      /<summary[^>]*><h3[^>]*>Reminderul dinaintea startului<span[^>]*>cu 2 zile înainte de start<\/span><\/h3><\/summary>/,
     );
     // The body: the full sentence, the subject, the preview.
-    expect(html).toContain(ro.Admin.emails.when.EVENT_REMINDER);
+    expect(html).toContain(filled(ro.Admin.emails.when.EVENT_REMINDER));
     expect(html).toContain("Subiect: EVENT_REMINDER");
-    expect(html).toMatch(/<iframe[^>]*sandbox=""[^>]*title="Reminder cu 48 de ore înainte"/);
+    expect(html).toMatch(/<iframe[^>]*sandbox=""[^>]*title="Reminderul dinaintea startului"/);
   });
 
   it("puts the language switch inside the card, first, under the line that says what it switches", () => {
@@ -133,7 +137,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
       expect(html).toMatch(
         new RegExp(`<h3[^>]*>${escape(ro.Admin.emails.types[type])}<span[^>]*>${escape(ro.Admin.emails.whenShort[type])}</span></h3>`),
       );
-      expect(html).toContain(ro.Admin.emails.when[type]);
+      expect(html).toContain(filled(ro.Admin.emails.when[type]));
       expect(html).toContain(`Subiect: ${type}`);
       expect(html).toMatch(new RegExp(`<iframe[^>]*title="${escape(ro.Admin.emails.types[type])}"`));
     }
@@ -146,7 +150,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
       const start = html.indexOf(`id="email-${type}"`);
       const summary = html.slice(start, html.indexOf("</summary>", start));
       expect(summary).toContain(ro.Admin.emails.neverSent);
-      expect(summary).toContain(ro.Admin.emails.whenShort[type]);
+      expect(summary).toContain(filled(ro.Admin.emails.whenShort[type]));
     }
     const reminder = html.indexOf('id="email-EVENT_REMINDER"');
     expect(html.slice(reminder, html.indexOf("</summary>", reminder))).not.toContain(ro.Admin.emails.neverSent);

@@ -1,12 +1,14 @@
 import { z } from "zod";
+import { type Deadlines, seriesHorizonEnd } from "@/modules/deadlines/domain/deadlines";
 import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "./zoned-time";
 
 /**
  * A standing recurrence (`DECISIONS.md` §122): "every Monday and Wednesday, until 20 December
  * — or for ever". Stored on the source event as `repeat_rule`; the maintenance job keeps the
- * next `HORIZON_DAYS` of occurrences created from it, each its own row, so one date can be
- * cancelled or moved on its own. The owner: "for a recurring event I need a start and end date
- * but I also need to update a certain edition"; "indefinitely, not set how many weeks".
+ * club's series horizon of occurrences created from it (eight weeks unless changed, §377), each
+ * its own row, so one date can be cancelled or moved on its own. The owner: "for a recurring
+ * event I need a start and end date but I also need to update a certain edition"; "indefinitely,
+ * not set how many weeks".
  */
 
 /** How often a repeated event recurs. Three cadences, because three is what the club runs. */
@@ -16,9 +18,6 @@ export type RepeatCadence = (typeof REPEAT_CADENCES)[number];
 /** ISO weekdays, 1 = Monday … 7 = Sunday. */
 export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
-
-/** How far ahead the job keeps a series created: eight weeks, so "next month" is always there. */
-export const HORIZON_DAYS = 56;
 
 /** At most this many occurrences in one pass, whatever the rule says — a typo's ceiling. */
 export const MAX_OCCURRENCES_PER_PASS = 104;
@@ -56,9 +55,12 @@ export function untilEnd(rule: RepeatRule, timeZone: string): Date | null {
   return fromWallTimeInput(`${nextDay}T00:00`, timeZone);
 }
 
-/** Up to where the job creates: the rule's end or the horizon, whichever comes first. */
-export function horizonEnd(rule: RepeatRule, timeZone: string, now: Date): Date {
-  const horizon = new Date(now.getTime() + HORIZON_DAYS * 86_400_000);
+/**
+ * Up to where the job creates: the rule's end or the club's horizon (§377), whichever comes first.
+ * How far ahead is the club's to say — eight weeks, so "next month" is always there, unless changed.
+ */
+export function horizonEnd(rule: RepeatRule, timeZone: string, now: Date, deadlines: Pick<Deadlines, "seriesHorizonDays">): Date {
+  const horizon = seriesHorizonEnd(now, deadlines);
   const end = untilEnd(rule, timeZone);
   return end && end.getTime() < horizon.getTime() ? end : horizon;
 }

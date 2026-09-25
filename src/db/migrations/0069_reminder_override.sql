@@ -1,0 +1,3 @@
+ALTER TABLE "events" ADD COLUMN "reminder_hours_before" smallint;--> statement-breakpoint
+ALTER TABLE "registrations" ADD COLUMN "email_link_expires_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_reminder_hours_before_in_range" CHECK ("events"."reminder_hours_before" IS NULL OR ("events"."reminder_hours_before" >= 0 AND "events"."reminder_hours_before" <= 168));

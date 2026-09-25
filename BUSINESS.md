@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.86-2026-09-25 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.85-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.86-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -260,7 +260,7 @@ an allergy or a medication is a special category of personal data. It is optiona
 its own consent worded on its own, it appears on no public page, it is left out of the
 registrations export, and withdrawing the consent erases the text rather than hiding it.
 
-Control of the email address is confirmed through an emailed link before the registration can progress. The confirmation link is valid for 48 hours. When it is not used in time the registration expires, and the person may start again while registration is still open.
+Control of the email address is confirmed through an emailed link before the registration can progress. The confirmation link is valid for the club's email-link window (48 hours by default, "Termene" on `/admin/emails`). When it is not used in time the registration expires, and the person may start again while registration is still open.
 
 Sign-in exists only for staff using the CMS and backoffice.
 
@@ -290,7 +290,7 @@ These rules prevent common aliases of the same inbox. They do not prove that two
 For internal registration, the normal sequence is:
 
 1. participant submits name and email and acknowledges the privacy notice;
-2. participant confirms the email address within 48 hours;
+2. participant confirms the email address within the club's email-link window (48 hours by default);
 3. if a place is available, the platform temporarily holds it;
 4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number;
 5. registration becomes confirmed;
@@ -318,7 +318,7 @@ For a capped event:
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
 - concurrent actions must never exceed capacity or let a later registrant jump the queue.
 
-The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
+The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 
 For an event without a capacity limit, the page shows that registration is open without displaying a fabricated number of places.
 
@@ -333,7 +333,7 @@ Rules:
 - the default queue order is first confirmed onto the waiting list, first offered;
 - an existing eligible waiting list always has priority over a later direct registration;
 - when a place is released, the next eligible participant receives a time-limited offer;
-- the initial waiting-list offer window is 24 hours and never extends beyond registration closing or event start;
+- the initial waiting-list offer window is the club's setting (24 hours by default, "Termene") and never extends beyond registration closing or event start;
 - an offered place is temporarily held and therefore reduces the public free-place count;
 - the participant becomes confirmed only after signing the declaration;
 - declining or cancelling the offer releases the place immediately;
@@ -984,7 +984,7 @@ The club must approve:
 - production sender name and email address;
 - photo-consent and removal procedure;
 - initial staff receiving Author, Editor, or Admin access;
-- final confirmation-link, direct-hold, and waiting-list offer durations if different from the initial defaults of 48 hours, 30 minutes, and 24 hours;
+- final confirmation-link, direct-hold, and waiting-list offer durations if different from the initial defaults of 48 hours, 30 minutes, and 24 hours — set on `/admin/emails` → Termene since `BR-V1.86` (§377);
 - the domain name to be registered and bound at the end of M1;
 - any future event requiring questions, minors, medical data, payments, or results;
 - whether analytics is needed and what consent is required;

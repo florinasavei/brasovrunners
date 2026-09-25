@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { materializeStandingRepeats, repeatEvent, stopRepeat } from "@/modules/content/events/service";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -175,10 +176,10 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     const made = await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "MONTHLY", weekdays: [], until: null, publish: false }, now: new Date("2026-10-11T10:00:00Z") });
     expect(made.created).toBe(1);
     // The job, five weeks later: the horizon now reaches 15 January, two more months.
-    const run = await materializeStandingRepeats(db, new Date("2026-11-20T10:00:00Z"));
+    const run = await materializeStandingRepeats(db, new Date("2026-11-20T10:00:00Z"), DEFAULT_DEADLINES);
     expect(run).toEqual({ sources: 1, created: 2 });
     // And again the same day: nothing new — two reads, no write.
-    expect((await materializeStandingRepeats(db, new Date("2026-11-20T11:00:00Z"))).created).toBe(0);
+    expect((await materializeStandingRepeats(db, new Date("2026-11-20T11:00:00Z"), DEFAULT_DEADLINES)).created).toBe(0);
     expect((await copiesOf(source.id)).map((copy) => toWallTimeInput(copy.startsAt, "Europe/Bucharest"))).toEqual([
       "2026-11-11T08:00",
       "2026-12-11T08:00",
@@ -186,7 +187,7 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     ]);
 
     await stopRepeat(db, { actor: editor, eventId: source.id });
-    expect((await materializeStandingRepeats(db, new Date("2027-03-01T10:00:00Z"))).sources).toBe(0);
+    expect((await materializeStandingRepeats(db, new Date("2027-03-01T10:00:00Z"), DEFAULT_DEADLINES)).sources).toBe(0);
     expect(await copiesOf(source.id)).toHaveLength(3);
   });
 

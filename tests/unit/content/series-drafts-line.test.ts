@@ -149,7 +149,8 @@ describe("§341 §351 the events list's wiring of the draft line", () => {
   });
 
   it("keeps one short sentence behind the '?' for a named reason, and none for drafts made by hand", () => {
-    expect(page).toContain('? t("events.seriesDraftsHintNew", { weeks: HORIZON_DAYS / 7 })');
+    // The horizon in the club's words (§377), "8 săptămâni" unless changed.
+    expect(page).toContain('? t("events.seriesDraftsHintNew", { horizon })');
     expect(page).toContain(': reason === "sourceNotPublished"\n                      ? t("events.seriesDraftsHintSource")\n                      : null');
   });
 

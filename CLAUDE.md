@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.86-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.85-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.86-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -146,7 +146,7 @@ sections and in `CHANGELOG.md`.
   before**: for an event further away than its participation window (per event, default asked
   7 days before, due 2 days before), the place is held until the deadline and the declaration —
   the confirmation — is asked at once and again when the window opens; inside the window and
-  on a weekly run, the thirty-minute hold (§104).
+  on a weekly run, the thirty-minute hold (§104). **Every such deadline is the club's "Termene" setting** on `/admin/emails` since `BR-V1.86` (§377; 30 min / 24 h / 48 h by default), the reminder per event or the club's.
 - The lifecycle, one allocator for the click and the job, proven under real concurrency
   (`tests/concurrency/capacity.test.ts`); the 30-minute hold, the waiting list and its
   24-hour offers, self-unregistration, the maintenance job (`AGENTS.md` §10.5–§10.6, §40, §68). Test registrations
@@ -173,7 +173,7 @@ sections and in `CHANGELOG.md`.
   only on production — QA `allowlist`, local `capture` — and live outside production is refused
   at startup (§37, `AGENTS.md` §16). The outbox drains after the request that
   queued it and on the scheduler (§68); a spent Mailgun allowance defers, never discards (§40).
-  The club's copy of a participant's message is a separate "[Copie club]" message per address, with no token, QR or attachment, and Mailgun open and click tracking are off on every message (§320). The reminder 48 hours before, the thank-you after (§81–§83); the participation confirmation
+  The club's copy of a participant's message is a separate "[Copie club]" message per address, with no token, QR or attachment, and Mailgun open and click tracking are off on every message (§320). The reminder before the start (the club's lead or the event's own, 48 hours by default, §377), the thank-you after (§81–§83); the participation confirmation
   when the window opens (§104); the number given by hand (§105).
 - **The Mailgun plan is a setting** on `/admin/emails` — Free, Basic, Foundation, Scale or
   typed ceilings — and every "how much can we still send" figure and the cost table follow it
@@ -258,6 +258,10 @@ sections and in `CHANGELOG.md`.
   its time on one line on a phone (the lead «Următoarea:» only where the widest date still fits), the pills in the order
   surface, difficulty, distance, elevation, cost (§375) · the `/admin/legal` notice says what the code enforces and folds
   closed on the legal page; a malformed admin id answers 404 on every backoffice page and API route (§376).
+- **Batch 10 (2026-09-25, `BR-V1.86`):** "Termene" — every participant-facing deadline is one club setting on `/admin/emails`
+  (the email link, the declaration hold, the waiting-list offer, the reminder with a per-event override, self check-in, race
+  week, a series' horizon), Administrator-only and audited, applied to new holds and offers only; every email, page and legal
+  template takes its words from it through placeholders, the reminder clause hedged for the event's own choice; migration `0069` (§377).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -320,7 +324,7 @@ it is the authority, this is the summary):
    approves new versions, and the minor's second signature stays off until it does (§330). Approved
    on production from the platform's templates
    (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
-   the same item as 4, with the texts now written.
+   the same item as 4, with the texts now written. Approving new versions from the templates also makes the terms and the privacy notice read their deadlines from "Termene" (§377); the production texts keep their literal numbers until then.
 9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
    notifications on production and QA (`SETUP.md` §36). Both answered `ok` on 2026-09-22.
 10. ~~The invitation key~~ — done 2026-09-20, and **only actually working since 2026-09-22**:

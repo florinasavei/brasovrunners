@@ -10,6 +10,8 @@ import { parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
+import { updateDeadlines } from "@/modules/deadlines/deadlines";
+import { DEADLINE_KEYS } from "@/modules/deadlines/domain/deadlines";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
@@ -146,6 +148,34 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
   }
   revalidatePath(path);
   redirect(`${path}?saved=clubNotices#admin-alert`);
+}
+
+/**
+ * "Termene" — the club's deadlines (§377). Administrator at the door and in the service, like
+ * every other setting on this page; every box is a whole number the service checks against its
+ * bounds, and a refusal comes back as the form's state with every box as typed (§315). The seven
+ * boxes post under their own names (`DEADLINE_KEYS`), read here as strings: the service's schema
+ * is what decides whether they are numbers.
+ */
+export async function updateDeadlinesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/emails" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateDeadlines(
+      getDb(),
+      actor,
+      Object.fromEntries(DEADLINE_KEYS.map((key) => [key, typeof form.get(key) === "string" ? String(form.get(key)).trim() : ""])),
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  // The when-lines and the previews under the panel say these numbers; without this the page
+  // comes back saying the old ones (the trap §164 and §100 documented above).
+  revalidatePath(path);
+  redirect(`${path}?saved=deadlines#admin-alert`);
 }
 
 /**

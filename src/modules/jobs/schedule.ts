@@ -351,8 +351,9 @@ export function decidePing(now: Date, due: DueSlot | null, floor: FloorSlot | nu
  *
  * The deadlines the change itself created — a hold, an offer; one already behind counts as now —
  * and the instants still ahead that the job acts on for the event: the start (holds and the
- * waiting list close), the registration close (the numbers settle), two days before the start
- * (the reminders), the participation window's opening (§104). An instant already behind is left
+ * waiting list close), the registration close (the numbers settle), the reminder lead before the
+ * start (the reminders — the event's own or the club's hours, handed in as `reminderHours`, none
+ * when zero; §377), the participation window's opening (§104). An instant already behind is left
  * out: the run that passed it has done its work, and counting it as "now" would wake the job on
  * every signature of race week for nothing. Null when nothing the change touches is ahead.
  */
@@ -362,6 +363,8 @@ export function maintenanceDueFor(
     registrationClosesAt: Date | null;
     confirmationOpensDaysBefore?: number | null;
     confirmationDeadlineDaysBefore?: number | null;
+    /** The event's reminder lead in force, in hours (`deadlines/domain/deadlines.ts#reminderHoursFor`); zero is none. */
+    reminderHours: number;
   },
   now: Date,
   ...deadlines: (Date | null | undefined)[]
@@ -374,7 +377,8 @@ export function maintenanceDueFor(
   const close = (event.registrationClosesAt ?? event.startsAt).getTime();
   const opens = event.confirmationOpensDaysBefore ?? 0;
   const deadlineDays = event.confirmationDeadlineDaysBefore ?? 0;
-  const instants = [start, close, start - 48 * 60 * MINUTE];
+  const instants = [start, close];
+  if (event.reminderHours > 0) instants.push(start - event.reminderHours * 60 * MINUTE);
   if (opens > 0 && opens > deadlineDays) instants.push(start - opens * day);
   for (const instant of instants) if (instant > at) candidates.push(instant);
   return candidates.length > 0 ? new Date(Math.min(...candidates)) : null;

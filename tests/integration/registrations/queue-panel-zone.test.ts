@@ -32,6 +32,13 @@ vi.mock("next-intl/server", () => ({
   getLocale: async () => locale,
 }));
 
+// The panel's help sentences name the club's hold and offer (§377), read per request from the
+// deployment's database; here, the platform's defaults — the times under test do not depend on them.
+vi.mock("@/modules/deadlines/request", async () => {
+  const { DEFAULT_DEADLINES } = await import("@/modules/deadlines/domain/deadlines");
+  return { deadlinesForThisRequest: async () => ({ ...DEFAULT_DEADLINES }) };
+});
+
 const { default: QueuePanel } = await import("@/modules/registrations/ui/QueuePanel");
 
 const NEW_YORK = "America/New_York";

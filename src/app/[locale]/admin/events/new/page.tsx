@@ -27,6 +27,8 @@ import { MissingForPublishCount, MissingForPublishList } from "@/modules/content
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
+import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -89,6 +91,9 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
   const { error } = await searchParams;
   const declarations = await listApprovedVersions(getDb(), "EVENT_DECLARATION", locale);
+  // The club's deadlines (§377): the reminder an event left "as usual" gets, and how far ahead a series is created.
+  const deadlines = await deadlinesForThisRequest();
+  const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
   const t = await getTranslations("Admin");
   // The language endonyms are shared with the public switcher and the editor's tabs.
   const tSite = await getTranslations("Site");
@@ -173,7 +178,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                   </RepeatToggle>
                   <Panel collapsible level={3} title={t("editor.repeatHelpSummary")}>
                     <Typography variant="body2" color="text.secondary">
-                      {t("editor.repeatHelp")}
+                      {t("editor.repeatHelp", { horizon })}
                     </Typography>
                   </Panel>
                 </Stack>
@@ -198,7 +203,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <PlaceBox {...box} languages={languages} />
               <ProgrammeBox {...box} languages={languages} />
               <RulesBox languages={languages} />
-              <RegistrationBox {...box} declarations={declarations} locale={locale} />
+              <RegistrationBox {...box} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
 
               <EditorGroup label={t("editor.groups.details")} />
               <CoHostsBox {...box} locale={locale} />
@@ -207,7 +212,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
               {/* 15 — always open: what the press makes, and the two buttons. */}
               <Panel static id="box-save" title={t("editor.boxes.save.title")}>
-                <CreateDraftLine repeatName="repeat.on" draft={t("editor.boxes.save.createDraft")} withSeries={t("editor.boxes.save.createWithSeries")} />
+                <CreateDraftLine repeatName="repeat.on" draft={t("editor.boxes.save.createDraft")} withSeries={t("editor.boxes.save.createWithSeries", { horizon })} />
                 <Box
                   sx={{
                     position: "sticky",

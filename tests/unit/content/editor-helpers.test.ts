@@ -84,7 +84,8 @@ describe("§350 the rule in one live sentence", () => {
     atTime: ro.Event.series.atTime,
     forever: ro.Admin.editor.repeatRuleLiveForever,
     until: ro.Admin.editor.repeatRuleLiveUntil,
-    horizon: ro.Admin.editor.repeatRuleLiveHorizon,
+    // Formatted on the server with the club's horizon in words (§377): "8 săptămâni" unset.
+    horizon: ro.Admin.editor.repeatRuleLiveHorizon.replace("{horizon}", "8 săptămâni"),
     // Written on the server (`series-sentence.ts#weekdayNames`) and handed to the island (§324).
     weekdayNames: weekdayNames("ro"),
     untilDay: calendarDayWords("ro"),
@@ -97,7 +98,7 @@ describe("§350 the rule in one live sentence", () => {
 
   it("says the days, the time, and for ever — or until when — and what is made now", () => {
     expect(ruleSentenceFrom(words, { cadence: "WEEKLY", weekdays: [3, 1], time: "18:30", day: "", until: "" }, "ro")).toBe(
-      "În fiecare luni și miercuri, la 18:30 — la nesfârșit. Se creează acum datele din următoarele opt săptămâni.",
+      "În fiecare luni și miercuri, la 18:30 — la nesfârșit. Se creează acum datele din următoarele 8 săptămâni.",
     );
     expect(ruleSentenceFrom(words, { cadence: "WEEKLY", weekdays: [1], time: "18:30", day: "", until: "2026-12-20" }, "ro")).toContain(
       "— până la dum., 20 dec. 2026.",

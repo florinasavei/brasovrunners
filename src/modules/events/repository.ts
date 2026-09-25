@@ -102,6 +102,8 @@ const PUBLIC_COLUMNS = {
   // Who may enter (§329): the page says it, the form's picker is bounded by it, and the
   // structured data states it as `typicalAgeRange`. A condition of the race, like its date.
   minAge: events.minAge,
+  // The event's own reminder lead (§377), for the five steps' "we send a reminder … before".
+  reminderHoursBefore: events.reminderHoursBefore,
   externalRegistrationUrl: events.externalRegistrationUrl,
   externalProvider: events.externalProvider,
   // Whether this event publishes a start list at all (BR-REQ-039-01). The names themselves are
@@ -491,6 +493,10 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
+      // The deadlines the words state (§377): this event's own reminder lead ("este peste 2
+      // zile"), and when its participation window opens ("când îți reamintim cu o săptămână").
+      reminderHoursBefore: events.reminderHoursBefore,
+      confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
     })
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))

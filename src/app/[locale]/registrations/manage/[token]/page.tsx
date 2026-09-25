@@ -12,6 +12,7 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import { formatDay } from "@/i18n/dates";
+import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
@@ -133,13 +134,13 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       {t("manage.selfCheckIn")}
                     </Button>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {t("manage.selfCheckInHelp")}
+                      {t("manage.selfCheckInHelp", { checkin: leadPhrase(locale, confirmed.selfCheckinHours) })}
                     </Typography>
                   </form>
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     {t("manage.selfCheckInClosed", {
-                      // It opens at an hour, the day before, in the event's zone (§349).
+                      // It opens at an hour, the club's check-in lead before the start, in the event's zone (§349, §377).
                       date: formatDay(confirmed.selfCheckinOpensAt, { locale, timeZone: confirmed.eventTimezone, style: "long", withTime: true, position: "inline" }),
                     })}
                   </Typography>

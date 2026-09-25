@@ -169,7 +169,8 @@ describe("§334 the five-minute slots", () => {
 
 describe("§334 when a registration change can matter to the maintenance job", () => {
   const day = 24 * 60 * 60_000;
-  const race = { startsAt: new Date(RAN.getTime() + 30 * day), registrationClosesAt: null };
+  // The reminder lead in force for the event — the club's forty-eight hours unset (§377).
+  const race = { startsAt: new Date(RAN.getTime() + 30 * day), registrationClosesAt: null, reminderHours: 48 };
 
   it("is the hold the change created, on a race weeks away", () => {
     expect(maintenanceDueFor(race, RAN, minutes(30))).toEqual(minutes(30));
@@ -177,6 +178,13 @@ describe("§334 when a registration change can matter to the maintenance job", (
 
   it("is two days before the start when nothing sooner was created", () => {
     expect(maintenanceDueFor(race, RAN)).toEqual(new Date(race.startsAt.getTime() - 2 * day));
+  });
+
+  it("is the event's own reminder lead, and has no reminder instant when it sends none (§377)", () => {
+    // Seventy-two hours chosen on the event: three days before the start.
+    expect(maintenanceDueFor({ ...race, reminderHours: 72 }, RAN)).toEqual(new Date(race.startsAt.getTime() - 3 * day));
+    // No reminder: the close is the start here, so the start is the next instant.
+    expect(maintenanceDueFor({ ...race, reminderHours: 0 }, RAN)).toEqual(race.startsAt);
   });
 
   it("is the participation window's opening when it comes first", () => {
@@ -189,13 +197,13 @@ describe("§334 when a registration change can matter to the maintenance job", (
   });
 
   it("leaves out the event's instants already behind, so race week's signatures wake nothing", () => {
-    const closed = { startsAt: new Date(RAN.getTime() + 30 * 60 * 60_000), registrationClosesAt: minutes(-60) };
+    const closed = { startsAt: new Date(RAN.getTime() + 30 * 60 * 60_000), registrationClosesAt: minutes(-60), reminderHours: 48 };
     // The close is behind and the reminder window already open: the start is all that is ahead.
     expect(maintenanceDueFor(closed, RAN)).toEqual(closed.startsAt);
-    expect(maintenanceDueFor({ startsAt: minutes(-10), registrationClosesAt: null }, RAN)).toBeNull();
+    expect(maintenanceDueFor({ startsAt: minutes(-10), registrationClosesAt: null, reminderHours: 48 }, RAN)).toBeNull();
   });
 
   it("counts a deadline the change created that is already behind as due now", () => {
-    expect(maintenanceDueFor({ startsAt: minutes(-10), registrationClosesAt: null }, RAN, minutes(-5))).toEqual(RAN);
+    expect(maintenanceDueFor({ startsAt: minutes(-10), registrationClosesAt: null, reminderHours: 48 }, RAN, minutes(-5))).toEqual(RAN);
   });
 });

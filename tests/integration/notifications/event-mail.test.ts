@@ -6,6 +6,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { queueEventReminders, sendEventThanks } from "@/modules/notifications/event-mail";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -116,9 +117,9 @@ describe("§81 the reminder and §82 after the race", () => {
     await seedRegistration(soon.id, "WAITLISTED", ion.id);
     await seedRegistration(cancelled.id, "CONFIRMED", ion.id);
 
-    expect(await queueEventReminders(db, NOW)).toBe(1);
+    expect(await queueEventReminders(db, NOW, DEFAULT_DEADLINES)).toBe(1);
     // A second run in the window sends nothing more (§16.1).
-    expect(await queueEventReminders(db, new Date(NOW.getTime() + HOUR))).toBe(0);
+    expect(await queueEventReminders(db, new Date(NOW.getTime() + HOUR), DEFAULT_DEADLINES)).toBe(0);
     const rows = await outbox("EVENT_REMINDER");
     expect(rows).toHaveLength(1);
     expect(rows[0].registrationId).toBe(confirmed.id);
@@ -140,8 +141,8 @@ describe("§81 the reminder and §82 after the race", () => {
     });
     await seedRegistration(later.id, "PENDING_DECLARATION", participantId, { holdExpiresAt: new Date(NOW.getTime() + HOUR) });
 
-    expect(await queueEventReminders(db, NOW)).toBe(1);
-    expect(await queueEventReminders(db, new Date(NOW.getTime() + HOUR))).toBe(0);
+    expect(await queueEventReminders(db, NOW, DEFAULT_DEADLINES)).toBe(1);
+    expect(await queueEventReminders(db, new Date(NOW.getTime() + HOUR), DEFAULT_DEADLINES)).toBe(0);
     const rows = await outbox("COMPLETE_DECLARATION");
     expect(rows).toHaveLength(1);
     expect(rows[0].registrationId).toBe(kept.id);
