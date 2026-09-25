@@ -8,11 +8,16 @@ import type { Database } from "@/db/types";
  * The rule that made one address one registration is a unique constraint,
  * `registrations_event_participant_unique`. Its replacement — one registration per address, per
  * event, per runner's name (`registrations_event_participant_name_unique`) — is added beside it in
- * migration `0071`; the old one is dropped by a contract migration of its own in a **later**
+ * migration `0073`; the old one is dropped by a contract migration of its own in a **later**
  * release (AGENTS.md §7.6: a drop ships after the code stopped relying on what it drops, and the
  * code that served before this release still reads "one row per address" into
  * `findRegistrationByEventAndParticipant`). Until that release, a second row would be refused by
  * the database — so the flow must not offer a link it cannot honour.
+ *
+ * **Which release:** the batch after the one that carries `0073` reaches production — once no
+ * deployed code reads "one row per address" any more. Its contract migration is one statement,
+ * `ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique;`, and the day
+ * it runs is the day the family flow opens on that environment, with no deploy of its own.
  *
  * So the flow switches itself on when the old constraint is gone, the way the minor's second
  * signature switches on with the declaration's text (§330): no flag, no deploy. While it stands,

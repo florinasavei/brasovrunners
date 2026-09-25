@@ -311,7 +311,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     if (existing && isActiveStatus(existing.status)) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        "this person already has a registration for this event",
+        "this address already has a registration for this event",
         ["email"],
       );
     }

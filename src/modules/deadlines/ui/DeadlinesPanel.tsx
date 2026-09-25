@@ -142,9 +142,11 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
               {t("emails.addressCap.value", { people: t(`emails.addressCap.people.${countForm(addressCap.cap.registrationsPerAddress, locale)}`, { count: addressCap.cap.registrationsPerAddress }) })}
             </Typography>
           ) : (
+            /* Asks first (§384): a limit every public submission meets from now on. */
             <ActionForm
               action={updateAddressCapAction}
               messages={await refusalMessages({ registrationsPerAddress: t("emails.addressCap.field") })}
+              confirm={{ title: t("confirm.addressCapTitle"), body: t("confirm.addressCapBody"), confirmLabel: t("emails.addressCap.save"), cancelLabel: confirmText.cancel }}
               scope="address-cap"
               data-testid="address-cap-form"
             >

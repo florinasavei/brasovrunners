@@ -5,6 +5,7 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
+import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -286,6 +287,26 @@ describe("§NNN the link creates the other person's registration, and everybody 
     expect(await db.select().from(participants)).toHaveLength(1);
     const rows = await rowsOf(event.id);
     expect(new Set(rows.map((row) => row.participantId)).size).toBe(1);
+  });
+
+  it("the address is throttled behind the link too, in its own bucket: a family of four spends neither hour", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    for (const [index, name] of ["Maria", "Ioana", "Elena"].entries()) {
+      const minute = 5 + index * 3;
+      await submitRegistration(db, event, submission(name, at(minute)), at(minute));
+      const { secret } = await linkFromLatestOffer(at(minute + 1));
+      expect(await consumeAndRegisterAnotherPerson(secret!, event, anotherPerson(name, at(minute + 2)), {}, at(minute + 2))).toMatchObject({ ok: true });
+    }
+    expect(await rowsOf(event.id)).toHaveLength(4);
+
+    // The form's five an hour saw four presses; the link's own bucket saw three (§19.4, keyed on the hashed identity).
+    const buckets = await db.select().from(rateLimitBuckets);
+    const counted = buckets.filter((row) => row.scope.startsWith("registration-")).map((row) => [row.scope, row.count]).sort();
+    expect(counted).toEqual([
+      ["registration-link-submit", 3],
+      ["registration-submit", 4],
+    ]);
   });
 });
 

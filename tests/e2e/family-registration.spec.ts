@@ -9,6 +9,7 @@ import {
   type RegistrationRow,
 } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { confirmDialog } from "./support/confirm";
 import { openFold } from "./support/fold";
 
 /**
@@ -157,6 +158,8 @@ test.describe("§NNN a family on one address", () => {
  * `platform_settings` row, two projects, one database — and the default comes back at the end.
  */
 test.describe("§NNN the limit per address, set and stated", () => {
+  // One after the other: the Organizer reads the row the Administrator's test changes and restores.
+  test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });
@@ -177,6 +180,8 @@ test.describe("§NNN the limit per address, set and stated", () => {
     expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(36);
     await box.fill("3");
     await save.click();
+    // Asks first (§384): a limit every public submission meets from now on.
+    await confirmDialog(page, "Salvezi limita pe adresă?");
     await expect(main.getByText("Maximul de înscrieri pe o adresă a fost salvat", { exact: false })).toBeVisible();
     await expect(page.locator("#main").getByTestId("address-cap").locator('input[name="registrationsPerAddress"]')).toHaveValue("3");
     // The message that states it, in its when-line.
@@ -194,6 +199,7 @@ test.describe("§NNN the limit per address, set and stated", () => {
     await openFold(again);
     await again.getByTestId("address-cap").locator('input[name="registrationsPerAddress"]').fill("4");
     await again.getByTestId("address-cap").getByRole("button", { name: "Salvează maximul" }).click();
+    await confirmDialog(page, "Salvezi limita pe adresă?");
     await expect(page.locator("#main").getByText("Maximul de înscrieri pe o adresă a fost salvat", { exact: false })).toBeVisible();
   });
 

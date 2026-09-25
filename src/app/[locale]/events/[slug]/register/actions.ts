@@ -55,6 +55,11 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     that people must be able to register at all costs. It is logged so the club can see how
     often the widget does not run, and the line never carries an address.
   */
+  // Read before the bot check (§NNN): a rejected check from the family form returns to that form, the
+  // link still in the address bar — the token was never spent and still works.
+  const another = text(form, ANOTHER_PERSON_PARAM).trim();
+  const anotherPath = another ? `${path}?${ANOTHER_PERSON_PARAM}=${encodeURIComponent(another)}` : null;
+
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const verdict = (await botCheckIsOn(getDb(), new Date()))
@@ -65,7 +70,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   }
   if (verdict === "failed") {
     await stashFormDraft(form, path);
-    redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
+    redirect(`${anotherPath ? `${anotherPath}&` : `${path}?`}error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
   }
 
   /*
@@ -75,9 +80,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     leaves the link working. A link that does not work any more comes back as the plain form with
     one sentence saying so; the token is not carried back into the address bar.
   */
-  const another = text(form, ANOTHER_PERSON_PARAM).trim();
-  if (another) {
-    const anotherPath = `${path}?${ANOTHER_PERSON_PARAM}=${encodeURIComponent(another)}`;
+  if (anotherPath) {
     let registered: { ok: true; email: string } | { ok: false };
     try {
       const internalEvent = await findEventForRegistrationById(db, publicEvent.id);

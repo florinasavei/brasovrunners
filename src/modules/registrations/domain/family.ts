@@ -38,7 +38,7 @@ export const ANOTHER_LINK_INVALID = "anotherLink";
  */
 export const ANOTHER_PERSON_PARAM = "another";
 
-export type FamilyRow ={ id: string; status: RegistrationStatus; registeredName: string };
+export type FamilyRow = { id: string; status: RegistrationStatus; registeredName: string };
 
 export type SubmissionDecision<R extends FamilyRow> =
   /** The same runner again, still registered: re-send what the state offers, create nothing (§199, §235). */

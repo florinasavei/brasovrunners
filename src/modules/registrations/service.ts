@@ -1047,11 +1047,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * people at a desk is the case this must not obstruct, and they are already authenticated
    * and authorized.
    */
-  // Not behind the emailed link for another person (§NNN): that door is the token's, and the token's
-  // own throttle counts each press of it (§39) — a family of four must not spend the address's hour.
-  if (origin.source === "PUBLIC" && !origin.anotherPerson) {
+  // Behind the emailed link for another person (§NNN) the address is throttled too, in a bucket of
+  // its own ("registration-link-submit", ten an hour): sharing this one would let a family of four
+  // spend seven of its five — the form, three re-sends for a link, three links.
+  if (origin.source === "PUBLIC") {
+    const scope = origin.anotherPerson ? "registration-link-submit" : "registration-submit";
     // Hashed (§322): the bucket needs equality, not the address.
-    const verdict = await consumeRateLimit(db, "registration-submit", emailBucketKey("registration-submit", identity.canonicalEmail), now);
+    const verdict = await consumeRateLimit(db, scope, emailBucketKey(scope, identity.canonicalEmail), now);
     if (!verdict.allowed) {
       // The event and the verdict, never the address (§14.5) — as the anti-bot refusals log.
       console.warn(`[registration] refused as throttled, event ${event.id}`);
@@ -1145,6 +1147,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       re-send, the email for another person and a new registration — and two members of one family
       pressing at once must not both find the address empty. Taken before the participant row, the
       order `confirmEmail` takes them in (event, then participant), so the two cannot deadlock.
+      The price, accepted: every public submission to one event now waits on this row — the silent
+      re-send and the email for another person included, not only the insert — so a busy event's
+      submissions run one at a time, each a few milliseconds long.
     */
     const locked = await repo.lockEventForCapacity(tx, event.id);
     if (!locked) throw new DomainError("NOT_FOUND", "no such event");

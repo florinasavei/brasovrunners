@@ -187,7 +187,7 @@ export const registrations = pgTable(
      * insert, a restart, a staff correction of the name), never read to decide anything: the
      * service compares the names themselves under the event's lock, and the unique index below is
      * the database's backstop for that decision. Rows written before the column carry a SQL
-     * approximation of the key (migration `0071`); null only on a row inserted by something that
+     * approximation of the key (migration `0073`); null only on a row inserted by something that
      * is not this application, which the index then does not constrain.
      */
     nameKey: text("name_key"),

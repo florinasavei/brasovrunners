@@ -800,6 +800,8 @@
       "honeypotOffBody": "Câmpul rămâne și se notează în jurnal, dar nu mai refuză pe nimeni.",
       "deadlinesTitle": "Salvezi termenele?",
       "deadlinesBody": "Fiecare loc ținut, ofertă și link dat de acum înainte primește numerele noi, iar emailurile și paginile le spun. Nimic din ce s-a dat deja nu se schimbă: un link, un loc ținut sau o ofertă își păstrează termenul primit.",
+      "addressCapTitle": "Salvezi limita pe adresă?",
+      "addressCapBody": "De acum, la fiecare eveniment, o adresă de email poate înscrie cel mult atâtea persoane, iar emailul care oferă înscrierea altcuiva spune numărul nou. Înscrierile făcute deja rămân toate.",
       "jobCadenceTitle": "Salvezi intervalul?",
       "jobCadenceBody": "Emailurile din coadă și întreținerea rulează cel mult o dată la intervalul ales; un email poate aștepta atât.",
       "neonLimitsTitle": "Salvezi limitele Neon?",
@@ -4137,6 +4139,7 @@
       "neonPlan": "Plan Neon salvat.",
       "jobCadence": "Interval salvat.",
       "deadlines": "Termene salvate.",
+      "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
     }

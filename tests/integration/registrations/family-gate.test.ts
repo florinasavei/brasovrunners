@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §NNN — the family flow switches itself on with the schema (`family-gate.ts`).
  *
- * Migration `0071` adds the new key beside the one-registration-per-address constraint; the old
+ * Migration `0073` adds the new key beside the one-registration-per-address constraint; the old
  * constraint is dropped by a contract migration of its own in a later release (AGENTS.md §7.6).
  * Until then a second row on an address would be refused by the database, so the flow must behave
  * exactly as before and never offer a link it cannot honour. These tests run on today's schema.
