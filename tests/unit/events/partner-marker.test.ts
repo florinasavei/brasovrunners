@@ -240,6 +240,19 @@ describe("§367 one tooltip per calendar entry", () => {
     expect(link).toContain('data-testid="WarningAmberIcon"');
   });
 
+  it("overrides the handshake's filter on a filled (race) entry, dense or not, and leaves an unfilled entry at the emoji's own default (§379 review, 2026-09-25)", () => {
+    for (const dense of [true, false]) {
+      const filledHtml = chip({ dense, partner: PARTNER, filled: true });
+      expect(filledHtml).toMatch(/filter:grayscale\(1\) brightness\(1\.6\)/);
+      expect(filledHtml).toMatch(/\[data-dark\] \.css-\S+\{[^}]*filter:grayscale\(1\) brightness\(0\.1\)/);
+
+      const unfilledHtml = chip({ dense, partner: PARTNER, filled: false });
+      expect(unfilledHtml).not.toMatch(/brightness\(1\.6\)/);
+      expect(unfilledHtml).toMatch(/filter:grayscale\(1\) brightness\(0\.45\)/);
+      expect(unfilledHtml).toMatch(/\[data-dark\] \.css-\S+\{[^}]*filter:grayscale\(1\) brightness\(0\.92\)/);
+    }
+  });
+
   it("has no title attribute anywhere, so the browser adds no tooltip of its own", () => {
     for (const html of [chip({ note: MOVED, partner: PARTNER }), chip({ dense: false, note: MOVED, partner: PARTNER }), chip()]) {
       expect(html).not.toMatch(/\stitle="/);

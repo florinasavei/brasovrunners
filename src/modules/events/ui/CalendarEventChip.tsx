@@ -2,10 +2,27 @@
 
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import NextLink from "next/link";
 import EditionMark, { EditionGlyph, type EditionNote } from "./EditionMark";
 import { GLYPHS, type GlyphName } from "./glyphs";
 import PartnerMark from "./PartnerMark";
+
+/**
+ * The handshake's own filter (`PartnerEmoji`) is tuned to `text.secondary` — invisible against a
+ * `filled` (race) entry's `primary.main` fill, where the glyph sits on `primary.contrastText`
+ * instead (§379 amended, 2026-09-25 — the owner's gray handshake almost disappeared on a race
+ * date). `primary.contrastText` swaps ends between schemes (`theme/theme.ts`): light draws it
+ * near-white on the club's dark blue, dark draws it near-black on the lighter dark-scheme blue —
+ * so, unlike the emoji's own default, the override does too. `brightness(1.6)` lifts the
+ * grayscale glyph close to `COLOR.paper`'s own mean brightness (~249); `brightness(0.1)` drops it
+ * close to `COLOR_DARK.paper`'s (~20), by the same multiplier-on-the-desaturated-glyph approach
+ * `PartnerEmoji`'s own doc comment measures against `text.secondary`.
+ */
+const FILLED_PARTNER_SX: SvgIconProps["sx"] = {
+  filter: "grayscale(1) brightness(1.6)",
+  "[data-dark] &": { filter: "grayscale(1) brightness(0.1)" },
+};
 
 /**
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
@@ -136,9 +153,9 @@ export default function CalendarEventChip({
           <Box component="span" data-testid="calendar-entry-marks" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, flexShrink: 0 }}>
             {partner &&
               (dense ? (
-                <PartnerGlyph size={markSize} />
+                <PartnerGlyph size={markSize} sx={filled ? FILLED_PARTNER_SX : undefined} />
               ) : (
-                <PartnerMark text={partner} size={markSize} />
+                <PartnerMark text={partner} size={markSize} sx={filled ? FILLED_PARTNER_SX : undefined} />
               ))}
             {note && (dense ? <EditionGlyph note={note} size={markSize} /> : <EditionMark note={note} size={markSize} />)}
           </Box>
@@ -169,7 +186,12 @@ export default function CalendarEventChip({
 }
 
 /** The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Colaborare" / "Partnership". */
-function PartnerGlyph({ size }: { size: number }) {
+function PartnerGlyph({ size, sx }: { size: number; sx?: SvgIconProps["sx"] }) {
   const Icon = GLYPHS.partner;
-  return <Icon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />;
+  return (
+    <Icon
+      aria-hidden="true"
+      sx={[{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+    />
+  );
 }

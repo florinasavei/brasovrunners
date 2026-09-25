@@ -5,10 +5,10 @@ import GlyphChip from "./GlyphChip";
 
 /**
  * A pill that wraps rather than ending in MUI's ellipsis, like the event page's pills (§356),
- * kept even now the marker reads "Colaborare" / "Partnership" (§379 — shorter than the old
- * "Eveniment în parteneriat" / "Partnered event", which was a full word wider than some
- * 320-pixel cards leave it) — a card narrower still, or a phone's own font-size setting, is
- * still safer wrapped than clipped. A plain object in module scope, because it crosses to `GlyphChip`.
+ * kept even now the marker reads "Colaborare" / "Partnership" (§379 — shorter than §375's longer
+ * label, which was a full word wider than some 320-pixel cards leave it) — a card narrower
+ * still, or a phone's own font-size setting, is still safer wrapped than clipped. A plain object
+ * in module scope, because it crosses to `GlyphChip`.
  */
 const PARTNER_CHIP_SX = {
   height: "auto",

@@ -55,7 +55,20 @@ const FONT_SIZE: Record<"small" | "medium" | "large" | "inherit", string> = {
  * multiplier cannot serve both. Measured headless (Chromium, Segoe UI Emoji, 🤝 at 120px): the
  * unfiltered glyph is ~193; `brightness(0.45)` lands light at ~89 and `brightness(0.92)` lands
  * dark at ~174, both close enough to their target that the finger outlines stay visible instead
- * of collapsing to a flat shape. The dark variant is picked with the same plain-object
+ * of collapsing to a flat shape.
+ *
+ * **A known, accepted gap (§379 review, 2026-09-25):** `text.secondary` is what this glyph is
+ * tuned to, but the runner glyph beside it in the "Alergare de grup" chip (`GlyphChip`'s
+ * `icon={<Icon />}`) is drawn by MUI's own `.MuiChip-icon` rule, `Chip.defaultIconColor` — grey-700
+ * on light (mean ~97, close enough to `text.secondary`'s ~87 that the two read as the same ink)
+ * but grey-300 on dark (mean ~224, visibly lighter than `text.secondary`'s ~178 this glyph
+ * targets). Matching grey-300 exactly would need `brightness(~1.15)` under `[data-dark] &`
+ * whenever this glyph sits in a chip rather than the overline — a second dark-scheme value passed
+ * down from `PartnerChip`/`GlyphChip` that no other glyph in `GLYPHS` carries. Left as the one
+ * shared filter, `brightness(0.92)`, tuned to the overline's own `text.secondary` (§379's first
+ * fix) rather than the chip's slightly brighter icon ink; the gap is a shade, not a contrast
+ * failure, and not worth a per-caller filter prop until a second glyph needs one too. The dark
+ * variant is picked with the same plain-object
  * `"[data-dark] &"` selector `theme/surfaces.ts` uses, not `theme.applyStyles`, so this stays a
  * plain object a Server Component can pass straight through the caller's `sx` prop
  * (`AGENTS.md` §14.1). Set ahead of the array spread so a caller's own `filter` (none exist yet)

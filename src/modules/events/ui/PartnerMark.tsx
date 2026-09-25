@@ -1,6 +1,7 @@
 "use client";
 
 import Tooltip from "@mui/material/Tooltip";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import { GLYPHS } from "./glyphs";
 
 /**
@@ -16,12 +17,22 @@ import { GLYPHS } from "./glyphs";
  * `aria-hidden={false}`: MUI's `SvgIcon` hides every glyph from assistive technology unless it is
  * given `titleAccess` — which draws an SVG `<title>`, the browser's own tooltip on top of this one
  * — so without it the `role` and the name below were never read (§367).
+ *
+ * `sx`, when given, follows the emoji's own default filter (§379 amended, 2026-09-25): the caller
+ * — `CalendarEventChip`, on a filled (race) entry — overrides the grayscale brightness so the
+ * handshake still reads against `primary.main` rather than the quiet `text.secondary` tone this
+ * glyph is tuned to everywhere else.
  */
-export default function PartnerMark({ text, size = 18 }: { text: string; size?: number }) {
+export default function PartnerMark({ text, size = 18, sx }: { text: string; size?: number; sx?: SvgIconProps["sx"] }) {
   const Icon = GLYPHS.partner;
   return (
     <Tooltip title={text} arrow enterTouchDelay={0}>
-      <Icon role="img" aria-label={text} aria-hidden={false} sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />
+      <Icon
+        role="img"
+        aria-label={text}
+        aria-hidden={false}
+        sx={[{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+      />
     </Tooltip>
   );
 }

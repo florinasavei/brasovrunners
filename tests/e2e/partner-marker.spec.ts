@@ -123,7 +123,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     const englishCard = page.locator("li").filter({ has: page.getByRole("heading", { name: englishTitle }) });
     await expect(englishCard.locator(".MuiChip-root").filter({ hasText: "Partnership" })).toHaveCount(1);
-    await expect(englishCard).not.toContainText("În parteneriat");
+    await expect(englishCard).not.toContainText("Colaborare");
     await expect(englishCard).not.toContainText(partner);
   });
 
