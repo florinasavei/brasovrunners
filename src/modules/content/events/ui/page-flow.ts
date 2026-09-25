@@ -26,6 +26,7 @@ const CARD_TITLE_KEY: Record<Exclude<PageSectionId, "share">, string> = {
   when: "when",
   place: "place",
   course: "course",
+  cost: "cost",
   registration: "registration",
   coHosts: "coHosts",
   links: "links",

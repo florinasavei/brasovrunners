@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
  * boxes go:
  *
  *   Pagina evenimentului, de sus în jos — the type, title and summary, description, date and time,
- *   place, the course, registration, partners, (the share links, automatic), links and files,
+ *   place, the course, the cost, registration, partners, (the share links, automatic), links and files,
  *   programme, rules, the film, the public list: the page's sections in `PAGE_SECTIONS`' order,
  *   which `events/page-sections.test.ts` holds both the page and these pages to;
  *   Nu apar pe pagină — the status, promotion, page address;
@@ -43,6 +43,7 @@ const EDITOR_ORDER = [
   "<WhenBox",
   "<PlaceBox",
   "<CourseBox",
+  "<CostBox",
   "<RegistrationBox",
   "<CoHostsBox",
   "<AutomaticSection",
@@ -75,7 +76,7 @@ describe("§350 the editor's boxes, in order (§NNN: the page's)", () => {
       // The first box is the type alone: it closes on itself and holds no card.
       expect(source, page).toMatch(/<KindBox \{\.\.\.box\}[^>]*\/>/);
       expect(source, page).not.toContain("</KindBox>");
-      for (const card of ["<StatusBox", "<CourseBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
+      for (const card of ["<StatusBox", "<CourseBox", "<CostBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
     }
@@ -143,7 +144,7 @@ describe("§350 the editor's boxes, in order (§NNN: the page's)", () => {
     // The first box no longer holds the status (§NNN): the status box wears the mark itself, and
     // the type's box, the course, the links, the partners, the promotion, the film and the list
     // reach nobody.
-    for (const box of ["<KindBox", "<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
+    for (const box of ["<KindBox", "<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }

@@ -114,10 +114,11 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
     await expect(readOnly).toBeVisible();
     await expect(readOnly).toHaveCount(1);
-    // The status and the links are boxes of their own since §NNN, where the page draws them — or
-    // apart, the status — and for this reader each is its heading and its line, nothing to open
-    // (§358). The course keeps a fold: its route description is words, and the words are theirs (§387).
-    for (const card of ["Starea evenimentului", "Linkuri și fișiere"]) {
+    // The status, the cost, the links and the public list are boxes of their own since §NNN, where
+    // the page draws them — or apart, the status — and for this reader each is its heading and its
+    // line, nothing to open, the sentence said once above (§358). The course keeps a fold: its route
+    // description is words, and the words are theirs (§387).
+    for (const card of ["Starea evenimentului", "Cost", "Linkuri și fișiere", "Lista publică a participanților"]) {
       const heading = page.getByRole("heading", { level: 2, name: new RegExp(`^(?:\\d+ · )?${card}`) });
       await expect(heading).toBeVisible();
       await expect(page.locator("section").filter({ has: heading })).toHaveCount(1);

@@ -17,6 +17,7 @@ import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/c
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
 import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/BibPrint";
 import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
+import CostBox from "@/modules/content/events/ui/boxes/CostBox";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
@@ -760,6 +761,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <WhenBox {...box} risk={risk} inSeries={inSeries} heading={flow.headings.when} />
                   <PlaceBox {...box} risk={risk} languages={languages} heading={flow.headings.place} />
                   <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} />
+                  <CostBox {...box} languages={languages} heading={flow.headings.cost} />
                   <RegistrationBox
                     {...box}
                     heading={flow.headings.registration}
@@ -770,7 +772,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     locale={locale}
                     now={now}
                     clubDeadlines={deadlines}
-                    languages={languages}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard

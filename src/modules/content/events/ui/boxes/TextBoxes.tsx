@@ -79,6 +79,7 @@ export async function LanguageTabs({
         other: t.raw("editor.required.tab.other") as string,
         complete: t("editor.required.complete"),
         locale: await getLocale(),
+        box: required,
       }
     : undefined;
   return (

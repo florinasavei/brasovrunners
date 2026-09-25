@@ -1358,6 +1358,9 @@
         "rules": {
           "title": "Rules"
         },
+        "cost": {
+          "title": "Cost"
+        },
         "registration": {
           "title": "Taking part and registration"
         },
@@ -1595,7 +1598,8 @@
           "when": "When",
           "place": "Where",
           "course": "The course",
-          "registration": "Cost and registration",
+          "cost": "Cost",
+          "registration": "Registration",
           "coHosts": "Together with",
           "share": "Share",
           "links": "Links and files",

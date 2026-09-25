@@ -1358,6 +1358,9 @@
         "rules": {
           "title": "Regulamentul"
         },
+        "cost": {
+          "title": "Cost"
+        },
         "registration": {
           "title": "Participare și înscrieri"
         },
@@ -1595,7 +1598,8 @@
           "when": "Când",
           "place": "Unde",
           "course": "Traseul",
-          "registration": "Cost și înscriere",
+          "cost": "Costul",
+          "registration": "Înscrierea",
           "coHosts": "Împreună cu",
           "share": "Distribuie",
           "links": "Linkuri și fișiere",
