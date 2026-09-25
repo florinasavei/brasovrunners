@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.95-2026-09-25 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.94-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.95-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -359,6 +359,7 @@ coffee is run on nothing.
 23. A marked event shows a headlamp pill (glyph and word, in the reader's language) after the route's numbers and before the cost on the listing card, the event page and the featured hero, and a line in the calendar entry and the .ics description; an unmarked event shows none of it.
 24. An event held with a partner (`events.coHosts`) carries a generic marker — one gray handshake glyph and the words "Colaborare" / "Partnership", never a partner's name or count — on the listing card's own chip, the event page's overline, and the calendar's grid and agenda entries; the full partner list stays the event page's own partner cards. The handshake's ink is a grayscale filter matched to `text.secondary` in each colour scheme, except on a **filled** (race) calendar entry, where it instead matches `primary.contrastText` — the near-white or near-black tone that entry's own fill uses in that scheme — so the marker reads there too rather than nearly vanishing against `primary.main` (2026-09-25, `DECISIONS.md` §379).
 25. A calendar entry opens exactly one tooltip at a time: in the month grid the entry's own tooltip carries every line (time, title, the date's note, the partner marker) and its marks are drawn bare with no tooltip or accessible name of their own; the agenda row carries no tooltip of its own, so its handshake keeps the only one, naming itself with the generic marker's words (2026-09-25, `DECISIONS.md` §379).
+26. (Amends criterion 21, §375.) Given an event held with one or more partners, when its listing card, series card, featured hero, calendar entry (grid, agenda, tooltip) or event page overline renders, then it carries one `Handshake` glyph (Material's, drawn with no colour of its own so each surface's own ink shows through `currentColor`) and the generic label "Colaborare" / "Partnership" in the reader's language — never a partner's name and never a count — and the partners themselves, each named with its links, appear only in the event page's partner cards (2026-09-25, `DECISIONS.md` §391, reverting §379/§386's grayscale-filtered emoji).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
