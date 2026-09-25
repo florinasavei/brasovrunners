@@ -90,7 +90,11 @@ describe("§350 the editor's boxes, in order", () => {
       const source = read(`src/modules/content/events/ui/boxes/${file}.tsx`);
       expect(source, file).toMatch(new RegExp(`level: 3,\\s+id: "${id}"`));
       expect(source, file).toContain("<Panel collapsible {...card}>");
-      expect(source, file).toContain("if (!mayEditSettings) return <Panel {...card} />;");
+      // The course card keeps its fold for a reader who may write a language's route description
+      // (§NNN), and is its heading alone for one who may write neither the settings nor the texts.
+      expect(source, file).toContain(
+        file === "CourseBox" ? "if (!languages.some((entry) => entry.mayEdit)) return <Panel {...card} />;" : "if (!mayEditSettings) return <Panel {...card} />;",
+      );
     }
   });
 
@@ -167,8 +171,9 @@ describe("§260 the language pieces, each in its box", () => {
 
   it("mounts no rich-text editor until its fold is opened", () => {
     expect(FIELDS).not.toMatch(/<RichTextEditor\b/);
-    // The summary, the description, the programme's notes and the rules: four a language.
-    expect(FIELDS.match(/<LazyRichTextEditor\b/g)).toHaveLength(4);
+    // The summary, the description, the programme's notes, the rules and the route description
+    // (§NNN): five a language.
+    expect(FIELDS.match(/<LazyRichTextEditor\b/g)).toHaveLength(5);
   });
 
   it("renders a language the reader may not write as text, and posts nothing for it", () => {
@@ -179,11 +184,12 @@ describe("§260 the language pieces, each in its box", () => {
     expect(EDIT).toContain("<TranslationHiddenFields");
   });
 
-  it("gives each box's tabs their own ids, so five strips share one page", () => {
-    // The Locul box has no strip since §362: its two names stand side by side.
-    const boxes = read("src/modules/content/events/ui/boxes/TextBoxes.tsx") + read("src/modules/content/events/ui/boxes/PlaceBox.tsx") + read("src/modules/content/events/ui/boxes/ProgrammeBox.tsx");
+  it("gives each box's tabs their own ids, so six strips share one page", () => {
+    // The Locul box has no strip since §362: its two names stand side by side. The course card has
+    // one since §NNN, for the route description.
+    const boxes = ["TextBoxes", "PlaceBox", "ProgrammeBox", "CourseBox"].map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`)).join("");
     const prefixes = [...boxes.matchAll(/idPrefix="(\w+)"/g)].map((match) => match[1]);
-    expect(prefixes.sort()).toEqual(["address", "description", "programme", "rules", "title"]);
+    expect(prefixes.sort()).toEqual(["address", "course", "description", "programme", "rules", "title"]);
     expect(new Set(prefixes).size).toBe(prefixes.length);
   });
 });

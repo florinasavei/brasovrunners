@@ -14,6 +14,8 @@ import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import EventLinks from "@/modules/events/ui/EventLinks";
+import EventRoute from "@/modules/events/ui/EventRoute";
+import { hasRouteDescription } from "@/modules/events/domain/route-section";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventVideo from "@/modules/events/ui/EventVideo";
@@ -151,6 +153,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   if (!event) notFound();
 
   const t = await getTranslations("Event");
+  // Each kind of link's own word in this language (§332), for the route section and "Linkuri și fișiere" alike.
+  const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The
@@ -288,14 +292,30 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* The address is not repeated here: it is the second line of "Unde" in the facts above
           (§356), under the place's name, which is the one link to the map. */}
 
+      {/* "Traseul" (§NNN), under `#route`: the route / training description with the route's own
+          links first — the route link, the GPX, the map. The facts' route row points here. Not
+          between the facts and the registration button, which stays where a phone finds it; the
+          first section after them. Nothing at all when this language has no description. */}
+      <EventRoute
+        descriptionJson={event.routeDescriptionJson}
+        links={event.links}
+        routeUrl={event.routeUrl}
+        locale={locale}
+        heading={t("routeSection")}
+        openRouteLabel={t("openRoute")}
+        kindLabels={linkKindLabels}
+      />
+
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
           because most of them are the route again — the GPX, a map — and before the programme.
-          Nothing at all when the event has none. */}
+          With a route section, the GPX and the map are drawn there instead (§NNN). Nothing at all
+          when the event has none left to show. */}
       <EventLinks
         links={event.links}
         locale={locale}
         heading={t("links.heading")}
-        kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+        kindLabels={linkKindLabels}
+        routeSection={hasRouteDescription(event.routeDescriptionJson)}
       />
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}

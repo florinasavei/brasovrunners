@@ -17,6 +17,8 @@ import type { PublicEvent } from "@/modules/events/repository";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventLinks from "@/modules/events/ui/EventLinks";
+import EventRoute from "@/modules/events/ui/EventRoute";
+import { hasRouteDescription } from "@/modules/events/domain/route-section";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
@@ -137,6 +139,7 @@ export default async function PreviewEventPage({ params }: Props) {
     bodyJson: translation.bodyJson,
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
+    routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     scheduleItems: placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
@@ -148,6 +151,8 @@ export default async function PreviewEventPage({ params }: Props) {
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
   };
+
+  const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -181,12 +186,23 @@ export default async function PreviewEventPage({ params }: Props) {
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} stacked />
 
-      {/* The links (§332), before the programme as on the public page, in the public words. */}
+      {/* The route section (§NNN), then the links (§332), before the programme as on the public
+          page, in the public words — the GPX and the map in the route section when there is one. */}
+      <EventRoute
+        descriptionJson={preview.routeDescriptionJson}
+        links={preview.links}
+        routeUrl={preview.routeUrl}
+        locale={locale}
+        heading={tEvent("routeSection")}
+        openRouteLabel={tEvent("openRoute")}
+        kindLabels={linkKindLabels}
+      />
       <EventLinks
         links={preview.links}
         locale={locale}
         heading={tEvent("links.heading")}
-        kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+        kindLabels={linkKindLabels}
+        routeSection={hasRouteDescription(preview.routeDescriptionJson)}
       />
 
       <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />
