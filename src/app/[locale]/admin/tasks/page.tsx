@@ -6,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { and, count, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
@@ -30,6 +30,9 @@ import {
   TASK_OWNERS,
   type TaskState,
 } from "@/modules/diagnostics/owner-tasks";
+import { opsTaskPanels, resolveTaskPanel, type TaskPanel } from "@/modules/diagnostics/domain/task-panels";
+import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
+import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { readBotCheck } from "@/modules/registrations/bot-check";
@@ -84,22 +87,23 @@ export const dynamic = "force-dynamic";
 
 /**
  * The panels this screen is divided into (§265; the owner: "partea de configurare ar trebui să
- * aibă subtaburi, pt status, general, mailuri, captcha, etc").
+ * aibă subtaburi, pt status, general, mailuri, captcha, etc") — the set and the gate live in
+ * `modules/diagnostics/domain/task-panels.ts` now, so the role boundary is one pure function
+ * rather than something read off this page's markup.
  *
  * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
  * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
- * every service on the way. Three panels:
+ * every service on the way. Four panels:
  *
  * - `todo` — what is still owed, with its filters, and the decisions still open.
  * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
  *   club must be able to switch it off on the day it refuses real people.
  * - `costs` — what the club pays today and what the next thing to cost anything would cost.
+ * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §NNN).
  *
- * A query parameter, not three routes: each panel needs the same session and the same reading of
- * the system (`describeTasks`), so three routes would be three copies of this page's head.
+ * A query parameter, not four routes: each panel needs the same session and the same reading of
+ * the system (`describeTasks`), so four routes would be four copies of this page's head.
  */
-const TASK_PANELS = ["todo", "botCheck", "costs"] as const;
-type TaskPanel = (typeof TASK_PANELS)[number];
 
 /** The colour is the whole message for somebody scanning: red stops a registration today. */
 const STATE_COLOR: Record<TaskState, "error" | "warning" | "success"> = {
@@ -160,7 +164,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const query = await searchParams;
   const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
   const panelRaw = first(query.panel);
-  const panel: TaskPanel = TASK_PANELS.includes(panelRaw as TaskPanel) ? (panelRaw as TaskPanel) : "todo";
   const ownerRaw = first(query.owner);
   const kindRaw = first(query.kind);
   const filter = {
@@ -169,15 +172,85 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   };
 
   const actor = await requireStaff();
-  if (!canManageRegistrations(actor.role)) notFound();
-
-  const db = getDb();
-  const now = new Date();
+  const isOps = canManageRegistrations(actor.role);
+  const canApp = canSeeDiagnostics(actor.role);
 
   // Strings, because that is what the sub-nav takes (§265), and `getPathname` is a server
   // function so this is the only side of the boundary that can build them.
   const tasksPath = getPathname({ locale, href: "/admin/tasks" });
   const devsPath = getPathname({ locale, href: "/devs" });
+
+  /**
+   * `resolveTaskPanel` (`modules/diagnostics/domain/task-panels.ts`) is the one gate: `null`
+   * means a panel this role may not see. `layout.tsx` has already refused any role that may
+   * open no panel here at all — a real 404, decided before `loading.tsx`'s Suspense boundary
+   * can flush a 200 (see its own comment). This page can still be asked, by a typed address,
+   * for a panel the *admitted* role may not see (Tehnic asking for `?panel=costs`), and a
+   * `notFound()` thrown from here is exactly the 200-with-not-found-body that guard exists to
+   * avoid — so a mismatch here lands on that role's own default panel instead.
+   */
+  const requestedPanel = resolveTaskPanel(actor.role, panelRaw);
+  const panel: TaskPanel = requestedPanel ?? (isOps ? "todo" : "app");
+  if (panelRaw !== undefined && requestedPanel === null) {
+    redirect(isOps ? tasksPath : `${tasksPath}?panel=app`);
+  }
+
+  const t = await getTranslations("Admin.tasks");
+  // «Aplicația» / «The app» sits after «Sistem» (§NNN; the owner asked for one more tab, not a
+  // rearrangement of the others). `opsTaskPanels` is empty for a Tehnic, who never sees the
+  // club's worklist or its money.
+  const subNavItems = [
+    ...opsTaskPanels(actor.role).map((name) => ({
+      href: name === "todo" ? tasksPath : `${tasksPath}?panel=${name}`,
+      label: t(`panel.${name}`),
+      active: panel === name,
+    })),
+    ...(canApp ? [{ href: devsPath, label: t("panel.system") }] : []),
+    ...(canApp ? [{ href: `${tasksPath}?panel=app`, label: t("panel.app"), active: panel === "app" }] : []),
+  ];
+
+  /**
+   * The app tab: `docs/QUEUE.md`, rendered read-only through the same renderer `/devs/docs`
+   * uses (`repo-docs.ts`, `DECISIONS.md` §88, §NNN). It needs none of the club's registration
+   * or money data below, so it answers on its own — the only path a Tehnic-only session ever
+   * reaches, and the lightest one for an Administrator who just wants to read the queue.
+   *
+   * The lead line is one sentence in the reader's own language — the "multi-lingual, always"
+   * rule (§352) is about text the club types, not this screen's own words, and every other
+   * lead line in the backoffice is one language. The document itself stays in the one language
+   * it is written in (English, the dispatcher's own working language); the line above it says
+   * so, in the reader's language, and never prints the other one beside it.
+   */
+  if (panel === "app") {
+    const doc = await renderRepoDoc("QUEUE");
+    return (
+      <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
+        <Box>
+          <Typography variant="h1" sx={{ fontSize: "1.5rem" }} gutterBottom>
+            {t("title")}
+          </Typography>
+        </Box>
+        <SubNav label={t("title")} items={subNavItems} />
+        {doc ? (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              {t("app.lead")}
+            </Typography>
+            <RepoDocHtml html={doc.html} />
+          </>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {t("app.missing")}
+          </Typography>
+        )}
+      </Stack>
+    );
+  }
+
+  if (!isOps) notFound();
+
+  const db = getDb();
+  const now = new Date();
 
   // The anti-bot switch (§254): read straight through, because this page is where it is moved.
   const botCheck = await readBotCheck(db);
@@ -327,7 +400,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     }),
   );
 
-  const t = await getTranslations("Admin.tasks");
   // The refusal codes (`?error=FORBIDDEN|VALIDATION_ERROR`, from the Neon and Mailgun plan actions) are
   // `Admin.errors.*`, shared by every backoffice page — `Admin.tasks.errors` does not exist.
   const tErrors = await getTranslations("Admin.errors");
@@ -503,17 +575,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       {/* The panels (§265), and the system's own screen beside them: `/devs` answers "is it
           working" and this one answers "what do we still owe", which are two halves of one
           question the club asks together. */}
-      <SubNav
-        label={t("title")}
-        items={[
-          ...TASK_PANELS.map((name) => ({
-            href: name === "todo" ? tasksPath : `${tasksPath}?panel=${name}`,
-            label: t(`panel.${name}`),
-            active: panel === name,
-          })),
-          ...(canSeeDiagnostics(actor.role) ? [{ href: devsPath, label: t("panel.system") }] : []),
-        ]}
-      />
+      <SubNav label={t("title")} items={subNavItems} />
 
       {panel === "botCheck" && (
         <>

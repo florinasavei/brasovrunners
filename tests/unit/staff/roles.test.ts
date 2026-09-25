@@ -316,6 +316,9 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     const sections = visibleAdminSections("DEV");
 
     expect(sections).toContain("devs");
+    // Since §NNN, DEV (Tehnic) is also offered `tasks` — but only for the «Aplicația» panel
+    // of it; the page itself refuses the club's ops panels to this role (`task-panels.test.ts`).
+    expect(sections).toContain("tasks");
     // The line that carries the weight (§38): DEV helps with the platform and never sees the
     // people who registered.
     expect(sections).not.toContain("registrations");

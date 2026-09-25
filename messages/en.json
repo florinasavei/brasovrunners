@@ -1875,7 +1875,12 @@
         "todo": "To do",
         "botCheck": "Anti-bot",
         "costs": "Costs",
-        "system": "System"
+        "system": "System",
+        "app": "The app"
+      },
+      "app": {
+        "lead": "The platform's work queue, from the repository — what is building, what is ready, what comes next",
+        "missing": "The document is not in this deployment."
       },
       "neonPlan": {
         "title": "The Neon plan (the database)",
@@ -3794,7 +3799,8 @@
       "status": "Status",
       "general": "General",
       "email": "Email",
-      "botCheck": "Anti-bot"
+      "botCheck": "Anti-bot",
+      "app": "The app"
     },
     "configuration": "Configuration",
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",
