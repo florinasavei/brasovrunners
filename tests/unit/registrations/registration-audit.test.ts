@@ -5,7 +5,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { publicFormEvent } from "@/modules/registrations/public-form-event";
 
 /**
- * The registration audit (§NNN), its two pure halves.
+ * The registration audit (§420), its two pure halves.
  *
  * - **A live declaration link on a registration that has moved on** (AGENTS.md §14.3): only a hold
  *   or an offer can be signed, so every other state is a notice in the form's place — the sentence
@@ -13,7 +13,7 @@ import { publicFormEvent } from "@/modules/registrations/public-form-event";
  * - **The public form's event** (§104): both of the form's doors hand the allocator the
  *   participation window, which is what decides a verified restart's hold.
  */
-describe("§NNN a live declaration link on a registration that has moved on", () => {
+describe("§420 a live declaration link on a registration that has moved on", () => {
   it.each(["PENDING_DECLARATION", "WAITLIST_OFFERED"] as const)("shows the form for %s", (status) => {
     expect(describeMovedOnDeclarationLink("COMPLETE_DECLARATION", status)).toBeNull();
     expect(describeMovedOnDeclarationLink("WAITLIST_OFFER", status)).toBeNull();
@@ -31,7 +31,7 @@ describe("§NNN a live declaration link on a registration that has moved on", ()
   });
 });
 
-describe("§NNN §104 the public form hands the allocator the participation window", () => {
+describe("§420 §104 the public form hands the allocator the participation window", () => {
   const row = {
     id: "00000000-0000-4000-8000-000000000001",
     eventStatus: "SCHEDULED",

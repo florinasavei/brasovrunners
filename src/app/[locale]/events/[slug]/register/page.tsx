@@ -285,7 +285,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   /*
-    The club's terms in force (§NNN): the tick names their version, read from the text in force and
+    The club's terms in force (§421): the tick names their version, read from the text in force and
     never typed. The public cache's read, as the legal page makes it; the service asks the database
     again when the form is sent and records the version it finds. None approved: the form says
     registrations cannot be taken, and the service refuses them.
@@ -325,7 +325,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 */
   const prefill = (name: string, fallback?: string) => draft?.[name] ?? fallback;
   /*
-    The terms tick is the one box the draft does not simply bring back (§NNN): a refusal naming it
+    The terms tick is the one box the draft does not simply bring back (§421): a refusal naming it
     returns it unticked, and says so when the version in force moved (`acceptanceAfterRefusal`).
   */
   const acceptance = acceptanceAfterRefusal({ invalid, draft, versionInForce: termsVersion });
@@ -607,7 +607,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          {/* No terms approved (§NNN): there is nothing to accept, and the service would refuse. */}
+          {/* No terms approved (§421): there is nothing to accept, and the service would refuse. */}
           {termsVersion === null && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-terms-missing">
               {t("terms.missing")}
@@ -1124,7 +1124,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   (§323): gone once the birth date says under eighteen — disabled as well as
                   hidden, so neither box is validated or posted — and never stored for a minor
                   whatever is posted. A rejection naming either box shows it whatever the date.
-                  Never on the family form (§NNN): a minor keeps none, and another adult's
+                  Never on the family form (§421): a minor keeps none, and another adult's
                   socials are that adult's to give — the service drops them whatever is posted. */}
               {!family && (
               <HiddenForMinor
@@ -1174,7 +1174,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 consents; this is the optional note for the person who wants the medical team
                 to know something, and it says so.
 
-                On the family form, only for a minor (§NNN): the parent consents for the child;
+                On the family form, only for a minor (§421): the parent consents for the child;
                 another adult's health note is art. 9 data only that adult can consent to.
               */}
               {(() => {
@@ -1241,7 +1241,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 Only when this event wrote any. An event with no rules of its own has nothing to
                 open, so the tick points at the event's own page as a plain link — the requirement
                 is the same, the panel would just be an empty box. It no longer points at the
-                club's terms (§NNN): those have a tick of their own, below, that names them.
+                club's terms (§421): those have a tick of their own, below, that names them.
               */}
               {hasRules ? (
                 <ReadAndAgree
@@ -1267,16 +1267,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </CheckboxField>
               )}
               {/*
-                The club's terms, accepted expressly (§NNN; Codul civil art. 1203): one tick, in both
+                The club's terms, accepted expressly (§421; Codul civil art. 1203): one tick, in both
                 branches above, never folded, naming the version in force and the unusual clauses.
                 The link opens in a tab of its own (§197), like the facts line's.
               */}
-              {/* The version this render's tick names, posted alongside it (§NNN, finding (7)):
+              {/* The version this render's tick names, posted alongside it (§421, finding (7)):
                   what lets the service tell this tick apart from a newer version approved
                   between the render and the submit, rather than silently recording the newer
                   one under an older tick. */}
               {termsVersion !== null && <input type="hidden" name="termsVersionShown" value={termsVersion} />}
-              {/* A refusal about the tick never brings it back ticked (§NNN): a version that moved
+              {/* A refusal about the tick never brings it back ticked (§421): a version that moved
                   between the render and the submit is said here, above the box, and read anew. */}
               {acceptance.changed && (
                 <Alert severity="warning" sx={{ mb: 1 }} data-testid="registration-terms-changed">
@@ -1295,7 +1295,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 })}
               </CheckboxField>
               {/*
-                The fitness statement. On the family form (§389, §NNN) it is the parent's to make
+                The fitness statement. On the family form (§389, §421) it is the parent's to make
                 for a minor, as on the ordinary form, and nobody's to make for another adult: then
                 the address holder acknowledges that the person makes it in the declaration they
                 sign. The birth date decides which one is shown; the server decides which one is owed.
@@ -1352,7 +1352,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                       )}
                     </>
                   );
-                  // On the family form, a minor's only (§NNN): another adult consents to the list themselves.
+                  // On the family form, a minor's only (§421): another adult consents to the list themselves.
                   return family ? <ShownForMinor birthDateId={fieldId("birthDate")}>{listQuestion}</ShownForMinor> : listQuestion;
                 })()}
 

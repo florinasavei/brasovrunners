@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEADLINE_RULES, DEFAULT_DEADLINES, deadlinesSettingSchema, publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
 
 /**
- * §NNN — a public participant list closes by itself, the club's number of days after the event
+ * §421 — a public participant list closes by itself, the club's number of days after the event
  * ("Termene", `publicListDays`), whatever the event's switch says. The list is a disclosure
  * (§32, AGENTS.md §10.10), and a disclosure with no end kept names public until the three-year
  * deletion. Checked at request time by the component that draws every page of the list, because
@@ -30,7 +30,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("§NNN the public list's period", () => {
+describe("§421 the public list's period", () => {
   it("is thirty days by default, one to 365, and counts from the end when the event has one", () => {
     expect(DEFAULT_DEADLINES.publicListDays).toBe(30);
     expect(DEADLINE_RULES.publicListDays).toMatchObject({ unit: "days", min: 1, max: 365 });

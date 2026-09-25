@@ -148,7 +148,7 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes the public list's
- * states in **every** language (`describesListStates`), or null when none does (§NNN, narrowing
+ * states in **every** language (`describesListStates`), or null when none does (§421, narrowing
  * §396).
  *
  * The line between two kinds of consent. A runner who ticked «Vreau să apar» under a notice that
@@ -158,7 +158,7 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
  * confirmed list is what every notice described, and is unchanged. Approved ahead of its date
  * counts too: nobody can have registered under a later number before it took effect.
  *
- * **Assumes the marker, once approved, is never dropped from a later version** (§NNN, finding
+ * **Assumes the marker, once approved, is never dropped from a later version** (§421, finding
  * (10) of the fix round on `feat/registration-consent-and-terms`). The gate this feeds
  * (`registrations/repository.ts`) is `privacy_notice_version >= this lowest version`, which is
  * only correct if every version from here on also describes the states. A club that approved v5
@@ -435,7 +435,7 @@ export type LegalDocumentVersionRow = {
   eventCount: number;
   /**
    * Registrations that recorded this version's *number* as the privacy notice they
-   * acknowledged — or, for a terms version, as the terms they accepted (`terms_version`, §NNN) —
+   * acknowledged — or, for a terms version, as the terms they accepted (`terms_version`, §421) —
    * the reliance the database cannot see.
    *
    * `registrations.privacy_notice_version` is a plain `integer` with no foreign key, as are
@@ -471,7 +471,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, per key, because that is the only shape this reference
-      // has: there is no id to join on. The terms since §NNN: a registration records the terms
+      // has: there is no id to join on. The terms since §421: a registration records the terms
       // version its tick named (`terms_version`), so a terms version somebody accepted is relied
       // on exactly as a notice somebody acknowledged — refused withdrawal and deletion alike. Rows
       // from before the column record none; the in-force window (§316) still answers for them.

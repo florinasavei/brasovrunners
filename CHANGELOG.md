@@ -8,6 +8,28 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.00-2026-09-25
+
+- **The legal texts are production-ready**: the terms, the privacy notice, the race declaration and the two group-run declarations use the counsel review's wording.
+  - The declaration accepts the risks without waiving liability.
+  - The terms allow family registration and name the courts by the Code of Civil Procedure.
+  - The notice says where data comes from, treats the fitness tick as health data, says where the providers really process it, and describes a public list that closes after {{publicListPeriod}}.
+  - The group-run texts ask for no identity number.
+  - The signing box accepts the liability limits expressly and tells an adult to sign personally.
+  - The club approves the five new versions in /admin/legal before the race is published. §418.
+- **Participant emails ready for production, per the counsel's review of 2026-09-25:**
+  - The address confirmation says whose registration it is, where the data came from, how long the link lives, and that the registration lapses without it.
+  - The freed place's offer names its deadline and a length that agrees with it: the offer's own span, in minutes when the cap left under an hour, «până la start» when it ends at the start.
+  - A minor's messages greet the parent, say whose registration it is and who signs.
+  - One neutral privacy line on every participant message.
+  - The confirmation asked in advance no longer says the race is free.
+  - The update notice offers a way out through "Înscrierile mele".
+  - The family link asks for the other person's agreement.
+  - The archive copies say how the document is masked and how long to keep it, with every period taken from the retention sweep.
+  - The group-run signer's copy is masked, with a "not you?" route.
+  - The club's copies: none of a message to an unconfirmed address, and one per bulk send with the count and no names. The allowance forecast now counts four copies per registration per address, not five. §419.
+- **The registration lifecycle's audit, closed.** Each "register another person" email keeps its own link, and the address's limit is still counted under the event's lock (migration `0080`). A desk entry that races a public submission on the same address is refused out loud and never confirms the other runner on this person's paper. No waiting-list offer is emailed once registration has closed; a lapsed hold still goes back to the queue, and the desk gives that place. The `/admin/emails` forecast promises no such offer. A lapsed declaration hold gives its provisional number back, so the desk can confirm the runner after the settle. The settle numbers only real places. An offer carries a number. A verification link dies with the registration's own link and never answers "confirmed" after the lapse. A declaration link on a registration that has moved on says where it stands. A wrong Turnstile secret refuses nobody, and `/api/health` and `/admin/tasks` now report it; a passing Cloudflare fault does not. The desk and events-list counters leave test registrations out. §420.
+- **The counsel review's registration changes, before the race opens** (§421): one required tick, never folded, for the club's terms on the public form and the family link, naming the version in force and the unusual clauses it accepts expressly (Civil Code art. 1203). A registration is refused without it, or while no terms are approved. The row records `terms_version` and `terms_accepted_at` (migration `0081`), and a terms version somebody accepted can no longer be withdrawn or deleted. A tick refused because the terms changed while the form was being filled comes back unticked, with a line saying so. On the family link, another adult's health note, socials, list tick and fitness statement are dropped whatever was posted, and an acknowledgement stands in for the statement. The public list shows a pending or waiting runner only if they ticked under a notice that describes the states. It closes by itself «Termene» → `publicListDays` days after the event (default 30, 1–365, `{{publicListPeriod}}` in the notice), and search engines are told not to snippet it. The emergency contact is erased seven days after the event. Every event page carries the photographs notice, with a way to object and the privacy link, and the gallery's upload help ends with the upload rule §421.
 ## BR-V1.99-2026-09-25
 
 - **Difficulty has five levels, and a gauge in place of the weights:** «Foarte ușor · Ușor · Mediu · Greu · Foarte greu» / «Very easy · Easy · Moderate · Hard · Very hard» (HARD now reads «Greu»; saved events keep their value). The editor offers all five, and the sample seed shows both ends. The pill's glyph is now a half-dial with its needle at one of five positions, drawn in the pill's own ink. It is the same on the listing card, the event page, the hero, the backoffice cards and the editor's choice. The word stays beside it, and «— Dificultate» is kept for screen readers. The «Mediu» pill measures 67.9 px at 320 px, down from 103.9 px with §399's weights. Migration `0078` adds the two enum values and nothing else. §412.

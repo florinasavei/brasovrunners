@@ -61,7 +61,7 @@ export async function registrationStatus(id: string): Promise<string> {
 }
 
 /**
- * Backdates a `PENDING_EMAIL_CONFIRMATION` row's link so it reads as lapsed (§NNN, e2e for
+ * Backdates a `PENDING_EMAIL_CONFIRMATION` row's link so it reads as lapsed (§420, e2e for
  * finding (7)) — the setup for "an expired verification link renders the lapsed notice, not
  * 'confirmed'", never the subject itself: the page under test still does the lapsing, through
  * `confirmEmailAction`, when the link is pressed.
@@ -74,7 +74,7 @@ export async function expireEmailConfirmationLink(id: string): Promise<void> {
 
 /**
  * Moves a registration straight to a state a live declaration link can then find moved on
- * (§NNN, e2e for finding (8)) — the setup, not the subject: the declare page's own notice is
+ * (§420, e2e for finding (8)) — the setup, not the subject: the declare page's own notice is
  * what the spec asserts on.
  */
 export async function setRegistrationStatus(id: string, status: string): Promise<void> {
@@ -123,7 +123,7 @@ export async function latestAcceptance(registrationId: string): Promise<{
  * the wait (a deferred send) mints nothing until something drains it again, which is later than
  * any spec needs the link.
  *
- * `REGISTER_ANOTHER_PERSON` is the exception (§389, §NNN): every such link stays live beside the
+ * `REGISTER_ANOTHER_PERSON` is the exception (§389, §420): every such link stays live beside the
  * others, as `issueActionToken` leaves them — the partial unique index no longer covers that
  * purpose — so minting one here supersedes nothing, exactly as the real send does not.
  */
@@ -150,7 +150,7 @@ export async function mintActionLink(
     try {
       // One live token per registration and purpose (the partial unique index): supersede, then add —
       // for every purpose but the family link, which the index leaves out and the real send never
-      // supersedes (§389, §NNN).
+      // supersedes (§389, §420).
       if (purpose !== "REGISTER_ANOTHER_PERSON") {
         await client.query(
           `UPDATE email_action_tokens SET invalidated_at = now()

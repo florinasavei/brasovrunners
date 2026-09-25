@@ -102,7 +102,7 @@ export async function GET(): Promise<Response> {
   // below succeeds or not.
   // Same reasoning as the Neon quota reading: a call to a third party (Cloudflare), cached for
   // fifteen minutes, independent of this connection, answered whether the probe below succeeds
-  // or not — and never failing this endpoint on its own account (§NNN, finding (10)'s health
+  // or not — and never failing this endpoint on its own account (§420, finding (10)'s health
   // half). `not_configured` and `unreachable` are silently `ok`-shaped; only `misconfigured` is
   // something a human needs to act on.
   const [reachable, neonQuota, turnstile] = await Promise.all([
@@ -170,7 +170,7 @@ export async function GET(): Promise<Response> {
       // the 503 and a monitor need (the status and the share of the quota spent) is published
       // here. `/admin/tasks` and `/devs` are where the full figures belong.
       neon: { status: neonQuota.status, percent: neonQuota.percent },
-      // The bot check's secret, probed rather than merely read as set (§NNN, finding (10)): a
+      // The bot check's secret, probed rather than merely read as set (§420, finding (10)): a
       // wrong `TURNSTILE_SECRET_KEY` fails registration open (§205) and used to announce itself
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
       // endpoint reports; only `misconfigured` is.

@@ -158,7 +158,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await page.getByRole("radio", { name: /Toți cei înscriși/ }).check();
     await expect(recipients).toContainText("2 destinatari");
 
-    // The counsel's scope line under the body (§NNN, review finding): what the organizer may
+    // The counsel's scope line under the body (§419, review finding): what the organizer may
     // write about, and why — visible before anything is typed, not only on a refusal.
     await expect(page.getByTestId("participant-message-scope")).toContainText("Scrie doar despre acest eveniment");
 

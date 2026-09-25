@@ -511,7 +511,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     sentAt: null,
   });
 
-  it("§NNN the address confirmation names whose registration it is, how long the link lives, and where the data came from", async () => {
+  it("§419 the address confirmation names whose registration it is, how long the link lives, and where the data came from", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const message = await renderOutboxMessage(rowOf("VERIFY_REGISTRATION_EMAIL", "verify"), db, NOW);
@@ -524,7 +524,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).toContain("If you did not request this registration, you can ignore this message.");
   });
 
-  it("§NNN the freed place's offer names its deadline and its length, and a lapsed one only its length", async () => {
+  it("§419 the freed place's offer names its deadline and its length, and a lapsed one only its length", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const offerDeadline = new Date(NOW.getTime() + 24 * 60 * 60_000);
@@ -544,7 +544,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(lapsed.text).not.toContain("până la");
   });
 
-  it("§NNN a capped offer states the length it was actually given, not the club's current setting (review finding)", async () => {
+  it("§419 a capped offer states the length it was actually given, not the club's current setting (review finding)", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     /*
@@ -569,7 +569,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).not.toContain(hoursPhrase("ro", DEFAULT_DEADLINES.offerHours));
   });
 
-  it("§NNN an offer capped under an hour says its minutes, never «o oră» (review finding)", async () => {
+  it("§419 an offer capped under an hour says its minutes, never «o oră» (review finding)", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const cappedDeadline = new Date(NOW.getTime() + 20 * 60_000);
@@ -585,7 +585,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).not.toContain("one hour");
   });
 
-  it("§NNN a capped offer never states more than its real span (review finding)", async () => {
+  it("§419 a capped offer never states more than its real span (review finding)", async () => {
     /*
       §355's `Math.round(offerMinutes / 60)` said "2 ore" for a 91-minute offer — a runner reading
       "you have 2 hours" beside a deadline 90 or 91 minutes away is told more time than the
@@ -617,7 +617,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     }
   });
 
-  it("§NNN a span with extra seconds is floored, never rounded up — 90 minutes 40 seconds still reads 90", async () => {
+  it("§419 a span with extra seconds is floored, never rounded up — 90 minutes 40 seconds still reads 90", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const cappedDeadline = new Date(NOW.getTime() + 90 * 60_000 + 40_000);
@@ -631,7 +631,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).toContain("(you have 90 minutes)");
   });
 
-  it("§NNN an offer capped at the event's own start reads «până la start» / \"by the start\" (§407)", async () => {
+  it("§419 an offer capped at the event's own start reads «până la start» / \"by the start\" (§407)", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     // `capHoldExpiry` never lets a hold outlive the start; an offer made two hours before it and
@@ -652,7 +652,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).toContain("(you have 2 hours)");
   });
 
-  it("§NNN a minor's messages greet the parent, say whose registration it is and who signs", async () => {
+  it("§419 a minor's messages greet the parent, say whose registration it is and who signs", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     await db.update(registrations).set({ guardianName: "Maria Pop" }).where(eq(registrations.id, registrationId));

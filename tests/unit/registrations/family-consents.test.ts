@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { anotherPersonFitnessRule, anotherPersonSubmissionSchema, withoutAnotherAdultsConsents } from "@/modules/registrations/fields";
 
 /**
- * §NNN — what the family form (§389) may carry for another adult: none of the consents only that
+ * §421 — what the family form (§389) may carry for another adult: none of the consents only that
  * adult can give. Dropped before the schema reads anything, so a form posted without JavaScript,
  * or by anything else, stores no health note, no socials and no list tick, and makes no
  * first-person fitness statement; the address holder's acknowledgement stands in for it. A minor
@@ -35,7 +35,7 @@ const posted = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-describe("§NNN the family form and another adult's consents", () => {
+describe("§421 the family form and another adult's consents", () => {
   it("drops the health note, the socials, the list tick and the fitness statement for an adult", () => {
     expect(withoutAnotherAdultsConsents(posted(), NOW)).toMatchObject({
       healthNotes: undefined,

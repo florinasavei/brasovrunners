@@ -82,7 +82,7 @@ async function createEvent(): Promise<PublicEvent> {
     { eventId: event.id, locale: "ro", slug: "cros-stari", title: "Cros" },
     { eventId: event.id, locale: "en", slug: "cross-states", title: "Cross" },
   ]);
-  // The two dates the list's period counts from (§NNN), beside what the list itself reads.
+  // The two dates the list's period counts from (§421), beside what the list itself reads.
   return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
@@ -97,7 +97,7 @@ async function register(
     confirmedAt?: Date;
     emailConfirmedAt?: Date;
     waitlistedAt?: Date;
-    /** The notice this registration was given (§NNN); 1 unless said. */
+    /** The notice this registration was given (§421); 1 unless said. */
     privacyNoticeVersion?: number;
   },
 ) {
@@ -215,7 +215,7 @@ describe("§396 with a notice that describes the states", () => {
   });
 
   /**
-   * §NNN — a tick given under the older notice covered confirmed names only: such a runner is not
+   * §421 — a tick given under the older notice covered confirmed names only: such a runner is not
    * published as pending or waiting, and is on the list once confirmed, as that notice said.
    */
   it("lists pending and waiting only those registered under the first notice that described the states", async () => {

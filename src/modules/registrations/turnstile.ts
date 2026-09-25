@@ -18,13 +18,13 @@ export const TURNSTILE_FIELD = "cf-turnstile-response";
 
 /**
  * Siteverify's error codes that say the *server's* side is wrong — a missing or invalid secret, or
- * Cloudflare's own internal error — and nothing about the visitor's token (§NNN). Every other
+ * Cloudflare's own internal error — and nothing about the visitor's token (§420). Every other
  * code (`invalid-input-response`, `timeout-or-duplicate`, …) is about the token, and stays a refusal.
  */
 const SERVER_SIDE_ERROR_CODES: ReadonlySet<string> = new Set(["missing-input-secret", "invalid-input-secret", "internal-error"]);
 
 /**
- * Of those, the codes that say the *secret* is wrong (§NNN). `internal-error` is Cloudflare's own
+ * Of those, the codes that say the *secret* is wrong (§420). `internal-error` is Cloudflare's own
  * fault — transient, like a 5xx — and says nothing about the secret, so the health probe reads it
  * as `unreachable`, never `misconfigured`: a passing fault must not show a wrong secret for the
  * probe's cache window.
@@ -88,7 +88,7 @@ export async function verifyTurnstile(
     const result = (await response.json()) as { success?: boolean; "error-codes"?: unknown };
     if (result.success === true) return "passed";
     /*
-      A refusal about *our* configuration is not a refusal of this visitor (§NNN). Cloudflare
+      A refusal about *our* configuration is not a refusal of this visitor (§420). Cloudflare
       answers a mistyped, rotated or another widget's secret — and its own internal error — with
       HTTP 200 and `success: false`, the same shape as a token it rejected. Scored as `failed`,
       that refused every person whose widget loaded while only the people whose browser blocked it
@@ -113,7 +113,7 @@ export async function verifyTurnstile(
 const TURNSTILE_HEALTH_CACHE_SECONDS = 900;
 
 /**
- * What the secret-health probe answered (§NNN, closing finding (10)'s health half).
+ * What the secret-health probe answered (§420, closing finding (10)'s health half).
  *
  * `verifyTurnstile` fails a misconfigured secret *open* on purpose (§205) — a wrong
  * `TURNSTILE_SECRET_KEY` must never refuse a real registration — but that meant nothing on the

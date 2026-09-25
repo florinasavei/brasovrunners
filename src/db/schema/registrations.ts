@@ -222,7 +222,7 @@ export const registrations = pgTable(
     phone: text("phone"),
     /**
      * A third person's name and number, for race day (BR-BUS-031). Cleared seven days after the
-     * event's start with the identity document and the health note (§NNN,
+     * event's start with the identity document and the health note (§421,
      * `jobs/retention.ts` step `identity-and-health`): the purpose ends on race day, and the row
      * is kept three years for other reasons.
      */
@@ -280,7 +280,7 @@ export const registrations = pgTable(
      * "I declare I am medically fit to take part" (§171; the owner: "nu e clar cu informațiile
      * medicale, trebuie să bifeze doar «declar că sunt apt»").
      *
-     * **Treated as data concerning health** (§NNN, amending §171): only the fact of the tick and
+     * **Treated as data concerning health** (§421, amending §171): only the fact of the tick and
      * its moment are kept, no condition and no diagnosis, but read prudently a statement about
      * one's fitness concerns one's health. It is required because it rests on no consent — it is
      * kept under art. 9(2)(f) GDPR, as evidence for the establishment, exercise or defence of
@@ -289,7 +289,7 @@ export const registrations = pgTable(
      *
      * Null for every registration taken before this existed, for a row a staff member entered at
      * the desk on a paper declaration — there the paper carries the statement — and for an adult
-     * registered by somebody else on the same address (§389, §NNN): a first-person statement
+     * registered by somebody else on the same address (§389, §421): a first-person statement
      * cannot be made on another adult's behalf, so that adult makes it in the declaration they
      * sign themselves.
      */
@@ -310,7 +310,7 @@ export const registrations = pgTable(
     rulesAcknowledgedAt: timestamp("rules_acknowledged_at", { withTimezone: true }),
 
     /**
-     * The club's terms, accepted expressly on the form (§NNN): the version in force when the form
+     * The club's terms, accepted expressly on the form (§421): the version in force when the form
      * was sent, and the moment — beside `privacy_notice_version`, and rewritten with it when a
      * cancelled or expired registration is sent again. Like that column, a plain number with no
      * foreign key; `/admin/legal` counts it (`listVersionsForBackoffice`).

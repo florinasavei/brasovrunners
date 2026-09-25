@@ -349,7 +349,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   <Typography sx={{ fontWeight: 600 }}>{item.eventTitle ?? item.eventId}</Typography>
                   <Chip size="small" label={t(`mine.status.${item.status}`)} />
                 </Stack>
-                {/* Whose data the buttons below withdraw (§389, §NNN): one address may carry several runners. */}
+                {/* Whose data the buttons below withdraw (§389, §420): one address may carry several runners. */}
                 <Typography variant="body1" data-testid="my-closed-registration-name">
                   {t("mine.runner", { name: item.registeredName })}
                 </Typography>

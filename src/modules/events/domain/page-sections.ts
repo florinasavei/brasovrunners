@@ -230,7 +230,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: "video", card: "box-video", anchor: null, glyph: "video", automatic: false, drawn: ({ event }) => youtubeVideoId(event.videoUrl) !== null },
   // The public participant list (BR-REQ-039-01): only where the event publishes one.
   //
-  // Left as the switch alone, not also `publicListStillOpen` (§NNN, finding (11) of the fix
+  // Left as the switch alone, not also `publicListStillOpen` (§421, finding (11) of the fix
   // round on `feat/registration-consent-and-terms`): the editor's page map has no `now` or the
   // club's deadlines to consult, and it says "drawn", not "drawn right now" — the list the club
   // switched on stays marked drawn on the map after the club's period has closed it on the

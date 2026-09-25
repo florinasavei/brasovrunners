@@ -255,7 +255,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   // The anti-bot switch (§254): read straight through, because this page is where it is moved.
   const botCheck = await readBotCheck(db);
-  // Whether the configured secret works, not merely whether it is set (§NNN, finding (10)'s
+  // Whether the configured secret works, not merely whether it is set (§420, finding (10)'s
   // health half) — cached fifteen minutes, same as `/api/health`.
   const botCheckHealth = await probeTurnstileSecret();
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);

@@ -79,7 +79,7 @@ describe("§383 when an automatic email is due", () => {
     expect(nextInLineOffers({ lapses: [at(5 * DAY)], waiting: 2, startsAt: at(4 * DAY), registrationClosesAt: null, now: NOW })).toEqual([]);
   });
 
-  it("offers nobody a place from the close on, while the release still spends the person waiting (§NNN)", () => {
+  it("offers nobody a place from the close on, while the release still spends the person waiting (§420)", () => {
     // Registration closes in a day: an offer made at or after it would be born lapsed, and
     // `fillAvailableSpots` makes none (BR-REQ-035-02 criterion 3).
     const lapses = [at(20 * HOUR), at(DAY), at(2 * DAY)];

@@ -42,7 +42,7 @@ import { renderBilingual, type TemplateData } from "./templates";
  *
  * Test registrations are written to exactly as §331 writes to them: like a real one (their
  * `@test.invalid` address goes nowhere, and they cannot exist in production, §12.6), and counted
- * apart in every number returned here. The club's copy is one per send since §NNN — the words and
+ * apart in every number returned here. The club's copy is one per send since §419 — the words and
  * how many real participants received them, no names (`enqueueBulkClubCopies`) — where it was one
  * per registration under §320.
  */
@@ -197,7 +197,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       else real += 1;
     }
     if (real + test === 0) return { kind: "duplicate" } as const;
-    // The club's one copy of this send (§NNN): the words and how many real participants it reached.
+    // The club's one copy of this send (§419): the words and how many real participants it reached.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,

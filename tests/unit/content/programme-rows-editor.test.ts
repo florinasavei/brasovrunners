@@ -89,7 +89,7 @@ describe("BR-REQ-050-02 criterion 13 — the programme's help is the compact «i
     expect(html.indexOf(ro.Admin.editor.programmeHelp)).toBeLessThan(html.indexOf('name="event.schedule[0].date"'));
   });
 
-  it("with people registered: the box stays amber without the count (said once under the map, §NNN), and the sentence about them is in the fold, not an amber box", async () => {
+  it("with people registered: the box stays amber without the count (said once under the map, §408), and the sentence about them is in the fold, not an amber box", async () => {
     const html = await box(EVENT, RISK);
     expect(html).not.toContain("23 înscriși");
     expect(html).not.toContain('data-testid="risk-line"');

@@ -49,13 +49,13 @@ test.describe("§389 a family on one address", () => {
     if (email) await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
-    // The club's terms, accepted expressly (§NNN).
+    // The club's terms, accepted expressly (§421).
     await page.locator('[name="termsAccepted"]').check();
     if (email) {
       await page.locator('[name="fitnessDeclared"]').check();
     } else {
       /*
-        The family form for another adult (§NNN): no health note, no socials, no list tick and no
+        The family form for another adult (§421): no health note, no socials, no list tick and no
         first-person fitness statement — those are the person's own to give — and the address
         holder's acknowledgement in the statement's place.
       */
@@ -139,7 +139,7 @@ test.describe("§389 a family on one address", () => {
     await expect(page.locator('[name="phone"]')).not.toHaveAttribute("required", /.*/);
     // The page never scrolls sideways at 320 pixels, in its family shape too.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    // A minor's parent consents for the child (§NNN): the statement and the health note come back
+    // A minor's parent consents for the child (§421): the statement and the health note come back
     // with a birth date under eighteen, and the acknowledgement for an adult goes.
     await page.locator('[name="birthDate"]').fill("2013-04-02");
     await expect(page.locator('[name="fitnessDeclared"]')).toBeVisible();

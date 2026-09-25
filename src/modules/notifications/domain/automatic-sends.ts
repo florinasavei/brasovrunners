@@ -172,7 +172,7 @@ export function nextInLineReleases(input: { lapses: Date[]; waiting: number; sta
 }
 
 /**
- * The offers the releases above turn into: only those made while an offer can still live (§NNN).
+ * The offers the releases above turn into: only those made while an offer can still live (§420).
  * `fillAvailableSpots` makes no offer once its own deadline — the club's offer window capped by
  * the close and the start (BR-REQ-035-02 criterion 3) — would be born at or behind the run's
  * instant, so a lapse at or after `min(registrationClosesAt, startsAt)` frees the place and emails

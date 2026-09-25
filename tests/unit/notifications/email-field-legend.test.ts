@@ -156,7 +156,7 @@ describe("§373 the fields of an email's words, as a legend", () => {
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.intro);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.missing);
 
-    // The name, the event and the link's lifetime since §NNN.
+    // The name, the event and the link's lifetime since §419.
     expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("16 câmpuri · 3 câmpuri folosite aici");
     expect(text(await render("WAITLIST_JOINED", "ro"))).toContain("16 câmpuri · 1 câmp folosit aici");
     expect(text(await render("PROFILE_MANAGE_LINK", "ro"))).toContain("16 câmpuri · niciunul folosit aici");

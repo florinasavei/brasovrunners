@@ -67,7 +67,7 @@ describe("§377 the deadlines as legal merge fields", () => {
     expect(mergeText(text, deadlineMergeValues("ro", { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminderHours: 72, publicListDays: 30 }))).toBe(
       "Confirmi în 12 ore; locul e ținut o oră; oferta, 6 ore; mesaje: legături, un memento cu 3 zile înainte (sau cât alege evenimentul) și o mulțumire.",
     );
-    // §NNN — how long the public list stays up after the event, the unit included, from the setting.
+    // §421 — how long the public list stays up after the event, the unit included, from the setting.
     expect(mergeText("cel mult {{publicListPeriod}} după eveniment", deadlineMergeValues("ro", DEFAULT_DEADLINES))).toBe("cel mult 30 de zile după eveniment");
     expect(mergeText("for at most {{publicListPeriod}} after the event", deadlineMergeValues("en", { ...DEFAULT_DEADLINES, publicListDays: 14 }))).toBe(
       "for at most 2 weeks after the event",
@@ -137,12 +137,12 @@ describe("§377 the deadlines as legal merge fields", () => {
 });
 
 /**
- * §NNN — the counsel review of 2026-09-25: a public list left on must not keep names public until
+ * §418 — the counsel review of 2026-09-25: a public list left on must not keep names public until
  * the three-year deletion, so the privacy notice promises it closes by itself at most
  * `{{publicListPeriod}}` after the event (§4, §7). A period, never a number in the approved text
  * (§357), with its unit, in words that agree with any value, like the deadlines above.
  */
-describe("§NNN the public list's ceiling as a legal merge field", () => {
+describe("§418 the public list's ceiling as a legal merge field", () => {
   it("is a merge field, filled with a period of days in each language", () => {
     expect(isMergeField("publicListPeriod")).toBe(true);
     // One registration, fed from "Termene" (`publicListDays`), never a constant of its own.

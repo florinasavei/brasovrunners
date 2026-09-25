@@ -11,7 +11,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the club's terms, accepted expressly on the form, and the record of which version
+ * §421 — the club's terms, accepted expressly on the form, and the record of which version
  * (BR-REQ-053-01 criterion 3; Codul civil art. 1202–1203; Codul de procedură civilă art. 249).
  *
  * Before this, the terms were a link beside the event's rules — or, on an event with its own
@@ -83,7 +83,7 @@ async function onlyRow(eventId: string) {
   return rows[0];
 }
 
-describe("§NNN the terms tick", () => {
+describe("§421 the terms tick", () => {
   it("refuses a public registration while no terms version is in force, and writes nothing", async () => {
     await approve("PRIVACY_NOTICE", 1);
     const event = await createEvent();
@@ -103,7 +103,7 @@ describe("§NNN the terms tick", () => {
   });
 
   /**
-   * §NNN, finding (7) of the fix round: the version shown and the version about to be recorded
+   * §421, finding (7) of the fix round: the version shown and the version about to be recorded
    * can differ when a new TERMS version is approved between the render and the submit. The tick
    * names a version (`termsVersionShown`, posted alongside it); a mismatch is refused rather than
    * silently recorded under a tick that never named the newer text. An absent one — an older

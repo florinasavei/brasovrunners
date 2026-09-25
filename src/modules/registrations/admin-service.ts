@@ -343,7 +343,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
   /*
-    The row this entry wrote, by the id the service returned (§NNN) — never re-read by address:
+    The row this entry wrote, by the id the service returned (§420) — never re-read by address:
     on a family's address (§389) the newest active row may be another runner's, entered on the
     public form a moment later, and the fast track below would confirm *them* on this person's paper.
   */

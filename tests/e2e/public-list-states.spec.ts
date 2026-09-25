@@ -96,7 +96,7 @@ async function insertDraft(client: pg.Client, translations: Translation[]): Prom
 /** Approve a draft the way the club does, which also expires the public pages' copy (§333). */
 async function approve(page: Page, id: string): Promise<void> {
   await page.goto(`/ro/admin/legal/${id}`);
-  // A tick that lands mid-hydration is lost (§NNN, the audit's flake): wait, as every other backoffice click does.
+  // A tick that lands mid-hydration is lost (§420, the audit's flake): wait, as every other backoffice click does.
   await hydrated(page);
   const form = page.getByTestId("approve-version-form");
   await form.getByRole("checkbox").check();
@@ -154,7 +154,7 @@ async function seedEvent(tag: string): Promise<Seeded> {
            privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out,
            email_confirmed_at, confirmed_at, waitlisted_at)
          VALUES ($1, $2, $3::registration_status, 'ro', $4, $4,
-           -- The newest approved notice, as a registration made now records (§NNN: the pending and
+           -- The newest approved notice, as a registration made now records (§421: the pending and
            -- waiting rows list only ticks given under a notice that described the states).
            (SELECT coalesce(max(version), 1) FROM legal_documents WHERE key = 'PRIVACY_NOTICE' AND is_approved AND withdrawn_at IS NULL),
            now(), false, 1, $5,

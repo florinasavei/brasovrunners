@@ -265,7 +265,7 @@ export async function cachedStartListPage(eventId: string, offset: number, limit
  * How many of the ticked pending and waiting rows the list gains behind the notice's gate
  * (§396) — `countPublicStartListOthers`, expired by the same "places" tag every change of state
  * and every change of the tick expires. Only registrations made under the first notice that
- * described the states, or a later one (§NNN): the version is in the key, so the approval of a
+ * described the states, or a later one (§421): the version is in the key, so the approval of a
  * notice can never serve a count computed against another line.
  */
 export async function cachedStartListOthersCounts(eventId: string, firstStatesNoticeVersion: number): Promise<{ pending: number; waitlisted: number }> {
@@ -283,7 +283,7 @@ export async function cachedStartListOthersPage(eventId: string, firstStatesNoti
 
 /**
  * The first approved privacy notice that described the list's states (`findFirstStatesNoticeVersion`,
- * §NNN), or null — the line below which a tick was given under a notice promising confirmed names
+ * §421), or null — the line below which a tick was given under a notice promising confirmed names
  * only. Expired with every legal text (an approval, a withdrawal, a deletion).
  */
 export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {

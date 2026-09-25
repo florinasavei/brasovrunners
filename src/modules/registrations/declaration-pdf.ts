@@ -63,7 +63,7 @@ export type DeclarationPdfInput = {
   locale: string;
   generatedAt: Date;
   /**
-   * A second footer line on every page while the file carries a full identity document (§NNN):
+   * A second footer line on every page while the file carries a full identity document (§418):
    * the event's bundle, downloaded by staff, says it must be deleted within seven days of the event.
    * Drawn only when some entry's signature still holds a document the database has not cleared.
    */
@@ -132,7 +132,7 @@ const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
 /**
- * The footer's second line (§NNN), or nothing: only a file that still carries an identity document
+ * The footer's second line (§418), or nothing: only a file that still carries an identity document
  * the database has not cleared — a signed entry's, the declarant's or a minor's — says to delete it.
  * A blank form, or a bundle drawn after the seven-day sweep, has none to warn about. Pure, for its test.
  */

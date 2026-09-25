@@ -21,7 +21,7 @@ import { RETENTION_PERIODS } from "./domain/retention-periods";
  * Every window this sweep enforces, in the order it runs them (§322):
  *
  *     identity document, health note,  7 days after the event's start (cleared, the rows stay)
- *     emergency contact                  (the contact since §NNN)
+ *     emergency contact                  (the contact since §421)
  *     a group run's self-declarations  7 days after the event's start (the rows go; §393)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
@@ -145,7 +145,7 @@ export type PruneCounts = {
   participants: number;
   identityDocuments: number;
   healthNotes: number;
-  /** Registrations whose emergency contact was cleared, seven days after the event (§NNN). */
+  /** Registrations whose emergency contact was cleared, seven days after the event (§421). */
   emergencyContacts: number;
   /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
   minorSocials: number;
@@ -262,7 +262,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .where(and(isNotNull(registrations.healthNotes), inArray(registrations.id, recent)))
       .returning({ id: registrations.id });
     /*
-      The emergency contact (§NNN): a third person's name and number, asked for race day and for
+      The emergency contact (§421): a third person's name and number, asked for race day and for
       nothing after it. Cleared with the documents and the note — a separate statement, so the
       count says how many rows lost a contact rather than a note — and kept no longer than seven
       days because nobody is rung about a race that is over.

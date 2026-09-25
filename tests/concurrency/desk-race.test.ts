@@ -15,7 +15,7 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * §NNN × BR-REQ-037-05, BR-REQ-037-07 — a desk entry racing a public submission on one address,
+ * §420 × BR-REQ-037-05, BR-REQ-037-07 — a desk entry racing a public submission on one address,
  * on two real connections.
  *
  * The desk's duplicate check (`createRegistrationByStaff`) reads outside the event's lock, so a
@@ -34,7 +34,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submission, on two connections", () => {
+describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submission, on two connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date("2026-09-25T10:00:00.000Z");

@@ -38,7 +38,7 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * nothing for an event that sends none), the participation confirmation when the window opens
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
- * closes (§160, AGENTS.md §10.5, §NNN),
+ * closes (§160, AGENTS.md §10.5, §420),
  * "here is your race number" when registration closes (§214), and "registration is open" to the
  * addresses left on the event's page (§146).
  *
@@ -169,7 +169,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         registrationClosesAt: rows[0].registrationClosesAt,
         now,
       };
-      // Every release spends a hold, offer or not: after the close (§NNN) the job still releases a
+      // Every release spends a hold, offer or not: after the close (§420) the job still releases a
       // lapsed hold to the queue — the desk gives that place — but emails nobody an offer for it.
       const consumed = nextInLineReleases(lapsing).reduce((sum, release) => sum + release.count, 0);
       const offers = nextInLineOffers(lapsing);

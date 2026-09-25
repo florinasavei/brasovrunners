@@ -191,7 +191,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
       expect(message.payloadJson, message.messageType).not.toHaveProperty("clubCopy");
 
       const copies = rows.filter((row) => row.messageType === message.messageType && row.participantId === null);
-      // The address confirmation goes to an address nobody has confirmed yet: no copy of it (§NNN).
+      // The address confirmation goes to an address nobody has confirmed yet: no copy of it (§419).
       if (message.messageType === "VERIFY_REGISTRATION_EMAIL") {
         expect(copies, message.messageType).toEqual([]);
         continue;

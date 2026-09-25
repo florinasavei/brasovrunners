@@ -90,7 +90,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     }
 
     /*
-      The club's terms, accepted expressly (§NNN): their own tick, required, naming the version in
+      The club's terms, accepted expressly (§421): their own tick, required, naming the version in
       force and the unusual clauses — and the event-rules tick beside it no longer points at them.
     */
     const termsLabel = page.locator("label").filter({ has: page.locator('[name="termsAccepted"]') });
@@ -191,7 +191,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
   test("a tick given under terms that changed comes back unticked, says so, and the next tick is taken", async ({ page }) => {
     /*
-      §NNN. The service refuses a tick whose rendered version (`termsVersionShown`) is no longer the
+      §421. The service refuses a tick whose rendered version (`termsVersionShown`) is no longer the
       one in force; the draft cookie brings every other box back as posted, but this one must come
       back unticked, or the runner accepts a version they never saw. A newer version approved in
       another tab is what happens in life; here the posted version is moved one ahead instead.

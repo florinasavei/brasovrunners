@@ -182,7 +182,7 @@ export async function listClosedRegistrationsHoldingConsentData<T extends Record
     .select({
       id: registrations.id,
       status: registrations.status,
-      // Whose data each button withdraws (§389, §NNN): a family's two closed registrations at one
+      // Whose data each button withdraws (§389, §420): a family's two closed registrations at one
       // event would otherwise be two identical cards.
       registeredName: registrations.registeredName,
       eventId: registrations.eventId,

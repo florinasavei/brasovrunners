@@ -65,7 +65,7 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
     selfCheckinHours: "24",
     raceWeekDays: "7",
     seriesHorizonDays: "56",
-    // How long a public participant list stays up after the event (§NNN).
+    // How long a public participant list stays up after the event (§421).
     publicListDays: "30",
   };
 

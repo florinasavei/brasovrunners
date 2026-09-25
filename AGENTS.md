@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.99-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V2.00-2026-09-25 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.99-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.00-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1968,7 +1968,7 @@ WAITLIST_OFFER
 MANAGE_PROFILE
 ```
 
-Never store raw token.
+Never store raw token. Minting a token supersedes the live one of the same registration and purpose (the partial unique index) — except `REGISTER_ANOTHER_PERSON`, whose links are never superseded: each stays live for its window (`DECISIONS.md` §420).
 
 A token is only ever sent to the participant: the club's copies of their messages are separate club-copy rows with no token minted, no action link, no QR and no attachment (`DECISIONS.md` §320).
 

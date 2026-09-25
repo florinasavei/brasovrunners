@@ -68,7 +68,7 @@ export type DeadlineRule = {
  * - **race week** 0 (the race day only) to 21 days;
  * - the **series horizon** 14 to 182 days: two weeks is the least a listing should show ahead,
  *   half a year the most rows anybody should have created and not looked at (§122);
- * - the **public list** 1 to 365 days after the event, 30 by default (§NNN): how long a participant
+ * - the **public list** 1 to 365 days after the event, 30 by default (§421): how long a participant
  *   list the club switched on stays public before it closes by itself. A day at least, so a list is
  *   still there the evening after; a year at most, the ceiling the brief set, so a club that keeps a
  *   season's lists up can say so in its notice — the default is a month, because the names are a
@@ -216,7 +216,7 @@ export function seriesHorizonEnd(now: Date, deadlines: Pick<Deadlines, "seriesHo
 }
 
 /**
- * When a public participant list closes by itself (§NNN): the club's number of days after the
+ * When a public participant list closes by itself (§421): the club's number of days after the
  * event ends — its end when it has one, its start otherwise. Checked at request time by the page
  * that draws the list, never only by a cached query: the public cache (§333) expires on writes,
  * and the passing of a date is not one.
@@ -229,7 +229,7 @@ export function publicListClosesAt(
   return new Date(end.getTime() + deadlines.publicListDays * DAY);
 }
 
-/** Whether an event's public list is still inside the club's period (§NNN). */
+/** Whether an event's public list is still inside the club's period (§421). */
 export function publicListStillOpen(
   event: { startsAt: Date; endsAt?: Date | null },
   now: Date,

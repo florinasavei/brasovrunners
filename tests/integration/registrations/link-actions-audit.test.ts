@@ -9,7 +9,7 @@ import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modul
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * The registration audit (§NNN), at the three server actions a participant presses — each on the
+ * The registration audit (§420), at the three server actions a participant presses — each on the
  * real clock, as the actions read it, with Next's redirect caught where the browser would follow it:
  *
  * - the confirmation link of a registration that had already lapsed says "lapsed", never
@@ -147,7 +147,7 @@ async function secretOf(messageType: string): Promise<string> {
   return match[1];
 }
 
-describe("§NNN BR-REQ-031-03 criterion 2 the confirmation page of a lapsed registration", () => {
+describe("§420 BR-REQ-031-03 criterion 2 the confirmation page of a lapsed registration", () => {
   it("says the registration lapsed, not 'confirmed, now sign'", async () => {
     await createEvent(30);
     expect(await press(submitRegistrationAction, registrationForm("Ana", "ana@example.ro"))).toContain("submitted=1");
@@ -171,7 +171,7 @@ describe("§NNN BR-REQ-031-03 criterion 2 the confirmation page of a lapsed regi
   });
 });
 
-describe("§NNN AGENTS.md §14.3 a live declaration link on a registration that has moved on", () => {
+describe("§420 AGENTS.md §14.3 a live declaration link on a registration that has moved on", () => {
   it("returns to its page with nothing spent, instead of ending on the error page", async () => {
     const event = await createEvent(30);
     await press(submitRegistrationAction, registrationForm("Ana", "ana@example.ro"));
@@ -191,7 +191,7 @@ describe("§NNN AGENTS.md §14.3 a live declaration link on a registration that 
     form.set("documentId", document!.id);
     form.set("contentSha256", document!.contentSha256);
     const to = await press(signDeclarationAction, form);
-    // `?invalid=1` now rides along on every non-DECLARATION_CHANGED CONFLICT (§NNN, nit found in
+    // `?invalid=1` now rides along on every non-DECLARATION_CHANGED CONFLICT (§420, nit found in
     // review) — harmless here: the registration has moved on, so the page's own moved-on notice
     // takes priority over the flag regardless of whether it is present.
     expect(to).toMatch(new RegExp(`/${token}(\\?invalid=1)?$`));
@@ -202,7 +202,7 @@ describe("§NNN AGENTS.md §14.3 a live declaration link on a registration that 
   });
 });
 
-describe("§NNN §104 the public form's restart holds the place until the participation window's deadline", () => {
+describe("§420 §104 the public form's restart holds the place until the participation window's deadline", () => {
   it("a verified runner registering again weeks before the race is held until two days before, not thirty minutes", async () => {
     const event = await createEvent(57);
     await press(submitRegistrationAction, registrationForm("Ana", "ana@example.ro"));

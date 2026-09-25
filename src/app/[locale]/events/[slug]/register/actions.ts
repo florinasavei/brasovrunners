@@ -88,7 +88,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
       if (!internalEvent) redirect(getPathname({ locale, href: "/events" }));
       registered = await consumeAndRegisterAnotherPerson(
         another,
-        // The whole row the allocator needs, the participation window included (§104, §NNN).
+        // The whole row the allocator needs, the participation window included (§104, §420).
         publicFormEvent(internalEvent, publicEvent.publishedAt),
         readRegistrationForm(form, locale),
         {
@@ -134,7 +134,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     await submitRegistration(
       db,
       // The whole row the allocator needs: the race's own day and minimum age (§321, §329), and the
-      // participation window, which a verified runner's restart is held until (§104, §NNN).
+      // participation window, which a verified runner's restart is held until (§104, §420).
       publicFormEvent(internalEvent, publicEvent.publishedAt),
       readRegistrationForm(form, locale),
       new Date(),

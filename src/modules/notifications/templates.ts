@@ -493,7 +493,7 @@ export type TemplateData = {
     offerHours: number;
     /**
      * This offer's own length in minutes, from `offerCreatedAt` to the (possibly capped)
-     * `holdExpiresAt` (`render.ts`, §NNN): `{offerHours}` then says whole hours only when the
+     * `holdExpiresAt` (`render.ts`, §419): `{offerHours}` then says whole hours only when the
      * span is exactly that many, and minutes otherwise — "20 de minute", "91 de minute" — never a
      * length longer than the real span.
      */
@@ -591,22 +591,22 @@ export type TemplateData = {
   addressAtCap?: boolean;
   /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
-   * message greets them and says whose registration it is about (§NNN) — the address is theirs.
+   * message greets them and says whose registration it is about (§419) — the address is theirs.
    */
   guardianName?: string;
   /**
-   * On a declaration request for a minor (§NNN): whether the declaration in force asks the minor to
+   * On a declaration request for a minor (§419): whether the declaration in force asks the minor to
    * sign beside the parent (§330, `asksForMinorSignature`) — the line then says both sign, each
    * with their own identity document.
    */
   minorSigns?: boolean;
   /**
-   * A bulk send's one club copy (§NNN; `enqueueBulkClubCopies`): how many real participants the
+   * A bulk send's one club copy (§419; `enqueueBulkClubCopies`): how many real participants the
    * send reached. The copy then greets the club, names nobody and says the count.
    */
   clubCopyRecipients?: number;
   /**
-   * A group run's signer's copy whose PDF shows the identity document masked (§NNN): the text asked
+   * A group run's signer's copy whose PDF shows the identity document masked (§419): the text asked
    * for one, and the address it goes to was never confirmed. The message says so.
    */
   idDocumentMasked?: boolean;
@@ -628,7 +628,7 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
 }
 
 /**
- * A neutral word for the runner the one bulk club copy names nobody in particular (§NNN, review
+ * A neutral word for the runner the one bulk club copy names nobody in particular (§419, review
  * finding): the organizer's body may read "Salut, {participantName}!", and the bulk copy has no
  * one registration to fill that with — never a blank ("Salut, !").
  */
@@ -644,7 +644,7 @@ function bulkParticipantWord(locale: EmailLocale): string {
  *
  * On the one bulk club copy (`bulkCopy`), `{participantName}` and `{bibNumber}` — facts this
  * copy has none of — read as a neutral word and nothing, rather than the blank a per-registration
- * send's missing field would leave (§NNN, review finding: "Salut, !" is not a sentence).
+ * send's missing field would leave (§419, review finding: "Salut, !" is not a sentence).
  */
 function organizerMessageParts(messageType: EmailMessageType, data: TemplateData, locale: EmailLocale, bulkCopy: boolean): EmailBodyPart[] {
   if (messageType !== "ORGANIZER_MESSAGE" || !data.organizerBody) return [];
@@ -723,7 +723,7 @@ const T = {
     verify: {
       subject: "Confirmă adresa de email",
       /*
-        The first message to whoever the form named (§NNN; GDPR art. 12(1), 14(2)(f), 14(3)(b)): whose
+        The first message to whoever the form named (§419; GDPR art. 12(1), 14(2)(f), 14(3)(b)): whose
         registration it is, where the data came from, how long the link lasts and that the
         registration lapses without it — a family member registered on this address (§389) reads it
         first, and the privacy notice is the footer's link.
@@ -743,7 +743,7 @@ const T = {
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? // No "the race is free" (§NNN): said of any event more than a day away, paid or not a race.
+          ? // No "the race is free" (§419): said of any event more than a day away, paid or not a race.
             `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce semnezi declarația pe proprie răspundere. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
         `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
@@ -760,7 +760,7 @@ const T = {
     waitlistSpotOffer: {
       subject: "S-a eliberat un loc pentru tine",
       /*
-        The message that starts the clock says when it stops (§NNN; Codul civil art. 1191, 1193;
+        The message that starts the clock says when it stops (§419; Codul civil art. 1191, 1193;
         terms §2's {{offerHours}}): the moment, in the event's zone, and the length the club set in
         "Termene" (§377). A resend after the offer lapsed names no moment that has passed.
       */
@@ -864,7 +864,7 @@ const T = {
         /*
           The PDF attached masks the identity document (§320); the sentence says how, how long the copy
           is kept — nothing sweeps a mailbox, so the email is where the reader learns when to delete
-          it — and where the whole one is, until when (§NNN). Every period from `RETENTION`, never a literal.
+          it — and where the whole one is, until when (§419). Every period from `RETENTION`, never a literal.
         */
         `Copia pentru arhiva clubului, cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere). Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la eveniment, ca în nota de confidențialitate, apoi șterge-o de aici; documentul întreg este în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice, până la ${identityDays("ro")} după eveniment.`,
       ],
@@ -883,7 +883,7 @@ const T = {
       greeting: () => "Salut,",
       body: (d: TemplateData) => [
         `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
-        // The legitimate-interest, three-year choice of the notice, and the right to object (§NNN).
+        // The legitimate-interest, three-year choice of the notice, and the right to object (§419).
         `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la alergare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare, când platforma o șterge.`,
       ],
     },
@@ -956,7 +956,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `Organizatorii au actualizat detaliile pentru ${d.eventTitle ?? "evenimentul"} la care ești înscris.`,
-        // A way out when the change does not suit, so the place goes to the waiting list (§NNN).
+        // A way out when the change does not suit, so the place goes to the waiting list (§419).
         "Înscrierea ta rămâne valabilă și nu trebuie să faci nimic. Dacă noua dată sau noul loc nu ți se potrivește, renunță la înscriere din „Înscrierile mele” (linkul de mai jos), ca locul să treacă la altcineva. Detaliile la zi sunt pe pagina evenimentului.",
       ],
       action: "Vezi pagina evenimentului",
@@ -1011,7 +1011,7 @@ const T = {
           : [
               `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"}. Vrei să înscrii pe altcineva cu aceeași adresă?`,
               "Formularul a fost trimis din nou cu această adresă și un alt nume, așa că nu am înscris încă pe nimeni. Dacă e cineva din familie, apasă butonul de mai jos: adresa rămâne aceeași, completezi datele persoanei, iar ea își confirmă și își semnează singură înscrierea, cu propriul link și propriul cod QR.",
-              // The other person's agreement, and that they are told how their data is used (§NNN; GDPR art. 14).
+              // The other person's agreement, and that they are told how their data is used (§419; GDPR art. 14).
               "Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim: nota de confidențialitate e la linkul de la sfârșitul acestui mesaj. Mesajele despre înscrierea lui vor veni la această adresă.",
               `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)} și se poate folosi o singură dată. Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.`,
             ],
@@ -1070,25 +1070,25 @@ const T = {
     clubCopy: {
       subject: "[Copie club] ",
       note: "Copie pentru club a mesajului trimis participantului. Legăturile personale, codul QR și atașamentele au fost scoase.",
-      /** A bulk send's one copy (§NNN): how many received it, and nobody's name. */
+      /** A bulk send's one copy (§419): how many received it, and nobody's name. */
       bulkNote: (count: number) =>
         `Copie pentru club a mesajului trimis la ${participantsPhrase("ro", count)}, fiecăruia în limba înscrierii lui. Numele destinatarilor nu apar aici, iar legăturile personale au fost scoase.`,
     },
-    /** The greeting of a message addressed to nobody by name — a bulk send's club copy (§NNN). */
+    /** The greeting of a message addressed to nobody by name — a bulk send's club copy (§419). */
     hello: "Salut,",
-    /** Under the parent's or guardian's greeting on a minor's registration (§NNN). */
+    /** Under the parent's or guardian's greeting on a minor's registration (§419). */
     guardianIntro: (participant: string) => `Mesajul privește înscrierea pe care ai făcut-o, ca părinte sau tutore, pentru ${participant}.`,
-    /** Who signs a minor's declaration (§NNN, §330): both when the text in force asks the minor too. */
+    /** Who signs a minor's declaration (§419, §330): both when the text in force asks the minor too. */
     minorSigners: (participant: string, both: boolean) =>
       both
         ? `Declarația o semnați amândoi, tu ca părinte sau tutore și ${participant}, fiecare cu actul lui de identitate; țineți-le pe amândouă la îndemână.`
         : `Declarația o semnezi tu, ca părinte sau tutore, pentru ${participant}.`,
-    /** A group run's signer's copy (§NNN): the document masked, and the way out for a declaration one did not sign. */
+    /** A group run's signer's copy (§419): the document masked, and the way out for a declaration one did not sign. */
     groupRunMasked: "În copia ta, seria și numărul actului de identitate apar mascate, pentru siguranță: adresa de e-mail nu a fost verificată înainte de trimitere.",
     groupRunNotYou: (contactUrl?: string) =>
       `Dacă nu tu ai semnat această declarație, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""} și o ștergem.`,
     /**
-     * Who sends it, and the notice (§323); the address follows the sentence. Neutral since §NNN: the
+     * Who sends it, and the notice (§323); the address follows the sentence. Neutral since §419: the
      * registration may be somebody else's made with this address — a child's, a family member's (§389).
      */
     privacyFooter: (club: string) => `Primești acest mesaj de la ${club} pentru o înscriere făcută cu această adresă de e-mail. Cum folosim datele:`,
@@ -1455,7 +1455,7 @@ function peoplePhrase(locale: EmailLocale, count: number | undefined): string {
   return form === "one" ? "one person" : `${n} people`;
 }
 
-/** "12 participanți", "un participant" / "12 participants", "one participant" — a bulk copy's count (§NNN). */
+/** "12 participanți", "un participant" / "12 participants", "one participant" — a bulk copy's count (§419). */
 function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
@@ -1577,7 +1577,7 @@ export function buildTemplateContent(
   */
   const atAddressCap = messageType === "REGISTER_ANOTHER_PERSON" && data.addressAtCap === true;
   /*
-    The freed place's offer with no deadline ahead (§NNN) — a resend after it lapsed — is the
+    The freed place's offer with no deadline ahead (§419) — a resend after it lapsed — is the
     platform's sentence alone, which states the offer's length instead of a moment. The club's words
     name the moment (`{holdExpiresAtFormatted}`), and a sentence missing it would read "până la
     (ai la dispoziție …)": a statement about the offer's state, like the address's limit above.
@@ -1613,10 +1613,10 @@ export function buildTemplateContent(
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
     : data;
 
-  // A bulk send's one club copy (§NNN): it greets the club and names nobody.
+  // A bulk send's one club copy (§419): it greets the club and names nobody.
   const bulkCopy = clubCopy && data.clubCopyRecipients !== undefined;
   /*
-    A minor's registration (§108, §NNN): the address is the parent's or guardian's, so the message
+    A minor's registration (§108, §419): the address is the parent's or guardian's, so the message
     greets them and its first line says whose registration it is about — never "Salut, Ioana," to a
     twelve-year-old in the parent's inbox. Not on the older declaration message (`DECLARATION_SIGNED`),
     kept as it was, nor on a message with a greeting of its own. An adult's greeting, the family's
@@ -1653,9 +1653,9 @@ export function buildTemplateContent(
       the only person entitled to the answer.
     */
     paragraphs: [
-      // What this is, before anything else is read (§320) — for a bulk send, to how many (§NNN).
+      // What this is, before anything else is read (§320) — for a bulk send, to how many (§419).
       ...(clubCopy ? [bulkCopy ? copy.clubCopy.bulkNote(data.clubCopyRecipients ?? 0) : copy.clubCopy.note] : []),
-      // Whose registration this is, under the parent's greeting (§NNN).
+      // Whose registration this is, under the parent's greeting (§419).
       ...(guardianName ? [copy.guardianIntro(data.participantName)] : []),
       // The number when the message carries one: a settled number, or the provisional one the
       // desk gave, whichever this registration actually has (§286).
@@ -1675,7 +1675,7 @@ export function buildTemplateContent(
           ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
       /*
-        Who signs a minor's declaration (§NNN, §330), after the body whoever wrote it — a fact about
+        Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
         this registration and the text in force, like the provisional number (§237): on the request
         to sign and on the freed place, which asks the same signature.
       */
@@ -1683,7 +1683,7 @@ export function buildTemplateContent(
         ? [copy.minorSigners(data.participantName, data.minorSigns === true)]
         : []),
       /*
-        A group run's signer's copy (§NNN): that the document is masked in it, when the text asked
+        A group run's signer's copy (§419): that the document is masked in it, when the text asked
         for one, and always how to have a declaration one did not sign deleted — the address was
         never confirmed, so the message may have reached somebody who signed nothing.
       */
@@ -1764,7 +1764,7 @@ function defaultLinkLifetime(locale: EmailLocale): string {
 
 /**
  * How long the club keeps an archive copy of a declaration — "3 ani" / "3 years" — from the
- * retention sweep's own constant (§95, §NNN), so the copy's instruction and what the privacy notice
+ * retention sweep's own constant (§95, §419), so the copy's instruction and what the privacy notice
  * says cannot drift. The mailbox is not swept by the platform: the sentence is the reminder.
  */
 export function archivePeriod(locale: EmailLocale): string {

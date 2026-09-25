@@ -286,7 +286,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(audit.metadataJson).toMatchObject({ changes: ["place"], recipients: 4, note: null });
   });
 
-  it("§NNN the notice offers a way out through «Înscrierile mele», and the club gets one copy of the send, naming nobody", async () => {
+  it("§419 the notice offers a way out through «Înscrierile mele», and the club gets one copy of the send, naming nobody", async () => {
     const event = await seedEvent();
     const rows = await seedRegistrations(event.id, EVERYONE);
     await updateClubNotices(db, editor, { participants: { bcc: ["arhiva@club.test"] } }, NOW);

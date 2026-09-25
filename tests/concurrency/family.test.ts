@@ -57,7 +57,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
       translations,
       now: NOW,
     }).catch(() => undefined);
-    // The club's terms (§NNN): a public submission is refused while none is approved.
+    // The club's terms (§421): a public submission is refused while none is approved.
     await insertLegalDocumentVersion(db, {
       key: "TERMS",
       version: 1,

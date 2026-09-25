@@ -32,7 +32,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * sentence that says the organiser does not answer for something — the liability paragraph and the
  * belongings bullet — carries "în limitele permise de lege" ("to the extent the law allows").
  *
- * **Production-ready per the counsel review of 2026-09-25 (§NNN).** The paper form's waiver "for any
+ * **Production-ready per the counsel review of 2026-09-25 (§418).** The paper form's waiver "for any
  * damage, injury, death… caused to me or by me" is gone: void for injury, death, intent and gross
  * fault, and binding on nobody's heirs. The liability paragraph is now informed acceptance of the
  * risks, a statement that the acceptance is no waiver (art. 1355(4)), the organiser's non-liability

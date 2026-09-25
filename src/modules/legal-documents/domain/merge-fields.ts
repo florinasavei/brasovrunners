@@ -18,7 +18,7 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  * (`reminderClause` below): "confirmări, legături, lista de așteptare{{reminderClause}} și cel
  * mult o mulțumire…". A field given "" is still left out cleanly (`OMITTABLE_MERGE_FIELDS`).
  *
- * **`{{publicListPeriod}}`** (§NNN) is how long a public participant list stays up after the
+ * **`{{publicListPeriod}}`** (§421) is how long a public participant list stays up after the
  * event before it closes by itself — "30 de zile", the unit included like `{{holdMinutes}}` — so
  * the notice names the club's period and never a number of its own.
  */

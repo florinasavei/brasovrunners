@@ -1,4 +1,4 @@
--- The registration audit (§NNN). Expand only: the index below allows more than it did, and the
+-- The registration audit (§420). Expand only: the index below allows more than it did, and the
 -- UPDATE clears a column the code already treats as released.
 --
 -- 1. Every "register another person" link stays live for its window (§389): the partial unique

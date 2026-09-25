@@ -162,7 +162,7 @@ export function mayReportState(
 }
 
 /**
- * A declaration link that is still live, on a registration that has moved on (§NNN).
+ * A declaration link that is still live, on a registration that has moved on (§420).
  *
  * The token can outlive the state it was sent for: the declaration's lives until the start
  * (§160), and nothing invalidates it when the hold lapses, the runner cancels from "Înscrierile

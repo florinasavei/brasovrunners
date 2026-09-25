@@ -51,7 +51,7 @@ export const MESSAGES_PER_COMPLETED_REGISTRATION =
   PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION + CLUB_MESSAGES_PER_COMPLETED_REGISTRATION;
 /**
  * Of the runner's five, the ones the club's hidden copy reaches: four. `VERIFY_REGISTRATION_EMAIL`
- * goes to an address nobody has confirmed yet and is never copied (`isCopiedPerMessage`, §NNN).
+ * goes to an address nobody has confirmed yet and is never copied (`isCopiedPerMessage`, §419).
  */
 export const COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION = PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION - 1;
 
@@ -65,7 +65,7 @@ export const COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION = PARTICIPAN
  *   receives a club copy of its own (one outbox row each since §320, where it was one Bcc on the
  *   participant's envelope before — Mailgun billed each recipient as a message either way), so two
  *   addresses under "copie ascunsă la emailurile către participanți" turn a runner's five
- *   messages into thirteen — the address-confirmation link is never copied (§NNN). The
+ *   messages into thirteen — the address-confirmation link is never copied (§419). The
  *   arithmetic is here so the panel that sets the list and the board that forecasts the day
  *   cannot disagree about what it costs.
  *

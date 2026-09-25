@@ -57,7 +57,7 @@ async function createEvent(): Promise<PublicEvent> {
     { eventId: event.id, locale: "ro", slug: "cros-randare", title: "Cros" },
     { eventId: event.id, locale: "en", slug: "cross-render", title: "Cross" },
   ]);
-  // Only `id`, `participantListVisibility` and the two dates the list's period counts from (§NNN)
+  // Only `id`, `participantListVisibility` and the two dates the list's period counts from (§421)
   // are read by the component; the rest of `PublicEvent`'s shape is asserted nowhere here, so a
   // cast stands in for the full query.
   return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
@@ -142,7 +142,7 @@ describe("§346 the rendered start list carries a name only for those who ticked
     expect(html).not.toContain("Sibiu");
     expect(html).not.toContain("42");
 
-    // §NNN: `data-nosnippet` on a `<section>`, which Google honours — not on the `<details>`
+    // §421: `data-nosnippet` on a `<section>`, which Google honours — not on the `<details>`
     // root, which it does not.
     expect(html).toMatch(/<section[^>]*data-nosnippet=""/);
     expect(html).not.toMatch(/<details[^>]*data-nosnippet=""/);

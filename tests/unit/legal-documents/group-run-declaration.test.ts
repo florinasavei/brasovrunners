@@ -91,11 +91,11 @@ describe("§393 which declaration a run offers: the surface decides", () => {
 
 describe("§393 the two templates", () => {
   /*
-    §NNN — the counsel review of 2026-09-25: a group run hands out no kit and the address is not
+    §418 — the counsel review of 2026-09-25: a group run hands out no kit and the address is not
     verified, so a typed identity number proves nothing and is data the club need not hold (GDPR
     art. 5(1)(c)). Neither text names a document, so the signing page asks for none.
   */
-  it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§NNN)", () => {
+  it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§418)", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
       expect([...mergeFieldsIn(body)].sort()).toEqual(["event", "eventDate", "eventLocation", "participant", "signedAt"]);
       expect(asksForIdDocument(body)).toBe(false);
@@ -115,7 +115,7 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("names asphalt's risks: traffic, dogs (§NNN), the group's pace, the dark", () => {
+  it("names asphalt's risks: traffic, dogs (§418), the group's pace, the dark", () => {
     const ro = bullets(TEXTS.asphalt.ro).join(" ");
     const en = bullets(TEXTS.asphalt.en).join(" ");
     for (const pattern of [/drumuri publice/, /regulile de circulație/, /câini, inclusiv fără stăpân/, /ritm pe care nu îl aleg eu/, /întunericului/, /reflectorizante/]) expect(ro).toMatch(pattern);
@@ -165,11 +165,11 @@ describe("§393 the two templates", () => {
   });
 
   /*
-    §NNN — evidence the signer could withdraw at will would be no evidence: the basis is the club's
+    §418 — evidence the signer could withdraw at will would be no evidence: the basis is the club's
     legitimate interest (art. 6(1)(f)), art. 9(2)(f) for the health statement, and the rights list
     names restriction and objection — as the privacy notice's §3 does.
   */
-  it("rests on legitimate interest, names art. 9(2)(f) for health, and lists restriction and objection (§NNN)", () => {
+  it("rests on legitimate interest, names art. 9(2)(f) for health, and lists restriction and objection (§418)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       const roText = TEXTS[surface].ro.join(" ");
       const enText = TEXTS[surface].en.join(" ");

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, finding (5) of the fix round on `feat/registration-consent-and-terms`: this branch's
+ * §421, finding (5) of the fix round on `feat/registration-consent-and-terms`: this branch's
  * `DEADLINE_MERGE_FIELDS` is the single source for `{{publicListPeriod}}`, fed from "Termene"
  * (`deadlineMergeValues`). The texts chain's second registration of the same field, with a
  * constant default spread after this one, was removed when the two branches met; a second

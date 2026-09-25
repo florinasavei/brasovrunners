@@ -9,7 +9,7 @@ import { env } from "@/shared/config/env";
  * (GDPR art. 13; `DECISIONS.md` §323).
  *
  * The line is the last thing in each language's half: "Primești acest mesaj de la <club> pentru o
- * înscriere făcută cu această adresă de e-mail. Cum folosim datele: <the notice>" (§NNN) — the notice in that half's own
+ * înscriere făcută cu această adresă de e-mail. Cum folosim datele: <the notice>" (§419) — the notice in that half's own
  * language, from `APP_BASE_URL`. The club's own mail (the archive copy, the confirmation
  * notice) and the staff invitation are not a participant's message about their data and carry
  * none; the invitation says what the club keeps about its team in its own body instead.
@@ -59,7 +59,7 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§323)", 
 
   it("says the message is about the registration, and for the opening notice that it was asked for", () => {
     const confirmation = render("REGISTRATION_CONFIRMED", "ro");
-    // Neutral since §NNN: the registration may be a child's or a family member's made with this address.
+    // Neutral since §419: the registration may be a child's or a family member's made with this address.
     expect(confirmation.text).toMatch(/Primești acest mesaj de la .+ pentru o înscriere făcută cu această adresă de e-mail\. Cum folosim datele:/);
     expect(confirmation.text).toMatch(/You are receiving this message from .+ about a registration made with this email address\. How we use the data:/);
     expect(confirmation.text).not.toContain("pentru înscrierea ta");

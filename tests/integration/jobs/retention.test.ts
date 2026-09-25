@@ -296,7 +296,7 @@ describe("retention sweep", () => {
   });
 
   /**
-   * §NNN — the emergency contact is a third person's name and number, asked for race day and for
+   * §421 — the emergency contact is a third person's name and number, asked for race day and for
    * nothing after it: cleared seven days after the event with the documents and the note, the row
    * kept, and counted on its own.
    */

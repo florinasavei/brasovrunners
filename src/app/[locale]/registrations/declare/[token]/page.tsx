@@ -213,7 +213,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     : undefined;
 
   /*
-    A live link on a registration that has moved on (§NNN): the hold lapsed and the place went on,
+    A live link on a registration that has moved on (§420): the hold lapsed and the place went on,
     the runner cancelled, staff cancelled, or it was confirmed on paper at the desk. Only a hold or
     an offer can be signed, so the form is not shown — its press would only end on the error page —
     and the page says where the registration stands instead, in the words a spent link gets. The
@@ -413,7 +413,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
-              // The club's deadlines and the public list's period (§377, §NNN) — as the PDF fills them.
+              // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
               ...listStatesMergeValues(locale),
@@ -489,7 +489,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   (BR-REQ-033-02 criterion 6). */}
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
-              {/* The box names the liability paragraph, so its limits are accepted expressly (§NNN, Civil Code art. 1203). */}
+              {/* The box names the liability paragraph, so its limits are accepted expressly (§418, Civil Code art. 1203). */}
               <CheckboxField name="accepted" required defaultChecked={draft?.accepted === "on"}>
                 {t("declare.accept")}
               </CheckboxField>
@@ -519,7 +519,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {minorName === null ? (
                 <>
                   {/*
-                    An adult signs for themselves (§NNN, Civil Code art. 1309): since a family
+                    An adult signs for themselves (§418, Civil Code art. 1309): since a family
                     registers on one address (§389), whoever holds the inbox holds this link, so the
                     page says whose signature it wants. Not for a minor — the parent signs there,
                     and the box below already says so.

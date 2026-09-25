@@ -252,7 +252,7 @@ export type SettledBib = {
 };
 
 /**
- * The statuses a close numbers (§NNN): the ones the capacity formula counts as a place
+ * The statuses a close numbers (§420): the ones the capacity formula counts as a place
  * (`domain/capacity.ts#computeOccupied` — confirmed, a declaration hold, an offer). Not
  * `PLACE_HOLDING_STATUSES`, which adds `PENDING_EMAIL_CONFIRMATION` so a provisional number can be
  * drawn at submission (§214): an address nobody has proved takes no place (AGENTS.md §10.5
@@ -304,7 +304,7 @@ export function awaitingSettledNumber() {
  * registration is a person who may well run, and a race with no bib for them is the failure
  * this is trying to avoid. A number already given by hand (§105) is kept and reserved, so the
  * sequence closes around it. An address not yet confirmed at the close is not "still holding a
- * place" in this sense (§NNN): it is not numbered here, and gives its provisional number back —
+ * place" in this sense (§420): it is not numbered here, and gives its provisional number back —
  * nobody can print a bib for an address that has not agreed to come.
  * Only `NUMBERED_AT_SETTLE` — `PENDING_DECLARATION`, `WAITLIST_OFFERED`, `CONFIRMED` — is settled;
  * `PENDING_EMAIL_CONFIRMATION` is released first, in the same transaction, below.
@@ -319,7 +319,7 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
   if (input.bibsSettledAt !== null) return [];
 
   /*
-    An address still unconfirmed at the close is not numbered (§NNN), and gives back the
+    An address still unconfirmed at the close is not numbered (§420), and gives back the
     provisional number it drew at submission, in the same transaction. The recompaction below
     reads only final numbers as taken, so it may hand that number to somebody else as theirs — and
     a later confirmation of this row would adopt its own provisional number (§220) and collide on

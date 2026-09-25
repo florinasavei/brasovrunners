@@ -67,7 +67,7 @@ describe("Cloudflare Turnstile", () => {
   });
 
   /*
-    §NNN (the registration audit, F5): a wrong secret is the server's misconfiguration, not the
+    §420 (the registration audit, F5): a wrong secret is the server's misconfiguration, not the
     visitor's failure. Cloudflare answers it with HTTP 200 and `success: false`, which used to be
     scored "failed" and refused every person whose widget loaded. It is "unavailable" now, logged
     with the codes; a rejection of the token itself still refuses.
@@ -99,7 +99,7 @@ describe("Cloudflare Turnstile", () => {
   });
 
   /*
-    §NNN, finding (10)'s health half: `verifyTurnstile` fails a wrong secret open on purpose, so
+    §420, finding (10)'s health half: `verifyTurnstile` fails a wrong secret open on purpose, so
     something else has to notice it — `probeTurnstileSecret` is what `/api/health` and
     `/admin/tasks` ask. It must tell a wrong secret apart from Cloudflare merely disliking a
     fake token, and from Cloudflare not answering at all.
@@ -121,7 +121,7 @@ describe("Cloudflare Turnstile", () => {
     expect(await probeTurnstileSecret(answer(["missing-input-secret"]))).toBe("misconfigured");
     expect(await probeTurnstileSecret(answer(["invalid-input-secret", "internal-error"]))).toBe("misconfigured");
 
-    // Cloudflare's own internal error is its passing fault, not the secret's (§NNN): read like a
+    // Cloudflare's own internal error is its passing fault, not the secret's (§420): read like a
     // 5xx, so fifteen minutes of cache never show a right secret as wrong.
     expect(await probeTurnstileSecret(answer(["internal-error"]))).toBe("unreachable");
 

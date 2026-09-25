@@ -11,7 +11,7 @@
  * club's hold (§377) says the participation window's deadline where an event has one (§104) — a
  * sentence true of one event and false of the next is a value, not a rule.
  *
- * **Production-ready per the counsel review of 2026-09-25 (§NNN).** Registering on the site is free
+ * **Production-ready per the counsel review of 2026-09-25 (§418).** Registering on the site is free
  * and a fee, where there is one, is the event page's; on another organiser's event the club only
  * publishes (§1). The unusual clauses — §3 cancelling or changing, §4 stopping or excluding, §5
  * liability, §10 law and court — are accepted expressly by a separate box (Civil Code art. 1203).
@@ -20,7 +20,7 @@
  * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
  * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.
  *
- * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§NNN).
+ * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§421).
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
 

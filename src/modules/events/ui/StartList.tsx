@@ -83,7 +83,7 @@ export default async function StartList({
 }) {
   if (event.participantListVisibility !== "NAMES") return null;
   /*
-    The list closes by itself (§NNN): the club's number of days after the event ("Termene"), asked
+    The list closes by itself (§421): the club's number of days after the event ("Termene"), asked
     now, at the request — the cached rows below expire on writes, and a date passing is not one. The
     same component draws every `?lista=` page, so a page link past the date shows nothing either.
   */
@@ -102,7 +102,7 @@ export default async function StartList({
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);
   /*
-    …and only for the ticks given under a notice that described them (§NNN): a registration that
+    …and only for the ticks given under a notice that described them (§421): a registration that
     recorded an older notice agreed to a list of confirmed names, and appears once confirmed, as
     before. With the gate on there is always such a notice; null only if the two reads disagree for
     a moment, and then nobody beyond the confirmed is read.
@@ -125,7 +125,7 @@ export default async function StartList({
   return (
     // Google honours `data-nosnippet` only on span, div and section elements (not on the
     // `details` root below), so the wrapper — not the disclosure — carries it: names stay out of
-    // search snippets (§NNN); the page itself stays indexed.
+    // search snippets (§421); the page itself stays indexed.
     <Box component="section" data-nosnippet="" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
     <Box
       component="details"

@@ -5,7 +5,7 @@ import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { type DeclarationEntry, idDocumentsNoticeFor } from "@/modules/registrations/declaration-pdf";
 
 /**
- * §NNN — the counsel review of 2026-09-25, on the signing page and the PDF.
+ * §418 — the counsel review of 2026-09-25, on the signing page and the PDF.
  *
  * The box accepts the declaration's liability paragraph expressly (Civil Code art. 1203); an adult
  * is told to sign personally, since whoever holds a family's inbox holds the link (art. 1309, §389);
@@ -15,7 +15,7 @@ import { type DeclarationEntry, idDocumentsNoticeFor } from "@/modules/registrat
  */
 const NOW = new Date("2026-11-21T08:00:00.000Z");
 
-describe("§NNN the signing page's words", () => {
+describe("§418 the signing page's words", () => {
   it("accepts the liability paragraph expressly, in both languages", () => {
     expect(ro.Registrations.declare.accept).toContain("inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege");
     expect(en.Registrations.declare.accept).toContain("including, expressly, the limitation of the organiser's liability to the extent the law allows");
@@ -29,7 +29,7 @@ describe("§NNN the signing page's words", () => {
   });
 });
 
-describe("§NNN the PDF's words", () => {
+describe("§418 the PDF's words", () => {
   it("says the link went to the registration's address, not the participant's", () => {
     const roWords = declarationWords("ro", NOW);
     const enWords = declarationWords("en", NOW);

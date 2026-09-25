@@ -66,7 +66,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
   // No language select: the text signed is the one on the page, in the page's language (§57).
   await expect(page.locator('[name="preferredLocale"]')).toHaveCount(0);
-  // The platform's texts ask for no identity document since the counsel review (§NNN), and a
+  // The platform's texts ask for no identity document since the counsel review (§418), and a
   // regression that asks for one under these texts would go unnoticed by a lenient check —
   // the field is asked exactly when the text names it, never otherwise.
   await expect(page.getByLabel(words.document, { exact: false })).toHaveCount(0);

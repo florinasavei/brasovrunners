@@ -12,7 +12,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * **Why two texts and not the race's.** The race's declaration (`declaration.ts`) speaks of a
  * competition, a race kit collected against the identity document, photographs of the race and a
  * registration confirmed by the signature; none of that is true of a Monday run. And the surface
- * decides the risks: on asphalt, traffic, dogs (§NNN), the group's pace and the dark; on a trail, the terrain,
+ * decides the risks: on asphalt, traffic, dogs (§418), the group's pace and the dark; on a trail, the terrain,
  * wild animals and dogs, the weather and the dark, the runner's own equipment (a headlamp after
  * dark) and pace. Each text names only its own.
  *
@@ -25,7 +25,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * carries "în limitele permise de lege" / "to the extent the law allows". A Romanian lawyer should
  * read both before the club approves them; these notes are the platform's reading, not advice.
  *
- * **No identity document (§NNN, the counsel review of 2026-09-25).** A group run hands out no kit
+ * **No identity document (§418, the counsel review of 2026-09-25).** A group run hands out no kit
  * and the email is not verified, so a typed number proves nothing and is data the club need not
  * hold (GDPR art. 5(1)(c)): neither text names `{{idDocument}}`, and the signing page, which asks
  * for a document only when the text names one, asks for none. The basis is the club's legitimate

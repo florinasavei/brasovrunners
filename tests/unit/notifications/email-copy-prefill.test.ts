@@ -50,11 +50,11 @@ const LOCALES = ["ro", "en"] as const;
 
 /** What each message's platform text is made of, field by field, in both languages. */
 const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
-  // Whose registration, and how long the link lives (§NNN).
+  // Whose registration, and how long the link lives (§419).
   VERIFY_REGISTRATION_EMAIL: ["participantName", "eventTitle", "confirmationHours"],
   COMPLETE_DECLARATION: ["eventTitle", "holdExpiresAtFormatted"],
   WAITLIST_JOINED: ["eventTitle"],
-  // The offer's moment and its length (§NNN).
+  // The offer's moment and its length (§419).
   WAITLIST_SPOT_OFFER: ["eventTitle", "holdExpiresAtFormatted", "offerHours"],
   REGISTRATION_CONFIRMED: ["eventTitle", "bibNumber", "checkinCode", "eventChecklist"],
   REGISTRATION_CANCELLED: ["eventTitle"],

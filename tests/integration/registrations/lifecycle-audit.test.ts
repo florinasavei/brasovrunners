@@ -14,7 +14,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * The registration lifecycle's audited defects (§NNN), one regression per finding, each through the
+ * The registration lifecycle's audited defects (§420), one regression per finding, each through the
  * service a participant or the desk actually reaches — the allocator, the job, the renderer:
  *
  * - a "register another person" email keeps its own link alive beside a newer one (§389);
@@ -218,10 +218,10 @@ async function secretOf(row: typeof emailOutbox.$inferSelect, when: Date): Promi
   return match[1];
 }
 
-describe("§NNN §389 BR-REQ-036-02 every 'register another person' email keeps its own link", () => {
+describe("§420 §389 BR-REQ-036-02 every 'register another person' email keeps its own link", () => {
   const EMAIL = "ana@example.ro";
   const other = (firstName: string, when: Date) => {
-    // An adult on the family link acknowledges the fitness statement rather than making it (§NNN).
+    // An adult on the family link acknowledges the fitness statement rather than making it (§421).
     const posted: Record<string, unknown> = { ...submission(firstName, EMAIL, when), fitnessAcknowledged: true };
     delete posted.email;
     return posted;
@@ -270,7 +270,7 @@ describe("§NNN §389 BR-REQ-036-02 every 'register another person' email keeps 
   });
 });
 
-describe("§NNN BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submission on one address", () => {
+describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submission on one address", () => {
   const EMAIL = "familia.pop@example.ro";
 
   it("is refused out loud, and never confirms the other runner on this person's paper", async () => {
@@ -325,7 +325,7 @@ describe("§NNN BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
   });
 });
 
-describe("§NNN BR-REQ-035-02 criterion 3 no waiting-list offer once registration has closed", () => {
+describe("§420 BR-REQ-035-02 criterion 3 no waiting-list offer once registration has closed", () => {
   it("a place freed after the close is offered to nobody, and the job does not work down the list", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await confirmed(event, "Ana");
@@ -358,7 +358,7 @@ describe("§NNN BR-REQ-035-02 criterion 3 no waiting-list offer once registratio
   });
 });
 
-describe("§NNN §160 §214 §220 a lapsed declaration hold gives its provisional number back", () => {
+describe("§420 §160 §214 §220 a lapsed declaration hold gives its provisional number back", () => {
   it("so the desk can re-allocate it after the settle, with a free number, instead of a duplicate-key error", async () => {
     const staff = await admin();
     const event = await createEvent({ capacity: 2 });
@@ -390,7 +390,7 @@ describe("§NNN §160 §214 §220 a lapsed declaration hold gives its provisiona
   });
 });
 
-describe("§NNN §160 once registration has closed, a lapsed declaration hold still goes to the queue — for the desk to give", () => {
+describe("§420 §160 once registration has closed, a lapsed declaration hold still goes to the queue — for the desk to give", () => {
   it("released while somebody waits, offered to nobody by email, and the desk promotes into the place (BR-REQ-035-02 criterion 3)", async () => {
     const staff = await admin();
     const event = await createEvent({ capacity: 1 });
@@ -416,7 +416,7 @@ describe("§NNN §160 once registration has closed, a lapsed declaration hold st
   });
 });
 
-describe("§NNN AGENTS.md §10.5 invariant 3 the settle numbers only the places the capacity formula counts", () => {
+describe("§420 AGENTS.md §10.5 invariant 3 the settle numbers only the places the capacity formula counts", () => {
   it("an unconfirmed address gets no final number and no BIB_ASSIGNED, and joins the waiting list without one", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await confirmed(event, "Ana");
@@ -437,7 +437,7 @@ describe("§NNN AGENTS.md §10.5 invariant 3 the settle numbers only the places 
   });
 });
 
-describe("§NNN §214 an offered place carries a provisional number", () => {
+describe("§420 §214 an offered place carries a provisional number", () => {
   it("from the waiting list: offered with a number, and signed keeping it", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await allocated(event, "Ana");
@@ -476,7 +476,7 @@ describe("§NNN §214 an offered place carries a provisional number", () => {
   });
 });
 
-describe("§NNN BR-REQ-031-03 criterion 2 the confirmation link lapses with the registration's own link", () => {
+describe("§420 BR-REQ-031-03 criterion 2 the confirmation link lapses with the registration's own link", () => {
   it("the verification token dies when the row's link does, so a click after the job is refused, not 'confirmed'", async () => {
     const event = await createEvent();
     const row = await submit(event, "Ana");
@@ -503,7 +503,7 @@ describe("§NNN BR-REQ-031-03 criterion 2 the confirmation link lapses with the 
   });
 });
 
-describe("§NNN §30 AGENTS.md §12.6 the desk's counters leave test registrations out", () => {
+describe("§420 §30 AGENTS.md §12.6 the desk's counters leave test registrations out", () => {
   it("a test row on hold or confirmed adds nothing to the desk's or the events list's numbers", async () => {
     const event = await createEvent();
     await allocated(event, "Ana");
@@ -516,7 +516,7 @@ describe("§NNN §30 AGENTS.md §12.6 the desk's counters leave test registratio
   });
 });
 
-describe("§NNN §389 'Înscrierile mele' names the runner of a closed registration", () => {
+describe("§420 §389 'Înscrierile mele' names the runner of a closed registration", () => {
   it("each closed card with data to withdraw says whose it is", async () => {
     const event = await createEvent();
     const ana = await allocated(event, "Ana");

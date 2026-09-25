@@ -278,7 +278,7 @@ describe("the club's declaration (§95)", () => {
     const all = await listSignedDeclarations(db, event.id);
     expect(all.map((s) => s.typedName)).toEqual(["Ana Popescu", "Ion Ionescu"]);
     // The bundle still carries whole identity documents, so every page's footer warns to delete
-    // it within seven days (§NNN); labels carry the notice the way `declarationWords` does.
+    // it within seven days (§418); labels carry the notice the way `declarationWords` does.
     const bundleLabels = { ...LABELS, idDocumentsNotice: declarationWords("ro", NOW).idDocumentsNotice };
     const pdf = await renderEventDeclarationsPdf(db, event.id, "ro", bundleLabels, NOW);
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBeGreaterThanOrEqual(2);
@@ -381,7 +381,7 @@ describe("the club's declaration (§95)", () => {
   });
 
   /**
-   * §357 — the longer text flows onto a second page (a third since the counsel review, §NNN, made
+   * §357 — the longer text flows onto a second page (a third since the counsel review, §418, made
    * the liability and signature paragraphs say what they do and do not do) rather than being cut: every line of text on
    * every page lies between the top margin and the footer's rule, and the last page carries the
    * end of the text and the signature block, not a footer alone. Signed (adult and minor) and the

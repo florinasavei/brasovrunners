@@ -122,7 +122,7 @@ async function queueToEveryone<T extends Record<string, unknown>>(
     if (inserted && row.kind === "REAL") real += 1;
   }
   /*
-    The update notice's club copy is one per save, not one per registration (§NNN): the words and
+    The update notice's club copy is one per save, not one per registration (§419): the words and
     how many were told, no names. `enqueueEmail` copies no row of it. The cancellation keeps its
     copy per registration, as §320 decided — the counsel's review named the two bulk sends only.
   */

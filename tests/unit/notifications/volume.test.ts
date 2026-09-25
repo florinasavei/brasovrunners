@@ -31,7 +31,7 @@ describe("BR-REQ-033-02 criterion 13 what one completed registration costs on th
 
   it("adds one per hidden-copy address for every copied message the runner receives, and none for the club's", () => {
     // The address-confirmation link goes to an address nobody has confirmed and is never copied
-    // (§NNN): four of the runner's five are.
+    // (§419): four of the runner's five are.
     expect(COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION).toBe(4);
     // One address: the runner's five, four copies, plus the club's own notice, which is not
     // copied again.

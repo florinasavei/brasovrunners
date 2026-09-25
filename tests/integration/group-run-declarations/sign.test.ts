@@ -63,7 +63,7 @@ beforeEach(async () => {
 });
 
 /**
- * A group-run text that still names an identity document: an older or club-edited version (§NNN).
+ * A group-run text that still names an identity document: an older or club-edited version (§418).
  * The platform's own templates no longer ask for one, but the signing code must keep serving a text
  * that does — asking for the document, keeping it, and masking it in the club's copy.
  */
@@ -158,7 +158,7 @@ describe("§393 signing a group run's self-declaration", () => {
 
     const rows = await db.select().from(groupRunDeclarations);
     expect(rows).toHaveLength(1);
-    // The platform's text names no identity document (§NNN): whatever was posted, none is kept.
+    // The platform's text names no identity document (§418): whatever was posted, none is kept.
     expect(rows[0]).toMatchObject({ eventId: event.id, typedName: "Ana Popescu", idDocument: null, email: "ana@example.ro", locale: "ro", declarationVersion: 1 });
 
     const outbox = await db.select().from(emailOutbox);
@@ -173,7 +173,7 @@ describe("§393 signing a group run's self-declaration", () => {
     }
   });
 
-  it("sends the signer and the club the document masked, both with the PDF attached, under a text that asks for it (§NNN)", async () => {
+  it("sends the signer and the club the document masked, both with the PDF attached, under a text that asks for it (§421)", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL", { idDocument: true });
     const event = await trailRun();
     await updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
@@ -188,7 +188,7 @@ describe("§393 signing a group run's self-declaration", () => {
     expect(toSigner.subject).toContain("Tura pe munte");
     // The English half reads the English title (§373).
     expect(toSigner.subject).toContain("The mountain loop");
-    // Masked on the signer's copy too (§NNN): the address was never confirmed before sending.
+    // Masked on the signer's copy too (§419): the address was never confirmed before sending.
     const signerPdf = drawnFrom(watched.pdfInputs.at(-1));
     expect(signerPdf).not.toContain("123456");
     expect(signerPdf).toContain("••••56");
@@ -217,7 +217,7 @@ describe("§393 signing a group run's self-declaration", () => {
   it("names every box that is wrong at once, and writes nothing", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun();
-    // The platform's text asks for no identity document (§NNN), so none is missing.
+    // The platform's text asks for no identity document (§418), so none is missing.
     await expect(
       signGroupRunDeclaration(db, await input(event.id, { accepted: false, typedName: "  ", idDocument: undefined, email: "not an address" }), NOW),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["typedName", "email", "accepted"] });

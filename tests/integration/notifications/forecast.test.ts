@@ -258,7 +258,7 @@ describe("§383 the forecast of automatic emails", () => {
   });
 
   /**
-   * §NNN, BR-REQ-035-02 criterion 3 — after registration closes the job makes no offer (it would be
+   * §420, BR-REQ-035-02 criterion 3 — after registration closes the job makes no offer (it would be
    * born lapsed), so the forecast promises none; but the lapse is still released to the queue for
    * the desk to give, so the hold is still spent and owed no last call.
    */

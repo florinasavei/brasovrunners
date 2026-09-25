@@ -110,7 +110,7 @@ const submission = (firstName: string, at: Date = NOW, overrides: Record<string,
 
 /** The other person's own facts, as the family form posts them: no address, no telephone (a child). */
 const anotherPerson = (firstName: string, at: Date = NOW, overrides: Record<string, unknown> = {}): Record<string, unknown> => {
-  // Another adult's fitness is theirs to declare when they sign (§NNN): the address holder ticks the
+  // Another adult's fitness is theirs to declare when they sign (§421): the address holder ticks the
   // acknowledgement, and the first-person statement the ordinary form posts is dropped.
   const posted: Record<string, unknown> = { fitnessAcknowledged: true, ...submission(firstName, at, overrides) };
   delete posted.email;
@@ -317,12 +317,12 @@ describe("§389 the link creates the other person's registration, and everybody 
 });
 
 /**
- * §NNN — the family form carries no consent that only the other adult can give (GDPR art. 4(11),
+ * §421 — the family form carries no consent that only the other adult can give (GDPR art. 4(11),
  * 7(1), 9(2)(a)): whatever is posted for an adult, the health note and its consent, the socials,
  * the public-list tick and the first-person fitness statement are not stored, and the address
  * holder's acknowledgement stands in for the statement. A minor's parent still consents for the child.
  */
-describe("§NNN the family form and another adult's own consents", () => {
+describe("§421 the family form and another adult's own consents", () => {
   const everything = { healthNotes: "astm", healthConsent: true, stravaUrl: "https://www.strava.com/athletes/12345", instagramHandle: "maria.pop", listOptOut: false, fitnessDeclared: true };
 
   async function linkFor(event: EventInput) {
@@ -346,7 +346,7 @@ describe("§NNN the family form and another adult's own consents", () => {
       listOptOut: true,
       fitnessDeclaredAt: null,
     });
-    // The terms and the event's rules are still accepted on the form (§NNN).
+    // The terms and the event's rules are still accepted on the form (§421).
     expect(maria.termsVersion).toBe(1);
     expect(maria.rulesAcknowledgedAt).not.toBeNull();
   });

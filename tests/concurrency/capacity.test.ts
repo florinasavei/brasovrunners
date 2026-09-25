@@ -65,7 +65,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       translations,
       now: NOW,
     }).catch(() => undefined);
-    // The club's terms (§NNN): a public submission is refused while none is approved.
+    // The club's terms (§421): a public submission is refused while none is approved.
     await insertLegalDocumentVersion(db, {
       key: "TERMS",
       version: 1,

@@ -6,7 +6,7 @@ import { BULK_CLUB_COPY_MESSAGES, bulkCopyRecipients, isCopiedPerMessage, isPart
 import { archivePeriod, buildOutgoingEmail, identityDays, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * BR-REQ-080-01 — the emails as the counsel's review of 2026-09-25 left them (§NNN): whose
+ * BR-REQ-080-01 — the emails as the counsel's review of 2026-09-25 left them (§419): whose
  * registration a message is about, who signs a minor's declaration, the family link's agreement
  * sentence, the archive copy's periods from the sweep's own constants, and which messages the club
  * gets a copy of — none of an unconfirmed address's, one per bulk send.
@@ -22,7 +22,7 @@ const DATA: TemplateData = {
 const render = (messageType: EmailMessageType, data: TemplateData, locale: "ro" | "en" = "ro") =>
   buildOutgoingEmail({ to: "x@example.test", locale, idempotencyKey: `t:${messageType}`, messageType, data, actionUrl: "https://example.test/ro/EXAMPLE" });
 
-describe("BR-REQ-080-01 §NNN the club's copies: none of an unconfirmed address's, one per bulk send", () => {
+describe("BR-REQ-080-01 §419 the club's copies: none of an unconfirmed address's, one per bulk send", () => {
   it("copies no address confirmation, no family link and no bulk send per message — and every other participant message as before", () => {
     const none = ["VERIFY_REGISTRATION_EMAIL", "REGISTER_ANOTHER_PERSON", "ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE"];
     for (const type of emailMessageType.enumValues) {
@@ -51,7 +51,7 @@ describe("BR-REQ-080-01 §NNN the club's copies: none of an unconfirmed address'
   });
 });
 
-describe("BR-REQ-080-01 §NNN a minor's messages speak to the parent", () => {
+describe("BR-REQ-080-01 §419 a minor's messages speak to the parent", () => {
   const minor: TemplateData = { ...DATA, guardianName: "Maria Pop" };
 
   it("says both sign, each with their own document, when the text in force asks the minor too", () => {
@@ -87,7 +87,7 @@ describe("BR-REQ-080-01 §NNN a minor's messages speak to the parent", () => {
   });
 });
 
-describe("BR-REQ-080-01 §NNN an offer capped under an hour says its minutes", () => {
+describe("BR-REQ-080-01 §419 an offer capped under an hour says its minutes", () => {
   const timings = { confirmationHours: 48, holdMinutes: 30, offerHours: 24, reminderHours: 48 };
 
   it("says «20 de minute» beside the moment, never «o oră», for a 20-minute cap", () => {
@@ -105,7 +105,7 @@ describe("BR-REQ-080-01 §NNN an offer capped under an hour says its minutes", (
   });
 });
 
-describe("BR-REQ-080-01 §NNN the words the counsel asked for", () => {
+describe("BR-REQ-080-01 §419 the words the counsel asked for", () => {
   it("asks for the other person's agreement on the family link, and not at the address's limit", () => {
     const link = render("REGISTER_ANOTHER_PERSON", { ...DATA, participantName: "" });
     expect(link.text).toContain("Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim");

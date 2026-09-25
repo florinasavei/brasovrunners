@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useBirthDateSaysMinor } from "./use-birth-date-minor";
 
 /**
- * A block the family form offers only for a minor (§389, §NNN) — the mirror of `HiddenForMinor`.
+ * A block the family form offers only for a minor (§389, §421) — the mirror of `HiddenForMinor`.
  *
  * On the form for another person on the same address, the health note and its consent, the
  * public-list tick and the first-person fitness statement are the parent's to give for a child,

@@ -10,7 +10,7 @@ import {
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (the registration audit) — two browser-rendered checks the integration tests
+ * §420 (the registration audit) — two browser-rendered checks the integration tests
  * (`tests/integration/registrations/link-actions-audit.test.ts`) cannot stand in for: what the
  * *page* shows, not merely what the server action redirects to.
  *
@@ -19,7 +19,7 @@ import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } 
  * - Finding (8): a live `COMPLETE_DECLARATION` link on a registration that has moved on (here,
  *   cancelled) must show the moved-on notice, not the signing form.
  */
-test.describe("§NNN a lapsed or moved-on registration link never shows the wrong page", () => {
+test.describe("§420 a lapsed or moved-on registration link never shows the wrong page", () => {
   test.describe.configure({ timeout: 90_000 });
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
@@ -47,7 +47,7 @@ test.describe("§NNN a lapsed or moved-on registration link never shows the wron
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
-    // The club's terms, their own required tick since §NNN.
+    // The club's terms, their own required tick since §421.
     await page.locator('[name="termsAccepted"]').check();
     await page.locator('[name="fitnessDeclared"]').check();
     await page.waitForTimeout(HUMAN_PAUSE_MS);

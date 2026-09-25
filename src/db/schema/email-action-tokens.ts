@@ -118,7 +118,7 @@ export const emailActionTokens = pgTable(
      * per (registration, purpose), profile tokens per (participant, purpose). Both cover only
      * rows that are still active, so used and superseded rows accumulate freely for audit.
      *
-     * One purpose is outside the first index, on purpose (§NNN): `REGISTER_ANOTHER_PERSON`. Every
+     * One purpose is outside the first index, on purpose (§420): `REGISTER_ANOTHER_PERSON`. Every
      * such link of a family is scoped to the address's first registration at the event (§389), so
      * a parent who fills the form once per child gets several emails about one registration — and
      * each says its link is good for the club's email-link window. Superseding them left only the

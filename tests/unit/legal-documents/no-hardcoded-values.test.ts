@@ -111,7 +111,7 @@ describe("§357 no hardcoded value in a legal template", () => {
   });
 
   /*
-    §NNN — the counsel review: a forum at the club's seat is void before a dispute against a
+    §418 — the counsel review: a forum at the club's seat is void before a dispute against a
     consumer (Code of Civil Procedure art. 126(2)) and, without the art. 1203 acceptance, against
     anybody. The terms name the courts by the Code, and a consumer's own domicile as a choice.
   */

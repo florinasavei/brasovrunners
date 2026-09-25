@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.99-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V2.00-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.99-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.00-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -16799,3 +16799,374 @@ Baseline `BR-V1.99-2026-09-25`.
 a long unbroken word in a picture's caption on a listing card. `overflowWrap: anywhere` had moved (§417, this branch's first commit) onto the words' own clamp box alone; a figure's caption sits outside that box and so was no longer covered, letting an address typed into a caption overflow a 320-pixel card. The rule now lives on the excerpt's outer box (`CARD_EXCERPT_SX`) as well, so every part of the card's summary — words and captions alike — wraps inside the card.
 
 Baseline `BR-V1.99-2026-09-25`.
+
+## 418. The legal texts made production-ready: the counsel review of 2026-09-25 (the five templates, the paper form, the signing page)
+
+**The owner, 2026-09-25 19:45:** "the GDPR and all the docs and emails must be prod ready". A counsel-style review of the texts against GDPR, Legea 190/2018, the Civil Code, eIDAS and consumer law produced fifty amendments. This section is the texts package: the five templates, the paper form and the signing page. The code package and the emails package are their own sections. The code package covers the terms tick, family consents, the list's gate and period, and emergency-contact retention.
+
+**Why.** The texts must say what the platform does and what the law allows.
+- The race declaration's paragraph from the paper form waived liability "for any damage, injury, death… caused to me or by me". That is void for bodily harm, intent and gross fault (Civil Code art. 1355), binds no heirs, and contradicted terms §5.
+- Its opening threatened the criminal false-statements offence, which does not apply to a statement made to a private association.
+- The blank paper form and a PAPER-recorded PDF printed "signed electronically".
+- The terms forbade registering anyone but oneself, although the family flow has been live since BR-V1.94. They named a forum at the club's seat, which is void against a consumer before a dispute, and pointed to SAL-ANPC, which does not handle non-trader disputes.
+- The notice overstated where data sits. It never named the mandatory fitness tick, and it kept a third party's emergency contact for three years.
+- The group-run declaration asked for an ID number that proves nothing on an unverified address. It rested on consent the signer could withdraw, which is no evidence.
+
+**What changed, per text (verbatim from the review, both languages).**
+
+- **Terms.**
+  - §1: registering on the site is free, and any fee is on the event page. On another organiser's event the club only publishes and is not a party (art. 1270, 1280).
+  - §1 gains a last paragraph: §3, §4, §5 and §10 are accepted expressly, by a separate box (art. 1203).
+  - §2 allows registering others with their agreement, each once, each signing their own declaration. §8 forbids signing for another adult.
+  - §3 has a refund rule true of free and paid events (OUG 34/2014 art. 16 lit. l).
+  - §4 words the minor's co-signature so it is true under either declaration, and binds the event's rules as shown at registration.
+  - §5 is written around attribution: art. 1349–1352, 1355(1)–(4), 1371, 1373.
+  - §7 shows the list's states only where the notice the runner was given provides for them.
+  - §9 says the accepted version is recorded.
+  - §10 has no compulsory pre-litigation step. It names the courts competent under the Code of Civil Procedure, with a consumer's domicile as a choice, and points to ANSPDCP.
+
+- **Privacy notice.**
+  - §2, family: another person's data comes from the registrant (art. 14(2)(f)), and the first message says so (art. 14(3)(b)). Only the person gives the consents.
+  - §2, a new paragraph: the fitness statement is health data, kept as evidence under art. 9(2)(f).
+  - §2, emergency contact: deleted at seven days, and seen by organisers and administrators.
+  - §2, minors: parents act under Civil Code art. 41/43, not GDPR art. 8. The minor's own ID is asked from 14. Photographs of children follow a realistic rule.
+  - §2, art. 22: the sentence no longer rests on "free".
+  - §3: who sees the ID is stated in full. Legea 190/2018 is cited as art. 2 alin. (2) lit. b).
+  - §3, group run: legitimate interest plus 9(2)(f), no ID, and the archive copy kept three years.
+  - §4: the list closes at most {{publicListPeriod}} after the event. Registrations under an older notice appear only once confirmed.
+  - §6: R2 is a preferred European location on a global network, and Turnstile is global. Zitadel is a Swiss provider with an adequacy decision. "The data stays in the EU" is gone.
+  - §7 is consolidated. Paper IDs are covered within seven days. ID-bearing exports and downloads are deleted within seven days. The group-run archive copy lasts three years. The list's ceiling is stated. An incident hold is added (art. 17(3)(e)).
+  - §8 gains the art. 12(3) extension and a meaning for restriction (art. 18, 19).
+
+- **Race declaration.**
+  - The opening asks for the truth, and the runner answers for it.
+  - A minor aged 14 or over signs with the parent's prior consent. Under 14, the parent signs alone as legal representative.
+  - Liability becomes informed acceptance: it is no waiver (art. 1355(4)). The organiser disclaims only what is solely the runner's or a third party's doing (art. 1352, 1371), and the runner is liable to others.
+  - New or rewritten bullets:
+    - health "to the best of my knowledge", with the cardiac risk;
+    - heat and cold;
+    - traffic duties;
+    - slow help, no alcohol or drugs, first aid, and being stopped;
+    - "Voi participa". "A group run is not a guided tour" is removed.
+  - Accompanying minors stay in the runner's care, and the paragraph disclaims nothing.
+  - Photographs are acknowledged, not claimed as the organiser's property.
+  - The agreement names the terms as accepted at registration.
+  - One signature paragraph is true of the link and of paper, and cites the full title of Legea 214/2024.
+
+- **Group-run declarations.**
+  - No {{idDocument}}.
+  - The basis is legitimate interest, with art. 9(2)(f) for the health statement.
+  - The archive's three years are stated, and restriction is added.
+  - The asphalt text names dogs.
+  - Legea 214/2024 is cited by its full title.
+
+- **Signing page and PDF.**
+  - The accept box accepts the liability limits expressly (art. 1203).
+  - An adult reads "{participant} must sign personally… nobody signs for another adult" (art. 1309), because a family's inbox holds the link (§389).
+  - The PDF label says "the registration's email address".
+  - The event bundle's footer says to delete the file within seven days while it carries identity documents.
+
+**The placeholder.** `{{publicListPeriod}}` is a merge field with its unit ("30 de zile", `daysPhrase`), like `{{holdMinutes}}` (§357, §377). It is in the token legend. It is filled on the terms, privacy and declare pages and in the signed PDF. Until the code package's Termene setting `publicListDays` exists, the value is `DEFAULT_PUBLIC_LIST_DAYS = 30`. The retention periods stay written out: they are the platform's RETENTION constants, not settings.
+
+**What this text waits for.**
+- `TODO(legal-code)` marks what the code package finishes: the terms tick and `terms_version` (§1's box, §9's record), the list gate by notice version, the list period, the emergency-contact sweep at seven days, family-link consents for an adult, and `Event.photosNotice`.
+- `TODO(legal-soon)` marks work nobody owns yet:
+  - Under-14 signing. The service, the page and the desk still ask a minor under 14 to co-sign whenever the text names `{{participantIdDocument}}`. This must change before any event with a minimum age below 14; the default is 14.
+  - §5's "Retrage adresa" button.
+- Also unowned and due soon:
+  - the deletability rule for signed group-run versions (§393's "Open:");
+  - the INTERNAL+PAID editor warning;
+  - the EXTERNAL organizer in JSON-LD;
+  - the approve dialog's count of upcoming registrants (§11).
+
+**Approval order.** The club approves all five texts in `/admin/legal` in one sitting, after the code package ships and before the race is published. Then nobody holds a registration under the old texts, and §11's email is owed to no one.
+
+**Refused.**
+- Rewriting §6's mailbox sentence for Google Workspace. The club must move the mailbox first, as an organisational step; the text follows at approval.
+- Rewriting §5 before the withdraw button exists. This is the amendment's own condition.
+
+**The paper form is now three pages.** The declaration outgrew two. The layout test allows two to three pages, with nothing cut off or drawn into the footer.
+
+**For a licensed Romanian lawyer** (the review's list):
+- the liability wording, and whether a tick satisfies art. 1203;
+- whether the club is a "profesionist";
+- the legal bases for health data;
+- three years against art. 2523/2528;
+- minors, and photographs of children;
+- paper IDs under Legea 190/2018 art. 4(2);
+- the consumer Gmail mailbox;
+- the family flow's validity;
+- obligations outside the texts: authorisations, insurance, volunteers.
+
+**Round 2 on the counsel review, 2026-09-25 (§418).** Five remaining findings answered. The registration-tick TODO(legal-code) comment in terms.ts now quotes the amendment's own RO/EN wording verbatim ("Am citit și accept [Termenii și condițiile]…" / "I have read and accept the [Terms and conditions]…"), not a platform paraphrase with section numbers the amendment doesn't carry — the distinction matters because the club will approve this text once the box ships, and a paraphrase the club never actually sees on the box would be what it approved instead of what is shown. `Admin.groupRunDeclarations.help` (both languages) no longer claims the group-run declaration's PDF carries an identity document; the approved group-run texts ask for none, only the signer's email address. The declaration's kit-collection bullet now states the true rule for each age band rather than an ambiguous "the minor's or the parent's" that reads as if a child under 14 might have handed over a document: under 14, only the parent's or guardian's; 14 to 17, both the minor's own and the parent's or guardian's — the same split the minors paragraph two sentences above it already draws. Terms §9 (registration keeps the version it was accepted under) and §1's last paragraph (the tick accepts the unusual clauses expressly) remain written as promises that come true only once the registration-form code chain — the required tick, `registrations.terms_version` / `terms_accepted_at` — ships; that chain and the tick's own viewer are expected in BR-V2.00, so the club should not approve this text as final until both packages land together. The two e2e cases the review flagged as unverified were confirmed to parse (`--list`, 12 cases across both projects) and were run against a production build on a dedicated worktree database; the run itself did not complete cleanly on this occasion because of contention from other sessions building and testing concurrently on the same machine, not because of anything in this diff, and the full suite is what the batch CI already runs on every PR.
+
+The declaration's 14–17 kit-collection bullet was ambiguous about whether the minor's own document, the parent's, or both were required at the kit table; it now says plainly that each signer's own identity document is the one named beside their own signature on the declaration — the minor's own for 14–17, the parent's or legal guardian's (who collects on the minor's behalf) for under 14 — in both Romanian and English. The backoffice group-run declarations help text, in both languages, was left as a sentence fragment after 'no identity document'; it now reads as a complete sentence stating plainly that no identity document is asked for when a runner signs the optional group-run declaration.
+
+Baseline `BR-V2.00-2026-09-25`.
+
+## 419. The emails, production-ready per the counsel's review
+
+The counsel's review of 2026-09-25 (`D:/tmp/handoff/legal/amendments-all.json`, the emails and message types) is applied verbatim, both languages, placeholders only. No mechanism changes: tokens, the club's saved words (§247), the legend and prefill (§359, §373) and the deadlines (§377) work as before.
+
+**What each message now says**
+
+- **VERIFY_REGISTRATION_EMAIL**. This is the first message a family member registered on the address sees (§389), so it says:
+  - whose registration it is (`{participantName}`);
+  - where the data came from, and to show this message to that person if someone else filled in the form (GDPR art. 14(3)(b));
+  - how long the link lives (`{confirmationHours}`) and that the registration lapses without it.
+
+  "Dacă nu ai solicitat această înscriere…" stays.
+- **WAITLIST_SPOT_OFFER**. The message that starts the clock now says when it stops: the moment (`{holdExpiresAtFormatted}`, which `render.ts` now fills for the offer as well as for the declaration request) and the length (`{offerHours}`) (Codul civil art. 1191, 1193).
+  - A resend after the offer lapsed states only the length.
+  - It is then always the platform's sentence, even when the club has saved its own words: without the moment, a club text would read "până la (ai la dispoziție …)". This is the same kind of exception as the address-cap one in §389.
+- **A minor's registration** (`guardian_name` set, the platform's usual truthiness):
+  - The message greets the parent or guardian, and its first line says whose registration it is about.
+  - The declaration request and the offer also say who signs: both, each with their own identity document, when the declaration in force in the registration's language names `{{participantIdDocument}}` (§330); otherwise the parent alone.
+  - `DECLARATION_SIGNED` and an adult's greeting (a family member's included) are unchanged.
+- **The privacy line** is one neutral sentence for every participant message: «…pentru o înscriere făcută cu această adresă de e-mail. Cum folosim datele:». The interest and group-run variants are unchanged.
+- **COMPLETE_DECLARATION (asked in advance)** no longer says «Cursa e gratuită». It was said of any event more than a day away, paid or not a race.
+- **EVENT_UPDATE_NOTICE** gives a way out: withdraw from «Înscrierile mele» (the tokenless page, §77) so the place goes to the waiting list.
+- **REGISTER_ANOTHER_PERSON** asks for the other person's agreement and points to the privacy notice.
+- **DECLARATION_ARCHIVE and GROUP_RUN_DECLARATION_ARCHIVE**:
+  - The race copy says how the identity document is masked.
+  - Both copies say how long the club keeps them and when to delete them. The mailbox is not swept, so the email is the reminder.
+  - Every period comes from `RETENTION` (`archivePeriod`, `identityDays`; "years" was added to the duration words).
+  - The group-run copy follows the notice's legitimate-interest, three-year choice and the right to object.
+- **GROUP_RUN_DECLARATION_SIGNED**. The signer's PDF now masks the identity document like the club's copy (`declarationPdfAudience` returns `club` for it; the backoffice keeps the whole document). The address was never confirmed, so one typo would hand a stranger an identity number (GDPR art. 5(1)(f), 25, 32). The message says so only when the text asked for a document, and always gives the contact-page route for a declaration the reader did not sign.
+
+**The club's copies (§320, narrowed; GDPR art. 5(1)(c), (e), 25(2))**
+
+- **No copy of a message to an unconfirmed address.** `VERIFY_REGISTRATION_EMAIL` and `REGISTER_ANOTHER_PERSON` are no longer copied. Such a registration is deleted after 30 days (§322), while a mailbox copy stayed for three years.
+- **One copy per bulk send.** `ORGANIZER_MESSAGE` and `EVENT_UPDATE_NOTICE` get one copy per send, from `enqueueBulkClubCopies`, instead of one per registration:
+  - The row has no registration and no participant. Its payload carries the event's id and how many real participants the send reached.
+  - The copy greets the club and names nobody.
+  - It is queued only when at least one real registration was written to. Its key is the send's own, so a retry queues nothing twice.
+- **EVENT_CANCELLED** keeps one copy per registration; the review named the two sends above only.
+- `isParticipantMessage` is unchanged: these types keep the privacy line and never carry envelope copies. The new `isCopiedPerMessage` is what `enqueueClubCopies` asks.
+- The composer's cost line counts one copy per club address per send.
+
+**The organizer's composer (§364)**
+
+A line under the body box says the message is about this event only: no advertising, no sponsors' offers, no other events (Legea 506/2004 art. 12; GDPR art. 5(1)(b)). There is no tick box.
+
+**Refused, or left for later**
+
+- "Cursă" only on a RACE event: optional in the review, not done.
+- A `PRIVACY_NOTICE_CHANGED` message type: the review says it is not required. The procedure is an organizer message before approving; the approve-dialog count is a `/admin/legal` change, outside this scope.
+- The `/devs` volume forecast still assumes a copy of every participant message. It now over-counts by the address-confirmation copies, the safe direction. Its constant is pinned to `docs/PLATFORM.md`, which this change could not edit.
+
+Merged with §407 (review round 2). The declaration request and the freed-place offer now build their stated moment the same way: the formatted deadline goes through `confirmationDueMoment`. A hold that ends at the start (a zero-day deadline) or an offer that `capHoldExpiry` cut at the start therefore reads «până la start, sâm., 21 nov. 2026, 09:00» / "by the start, Sat, 21 Nov 2026, 09:00", in the value itself and in any text the club wrote with `{holdExpiresAtFormatted}`. `confirmLater` and `windowOpen` still belong to the declaration request alone.
+
+The offer's stated length is always the offer's own span, `offerCreatedAt` to `holdExpiresAt`. When the cap leaves less than an hour, the length is said in minutes through the shared duration words, e.g. «ai la dispoziție 20 de minute» / "you have 20 minutes". A 20-minute offer never says «o oră» next to a moment that is minutes away. From an hour up it is rounded to whole hours, as before.
+
+The allowance forecast now counts club copies only for the messages that are copied. The address-confirmation link goes to an address nobody has confirmed and gets no club copy, so each hidden-copy address costs four messages per completed registration, not five (`COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION`). The panel's "of those, N are copies" line and `docs/PLATFORM.md` use the same figure.
+
+The link for another person (§389) keeps its own plain greeting, «Salut,» / "Hello,", even when the registration the address already holds is a minor's. The message is to the address holder about somebody else, so the parent's greeting and the "whose registration" line do not apply to it.
+
+A capped waiting-list offer's stated length is now taken straight from `minutesPhrase` (already-tested, already-shared with the hold's own wording) rather than a separate `Math.round(offerMinutes / 60)` in `render.ts` — whole hours only when the offer's own span (`offerCreatedAt` to the possibly-capped `holdExpiresAt`) is exactly that many, minutes otherwise, so a 91-minute offer reads "91 de minute" rather than being rounded up to "2 ore" and read against a deadline it doesn't reach (the same Codul civil art. 1191/1193 concern the earlier counsel-review fix answered). `templates.ts`'s `timingWords` now always defers to `data.timings.offerMinutes` when render.ts supplies one, instead of only below 60 minutes; render.ts no longer overrides `offerHours` directly. Confirmed separately, with a new integration case, that an offer capped exactly at the event's start already reads "până la start" / "by the start" beside the date through the existing `confirmationDueMoment` helper (§407) — no code change was needed there, only test coverage.
+
+The waiting-list offer's stated minutes are floored, never rounded, against the real millisecond span between offerCreatedAt and the capped holdExpiresAt, so the stated length never claims more time than the deadline actually gives.
+
+Baseline `BR-V2.00-2026-09-25`.
+
+## 420. The registration audit: eleven defects in the lifecycle, each fixed inside the locks it already had
+
+**2026-09-25.** An adversarial audit of the registration lifecycle confirmed eleven defects and two nits. A second reviewer checked each one against origin/qa. Each fix below is the smallest change inside the locks the code already takes, and each has a regression test that fails on qa and passes after the fix. No trust rule in CLAUDE.md's table was broken by any of them. Several produced a visible false statement to a runner, and one could confirm the wrong person at the desk.
+
+**1. Every "register another person" email keeps its own link (amends BR-REQ-036-02 criterion 5 for one purpose).**
+- **Problem.** Every family link is scoped to the address's first registration at the event (§389). `issueActionToken` superseded the older link whenever a newer one was minted. A parent who filled the form once per child and then opened the inbox found every link dead except the last, although each email says its link is valid for the club's window. It also meant BR-REQ-034-02 criterion 11 (five emailed links pressed at once) could never happen through real tokens.
+- **Fix.** `REGISTER_ANOTHER_PERSON` is the one purpose `issueActionToken` does not supersede. Migration `0078` recreates `email_action_tokens_one_active_per_registration_purpose` with `AND "purpose" <> 'REGISTER_ANOTHER_PERSON'`.
+- **Why it is safe.** Each link is still single use and hashed. The address's limit is still counted under the event lock whenever a link is used.
+- **Rejected:** rewording the email to say a newer message replaces the link. That would keep the defect and just describe it.
+
+**2. A staff entry that finds the address registered under the lock is refused out loud (BR-REQ-037-05, BR-REQ-037-07).**
+- **Problem.** `createRegistrationByStaff`'s pre-check reads outside the lock. A public submission on the same address could land in the gap. Under the lock the decision became "resend", which created nothing and returned success. The fast track then re-read the address, found the *other* runner's row, and confirmed them on this person's paper, with an audit row in their name.
+- **Fix.** `submitRegistration` now throws the pre-check's own refusal (`VALIDATION_ERROR`, `["email"]`) for a staff `resend` or `offerAnother`. Nothing is written. A staff caller now receives `registrationId` for the row it created or restarted, and the fast track confirms that row, never a row found by address. The public answer is unchanged, byte for byte (§39).
+
+**3. No waiting-list offer after the registration close or the start (BR-REQ-035-02 criterion 3).**
+- **Problem.** The offer deadline is capped at the close and the start, so after either it is already in the past. Such an offer is born lapsed: it occupies no place, the next job run expires it and offers the next person. The job worked down the whole list one dead offer per run, emailing everyone "a place is yours". A late cancellation also mailed a second person an offer for a place already taken.
+- **Fix.** `fillAvailableSpots` computes the deadline once and makes no offer when it is not after `now`. The list stays `WAITLISTED` until the start closes it. The desk's `promoteFromWaitlistByStaff` is a separate path and still works.
+
+**4. The lapsed-declaration sweep releases the provisional number (§220, completed).**
+- **Problem.** The `DECLARATION_HOLD_LAPSED` update was the one bulk sweep that left `provisional_bib_number` set. The settle reads only final numbers as taken, so it could give that number to somebody else. `confirmByStaff` re-allocating the lapsed row on race morning (§160) then adopted its stale number as final and hit `registrations_event_bib_number_unique`. The runner with a signed paper could never be confirmed.
+- **Fix.** The sweep now clears the column like the others. Migration `0078` also clears it on EXPIRED and CANCELLED rows. The desk search's status filter stays as a second guard.
+
+**5. The settle numbers only the places the capacity formula counts (amends §214's "a place is held from submission").**
+- **Problem.** `awaitingSettledNumber` used `PLACE_HOLDING_STATUSES`, which includes `PENDING_EMAIL_CONFIRMATION`. `computeOccupied` does not count that status, in line with AGENTS.md §10.5 invariant 3 and §10.6 rule 6. So a full race could settle more final numbers than it has places. It emailed BIB_ASSIGNED, with a manage link, to an address nobody had proved, and that row then confirmed onto the waiting list still wearing a final number.
+- **Fix.** The settle numbers `PENDING_DECLARATION`, `WAITLIST_OFFERED` and `CONFIRMED` only, and in the same transaction releases the provisional numbers of the event's unconfirmed rows. If a late confirmation gets a place, it draws a fresh number the way any post-close confirmation does.
+- **Unchanged.** The provisional number drawn at submission stays: §214's intent, the runner seeing a number at once, still holds. This section corrects §214's sentence that an unconfirmed row "occupies a place".
+
+**6. An offered place carries a provisional number (§214).**
+- **Problem.** `fillAvailableSpots` and the desk's promotion moved a runner to `WAITLIST_OFFERED` without drawing a number. A runner confirmed from the waiting list had none until the settle.
+- **Fix.** Both now call `ensureProvisionalBibNumber` under the lock they already hold. The promotion reads the row back, so after the close the drawn number becomes the final one and is not skipped (§220).
+
+**7. The confirmation link lapses with the registration's own link (BR-REQ-031-03 criterion 2, §377, §217).**
+- **Problem.** The VERIFY token borrowed `hold_expires_at`, which a `PENDING_EMAIL_CONFIRMATION` row never has, so it lived fourteen days. After the job lapsed the row at 48 hours, a click spent the link, and the page said "confirmed, now sign the declaration" to a registration that no longer existed. No declaration email came. A click after the lapse but before the job ran confirmed and allocated.
+- **Fix, three parts:**
+  - the token expires at the row's `email_link_expires_at`, or the club's hours for a legacy row;
+  - `confirmEmail` lapses a row whose link has lapsed, exactly as the sweep would, instead of allocating it;
+  - `confirmEmailAction` sends only PENDING_DECLARATION, WAITLISTED, WAITLIST_OFFERED and CONFIRMED to `?done=1`. Anything else goes to `?invalid=1`, whose spent-link notice says "lapsed, register again".
+
+**8. A live declaration link on a registration that has moved on shows where it stands (AGENTS.md §14.3).**
+- **Problem.** The declaration link lives until the start (§160), and nothing invalidates it when a hold lapses or a registration is cancelled. The page rendered the full form, and the press ended on the error page.
+- **Fix.** The page shows the notice a spent link gets for the same state (`describeMovedOnDeclarationLink`), in the form's place, for any state other than a hold or an offer. The action now redirects back to the page on any conflict other than `DECLARATION_CHANGED`. Nothing is spent.
+
+**9. The public form passes the participation window (§104).**
+- **Problem.** Both of the form's doors built their own event literal without the window. A verified runner restarting a cancelled registration weeks before the race got the club's thirty-minute hold instead of the window's deadline, and lost the place to the waiting list half an hour later.
+- **Fix.** Both doors now use `publicFormEvent`, which carries the window and the reminder lead.
+
+**10. A wrong Turnstile secret is the check not running, not the visitor failing (§216).**
+- **Problem.** Cloudflare answers `invalid-input-secret`, `missing-input-secret` and `internal-error` with HTTP 200 and `success: false`. These were scored `failed`, which refused every visitor whose widget loaded.
+- **Fix.** They are now `unavailable`, and logged with the error codes only. Every other rejection still refuses.
+
+**11. Nits.**
+- «Înscrierile mele» names the runner on a closed card (§389).
+- The desk's counters and the events list's race-day numbers leave test registrations out (§30, AGENTS.md §12.6).
+- The public-list e2e approval waits for hydration before ticking, as every other backoffice click does.
+
+**Known limit, left as it was.** After the close, a lapsed declaration hold is still released when somebody waits (§160's `wanted`), although that person can no longer be offered the place. The place stays free for the desk's promotion. Before this section it was released *and* offered as a dead offer. Whether a queue that can no longer be served should count as wanting a place is an owner question.
+
+**Consequences.**
+- Migration `0078_registration_audit` (expand only): the index predicate, and the provisional-number data fix.
+- `issueActionToken`, `submitRegistration` (the staff refusal and `registrationId`), `confirmEmail`, `fillAvailableSpots`, `promoteFromWaitlistByStaff`, `expireStaleHolds`, `settleBibNumbers` / `awaitingSettledNumber`, `render.ts`.
+- The confirm, declare and register actions; the declare and «Înscrierile mele» pages; `turnstile.ts`; `countDesk` and `countConfirmedAndCheckedInByEvent`.
+- New files: `registrations/public-form-event.ts`; `link-status.ts#describeMovedOnDeclarationLink`.
+
+**Tests.**
+- `tests/integration/registrations/lifecycle-audit.test.ts` (14).
+- `tests/integration/registrations/link-actions-audit.test.ts` (3, the real server actions).
+- `tests/unit/registrations/registration-audit.test.ts`.
+- `tests/unit/registrations/turnstile.test.ts` (+1).
+- `provisional-bibs.test.ts`: three tests now confirm the address before the settle.
+- `tests/e2e/public-list-states.spec.ts`.
+- `tests/concurrency/*` unchanged and green.
+
+After the second re-review (2026-09-25). The lapsed-declaration sweep no longer checks, after the registration close, whether an offer would expire the moment it was made. It releases a lapsed hold exactly as §160 says, whenever somebody wants the place. Only fillAvailableSpots holds back the offer email, since an offer made then would already be lapsed. The place that frees up is the desk's to give: promoteFromWaitlistByStaff or confirmByStaff, under the same lock. Keeping the hold would have answered "the event is full" for a place nobody holds. expireStaleHolds is back to its earlier signature and needs no deadlines.
+
+The §383 forecast follows the job. nextInLineReleases is the old arithmetic: one lapse before the start spends one person waiting. It still decides which declaration holds are released rather than owed a last call. nextInLineOffers keeps only the releases before min(registrationClosesAt, startsAt), because from that instant fillAvailableSpots emails nobody.
+
+The Turnstile health probe reads Cloudflare's internal-error as "unreachable", its own passing fault, and never as "misconfigured". Only missing-input-secret or invalid-input-secret say the secret is wrong. Otherwise a transient fault would show a right secret as wrong for the probe's fifteen-minute cache. verifyTurnstile is unchanged: all three codes still mean the check did not run, never that the visitor failed it.
+
+The migration is 0080_registration_audit, after the weather branch's 0078_difficulty_five and 0079_event_coordinates. It is expand only: the looser partial unique index and the UPDATE that clears provisional numbers on EXPIRED and CANCELLED rows.
+
+The desk race of finding (2) has a two-connection test (tests/concurrency/desk-race.test.ts). A third connection holds the event row, so the public submission is ordered first and the staff entry's pre-check runs in the gap.
+
+Baseline `BR-V2.00-2026-09-25`.
+
+## 421. The registration form is ready for counsel's review: the terms accepted expressly and recorded, another adult's own consents, the public list's gate and its end, the emergency contact's seven days
+
+**2026-09-25. Amends §59, §171, §316, §389 and §396; narrows §32 and §143.** Counsel reviewed the platform's texts and the registration code before the 21 November race was opened on production (`LEGAL-REPORT-2026-09-25`). The code part of that review had five findings, all "before launch, required". This section records them as built.
+
+### 1. The terms: one express tick, and its record
+
+**What was wrong.**
+- On an event with its own rules, the club's terms were only a link in the facts line, with no tick. That is browsewrap.
+- On an event without rules, the fallback tick read "am citit condițiile concursului" and linked the terms. It never named the unusual clauses: cancellation or change (terms §3), stopping or exclusion (§4), liability (§5), law and court (§10).
+- An unusual standard clause binds only once it is accepted expressly (Codul civil art. 1202–1203), and an adhesion contract is read against its drafter (art. 1269).
+- Nothing recorded which terms version a runner accepted. §316 had to infer it from time windows.
+
+**Decision.**
+- One required tick, `termsAccepted`, is always shown and never folded. It sits on the public form and on the family link (§389), in both branches of the rules box.
+- Its words are counsel's: «Am citit și accept [Termenii și condițiile] (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.» The English is the same. `{version}` is read from the version in force, never typed.
+- The event-rules tick stays separate (§195). Its fallback now links to the event's own page, not to the terms.
+- `submitRegistration` refuses a PUBLIC submission without the tick (field `termsAccepted`). It also refuses one while no TERMS version is in force («no approved terms exist yet»), in the same place as the privacy-notice refusal. The form says so above the first field.
+- Expand-only migration 0078 adds `registrations.terms_version` (integer, nullable) and `terms_accepted_at` (timestamptz, nullable). They are written from `findCurrentApprovedDocument(TERMS, locale, now)` beside `privacy_notice_version`, and rewritten when a cancelled or expired row is sent again.
+- A staff entry or a desk walk-in records neither and is not refused: the paper carries the terms (§67, AGENTS.md §15.11).
+- `listVersionsForBackoffice` counts `terms_version` per TERMS version, matched per key. `dependantObstacle` therefore refuses withdrawal and deletion of a terms version somebody accepted, exactly as for a notice someone acknowledged. The §316 in-force window stays as the answer for rows written before the column, for the declaration's own "sunt de acord cu termenii", and for a restart that overwrote an earlier number.
+
+*Rejected:*
+- **A hidden field comparing the version the page showed with the one in force at submission.** It is not asked for. The version recorded is the one in force when the form is sent, and a new version landing mid-form is rare.
+- **A foreign key.** The notice's reference is a plain number too (§53).
+
+### 2. The family form carries none of another adult's own consents
+
+**What was wrong.** On the link for another person (§389), the address holder ticked, for another adult:
+- the health-note consent (art. 9 data);
+- the public-list tick;
+- the socials;
+- the first-person «Declar pe propria răspundere că sunt apt medical».
+
+A consent given by a third party for an adult is not that adult's consent (GDPR art. 4(11), 7(1), 9(2)(a)). Art. 8 and Codul civil art. 41–43 cover only a parent acting for a minor.
+
+**Decision.** For a runner aged eighteen or over today (the guardian rule's calendar), `withoutAnotherAdultsConsents` drops the following whatever was posted, before the schema reads anything:
+- the health note and its consent;
+- the Strava link and the Instagram username;
+- the list tick (`list_opt_out = true`);
+- `fitnessDeclared`, so `fitness_declared_at` stays null.
+
+In their place, the address holder ticks `fitnessAcknowledged`: «Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul.» Nothing is stored for that tick. The operative statement is in the declaration the person signs.
+
+`anotherPersonFitnessRule` asks the acknowledgement of an adult and the statement of a minor's parent. On the page:
+- a new island, `ShownForMinor`, is a disabled fieldset while hidden, so it is neither validated nor posted;
+- it shows the health block, the list tick and the statement only once the birth date says under eighteen;
+- `HiddenForMinor` shows the acknowledgement otherwise;
+- the socials are not rendered on the family form at all;
+- `Registration.another.intro` now ends with counsel's sentence.
+
+The ordinary form is the person's own and is unchanged. So is a minor's registration: the parent consents for the child. Offering the three optional items on the declaration page the adult signs is left for later, as counsel allowed.
+
+### 3. The public list's states follow the notice each runner was given
+
+**What was wrong.** §396's gate read only the notice in force. A runner who ticked «Vreau să apar» under a notice that described confirmed names only would appear as pending or waiting the day a marker-carrying notice was approved. Their consent does not cover that (art. 5(1)(b), 7(1)). §396 recorded this as the owner's call; counsel made it required. It must ship before the new notice is approved on production.
+
+**Decision.**
+- `findFirstStatesNoticeVersion` finds the lowest approved, not withdrawn PRIVACY_NOTICE version whose every language names `{{participantListStates}}`, or null.
+- `listPublicStartListOthers` and `countPublicStartListOthers` take that version as a required argument and add `privacy_notice_version >= it`.
+- The version is cached (`legal.first-states-notice`, tag `legal`) and is in both cache keys.
+- With no such notice, nothing beyond the confirmed is read, as before. The confirmed list is unchanged: every notice described it.
+- `privacy_notice_version` is never overwritten to widen a consent. A later re-tick widening would need a column of its own (`list_consent_notice_version`); it is not built.
+
+### 4. A public list closes by itself
+
+**What was wrong.** «Până după eveniment» had no end in the code. A list left on kept names public until the three-year deletion (art. 5(1)(e), 25(2)).
+
+**Decision.**
+- "Termene" (§377) gains `publicListDays`: default 30, bounds 1–90, Administrator-only and audited through the existing `deadlines.changed` row.
+- `publicListClosesAt` and `publicListStillOpen` count the days from the event's end, or its start when it has none.
+- `StartList` returns nothing once the time now is past that point. The check runs at request time, because the public cache expires on writes and a date passing is not one. It covers every `?lista=` page, since they are the same component.
+- The list carries `data-nosnippet`. The page itself stays indexed.
+- The legal merge field `{{publicListPeriod}}` carries the period with its unit («30 de zile», «4 săptămâni»). It is filled on the legal pages through `deadlineMergeValues` and is in the token legend, so the notice names the club's period and never a number of its own. Writing it into the privacy-notice template is the templates' change.
+
+Bounds: at least a day, so the list is there the evening after; at most three months, because who is coming and who came is answered well before then.
+
+### 5. The emergency contact goes after seven days
+
+**What was wrong.** A third party's name and phone were kept three years for a purpose that ends on race day (art. 5(1)(c), 5(1)(e)).
+
+**Decision.** The `identity-and-health` retention step also nulls `emergency_contact_name` and `emergency_contact_phone` seven days after the event's start, with the identity documents and the health note. It is a separate statement, counted as `PruneCounts.emergencyContacts`. The row stays for its three years. The runner's own phone is kept (counsel's optional item, not taken).
+
+### Also: the fitness statement (§171, amended)
+
+The tick is now described as a statement of fitness, treated as data concerning health and kept under art. 9(2)(f) as evidence. It is required because it rests on no consent. Only the moment is stored. Saying this in the privacy notice is the templates' change.
+
+**Tests.**
+- Integration:
+  - `registrations/terms-acceptance.test.ts`: refusal with no terms and without the tick, the version recorded and rewritten on a restart, staff records none, reliance counted per key;
+  - `registrations/family.test.ts`, «§421 the family form and another adult's own consents»;
+  - `registrations/start-list-states.test.ts`, the rendered narrowing;
+  - `jobs/retention.test.ts`, the emergency contact.
+- Unit:
+  - `registrations/family-consents.test.ts`;
+  - `form-mapping.test.ts`;
+  - `deadlines/*`.
+- Privacy:
+  - `public-surface.test.ts`, the version gate and `findFirstStatesNoticeVersion`;
+  - `public-list-period.test.ts`, the period and the component drawing nothing past it.
+- E2E: the form's terms tick and the family form's adult and minor shapes, on both projects.
+- Every fixture that submits a public registration now approves a TERMS version and ticks the box.
+
+Migration: `0078_terms_acceptance.sql`.
+
+The terms tick is the one box a refused form does not bring back as it was posted (§421). The draft cookie of §142/§315 returns every tick as the runner left it. That is right for a refusal about another field and wrong for this one. The service refuses a tick whose posted `termsVersionShown` is no longer the version in force, and ticking it again on the page would record acceptance of a text the runner's tick never named. So whenever the refusal names `termsAccepted`, the box comes back unticked (`acceptanceAfterRefusal`, `form-errors.ts`). When the refusal was about a stale version — the posted tick was on, or the posted version differs from the one in force — a line above the box says the terms changed while the form was being filled in and asks for the version named below to be read and ticked again (`Registration.terms.changed`). If the tick was simply missing, there is no line, only the usual error summary. If the draft was dropped for its size, the box is still unticked.
+
+The photographs notice on every event page and the gallery's upload rule are the counsel amendment's words, verbatim, in both languages. The notice says photos and film may be taken at club events, names the objection at collection ("tell the photographer") beside writing to the club, and links the privacy notice. The upload help ends with the rule on portraits and children and the one-month deletion. A test holds both catalogues to that text.
+
+The public list's period after the event is 1 to 365 days, 30 by default. A year is the ceiling the brief set; the default stays a month, because the disclosure's purpose is spent soon after the event.
+
+`{{publicListPeriod}}` has one registration, among the deadline merge fields, filled from «Termene» everywhere a legal text is shown or printed (the privacy and terms pages, the declaration page, the signed PDF). The constant-valued second registration the texts branch carried was removed when the two branches met, together with its helper and its spreads; spread last, that second registration would have silently put the constant back.
+
+The terms columns are migration `0081_terms_acceptance`, after the five-level gauge (`0078`), the event coordinates (`0079`) and the registration audit (`0080`).
+
+Merged with BR-V1.99 and with fix/emails-legal-ready. The album's upload help keeps V1.99's sentence on how photos are sent ("sent as they are; only one that is too large is shrunk on the device first") and ends with the photographs amendment's upload rule, word for word, in both languages. A group-run signer's own copy is masked like the club's (the emails branch). Under the platform's own group-run text, which asks for no identity document, there is nothing to mask and the email says nothing about it. A club text that still names one is masked in both copies. On the form, a refusal that names the terms tick treats an empty or unreadable posted version as no version. `Number("")` is 0, so without this the page said the terms had changed when nothing had moved. The tick still comes back unticked.
+
+Baseline `BR-V2.00-2026-09-25`.

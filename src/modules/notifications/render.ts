@@ -170,7 +170,7 @@ async function renderRow(
   */
   const clubCopy = isClubCopy(row.payloadJson);
   /*
-    A bulk send's one club copy (§NNN, `enqueueBulkClubCopies`): no registration and no participant
+    A bulk send's one club copy (§419, `enqueueBulkClubCopies`): no registration and no participant
     behind it, the event's id and the number of recipients in its payload. It greets the club and
     names nobody.
   */
@@ -188,7 +188,7 @@ async function renderRow(
 
   // The event comes from the registration — or, for the one message about an event and
   // nobody's registration (§146), from the payload's id, so a renamed event renders right.
-  // A bulk send's club copy names its event the same way (§NNN).
+  // A bulk send's club copy names its event the same way (§419).
   const payloadEventId =
     row.messageType === "REGISTRATION_OPENED" || bulkRecipients !== null ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
   const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
@@ -214,7 +214,7 @@ async function renderRow(
       copy must name who signed. Without a registration (the "my registrations" link), the address's
       name. The one bulk club copy of an organizer's message reads it too — blank, as before — and
       `organizerMessageParts` (`templates.ts`) is what turns that blank into a neutral word wherever
-      the organizer's own body used `{participantName}` (§NNN, review finding).
+      the organizer's own body used `{participantName}` (§419, review finding).
     */
     participantName: registration?.registeredName ?? participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
@@ -288,11 +288,11 @@ async function renderRow(
   }
   // The subject's "[Copie club]" and the line that says the personal links were taken out.
   if (clubCopy) data.clubCopy = true;
-  // A bulk send's one copy: how many it went to, and nobody's name (§NNN).
+  // A bulk send's one copy: how many it went to, and nobody's name (§419).
   if (bulkRecipients !== null) data.clubCopyRecipients = bulkRecipients;
   /*
     A minor's registration (§108): the address is the parent's or guardian's, so the message greets
-    them and says whose registration it is about (§NNN; GDPR art. 12(1), 14; Codul civil art.
+    them and says whose registration it is about (§419; GDPR art. 12(1), 14; Codul civil art.
     41–43). "A minor" is `guardian_name` set, the truthiness every other part of the platform reads.
     The declaration request also says who signs: both, when the declaration in force in the
     registration's language asks the minor to sign as well (§330), else the parent alone.
@@ -307,7 +307,7 @@ async function renderRow(
   /*
     The hold's deadline on the declaration email (§104), and whether it is the window's — a
     deadline more than a day away is the week-before confirmation, not the club's hold (§377) — and
-    the offer's on the freed place (§NNN: the message that starts the clock names when it stops;
+    the offer's on the freed place (§419: the message that starts the clock names when it stops;
     Codul civil art. 1191, 1193). A deadline already behind us (a resend after it) is not named:
     the declaration's place is being kept (§160), and the offer says its length instead.
   */
@@ -342,7 +342,7 @@ async function renderRow(
       }
     }
     /*
-      An offer's stated length must agree with its stated moment (§NNN, following the finding
+      An offer's stated length must agree with its stated moment (§419, following the finding
       raised in review: counsel's own citation, Codul civil art. 1191, 1193, is contradicted by a
       message that names a deadline and then a length that does not reach it). `holdExpiresAt` is
       already capped at registration close or the event start (`capHoldExpiry`), and the club's
@@ -409,7 +409,7 @@ async function renderRow(
   }
   /*
     "Înscrierile mele" by address, not by token: neither message mints anything (§77). On the
-    update notice too (§NNN): a runner whom the new date or place does not suit withdraws there, so
+    update notice too (§419): a runner whom the new date or place does not suit withdraws there, so
     the place goes to the waiting list instead of staying blocked.
   */
   if (row.messageType === "ORGANIZER_MESSAGE" || row.messageType === "EVENT_UPDATE_NOTICE") {
@@ -624,7 +624,7 @@ async function renderRow(
         ? (eventDetails?.startsAt ?? (await findEventStartsAt(db, eventId)))
         : undefined;
     /*
-      The verification link dies when the registration's own link does (§377, §NNN): the lapse
+      The verification link dies when the registration's own link does (§377, §420): the lapse
       written on the row when it entered `PENDING_EMAIL_CONFIRMATION`, or — on a row written before
       the column — the club's hours from now. It used to borrow `holdExpiresAt`, which that state
       never has, and so lived the fourteen-day default: after the job had lapsed the row at 48 hours,
@@ -784,7 +784,7 @@ async function renderRow(
  *
  * About a declaration row, not a registration: no participant, no token, no manage link — there is
  * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95), the
- * identity document masked on both copies (§320; the signer's since §NNN). A row whose declaration is
+ * identity document masked on both copies (§320; the signer's since §419). A row whose declaration is
  * gone (erased, or swept seven days after the run) cannot be rendered, and says so: a failed render
  * is final (`AGENTS.md` §16.1), which is right — there is nothing left to send.
  */
@@ -828,7 +828,7 @@ async function renderGroupRunDeclarationRow(
   }
 
   /*
-    Both emailed copies with the identity document masked (§NNN; GDPR art. 5(1)(f), 25, 32): the
+    Both emailed copies with the identity document masked (§419; GDPR art. 5(1)(f), 25, 32): the
     signer's address was never confirmed — the declaration is signed on a page, no link is sent
     first — so one typo hands a stranger a national identification number. The backoffice keeps the
     whole document for its seven days (`participant`). The signer's message says so, and only when

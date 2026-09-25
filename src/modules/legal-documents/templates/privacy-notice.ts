@@ -32,7 +32,7 @@
  * force names it (`describesListStates`), the way §330's declaration switches the minor's
  * signature on.
  *
- * **Production-ready per the counsel review of 2026-09-25 (§NNN).** A family registration says
+ * **Production-ready per the counsel review of 2026-09-25 (§418).** A family registration says
  * where another person's data comes from and that only the person gives the consents (art. 14);
  * the mandatory fitness tick is named as data concerning health, kept as evidence under art.
  * 9(2)(f); the emergency contact goes at seven days; who sees the identity document is said in

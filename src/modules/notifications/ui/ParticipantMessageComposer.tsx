@@ -51,7 +51,7 @@ export type ComposerLabels = {
   body: string;
   bodyHelp: string;
   /**
-   * What the message may be about (§NNN; Legea 506/2004 art. 12, GDPR art. 5(1)(b)): this event
+   * What the message may be about (§419; Legea 506/2004 art. 12, GDPR art. 5(1)(b)): this event
    * only, never advertising, a sponsor's offer or another event. Under the body box, no tick.
    */
   bodyScope: string;

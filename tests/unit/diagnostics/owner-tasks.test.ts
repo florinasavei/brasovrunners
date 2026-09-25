@@ -138,7 +138,7 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
     expect(stateOf(LAUNCHED, "botCheck")).toBe("done");
     // A secret that is set but wrong is broken, red — not the quiet "open" a missing key gets
-    // (§NNN, finding (10)'s health half): the difference between "not set up yet" and "set up
+    // (§420, finding (10)'s health half): the difference between "not set up yet" and "set up
     // and does not work" is the whole reason this state exists.
     expect(
       stateOf({ ...LAUNCHED, botCheckConfigured: true, botCheckHealth: "misconfigured" }, "botCheck"),

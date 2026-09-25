@@ -452,7 +452,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   if (event.eventStatus !== "SCHEDULED") return 0;
 
   /*
-    The offer's deadline, once for every candidate (§NNN): the club's offer window (§377) at the
+    The offer's deadline, once for every candidate (§420): the club's offer window (§377) at the
     moment the offer is made, capped by the close and the start (BR-REQ-035-02 criterion 3). Once
     the close or the start has passed, that cap is already behind `now`: an offer made then would be
     born lapsed — occupying nothing (`countOccupied` counts an offer only while its deadline is
@@ -491,7 +491,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
     });
     if (!offered) continue;
     /*
-      An offer holds a place, so it carries a number (§214, §NNN) — the one door into a place that
+      An offer holds a place, so it carries a number (§214, §420) — the one door into a place that
       drew none, which left a runner confirmed from the waiting list with no number until the
       settle. Under the caller's event lock, like every draw; the offer's own expiry releases it.
     */
@@ -755,7 +755,7 @@ export function refusesSubmission(input: {
 export type SubmitRegistrationResult = {
   ok: true;
   /**
-   * The registration a **staff** entry created or restarted (§NNN), so the desk confirms that row
+   * The registration a **staff** entry created or restarted (§420), so the desk confirms that row
    * and no other — never re-read by address, which on a family's address (§389) can find another
    * runner's row. Absent on every public answer, which stays the same for everybody (§39).
    */
@@ -969,7 +969,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // decides it from as well (finding (9) of the fix round on `feat/registration-consent-and-terms`).
   const schema = origin.anotherPerson ? baseSchema.superRefine(anotherPersonFitnessRule(now)) : baseSchema;
   /*
-    Another adult on the address (§389, §NNN): the consents only that adult can give — the health
+    Another adult on the address (§389, §421): the consents only that adult can give — the health
     note, the socials, the public list, the first-person fitness statement — are dropped whatever
     was posted, before anything reads them. A minor's parent still consents for the child.
   */
@@ -1050,7 +1050,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     );
   }
   /*
-    The club's terms, accepted expressly on the form (§NNN): the version in force now is the one the
+    The club's terms, accepted expressly on the form (§421): the version in force now is the one the
     tick names and the one recorded. Only where the tick is asked — the public form and the family
     link; a staff entry or a desk walk-in makes it on paper and records none. With no approved terms
     there is nothing to accept, and the registration is refused like one with no privacy notice.
@@ -1060,7 +1060,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "no approved terms exist yet; registration cannot be accepted");
   }
   /*
-    The version shown and the version about to be recorded can differ (§NNN, finding (7)): a new
+    The version shown and the version about to be recorded can differ (§421, finding (7)): a new
     TERMS version may be approved between this page's render and this submit. `termsVersionShown`
     is the version the tick actually named — posted only when the page had one to show — so a
     mismatch is refused rather than silently recorded under a tick that never named the newer
@@ -1178,7 +1178,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // the paper declaration at the desk carries it, and nobody declares it on another's behalf.
     fitnessDeclaredAt: input.fitnessDeclared ? now : null,
     rulesAcknowledgedAt: input.rulesAcknowledged ? now : null,
-    // The terms version the tick named and the moment (§NNN); rewritten with everything else on a
+    // The terms version the tick named and the moment (§421); rewritten with everything else on a
     // restart, like `privacy_notice_version`. Null on a staff entry: the paper carries it.
     termsVersion: terms && input.termsAccepted ? terms.version : null,
     termsAcceptedAt: terms && input.termsAccepted ? now : null,
@@ -1186,7 +1186,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
   /** The deadlines this submission created, for the maintenance job (§334); none on a resend. */
   let createdDeadlines = undefined as (Date | null)[] | undefined;
-  /** The registration this submission created or restarted, for a staff caller (§NNN); none on a resend. */
+  /** The registration this submission created or restarted, for a staff caller (§420); none on a resend. */
   let written = undefined as string | undefined;
   /*
     The club's deadlines (§377), read before the transaction and from the instance's memo when it
@@ -1248,7 +1248,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "this address already carries the club's limit of registrations at this event", [ADDRESS_AT_CAP]);
     }
     /*
-      A staff entry that finds the address registered, here under the lock (§NNN): the refusal
+      A staff entry that finds the address registered, here under the lock (§420): the refusal
       `createRegistrationByStaff` gives before calling in, given again where it cannot be raced. The
       pre-check reads outside the lock, so a public submission on the same address can land between
       the two; the re-send below would then create nothing and return as a success, and the desk's
@@ -1394,7 +1394,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         either both happened or neither did.
       */
       await recordAuditEvent(tx, {
-        // The person themselves, so no actor. A staff entry never reaches this line since §NNN: it
+        // The person themselves, so no actor. A staff entry never reaches this line since §420: it
         // is refused out loud above, under the lock, as `createRegistrationByStaff` refuses it
         // before calling in. The staff id stays as the truthful answer should that ever change.
         actorStaffUserId: origin.source === "STAFF" ? (origin.createdByStaffUserId ?? null) : null,
@@ -1531,7 +1531,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   if (createdDeadlines !== undefined) wakeMaintenance(event, now, settings, ...createdDeadlines);
 
-  // To a staff caller only (§NNN): the public answer stays byte for byte the same for everybody (§39).
+  // To a staff caller only (§420): the public answer stays byte for byte the same for everybody (§39).
   return origin.source === "STAFF" && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
 }
 
@@ -1570,7 +1570,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     if (lockedEvent.eventStatus !== "SCHEDULED") return { registration: current, allocated: false };
 
     /*
-      The link has lapsed (§377, §NNN; BR-REQ-031-03 criterion 2): evaluated here against `now`,
+      The link has lapsed (§377, §420; BR-REQ-031-03 criterion 2): evaluated here against `now`,
       never trusting that the job has run since (§10.6). A click after the lapse and before the next
       sweep used to confirm and allocate a registration its own link had already given up on. It is
       lapsed here exactly as the sweep would lapse it — the provisional number released with it — and
@@ -2083,7 +2083,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     });
     if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
     /*
-      The place carries a number (§214, §NNN), as in `fillAvailableSpots`: drawn under this lock, and
+      The place carries a number (§214, §420), as in `fillAvailableSpots`: drawn under this lock, and
       read back so the confirmation below sees it — before the close it is kept as the provisional
       one, after the close it is adopted as the final one (§220) rather than skipped for a fresh one.
     */

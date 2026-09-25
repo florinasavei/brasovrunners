@@ -134,7 +134,7 @@ describe("the club's archive copy (§99)", () => {
     expect(message.text).toContain("Salut,");
     // The attached copy masks the identity document (§320), and the message says where the whole one is.
     // How it is masked, how long to keep it and until when the whole one is in the backoffice —
-    // every period from the sweep's own constants (§NNN), never a literal.
+    // every period from the sweep's own constants (§419), never a literal.
     expect(message.text).toContain("cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere)");
     expect(message.text).toContain(`Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la eveniment`);
     expect(message.text).toContain(`până la ${identityDays("ro")} după eveniment`);

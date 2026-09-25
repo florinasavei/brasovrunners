@@ -77,7 +77,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
       formatDay(TOKEN_EXAMPLE_SIGNED_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
     ),
   },
-  // The club's deadlines (§377) and the public list's period after the event (§NNN), in any of the three texts, filled from "Termene" when the text is
+  // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
   // Each language's example in its own words, as the text in that language is filled (§369).
   ...DEADLINE_MERGE_FIELDS.map((field) => ({

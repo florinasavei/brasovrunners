@@ -224,7 +224,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
       // would stop being a rehearsal of the real path.
       fitnessDeclared: true,
       rulesAcknowledged: true,
-      // The club's terms (§NNN), ticked as the public form must.
+      // The club's terms (§421), ticked as the public form must.
       termsAccepted: true,
       resultsNameConsent: false,
       // A synthetic row is never on a public start list anyway (`listPublicStartList`

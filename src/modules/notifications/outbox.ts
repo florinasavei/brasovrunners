@@ -187,7 +187,7 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
   params: EnqueueEmailParams,
 ): Promise<void> {
   // Never a message to an address nobody has confirmed, nor one of a bulk send — that gets one copy
-  // per send (`enqueueBulkClubCopies`) — however the club's list reads (§NNN).
+  // per send (`enqueueBulkClubCopies`) — however the club's list reads (§419).
   if (!params.registrationId || !isCopiedPerMessage(params.messageType) || isClubCopy(params.payload)) return;
   const recipients = clubCopyRecipients(params.recipientEmail, participantMessageBcc(await readClubNotices(tx)));
   if (recipients.length === 0) return;
@@ -221,7 +221,7 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
 }
 
 /**
- * The club's **one** copy of a bulk send (§NNN; the counsel's review of 2026-09-25, GDPR art.
+ * The club's **one** copy of a bulk send (§419; the counsel's review of 2026-09-25, GDPR art.
  * 5(1)(c)): the organizer's message (§364) or the update notice (§331) went to everybody
  * registered, one row each, and until now each of those rows was copied to every club address —
  * a hundred runners, a hundred copies of the same words, each greeting a runner by name.

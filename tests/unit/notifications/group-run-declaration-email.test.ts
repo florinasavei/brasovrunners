@@ -35,7 +35,7 @@ describe("§393 the group run's declaration messages", () => {
     }
   });
 
-  it("greets the club, names who and for which run, says how long to keep it from RETENTION, and carries no privacy line (§NNN)", () => {
+  it("greets the club, names who and for which run, says how long to keep it from RETENTION, and carries no privacy line (§419)", () => {
     for (const locale of ["ro", "en"] as const) {
       const email = render("GROUP_RUN_DECLARATION_ARCHIVE", locale);
       expect(email.subject).toContain("Ana Popescu");
@@ -51,7 +51,7 @@ describe("§393 the group run's declaration messages", () => {
     }
   });
 
-  it("tells the signer the document is masked only when the text asked for one, and always how to have it deleted (§NNN)", () => {
+  it("tells the signer the document is masked only when the text asked for one, and always how to have it deleted (§419)", () => {
     const contactUrl = "https://example.test/ro/contact";
     const masked = buildOutgoingEmail({
       to: "x@example.test",

@@ -176,7 +176,7 @@ export function readOrganizerMessagePayload(payload: unknown): OrganizerMessage 
 /**
  * What one send costs against the Mailgun allowance (§100), in messages: every recipient's own —
  * a test row's `@test.invalid` address still spends a message — plus **one** club copy per address
- * on the club's list for the whole send (§NNN; one per registration under §320), and none when the
+ * on the club's list for the whole send (§419; one per registration under §320), and none when the
  * send reaches no real participant.
  */
 export function organizerMessageCost(recipients: { real: number; test: number }, clubCopyAddresses: number): number {

@@ -138,7 +138,7 @@ describe("§364 the words out of the outbox row", () => {
 });
 
 describe("§364 §100 §40 what a send costs, and what waits", () => {
-  it("counts every recipient once and one club copy per address for the whole send (§NNN)", () => {
+  it("counts every recipient once and one club copy per address for the whole send (§419)", () => {
     expect(organizerMessageCost({ real: 10, test: 2 }, 0)).toBe(12);
     // Ten runners, two club addresses: two copies for the send, not twenty.
     expect(organizerMessageCost({ real: 10, test: 2 }, 2)).toBe(14);

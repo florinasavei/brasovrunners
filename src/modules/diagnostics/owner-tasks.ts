@@ -196,7 +196,7 @@ export type OwnerTaskInputs = {
   /** Are both Turnstile keys set (`DECISIONS.md` §97)? Off, the honeypot and the timing check stand alone. */
   botCheckConfigured: boolean;
   /**
-   * Does the configured secret actually work (§NNN, finding (10)'s health half,
+   * Does the configured secret actually work (§420, finding (10)'s health half,
    * `probeTurnstileSecret`)? `unreachable` and `not_configured` read the same as `ok` here —
    * this input only ever turns the row `broken` when Cloudflare itself says the secret is
    * wrong, never on a timeout or on no keys at all, which `botCheckConfigured` already covers.
@@ -356,7 +356,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   // Not blocking either: the form already refuses the dumb bots, and a wrong secret fails open
   // (§205) — nobody is ever refused a registration by this row being red. Open until the two
   // keys exist (§97); broken, red, when they exist and Cloudflare says the secret itself is
-  // wrong (§NNN, finding (10)) — a case the platform used to only log.
+  // wrong (§420, finding (10)) — a case the platform used to only log.
   push("botCheck", {
     owner: "club",
     state: input.botCheckHealth === "misconfigured" ? "broken" : input.botCheckConfigured ? "done" : "open",

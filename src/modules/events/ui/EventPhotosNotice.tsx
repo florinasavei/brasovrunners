@@ -6,7 +6,7 @@ import { DENSITY } from "@/theme/density";
 
 /**
  * "A line on every event page about photographs" — the counsel review's photographs amendment
- * (§NNN): photographs are a legitimate-interest processing (§323), so the way to object is said where
+ * (§421): photographs are a legitimate-interest processing (§323), so the way to object is said where
  * they are taken, not only in the gallery (`Gallery.photosNotice`). Every event page — a race and
  * a group run alike — carries it near the facts, with a message (no reason asked) and a link to
  * the privacy notice that describes the processing.

@@ -326,7 +326,7 @@ describe("§364 the organizer's message to an event's participants", () => {
     expect(bogdan.text).toContain("Your number:.");
   });
 
-  it("gives the club one copy of the whole send — the words and the count, no names (§NNN) — and counts no test row", async () => {
+  it("gives the club one copy of the whole send — the words and the count, no names (§419) — and counts no test row", async () => {
     const event = await seedEvent();
     const rows = await seedRegistrations(event.id, EVERYONE);
     const admin = await staff("ADMIN", "admin@dev.test");

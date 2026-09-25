@@ -115,7 +115,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
 
   const token = await db.transaction(async (tx) => {
     /*
-      The one purpose whose earlier links stay live (§NNN): each "register another person" email
+      The one purpose whose earlier links stay live (§420): each "register another person" email
       (§389) promises its own link for the club's email-link window, and a family fills the form
       once per person before opening the inbox. The address's limit is counted under the event's
       lock whenever one is used, and each is single use, so several live links cannot add a

@@ -320,12 +320,12 @@ describe("§396 what the pending and waiting rows may contain", () => {
 });
 
 /**
- * §NNN (narrowing §396) — a tick given under a notice that described a list of confirmed names
+ * §421 (narrowing §396) — a tick given under a notice that described a list of confirmed names
  * only covers that list. The pending and waiting groups hold only registrations that recorded the
  * first notice describing the states, or a later one; an older tick appears once confirmed, as it
  * always did.
  */
-describe("§NNN the pending and waiting rows follow the notice each runner was given", () => {
+describe("§421 the pending and waiting rows follow the notice each runner was given", () => {
   const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
   const statesBody = { sections: [{ paragraphs: ["Lista arată {{participantListStates}}."] }] };
   const plainBody = { sections: [{ paragraphs: ["Lista arată numele confirmate."] }] };

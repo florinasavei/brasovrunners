@@ -78,7 +78,7 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
     // `listOptOut`, `resultsNameConsent` and `clubMemberDeclared` are deliberately absent: a
     // checkbox is either ticked or not, so it cannot fail validation and a summary entry for
     // one could never appear. `privacyAcknowledged` is the exception and is in the list,
-    // because `z.literal(true)` rejects an unticked one. `termsVersionShown` (§NNN, finding (7))
+    // because `z.literal(true)` rejects an unticked one. `termsVersionShown` (§421, finding (7))
     // is a hidden field with no focusable box of its own — a stale version is refused by naming
     // `termsAccepted`, the tick it names, never itself.
     const posted = Object.keys(readRegistrationForm(new FormData(), "ro"));
@@ -98,11 +98,11 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
 });
 
 /**
- * §NNN — the terms tick after a refused submit. The draft brings every tick back as posted; the
+ * §421 — the terms tick after a refused submit. The draft brings every tick back as posted; the
  * one about the terms comes back unticked whenever the refusal names it, so a version approved
  * between the render and the submit is never accepted by a tick that named the older one.
  */
-describe("§NNN the terms tick after a refusal", () => {
+describe("§421 the terms tick after a refusal", () => {
   const draft = (values: Record<string, string>) => values;
 
   it("comes back as posted when the refusal was about another field", () => {

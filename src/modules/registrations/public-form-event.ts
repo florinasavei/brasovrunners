@@ -4,7 +4,7 @@ import type { EventForRegistration } from "./service";
 type Event = typeof events.$inferSelect;
 
 /**
- * The event as the public registration form hands it to the allocator (§NNN): every field a
+ * The event as the public registration form hands it to the allocator (§420): every field a
  * decision behind that form rests on, read off the event's own row.
  *
  * One function for both of the form's doors — the ordinary submission and the link for another

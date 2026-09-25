@@ -20,7 +20,7 @@ import type { Deadlines } from "./deadlines";
  * phrase sits inside a sentence: "the link is valid for one day", "linkul e valabil o zi".
  */
 
-// `years` for a retention period said in an email (§NNN): the club's archive copy says how long to keep it.
+// `years` for a retention period said in an email (§419): the club's archive copy says how long to keep it.
 export type DurationUnit = "minutes" | "hours" | "days" | "weeks" | "years";
 type Locale = "ro" | "en";
 

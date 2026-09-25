@@ -37,10 +37,10 @@ export const REGISTRATION_FORM_FIELDS = [
   // Both are `z.literal(true)`, so an unticked one is a rejection the summary must be able to
   // name and link to — unlike the optional boxes, which cannot fail (§171).
   "fitnessDeclared",
-  // The family form's stand-in for the statement above, for another adult (§NNN).
+  // The family form's stand-in for the statement above, for another adult (§421).
   "fitnessAcknowledged",
   "rulesAcknowledged",
-  // The club's terms (§NNN), `z.literal(true)` like the two above.
+  // The club's terms (§421), `z.literal(true)` like the two above.
   "termsAccepted",
   "emailConfirm",
   "privacyAcknowledged",
@@ -79,7 +79,7 @@ export const ERROR_SUMMARY_ID = "registration-errors";
 export const DECLARATION_ERROR_SUMMARY_ID = "declaration-errors";
 
 /**
- * The terms tick after a refused submit (§NNN).
+ * The terms tick after a refused submit (§421).
  *
  * The draft cookie brings every tick back as it was posted (§142, §315) — right for a refusal
  * about something else, wrong for this one: when the refusal names `termsAccepted`, either the box

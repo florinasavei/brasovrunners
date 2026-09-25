@@ -33,7 +33,7 @@ export async function confirmEmailAction(form: FormData): Promise<void> {
   */
   if (result.registration.status === "PENDING_EMAIL_CONFIRMATION") redirect(`${path}?eventOff=1`);
   /*
-    "Confirmed — now sign" only where it is true (§NNN): the address confirmed and the registration
+    "Confirmed — now sign" only where it is true (§420): the address confirmed and the registration
     moved on to a place, the waiting list or an offer. A registration that had lapsed (or was
     cancelled) before the click is over; the page re-reads the spent link and says so — "lapsed,
     register again" — rather than promising a declaration email that will never come (§217).

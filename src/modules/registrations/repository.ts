@@ -495,7 +495,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
   db: Database<T>,
   eventId: string,
   /**
-   * The first privacy notice that described the states (`findFirstStatesNoticeVersion`, §NNN):
+   * The first privacy notice that described the states (`findFirstStatesNoticeVersion`, §421):
    * only a registration that recorded it or a later one is listed here. A tick given under an
    * older notice agreed to a list of confirmed names, and that is where such a runner appears —
    * once confirmed, as before. Required, so no caller can forget it.
@@ -535,7 +535,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
 export async function countPublicStartListOthers<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-  /** As `listPublicStartListOthers` (§NNN): consent given under an older notice is not counted here. */
+  /** As `listPublicStartListOthers` (§421): consent given under an older notice is not counted here. */
   firstStatesNoticeVersion: number,
 ): Promise<{ pending: number; waitlisted: number }> {
   const [row] = await db
@@ -712,7 +712,7 @@ export type EventForExpiry = {
  * until the race while everybody after them was turned away. Counted like one more person
  * waiting: one newcomer, one hold, the oldest deadline first.
  *
- * The same after registration has closed (§NNN). `fillAvailableSpots` then makes no offer — one
+ * The same after registration has closed (§420). `fillAvailableSpots` then makes no offer — one
  * would be born lapsed — but the place a lapsed hold gives back is still wanted: the desk gives it
  * to somebody waiting (`promoteFromWaitlistByStaff`) or to the runner standing there with a paper
  * (`confirmByStaff`), both under the same lock and both after this sweep. Keeping the hold here
@@ -793,7 +793,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     await db
       .update(registrations)
       /*
-        The number goes with the place here too (§220, §NNN). This sweep was the one that forgot:
+        The number goes with the place here too (§220, §420). This sweep was the one that forgot:
         a lapsed hold kept its provisional number, the settle — which reads only final numbers as
         taken — gave that number to somebody else as their final one, and re-allocating the lapsed
         row at the desk (`confirmByStaff`, §160) then adopted it as *its* final number and hit the

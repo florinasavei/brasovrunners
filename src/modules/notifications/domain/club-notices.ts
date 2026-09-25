@@ -209,7 +209,7 @@ export function isParticipantMessage(messageType: EmailMessageType): boolean {
 }
 
 /**
- * Participant messages the club gets **no copy of per message** (§NNN, the counsel's review of
+ * Participant messages the club gets **no copy of per message** (§419, the counsel's review of
  * 2026-09-25, GDPR art. 5(1)(c) and (e), art. 25(2)) — still participant messages in every other
  * respect (the privacy line, no envelope copies), only never copied one by one:
  *
@@ -230,16 +230,16 @@ const NO_CLUB_COPY_PER_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMes
   "EVENT_UPDATE_NOTICE",
 ]);
 
-/** The bulk sends whose club copy is one per send, with the count of recipients and no names (§NNN). */
+/** The bulk sends whose club copy is one per send, with the count of recipients and no names (§419). */
 export const BULK_CLUB_COPY_MESSAGES = ["ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE"] as const satisfies readonly EmailMessageType[];
 export type BulkClubCopyMessage = (typeof BULK_CLUB_COPY_MESSAGES)[number];
 
-/** Whether each message of this type gets a club copy of its own when it is queued (§320, §NNN). */
+/** Whether each message of this type gets a club copy of its own when it is queued (§320, §419). */
 export function isCopiedPerMessage(messageType: EmailMessageType): boolean {
   return isParticipantMessage(messageType) && !NO_CLUB_COPY_PER_MESSAGE.has(messageType);
 }
 
-/** The payload key that carries, on a bulk send's one club copy, how many real participants it went to (§NNN). */
+/** The payload key that carries, on a bulk send's one club copy, how many real participants it went to (§419). */
 export const BULK_COPY_RECIPIENTS = "recipients";
 
 /** How many participants a bulk send's club copy says it went to, or `null` for any other row. */
@@ -303,7 +303,7 @@ export function declarationPdfAudience(messageType: EmailMessageType, clubCopy: 
   if (clubCopy) return null;
   if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE") return "club";
   /*
-    A group run's signer's copy is masked too (§NNN): the declaration is signed on a page and its
+    A group run's signer's copy is masked too (§419): the declaration is signed on a page and its
     address is never confirmed first, so the copy may reach a stranger through one typo. A race's
     PDF goes only to an address the runner confirmed with the link (§12.8), and stays whole.
   */
