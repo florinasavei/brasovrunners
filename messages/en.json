@@ -1184,8 +1184,8 @@
       "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. A Facebook event with several dates keeps one address, so the series inherits it from the source event; any one date can change its own.",
       "bodyHelp": "Optional, in both languages or neither. The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
-      "confirmationDeadlineDaysBefore": "…and due how many days before",
-      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once ({hold}), as for the weekly runs — which are within a week anyway.",
+      "confirmationDeadlineDaysBefore": "…and due how many days before (0 = at the start)",
+      "confirmationWindowHelp": "A runner confirms by signing the declaration, any time after confirming their email: online, from the registration email, or on paper at the registration desk. At the first number of days before the start we email them to ask for the confirmation. Until the deadline the place is theirs; after the deadline the place goes to the next in line only if someone is waiting. With 0 as the deadline, the place does not lapse before the start. Whoever registers after the window has opened, or when the first number is 0 (as on the weekly runs), has {hold} to sign.",
       "typeHelpSummary": "What each type means",
       "typeNotes": {
         "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
@@ -1390,7 +1390,9 @@
         },
         "confirmation": {
           "title": "Confirmation window",
-          "dates": "For {date}: asked from {opens}, due {due}."
+          "dates": "For {date}: asked from {opens}, due {due}.",
+          "datesAtStart": "For {date}: asked from {opens}, due at the start — the place does not lapse before the start.",
+          "datesOff": "No window: the signature is asked at registration ({hold}), as on the weekly runs."
         },
         "bibs": {
           "title": "Race numbers (bibs)",
@@ -1519,7 +1521,9 @@
             "noDeclaration": "Declaration missing — required for registration on the site"
           },
           "confirmation": {
-            "sentence": "Asked {opens} days before, due {due} days before"
+            "sentence": "Asked {opens} days before, due {due} days before",
+            "atStart": "Asked {opens} days before, due at the start",
+            "off": "No window — the signature is asked at registration"
           },
           "bibs": {
             "from": "From {number}",
@@ -3557,7 +3561,8 @@
       "declaration": {
         "title": "Sign the declaration",
         "body": "From that same email, read the declaration and type your name — online, or on paper at the registration desk on race day. The registration is complete only with the signed declaration. Your place is held for {hold}; if a waiting list forms, after that it goes to the next in line.",
-        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {deadline} before the start; after that it goes to the next in line."
+        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {due}; after that it goes to the next in line.",
+        "bodyLaterAtStart": "The place is yours, but the race is free, so we ask for a confirmation: you can sign the declaration of own responsibility from now, from the registration email, any time until the start — online, or on paper at the registration desk on race day. {opens} before the start we send you a reminder email. The place does not lapse before the start."
       },
       "confirmed": {
         "title": "You are in",
@@ -3688,6 +3693,7 @@
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
+      "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
       "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (at most the first two and last two characters remain); we never keep a copy of the document.",
@@ -3797,7 +3803,8 @@
       "closedHelp": "These registrations are no longer active, but they still hold details you gave us only because you agreed to. You can delete them here; the rest of the registration is kept for as long as the privacy notice says.",
       "eventCancelledChip": "Event cancelled",
       "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
-      "runner": "Registered: {name}"
+      "runner": "Registered: {name}",
+      "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day."
     },
     "manage": {
       "title": "Manage your registration",

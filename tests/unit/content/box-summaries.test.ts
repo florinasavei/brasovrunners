@@ -222,6 +222,11 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(conditionsSummary(words, 14, { version: 3, title: "Declarația" })).toBe("de la 14 ani · declarația v3");
     expect(conditionsSummary(words, 16, null)).toBe(`de la 16 ani · ${words.conditions.noDeclaration}`);
     expect(confirmationSummary(words, 7, 2)).toBe("Cerută cu 7 zile înainte, termen cu 2 zile înainte");
+    // §NNN: a deadline of zero is the start, and no window says so rather than two dead numbers.
+    expect(confirmationSummary(words, 7, 0)).toBe("Cerută cu 7 zile înainte, termen la start");
+    expect(confirmationSummary(wordsEn, 7, 0)).toBe("Asked 7 days before, due at the start");
+    expect(confirmationSummary(words, 0, 0)).toBe(words.confirmation.off);
+    expect(confirmationSummary(words, 2, 3)).toBe(words.confirmation.off);
     expect(bibsSummary(words, 100, "Verde", { allocated: 42, unprinted: 2 })).toBe("De la 100 · Verde · alocate: 42, de tipărit: 2");
     expect(bibsSummary(words, 1, null, null)).toBe("De la 1 · culoarea clubului");
     expect(startListSummary(words, "HIDDEN")).toBe("Ascunsă");
