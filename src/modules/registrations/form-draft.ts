@@ -2,6 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 import { cookies } from "next/headers";
 import { env } from "@/shared/config/env";
 import { TURNSTILE_FIELD } from "./turnstile";
+import { ANOTHER_PERSON_PARAM } from "./domain/family";
 
 /**
  * What the participant typed, kept across a rejected submit (`DECISIONS.md` §142; the owner:
@@ -36,7 +37,12 @@ const MAX_BYTES = 3_800;
   The three that stay: the token (single use), the trap (its whole point is to be empty), and
   the render time (it is the clock for the next attempt, not the last one).
 */
-const SKIPPED = new Set([TURNSTILE_FIELD, "honeypot", "renderedAt", "locale", "slug"]);
+/*
+  …and the secret of the link for another person on one address (§NNN): an action token is never
+  kept anywhere but the email it was sent in (§14.5), sealed cookie or not — the page reads it from
+  its own address again.
+*/
+const SKIPPED = new Set([TURNSTILE_FIELD, "honeypot", "renderedAt", "locale", "slug", ANOTHER_PERSON_PARAM]);
 
 export type FormDraft = Readonly<Record<string, string>>;
 

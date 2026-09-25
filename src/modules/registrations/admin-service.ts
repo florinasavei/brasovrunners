@@ -26,10 +26,13 @@ import { erasedBibNumbers } from "./bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
+import { registrationNameKey } from "./domain/name-key";
 import {
   findEventForAllocation,
   findRegistrationByEventAndParticipant,
   findRegistrationById,
+  findRegistrationsByEventAndParticipant,
+  lockEventForCapacity,
 } from "./repository";
 import {
   checkIn,
@@ -309,7 +312,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     if (existing && isActiveStatus(existing.status)) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        "this person already has a registration for this event",
+        "this address already has a registration for this event",
         ["email"],
       );
     }
@@ -614,11 +617,29 @@ export async function correctRegisteredName<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   if (current.registeredName === trimmed) return current;
 
-  const [updated] = await db
-    .update(registrations)
-    .set({ registeredName: trimmed, updatedAt: now })
-    .where(eq(registrations.id, registrationId))
-    .returning();
+  /*
+    The runner's key follows the name (§NNN): it is what tells two people on one address apart, so
+    a corrected name that is another registration's on the same address and event would make one
+    person of two. Refused with the name box's own field, before the unique index would refuse it
+    as a driver error — and read under the event's lock, the one `submitRegistration` takes before
+    it reads the address, so a rename and a new runner on the same address cannot both find the
+    name free and meet in the index.
+  */
+  const nameKey = registrationNameKey(trimmed);
+  const updated = await db.transaction(async (tx) => {
+    const locked = await lockEventForCapacity(tx, current.eventId);
+    if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+    const siblings = await findRegistrationsByEventAndParticipant(tx, current.eventId, current.participantId);
+    if (siblings.some((row) => row.id !== current.id && registrationNameKey(row.registeredName) === nameKey)) {
+      throw new DomainError("VALIDATION_ERROR", "another registration on this address at this event already carries that name", ["registeredName"]);
+    }
+    const [row] = await tx
+      .update(registrations)
+      .set({ registeredName: trimmed, nameKey, updatedAt: now })
+      .where(eq(registrations.id, registrationId))
+      .returning();
+    return row;
+  });
 
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,

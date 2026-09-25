@@ -130,6 +130,14 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 {/* The race will not run (§331); the registration's own state stays beside it. */}
                 {item.eventCancelled && <Chip size="small" color="error" label={t("mine.eventCancelledChip")} />}
               </Stack>
+              {/*
+                Whose registration this is (§NNN): one address may carry a family, each person a
+                registration of their own, so every row names its runner. Behind the address's own
+                link, which is the one place the names on it may be read.
+              */}
+              <Typography variant="body1" sx={{ fontWeight: 600 }} data-testid="my-registration-name">
+                {t("mine.runner", { name: item.registeredName })}
+              </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>

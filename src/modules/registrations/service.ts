@@ -40,7 +40,13 @@ import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
+import { DEFAULT_ADDRESS_CAP } from "./domain/address-cap";
+import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
+import { registrationNameKey, sameRunner } from "./domain/name-key";
+import { currentAddressCap } from "./address-cap";
+import { familyRegistrationOpen } from "./family-gate";
 import {
+  anotherPersonSubmissionSchema,
   declarationSigningSchema,
   isMinorOn,
   minimumAgeRule,
@@ -760,6 +766,16 @@ export type RegistrationOrigin = {
   secondAttempt?: boolean;
   /** Whether the club has the hidden field switched on (§282). */
   honeypotOn?: boolean;
+  /**
+   * This public submission came through the link emailed to an address that is already registered
+   * at the event (§NNN, `REGISTER_ANOTHER_PERSON`): the form for another person on that address.
+   * The caller has spent the token in the same transaction and names the participant it was issued
+   * to; the address is that participant's, never one typed into the form. It changes three things:
+   * the per-identity throttle is not spent (the token's own throttle bounds this door, §39); the
+   * decision is the link's (`domain/family.ts`) — create, or refuse out loud, behind the token —
+   * and the registrations-per-address limit is enforced here, under the event's lock.
+   */
+  anotherPerson?: { participantId: string };
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
@@ -828,37 +844,47 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
   if (!participant) return;
 
-  const registration = input.eventId
-    ? await repo.findRegistrationByEventAndParticipant(db, input.eventId, participant.id)
-    : await repo.findLatestActiveRegistrationForParticipant(db, participant.id);
-  if (!registration || !isActiveStatus(registration.status)) return;
+  /*
+    Every runner the address holds at the event, each with their own link (§NNN): a family's
+    inbox asking "send it again" gets one message per person still owing a step, never only the
+    first one's. Asked without an event, the newest active registration, as before.
+  */
+  const candidates = input.eventId
+    ? await repo.findRegistrationsByEventAndParticipant(db, input.eventId, participant.id)
+    : [await repo.findLatestActiveRegistrationForParticipant(db, participant.id)];
+  const active = candidates.filter((row): row is Registration => row !== undefined && isActiveStatus(row.status));
+  if (active.length === 0) return;
   // A cancelled event hands out no link (§331): each would open onto "this event is cancelled",
   // and its participants were told so in a message of its own. The same silent answer as above.
   // Asked without an event, the lookup has already passed over cancelled ones, so a runner with
   // another race still gets that one's link rather than nothing.
   if (input.eventId) {
-    const event = await repo.findEventForAllocation(db, registration.eventId);
+    const event = await repo.findEventForAllocation(db, input.eventId);
     if (!event || event.eventStatus === "CANCELLED") return;
   }
 
-  const messageType = deriveAllowedResendMessageType(registration.status);
-  if (!messageType) return;
+  const sends = active
+    .map((registration) => ({ registration, messageType: deriveAllowedResendMessageType(registration.status) }))
+    .filter((send): send is { registration: Registration; messageType: NonNullable<typeof send.messageType> } => send.messageType !== null);
+  if (sends.length === 0) return;
 
   await db.transaction(async (tx) => {
-    await enqueueEmail(tx, {
-      participantId: participant.id,
-      registrationId: registration.id,
-      messageType,
-      // The registration's language, not the language of the page they asked from: the row
-      // records what they chose when they registered, and that is the one they read.
-      locale: registration.locale,
-      recipientEmail: participant.deliveryEmail,
-      payload: {},
-      // Per request, so two genuine asks an hour apart are two messages — the throttle above
-      // is what bounds them, not a key collision that would silently swallow the second.
-      idempotencyKey: `registration:${registration.id}:link-requested:${now.toISOString()}`,
-      now,
-    });
+    for (const { registration, messageType } of sends) {
+      await enqueueEmail(tx, {
+        participantId: participant.id,
+        registrationId: registration.id,
+        messageType,
+        // The registration's language, not the language of the page they asked from: the row
+        // records what they chose when they registered, and that is the one they read.
+        locale: registration.locale,
+        recipientEmail: participant.deliveryEmail,
+        payload: {},
+        // Per request, so two genuine asks an hour apart are two messages — the throttle above
+        // is what bounds them, not a key collision that would silently swallow the second.
+        idempotencyKey: `registration:${registration.id}:link-requested:${now.toISOString()}`,
+        now,
+      });
+    }
   });
 }
 
@@ -907,7 +933,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   */
   const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
   const schema = (
-    origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema
+    origin.source === "STAFF"
+      ? staffRegistrationSubmissionSchema
+      : origin.anotherPerson
+        ? anotherPersonSubmissionSchema
+        : registrationSubmissionSchema
   ).superRefine(minimumAgeRule(eventDay, event.minAge ?? MIN_PARTICIPANT_AGE));
   const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
@@ -1017,9 +1047,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * people at a desk is the case this must not obstruct, and they are already authenticated
    * and authorized.
    */
+  // Behind the emailed link for another person (§NNN) the address is throttled too, in a bucket of
+  // its own ("registration-link-submit", ten an hour): sharing this one would let a family of four
+  // spend seven of its five — the form, three re-sends for a link, three links.
   if (origin.source === "PUBLIC") {
+    const scope = origin.anotherPerson ? "registration-link-submit" : "registration-submit";
     // Hashed (§322): the bucket needs equality, not the address.
-    const verdict = await consumeRateLimit(db, "registration-submit", emailBucketKey("registration-submit", identity.canonicalEmail), now);
+    const verdict = await consumeRateLimit(db, scope, emailBucketKey(scope, identity.canonicalEmail), now);
     if (!verdict.allowed) {
       // The event and the verdict, never the address (§14.5) — as the anti-bot refusals log.
       console.warn(`[registration] refused as throttled, event ${event.id}`);
@@ -1099,10 +1133,102 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     from them.
   */
   const settings = await currentDeadlines(db);
+  /*
+    The club's limit of registrations per address (§NNN), read the same way and for the same reason
+    as the deadlines: before the transaction, from the instance's memo, never under the event's lock.
+    A staff entry never meets it — it refuses a registered address out loud before calling in.
+  */
+  const cap = origin.source === "PUBLIC" ? await currentAddressCap(db) : DEFAULT_ADDRESS_CAP;
 
   await db.transaction(async (tx) => {
+    /*
+      The event row, locked, before anything is read about the address (§NNN; §214 took the lock
+      for the insert alone). Which runners the address already holds is now what decides between a
+      re-send, the email for another person and a new registration — and two members of one family
+      pressing at once must not both find the address empty. Taken before the participant row, the
+      order `confirmEmail` takes them in (event, then participant), so the two cannot deadlock.
+      The price, accepted: every public submission to one event now waits on this row — the silent
+      re-send and the email for another person included, not only the insert — so a busy event's
+      submissions run one at a time, each a few milliseconds long.
+    */
+    const locked = await repo.lockEventForCapacity(tx, event.id);
+    if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
-    const existing = await repo.findRegistrationByEventAndParticipant(tx, event.id, participant.id);
+    if (origin.anotherPerson && origin.anotherPerson.participantId !== participant.id) {
+      // The caller fixes the address from the token; a mismatch is a caller's bug, never a person's.
+      throw new DomainError("VALIDATION_ERROR", "the link for another person belongs to another address", [ANOTHER_LINK_INVALID]);
+    }
+    const rows = await repo.findRegistrationsByEventAndParticipant(tx, event.id, participant.id);
+    const via = origin.anotherPerson ? "link" : origin.source === "STAFF" ? "staff" : "form";
+    /*
+      Whether the schema lets a second runner onto the address yet (`family-gate.ts`). Asked only
+      when the answer can change the decision: a first registration and the same runner again are
+      decided the same way either way, and cost no catalogue read.
+    */
+    const sameAndActive = rows.some((row) => isActiveStatus(row.status) && sameRunner(row.registeredName, legalName));
+    const familyOpen = via === "link" || (rows.length > 0 && !sameAndActive) ? await familyRegistrationOpen(tx) : false;
+    const decision = decideSubmission({ rows, legalName, via, familyOpen, cap });
+
+    /*
+      Behind the emailed link only (§NNN): whoever holds it has read the address's inbox, so the
+      refusal may say what it is about — and it rolls the transaction back, the token's spend
+      included, so the same link still works once the name is corrected or a place on the address
+      frees up. Each is a marker the form's summary turns into a sentence, never a value.
+    */
+    if (decision.kind === "refuseClosed") {
+      throw new DomainError("VALIDATION_ERROR", "a second person on one address is not available yet", [ANOTHER_LINK_INVALID]);
+    }
+    if (decision.kind === "refuseAlreadyRegistered") {
+      throw new DomainError("VALIDATION_ERROR", "this runner is already registered on this address", [ALREADY_ON_ADDRESS]);
+    }
+    if (decision.kind === "refuseAtCap") {
+      throw new DomainError("VALIDATION_ERROR", "this address already carries the club's limit of registrations at this event", [ADDRESS_AT_CAP]);
+    }
+
+    if (decision.kind === "offerAnother") {
+      /*
+        Another runner, on an address that is registered here (§NNN; the owner: "people must have
+        this in the flow via email, like 'you are already registered, register for another
+        person?'").
+
+        Nothing is created. The screen is the one every submission gets — byte for byte, since the
+        action cannot tell this return from any other — because saying anything else would tell a
+        stranger which addresses are registered (§39, AGENTS.md §19.4). The answer goes to the
+        address: one message with a single-use link to the form for the other person, the address
+        fixed on it — or, when the address already carries the club's limit, the sentence that says
+        so and no link. The token is minted at send time and hashed at rest (§12.8, §14.5), scoped to
+        the registration the address holds here, so it names the event and the participant and
+        nothing a stranger typed.
+      */
+      const queued = await enqueueEmail(tx, {
+        participantId: participant.id,
+        registrationId: decision.about.id,
+        messageType: "REGISTER_ANOTHER_PERSON",
+        // The language of the form just filled in: this answers that submission.
+        locale: input.locale,
+        recipientEmail: participant.deliveryEmail,
+        // What was decided now, not what the setting says when the message renders: the email and
+        // the decision must agree, and the link's page asks the limit again under the lock anyway.
+        payload: { atCap: decision.atCap, registrationsPerAddress: cap.registrationsPerAddress },
+        idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
+        now,
+      });
+      // The club's record, as for any re-submission (§312): the state found and the message sent —
+      // never the name that was typed (§12.12). The registration's timeline reads it as a line.
+      await recordAuditEvent(tx, {
+        actorStaffUserId: null,
+        participantId: participant.id,
+        action: "registration.resubmitted",
+        entityType: "registration",
+        entityId: decision.about.id,
+        metadata: { status: decision.about.status, resent: queued ? "REGISTER_ANOTHER_PERSON" : null },
+        now,
+      });
+      return;
+    }
+
+    const existing = decision.kind === "resend" || decision.kind === "restart" ? decision.registration : undefined;
 
     if (existing && isActiveStatus(existing.status)) {
       /*
@@ -1210,6 +1336,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     const carriedFields = {
       registeredName: legalName,
+      // The runner's key follows the name (§NNN): one address, several runners, told apart by it.
+      nameKey: registrationNameKey(legalName),
       // A restart records what the person answered *now*. Carrying last year's t-shirt size
       // forward because a cancelled row happened to hold one is not a kindness.
       ...details,
@@ -1261,10 +1389,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // The event row first, like every other allocation (rule 1 above, §10.6): a verified
       // participant's restart used to allocate against the capacity the page had read, with
       // no lock — the one door into the allocator that skipped the serialization point
-      // (`DECISIONS.md` §151).
-      const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
-      if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
-      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), existing.id, now, settings);
+      // (`DECISIONS.md` §151). Held since the transaction's first statement (§NNN).
+      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings);
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
       // A hold, a place on the waiting list, or an offer made on the way to somebody else when
       // the allocator released a lapsed hold (§160) — the same deadlines `confirmEmail` wakes for.
@@ -1283,10 +1409,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       the same free number.
 
       It is the same serialization point every other allocation uses (§10.6, §151), so the
-      cost is contention this event already has, not a new kind of it.
+      cost is contention this event already has, not a new kind of it. Taken at the top of the
+      transaction since §NNN, where the address's runners are read.
     */
-    const lockedForCreate = await repo.lockEventForCapacity(tx, event.id);
-    if (!lockedForCreate) throw new DomainError("NOT_FOUND", "no such event");
+    const lockedForCreate = locked;
 
     // When the link lapses unconfirmed, written on the row (§377): the club's hours now, kept however they change.
     const linkExpiresAt = emailLinkExpiresAt(now, settings);

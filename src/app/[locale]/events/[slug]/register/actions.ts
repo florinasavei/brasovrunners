@@ -10,6 +10,8 @@ import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { submitRegistration } from "@/modules/registrations/service";
+import { consumeAndRegisterAnotherPerson } from "@/modules/registrations/token-actions";
+import { ANOTHER_LINK_INVALID, ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { botCheckIsOn, honeypotIsOn } from "@/modules/registrations/bot-check";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
@@ -53,6 +55,11 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     that people must be able to register at all costs. It is logged so the club can see how
     often the widget does not run, and the line never carries an address.
   */
+  // Read before the bot check (§NNN): a rejected check from the family form returns to that form, the
+  // link still in the address bar — the token was never spent and still works.
+  const another = text(form, ANOTHER_PERSON_PARAM).trim();
+  const anotherPath = another ? `${path}?${ANOTHER_PERSON_PARAM}=${encodeURIComponent(another)}` : null;
+
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const verdict = (await botCheckIsOn(getDb(), new Date()))
@@ -63,7 +70,62 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   }
   if (verdict === "failed") {
     await stashFormDraft(form, path);
-    redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
+    redirect(`${anotherPath ? `${anotherPath}&` : `${path}?`}error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
+  }
+
+  /*
+    The form for another person on a registered address (§NNN), opened from the link emailed to
+    that address: the token rides in a hidden field, the address is the token's — never the form's
+    — and the token is spent in the same transaction that creates the registration, so a refusal
+    leaves the link working. A link that does not work any more comes back as the plain form with
+    one sentence saying so; the token is not carried back into the address bar.
+  */
+  if (anotherPath) {
+    let registered: { ok: true; email: string } | { ok: false };
+    try {
+      const internalEvent = await findEventForRegistrationById(db, publicEvent.id);
+      if (!internalEvent) redirect(getPathname({ locale, href: "/events" }));
+      registered = await consumeAndRegisterAnotherPerson(
+        another,
+        {
+          id: internalEvent.id,
+          eventStatus: internalEvent.eventStatus,
+          registrationMode: internalEvent.registrationMode,
+          startsAt: internalEvent.startsAt,
+          registrationOpensAt: internalEvent.registrationOpensAt,
+          registrationClosesAt: internalEvent.registrationClosesAt,
+          capacity: internalEvent.capacity,
+          raceId: internalEvent.raceId,
+          publishedAt: publicEvent.publishedAt,
+          timezone: internalEvent.timezone,
+          minAge: internalEvent.minAge,
+        },
+        readRegistrationForm(form, locale),
+        {
+          turnstile: verdict,
+          secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
+          honeypotOn: await honeypotIsOn(getDb(), new Date()),
+        },
+        new Date(),
+      );
+    } catch (error) {
+      if (isDomainError(error)) {
+        const fields = error.fields.length > 0 ? `&fields=${error.fields.join(",")}` : "";
+        const linkGone = error.fields.includes(ANOTHER_LINK_INVALID);
+        // On the form's path either way: a cookie's path is a path, never the query that carries the link.
+        await stashFormDraft(form, path);
+        const retry = error.fields.includes("tooFast") ? "&retry=1" : "";
+        redirect(`${linkGone ? `${path}?` : `${anotherPath}&`}error=${error.code}${fields}${retry}#${ERROR_SUMMARY_ID}`);
+      }
+      throw error;
+    }
+    if (!registered.ok) {
+      await stashFormDraft(form, path);
+      redirect(`${path}?error=VALIDATION_ERROR&fields=${ANOTHER_LINK_INVALID}#${ERROR_SUMMARY_ID}`);
+    }
+    await clearFormDraft(path);
+    await stashSubmittedFacts({ email: registered.email, firstName: text(form, "firstName") }, path);
+    redirect(`${path}?submitted=1`);
   }
 
   try {
