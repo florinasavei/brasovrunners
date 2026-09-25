@@ -214,7 +214,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
     isSpecial: false,
     distanceMeters: 8000,
     elevationGainMeters: 250,
-    headlampRequired: false,
+    nightOverride: null,
     registrationMode: "NONE",
     registrationOpensAt: null,
     registrationClosesAt: null,
@@ -260,7 +260,7 @@ describe("BR-REQ-011-01 the facts' route row points at the section (§387)", () 
 
 describe("BR-REQ-050-02 the «Traseul» card says it on its closed line and warns of the same words (§387)", () => {
   const summaryWords = (locale: "ro" | "en") => (locale === "ro" ? ro : en).Admin.editor.boxes.summary as SummaryWords;
-  const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: STRAVA_ROUTE, headlampRequired: false };
+  const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: STRAVA_ROUTE, nightOverride: null };
   const labels = { surface: "Trail", difficulty: "Mediu" };
   const language = (locale: string, routeDescriptionJson: unknown): SummaryTranslation => ({
     locale,

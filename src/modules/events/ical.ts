@@ -4,6 +4,7 @@ import { costUrlHost, type EventCostType } from "./domain/cost";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
+import { clubNightEvent } from "./night-event";
 import { env } from "@/shared/config/env";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { CLUB_NAME } from "@/theme/brand";
@@ -92,8 +93,12 @@ export type CalendarEvent = {
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
-  /** Bring a headlamp (§382): a line of its own under the facts line, "Frontală necesară" in the calendar's language. */
-  headlampRequired?: boolean;
+  /**
+   * The organizer's night override (§NNN): true "Da", false "Nu", null or absent "Automat" — the
+   * start against dusk at the club's place. A night event gets a line of its own under the facts
+   * line, "Eveniment de noapte — apusul la 16:36, ia o frontală" in the calendar's language.
+   */
+  nightOverride?: boolean | null;
   surface?: EventSurface | null;
   difficulty?: "EASY" | "MODERATE" | "HARD" | null;
   costType?: EventCostType | null;
@@ -372,8 +377,12 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     return event.costType ? [t(`costValues.${event.costType}`)] : [];
   })();
 
+  // A night event (§NNN): this date's own answer, from the one function every surface asks.
+  const night = clubNightEvent({ nightOverride: event.nightOverride ?? null, timezone: timeZone, startsAt: event.startsAt });
+  const nightLine = night.night ? (night.sunset ? t("night.ics", { time: night.sunset }) : t("night.pill")) : "";
+
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
-  const km = distanceInKm(event.distanceMeters ?? null);
+  const km =distanceInKm(event.distanceMeters ?? null);
   const facts = [
     event.type ? t(`type.${event.type}`) : "",
     km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
@@ -427,9 +436,9 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     place.lines,
     excerpt ? [{ text: excerpt }] : [],
     body ? [{ text: body }] : [],
-    // The headlamp (§382) on its own line under the facts: a thing to pack, read on the morning of
-    // a dark evening's run, not one more word lost among the route's.
-    [times, facts, event.headlampRequired ? t("headlampRequired") : ""].filter((text) => text.length > 0).map((text) => ({ text })),
+    // A night event (§NNN, where §382 put the headlamp) on its own line under the facts: a thing to
+    // pack, read on the morning of a dark evening's run, not one more word lost among the route's.
+    [times, facts, nightLine].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],
     links,
     programme.length > 0 ? [{ text: `${t("schedule")}:` }, ...programme.map((text) => ({ text }))] : [],

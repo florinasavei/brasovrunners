@@ -70,7 +70,7 @@ export type SummaryWords = {
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
-  course: { route: string; km: string; elevation: string; headlamp: string; described: string; describedOneLanguage: string };
+  course: { route: string; km: string; elevation: string; night: string; nightAuto: string; day: string; described: string; describedOneLanguage: string };
   links: { strava: string; facebook: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
@@ -415,7 +415,18 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
   return visibility === "NAMES" ? words.startList.shown : words.startList.hidden;
 }
 
-type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "headlampRequired">;
+type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride">;
+
+/**
+ * The night event's word on the closed "Traseul" card (§NNN): `de noapte` for the organizer's "Da",
+ * `de zi` for "Nu", `de noapte (automat)` when automatic and the event's own date starts after
+ * dusk — and nothing when automatic and it does not, like any fact nobody stated.
+ */
+export function nightSummary(words: SummaryWords, nightOverride: boolean | null | undefined, computedNight: boolean): string | null {
+  if (nightOverride === true) return words.course.night;
+  if (nightOverride === false) return words.course.day;
+  return computedNight ? words.course.nightAuto : null;
+}
 
 /** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */
 function distanceWords(words: SummaryWords, distanceMeters: number | null | undefined): string | null {
@@ -424,15 +435,16 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
 }
 
 /**
- * Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu · cu descriere`, or `Nimic
- * completat` (the headlamp, §382). The route / training description (§387) adds `cu descriere` when
+ * Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · de noapte (automat) · traseu · cu descriere`, or
+ * `Nimic completat` (the night event, §NNN — `labels.night` is the automatic answer for the event's
+ * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
  * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
  */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
-  labels: { surface: string | null; difficulty: string | null },
+  labels: { surface: string | null; difficulty: string | null; night?: boolean },
   translations: readonly SummaryTranslation[] = [],
 ): string {
   const described = translations.filter((translation) => !BLANK.route(translation)).length;
@@ -441,7 +453,7 @@ export function courseSummary(
     labels.difficulty,
     distanceWords(words, event?.distanceMeters),
     event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
-    event?.headlampRequired ? words.course.headlamp : null,
+    event ? nightSummary(words, event.nightOverride, labels.night === true) : null,
     event?.routeUrl ? words.course.route : null,
     described === 0 ? null : described === translations.length ? words.course.described : words.course.describedOneLanguage,
     ...identicalMarks(words, translations, ["routeDescription"]),

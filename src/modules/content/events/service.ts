@@ -417,7 +417,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
-    headlampRequired: fields.headlampRequired,
+    nightOverride: fields.nightOverride,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
@@ -1409,9 +1409,9 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
-  // A fact of the route like the two above (§382): "from this date" carries it from the first
-  // dark Wednesday of October, and "from this date" again takes it off in spring.
-  "headlampRequired",
+  // The night override, a fact of the route like the two above (§382, §NNN). "Automat" carried to
+  // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
+  "nightOverride",
   "registrationMode",
   "capacity",
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
@@ -2183,9 +2183,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
-    // The headlamp travels with the route (§382): a copy of an evening run, and every date a
-    // series makes from it, is as dark at its start as the source.
-    headlampRequired: source.headlampRequired,
+    // The night override travels with the route (§382, §NNN): a copy, and every date a series
+    // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
+    // night event by its own sunset.
+    nightOverride: source.nightOverride,
     featured: false,
     // Nor the special mark (§168): it says something about one edition — the anniversary, the
     // Wednesday another club's race passes through — and the copy is a different one.

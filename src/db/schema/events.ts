@@ -302,16 +302,17 @@ export const events = pgTable(
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
-     * Bring a headlamp (§382; the owner, 2026-09-25: "a headlamp icon for the events that require
-     * a headlamp (e.g. the Wednesday 'Running up that hill' event during autumn, winter and spring,
-     * as it is already dark at 19:00 when it starts)"). A fact of the route on this date, set by
-     * the organizer in "Traseul": a pill on the card and the page, a line in the calendar entry.
-     * Per row, so a series can carry it from October and drop it in April (the scope radio, §350).
+     * "Eveniment de noapte" — the organizer's override of the computed answer (§NNN, replacing
+     * §382's "Necesită frontală" checkbox; the owner, 2026-09-25: "«Necesită frontală» ar trebui
+     * să fie cumva «eveniment de noapte» setat automat în funcție de ora de start și când apune
+     * soarele"). `null` is "Automat": the start against civil dusk of its own date at the club's
+     * place (`events/domain/night.ts`); `true` is "Da" and `false` is "Nu", whatever the sun does.
      *
-     * Not null with a default, so every row written before it reads as "no headlamp needed",
-     * which is what nobody had said otherwise.
+     * The column keeps §382's name — renaming it would be a contract migration for a word — and
+     * the code calls it `nightOverride`. Migration `0075_night_override` dropped the NOT NULL and
+     * the default and turned every `false` into `null`: nobody had said "Nu", only not ticked a box.
      */
-    headlampRequired: boolean("headlamp_required").notNull().default(false),
+    nightOverride: boolean("headlamp_required"),
 
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).

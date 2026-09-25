@@ -23,6 +23,7 @@ import {
 import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
+import { nightOverrideFromChoice } from "@/modules/events/domain/night";
 import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import {
@@ -234,8 +235,9 @@ function eventFieldsFrom(form: FormData) {
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
-    // "Necesită frontală" (§382): a checkbox in "Traseul", so an absent value is "none needed".
-    headlampRequired: form.get("event.headlampRequired") === "on",
+    // "Eveniment de noapte" (§NNN): the three choices in "Traseul" — "yes", "no", or "auto" (and
+    // an absent value) for the sunset's own answer.
+    nightOverride: nightOverrideFromChoice(value("nightOverride")),
     featured: form.get("event.featured") === "on",
     // A checkbox like the one above it, and unlike it in every other way: any number of
     // events may be special (§168), so nothing is cleared when one is ticked.

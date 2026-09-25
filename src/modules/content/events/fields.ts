@@ -678,10 +678,11 @@ export const eventFieldsSchema = z
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     /**
-     * "Necesită frontală" (§382): bring a headlamp — a checkbox in "Traseul". Optional for a caller
-     * from before it existed, which means none is needed, like `isSpecial`.
+     * "Eveniment de noapte" (§NNN, replacing §382's checkbox): the organizer's override — true
+     * "Da", false "Nu", null "Automat" (after sunset, `events/domain/night.ts`). Optional for a
+     * caller from before it existed, which means automatic.
      */
-    headlampRequired: z.boolean().optional().default(false),
+    nightOverride: z.boolean().nullable().optional().default(null),
     featured: z.boolean(),
     /**
      * A special edition (§168): any number of events may carry it, so there is nothing to

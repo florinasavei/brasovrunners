@@ -210,6 +210,54 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).toContain("The programme: 09:00 — Number pickup (Cort); 09:30 — Briefing.");
   });
 
+  it("says the sunset and to bring a light in the reminder of a night event only (§NNN)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const row = {
+      id: "row-n",
+      participantId,
+      registrationId,
+      messageType: "EVENT_REMINDER" as const,
+      locale: "ro" as const,
+      recipientEmail: "ana@example.ro",
+      payloadJson: {},
+      idempotencyKey: "test:n",
+      requestedByStaffUserId: null,
+      isManualResend: false,
+      status: "PROCESSING" as const,
+      attemptCount: 1,
+      nextAttemptAt: null,
+      lockedAt: NOW,
+      providerMessageId: null,
+      lastError: null,
+      createdAt: NOW,
+      sentAt: null,
+    };
+    let sent = 0;
+    const render = () => renderOutboxMessage({ ...row, id: `row-n${++sent}`, idempotencyKey: `test:n${sent}` }, db, NOW);
+
+    // The fixture starts at noon on 1 October, automatic: broad daylight, no line.
+    const day = await render();
+    expect(day.text).not.toContain("Eveniment de noapte");
+    expect(day.text).not.toContain("Night event");
+
+    // A Wednesday 19:00 in November, automatic: after dusk — the sunset of that day in both halves.
+    await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
+    const night = await render();
+    expect(night.text).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(night.text).toContain("Night event: sunset is at 16:44. Bring a headlamp.");
+
+    // «Nu» wins over the sun, and «Da» over the daylight.
+    await db.update(events).set({ nightOverride: false }).where(eq(events.id, event.id));
+    expect((await render()).text).not.toContain("Eveniment de noapte");
+    await db.update(events).set({ nightOverride: true, startsAt: new Date("2026-10-01T09:00:00.000Z") }).where(eq(events.id, event.id));
+    expect((await render()).text).toMatch(/Eveniment de noapte: apusul e la \d\d:\d\d\. Ia o frontală\./);
+
+    // Never on another message about the same night event.
+    const confirmed = await renderOutboxMessage({ ...row, id: "row-nc", idempotencyKey: "test:nc", messageType: "REGISTRATION_CONFIRMED" }, db, NOW);
+    expect(confirmed.text).not.toContain("Eveniment de noapte");
+  });
+
   it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });

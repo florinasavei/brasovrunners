@@ -20,6 +20,7 @@ import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import CalendarEventChip from "./CalendarEventChip";
 import type { EditionNote } from "./EditionMark";
 import { readCoHosts } from "../domain/co-hosts";
+import { clubNightEvent } from "../night-event";
 import { partnerPhrase } from "./counted-phrases";
 import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
@@ -103,8 +104,15 @@ export default async function EventCalendar({
     format.dateTime(new Date(Date.UTC(2024, i, 1, 12)), { timeZone: "UTC", month: "long" }),
   );
 
+  // A night event's line (§NNN), or null on a date that is not one.
+  const nightLine = (event: PublicEvent) => {
+    const facts = clubNightEvent(event);
+    if (!facts.night) return null;
+    return facts.sunset ? tEvent("night.calendar", { time: facts.sunset }) : tEvent("night.pill");
+  };
+
   // The chip is a client island (the tooltip); everything crosses as strings and names (§112).
-  const eventLink = (event: PublicEvent, dense: boolean) => {
+  const eventLink =(event: PublicEvent, dense: boolean) => {
     const glyphs: GlyphName[] = [`type:${event.type}`, ...(event.surface ? [`surface:${event.surface}` as const] : [])];
     return (
       <CalendarEventChip
@@ -116,8 +124,9 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
-        // "Frontală necesară" (§382) in the tooltip and the entry's name, after the place's note.
-        headlamp={event.headlampRequired ? tEvent("headlampRequired") : null}
+        // "Eveniment de noapte — apusul la 16:36" (§NNN, where §382 put the headlamp) in the tooltip
+        // and the entry's name, after the place's note: this date's own answer, from its own sunset.
+        night={nightLine(event)}
         // Held with a partner (§367, amended §375, §379): the handshake beside the entry, the generic
         // "Colaborare" in its tooltip — it never names a partner (there may be several).
         partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}

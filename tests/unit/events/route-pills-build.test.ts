@@ -39,13 +39,17 @@ const FULL_ROUTE = {
   difficulty: "EASY" as const,
   distanceMeters: 10000,
   elevationGainMeters: 300,
-  headlampRequired: true,
+  // A Wednesday 19:00 in November: after dusk in Brașov, so the automatic answer is a night event (§NNN).
+  startsAt: new Date("2026-11-18T17:00:00Z"),
+  timezone: "Europe/Bucharest",
+  nightOverride: null,
   costType: "FREE" as const,
 };
 
 /** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
 function chips(fragment: string) {
-  return [...fragment.matchAll(/<div class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
+  // `[^>]*` before the class: the night pill's tooltip (§NNN) puts its words in a `title` first.
+  return [...fragment.matchAll(/<div [^>]*?class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),
     small: classes.includes("MuiChip-sizeSmall"),
     label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
@@ -53,12 +57,12 @@ function chips(fragment: string) {
   }));
 }
 
-describe("§388 buildRoutePills — surface, difficulty, distance, elevation, headlamp, then cost", () => {
+describe("§388 buildRoutePills — surface, difficulty, distance, elevation, night event, then cost", () => {
   it("builds every pill, in that order, from what the club stated", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Frontală", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Eveniment de noapte", "Gratuit"]);
     expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY", "distance", "elevation", "headlamp", "cost:FREE"]);
   });
 
@@ -66,16 +70,16 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, he
     currentLocale = "en";
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Headlamp", "Free"]);
+    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Night event", "Free"]);
   });
 
   it("gives a pill only to what the club stated, and none at all when it stated nothing", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, headlampRequired: false }, t, format);
+    const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, nightOverride: false }, t, format);
     expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km", "Gratuit"]);
     const none = buildRoutePills(
-      { surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, headlampRequired: false, costType: null },
+      { surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, startsAt: FULL_ROUTE.startsAt, timezone: "Europe/Bucharest", nightOverride: false, costType: null },
       t,
       format,
     );
@@ -96,7 +100,7 @@ describe("§388 RoutePills — one small outlined chip per pill, its glyph, noth
     const format = await getFormatter();
     const html = renderToStaticMarkup(RoutePills({ pills: buildRoutePills(FULL_ROUTE, t, format) }));
     const drawn = chips(html);
-    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Frontală", "Gratuit"]);
+    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Eveniment de noapte", "Gratuit"]);
     for (const pill of drawn) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);

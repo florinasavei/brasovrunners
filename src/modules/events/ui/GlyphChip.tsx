@@ -2,6 +2,7 @@
 
 import Chip from "@mui/material/Chip";
 import type { SxProps, Theme } from "@mui/material/styles";
+import Tooltip from "@mui/material/Tooltip";
 import { GLYPHS, type GlyphName } from "./glyphs";
 
 /**
@@ -20,10 +21,17 @@ export default function GlyphChip({
   color = "default",
   variant = "filled",
   href,
+  tooltip,
   sx,
 }: {
   glyph: GlyphName;
   label: string;
+  /**
+   * Why the pill is there, on hover and on a tap (§NNN: the night pill's "Apusul la 16:36 — ia o
+   * frontală"). It describes the chip rather than naming it (`describeChild`), so the chip's words
+   * stay what a screen reader announces first.
+   */
+  tooltip?: string;
   /**
    * The club's blue for the one event the site leads with, the club's orange for a special
    * edition (§168) — two claims side by side on the same hero, each with its own colour and
@@ -37,9 +45,16 @@ export default function GlyphChip({
   sx?: SxProps<Theme>;
 }) {
   const Icon = GLYPHS[glyph];
-  return href ? (
+  const chip = href ? (
     <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} />
   ) : (
     <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} />
+  );
+  return tooltip ? (
+    <Tooltip title={tooltip} arrow describeChild enterTouchDelay={0}>
+      {chip}
+    </Tooltip>
+  ) : (
+    chip
   );
 }

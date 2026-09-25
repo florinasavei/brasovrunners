@@ -1,16 +1,22 @@
 import type { events } from "@/db/schema/events";
 import { distanceInKm } from "../domain/event-type";
+import { clubNightEvent } from "../night-event";
 import type { GlyphName } from "./glyphs";
 
-/** A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary (§112), and its words. */
-export type Pill = { glyph: GlyphName; label: string };
+/**
+ * A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary
+ * (§112), its words, and — only the night pill's (§NNN) — a tooltip that says why.
+ */
+export type Pill = { glyph: GlyphName; label: string; tooltip?: string };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
- * route, and the cost — the same columns on the public event row and the backoffice's own
- * (`EditableEvent`), so one function serves both without either module importing the other's. */
+ * route, the cost, and the start, its zone and the night override (§NNN: whether this date is a
+ * night event is its sunset's question) — the same columns on the public event row and the
+ * backoffice's own (`EditableEvent`), so one function serves both without either module
+ * importing the other's. */
 export type RouteFactsSource = Pick<
   typeof events.$inferSelect,
-  "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "headlampRequired" | "costType"
+  "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "nightOverride" | "startsAt" | "timezone" | "costType"
 >;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -27,8 +33,9 @@ type FormatNumber = { number(value: number, options?: { maximumFractionDigits?: 
  * The route's pills, in one fixed order (§366, amended §375 — the owner, 2026-09-24, of the
  * card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order of this should be: terrain
  * type, difficulty, distance, elevation"): **surface, difficulty, distance, elevation**, then the
- * **headlamp** (§382) — what to bring for that route, after what the route is — then the cost
- * pill after them wherever a caller adds one.
+ * **night event** (§NNN, at the place §382 gave the headlamp — it is still the headlamp's glyph,
+ * what to bring for that route, after what the route is) — then the cost pill after them wherever
+ * a caller adds one.
  *
  * One function decides the order for both surfaces that draw route pills — the listing card
  * (`EventFacts`'s compact form) and the event page (`EventFacts`'s stacked form, §356) — so
@@ -71,8 +78,23 @@ export function routePillParts(
     ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
-  const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;
-  return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill };
+  return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };
+}
+
+/**
+ * "Eveniment de noapte" / "Night event" (§NNN): the headlamp's glyph, the words, and the tooltip
+ * "Apusul la 16:36 — ia o frontală" — or null on a date that is not one. The answer is this row's
+ * own date's (`clubNightEvent`): a series' dates are rows of their own, so the listing's one line
+ * for a series, which draws its next date, says the next date's answer.
+ */
+export function nightPill(event: Pick<RouteFactsSource, "nightOverride" | "startsAt" | "timezone">, t: Translate): Pill | null {
+  const facts = clubNightEvent(event);
+  if (!facts.night) return null;
+  return {
+    glyph: "headlamp",
+    label: t("night.pill"),
+    ...(facts.sunset ? { tooltip: t("night.tooltip", { time: facts.sunset }) } : {}),
+  };
 }
 
 /**

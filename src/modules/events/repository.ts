@@ -94,8 +94,9 @@ const PUBLIC_COLUMNS = {
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
-  // Bring a headlamp (§382): a pill on the card and the page, a line in the calendar entry.
-  headlampRequired: events.headlampRequired,
+  // The night override (§NNN): with the start and the zone above, whether this date is a night
+  // event — the pill on the card and the page, a line in the calendar entry and the `.ics`.
+  nightOverride: events.nightOverride,
   registrationMode: events.registrationMode,
   registrationOpensAt: events.registrationOpensAt,
   registrationClosesAt: events.registrationClosesAt,
@@ -501,6 +502,8 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
+      // The night override (§NNN): with the start and the zone, whether the reminder says to bring a light.
+      nightOverride: events.nightOverride,
       // The deadlines the words state (§377): this event's own reminder lead ("este peste 2
       // zile"), and when its participation window opens ("când îți reamintim cu o săptămână").
       reminderHoursBefore: events.reminderHoursBefore,

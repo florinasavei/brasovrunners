@@ -1,21 +1,27 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { calendarDayWords } from "@/i18n/dates";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
+import { nightChoiceOf } from "@/modules/events/domain/night";
+import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { clubNightEvent } from "@/modules/events/night-event";
+import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
-import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
+import NightEventField from "../NightEventField";
+import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 import { LanguageTabs } from "./TextBoxes";
 
 /**
  * Card 1.2, "Traseul" (§350, §358), inside "Ce fel de eveniment": what they run on, how hard, how
- * long and how steep, whether it is run in the dark (the headlamp, §382), and where the route can be
+ * long and how steep, whether it is a night event (automatic from the sunset, §NNN), and where the route can be
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
  *
@@ -27,10 +33,19 @@ import { LanguageTabs } from "./TextBoxes";
  * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
  * alone, since those words are theirs. The first box has already said the settings are not.
  */
-export default async function CourseBox({ event, mayEditSettings, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
+export default async function CourseBox({
+  event,
+  mayEditSettings,
+  languages,
+  inSeries = false,
+}: BoxProps & { languages: readonly LanguageEntry[]; inSeries?: boolean }) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
+  const locale = await getLocale();
   const { words } = await summaryWords();
+  // The event's own start on its own clock, for the night line's first paint (§NNN).
+  const zone = event?.timezone ?? DEFAULT_TIMEZONE;
+  const wall = toWallTimeInput(event?.startsAt ?? null, zone);
   const card = {
     level: 3,
     id: "box-course",
@@ -41,6 +56,8 @@ export default async function CourseBox({ event, mayEditSettings, languages }: B
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
         difficulty: event?.difficulty ? t(`editor.difficultyValues.${event.difficulty}`) : null,
+        // The automatic answer for the event's own date (§NNN), read by the same function as the pill.
+        night: event ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
       languages.map((entry) => entry.translation),
     ),
@@ -107,13 +124,31 @@ export default async function CourseBox({ event, mayEditSettings, languages }: B
             sx={{ flex: 1 }}
           />
         </Stack>
-        {/* "Necesită frontală" (§382): the Wednesday hill run starts in the dark from autumn to
-            spring. A checkbox like the promotion box's: unticked posts nothing, "none needed". */}
+        {/* "Eveniment de noapte" (§NNN, replacing §382's "Necesită frontală"): Automat by default —
+            the Wednesday hill run is a night event from autumn to spring by its own sunset — with
+            "Da" and "Nu" for the organizer who knows better, and the automatic answer under it. */}
         <Box>
-          <CheckboxField name="event.headlampRequired" defaultChecked={event?.headlampRequired ?? false}>
-            {t("editor.headlampRequired")}
-          </CheckboxField>
-          <BoxNote>{t("editor.headlampRequiredHelp")}</BoxNote>
+          <NightEventField
+            name="event.nightOverride"
+            defaultChoice={nightChoiceOf(event?.nightOverride)}
+            place={env.CLUB_COORDINATES}
+            zone={zone}
+            start={{ date: wall.slice(0, 10), time: wall.slice(11, 16) }}
+            inSeries={inSeries}
+            seriesToggleName={event ? undefined : "repeat.on"}
+            words={{
+              label: t("editor.night.label"),
+              choices: { auto: t("editor.night.auto"), yes: t("editor.night.yes"), no: t("editor.night.no") },
+              autoLine: t.raw("editor.night.autoLine") as string,
+              autoLineNoTime: t.raw("editor.night.autoLineNoTime") as string,
+              autoLineNoDate: t("editor.night.autoLineNoDate"),
+              verdictNight: t("editor.night.verdictNight"),
+              verdictDay: t("editor.night.verdictDay"),
+              series: t("editor.night.series"),
+              day: calendarDayWords(locale),
+            }}
+          />
+          <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
         <RecallField
           name="event.routeUrl"

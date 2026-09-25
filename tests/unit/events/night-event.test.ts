@@ -1,0 +1,534 @@
+import { readFileSync } from "node:fs";
+import { createElement, type ReactElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import { calendarDayWords } from "@/i18n/dates";
+import { courseSummary, nightSummary, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
+import { nightChoiceOf, nightEvent, nightOverrideFromChoice } from "@/modules/events/domain/night";
+import { DEFAULT_CLUB_COORDINATES, isNightEvent, localDay, parseCoordinates, sunTimes, wallClockTime } from "@/modules/events/domain/sun";
+import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { calendarDescription, type CalendarEvent, type CalendarLabels } from "@/modules/events/ical";
+import type { PublicEvent } from "@/modules/events/repository";
+import { orderRoutePills, type Pill } from "@/modules/events/ui/route-pills";
+import { buildTemplateContent, type TemplateData } from "@/modules/notifications/templates";
+
+/**
+ * BR-REQ-020-01, BR-REQ-050-02, the reminder and the calendar file (`DECISIONS.md` §NNN, replacing
+ * §382's "Necesită frontală" checkbox) — the night event, computed from the sunset.
+ *
+ * The owner, 2026-09-25: "«Necesită frontală» ar trebui să fie cumva «eveniment de noapte» setat
+ * automat în funcție de ora de start și când apune soarele."
+ *
+ * - the sun (NOAA's algorithm, `sun.ts`) against published sunrise and sunset tables, and the
+ *   boundaries of "night": civil dusk and civil dawn of the start's own day, on its own clock;
+ * - the override before the sun, and the editor's three choices both ways;
+ * - the words: the pill and its tooltip on the card, the page and the hero; the calendar entry;
+ *   the `.ics`; the reminder's line; the closed card's summary; the editor's automatic line.
+ */
+let currentLocale: "ro" | "en" = "ro";
+
+vi.mock("next-intl/server", async () => {
+  const { createFormatter, createTranslator } = await import("next-intl");
+  const roMessages = (await import("../../../messages/ro.json")).default;
+  const enMessages = (await import("../../../messages/en.json")).default;
+  return {
+    getTranslations: async (namespace: string) =>
+      createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? roMessages : enMessages, namespace: namespace as "Event" }),
+    getFormatter: async () => createFormatter({ locale: currentLocale, timeZone: "Europe/Bucharest" }),
+    getLocale: async () => currentLocale,
+  };
+});
+
+// The tooltip writes its title into the markup, so what it would say can be read from a static render.
+vi.mock("@mui/material/Tooltip", async () => {
+  const react = await import("react");
+  return {
+    default: ({ title, children }: { title: ReactNode; children: ReactElement }) =>
+      react.createElement("span", { "data-tooltip": "" }, react.createElement("span", { "data-tooltip-title": "" }, title), children),
+  };
+});
+
+const { default: EventFacts } = await import("@/modules/events/ui/EventFacts");
+const { default: CalendarEventChip } = await import("@/modules/events/ui/CalendarEventChip");
+const { default: EventCalendar } = await import("@/modules/events/ui/EventCalendar");
+const { GLYPHS } = await import("@/modules/events/ui/glyphs");
+const { default: FlashlightOnIcon } = await import("@mui/icons-material/FlashlightOn");
+const { nightAutoLine } = await import("@/modules/content/events/ui/NightEventField");
+
+afterEach(() => {
+  currentLocale = "ro";
+});
+
+const ZONE = "Europe/Bucharest";
+const BRASOV = DEFAULT_CLUB_COORDINATES;
+const NOW = new Date("2026-09-24T09:00:00Z");
+/** A Wednesday in November at 19:00 in Brașov: an hour and three quarters after dusk. */
+const NOVEMBER_19 = new Date("2026-11-18T17:00:00Z");
+/** The same Wednesday run in June: nearly three hours before dusk. */
+const JUNE_19 = new Date("2027-06-16T16:00:00Z");
+
+/** Minutes between two "HH:mm" wall-clock readings. */
+const minutes = (a: string, b: string) => {
+  const [ah, am] = a.split(":").map(Number);
+  const [bh, bm] = b.split(":").map(Number);
+  return Math.abs(ah * 60 + am - (bh * 60 + bm));
+};
+const at = (wall: string, zone = ZONE) => fromWallTimeInput(wall, zone)!;
+
+describe("§NNN the sun — NOAA's algorithm against published tables, within five minutes", () => {
+  /*
+    References: timeanddate.com's tables (which follow the same NOAA/USNO definitions: the upper limb
+    on the horizon, with refraction) for Bucharest and London, and NOAA's own Solar Calculator for
+    Brașov. The brief quoted "≈ 21:03 / 05:31" for Brașov's solstice — those are Bucharest's, a
+    degree and a quarter further south; Brașov's own are seven minutes later in the evening.
+  */
+  it.each([
+    ["Bucharest, the June solstice", { latitude: 44.4268, longitude: 26.1025 }, "2026-06-21", ZONE, "05:31", "21:03"],
+    ["Bucharest, the December solstice", { latitude: 44.4268, longitude: 26.1025 }, "2026-12-21", ZONE, "07:49", "16:39"],
+    ["London, the June solstice", { latitude: 51.5074, longitude: -0.1278 }, "2026-06-21", "Europe/London", "04:43", "21:21"],
+    ["Brașov, the June solstice", BRASOV, "2026-06-21", ZONE, "05:28", "21:10"],
+    ["Brașov, the December solstice", BRASOV, "2026-12-21", ZONE, "07:55", "16:36"],
+  ])("%s", (_name, place, day, zone, sunrise, sunset) => {
+    const sun = sunTimes(day, place)!;
+    expect(minutes(wallClockTime(sun.sunrise!, zone), sunrise)).toBeLessThanOrEqual(5);
+    expect(minutes(wallClockTime(sun.sunset!, zone), sunset)).toBeLessThanOrEqual(5);
+  });
+
+  it("puts civil dawn before sunrise and civil dusk after sunset, about half an hour apart at Brașov", () => {
+    for (const day of ["2026-03-20", "2026-06-21", "2026-09-23", "2026-12-21"]) {
+      const sun = sunTimes(day, BRASOV)!;
+      const dawnGap = (sun.sunrise!.getTime() - sun.civilDawn!.getTime()) / 60_000;
+      const duskGap = (sun.civilDusk!.getTime() - sun.sunset!.getTime()) / 60_000;
+      for (const gap of [dawnGap, duskGap]) {
+        expect(gap).toBeGreaterThan(25);
+        expect(gap).toBeLessThan(45);
+      }
+    }
+  });
+
+  it("reads the day on the event's clock, through the zone's own rules — never a fixed offset", () => {
+    // 19:00 on the last Saturday of October is UTC+3; 19:00 the next day is UTC+2.
+    expect(at("2026-10-24T19:00").toISOString()).toBe("2026-10-24T16:00:00.000Z");
+    expect(at("2026-10-25T19:00").toISOString()).toBe("2026-10-25T17:00:00.000Z");
+    // 01:30 on the 19th in Brașov is still the 18th in UTC: the day is the wall clock's.
+    expect(localDay(at("2026-11-19T01:30"), ZONE)).toBe("2026-11-19");
+    // The sunset of 25 October is printed in winter time, the day before in summer time.
+    expect(wallClockTime(sunTimes("2026-10-24", BRASOV)!.sunset!, ZONE)).toMatch(/^18:/);
+    expect(wallClockTime(sunTimes("2026-10-25", BRASOV)!.sunset!, ZONE)).toMatch(/^17:/);
+  });
+
+  it("answers a day with no sunset: the polar summer is never dark, the polar winter always", () => {
+    const svalbard = { latitude: 78.22, longitude: 15.65 };
+    expect(sunTimes("2026-06-21", svalbard)).toMatchObject({ sunset: null, civilDusk: null, alwaysLight: true, alwaysDark: false });
+    expect(isNightEvent(new Date("2026-06-21T22:00:00Z"), svalbard, "Arctic/Longyearbyen")).toBe(false);
+    expect(isNightEvent(new Date("2026-12-21T11:00:00Z"), svalbard, "Arctic/Longyearbyen")).toBe(true);
+  });
+
+  it("refuses a string that is not a day", () => {
+    expect(sunTimes("2026-02-31", BRASOV)).toBeNull();
+    expect(sunTimes("", BRASOV)).toBeNull();
+  });
+});
+
+describe("§NNN the line: civil dusk to civil dawn of the start's own day", () => {
+  const november = sunTimes("2026-11-18", BRASOV)!;
+
+  it("is night from the minute of civil dusk, and not a minute before", () => {
+    const dusk = november.civilDusk!;
+    expect(isNightEvent(dusk, BRASOV, ZONE)).toBe(true);
+    expect(isNightEvent(new Date(dusk.getTime() - 60_000), BRASOV, ZONE)).toBe(false);
+    // Twenty minutes after sunset is still civil twilight: a run then does not count.
+    expect(isNightEvent(new Date(november.sunset!.getTime() + 20 * 60_000), BRASOV, ZONE)).toBe(false);
+  });
+
+  it("is night before civil dawn, and day from it", () => {
+    const dawn = november.civilDawn!;
+    expect(isNightEvent(new Date(dawn.getTime() - 60_000), BRASOV, ZONE)).toBe(true);
+    expect(isNightEvent(dawn, BRASOV, ZONE)).toBe(false);
+  });
+
+  it("the Wednesday 19:00 run: night in November and December, day in June and on 7 October", () => {
+    expect(isNightEvent(NOVEMBER_19, BRASOV, ZONE)).toBe(true);
+    expect(isNightEvent(at("2026-12-16T19:00"), BRASOV, ZONE)).toBe(true);
+    expect(isNightEvent(JUNE_19, BRASOV, ZONE)).toBe(false);
+    expect(isNightEvent(at("2026-10-07T19:00"), BRASOV, ZONE)).toBe(false);
+  });
+
+  it("a start with no time is never a night event", () => {
+    expect(isNightEvent(null, BRASOV, ZONE)).toBe(false);
+    expect(isNightEvent(new Date(Number.NaN), BRASOV, ZONE)).toBe(false);
+  });
+});
+
+describe("§NNN the club's place — CLUB_COORDINATES", () => {
+  it("reads «latitude,longitude» and refuses anything else", () => {
+    expect(parseCoordinates("45.6427,25.5887")).toEqual({ latitude: 45.6427, longitude: 25.5887 });
+    expect(parseCoordinates(" -33.9 , 18.42 ")).toEqual({ latitude: -33.9, longitude: 18.42 });
+    for (const bad of ["", "45.6427", "45,6427;25,5887", "91,0", "0,181", "Brașov"]) expect(parseCoordinates(bad), bad).toBeNull();
+  });
+
+  it("defaults to Brașov's centre when unset", async () => {
+    const { envSchema } = await import("@/shared/config/env");
+    expect(envSchema.parse({}).CLUB_COORDINATES).toEqual(BRASOV);
+    expect(envSchema.parse({ CLUB_COORDINATES: "44.4268,26.1025" }).CLUB_COORDINATES).toEqual({ latitude: 44.4268, longitude: 26.1025 });
+    expect(() => envSchema.parse({ CLUB_COORDINATES: "Brașov" })).toThrow(/CLUB_COORDINATES/);
+  });
+});
+
+describe("§NNN nightEvent — the override before the sun", () => {
+  it("«Automat» (null) is the sun's answer, with the day's sunset", () => {
+    expect(nightEvent({ nightOverride: null, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({ night: true, source: "automatic", sunset: "16:44" });
+    expect(nightEvent({ nightOverride: null, timezone: ZONE }, JUNE_19, BRASOV)).toMatchObject({ night: false, source: "automatic" });
+  });
+
+  it("«Da» is a night event in June and «Nu» is none in November, the sunset still said", () => {
+    expect(nightEvent({ nightOverride: true, timezone: ZONE }, JUNE_19, BRASOV)).toMatchObject({ night: true, source: "override" });
+    expect(nightEvent({ nightOverride: false, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({ night: false, source: "override", sunset: "16:44" });
+  });
+
+  it("the editor's three choices and the column, both ways", () => {
+    expect([true, false, null, undefined].map(nightChoiceOf)).toEqual(["yes", "no", "auto", "auto"]);
+    expect(["yes", "no", "auto", "", null, "on"].map(nightOverrideFromChoice)).toEqual([true, false, null, null, null, null]);
+  });
+});
+
+/** "Running up that hill": a Wednesday evening on the Tâmpa, 19:00 in Brașov, in November. */
+function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
+  return {
+    id: "11111111-1111-1111-1111-111111111111",
+    type: "GROUP_RUN",
+    surface: "TRAIL",
+    eventStatus: "SCHEDULED",
+    startsAt: NOVEMBER_19,
+    endsAt: null,
+    raceStartsAt: null,
+    timezone: ZONE,
+    mapUrl: null,
+    routeUrl: null,
+    stravaEventUrl: null,
+    facebookEventUrl: null,
+    coHosts: null,
+    coHostName: null,
+    coHostUrl: null,
+    featured: false,
+    isSpecial: false,
+    distanceMeters: 8000,
+    elevationGainMeters: 250,
+    nightOverride: null,
+    registrationMode: "NONE",
+    registrationOpensAt: null,
+    registrationClosesAt: null,
+    externalRegistrationUrl: null,
+    externalProvider: null,
+    minAge: 14,
+    slug: "running-up-that-hill",
+    title: "Running up that hill",
+    excerpt: null,
+    locationName: "Stația de telecabină Tâmpa",
+    locationAddress: null,
+    locationToBeAnnounced: false,
+    difficulty: "MODERATE",
+    costType: "FREE",
+    costAmount: null,
+    costUrl: null,
+    publishedAt: NOW,
+    ...overrides,
+  } as PublicEvent;
+}
+
+const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
+
+/** Every chip's label, in order. */
+function pillLabels(fragment: string): string[] {
+  return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+}
+/** Every tooltip's words, in order. */
+function tooltips(fragment: string): string[] {
+  return [...withoutStyles(fragment).matchAll(/data-tooltip-title="">([^<]*)</g)].map((match) => match[1]);
+}
+
+/** The `<dl>`'s rows: each label with its `<dd>` markup. */
+function rows(html: string) {
+  return [...withoutStyles(html).matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt><dd\b[^>]*>([\s\S]*?)<\/dd>/g)].map(([, dt, dd]) => ({ label: text(dt), dd }));
+}
+
+describe("§NNN orderRoutePills — the night event where §382 put the headlamp", () => {
+  const surface: Pill = { glyph: "surface:TRAIL", label: "Trail" };
+  const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
+  const distance: Pill = { glyph: "distance", label: "8 km" };
+  const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
+  const night: Pill = { glyph: "headlamp", label: "Eveniment de noapte", tooltip: "Apusul la 16:44 — ia o frontală" };
+
+  it("surface, difficulty, distance, elevation, then the night event — whatever order it is handed in", () => {
+    expect(orderRoutePills({ headlamp: night, elevation, distance, difficulty, surface })).toEqual([surface, difficulty, distance, elevation, night]);
+  });
+
+  it("keeps its place when the numbers are missing, and is absent when not handed", () => {
+    expect(orderRoutePills({ headlamp: night, surface })).toEqual([surface, night]);
+    expect(orderRoutePills({ surface, elevation, headlamp: null })).toEqual([surface, elevation]);
+  });
+
+  it("keeps the headlamp's glyph, one file from @mui/icons-material", () => {
+    expect(GLYPHS.headlamp).toBe(FlashlightOnIcon);
+  });
+});
+
+describe("§NNN the event page's facts", () => {
+  it("puts «Eveniment de noapte» last in the route's pills, with the headlamp and the sunset in its tooltip", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
+    const route = rows(html).find((row) => row.label === "Traseu");
+    expect(route).toBeDefined();
+    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Eveniment de noapte"]);
+    expect(tooltips(route!.dd)).toEqual(["Apusul la 16:44 — ia o frontală"]);
+    expect(route!.dd).toContain('data-testid="FlashlightOnIcon"');
+    expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
+  });
+
+  it("says «Night event» and «Sunset at 16:44 — bring a headlamp» in English", async () => {
+    currentLocale = "en";
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
+    const route = rows(html).find((row) => row.label === "Route")!;
+    expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night event"]);
+    expect(tooltips(route.dd)).toEqual(["Sunset at 16:44 — bring a headlamp"]);
+  });
+
+  it("makes a route row on its own when it is the only fact of the route — it is not the overline again", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ distanceMeters: null, elevationGainMeters: null, difficulty: null }), now: NOW, stacked: true }),
+    );
+    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toEqual(["Trail", "Eveniment de noapte"]);
+  });
+
+  it("shows nothing on the June date, and shows it on the June date the organizer said «Da» for", async () => {
+    const june = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW, stacked: true }));
+    expect(june).not.toContain("Eveniment de noapte");
+    expect(june).not.toContain("FlashlightOnIcon");
+    const yes = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19, nightOverride: true }), now: NOW, stacked: true }));
+    expect(pillLabels(yes)).toContain("Eveniment de noapte");
+    expect(tooltips(yes)[0]).toMatch(/^Apusul la 21:\d\d — ia o frontală$/);
+    const no = renderToStaticMarkup(await EventFacts({ event: event({ nightOverride: false }), now: NOW, stacked: true }));
+    expect(no).not.toContain("Eveniment de noapte");
+  });
+});
+
+describe("§NNN the listing card and the hero", () => {
+  it("the card's pills: the route, the night event, then the cost", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
+    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Eveniment de noapte", "Gratuit"]);
+    expect(html).toContain('data-testid="FlashlightOnIcon"');
+  });
+
+  it("the card in English, and nothing on a day date", async () => {
+    currentLocale = "en";
+    expect(pillLabels(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" })))).toContain("Night event");
+    const day = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW, variant: "compact" }));
+    expect(day).not.toContain("Night event");
+    expect(day).not.toContain("FlashlightOnIcon");
+  });
+
+  it("the hero's route line says it after the climb and before the cost, with its glyph", async () => {
+    const html = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW })));
+    const route = text(rows(html).find((row) => row.label === "Traseu")!.dd);
+    expect(route.indexOf("250 m diferență de nivel")).toBeLessThan(route.indexOf("Eveniment de noapte"));
+    expect(route.indexOf("Eveniment de noapte")).toBeLessThan(route.indexOf("Gratuit"));
+    expect(html).toContain('data-testid="FlashlightOnIcon"');
+    const day = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW }));
+    expect(day).not.toContain("Eveniment de noapte");
+  });
+});
+
+describe("§NNN the calendar entry names it after the place, with the sunset", () => {
+  function chip(values: Partial<Parameters<typeof CalendarEventChip>[0]> = {}) {
+    return renderToStaticMarkup(
+      createElement(CalendarEventChip, {
+        href: "/ro/evenimente/running-up-that-hill",
+        time: "19:00",
+        title: "Running up that hill",
+        glyphs: ["type:GROUP_RUN", "surface:TRAIL"],
+        filled: false,
+        cancelled: false,
+        note: null,
+        partner: null,
+        dense: true,
+        ...values,
+      }),
+    );
+  }
+
+  it("the tooltip's lines: the time and title, the place's note, the night event, the partner", () => {
+    const moved = { kind: "moved" as const, text: "Nu în locul obișnuit: Stația de telecabină Tâmpa" };
+    const html = chip({ note: moved, night: "Eveniment de noapte — apusul la 16:44", partner: "Colaborare" });
+    const tooltip = html.slice(html.indexOf("data-tooltip-title"), html.indexOf("<a "));
+    const lines = [...tooltip.matchAll(/<span class="[^"]*">([^<]+)<\/span>/g)].map((match) => match[1]);
+    expect(lines).toEqual(["19:00 Running up that hill", moved.text, "Eveniment de noapte — apusul la 16:44", "Colaborare"]);
+  });
+
+  it("the calendar hands each date its own answer, in the reader's language", async () => {
+    for (const [locale, words] of [
+      ["ro", "Eveniment de noapte — apusul la 16:44"],
+      ["en", "Night event — sunset at 16:44"],
+    ] as const) {
+      currentLocale = locale;
+      const html = renderToStaticMarkup(
+        await EventCalendar({
+          view: { kind: "month", month: { year: 2026, month: 11 } },
+          events: [
+            event(),
+            // A Sunday morning run in the same month: daylight, no line.
+            event({ id: "22222222-2222-2222-2222-222222222222", slug: "duminica", title: "Duminică dimineața", startsAt: at("2026-11-15T09:00") }),
+          ],
+          now: NOW,
+          layout: "grid",
+        }),
+      );
+      const anchors = [...html.matchAll(/<a [^>]*aria-label="([^"]*)"[^>]*>/g)].map((match) => match[1]);
+      expect(anchors).toContain(`19:00 Running up that hill. ${words}`);
+      expect(anchors).toContain("09:00 Duminică dimineața");
+    }
+  });
+});
+
+describe("§NNN the calendar file's description", () => {
+  function translator(catalogue: { Event: Record<string, unknown> }): CalendarLabels["t"] {
+    return (key, values) => {
+      const message = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], catalogue.Event);
+      if (typeof message !== "string") throw new Error(`missing Event.${key}`);
+      return Object.entries(values ?? {}).reduce((out, [name, value]) => out.replaceAll(`{${name}}`, String(value)), message);
+    };
+  }
+  const calendarEvent: CalendarEvent = {
+    id: "11111111-1111-1111-1111-111111111111",
+    title: "Running up that hill",
+    startsAt: NOVEMBER_19,
+    endsAt: null,
+    timezone: ZONE,
+    locationName: "Stația de telecabină Tâmpa",
+    excerpt: null,
+    scheduleJson: null,
+    distanceMeters: 8000,
+    url: "https://example.test/ro/evenimente/running-up-that-hill",
+    updatedAt: null,
+    nightOverride: null,
+  };
+
+  it("carries the night event on a line of its own under the facts, in the reader's language", () => {
+    const roLines = calendarDescription(calendarEvent, { locale: "ro", t: translator(ro) }).split("\n");
+    const line = "Eveniment de noapte — apusul la 16:44, ia o frontală";
+    expect(roLines).toContain(line);
+    expect(roLines.indexOf(line)).toBe(roLines.findIndex((entry) => entry.includes("8 km")) + 1);
+    expect(calendarDescription(calendarEvent, { locale: "en", t: translator(en) }).split("\n")).toContain("Night event — sunset at 16:44, bring a headlamp");
+  });
+
+  it("says nothing on a day date, nor on a night the organizer said «Nu» for; «Da» in June says it", () => {
+    expect(calendarDescription({ ...calendarEvent, startsAt: JUNE_19 }, { locale: "ro", t: translator(ro) })).not.toContain("Eveniment de noapte");
+    expect(calendarDescription({ ...calendarEvent, nightOverride: false }, { locale: "en", t: translator(en) })).not.toContain("Night event");
+    expect(calendarDescription({ ...calendarEvent, startsAt: JUNE_19, nightOverride: true }, { locale: "ro", t: translator(ro) })).toMatch(
+      /Eveniment de noapte — apusul la 21:\d\d, ia o frontală/,
+    );
+  });
+});
+
+describe("§NNN the reminder's line", () => {
+  const base: TemplateData = { participantName: "Ana", eventTitle: "Running up that hill" };
+  const paragraphs = (locale: "ro" | "en", data: TemplateData, overrides?: Parameters<typeof buildTemplateContent>[4]) =>
+    buildTemplateContent("EVENT_REMINDER", locale, data, undefined, overrides).paragraphs.join("\n");
+
+  it("says the sunset and to bring a light, in each language, only when the renderer set it", () => {
+    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44" })).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(paragraphs("en", { ...base, nightEventSunset: "16:44" })).toContain("Night event: sunset is at 16:44. Bring a headlamp.");
+    expect(paragraphs("ro", base)).not.toContain("Eveniment de noapte");
+    expect(paragraphs("ro", { ...base, nightEventSunset: "" })).toContain("Eveniment de noapte: ia o frontală.");
+  });
+
+  it("survives the club's own words for the reminder — a fact about the date, not a matter of style", () => {
+    const overrides = { "EVENT_REMINDER:ro": { subject: "Pe curând", paragraphs: ["Ne vedem la start."] } };
+    const text = paragraphs("ro", { ...base, nightEventSunset: "16:44" }, overrides);
+    expect(text).toContain("Ne vedem la start.");
+    expect(text).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+  });
+
+  it("is never on another message, even when handed the field", () => {
+    const confirmed = buildTemplateContent("REGISTRATION_CONFIRMED", "ro", { ...base, nightEventSunset: "16:44" }, undefined).paragraphs.join("\n");
+    expect(confirmed).not.toContain("Eveniment de noapte");
+  });
+});
+
+describe("§NNN the editor: the closed card's word and the automatic line", () => {
+  const roWords = ro.Admin.editor.boxes.summary as SummaryWords;
+  const enWords = en.Admin.editor.boxes.summary as SummaryWords;
+
+  it("«de noapte (automat)», «de noapte», «de zi» — and nothing for an automatic day", () => {
+    expect(nightSummary(roWords, null, true)).toBe("de noapte (automat)");
+    expect(nightSummary(roWords, true, false)).toBe("de noapte");
+    expect(nightSummary(roWords, false, true)).toBe("de zi");
+    expect(nightSummary(roWords, null, false)).toBeNull();
+    expect([nightSummary(enWords, null, true), nightSummary(enWords, true, false), nightSummary(enWords, false, true)]).toEqual([
+      "night (automatic)",
+      "night",
+      "day",
+    ]);
+  });
+
+  it("in the «Traseul» card's line, after the climb", () => {
+    const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: null, nightOverride: null };
+    expect(courseSummary(roWords, course, { surface: "Trail", difficulty: "Mediu", night: true })).toBe("Trail · Mediu · 8 km · +250 m · de noapte (automat)");
+    expect(courseSummary(roWords, { ...course, nightOverride: false }, { surface: null, difficulty: null, night: true })).toBe("8 km · +250 m · de zi");
+    expect(courseSummary(roWords, course, { surface: null, difficulty: null, night: false })).toBe("8 km · +250 m");
+  });
+
+  const lineWords = (catalogue: typeof ro | typeof en, locale: string) => ({
+    autoLine: catalogue.Admin.editor.night.autoLine,
+    autoLineNoTime: catalogue.Admin.editor.night.autoLineNoTime,
+    autoLineNoDate: catalogue.Admin.editor.night.autoLineNoDate,
+    verdictNight: catalogue.Admin.editor.night.verdictNight,
+    verdictDay: catalogue.Admin.editor.night.verdictDay,
+    day: calendarDayWords(locale),
+  });
+
+  it("the automatic line for the date and time in the form, in both languages — the same sun as the pill", () => {
+    const november = { date: "2026-11-18", time: "19:00", timeZone: ZONE };
+    expect(nightAutoLine(lineWords(ro, "ro"), november, BRASOV)).toBe("Automat: pe mie., 18 nov. 2026, apusul e la 16:44 — eveniment de noapte");
+    expect(nightAutoLine(lineWords(en, "en"), november, BRASOV)).toBe("Automatic: on Wed, 18 Nov 2026, sunset is at 16:44 — a night event");
+    expect(nightAutoLine(lineWords(ro, "ro"), { date: "2027-06-16", time: "19:00", timeZone: ZONE }, BRASOV)).toMatch(
+      /^Automat: pe mie\., 16 iun\. 2027, apusul e la 21:\d\d — nu e eveniment de noapte$/,
+    );
+  });
+
+  it("asks for the time when there is only a date, and for the date when there is none", () => {
+    expect(nightAutoLine(lineWords(ro, "ro"), { date: "2026-11-18", time: "", timeZone: ZONE }, BRASOV)).toBe(
+      "Automat: pe mie., 18 nov. 2026, apusul e la 16:44 — alege ora startului",
+    );
+    expect(nightAutoLine(lineWords(en, "en"), { date: "", time: "19:00", timeZone: ZONE }, BRASOV)).toBe(en.Admin.editor.night.autoLineNoDate);
+  });
+
+  it("carries every word in both catalogues", () => {
+    for (const catalogue of [ro, en]) {
+      const night = catalogue.Admin.editor.night;
+      for (const key of ["label", "auto", "yes", "no", "autoLine", "autoLineNoTime", "autoLineNoDate", "verdictNight", "verdictDay", "series", "help"] as const) {
+        expect(night[key].length, key).toBeGreaterThan(0);
+      }
+      for (const key of ["pill", "tooltip", "calendar", "ics"] as const) expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
+    }
+    expect(ro.Admin.editor.night.auto).toBe("Automat (după apus)");
+    expect(ro.Event.night.pill).toBe("Eveniment de noapte");
+    expect(en.Event.night.pill).toBe("Night event");
+  });
+
+  it("the box posts the radio by the name the action reads (the integration suite proves the save)", () => {
+    expect(readFileSync("src/modules/content/events/ui/boxes/CourseBox.tsx", "utf8")).toContain('name="event.nightOverride"');
+  });
+});
+
+describe("§NNN the migration", () => {
+  it("is 0075_night_override in the journal (the backfill is proven in tests/integration/db)", () => {
+    const journal = JSON.parse(readFileSync("src/db/migrations/meta/_journal.json", "utf8")) as { entries: Array<{ idx: number; tag: string }> };
+    expect(journal.entries.find((entry) => entry.tag === "0075_night_override")?.idx).toBe(75);
+    // §382's own migration stays as it shipped: history is not rewritten.
+    expect(readFileSync("src/db/migrations/0070_headlamp_required.sql", "utf8").trim()).toBe(
+      'ALTER TABLE "events" ADD COLUMN "headlamp_required" boolean DEFAULT false NOT NULL;',
+    );
+  });
+});

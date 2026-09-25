@@ -352,6 +352,13 @@ export type TemplateData = {
   /** "What to bring", the translation's one line (§81). */
   eventChecklist?: string;
   /**
+   * Set only on the reminder of a date that is a night event (§NNN): the sunset of that day,
+   * "16:36", on the event's clock — the same in both halves, a 24-hour time is no language's.
+   * The line says it and says to bring a light. An empty string is a night event whose sunset
+   * could not be computed (a polar night); the line then says the light alone.
+   */
+  nightEventSunset?: string;
+  /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
    * words. Absent when the other language was not read — both halves read `eventChecklist`.
@@ -841,6 +848,8 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
+    /** The reminder of a night event (§NNN), after the body whoever wrote it. */
+    nightEvent: (sunset: string) => (sunset ? `Eveniment de noapte: apusul e la ${sunset}. Ia o frontală.` : "Eveniment de noapte: ia o frontală."),
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -1096,6 +1105,7 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
+    nightEvent: (sunset: string) => (sunset ? `Night event: sunset is at ${sunset}. Bring a headlamp.` : "Night event: bring a headlamp."),
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -1291,6 +1301,13 @@ export function buildTemplateContent(
         : written
           ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
+      /*
+        A night event (§NNN, the question §382 left open): the reminder of a date that starts after
+        dusk says the sunset and to bring a light. After the body, like the provisional number below
+        — a fact about this date, not a matter of how the club writes — so a reminder the club
+        reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
+      */
+      ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined ? [copy.nightEvent(data.nightEventSunset)] : []),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
