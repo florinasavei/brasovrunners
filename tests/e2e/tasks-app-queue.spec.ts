@@ -11,7 +11,7 @@ import { signIn } from "./support/featured-event";
  * cannot see is here — that the tab is really on the page, that the document really renders
  * with its headings, and that the door really is shut for a role with no business behind it.
  */
-test.describe("§NNN the app tab on /admin/tasks", () => {
+test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
   test("sees the tab and the queue's headings", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/tasks");
@@ -35,8 +35,8 @@ test.describe("§NNN the app tab on /admin/tasks", () => {
 
     // The lead line above the document: one sentence, in the page's own language — never the
     // other one beside it (§NNN).
-    await expect(main.getByText(/citită direct din/)).toBeVisible();
-    await expect(main.getByText(/read straight from/)).toHaveCount(0);
+    await expect(main.getByText(/din depozit/)).toBeVisible();
+    await expect(main.getByText(/from the repository/)).toHaveCount(0);
   });
 
   test("a Voluntar gets no tab to see, because the whole route is closed to them", async ({ page }) => {

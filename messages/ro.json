@@ -1783,7 +1783,7 @@
         "app": "Aplicația"
       },
       "app": {
-        "lead": "Coada de lucru a echipei care construiește platforma, citită direct din docs/QUEUE.md din depozitul de cod.",
+        "lead": "Coada de lucru a platformei, din depozit — ce se construiește, ce e gata, ce urmează",
         "missing": "Documentul nu este în această versiune a aplicației."
       },
       "neonPlan": {
