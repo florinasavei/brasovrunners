@@ -2,8 +2,11 @@ import type { events } from "@/db/schema/events";
 import { distanceInKm } from "../domain/event-type";
 import type { GlyphName } from "./glyphs";
 
-/** A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary (§112), and its words. */
-export type Pill = { glyph: GlyphName; label: string };
+/** A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary (§112), and its words.
+ * `ariaLabel`, when the bare word does not carry enough context on its own — the difficulty
+ * pill's «Dificultate: Mediu» (fix round, finding 3) — is the chip's accessible name; every other
+ * pill leaves it unset and keeps its word as its accessible name. */
+export type Pill = { glyph: GlyphName; label: string; ariaLabel?: string };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
  * route, and the cost — the same columns on the public event row and the backoffice's own
@@ -68,7 +71,15 @@ export function routePillParts(
     ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
     : null;
   const difficultyPill: Pill | null = event.difficulty
-    ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
+    ? {
+        glyph: `difficulty:${event.difficulty}`,
+        label: t(`difficultyValues.${event.difficulty}`),
+        // «Dificultate: Mediu» / «Difficulty: Medium» (fix round, finding 3) — `Event.difficulty`
+        // and `Event.difficultyValues.*` are both already in the catalogue for the field label
+        // and the pill's own word, so the accessible name is built from the same two keys rather
+        // than a string written here.
+        ariaLabel: `${t("difficulty")}: ${t(`difficultyValues.${event.difficulty}`)}`,
+      }
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;

@@ -2,7 +2,6 @@ import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
-import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -102,11 +101,11 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
  * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
  *
- * `difficulty` is Material's own dumbbell, `FitnessCenterIcon`, registered by name for a caller
- * that wants the bare concept rather than one value's own level (§NNN) — the three `difficulty:*`
- * entries below are `DifficultyIcon.tsx`'s own drawing, one through three dumbbells lit, one
- * `<svg>` each so `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other
- * glyph here hands them.
+ * There is no bare `difficulty` entry: every caller reads one value's own level, so only the
+ * three `difficulty:*` entries below exist — `DifficultyIcon.tsx`'s own drawing, Material's
+ * `FitnessCenterIcon` path repeated one through three times lit, one `<svg>` each so
+ * `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
+ * hands them (fix round, finding 2 — a bare `FitnessCenterIcon` registration had no caller).
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -120,7 +119,6 @@ export const GLYPHS = {
   elevation: TrendingUpIcon,
   headlamp: FlashlightOnIcon,
   partner: HandshakeIcon,
-  difficulty: FitnessCenterIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

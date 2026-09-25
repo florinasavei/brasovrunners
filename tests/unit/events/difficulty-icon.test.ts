@@ -49,13 +49,29 @@ describe("§NNN DifficultyIcon — a scale of dumbbells, one through three lit",
     expect(html).toContain('aria-hidden="true"');
   });
 
-  it("the pill's accessible name is the word, not the count of dumbbells (§318)", () => {
-    const html = renderToStaticMarkup(GlyphChip({ glyph: "difficulty:MODERATE", label: "Mediu" }));
+  it("a pill with no ariaLabel keeps its word as its accessible name (§318)", () => {
+    const html = renderToStaticMarkup(GlyphChip({ glyph: "type:RACE", label: "Cursă" }));
     // The chip carries no aria-label of its own: its accessible name is its text content, the
     // word — `.MuiChip-icon` is `aria-hidden` (every `SvgIcon` is, unless given a title).
-    expect(html).not.toMatch(/aria-label="[^"]*Mediu/);
+    expect(html).not.toMatch(/aria-label="[^"]*Cursă/);
+    expect(html).toContain(">Cursă<");
+    const svgOpenTags = [...html.matchAll(/<svg\b[^>]*>/g)];
+    for (const [tag] of svgOpenTags) expect(tag).toContain('aria-hidden="true"');
+  });
+
+  it("the difficulty pill's accessible name is «Dificultate: …», not the bare word (fix round, finding 3)", () => {
+    const html = renderToStaticMarkup(
+      GlyphChip({ glyph: "difficulty:MODERATE", label: "Mediu", ariaLabel: "Dificultate: Mediu" }),
+    );
+    expect(html).toContain('aria-label="Dificultate: Mediu"');
     expect(html).toContain(">Mediu<");
     const svgOpenTags = [...html.matchAll(/<svg\b[^>]*>/g)];
     for (const [tag] of svgOpenTags) expect(tag).toContain('aria-hidden="true"');
+  });
+
+  it("draws each of the scale's dumbbells as Material's own FitnessCenter path, one per level, in a wide viewBox", () => {
+    const html = renderToStaticMarkup(HARD_DIFFICULTY_ICON({}));
+    expect(html).toContain('viewBox="0 0 72 24"');
+    expect((html.match(/<path/g) ?? []).length).toBe(3);
   });
 });

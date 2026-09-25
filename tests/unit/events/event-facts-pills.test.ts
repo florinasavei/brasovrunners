@@ -102,9 +102,12 @@ function row(html: string, label: string) {
   return found;
 }
 
-/** Every chip in a fragment: its variant, its label and whether it carries its glyph. */
+/** Every chip in a fragment: its variant, its label and whether it carries its glyph. The
+ * opening tag's attribute order is not fixed — the difficulty pill now carries `aria-label`
+ * ahead of `class` (fix round, finding 3) — so the class match looks for `class="…"` anywhere in
+ * the tag rather than requiring it first. */
 function chips(fragment: string) {
-  return [...fragment.matchAll(/<div class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
+  return [...fragment.matchAll(/<div [^>]*class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),
     small: classes.includes("MuiChip-sizeSmall"),
     label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],

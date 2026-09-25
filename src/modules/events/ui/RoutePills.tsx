@@ -28,7 +28,7 @@ export default function RoutePills({ pills }: { pills: Pill[] }) {
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
       {pills.map((item) => (
-        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} variant="outlined" sx={PILL_SX} />
+        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} ariaLabel={item.ariaLabel} variant="outlined" sx={PILL_SX} />
       ))}
     </Box>
   );

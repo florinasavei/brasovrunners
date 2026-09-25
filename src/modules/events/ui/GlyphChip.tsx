@@ -17,6 +17,7 @@ import { GLYPHS, type GlyphName } from "./glyphs";
 export default function GlyphChip({
   glyph,
   label,
+  ariaLabel,
   color = "default",
   variant = "filled",
   href,
@@ -24,6 +25,14 @@ export default function GlyphChip({
 }: {
   glyph: GlyphName;
   label: string;
+  /**
+   * The chip's accessible name, when the bare word is not enough on its own — the difficulty
+   * pill's «Dificultate: Mediu» / «Difficulty: Medium» (fix round, finding 3), built by the
+   * caller from `Event.difficulty` and `Event.difficultyValues.*`, both already in the
+   * catalogue. Omitted, the chip's accessible name stays its text content, the word — the same
+   * behaviour the unit test locks in for every other pill.
+   */
+  ariaLabel?: string;
   /**
    * The club's blue for the one event the site leads with, the club's orange for a special
    * edition (§168) — two claims side by side on the same hero, each with its own colour and
@@ -38,8 +47,19 @@ export default function GlyphChip({
 }) {
   const Icon = GLYPHS[glyph];
   return href ? (
-    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} />
+    <Chip
+      component="a"
+      href={href}
+      clickable
+      size="small"
+      color={color}
+      variant={variant}
+      icon={<Icon />}
+      label={label}
+      aria-label={ariaLabel}
+      sx={sx}
+    />
   ) : (
-    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} />
+    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} aria-label={ariaLabel} sx={sx} />
   );
 }
