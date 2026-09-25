@@ -2,7 +2,7 @@
  * One phone density scale for the public pages — every page under `src/app/[locale]` a visitor
  * or a participant reads, with the listing, an event page and the calendar the ones it reaches
  * furthest into — so "tighter on mobile" is an edit to this file, not a hunt through a dozen
- * components (§NNN; the owner, 2026-09-24, on his phone, after the listing and an event page:
+ * components (§380; the owner, 2026-09-24, on his phone, after the listing and an event page:
  * "There is a bit too much padding and whitespace on mobile, the space could be used more
  * efficiently").
  *

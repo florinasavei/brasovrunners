@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.88-2026-09-25
+
+- **Less whitespace on a phone** — one density scale, `src/theme/density.ts`, with eight named steps used only below `sm`. Every public page starts 12 pixels from the header instead of 16. The listing's cards sit closer together and start closer to their top edge, the featured event has less padding, and the gaps between sections, facts and partner cards on an event page are smaller. From `sm` up nothing moves, and a test holds every changed site to the value it had before. At 360 pixels the listing is 118 pixels shorter and an event page about 50 §380.
+- The partner's card on the event page has an outline and a gray wash (`action.selected`), so the partner the club shares its event with reads as its own box, including with a description and links at 320 pixels. On the listing card the time is bold like the date; a race bolds only the numbers of its two named times, never "întâlnire" or "start". A race card's «when» row keeps the two times together on one line under the date at every phone width, with a 4-pixel gap in place of 6 on that row only. §381.
 ## BR-V1.87-2026-09-25
 
 - **The footer's privacy notice is a question mark after "Despre club" on a phone and reads "GDPR" from sm in both languages; its name is "Nota de confidențialitate (GDPR)" / "Privacy notice (GDPR)"; a phone's footer items are 6 px apart and still one row at 320 px.** §378.

@@ -53,7 +53,7 @@ export const GROUP_GAP = 1.5;
  * the eye reads first — the very thing §275 was decided against.
  *
  * The padding is `CardContent`'s sixteen pixels on three sides — twelve on a phone at the top
- * (`DENSITY.cardPadTop`, §NNN), the owner's "too much whitespace" on the listing. Only the top
+ * (`DENSITY.cardPadTop`, §380), the owner's "too much whitespace" on the listing. Only the top
  * shrinks: the sides stay the sixteen pixels `EventFacts.tsx`'s width budget was measured
  * against (§366, §375), and the density scale says so explicitly rather than leaving it a
  * silent exception. At the foot it is four, because the last thing in every card is the door —

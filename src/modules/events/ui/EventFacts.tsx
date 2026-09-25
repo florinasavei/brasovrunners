@@ -89,7 +89,7 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 
 /**
  * The gap between a race card's «when» pieces, and before each separator, on the card row only
- * (§375 amended, §NNN): four pixels where every other row keeps six. A race's row wraps by
+ * (§375 amended, §381): four pixels where every other row keeps six. A race's row wraps by
  * design (`flow`, below), the date on the first line and the two named times on the second —
  * and with those times' digits bold (`whenPieces`' `boldTime`), the second line measured, in
  * headless Chromium on the built listing at 320 pixels in Romanian on the widest weekday
@@ -293,7 +293,7 @@ export default async function EventFacts({
      weekly-run cards without the word going bold with it. `ical.ts`'s calendar description
      keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line.
 
-     The bold digits cost a race's card width (§NNN): its second line, the two named times, grew
+     The bold digits cost a race's card width (§381): its second line, the two named times, grew
      to 226.83 pixels at 320 in Romanian on the widest weekday against the row's 226, and wrapped
      to a third line. The card's race row takes a four-pixel gap instead of six for it
      (`RACE_ROW_GAP`, above, with the measurement before and after); the lead's breakpoint and
@@ -937,7 +937,7 @@ export default async function EventFacts({
           what needs it now, a row of pills and a date that fits on one line. From `sm` up the
           label column is back, as wide as its longest label, the answer baseline-aligned with it.
 
-          The phone's spacing (§NNN): four pixels between a question and its answer (`rowGap` 0.5,
+          The phone's spacing (§380): four pixels between a question and its answer (`rowGap` 0.5,
           already the tight end — less and the answer reads as the label's second line), six under
           an answer before the next question (`DENSITY.gapXs` on the `dd`, was eight), and the
           answer indented twenty-eight (`pl` 3.5: the twenty-pixel glyph and its eight-pixel gap),

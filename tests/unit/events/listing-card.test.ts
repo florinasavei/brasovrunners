@@ -348,7 +348,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(source).toContain("flexShrink: 0");
   });
 
-  it("gives a race card's «when» row a four-pixel gap, and every other card row its six (§NNN)", async () => {
+  it("gives a race card's «when» row a four-pixel gap, and every other card row its six (§381)", async () => {
     // With the times' digits bold, a race's second line — the two named times — measured 226.83
     // pixels against 226 at 320 on the widest weekday and wrapped to a third line; two pixels
     // fewer each side of the separator win it back. Only that row: a series' breakpoint was

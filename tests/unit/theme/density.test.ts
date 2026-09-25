@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DENSITY } from "@/theme/density";
 
 /**
- * `DECISIONS.md` §NNN — one phone density scale, used everywhere the public pages set a
+ * `DECISIONS.md` §380 — one phone density scale, used everywhere the public pages set a
  * spacing value below `sm`, rather than a number chosen fresh in each component.
  *
  * Three checks, each a walk over the source in the spirit of `tests/unit/theme/surfaces.test.ts`:
@@ -76,7 +76,7 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
   {
     file: "src/modules/events/ui/EventFacts.tsx",
     line: "rowGap: { xs: 0.5, sm: 1.5 },",
-    reason: "four pixels between a question and its answer on the stacked facts — already the tight end (§NNN)",
+    reason: "four pixels between a question and its answer on the stacked facts — already the tight end (§380)",
   },
   {
     file: "src/modules/events/ui/EventFacts.tsx",
@@ -161,7 +161,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
 
 const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;
 
-describe("DECISIONS.md §NNN the public pages share one phone density scale", () => {
+describe("DECISIONS.md §380 the public pages share one phone density scale", () => {
   it("defines eight positive steps, each tighter than every value it replaced", () => {
     expect(Object.keys(DENSITY)).toHaveLength(8);
     for (const [name, value] of Object.entries(DENSITY) as Array<[string, number]>) {
