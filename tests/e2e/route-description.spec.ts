@@ -24,6 +24,7 @@ const DOC_LINK = ["https:/", "files.example.test", "regulament-extins.pdf"].join
 
 let slug = "";
 let slugEn = "";
+let editorUrl = "";
 
 /** One language's route description: open its fold, type, and put the map in as a picture. */
 async function writeRouteDescription(page: Page, locale: "ro" | "en", text: string, map: Buffer) {
@@ -35,6 +36,11 @@ async function writeRouteDescription(page: Page, locale: "ro" | "en", text: stri
   // The map is a picture in the text (§72–§73): the toolbar's own file input, shrunk and stored.
   await editor.locator('input[type="file"]').setInputFiles({ name: `harta-${locale}.jpg`, mimeType: "image/jpeg", buffer: map });
   await expect(editor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 20_000 });
+  // The picture's own panel opens on it (§73): say what it shows, then close it.
+  const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
+  await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill(locale === "ro" ? "Harta traseului" : "The route map");
+  await pictureWords.getByRole("button", { name: "Gata" }).click();
+  await expect(pictureWords).toHaveCount(0);
 }
 
 /** A link's height, for the 44-pixel rule (BR-REQ-041-01 criterion 6). */
@@ -62,12 +68,13 @@ test.describe.serial("BR-REQ-050-02 the route / training description (§NNN)", (
     await field("translations.en.slug").fill(slugEn);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
+    editorUrl = page.url().split("?")[0];
     await hydrated(page);
 
     // The route link, then the route / training description under the card's own tabs.
-    const course = await openEditorBox(page, "Traseul");
+    await openEditorBox(page, "Traseul");
     await field("event.routeUrl").fill(ROUTE_LINK);
-    await expect(course.getByText("Punctele de oprire, pantele, ce să aștepți")).toBeAttached();
+    await expect(languagePanel(page, "course", "ro").getByText("Punctele de oprire, pantele, ce să aștepți")).toBeVisible();
     const map = await sharp({ create: { width: 1200, height: 900, channels: 3, background: "#228844" } }).jpeg().toBuffer();
     await writeRouteDescription(page, "ro", "Oprire cu apă la km 4, apoi urcarea pe serpentine până la creastă.", map);
     await languageTab(page, "course", "en").click();
@@ -157,5 +164,20 @@ test.describe.serial("BR-REQ-050-02 the route / training description (§NNN)", (
     await expect(page.locator("section#links").getByRole("heading", { name: "Links and files" })).toBeVisible();
     await expect(page.locator("section#links").locator(`a[href="${GPX_LINK}"]`)).toHaveCount(0);
     await expect(page.getByTestId("route-jump")).toHaveText("About the route");
+  });
+
+  test("a Redactor, who may not change the course's settings, still writes its description", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
+    await page.goto(editorUrl);
+    await hydrated(page);
+    const course = await openEditorBox(page, "Traseul");
+    // The settings are not theirs: no route link box, no surface.
+    await expect(course.locator('[name="event.routeUrl"]')).toHaveCount(0);
+    // The words are: the description's fold in each language, holding what was saved.
+    const fold = languagePanel(page, "course", "ro").locator('[data-rich-text-fold="translations.ro.routeDescription"]');
+    await expect(fold).toBeVisible();
+    await openFold(fold);
+    await expect(languagePanel(page, "course", "ro").locator('[data-rich-text="translations.ro.routeDescription"]')).toContainText("Oprire cu apă la km 4");
+    expect((await fold.locator(":scope > summary").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
   });
 });
