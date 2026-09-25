@@ -250,6 +250,46 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(withLinks.text).not.toContain(drive);
   });
 
+  it("a GPX with a route description has no page it can point at (§NNN, review round)", async () => {
+    // A weekly run's typical shape: a route description in both languages and a GPX link, no
+    // other link. `EventLinks` then renders nothing (every link moved into the route section),
+    // so the page has no `#links` — the email must not send the runner to an anchor that is not
+    // there, and must not claim the GPX is "Linkuri și fișiere" when the page draws it in "Traseul".
+    const [event] = await db.select().from(events).limit(1);
+    const description = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Oprire cu apă la km 4." }] }] };
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul-traseu", title: "Crosul", excerpt: "x", routeDescriptionJson: description });
+    const drive = ["https:/", "drive.example.test", "file", "d", "gpx2", "view"].join("/");
+    await db.update(events).set({ links: [{ kind: "GPX", url: drive, labelRo: null, labelEn: null }] }).where(eq(events.id, event.id));
+
+    const message = await renderOutboxMessage(
+      {
+        id: "row-l3",
+        participantId,
+        registrationId,
+        messageType: "EVENT_REMINDER" as const,
+        locale: "ro" as const,
+        recipientEmail: "ana@example.ro",
+        payloadJson: {},
+        idempotencyKey: "test:l3",
+        requestedByStaffUserId: null,
+        isManualResend: false,
+        status: "PROCESSING" as const,
+        attemptCount: 1,
+        nextAttemptAt: null,
+        lockedAt: NOW,
+        providerMessageId: null,
+        lastError: null,
+        createdAt: NOW,
+        sentAt: null,
+      },
+      db,
+      NOW,
+    );
+
+    expect(message.html).not.toContain("#links");
+    expect(message.text).not.toContain("Linkuri și fișiere");
+  });
+
   it("renders a message with no token and no action link", async () => {
     const message = await renderOutboxMessage(
       {

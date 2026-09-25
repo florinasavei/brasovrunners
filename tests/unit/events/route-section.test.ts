@@ -324,8 +324,11 @@ describe("BR-REQ-011-01 where the section sits (§NNN)", () => {
     expect(preview).toContain("routeSection={hasRouteDescription(preview.routeDescriptionJson)}");
   });
 
-  it("leaves the calendar file, the structured data and the emails without it", () => {
-    for (const file of ["src/modules/events/ical.ts", "src/modules/events/structured-data.ts", "src/modules/notifications/render.ts", "src/modules/notifications/templates.ts"]) {
+  it("leaves the calendar file, the structured data and the email templates without it", () => {
+    // render.ts reads `routeDescriptionJson` too (§NNN, review round): the "Linkuri și fișiere"
+    // line must agree with the page's own split (`partitionEventLinks`) about which links are
+    // still in "Linkuri și fișiere" once a route section has taken the GPX and the map out of it.
+    for (const file of ["src/modules/events/ical.ts", "src/modules/events/structured-data.ts", "src/modules/notifications/templates.ts"]) {
       expect(read(file), file).not.toContain("routeDescription");
     }
   });
