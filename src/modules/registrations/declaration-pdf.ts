@@ -62,6 +62,12 @@ export type DeclarationPdfInput = {
   entries: readonly DeclarationEntry[];
   locale: string;
   generatedAt: Date;
+  /**
+   * A second footer line on every page while the file carries a full identity document (§NNN):
+   * the event's bundle, downloaded by staff, says it must be deleted within seven days of the event.
+   * Drawn only when some entry's signature still holds a document the database has not cleared.
+   */
+  idDocumentsNotice?: string;
   labels: {
     organization: string;
     whereupon: string;
@@ -125,6 +131,16 @@ const MARGIN = DECLARATION_MARGIN;
 const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
+/**
+ * The footer's second line (§NNN), or nothing: only a file that still carries an identity document
+ * the database has not cleared — a signed entry's, the declarant's or a minor's — says to delete it.
+ * A blank form, or a bundle drawn after the seven-day sweep, has none to warn about. Pure, for its test.
+ */
+export function idDocumentsNoticeFor(input: Pick<DeclarationPdfInput, "entries" | "idDocumentsNotice">): string | undefined {
+  const carries = input.entries.some((entry) => Boolean(entry.signature?.idDocument || entry.signature?.minor?.idDocument));
+  return carries ? input.idDocumentsNotice : undefined;
+}
+
 export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<Buffer> {
   const [regular, bold, hand, logo] = await Promise.all([
     readFile(path.join(ASSETS, "Roboto-Regular.ttf")),
@@ -174,6 +190,7 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
   // Footers: the page count is what makes a missing page noticeable; the hash of each text
   // is under its own signature block, where a printed copy is checked against the version.
   const range = doc.bufferedPageRange();
+  const idDocumentsNotice = idDocumentsNoticeFor(input);
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
     const bottom = doc.page.margins.bottom;
@@ -186,6 +203,13 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
       .fillColor(COLOR.inkMuted)
       .text(`${input.labels.organization} · ${input.labels.generatedOn}`, MARGIN.left, y, { width: TEXT_WIDTH - 90, lineBreak: false })
       .text(input.labels.page(i + 1, range.count), MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
+    if (idDocumentsNotice) {
+      doc
+        .font("bold")
+        .fontSize(DECLARATION_FOOTER.size)
+        .fillColor(COLOR.inkMuted)
+        .text(idDocumentsNotice, MARGIN.left, y + DECLARATION_FOOTER.size + 3, { width: TEXT_WIDTH, lineBreak: false });
+    }
     doc.page.margins.bottom = bottom;
   }
 

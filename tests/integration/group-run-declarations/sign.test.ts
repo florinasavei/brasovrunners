@@ -62,8 +62,23 @@ beforeEach(async () => {
   watched.pdfInputs.length = 0;
 });
 
-async function approveOne(key: LegalDocumentKey, version = 1) {
-  const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES[key][locale] }));
+/**
+ * A group-run text that still names an identity document: an older or club-edited version (§NNN).
+ * The platform's own templates no longer ask for one, but the signing code must keep serving a text
+ * that does — asking for the document, keeping it, and masking it in the club's copy.
+ */
+function withIdDocument(key: LegalDocumentKey, locale: "ro" | "en") {
+  const template = LEGAL_TEMPLATES[key][locale];
+  const [first, ...rest] = template.body.sections;
+  const opening = locale === "ro" ? "Subsemnatul/a {{participant}}, cu actul de identitate {{idDocument}}." : "I, {{participant}}, holder of identity document {{idDocument}}.";
+  return { ...template, body: { sections: [{ ...first, paragraphs: [opening, ...first.paragraphs.slice(1)] }, ...rest] } };
+}
+
+async function approveOne(key: LegalDocumentKey, version = 1, { idDocument = false }: { idDocument?: boolean } = {}) {
+  const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
+    locale,
+    ...(idDocument ? withIdDocument(key, locale) : LEGAL_TEMPLATES[key][locale]),
+  }));
   await insertLegalDocumentVersion(db, {
     key,
     version,
@@ -80,8 +95,8 @@ async function approveOne(key: LegalDocumentKey, version = 1) {
  * identity document, and without an approved notice in force nothing is taken (BR-REQ-053-01's
  * rule, the one a registration answers to). `{ privacy: false }` leaves the notice out.
  */
-async function approveTemplate(key: LegalDocumentKey, { privacy = true }: { privacy?: boolean } = {}) {
-  await approveOne(key);
+async function approveTemplate(key: LegalDocumentKey, { privacy = true, idDocument = false }: { privacy?: boolean; idDocument?: boolean } = {}) {
+  await approveOne(key, 1, { idDocument });
   if (privacy) await approveOne("PRIVACY_NOTICE");
 }
 
@@ -143,7 +158,8 @@ describe("§393 signing a group run's self-declaration", () => {
 
     const rows = await db.select().from(groupRunDeclarations);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ eventId: event.id, typedName: "Ana Popescu", idDocument: ID, email: "ana@example.ro", locale: "ro", declarationVersion: 1 });
+    // The platform's text names no identity document (§NNN): whatever was posted, none is kept.
+    expect(rows[0]).toMatchObject({ eventId: event.id, typedName: "Ana Popescu", idDocument: null, email: "ana@example.ro", locale: "ro", declarationVersion: 1 });
 
     const outbox = await db.select().from(emailOutbox);
     expect(outbox.map((row) => [row.messageType, row.recipientEmail]).sort()).toEqual([
@@ -157,8 +173,8 @@ describe("§393 signing a group run's self-declaration", () => {
     }
   });
 
-  it("sends the signer the whole document and the club a masked one, both with the PDF attached", async () => {
-    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+  it("sends the signer the whole document and the club a masked one, both with the PDF attached, under a text that asks for it", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL", { idDocument: true });
     const event = await trailRun();
     await updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
     await signGroupRunDeclaration(db, await input(event.id), NOW);
@@ -196,11 +212,21 @@ describe("§393 signing a group run's self-declaration", () => {
   it("names every box that is wrong at once, and writes nothing", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun();
+    // The platform's text asks for no identity document (§NNN), so none is missing.
+    await expect(
+      signGroupRunDeclaration(db, await input(event.id, { accepted: false, typedName: "  ", idDocument: undefined, email: "not an address" }), NOW),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["typedName", "email", "accepted"] });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+    expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+
+  it("under a text that names an identity document, asks for it among the wrong boxes", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL", { idDocument: true });
+    const event = await trailRun();
     await expect(
       signGroupRunDeclaration(db, await input(event.id, { accepted: false, typedName: "  ", idDocument: undefined, email: "not an address" }), NOW),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["idDocument", "typedName", "email", "accepted"] });
     expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
-    expect(await db.select().from(emailOutbox)).toHaveLength(0);
   });
 
   it("is bound to the text that was read (§57): a newer version in force refuses the press", async () => {

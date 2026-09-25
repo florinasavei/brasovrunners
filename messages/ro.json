@@ -1230,7 +1230,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
+      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
         "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
@@ -1903,7 +1903,7 @@
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
-        "publicListPeriod": "Cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
+        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -3393,7 +3393,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Actul de identitate și adresa de email sunt în PDF. Platforma șterge declarațiile la {days} după alergare.",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Platforma șterge declarațiile la {days} după alergare.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when}",
       "pdf": "PDF",
@@ -3504,9 +3504,9 @@
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
     "ageRule": {
-      "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+      "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumOnly": "Vârsta minimă: {age}.",
-      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia."
+      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia."
     },
     "sex": "Sex",
     "sexOptions": {
@@ -3723,7 +3723,8 @@
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
-      "accept": "Am citit și accept declarația de mai sus",
+      "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
+      "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
       "typedName": "Scrie numele complet ca semnătură",
       "action": "Semnează și confirmă",
       "privacyLink": "Nota de confidențialitate",

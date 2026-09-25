@@ -6,9 +6,9 @@ import ro from "../../../messages/ro.json";
 /**
  * §NNN, finding (5) of the fix round on `feat/registration-consent-and-terms`: this branch's
  * `DEADLINE_MERGE_FIELDS` is the single source for `{{publicListPeriod}}`, fed from "Termene"
- * (`deadlineMergeValues`). A second registration of the same field — the texts chain's
- * `publicListPeriodMergeValues`, spread *after* this one at integration — would silently win and
- * put back the constant default. This proves the page a reader actually sees follows the club's
+ * (`deadlineMergeValues`). The texts chain's second registration of the same field, with a
+ * constant default spread after this one, was removed when the two branches met; a second
+ * registration would silently win and put back the constant. This proves the page a reader actually sees follows the club's
  * *setting*, not a default, end to end: the merge the privacy page performs, not only the merge
  * function in isolation (`tests/unit/deadlines/duration-words.test.ts` already covers that).
  */

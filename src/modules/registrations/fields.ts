@@ -136,12 +136,12 @@ const submissionFields = z.object({
    * "I declare I am medically fit to take part" (§171, amended by §NNN).
    *
    * Required on the public form and nowhere else. A statement of fitness, treated as data
-   * concerning health and kept under art. 9(2)(f) GDPR as evidence; required because it rests on
-   * no consent — which is why it can be insisted on where `healthNotes` cannot. Only the moment
-   * is stored (`fitness_declared_at`), never anything medical. A registration an organizer takes
-   * over the telephone, or a walk-in at the desk, makes it on paper instead, so the staff schema
-   * relaxes it below; so does the form for another adult on the same address (§389, §NNN), where
-   * `fitnessAcknowledged` stands in its place.
+   * concerning health and kept under art. 9(2)(f) GDPR as evidence (§NNN, amending §171; the
+   * privacy notice's §2 says so) — required because it rests on no consent, which is why it can be
+   * insisted on where `healthNotes` cannot. Only the moment is stored (`fitness_declared_at`),
+   * never anything medical. A registration an organizer takes over the telephone, or a walk-in at
+   * the desk, makes it on paper instead, so the staff schema relaxes it below; so does the form for
+   * another adult on the same address (§389, §NNN), where `fitnessAcknowledged` stands in its place.
    */
   fitnessDeclared: z.literal(true),
   /**

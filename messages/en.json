@@ -1230,7 +1230,7 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers the runner, with their consent. 0 means no minimum age.",
+      "minAgeHelp": "Reached by the day of the event. Under 18, a parent or legal guardian registers the runner, with their consent. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -1903,7 +1903,7 @@
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
-        "publicListPeriod": "How long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself"
+        "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3393,7 +3393,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration on the run's page, and when. The identity document and the email address are in the PDF. The platform deletes the declarations {days} after the run.",
+      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform deletes the declarations {days} after the run.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when}",
       "pdf": "PDF",
@@ -3504,9 +3504,9 @@
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
     "ageRule": {
-      "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent registers the runner, with their consent.",
+      "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
       "minimumOnly": "Minimum age: {age}.",
-      "guardianOnly": "Under 18, a parent registers the runner, with their consent."
+      "guardianOnly": "Under 18, a parent or legal guardian registers the runner, with their consent."
     },
     "sex": "Sex",
     "sexOptions": {
@@ -3723,7 +3723,8 @@
     },
     "declare": {
       "title": "Event declaration",
-      "accept": "I have read and accept the declaration above",
+      "accept": "I have read and accept the declaration above, including, expressly, the limitation of the organiser's liability to the extent the law allows.",
+      "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",
       "privacyLink": "Privacy notice",

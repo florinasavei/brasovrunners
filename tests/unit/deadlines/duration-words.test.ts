@@ -135,3 +135,36 @@ describe("§377 the deadlines as legal merge fields", () => {
     }
   });
 });
+
+/**
+ * §NNN — the counsel review of 2026-09-25: a public list left on must not keep names public until
+ * the three-year deletion, so the privacy notice promises it closes by itself at most
+ * `{{publicListPeriod}}` after the event (§4, §7). A period, never a number in the approved text
+ * (§357), with its unit, in words that agree with any value, like the deadlines above.
+ */
+describe("§NNN the public list's ceiling as a legal merge field", () => {
+  it("is a merge field, filled with a period of days in each language", () => {
+    expect(isMergeField("publicListPeriod")).toBe(true);
+    // One registration, fed from "Termene" (`publicListDays`), never a constant of its own.
+    const period = (locale: string, publicListDays: number) => deadlineMergeValues(locale, { ...DEFAULT_DEADLINES, publicListDays }).publicListPeriod;
+    expect(deadlineMergeValues("ro", DEFAULT_DEADLINES).publicListPeriod).toBe(daysPhrase("ro", DEFAULT_DEADLINES.publicListDays));
+    expect(period("ro", 30)).toBe("30 de zile");
+    expect(period("en", 30)).toBe("30 days");
+    expect(period("ro", 1)).toBe("o zi");
+    expect(period("ro", 14)).toBe("2 săptămâni");
+    expect(period("en", 365)).toBe(daysPhrase("en", 365));
+  });
+
+  it("is named twice in the platform's notice, §4 and §7, and merges without a blank or a written number", () => {
+    for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
+      const paragraphs = body.sections.flatMap((section) => section.paragraphs);
+      expect(paragraphs.filter((paragraph) => paragraph.includes("{{publicListPeriod}}")).length, locale).toBe(2);
+      const all = paragraphs
+        .map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, { ...DEFAULT_DEADLINES, publicListDays: 45 }), ...listStatesMergeValues(locale) }))
+        .join(" ");
+      expect(all).toContain(locale === "en" ? "at most 45 days after the event" : "cel mult 45 de zile după eveniment");
+      expect(all).not.toContain("…………");
+      expect(all).not.toContain("{{publicListPeriod}}");
+    }
+  });
+});

@@ -279,25 +279,25 @@ describe("§329 every sentence about the minimum age says the event's number, th
   it("puts the event's minimum in Romanian with the grammar the helper gives it", () => {
     const t = createTranslator({ locale: "ro", messages: ro, namespace: "Registration" });
     expect(t("ageRule.minimumAndGuardian", { age: yearsPhrase(14, "ro") })).toBe(
-      "Vârsta minimă: 14 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+      "Vârsta minimă: 14 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
     );
     expect(t("ageRule.minimumOnly", { age: yearsPhrase(21, "ro") })).toBe("Vârsta minimă: 21 de ani.");
     expect(t("errors.tooYoung", { age: yearsPhrase(16, "ro") })).toBe(
       "Vârsta minimă de participare la acest eveniment este 16 ani împliniți în ziua cursei.",
     );
     expect(t("ageRule.guardianOnly")).toBe(
-      "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+      "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
     );
   });
 
   it("puts the event's minimum in English with the same exact wording", () => {
     const t = createTranslator({ locale: "en", messages: en, namespace: "Registration" });
     expect(t("ageRule.minimumAndGuardian", { age: yearsPhrase(14, "en") })).toBe(
-      "Minimum age: 14 years. Under 18, a parent registers the runner, with their consent.",
+      "Minimum age: 14 years. Under 18, a parent or legal guardian registers the runner, with their consent.",
     );
     expect(t("ageRule.minimumOnly", { age: yearsPhrase(21, "en") })).toBe("Minimum age: 21 years.");
     expect(t("ageRule.guardianOnly")).toBe(
-      "Under 18, a parent registers the runner, with their consent.",
+      "Under 18, a parent or legal guardian registers the runner, with their consent.",
     );
   });
 
@@ -327,8 +327,15 @@ describe("§329 the platform's legal templates leave the number to the event", (
         // No number of the template's own but the guardian's eighteen. The privacy notice's
         // paragraph also cites its legal bases since the GDPR rewrite (§323) — "art. 8 GDPR",
         // "art. 6(1)(b)" — which are articles, not ages, so they are set aside before the check.
-        const withoutCitations = sentence!.replace(/\bart\.\s*\d+(\(\d+\))*(\([a-z]\))?/g, "");
-        expect(withoutCitations.replace(/\b18\b/g, "")).not.toMatch(/\d/);
+        // Since the counsel review (§NNN) it also cites the Civil Code the Romanian way — "art. 41
+        // alin. (2)" — and states the Code's own threshold of fourteen (art. 41, 43: the parent acts
+        // for a child under 14 and approves the acts of one aged 14 to 18). That is the law's age,
+        // the same for every event, not a minimum of the template's. A cross-reference to another
+        // section of the notice ("secțiunea 4") is a heading's number, not an age either.
+        const withoutCitations = sentence!
+          .replace(/\bart\.\s*\d+(\(\d+\))*(\([a-z]\))?(\s*alin\.\s*\(\d+\))?/g, "")
+          .replace(/\b(?:secțiunea|section)\s+\d+/g, "");
+        expect(withoutCitations.replace(/\b1[48]\b/g, "")).not.toMatch(/\d/);
       });
     }
   }

@@ -797,7 +797,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // bound — the last birth date that is sixteen on 3 May 2027.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
-        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
       await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
@@ -805,7 +805,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // The event's page says the same sentence among its facts, and its structured data "16-".
       await page.goto(`/ro/evenimente/${slug}`);
       await expect(page.locator("#main")).toContainText(
-        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
       expect(await typicalAgeRange()).toBe("16-");
 
@@ -826,7 +826,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // the picker's bound is today, the one the page always had.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
-        "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+        "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
       await expect(page.locator("#main")).toContainText("Categoriile de vârstă se calculează la data cursei.");
       await expect(page.locator("#main")).not.toContainText("Vârsta minimă este");

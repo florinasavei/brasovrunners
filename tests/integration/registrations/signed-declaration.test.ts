@@ -5,6 +5,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentBody, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
@@ -164,7 +165,7 @@ describe("the club's declaration (§95)", () => {
     const merged = mergeLegalBody(entry!.body, entry!.values ?? {});
     const text = merged.sections.flatMap((s) => s.paragraphs).join(" ");
     // The blanks are filled: the person, the document, the event, its date and its place.
-    expect(text).toContain("Subsemnatul/a Ana Popescu, posesor/posesoare al actului de identitate bv 123456");
+    expect(text).toContain("Subsemnatul/a Ana Popescu, posesor/posesoare al/a actului de identitate bv 123456");
     expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
     expect(text).not.toContain("{{");
     expect(entry!.signature?.idDocument).toBe("bv 123456");
@@ -198,7 +199,7 @@ describe("the club's declaration (§95)", () => {
     expect(club!.values?.idDocument).toBe("BV ••••56");
     expect(JSON.stringify(club)).not.toContain("123456");
     const text = mergeLegalBody(club!.body, club!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
-    expect(text).toContain("posesor/posesoare al actului de identitate BV ••••56");
+    expect(text).toContain("posesor/posesoare al/a actului de identitate BV ••••56");
     expect(text).not.toContain("123456");
     // Everything else is the same page.
     expect({ ...club!.signature, idDocument: null }).toEqual({ ...whole!.signature, idDocument: null });
@@ -239,8 +240,8 @@ describe("the club's declaration (§95)", () => {
     expect(JSON.stringify(club)).not.toContain("123456");
     expect(JSON.stringify(club)).not.toContain("654321");
     const text = mergeLegalBody(club!.body, club!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
-    expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al actului de identitate MP ••••21");
-    expect(text).toContain("Ion Popescu, posesor/posesoare al actului de identitate BV ••••56");
+    expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al/a actului de identitate MP ••••21");
+    expect(text).toContain("Ion Popescu, posesor/posesoare al/a actului de identitate BV ••••56");
 
     const whole = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
     expect(whole!.signature).toMatchObject({ idDocument: "BV 123456", minor: { typedName: "Maria Popescu", idDocument: "MP 654321" } });
@@ -276,8 +277,30 @@ describe("the club's declaration (§95)", () => {
 
     const all = await listSignedDeclarations(db, event.id);
     expect(all.map((s) => s.typedName)).toEqual(["Ana Popescu", "Ion Ionescu"]);
-    const pdf = await renderEventDeclarationsPdf(db, event.id, "ro", LABELS, NOW);
+    // The bundle still carries whole identity documents, so every page's footer warns to delete
+    // it within seven days (§NNN); labels carry the notice the way `declarationWords` does.
+    const bundleLabels = { ...LABELS, idDocumentsNotice: declarationWords("ro", NOW).idDocumentsNotice };
+    const pdf = await renderEventDeclarationsPdf(db, event.id, "ro", bundleLabels, NOW);
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBeGreaterThanOrEqual(2);
+    // pdfkit draws by glyph id, so the words are not in the bytes — but the notice is its own
+    // text run, below the main footer line: two runs share the main line's y (the organisation
+    // half and the page number), and a third, lower run is the notice. Its y still falls in the
+    // footer region the geometry test uses (below `FOOTER_TOP`), never in the body.
+    for (const page of textLinesByPage(pdf)) {
+      const footer = page.filter(([, y]) => y < FOOTER_TOP);
+      const distinctY = new Set(footer.map(([, y]) => y));
+      expect(footer.length, "three footer runs: two on the main line, one for the notice").toBe(3);
+      expect(distinctY.size, "the notice sits on its own, lower line").toBe(2);
+      expect(Math.min(...footer.map(([, y]) => y)), "the notice's line is below the footer's top").toBeLessThan(FOOTER_TOP);
+    }
+    // Once the retention sweep clears every identity document (§85), the bundle carries none
+    // to warn about: the footer goes back to its two runs on the main line alone.
+    await db.update(declarationAcceptances).set({ idDocument: null, minorIdDocument: null });
+    const swept = await renderEventDeclarationsPdf(db, event.id, "ro", bundleLabels, NOW);
+    for (const page of textLinesByPage(swept)) {
+      const footer = page.filter(([, y]) => y < FOOTER_TOP);
+      expect(footer.length, "no notice line once identity documents are gone").toBe(2);
+    }
     // Nothing signed is still a valid file.
     const empty = await renderDeclarationPdf({ entries: [], locale: "ro", generatedAt: NOW, labels: LABELS });
     expect(empty.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
@@ -353,17 +376,18 @@ describe("the club's declaration (§95)", () => {
     const blank = (document!.body as LegalDocumentBody).sections.flatMap((s) => s.paragraphs).join("\n");
     const merged = mergeText(blank, facts!.values);
     expect(merged).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
-    expect(merged).toContain(`Subsemnatul/a ${BLANK}, posesor/posesoare al actului de identitate ${BLANK}`);
+    expect(merged).toContain(`Subsemnatul/a ${BLANK}, posesor/posesoare al/a actului de identitate ${BLANK}`);
     expect(merged).not.toContain("{{");
   });
 
   /**
-   * §357 — the longer text flows onto a second page rather than being cut: every line of text on
+   * §357 — the longer text flows onto a second page (a third since the counsel review, §NNN, made
+   * the liability and signature paragraphs say what they do and do not do) rather than being cut: every line of text on
    * every page lies between the top margin and the footer's rule, and the last page carries the
    * end of the text and the signature block, not a footer alone. Signed (adult and minor) and the
    * blank forms alike, since each is its own layout at the foot.
    */
-  it("renders the longer declaration on two pages without a line cut off or drawn into the footer", async () => {
+  it("renders the longer declaration over several pages without a line cut off or drawn into the footer", async () => {
     await approve(db, CLUB_DECLARATION);
     const event = await createEvent(db);
     const adult = await pendingRegistration(event);
@@ -382,8 +406,9 @@ describe("the club's declaration (§95)", () => {
     };
     for (const [name, pdf] of Object.entries(pdfs)) {
       const pages = textLinesByPage(pdf!);
-      expect(pages.length, name).toBe(2);
-      expect(pdf!.toString("latin1").match(/\/Type \/Page\b/g)?.length, name).toBe(2);
+      expect(pages.length, name).toBeGreaterThanOrEqual(2);
+      expect(pages.length, name).toBeLessThanOrEqual(3);
+      expect(pdf!.toString("latin1").match(/\/Type \/Page\b/g)?.length, name).toBe(pages.length);
       for (const [index, lines] of pages.entries()) {
         const page = `${name} page ${index + 1}`;
         const body = lines.filter(([, y]) => y >= FOOTER_TOP);
