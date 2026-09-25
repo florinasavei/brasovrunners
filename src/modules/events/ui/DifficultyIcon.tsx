@@ -56,7 +56,11 @@ const SCALE_WIDTH = `${DIFFICULTY_LEVELS.length}em`;
 export default function DifficultyScaleIcon({ level, ...props }: SvgIconProps & { level: number }) {
   if (level < 1 || level > DIFFICULTY_LEVELS.length) throw new RangeError(`DifficultyScaleIcon: level ${level} is outside 1..${DIFFICULTY_LEVELS.length}`);
   return (
-    <SvgIcon {...props} viewBox={`0 0 ${DIFFICULTY_LEVELS.length * 24} 24`} sx={{ width: SCALE_WIDTH, ...props.sx }}>
+    <SvgIcon
+      {...props}
+      viewBox={`0 0 ${DIFFICULTY_LEVELS.length * 24} 24`}
+      sx={[{ width: SCALE_WIDTH }, ...(Array.isArray(props.sx) ? props.sx : [props.sx])]}
+    >
       {DIFFICULTY_LEVELS.map((name, index) => {
         const on = index < level;
         return (
