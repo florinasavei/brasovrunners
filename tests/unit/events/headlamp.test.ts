@@ -284,8 +284,7 @@ describe("§NNN the migration", () => {
     expect(journal.entries.find((entry) => entry.idx === 70)?.tag).toBe("0070_headlamp_required");
   });
 
-  it("the editor's action reads the checkbox by the name the box posts", () => {
-    expect(readFileSync("src/app/[locale]/admin/actions.ts", "utf8")).toContain('headlampRequired: form.get("event.headlampRequired") === "on"');
+  it("the editor's box posts the checkbox by the name the action reads (the integration suite proves the save)", () => {
     expect(readFileSync("src/modules/content/events/ui/boxes/CourseBox.tsx", "utf8")).toContain('name="event.headlampRequired"');
   });
 });
@@ -305,7 +304,7 @@ describe("§NNN the editor's «Traseul» box says it while shut", () => {
   it("carries the checkbox's words and its help line in both catalogues", () => {
     expect(ro.Admin.editor.headlampRequired).toBe("Necesită frontală");
     expect(en.Admin.editor.headlampRequired).toBe("Headlamp required");
-    expect(ro.Admin.editor.headlampRequiredHelp).toBe("Se arată pe cardul și pe pagina evenimentului.");
-    expect(en.Admin.editor.headlampRequiredHelp).toBe("Shown on the event's card and page.");
+    expect(ro.Admin.editor.headlampRequiredHelp).toBe("Se arată pe card, pe pagina evenimentului și în calendar.");
+    expect(en.Admin.editor.headlampRequiredHelp).toBe("Shown on the event's card, page and calendar.");
   });
 });

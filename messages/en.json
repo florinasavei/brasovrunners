@@ -840,7 +840,7 @@
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
       "headlampRequired": "Headlamp required",
-      "headlampRequiredHelp": "Shown on the event's card and page.",
+      "headlampRequiredHelp": "Shown on the event's card, page and calendar.",
       "registrationSection": "Registration",
       "registrationMode": "Registration mode",
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",

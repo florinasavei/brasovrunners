@@ -412,7 +412,7 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
   return visibility === "NAMES" ? words.startList.shown : words.startList.hidden;
 }
 
-type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl"> & { headlampRequired?: boolean };
+type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "headlampRequired">;
 
 /** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */
 function distanceWords(words: SummaryWords, distanceMeters: number | null | undefined): string | null {

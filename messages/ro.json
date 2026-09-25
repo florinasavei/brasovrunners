@@ -840,7 +840,7 @@
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
       "headlampRequired": "Necesită frontală",
-      "headlampRequiredHelp": "Se arată pe cardul și pe pagina evenimentului.",
+      "headlampRequiredHelp": "Se arată pe card, pe pagina evenimentului și în calendar.",
       "registrationSection": "Înscriere",
       "registrationMode": "Modul de înscriere",
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",

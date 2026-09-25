@@ -51,7 +51,7 @@ async function setHeadlamp(page: Page, on: boolean, live: boolean) {
   await expect(box).toBeVisible();
   // A thumb's target (BR-REQ-041-01 criterion 6): the checkbox's own box, not only its label.
   expect((await box.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-  await expect(page.getByText("Se arată pe cardul și pe pagina evenimentului.")).toBeVisible();
+  await expect(page.getByText("Se arată pe card, pe pagina evenimentului și în calendar.")).toBeVisible();
   if (on) await box.check();
   else await box.uncheck();
   if (live) await page.locator('[name="acknowledgeLiveEdit"]').check();
