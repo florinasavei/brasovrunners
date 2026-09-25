@@ -30,12 +30,12 @@ export type TimeFieldProps = {
 };
 
 /**
- * A time of day in the backoffice: the platform's own `<input type="time">`, always on the
- * 24-hour clock (`DECISIONS.md` §345, amended by §NNN; the owner, 2026-09-25, of the MUI wheel
- * picker: "I simply hate this time picker"). `type="time"` always *posts* `HH:mm` — the browser
- * may *show* a 12-hour clock face with its own AM/PM in some locales, exactly as §303 found
- * before the pickers went in, but the value this box carries and posts never changes shape, and
- * a phone gets its own OS wheel, which every runner already knows how to use, rather than MUI's.
+ * A time of day in the backoffice: the platform's own `<input type="time">`, always *posting*
+ * `HH:mm` on the 24-hour clock (`DECISIONS.md` §345, amended by §NNN; the owner, 2026-09-25, of
+ * the MUI wheel picker: "I simply hate this time picker"). The browser may *show* a 12-hour
+ * clock face with its own AM/PM in some locales, exactly as §303 found before the pickers went
+ * in, but the value this box carries and posts never changes shape, and a phone gets its own OS
+ * wheel, which every runner already knows how to use, rather than MUI's.
  *
  * **What it posts has not changed:** `HH:mm` under the same name — `type="time"`'s own value,
  * with `step={60}` so no browser offers seconds. §345's date half is untouched (`DateField`
@@ -75,9 +75,14 @@ export default function TimeField({ name, label, defaultValue = "", required = f
       error={named}
       helperText={help}
       size={size}
-      sx={sx}
+      // Chromium and Edge draw their own clock icon inside `type="time"`; without hiding it, a
+      // 140-pixel box (the schedule rows, `WallTimeField`) carries two clocks. The icon is
+      // decoration only — it has no popup of its own, so hiding it loses nothing.
+      sx={[{ "& input::-webkit-calendar-picker-indicator": { display: "none" } }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
       slotProps={{
         inputLabel: { shrink: true },
+        // `pattern` is inert on `type="time"` in every shipping browser — kept only for the
+        // scriptless render (`pickers-js-off.test.ts`) and as documentation of the shape.
         htmlInput: { step: 60, pattern: TIME_PATTERN, title: t("pickers.timeTyped") },
         input: {
           startAdornment: (
@@ -87,7 +92,7 @@ export default function TimeField({ name, label, defaultValue = "", required = f
           ),
           endAdornment: clearable ? (
             <InputAdornment position="end">
-              <IconButton aria-label={t("pickers.clearTime")} onClick={clear} sx={{ minWidth: 44, minHeight: 44 }} size="small" tabIndex={-1}>
+              <IconButton aria-label={t("pickers.clearTime")} onClick={clear} sx={{ minWidth: 44, minHeight: 44 }} size="small">
                 <CloseIcon fontSize="small" />
               </IconButton>
             </InputAdornment>

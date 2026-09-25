@@ -349,9 +349,7 @@
       "datePlaceholder": "YYYY-MM-DD",
       "dateTyped": "The date, like 2026-11-21: year, month, day.",
       "dateIncomplete": "Fill in the whole date: day, month and year.",
-      "timePlaceholder": "hh:mm",
       "timeTyped": "The time on the 24-hour clock, like 09:30 or 19:00.",
-      "timeIncomplete": "Fill in the whole time: hours and minutes.",
       "clearTime": "Clear the time"
     },
     "nav": {

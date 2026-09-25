@@ -349,9 +349,7 @@
       "datePlaceholder": "AAAA-LL-ZZ",
       "dateTyped": "Data, ca 2026-11-21: anul, luna, ziua.",
       "dateIncomplete": "Completează data întreagă: ziua, luna și anul.",
-      "timePlaceholder": "hh:mm",
       "timeTyped": "Ora pe 24 de ore, ca 09:30 sau 19:00.",
-      "timeIncomplete": "Completează ora întreagă: ora și minutul.",
       "clearTime": "Șterge ora"
     },
     "nav": {
