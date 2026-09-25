@@ -10,7 +10,8 @@ import type { GlyphName } from "./glyphs";
  * adds extra words a screen reader reads right after `label`, never shown, while the visible
  * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
- * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394). Content, not an
+ * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394); the difficulty pill's
+ * «Mediu» is followed, for a screen reader, by the field's own name, «Dificultate». Content, not an
  * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
  * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
  * own text (visually hidden) rather than on the attribute.
@@ -94,7 +95,14 @@ export function routePillParts(
     ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
     : null;
   const difficultyPill: Pill | null = event.difficulty
-    ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
+    ? {
+        glyph: `difficulty:${event.difficulty}`,
+        label: t(`difficultyValues.${event.difficulty}`),
+        // The visible word alone — «Mediu» — says a level without saying of what; a screen reader
+        // hears «Mediu — Dificultate» through the same `srSuffix` the external cost pill uses, the
+        // field's own catalogue label (`Event.difficulty`), never a string written here.
+        srSuffix: t("difficulty"),
+      }
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };

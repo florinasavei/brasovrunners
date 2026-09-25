@@ -12,9 +12,6 @@ import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
 import ScienceIcon from "@mui/icons-material/Science";
-import SignalCellularAltIcon from "@mui/icons-material/SignalCellularAlt";
-import SignalCellularAlt1BarIcon from "@mui/icons-material/SignalCellularAlt1Bar";
-import SignalCellularAlt2BarIcon from "@mui/icons-material/SignalCellularAlt2Bar";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
@@ -24,6 +21,8 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
+import { DIFFICULTY_ICONS } from "./difficulty-glyphs";
+import type { DifficultyLevel } from "./difficulty-levels";
 import RoadIcon from "./RoadIcon";
 
 /** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
@@ -40,9 +39,11 @@ export type Glyph = ComponentType<SvgIconProps>;
  * trophy (every runner finishes a race, few win one); a gear test is the flask (something is
  * being tried); "other event" is a group of people; an external event opens elsewhere;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
- * mixed the fork in the path; difficulty is one, two or three bars — the shape a phone's
- * signal uses for "how much", which needs no legend; cost is a coin, crossed out when there is
- * none, or a hand holding a heart for a donation — the platform takes none of the three itself.
+ * mixed the fork in the path; difficulty is a scale of dumbbells, one through three of them lit
+ * (§NNN; the owner, 2026-09-25, of the phone-signal bars this replaces: "I want also for the
+ * difficulty to have a better icon system, like weights or something" — drawn in `DifficultyIcon.tsx`);
+ * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
+ * platform takes none of the three itself.
  */
 export const TYPE_GLYPH: Record<EventType, Glyph> = {
   GROUP_RUN: DirectionsRunIcon,
@@ -60,11 +61,9 @@ export const SURFACE_GLYPH: Record<EventSurface, Glyph> = {
   MIXED: AltRouteIcon,
 };
 
-export const DIFFICULTY_GLYPH: Record<"EASY" | "MODERATE" | "HARD", Glyph> = {
-  EASY: SignalCellularAlt1BarIcon,
-  MODERATE: SignalCellularAlt2BarIcon,
-  HARD: SignalCellularAltIcon,
-};
+/** One scale per level, mapped over `DIFFICULTY_LEVELS` in `DifficultyIcon.tsx` — a level added
+ * there is registered here with no edit of its own. */
+export const DIFFICULTY_GLYPH: Record<DifficultyLevel, Glyph> = DIFFICULTY_ICONS;
 
 export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
   FREE: MoneyOffIcon,
@@ -101,6 +100,12 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
  * the kit). Always beside its word, "Eveniment de noapte" / "Night event", like every other pill.
+ *
+ * There is no bare `difficulty` entry: every caller reads one value's own level, so only the
+ * `difficulty:*` entries exist — one per level of `DIFFICULTY_LEVELS` (`DifficultyIcon.tsx`),
+ * Material's `FitnessCenterIcon` path repeated one through three times lit, one `<svg>` each so
+ * `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
+ * hands them.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),

@@ -102,7 +102,9 @@ function row(html: string, label: string) {
   return found;
 }
 
-/** Every chip in a fragment: its variant, its label and whether it carries its glyph. */
+/** Every chip in a fragment: its variant, its label and whether it carries its glyph. The label
+ * is the chip's own first text — the difficulty pill's visually-hidden «— Dificultate» follows it
+ * in a span of its own (`GlyphChip`'s `srSuffix`), so the visible word is still what this reads. */
 function chips(fragment: string) {
   return [...fragment.matchAll(/<div class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),
@@ -148,7 +150,9 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     expect(new Set(glyphClasses).size).toBe(1);
     expect(route.dd).toContain('data-testid="StraightenIcon"');
     expect(route.dd).toContain('data-testid="TrendingUpIcon"');
-    expect(route.dd).toContain('data-testid="SignalCellularAlt1BarIcon"');
+    // "Ușor" (EASY) is one dumbbell lit, two faint (`DifficultyIcon.tsx`, §NNN).
+    expect((route.dd.match(/data-testid="difficulty-dumbbell-on"/g) ?? []).length).toBe(1);
+    expect((route.dd.match(/data-testid="difficulty-dumbbell-off"/g) ?? []).length).toBe(2);
   });
 
   it("says the climb short in English too", async () => {
