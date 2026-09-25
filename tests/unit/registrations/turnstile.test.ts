@@ -97,4 +97,42 @@ describe("Cloudflare Turnstile", () => {
       logged.mockRestore();
     }
   });
+
+  /*
+    §NNN, finding (10)'s health half: `verifyTurnstile` fails a wrong secret open on purpose, so
+    something else has to notice it — `probeTurnstileSecret` is what `/api/health` and
+    `/admin/tasks` ask. It must tell a wrong secret apart from Cloudflare merely disliking a
+    fake token, and from Cloudflare not answering at all.
+  */
+  it("probes the secret without a real widget token, and tells a wrong secret from a timeout", async () => {
+    process.env.TURNSTILE_SITE_KEY = "1x000";
+    process.env.TURNSTILE_SECRET_KEY = "2x000";
+    const { probeTurnstileSecret } = await import("@/modules/registrations/turnstile");
+    const answer = (codes: string[]) =>
+      (async () => new Response(JSON.stringify({ success: false, "error-codes": codes }), { status: 200 })) as typeof fetch;
+
+    // The secret is fine; Cloudflare rejects only the dummy token, as it always will.
+    expect(await probeTurnstileSecret(answer(["invalid-input-response"]))).toBe("ok");
+    expect(await probeTurnstileSecret(answer(["timeout-or-duplicate"]))).toBe("ok");
+
+    // The secret itself is what Cloudflare is unhappy about — this is the fault the health
+    // endpoint and the admin task row must both surface.
+    expect(await probeTurnstileSecret(answer(["invalid-input-secret"]))).toBe("misconfigured");
+    expect(await probeTurnstileSecret(answer(["missing-input-secret"]))).toBe("misconfigured");
+    expect(await probeTurnstileSecret(answer(["internal-error"]))).toBe("misconfigured");
+
+    // Cloudflare not answering says nothing about the secret, and must never read as broken.
+    const down = (async () => {
+      throw new Error("network");
+    }) as typeof fetch;
+    expect(await probeTurnstileSecret(down)).toBe("unreachable");
+    const bad = (async () => new Response("", { status: 503 })) as typeof fetch;
+    expect(await probeTurnstileSecret(bad)).toBe("unreachable");
+  });
+
+  it("probes as not_configured without both keys, and refuses no registration by doing so", async () => {
+    process.env.TURNSTILE_SITE_KEY = "site-only";
+    const { probeTurnstileSecret } = await import("@/modules/registrations/turnstile");
+    expect(await probeTurnstileSecret()).toBe("not_configured");
+  });
 });

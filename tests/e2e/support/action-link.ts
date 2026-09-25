@@ -60,6 +60,27 @@ export async function registrationStatus(id: string): Promise<string> {
   });
 }
 
+/**
+ * Backdates a `PENDING_EMAIL_CONFIRMATION` row's link so it reads as lapsed (§NNN, e2e for
+ * finding (7)) — the setup for "an expired verification link renders the lapsed notice, not
+ * 'confirmed'", never the subject itself: the page under test still does the lapsing, through
+ * `confirmEmailAction`, when the link is pressed.
+ */
+export async function expireEmailConfirmationLink(id: string): Promise<void> {
+  await withDatabase((client) =>
+    client.query(`UPDATE registrations SET email_link_expires_at = now() - interval '1 hour' WHERE id = $1`, [id]),
+  );
+}
+
+/**
+ * Moves a registration straight to a state a live declaration link can then find moved on
+ * (§NNN, e2e for finding (8)) — the setup, not the subject: the declare page's own notice is
+ * what the spec asserts on.
+ */
+export async function setRegistrationStatus(id: string, status: string): Promise<void> {
+  await withDatabase((client) => client.query(`UPDATE registrations SET status = $2 WHERE id = $1`, [id, status]));
+}
+
 /** The two telephone numbers as stored — E.164, whatever the boxes showed (§84). */
 export async function registrationPhones(id: string): Promise<{ phone: string | null; emergencyContactPhone: string | null }> {
   return withDatabase(async (client) => {

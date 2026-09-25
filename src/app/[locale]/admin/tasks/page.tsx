@@ -36,6 +36,7 @@ import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { readBotCheck } from "@/modules/registrations/bot-check";
+import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import BotCheckPanel from "@/modules/registrations/ui/BotCheckPanel";
 import {
   annualCostToday,
@@ -254,6 +255,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   // The anti-bot switch (§254): read straight through, because this page is where it is moved.
   const botCheck = await readBotCheck(db);
+  // Whether the configured secret works, not merely whether it is set (§NNN, finding (10)'s
+  // health half) — cached fifteen minutes, same as `/api/health`.
+  const botCheckHealth = await probeTurnstileSecret();
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
   const jobs = await Promise.all([
     checkJobHealth(db, "email-outbox", now),
@@ -387,6 +391,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // Configured *and* switched on (§254): a row that said "done" while the check was off
       // would be the task board lying about a defence.
       botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY) && botCheck.enabled,
+      botCheckHealth,
       // The club's own setting first, the deployment's variable as the fallback (§244).
       declarationArchiveConfigured: volume.archiveConfigured,
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),

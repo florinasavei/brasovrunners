@@ -303,7 +303,11 @@ export function awaitingSettledNumber() {
  * A declaration can be signed on paper at the desk on race day (§67), so an unsigned
  * registration is a person who may well run, and a race with no bib for them is the failure
  * this is trying to avoid. A number already given by hand (§105) is kept and reserved, so the
- * sequence closes around it.
+ * sequence closes around it. An address not yet confirmed at the close is not "still holding a
+ * place" in this sense (§NNN): it is not numbered here, and gives its provisional number back —
+ * nobody can print a bib for an address that has not agreed to come.
+ * Only `NUMBERED_AT_SETTLE` — `PENDING_DECLARATION`, `WAITLIST_OFFERED`, `CONFIRMED` — is settled;
+ * `PENDING_EMAIL_CONFIRMATION` is released first, in the same transaction, below.
  *
  * Idempotent through `events.bibs_settled_at`: the job sees the same closed event every few
  * minutes and must do this exactly once.

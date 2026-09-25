@@ -2185,11 +2185,17 @@
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
           "todo": "Done on 19 September 2026: the widget “brasovrunners-site” exists and both keys are on both Vercel projects — this row turns green on the next deployment. The registration form already has a trap field and a fill-time check, which stop the simple bots; Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest.",
           "done": "The registration form has the anti-bot check on.",
+          "misconfigured": "Both keys are set, but Cloudflare says the secret key itself is wrong — mistyped, revoked, or belongs to another widget. Nobody is refused registration by this: a check that cannot run fails open (`DECISIONS.md` §205), which is exactly why nothing else on the platform noticed until this row existed. Fix the key below; until then the site's bot defence is silently down to the trap field and the fill-time check alone.",
           "how": [
             "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
             "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
             "✓ In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
+          ],
+          "howMisconfigured": [
+            "Cloudflare → Turnstile → the “brasovrunners-site” widget → copy the Secret key again (or Rotate Secret Key if it may have leaked).",
+            "Vercel → the production project (and QA, with its own key if it has one) → Settings → Environment Variables: replace TURNSTILE_SECRET_KEY. Redeploy.",
+            "Reload this page after the deployment: the row turns green once Cloudflare accepts the secret again. A test registration is not required — this row is checked without one."
           ]
         },
         "declarationArchiveMail": {

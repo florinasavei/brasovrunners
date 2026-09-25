@@ -2185,11 +2185,17 @@
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
           "todo": "Făcut pe 19 septembrie 2026: widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel — rândul devine verde la următoarea publicare. Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli; Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul.",
           "done": "Formularul de înscriere are verificarea anti-bot pornită.",
+          "misconfigured": "Ambele chei sunt puse, dar Cloudflare spune că secretul (Secret key) în sine e greșit — scris greșit, revocat sau al altui widget. Nimeni nu e refuzat la înscriere din cauza asta: o verificare care nu poate rula lasă înscrierea să treacă (`DECISIONS.md` §205), și tocmai de asta nimic altceva de pe platformă nu observase până acum. Corectează cheia mai jos; până atunci apărarea anti-bot a site-ului stă doar pe capcana ascunsă și verificarea timpului de completare.",
           "how": [
             "✓ Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
             "✓ Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
             "✓ În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
+          ],
+          "howMisconfigured": [
+            "Cloudflare → Turnstile → widgetul „brasovrunners-site” → copiază din nou Secret key (sau Rotate Secret Key dacă a putut fi expus).",
+            "Vercel → proiectul de producție (și QA, cu cheia lui proprie dacă are una) → Settings → Environment Variables: înlocuiește TURNSTILE_SECRET_KEY. Redeploy.",
+            "Reîncarcă această pagină după deploy: rândul devine verde imediat ce Cloudflare acceptă din nou secretul. Nu e nevoie de o înscriere de test — rândul se verifică fără una."
           ]
         },
         "declarationArchiveMail": {

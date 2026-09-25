@@ -134,8 +134,14 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       a concurrent press. The transaction rolled back and nothing was spent, so the page is simply
       shown again — and it now reads the state and says where the registration stands, in place of
       a form nobody can sign — rather than the error page (AGENTS.md §14.3: translated at the boundary).
+
+      `?invalid=1` (§NNN, nit found in review): when the state is still signable — a
+      `PENDING_DECLARATION` or `WAITLIST_OFFERED` row that simply changed under a concurrent
+      press and lost the race — the moved-on notice does not apply, the form is shown again as
+      unsigned, and without the flag it would say nothing about why the press did nothing. A row
+      that *has* moved on takes the notice regardless of the flag, so this never overrides it.
     */
-    if (isDomainError(error) && error.code === "CONFLICT") redirect(path);
+    if (isDomainError(error) && error.code === "CONFLICT") redirect(`${path}?invalid=1`);
     throw error;
   }
 }

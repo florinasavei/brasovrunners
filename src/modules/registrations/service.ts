@@ -308,7 +308,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   /** The club's deadlines (§377), read by the caller before its transaction: a new hold's length comes from here. */
   settings: Deadlines,
 ): Promise<Registration> {
-  await repo.expireStaleHolds(db, event, now);
+  await repo.expireStaleHolds(db, event, now, { deadlines: settings });
   await fillAvailableSpots(db, event, now, settings);
 
   const counts = await repo.countOccupied(db, event.id, now);
@@ -331,7 +331,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
       release takes the release back with it, like everything else in the transaction.
     */
     if (counts.lapsedDeclarationHolds > 0) {
-      await repo.expireStaleHolds(db, event, now, { wanting: 1 });
+      await repo.expireStaleHolds(db, event, now, { wanting: 1, deadlines: settings });
       const after = await repo.countOccupied(db, event.id, now);
       direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
     }
@@ -445,7 +445,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
     read under the event lock, so the status here is the one a concurrent cancellation left.
   */
   if (event.eventStatus === "CANCELLED") return 0;
-  await repo.expireStaleHolds(db, event, now);
+  await repo.expireStaleHolds(db, event, now, { deadlines: settings });
   // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
   if (event.eventStatus !== "SCHEDULED") return 0;
 
@@ -1704,7 +1704,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     // live when the page was rendered (§15.3 step 6; §10.6: evaluated against `now`). A hold
     // past its deadline is still live while nobody waits for the place (§160): the signature
     // that comes late is the one the owner asked to be lenient about.
-    await repo.expireStaleHolds(tx, locked, now);
+    await repo.expireStaleHolds(tx, locked, now, { deadlines: settings });
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
 
@@ -2027,7 +2027,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     if (locked.eventStatus === "CANCELLED") {
       throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
     }
-    await repo.expireStaleHolds(tx, locked, now);
+    await repo.expireStaleHolds(tx, locked, now, { deadlines: settings });
 
     const current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");

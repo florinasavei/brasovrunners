@@ -100,3 +100,56 @@ export async function verifyTurnstile(
     return "unavailable";
   }
 }
+
+/** How long `/api/health` and `/admin/tasks` trust one secret probe before asking Cloudflare again. */
+const TURNSTILE_HEALTH_CACHE_SECONDS = 900;
+
+/**
+ * What the secret-health probe answered (§NNN, closing finding (10)'s health half).
+ *
+ * `verifyTurnstile` fails a misconfigured secret *open* on purpose (§205) — a wrong
+ * `TURNSTILE_SECRET_KEY` must never refuse a real registration — but that meant nothing on the
+ * platform ever noticed the secret was wrong; only `console.error` did, which nobody reads on a
+ * deployed server. This probe is how something that *is* read — `/api/health`, `/admin/tasks` —
+ * finds out.
+ *
+ * `misconfigured` and `unreachable` are kept apart the same way `verifyTurnstile` keeps `failed`
+ * and `unavailable` apart: a timeout or a 5xx from Cloudflare is not evidence the secret is
+ * wrong, so it must never turn the health check red on its own.
+ */
+export type TurnstileSecretHealth = "ok" | "misconfigured" | "unreachable" | "not_configured";
+
+/**
+ * Asks Cloudflare whether the configured secret is even the right shape of wrong.
+ *
+ * There is no way to prove a secret is *right* without a real widget token, so this proves the
+ * cheaper half: it sends a token that is certainly not real. Cloudflare always rejects it — the
+ * question is which reason it gives. A secret that matches the site key answers
+ * `invalid-input-response` (the token, not the secret, is bad) or `timeout-or-duplicate`, and
+ * that is `ok`. A secret that is missing, mistyped or belongs to another widget answers one of
+ * `SERVER_SIDE_ERROR_CODES` regardless of the token, which is exactly the case
+ * `verifyTurnstile` already recognises — this reuses that same set rather than inventing a
+ * second notion of "server-side error".
+ */
+export async function probeTurnstileSecret(fetchImpl: typeof fetch = fetch): Promise<TurnstileSecretHealth> {
+  if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return "not_configured";
+  const body = new URLSearchParams({
+    secret: env.TURNSTILE_SECRET_KEY,
+    response: "XXXX.DUMMY.TOKEN.health-probe-never-a-real-widget-response.XXXX",
+  });
+  try {
+    const response = await fetchImpl(SITEVERIFY_URL, {
+      method: "POST",
+      body,
+      signal: AbortSignal.timeout(5_000),
+      next: { revalidate: TURNSTILE_HEALTH_CACHE_SECONDS },
+    });
+    if (!response.ok) return "unreachable";
+    const result = (await response.json()) as { success?: boolean; "error-codes"?: unknown };
+    if (result.success === true) return "ok";
+    const codes = Array.isArray(result["error-codes"]) ? result["error-codes"].map(String) : [];
+    return codes.some((code) => SERVER_SIDE_ERROR_CODES.has(code)) ? "misconfigured" : "ok";
+  } catch {
+    return "unreachable";
+  }
+}

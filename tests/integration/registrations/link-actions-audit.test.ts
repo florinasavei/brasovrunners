@@ -190,7 +190,10 @@ describe("§NNN AGENTS.md §14.3 a live declaration link on a registration that 
     form.set("documentId", document!.id);
     form.set("contentSha256", document!.contentSha256);
     const to = await press(signDeclarationAction, form);
-    expect(to).toMatch(new RegExp(`/${token}$`));
+    // `?invalid=1` now rides along on every non-DECLARATION_CHANGED CONFLICT (§NNN, nit found in
+    // review) — harmless here: the registration has moved on, so the page's own moved-on notice
+    // takes priority over the flag regardless of whether it is present.
+    expect(to).toMatch(new RegExp(`/${token}(\\?invalid=1)?$`));
 
     const [spent] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "COMPLETE_DECLARATION"));
     expect(spent.usedAt).toBeNull();
