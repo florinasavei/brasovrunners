@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V1.92-2026-09-25 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V1.93-2026-09-25 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks, stops unless every one is green, and merges it into `qa`

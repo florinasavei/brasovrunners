@@ -27,13 +27,16 @@ import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
+import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
+import { findSignedGroupRunDeclaration, groupRunDeclarationIdOf } from "@/modules/group-run-declarations/repository";
 import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -65,10 +68,18 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
+  // The form for another person on the same address (§389) — only while the address has room; at
+  // the club's limit the message carries no link, and nothing is minted for it.
+  REGISTER_ANOTHER_PERSON: "REGISTER_ANOTHER_PERSON",
 };
 
+/**
+ * Where each purpose's link opens: a page of its own, the secret in its path — except the form for
+ * another person on one address (§389), which is the event's own registration form with the secret
+ * in `?another=` (`ANOTHER_PERSON_PARAM`), built below with the event's slug.
+ */
 const ROUTE_BY_PURPOSE: Record<
-  EmailActionTokenPurpose,
+  Exclude<EmailActionTokenPurpose, "REGISTER_ANOTHER_PERSON">,
   | "/registrations/confirm/[token]"
   | "/registrations/declare/[token]"
   | "/registrations/manage/[token]"
@@ -136,6 +147,11 @@ async function renderRow(
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
 
+  // A group run's self-declaration (§NNN) is about no registration: its own, shorter path.
+  if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
+    return renderGroupRunDeclarationRow(row, db, now, eventRows);
+  }
+
   /*
     The club's copy of a participant's message (§320; `enqueueClubCopies` in `outbox.ts`).
 
@@ -179,7 +195,13 @@ async function renderRow(
   const placeLater = eventDetails?.locationToBeAnnounced === true;
 
   const data: TemplateData = {
-    participantName: participant?.defaultName ?? "",
+    /*
+      The runner this message is about: the registration's own name when there is one (§389). One
+      address may carry a family, and the participant's `default_name` is only whoever filled the
+      form first — the confirmation of a second child must greet that child, and the club's archive
+      copy must name who signed. Without a registration (the "my registrations" link), the address's name.
+    */
+    participantName: registration?.registeredName ?? participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
     // The place in the runner's language (§362), nullable on an event row from before the column
     // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
@@ -329,7 +351,10 @@ async function renderRow(
   // light — only when this date, the one being reminded of, is one; the same function as the pill.
   if (row.messageType === "EVENT_REMINDER" && eventDetails) {
     const night = clubNightEvent(eventDetails);
-    if (night.night) data.nightEventSunset = night.sunset ?? "";
+    if (night.night) {
+      data.nightEventSunset = night.sunset ?? "";
+      data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
+    }
   }
   // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words —
   // and in the update notice when the programme is what changed (§331).
@@ -419,12 +444,47 @@ async function renderRow(
     data.bibProvisional = registration.bibNumber === null && registration.provisionalBibNumber !== null;
   }
 
+  /*
+    The link for another person on one address (§389): what the submission decided, from the row —
+    the club's limit as it stood then, and whether the address had reached it. At the limit the
+    message is the sentence that says so, and no token is minted for a link it does not carry.
+  */
+  let anotherPersonLink = false;
+  if (row.messageType === "REGISTER_ANOTHER_PERSON") {
+    const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown };
+    data.addressAtCap = payload.atCap === true;
+    if (typeof payload.registrationsPerAddress === "number") data.addressCap = payload.registrationsPerAddress;
+    anotherPersonLink = !data.addressAtCap && Boolean(eventDetails?.slug);
+  }
+
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
 
   // A club copy has no action button at all — not even the thank-you's public link — so there is
   // one rule to check rather than a list of which actions are safe to copy (§320).
   let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
-  if (purpose && row.participantId && !clubCopy) {
+  if (purpose === "REGISTER_ANOTHER_PERSON") {
+    if (anotherPersonLink && eventDetails && row.participantId && row.registrationId && !clubCopy) {
+      /*
+        Single use, hashed at rest, minted here at send time like every link (§12.8, §14.5), and
+        alive for the club's email-link window ("Termene", §377) — the same hours the other person's
+        own confirmation link will get. Scoped to the registration the address already holds here,
+        which names the event and the participant; opening the page reads it, only the submission
+        spends it. The form is the event's own, in the language its slug belongs to.
+      */
+      const issued = await issueActionToken(db, {
+        participantId: row.participantId,
+        registrationId: row.registrationId,
+        purpose,
+        expiresAt: emailLinkExpiresAt(now, settings),
+        now,
+      });
+      const formPath = getPathname({
+        locale: eventDetails.locale,
+        href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } },
+      });
+      actionUrl = `${env.APP_BASE_URL}${formPath}?${ANOTHER_PERSON_PARAM}=${issued.secret}`;
+    }
+  } else if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
     // Borrow the registration's own deadline so the token dies when the place does — but only
@@ -580,6 +640,74 @@ async function renderRow(
     attachments: clubCopy ? undefined : attachments,
     // The club's own words, when it has written any (§247). Memoized for half a minute, so a
     // batch of twenty reads the setting once rather than twenty times.
+    overrides: await readEmailCopyForSending(db, now),
+    cc: addresses(payload.cc),
+    bcc: addresses(payload.bcc),
+  });
+}
+
+/**
+ * A group run's optional self-declaration (§NNN): the signer's copy or the club's archive copy.
+ *
+ * About a declaration row, not a registration: no participant, no token, no manage link — there is
+ * nothing to manage — and the PDF is drawn from the row at send time, never stored (§95): whole on
+ * the signer's copy, the identity document masked on the club's (§320). A row whose declaration is
+ * gone (erased, or swept seven days after the run) cannot be rendered, and says so: a failed render
+ * is final (`AGENTS.md` §16.1), which is right — there is nothing left to send.
+ */
+async function renderGroupRunDeclarationRow(
+  row: OutboxRow,
+  db: RendererDb,
+  now: Date,
+  eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+): Promise<OutgoingEmail> {
+  const locale = row.locale as Locale;
+  const archive = row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE";
+  const id = groupRunDeclarationIdOf(row.payloadJson);
+  const signed = id ? await findSignedGroupRunDeclaration(db, id) : undefined;
+  if (!signed) throw new Error("the group-run declaration this message is about no longer exists");
+
+  const eventTexts = await eventRows(db, signed.eventId);
+  const eventDetails = eventNotificationDetailsIn(eventTexts, locale);
+  const otherDetails = eventTexts.find((candidate) => candidate.locale === otherLocale(locale) && candidate.locale !== eventDetails?.locale);
+  const placeLater = eventDetails?.locationToBeAnnounced === true;
+  const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+
+  const data: TemplateData = {
+    participantName: signed.typedName,
+    eventTitle: eventDetails?.title,
+    eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
+    eventLocationNameOther: placeLater ? placeToBeAnnouncedWords(otherLocale(locale)) : (eventDetails?.locationNames[otherLocale(locale)] ?? undefined),
+    eventStartsAtFormatted: formatEventStart(eventDetails, locale),
+    eventStartsAtFormattedOther: formatEventStart(eventDetails, otherLocale(locale)),
+    signedAtFormatted: formatInSentence(signed.acceptedAt, zone, locale),
+    signedAtFormattedOther: formatInSentence(signed.acceptedAt, zone, otherLocale(locale)),
+    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    eventUrl: eventDetails?.slug
+      ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
+      : undefined,
+    eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
+    contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
+  };
+  if (otherDetails) {
+    data.eventTitleOther = otherDetails.title;
+    if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
+  }
+
+  const pdf = await renderGroupRunDeclarationPdf(db, signed, archive ? "club" : "participant", now);
+  // The archive copy's own copies (§244), read from the payload as the race's archive reads them.
+  const payload = (archive ? (row.payloadJson ?? {}) : {}) as { cc?: unknown; bcc?: unknown };
+  const addresses = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "") : [];
+
+  return buildOutgoingEmail({
+    to: row.recipientEmail,
+    locale,
+    idempotencyKey: row.idempotencyKey,
+    messageType: row.messageType,
+    data,
+    actionUrl: undefined,
+    attachments: pdf ? [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }] : undefined,
     overrides: await readEmailCopyForSending(db, now),
     cc: addresses(payload.cc),
     bcc: addresses(payload.bcc),

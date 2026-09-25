@@ -6,6 +6,7 @@ import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -108,6 +109,8 @@ export const GLYPHS = {
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
   headlamp: FlashlightOnIcon,
+  // The club's discount on an external event's own fee (§NNN): a price tag, under the cost row.
+  discount: LocalOfferIcon,
   partner: PartnerEmoji as Glyph,
 };
 

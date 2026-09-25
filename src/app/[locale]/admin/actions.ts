@@ -55,6 +55,7 @@ import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
+import { eraseGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -238,6 +239,9 @@ function eventFieldsFrom(form: FormData) {
     // "Eveniment de noapte" (§NNN): the three choices in "Traseul" — "yes", "no", or "auto" (and
     // an absent value) for the sunset's own answer.
     nightOverride: nightOverrideFromChoice(value("nightOverride")),
+    // The group run's optional self-declaration (§NNN): a checkbox in "Traseul"; unticked, or
+    // disabled because the club has no approved text of that kind, posts nothing: not offered.
+    offersGroupRunDeclaration: form.get("event.offersGroupRunDeclaration") === "on",
     featured: form.get("event.featured") === "on",
     // A checkbox like the one above it, and unlike it in every other way: any number of
     // events may be special (§168), so nothing is cleared when one is ticked.
@@ -303,6 +307,13 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), posted from the
+    // cost card's own strip (`RegistrationBox`), which now renders for a words-only reader too
+    // (no settings rights) as well as inside the settings editor's `CostFields`. Read only when
+    // the box was actually posted, the way `reminderHoursBefore` above is — an absent box (a
+    // future caller, a stale form) must leave the column alone rather than blank it; cleared
+    // server-side outside EXTERNAL + PAID (`service.ts#applyTranslationSave`).
+    discountNote: form.has(`translations.${locale}.discountNote`) ? value("discountNote") : undefined,
   };
 }
 
@@ -935,6 +946,24 @@ export async function withdrawInterestAction(_previous: FormOutcome | null, form
   }
 
   return backTo(path, outcome);
+}
+
+/**
+ * An Administrator erases one group run's self-declaration (§NNN): the reason typed, the audit row
+ * first (who and why, never who had signed). The coarse gate here and the service's own, which is
+ * the one that holds (BR-REQ-060-01). A reason left empty comes back in its box (§315).
+ */
+export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await eraseGroupRunDeclaration(getDb(), actor, { id: text(form, "declarationId"), reason: text(form, "reason") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(path, { saved: "groupRunDeclarationErased" });
 }
 
 /** Adding a colleague (§123). A refused address or name comes back in its box (§315). */

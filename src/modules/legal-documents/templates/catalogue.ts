@@ -3,6 +3,7 @@ import type { Locale } from "@/i18n/routing";
 import type { LegalDocumentBody } from "../domain/content-hash";
 import { type ClubFacts, fillClubFacts } from "./club-facts";
 import { declarationEn, declarationRo } from "./declaration";
+import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "./group-run-declaration";
 import { privacyNoticeEn, privacyNoticeRo } from "./privacy-notice";
 import { termsEn, termsRo } from "./terms";
 
@@ -31,6 +32,15 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   EVENT_DECLARATION: {
     ro: { title: "Declarație pe proprie răspundere", body: declarationRo },
     en: { title: "Declaration of own responsibility", body: declarationEn },
+  },
+  // The group runs' optional self-declarations, one per surface (§NNN).
+  GROUP_RUN_DECLARATION_ASPHALT: {
+    ro: { title: "Declarație pe propria răspundere (alergare de grup, asfalt)", body: groupRunAsphaltRo },
+    en: { title: "Self-declaration (group run, asphalt)", body: groupRunAsphaltEn },
+  },
+  GROUP_RUN_DECLARATION_TRAIL: {
+    ro: { title: "Declarație pe propria răspundere (alergare de grup, trail)", body: groupRunTrailRo },
+    en: { title: "Self-declaration (group run, trail)", body: groupRunTrailEn },
   },
 };
 

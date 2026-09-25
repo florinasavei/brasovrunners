@@ -17,7 +17,12 @@ vi.mock("next-intl/server", async () => {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Registration" }),
   };
 });
-vi.mock("@/modules/public-cache/reads", () => ({ cachedDeadlines: async () => deadlines }));
+// Whether a second runner may be registered on one address yet (§389, `family-gate.ts`).
+const gate = { open: false };
+vi.mock("@/modules/public-cache/reads", () => ({
+  cachedDeadlines: async () => deadlines,
+  cachedFamilyRegistrationOpen: async () => gate.open,
+}));
 
 const { default: RegistrationSteps } = await import("@/modules/registrations/ui/RegistrationSteps");
 
@@ -53,5 +58,25 @@ describe("§377 the five steps say the club's numbers", () => {
     expect(html).toContain("cu 10 zile înainte de start primești un email");
     expect(html).toContain("până cu 2 zile înainte de start");
     expect(await render({ window: { opensDays: 7, deadlineDays: 1 } })).toContain("cu o săptămână înainte de start");
+  });
+});
+
+describe("§389 the five steps say how a family registers on one address", () => {
+  beforeEach(() => {
+    gate.open = false;
+  });
+
+  it("says to send the form again, and that the next step comes by email — once the schema allows it", async () => {
+    gate.open = true;
+    const html = await render({});
+    expect(html).toContain("Înscrii pe altcineva cu aceeași adresă?");
+    expect(html).toContain("Trimite din nou formularul — primești un email cu pasul următor.");
+    expect(html).toContain('data-testid="steps-family"');
+  });
+
+  it("promises nothing while one address still holds one registration per event", async () => {
+    const html = await render({});
+    expect(html).not.toContain("Înscrii pe altcineva");
+    expect(html).not.toContain("steps-family");
   });
 });

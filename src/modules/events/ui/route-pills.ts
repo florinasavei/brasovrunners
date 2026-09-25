@@ -1,13 +1,21 @@
 import type { events } from "@/db/schema/events";
+import { costPaidToExternalOrganizer } from "../domain/cost";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent } from "../night-event";
 import type { GlyphName } from "./glyphs";
 
 /**
  * A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary
- * (§112), its words, and — only the night pill's (§NNN) — a tooltip that says why.
+ * (§112), its words, and — only the night pill's (§NNN) — a tooltip that says why. `srSuffix`
+ * adds extra words a screen reader reads right after `label`, never shown, while the visible
+ * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
+ * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
+ * reader alone is told the fee goes to the organizer (`DECISIONS.md` §NNN). Content, not an
+ * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
+ * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
+ * own text (visually hidden) rather than on the attribute.
  */
-export type Pill = { glyph: GlyphName; label: string; tooltip?: string };
+export type Pill = { glyph: GlyphName; label: string; tooltip?: string; srSuffix?: string };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
  * route, the cost, and the start, its zone and the night override (§NNN: whether this date is a
@@ -16,7 +24,7 @@ export type Pill = { glyph: GlyphName; label: string; tooltip?: string };
  * importing the other's. */
 export type RouteFactsSource = Pick<
   typeof events.$inferSelect,
-  "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "nightOverride" | "startsAt" | "timezone" | "costType"
+  "type" | "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "nightOverride" | "startsAt" | "timezone" | "costType" | "registrationMode"
 >;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -87,12 +95,15 @@ export function routePillParts(
  * own date's (`clubNightEvent`): a series' dates are rows of their own, so the listing's one line
  * for a series, which draws its next date, says the next date's answer.
  */
-export function nightPill(event: Pick<RouteFactsSource, "nightOverride" | "startsAt" | "timezone">, t: Translate): Pill | null {
+export function nightPill(event: Pick<RouteFactsSource, "type" | "nightOverride" | "startsAt" | "timezone">, t: Translate): Pill | null {
   const facts = clubNightEvent(event);
   if (!facts.night) return null;
+  // «Alergare de noapte» on a group run — the owner calls a run a run, not an "event" — and
+  // «Eveniment de noapte» on every other type (§NNN).
+  const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
   return {
     glyph: "headlamp",
-    label: t("night.pill"),
+    label,
     ...(facts.sunset ? { tooltip: t("night.tooltip", { time: facts.sunset }) } : {}),
   };
 }
@@ -110,10 +121,21 @@ export function nightPill(event: Pick<RouteFactsSource, "nightOverride" | "start
  * the array this returns; it is the one function both surfaces (the listing card's compact facts
  * and the backoffice's own event list) call, so neither reads the route in a different order or
  * a different set from the other.
+ *
+ * The cost pill's word stays the closed set's own — "Cu taxă" — but on an `EXTERNAL`-registration
+ * `PAID` event a screen reader alone is told the fee goes to the organizer, never the club
+ * (`DECISIONS.md` §NNN, `GlyphChip`'s `srSuffix`): the one place that decides it, so the event
+ * page's compact card and the backoffice's own list cannot read the pill differently.
  */
 export function buildRoutePills(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill[] {
   const parts = routePillParts(event, t, format);
   const pills = orderRoutePills(parts);
-  if (event.costType) pills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+  if (event.costType) {
+    pills.push({
+      glyph: `cost:${event.costType}`,
+      label: t(`costValues.${event.costType}`),
+      srSuffix: costPaidToExternalOrganizer(event) ? t("costPaidExternalSrSuffix") : undefined,
+    });
+  }
   return pills;
 }

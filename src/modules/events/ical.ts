@@ -106,6 +106,10 @@ export type CalendarEvent = {
   costAmount?: string | null;
   /** Where a paid event is settled, or where a donation is made (§343); https, or nothing. */
   costUrl?: string | null;
+  /** Whether registration is with another organizer (§NNN) — a `PAID` cost then reads "la organizator". */
+  registrationMode?: "NONE" | "INTERNAL" | "EXTERNAL" | null;
+  /** The club's discount on an `EXTERNAL`-registration `PAID` event's own fee (§NNN), in the calendar's language. */
+  discountNote?: string | null;
   /** The links group (§159): each line only when the organizer gave the link. */
   routeUrl?: string | null;
   videoUrl?: string | null;
@@ -364,6 +368,13 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     runner recognises, which is what the page's own facts line allows too.
   */
   const costFacts = ((): string[] => {
+    if (event.costType === "PAID" && event.registrationMode === "EXTERNAL") {
+      // The place is entered and paid at the organizer's own form (§NNN), never the club's: its
+      // own line, "Cost: 75 lei, la organizator", with the club's discount after it when there
+      // is one — the same fact the page's cost row and pill state.
+      const main = event.costAmount ? t("costPaidExternalLine", { amount: event.costAmount }) : t("costPaidExternal");
+      return event.discountNote ? [main, event.discountNote] : [main];
+    }
     if (event.costType === "PAID") {
       const main = event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID");
       const host = event.costUrl ? costUrlHost(event.costUrl) : null;

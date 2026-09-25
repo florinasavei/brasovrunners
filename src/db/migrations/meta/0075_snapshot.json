@@ -1,6 +1,6 @@
 {
-  "id": "06aa6971-50ec-4596-9f3e-6cbf72907672",
-  "prevId": "2e54a874-71bf-4cbe-b888-40f46ef7a80c",
+  "id": "d5cab819-f507-42ff-971e-69c789f9e766",
+  "prevId": "922f8afb-712a-4826-97b4-9428d9dacf46",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -875,6 +875,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "discount_note": {
+          "name": "discount_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "author_staff_user_id": {
           "name": "author_staff_user_id",
           "type": "uuid",
@@ -1162,7 +1168,15 @@
           "name": "headlamp_required",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": false
+        },
+        "offers_group_run_declaration": {
+          "name": "offers_group_run_declaration",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "location_name": {
           "name": "location_name",
@@ -2131,6 +2145,146 @@
       },
       "isRLSEnabled": false
     },
+    "public.group_run_declarations": {
+      "name": "group_run_declarations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legal_document_id": {
+          "name": "legal_document_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "declaration_version": {
+          "name": "declaration_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_sha256": {
+          "name": "content_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "typed_name": {
+          "name": "typed_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_document": {
+          "name": "id_document",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "group_run_declarations_event_accepted_at_idx": {
+          "name": "group_run_declarations_event_accepted_at_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "accepted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "group_run_declarations_event_id_events_id_fk": {
+          "name": "group_run_declarations_event_id_events_id_fk",
+          "tableFrom": "group_run_declarations",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "group_run_declarations_legal_document_id_legal_documents_id_fk": {
+          "name": "group_run_declarations_legal_document_id_legal_documents_id_fk",
+          "tableFrom": "group_run_declarations",
+          "tableTo": "legal_documents",
+          "columnsFrom": [
+            "legal_document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "group_run_declarations_version_positive": {
+          "name": "group_run_declarations_version_positive",
+          "value": "\"group_run_declarations\".\"declaration_version\" >= 1"
+        },
+        "group_run_declarations_hash_is_sha256_hex": {
+          "name": "group_run_declarations_hash_is_sha256_hex",
+          "value": "\"group_run_declarations\".\"content_sha256\" ~ '^[0-9a-f]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.job_runs": {
       "name": "job_runs",
       "schema": "",
@@ -3063,6 +3217,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "name_key": {
+          "name": "name_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "first_name": {
           "name": "first_name",
           "type": "text",
@@ -3356,6 +3516,33 @@
         }
       },
       "indexes": {
+        "registrations_event_participant_name_unique": {
+          "name": "registrations_event_participant_name_unique",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "name_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "registrations_race_participant_active_unique": {
           "name": "registrations_race_participant_active_unique",
           "columns": [
@@ -3609,14 +3796,6 @@
           "columns": [
             "checkin_code"
           ]
-        },
-        "registrations_event_participant_unique": {
-          "name": "registrations_event_participant_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "event_id",
-            "participant_id"
-          ]
         }
       },
       "policies": {},
@@ -3771,7 +3950,8 @@
         "MANAGE_REGISTRATION",
         "WAITLIST_OFFER",
         "MANAGE_PROFILE",
-        "LIST_CONSENT"
+        "LIST_CONSENT",
+        "REGISTER_ANOTHER_PERSON"
       ]
     },
     "public.email_message_type": {
@@ -3798,7 +3978,10 @@
         "CLUB_CONFIRMATION_NOTICE",
         "EVENT_UPDATE_NOTICE",
         "EVENT_CANCELLED",
-        "ORGANIZER_MESSAGE"
+        "ORGANIZER_MESSAGE",
+        "GROUP_RUN_DECLARATION_SIGNED",
+        "GROUP_RUN_DECLARATION_ARCHIVE",
+        "REGISTER_ANOTHER_PERSON"
       ]
     },
     "public.email_outbox_status": {
@@ -3895,7 +4078,9 @@
       "values": [
         "PRIVACY_NOTICE",
         "TERMS",
-        "EVENT_DECLARATION"
+        "EVENT_DECLARATION",
+        "GROUP_RUN_DECLARATION_ASPHALT",
+        "GROUP_RUN_DECLARATION_TRAIL"
       ]
     },
     "public.locale": {

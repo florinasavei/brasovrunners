@@ -1,3 +1,6 @@
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { openEditorBox } from "./fold";
 
@@ -17,6 +20,84 @@ export const FEATURED = {
   title: "Crosul aniversar Brașov Runners",
   slug: "crosul-aniversar-brasov-runners",
 };
+
+/**
+ * An advisory lock across Playwright *projects* — `test.describe.configure({ mode: "serial" })`
+ * only orders tests inside one project's own run of one file; `mobile` and `desktop` are separate
+ * processes, each running that file, and nothing stops both from mutating the shared `FEATURED`
+ * event at the same instant. A directory's exclusive creation is atomic on every filesystem this
+ * suite runs on (Windows and Linux CI alike), so it doubles as the lock: the first project to
+ * `mkdirSync` it holds the lock, the other polls until it is gone. No package earns its place for
+ * one `mkdir`/`rmdir` pair (`CLAUDE.md` — prefer nothing over a dependency).
+ */
+const FEATURED_LOCK_DIR = join(tmpdir(), "br-e2e-featured-event.lock");
+/** The pid and the moment the lock was taken, written inside it right after `mkdirSync` succeeds. */
+const FEATURED_LOCK_MARKER = join(FEATURED_LOCK_DIR, "owner.json");
+/**
+ * A worker `withFeaturedEventLock` never got to release stands no longer than this before the
+ * next acquirer breaks it — comfortably above the longest span anything here actually holds it
+ * (one event save, `ensureRegistrationIsOpen`'s own three attempts included), and far below the
+ * 90s a caller would otherwise poll behind a lock nobody is coming back for.
+ */
+const FEATURED_LOCK_STALE_MS = 2 * 60_000;
+
+async function acquireFeaturedEventLock(): Promise<void> {
+  for (;;) {
+    try {
+      mkdirSync(FEATURED_LOCK_DIR);
+      writeFileSync(FEATURED_LOCK_MARKER, JSON.stringify({ pid: process.pid, acquiredAt: Date.now() }));
+      return;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      breakFeaturedEventLockIfStale();
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+}
+
+/**
+ * A worker Playwright kills mid-test never runs the `finally` in `withFeaturedEventLock` below,
+ * so its lock directory would otherwise sit forever — every later run on either project polling
+ * to its 90s timeout until somebody deletes it by hand. The marker's own timestamp, not the
+ * directory's mtime (which nothing here else touches, but which a filesystem is still free to
+ * treat as it likes), says how long it has stood; past `FEATURED_LOCK_STALE_MS` nobody plausibly
+ * still holds it, so it is removed here and the loop above's next `mkdirSync` takes it instead.
+ */
+function breakFeaturedEventLockIfStale(): void {
+  let acquiredAt: number;
+  try {
+    ({ acquiredAt } = JSON.parse(readFileSync(FEATURED_LOCK_MARKER, "utf8")) as { acquiredAt: number });
+  } catch {
+    return; // No marker yet — a race with the holder's own write right after its `mkdirSync` — or already gone.
+  }
+  if (Date.now() - acquiredAt < FEATURED_LOCK_STALE_MS) return;
+  try {
+    rmSync(FEATURED_LOCK_DIR, { recursive: true, force: true });
+  } catch {
+    // Another worker broke or released it first.
+  }
+}
+
+function releaseFeaturedEventLock(): void {
+  try {
+    rmSync(FEATURED_LOCK_DIR, { recursive: true, force: true });
+  } catch {
+    // Already gone — nothing left to release.
+  }
+}
+
+/**
+ * Runs `fn` while holding the sole lock on the shared `FEATURED` event, released whatever `fn`
+ * does — a test that left the lock behind would hang every other project's run forever.
+ */
+export async function withFeaturedEventLock<T>(fn: () => Promise<T>): Promise<T> {
+  await acquireFeaturedEventLock();
+  try {
+    return await fn();
+  } finally {
+    releaseFeaturedEventLock();
+  }
+}
 
 /** Above the 3-second floor `service.ts#looksLikeSpam` applies to a submission. */
 export const HUMAN_PAUSE_MS = 3_500;

@@ -36,6 +36,7 @@ import {
 } from "./repository";
 import { templatePrefill } from "./templates/catalogue";
 import { type ClubFacts, remainingPlaceholders } from "./templates/club-facts";
+import { REGISTRATION_LEGAL_KEYS } from "./domain/keys";
 
 /**
  * Writing legal documents from the backoffice (BR-REQ-053-02, `DECISIONS.md` §46).
@@ -814,7 +815,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
 ): Promise<PlatformApproval> {
   assertMayEdit(actor);
 
-  const keys: LegalDocumentKey[] = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"];
+  const keys: readonly LegalDocumentKey[] = REGISTRATION_LEGAL_KEYS;
   const result: PlatformApproval = { approved: [], alreadyApproved: [] };
 
   for (const key of keys) {

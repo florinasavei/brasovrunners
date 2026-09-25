@@ -313,6 +313,19 @@ export const events = pgTable(
      * the default and turned every `false` into `null`: nobody had said "Nu", only not ticked a box.
      */
     nightOverride: boolean("headlamp_required"),
+    /**
+     * Offer the optional self-declaration on the event's page (§NNN; the owner, 2026-09-25: "I
+     * might need a 'declarație pe propria răspundere' for group runs as well, especially for the
+     * trail one"). Only a group run (§111) whose surface is asphalt or trail has a declaration to
+     * offer — `GROUP_RUN_DECLARATION_ASPHALT` or `_TRAIL`, by the surface — and only while the club
+     * has an approved version of that kind in force (`groupRunDeclarationKey`). It gates nothing:
+     * a group run takes no registration, and signing is never a condition of turning up.
+     *
+     * Not null with a default, so every row written before it reads as "not offered". The editor
+     * ticks it by default for a trail group run (the mountain rescue asks for it on the Tâmpa run)
+     * and leaves it off for asphalt.
+     */
+    offersGroupRunDeclaration: boolean("offers_group_run_declaration").notNull().default(false),
 
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).
@@ -792,6 +805,19 @@ export const eventTranslations = pgTable(
 
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
+
+    /**
+     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §NNN):
+     * shown only on an `EXTERNAL`-registration, `PAID` event — the organizer sets the price, the
+     * club only knows what its members get off it. Free text, at most 200 characters (checked in
+     * `content/events/fields.ts`, not here — the same discipline `checklist` follows), both
+     * languages or neither. Null on every other event: the service clears it whenever a saved
+     * event stops being `EXTERNAL` + `PAID`, whether the words were posted in the same save
+     * (`translationColumnsFrom`) or the mode moved from a settings-only save that posts no words
+     * at all (`clearDiscountNoteIfNotAllowed`) — an Organizer with settings rights but no text
+     * rights leaves no stale note nobody can read.
+     */
+    discountNote: text("discount_note"),
 
     // AGENTS.md §12.4. The author is what turns "an Author edits their own drafts"
     // (BR-REQ-051-01 criterion 1) into a rule the server can check rather than a description.

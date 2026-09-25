@@ -8,8 +8,10 @@ import { Link } from "@/i18n/navigation";
 import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
+import { costPaidToExternalOrganizer, EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { identicalInBothLanguages, isWrittenText } from "@/shared/forms/both-languages";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
@@ -31,11 +33,12 @@ import {
   summaryDate,
 } from "../box-summaries";
 import CostFields from "../CostFields";
+import { DiscountNoteFields } from "../TranslationFields";
 import GlyphSelect from "../GlyphSelect";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
 import WallTimeField from "../WallTimeField";
-import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
@@ -91,6 +94,7 @@ export default async function RegistrationBox({
   locale,
   now,
   clubDeadlines,
+  languages,
 }: BoxProps & {
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
@@ -106,6 +110,8 @@ export default async function RegistrationBox({
   /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
   locale: string;
+  /** Every language's row, for the discount note's own strip inside the cost card (`DECISIONS.md` §NNN). */
+  languages: readonly LanguageEntry[];
 }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
@@ -118,7 +124,41 @@ export default async function RegistrationBox({
   // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind
   // that has one (§343) — what the page will say, on the box's closed line.
   const costAmount = event?.costType === "PAID" || event?.costType === "DONATION" ? (event.costAmount ?? "").trim() : "";
-  const costLabel = event?.costType ? `${t(`editor.costValues.${event.costType}`)}${costAmount ? `, ${costAmount}` : ""}` : null;
+  // "cu reducere" (`DECISIONS.md` §NNN): the closed cost line names the club's discount when the
+  // event is `EXTERNAL` + `PAID` and at least one language carries a note — read off the strip's
+  // own rows, never a query of its own.
+  const hasDiscountNote = languages.some((entry) => isWrittenText(entry.translation.discountNote));
+  const discounted = event ? costPaidToExternalOrganizer(event) && hasDiscountNote : false;
+  // Whether the note may be typed at all right now (`DECISIONS.md` §NNN): the event's stored
+  // mode and cost, not the live select — a reader without `mayEditSettings` cannot change either,
+  // and one with it sees the same strip inside `CostFields`, which does watch the live select.
+  const discountNoteApplies = event !== null && costPaidToExternalOrganizer(event);
+  // The strip itself, one instance, used both inside `CostFields` (settings editors, who can also
+  // change the cost type live) and on its own for a words-only reader (`RegistrationBox:183`):
+  // the club's one role for "the words" (§103) must be able to write this note without settings
+  // rights, so it renders outside the settings gate too, gated on the stored mode/cost instead.
+  const discountNotePanels = (
+    <LocaleTabPanels
+      idPrefix="discount-note"
+      panels={languages.map((entry) => ({
+        locale: entry.translation.locale,
+        label: entry.label,
+        content: <DiscountNoteFields translation={entry.translation} mayEdit={entry.mayEdit} />,
+      }))}
+      identical={{
+        names: ["discountNote"],
+        warning: t("editor.identical.warning"),
+        mark: t("editor.identical.tab"),
+        initial: (() => {
+          const [first, ...rest] = languages;
+          return first ? rest.some((entry) => identicalInBothLanguages(first.translation.discountNote, entry.translation.discountNote)) : false;
+        })(),
+      }}
+    />
+  );
+  const costLabel = event?.costType
+    ? `${t(`editor.costValues.${event.costType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
+    : null;
   const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
   const needsDeclaration = initialMode === "INTERNAL" && declaration === null && event !== null;
   const design = readBibDesign(event?.bibDesign ?? null);
@@ -167,7 +207,13 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        <SettingsReadOnly />
+        <Stack spacing={2}>
+          <SettingsReadOnly />
+          {/* A words-only reader (Redactor, §103) still owns the club's discount note on an
+              EXTERNAL + PAID event, even without the settings rights the rest of this box needs
+              (`DECISIONS.md` §NNN). */}
+          {discountNoteApplies && discountNotePanels}
+        </Stack>
       ) : (
         <Stack spacing={2}>
           {/* The cost, on every type (moved from "Traseu și detalii"): the empty option is "not
@@ -192,6 +238,7 @@ export default async function RegistrationBox({
           */}
           <CostFields
             initialCostType={event?.costType ?? ""}
+            initialMode={initialMode}
             costAmount={{ defaultValue: event?.costAmount ?? "", box: box("costAmount") }}
             costUrl={{ defaultValue: event?.costUrl ?? "", box: box("costUrl", { inputMode: "url" }) }}
             labels={{
@@ -204,7 +251,9 @@ export default async function RegistrationBox({
               donationAmount: t("editor.costDonationAmount"),
               donationAmountHelp: t("editor.costDonationAmountHelp"),
             }}
-          />
+          >
+            {discountNotePanels}
+          </CostFields>
 
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>
             <BoxNote testId="group-run-no-registration">{t("editor.groupRunNoRegistration")}</BoxNote>

@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import {
   legalDocumentNumbering,
   legalDocumentTranslations,
@@ -104,6 +105,22 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
 ): Promise<boolean> {
   const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now);
   return document ? asksForMinorSignature(document.body) : false;
+}
+
+/**
+ * Whether the club has an approved group-run declaration in force for each surface (§NNN) — what
+ * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked.
+ * Asked in Romanian: both languages are required before a version can be approved (§46).
+ */
+export async function groupRunDeclarationsInForce<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<Record<"ASPHALT" | "TRAIL", boolean>> {
+  const [asphalt, trail] = await Promise.all([
+    findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_ASPHALT", "ro", now),
+    findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", now),
+  ]);
+  return { ASPHALT: asphalt !== undefined, TRAIL: trail !== undefined };
 }
 
 /** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */
@@ -390,7 +407,12 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       withdrawnAt: legalDocuments.withdrawnAt,
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
-      acceptanceCount: sql<number>`(select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})`,
+      // Every signature against this version: a race's acceptances, and a group run's optional
+      // self-declarations (§NNN) — both are somebody relying on these exact words.
+      acceptanceCount: sql<number>`(
+        (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
+      )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, and only for the notice key, because that is the only
       // shape this reference has: there is no id to join on.

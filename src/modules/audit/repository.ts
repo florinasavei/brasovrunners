@@ -96,6 +96,17 @@ export type AuditAction =
   | "registration.declaration_downloaded"
   /** Every signed declaration of one event downloaded as one PDF (§324): the event and how many, never who. */
   | "event.declarations_downloaded"
+  /**
+   * One group run's optional self-declaration downloaded as a PDF from the backoffice (§NNN, as
+   * §324 for the race's): the event as the entity, `{ format: "pdf" }` — never whose it was.
+   */
+  | "event.group_run_declaration_downloaded"
+  /**
+   * One group run's self-declaration erased by an Administrator (§NNN, as §67 and §88 for a
+   * registration): written first, in the transaction that deletes the row. Names who acted and why
+   * (the reason typed) and the event — never who had signed: the row it would name is gone.
+   */
+  | "event.group_run_declaration_erased"
   /** One event's emergency sheet rendered (§322): the event and the row count, never a value. */
   | "event.emergency_sheet_viewed"
   /**
@@ -146,6 +157,8 @@ export type AuditAction =
   | "job_cadence.changed"
   /** The club's deadlines ("Termene", §377): which ones moved, each from and to. */
   | "deadlines.changed"
+  /** How many registrations one address may carry at one event (§389), from and to. */
+  | "registrationsPerAddress.changed"
   /**
    * The database's brakes changed from `/admin/tasks` (§335): the compute's size ceiling and the
    * period's CU-hour limit, from and to as Neon stated them before and after — never the request —

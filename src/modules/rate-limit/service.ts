@@ -19,12 +19,14 @@ import { retryAfterSeconds, windowStart } from "./domain/window";
 
 export type RateLimitScope =
   | "registration-submit"
+  | "registration-link-submit"
   | "link-request"
   | "admin-resend"
   | "token-validate"
   | "job-invoke"
   | "admin-send-now"
-  | "contact-message";
+  | "contact-message"
+  | "group-run-declaration";
 
 /**
  * What each guarded action allows, as data.
@@ -40,6 +42,15 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   // Five submissions per hour for one email identity. A participant registering, mistyping and
   // retrying uses two or three; a script filling a mailbox uses hundreds.
   "registration-submit": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * The emailed link that registers another person on the same address (§389), its own bucket
+   * on the same key — the canonical identity, hashed. §19.4's per-address limit holds
+   * behind the link too, but sharing "registration-submit" would let a family of four spend seven
+   * of its five (one form, three re-sends for a link, three links). Ten an hour is the highest
+   * cap an event may set per address (`domain/address-cap.ts`), so a real family never meets
+   * it, and a script that somehow held a live token still cannot flood one mailbox.
+   */
+  "registration-link-submit": { limit: 10, windowMs: 60 * 60_000 },
   /**
    * §19.4's second surface, keyed on the canonical email identity as that table requires.
    *
@@ -103,6 +114,13 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * reached nobody.
    */
   "contact-message": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * A group run's optional self-declaration (§NNN), keyed on a hash of the signer's canonical
+   * email like the contact form's. Every signature queues two messages — the signer's PDF and the
+   * club's archive copy — so a script posting the page spends the club's Mailgun allowance twice
+   * per post. Five an hour is a runner signing for Monday and correcting a typo, several times over.
+   */
+  "group-run-declaration": { limit: 5, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {

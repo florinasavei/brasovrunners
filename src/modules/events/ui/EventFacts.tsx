@@ -15,7 +15,7 @@ import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age"
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
-import { costUrlHost } from "../domain/cost";
+import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
@@ -508,10 +508,11 @@ export default async function EventFacts({
       pay are the page's). No pill for what the club has not stated: a null cost is unstated, not
       free (AGENTS.md §1.2).
     */
-    // `buildRoutePills` (`route-pills.ts`) is the one function that orders and builds them — the
-    // event page's compact card and the backoffice's own list both call it (§388), so neither
-    // reads the route in a different order or a different set from the other.
-    const cardPills = buildRoutePills(event, t, format);
+    // The same helper the backoffice's own list calls (`buildRoutePills`, `route-pills.ts`,
+    // §388): surface, difficulty, distance, elevation, headlamp, then the cost pill — with the
+    // screen-reader-only organizer suffix on an `EXTERNAL`-registration `PAID` event — built in
+    // that one place, so the card and the backoffice list cannot read it differently.
+    const cardPills: Pill[] = buildRoutePills(event, t, format);
 
     /*
       Where: the place — the map link when the club pasted one, tight like the page's (§356) so
@@ -642,7 +643,14 @@ export default async function EventFacts({
       club stated one. Never a raw URL, only the host a runner recognises (`costUrlHost`), the same
       rule "Linkuri și fișiere" follows (§332).
     */
-    if (event.costType === "PAID") {
+    if (event.costType === "PAID" && costPaidToExternalOrganizer(event)) {
+      // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
+      // form, not the club's (`DECISIONS.md` §NNN): the hero says so plainly, the same wording
+      // the page's cost row uses, and never links `costUrl` — the club's own address is not where
+      // this fee goes. The club's own discount, if any, follows on its own piece.
+      route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal")));
+      if (event.discountNote) route.push(withGlyph(GLYPHS.discount, event.discountNote));
+    } else if (event.costType === "PAID") {
       route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
       const host = event.costUrl ? costUrlHost(event.costUrl) : null;
       if (event.costUrl && host) {
@@ -848,8 +856,23 @@ export default async function EventFacts({
   const costHost = event.costUrl ? costUrlHost(event.costUrl) : null;
   const costExtras: ReactNode[] = [];
   let costPill: Pill | null = null;
+  // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
+  // form, not the club's (`DECISIONS.md` §NNN): the pill says so plainly ("Cu taxă, la
+  // organizator") rather than reading like a club fee, and the club's own discount, if any,
+  // follows it with the tag glyph (§112).
+  const externalPaid = costPaidToExternalOrganizer(event);
   if (event.costType === "FREE") {
     costPill = { glyph: "cost:FREE", label: t("costValues.FREE") };
+  } else if (event.costType === "PAID" && externalPaid) {
+    costPill = { glyph: "cost:PAID", label: event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal") };
+    if (event.discountNote) {
+      costExtras.push(
+        <Box key="discount" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+          <GLYPHS.discount aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+          {event.discountNote}
+        </Box>,
+      );
+    }
   } else if (event.costType === "PAID") {
     costPill = { glyph: "cost:PAID", label: event.costAmount ? event.costAmount : t("costValues.PAID") };
     if (event.costUrl && costHost) {

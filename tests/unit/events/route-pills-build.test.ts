@@ -35,6 +35,7 @@ afterEach(() => {
 
 /** QA's `test-bvr`-shaped route: everything the club can state, stated. */
 const FULL_ROUTE = {
+  type: "RACE" as const,
   surface: "ASPHALT" as const,
   difficulty: "EASY" as const,
   distanceMeters: 10000,
@@ -44,6 +45,7 @@ const FULL_ROUTE = {
   timezone: "Europe/Bucharest",
   nightOverride: null,
   costType: "FREE" as const,
+  registrationMode: "INTERNAL" as const,
 };
 
 /** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
@@ -79,7 +81,18 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, nightOverride: false }, t, format);
     expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km", "Gratuit"]);
     const none = buildRoutePills(
-      { surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, startsAt: FULL_ROUTE.startsAt, timezone: "Europe/Bucharest", nightOverride: false, costType: null },
+      {
+        type: "RACE",
+        surface: null,
+        difficulty: null,
+        distanceMeters: null,
+        elevationGainMeters: null,
+        startsAt: FULL_ROUTE.startsAt,
+        timezone: "Europe/Bucharest",
+        nightOverride: false,
+        costType: null,
+        registrationMode: "INTERNAL",
+      },
       t,
       format,
     );
@@ -91,6 +104,19 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const format = await getFormatter();
     const pills = buildRoutePills({ ...FULL_ROUTE, costType: "PAID" }, t, format);
     expect(pills.at(-1)?.label).toBe("Cu taxă");
+    expect(pills.at(-1)?.srSuffix).toBeUndefined();
+  });
+
+  it("adds the organizer's screen-reader-only suffix only on EXTERNAL + PAID (§NNN)", async () => {
+    const t = await getTranslations("Event");
+    const format = await getFormatter();
+    const internalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "INTERNAL" }, t, format);
+    expect(internalPaid.at(-1)?.label).toBe("Cu taxă");
+    expect(internalPaid.at(-1)?.srSuffix).toBeUndefined();
+
+    const externalPaid = buildRoutePills({ ...FULL_ROUTE, costType: "PAID", registrationMode: "EXTERNAL" }, t, format);
+    expect(externalPaid.at(-1)?.label).toBe("Cu taxă");
+    expect(externalPaid.at(-1)?.srSuffix).toBe("plătit la organizator, nu la club");
   });
 });
 

@@ -9,7 +9,10 @@ import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { getPathname } from "@/i18n/navigation";
+import { countForm } from "@/i18n/count-form";
+import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { env } from "@/shared/config/env";
 
 /**
@@ -359,6 +362,12 @@ export type TemplateData = {
    */
   nightEventSunset?: string;
   /**
+   * Set alongside `nightEventSunset` (§NNN): whether this event is a group run, since the night
+   * line calls it a run («Alergare de noapte») rather than an event («Eveniment de noapte») only
+   * then — the owner calls a run a run.
+   */
+  nightEventIsGroupRun?: boolean;
+  /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
    * words. Absent when the other language was not read — both halves read `eventChecklist`.
@@ -493,6 +502,14 @@ export type TemplateData = {
    * On the organizer's message, which mints nothing, so its reader can still find their registration.
    */
   myRegistrationsUrl?: string;
+  /**
+   * The link for another person on one address (§389, `REGISTER_ANOTHER_PERSON`): the club's limit
+   * of registrations per address as it stood when the form was sent, and whether the address had
+   * reached it — then the message says so and carries no link. Both from the row's payload: the
+   * email says what the submission decided.
+   */
+  addressCap?: number;
+  addressAtCap?: boolean;
 };
 
 /**
@@ -718,6 +735,23 @@ const T = {
         "Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Se păstrează trei ani după eveniment, ca în nota de confidențialitate; documentul întreg este în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice, până la șapte zile după eveniment.",
       ],
     },
+    groupRunDeclarationSigned: {
+      // The signer's copy of a group run's optional self-declaration (§NNN): the PDF attached, no token.
+      subject: (d: TemplateData) => `Declarația ta pe propria răspundere — ${d.eventTitle ?? "alergarea de grup"}`,
+      body: (d: TemplateData) => [
+        `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Pe platforma clubului, declarația se șterge la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare.`,
+      ],
+    },
+    groupRunDeclarationArchive: {
+      // The club's archive copy (§NNN, §99): searchable by who and for what; the document masked (§320).
+      subject: (d: TemplateData) => `Declarație semnată (alergare de grup): ${d.participantName || "alergător"} — ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) => [
+        `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
+        `Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare, când platforma o șterge.`,
+      ],
+    },
     clubConfirmationNotice: {
       // Searchable in the club's mailbox by who and for what, like the archive copy above.
       subject: (d: TemplateData) => `Înscriere confirmată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
@@ -817,6 +851,33 @@ const T = {
       action: "Vezi pagina evenimentului",
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
+    /**
+     * The form sent again with a registered address and another runner's name (§389): nothing was
+     * created, and this is the address's answer. Two shapes: the question and the link to the form
+     * for the other person; or, when the address already carries the club's limit at the event, the
+     * sentence that says so and no link. Addressed to the inbox, not to one runner — a parent reads
+     * it as often as the runner does — so the greeting names nobody.
+     */
+    registerAnotherPerson: {
+      subject: (d: TemplateData) =>
+        d.addressAtCap
+          ? `Adresa ta are deja numărul maxim de înscrieri la ${d.eventTitle ?? "eveniment"}`
+          : `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"} — înscrii pe altcineva?`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) =>
+        d.addressAtCap
+          ? [
+              `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă și un alt nume. Nu am înscris pe nimeni: pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", d.addressCap)} la un eveniment, iar adresa ta le are deja.`,
+              "Pentru încă o persoană, folosește adresa ei de email. Dacă cineva de pe adresa ta nu mai vine, îi anulezi înscrierea din linkul primit la confirmare sau din „Înscrierile mele”, și locul de pe adresă se eliberează.",
+              "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
+            ]
+          : [
+              `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"}. Vrei să înscrii pe altcineva cu aceeași adresă?`,
+              "Formularul a fost trimis din nou cu această adresă și un alt nume, așa că nu am înscris încă pe nimeni. Dacă e cineva din familie, apasă butonul de mai jos: adresa rămâne aceeași, completezi datele persoanei, iar ea își confirmă și își semnează singură înscrierea, cu propriul link și propriul cod QR.",
+              `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)} și se poate folosi o singură dată. Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.`,
+            ],
+      action: "Înscrie altă persoană",
+    },
     /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
@@ -848,8 +909,17 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
-    /** The reminder of a night event (§NNN), after the body whoever wrote it. */
-    nightEvent: (sunset: string) => (sunset ? `Eveniment de noapte: apusul e la ${sunset}. Ia o frontală.` : "Eveniment de noapte: ia o frontală."),
+    /**
+     * The reminder of a night event (§NNN), after the body whoever wrote it — «Alergare de
+     * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
+     * noapte» on every other type.
+     */
+    nightEvent: (sunset: string, isGroupRun: boolean) => {
+      const label = isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
+      return sunset ? `${label}: apusul e la ${sunset}. Ia o frontală.` : `${label}: ia o frontală.`;
+    },
+    /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
+    addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -861,6 +931,9 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
+    /** The same for a group run's self-declaration (§NNN): signed on a page, no registration behind it. */
+    privacyFooterDeclaration: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -966,6 +1039,21 @@ const T = {
       body: (d: TemplateData) => [
         `Attached is the declaration of own responsibility signed by ${d.participantName || "participant"} for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
         "The club's archive copy, without the identity document's series and number. Kept three years after the event, as the privacy notice says; the full document is in the event's declarations PDF in the backoffice until seven days after the event.",
+      ],
+    },
+    groupRunDeclarationSigned: {
+      subject: (d: TemplateData) => `Your self-declaration — ${d.eventTitle ?? "the group run"}`,
+      body: (d: TemplateData) => [
+        `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
+        `Signing it was optional and registers you for nothing: come to the run as usual. On the club's platform the declaration is deleted ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run.`,
+      ],
+    },
+    groupRunDeclarationArchive: {
+      subject: (d: TemplateData) => `Signed declaration (group run): ${d.participantName || "runner"} — ${d.eventTitle ?? "event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => [
+        `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
+        `The club's archive copy, without the identity document's series and number. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, until ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run, when the platform deletes it.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1084,6 +1172,26 @@ const T = {
       action: "See the event's page",
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
     },
+    registerAnotherPerson: {
+      subject: (d: TemplateData) =>
+        d.addressAtCap
+          ? `Your address already has the most registrations allowed for ${d.eventTitle ?? "the event"}`
+          : `You are already registered for ${d.eventTitle ?? "the event"} — registering someone else?`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) =>
+        d.addressAtCap
+          ? [
+              `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address and another name. We registered nobody: one email address may register at most ${peoplePhrase("en", d.addressCap)} for an event, and yours already has.`,
+              "For one more person, use their own email address. If someone on your address is no longer coming, cancel their registration from the link in their confirmation or from “My registrations”, and the place on the address is freed.",
+              "If you did not send the form, you can ignore this message: nothing has changed.",
+            ]
+          : [
+              `You are already registered for ${d.eventTitle ?? "the event"}. Do you want to register someone else with the same address?`,
+              "The form was sent again with this address and another name, so we have not registered anyone yet. If it is someone in your family, press the button below: the address stays the same, you fill in that person's details, and they confirm and sign their own registration, with their own link and their own QR code.",
+              `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)} and can be used once. If you did not send the form, you can ignore this message: nothing has changed.`,
+            ],
+      action: "Register another person",
+    },
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
       time: (d: TemplateData) =>
@@ -1105,7 +1213,12 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
-    nightEvent: (sunset: string) => (sunset ? `Night event: sunset is at ${sunset}. Bring a headlamp.` : "Night event: bring a headlamp."),
+    /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
+    nightEvent: (sunset: string, isGroupRun: boolean) => {
+      const label = isGroupRun ? "Night run" : "Night event";
+      return sunset ? `${label}: sunset is at ${sunset}. Bring a headlamp.` : `${label}: bring a headlamp.`;
+    },
+    addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -1113,6 +1226,7 @@ const T = {
     },
     privacyFooter: (club: string) => `This message comes from ${club} about your registration. How we use your data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
+    privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
   },
 } as const;
 
@@ -1138,7 +1252,23 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
   ORGANIZER_MESSAGE: "organizerMessage",
+  GROUP_RUN_DECLARATION_SIGNED: "groupRunDeclarationSigned",
+  GROUP_RUN_DECLARATION_ARCHIVE: "groupRunDeclarationArchive",
+  REGISTER_ANOTHER_PERSON: "registerAnotherPerson",
 };
+
+/**
+ * "4 persoane", "o persoană" / "4 people", "one person" (§389): how many runners one address may
+ * register, as the words the two sentences about the limit say it — the number is the club's
+ * setting, carried on the row, never a literal here. `countForm`'s Romanian forms (§341); the
+ * limit's bounds (1–10) never reach the "de" form, and it is spelled for any number all the same.
+ */
+function peoplePhrase(locale: EmailLocale, count: number | undefined): string {
+  const n = count ?? ADDRESS_CAP_RULE.default;
+  const form = countForm(n, locale);
+  if (locale === "ro") return form === "one" ? "o persoană" : form === "few" ? `${n} persoane` : `${n} de persoane`;
+  return form === "one" ? "one person" : `${n} people`;
+}
 
 /**
  * The sentences the update and the cancellation add after the body (§331) — machinery, like the
@@ -1247,7 +1377,14 @@ export function buildTemplateContent(
   */
   // The organizer's message is written per send (§364): there is no stored wording to apply, and a
   // hand-made entry for it in the setting must not replace what the organizer wrote this time.
-  const written = messageType === "ORGANIZER_MESSAGE" ? null : copyFor(overrides, messageType, locale);
+  /*
+    The link for another person, at the address's limit (§389), is the platform's sentence alone:
+    it is a statement about the address's state — like "you were already registered" (§235) — and
+    the club's words for this message are the question and the link, which this send carries
+    neither of. A club text would otherwise offer a button the message does not have.
+  */
+  const atAddressCap = messageType === "REGISTER_ANOTHER_PERSON" && data.addressAtCap === true;
+  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
@@ -1307,7 +1444,9 @@ export function buildTemplateContent(
         — a fact about this date, not a matter of how the club writes — so a reminder the club
         reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
       */
-      ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined ? [copy.nightEvent(data.nightEventSunset)] : []),
+      ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
+        ? [copy.nightEvent(data.nightEventSunset, data.nightEventIsGroupRun === true)]
+        : []),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
@@ -1317,13 +1456,18 @@ export function buildTemplateContent(
       ...(data.bibProvisional && data.bibNumber !== undefined
         ? [copy.bibProvisional(data.bibNumber)]
         : []),
+      // The club's limit under the link for another person (§389), whoever wrote the words above:
+      // the number is the setting's, from the row, and a club text needs no field to state it.
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.addressCap !== undefined
+        ? [copy.addressCapLine(data.addressCap)]
+        : []),
     ],
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
     links: (() => {
       const own = entry.links?.(data) ?? [];
       // The club's archive copy and the staff invitation are not a participant's message.
-      if (messageType === "DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
+      if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
         return own.length > 0 ? own : undefined;
       }
       const seen = new Set(own.map((link) => link.url));
@@ -1336,7 +1480,11 @@ export function buildTemplateContent(
     privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
       ? undefined
       : {
-          text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),
+          text: (messageType === "REGISTRATION_OPENED"
+            ? copy.privacyFooterInterest
+            : messageType === "GROUP_RUN_DECLARATION_SIGNED"
+              ? copy.privacyFooterDeclaration
+              : copy.privacyFooter)(controllerName()),
           url: privacyUrl,
         },
   };
@@ -1378,6 +1526,8 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
  */
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "DECLARATION_ARCHIVE",
+  // The group run's archive copy (§NNN), to the club's mailbox like the race's.
+  "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
 ]);

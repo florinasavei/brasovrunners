@@ -13,6 +13,7 @@ import {
   legalDocuments,
 } from "@/db/schema/legal-documents";
 import { galleryAlbums, galleryAlbumTranslations, galleryItems, mediaAssets } from "@/db/schema/gallery";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -21,6 +22,7 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
+import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 
 const schema = {
   auditLogs,
@@ -34,6 +36,7 @@ const schema = {
   legalDocumentTranslations,
   registrations,
   declarationAcceptances,
+  groupRunDeclarations,
   jobRuns,
   rateLimitBuckets,
   platformSettings,
@@ -69,6 +72,7 @@ export async function createTestDatabase(): Promise<{
   await migrate(db, { migrationsFolder: "./src/db/migrations" });
   // A fresh database has no deadlines row: nothing memoized from another database may answer for it.
   forgetCachedDeadlines();
+  forgetCachedAddressCap();
 
   return {
     db,
@@ -81,10 +85,13 @@ export async function createTestDatabase(): Promise<{
 /** Truncate every table so one test cannot see another's rows. Children before parents. */
 export async function resetTables(db: TestDatabase): Promise<void> {
   // The club's deadlines are memoized per process (§377); a test that set them must not leave
-  // its numbers to the next test's empty database.
+  // its numbers to the next test's empty database. The same for the limit per address (§389).
   forgetCachedDeadlines();
+  forgetCachedAddressCap();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
+  // A group run's self-declarations (§NNN) reference the event and the legal version: before both.
+  await db.delete(groupRunDeclarations);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
   // The gallery: items, then albums (which the cover references), then the assets.

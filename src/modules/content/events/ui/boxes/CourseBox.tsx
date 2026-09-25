@@ -13,6 +13,7 @@ import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
+import GroupRunDeclarationField from "../GroupRunDeclarationField";
 import NightEventField from "../NightEventField";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
@@ -36,6 +37,7 @@ import { LanguageTabs } from "./TextBoxes";
 export default async function CourseBox({
   event,
   mayEditSettings,
+  groupRunDeclarations,
   languages,
   inSeries = false,
 }: BoxProps & { languages: readonly LanguageEntry[]; inSeries?: boolean }) {
@@ -135,7 +137,12 @@ export default async function CourseBox({
             zone={zone}
             start={{ date: wall.slice(0, 10), time: wall.slice(11, 16) }}
             inSeries={inSeries}
-            seriesToggleName={event ? "repeatOn" : "repeat.on"}
+            // The repeat toggle is a field in the same form only on the create page — "repeat.on"
+            // inside the one `ActionForm` this card also lives in. On the edit page, "Repetă" is a
+            // separate `ActionForm` (the aside's own submit, `scope="repeat"`), so a name here could
+            // never be read from this form's data; the series sentence there depends on `inSeries`
+            // alone, computed server-side from the event's own row (§NNN).
+            seriesToggleName={event ? undefined : "repeat.on"}
             words={{
               label: t("editor.night.label"),
               choices: { auto: t("editor.night.auto"), yes: t("editor.night.yes"), no: t("editor.night.no") },
@@ -150,6 +157,24 @@ export default async function CourseBox({
           />
           <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
+        {/* "Declarație opțională pe propria răspundere" (§NNN): a group run on asphalt or trail may
+            offer its surface's self-declaration — on by default for trail, the mountain rescue asks
+            for it on the Tâmpa run. An island: it follows the type and surface selects above. */}
+        <GroupRunDeclarationField
+          initialType={event?.type ?? "GROUP_RUN"}
+          initialSurface={event?.surface ?? ""}
+          initialChecked={event?.offersGroupRunDeclaration ?? false}
+          approved={groupRunDeclarations ?? { ASPHALT: false, TRAIL: false }}
+          words={{
+            label: t("editor.groupRunDeclaration.label"),
+            help: t("editor.groupRunDeclaration.help"),
+            notGroupSurface: t("editor.groupRunDeclaration.notGroupSurface"),
+            missing: {
+              ASPHALT: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_ASPHALT") }),
+              TRAIL: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_TRAIL") }),
+            },
+          }}
+        />
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}

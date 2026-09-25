@@ -126,6 +126,10 @@ describe("§199 the form filled a second time with the same address", () => {
       constraint decides that, and a constraint nothing tests is a constraint somebody drops
       in a migration to make an unrelated error go away. The bib index is tested the same way
       for the same reason.
+
+      Since the contract migration (§NNN, migration 0073) the guarantee is keyed on the folded
+      name too — `registrations_event_participant_name_unique` — so this repeats the same name
+      the existing row carries, the case the family flow does not open a second place for.
     */
     const event = await createInternalEvent();
     await submitRegistration(db, event, submission(NOW), NOW);
@@ -139,13 +143,14 @@ describe("§199 the form filled a second time with the same address", () => {
         kind: "REAL",
         locale: existing.locale,
         registeredName: existing.registeredName,
+        nameKey: existing.nameKey,
         displayName: existing.displayName,
         privacyNoticeVersion: existing.privacyNoticeVersion,
         privacyAcknowledgedAt: existing.privacyAcknowledgedAt,
         resultsNameConsent: existing.resultsNameConsent,
         resultsConsentVersion: existing.resultsConsentVersion,
       }),
-      { code: SQLSTATE.UNIQUE_VIOLATION, constraint: "registrations_event_participant_unique" },
+      { code: SQLSTATE.UNIQUE_VIOLATION, constraint: "registrations_event_participant_name_unique" },
     );
 
     expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(1);

@@ -71,6 +71,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
     "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
     "event.nightOverride": inBox("course", t("editor.night.label")),
+    "event.offersGroupRunDeclaration": inBox("course", t("editor.groupRunDeclaration.label")),
     "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
     "event.featured": inBox("promotion", t("editor.featured")),
@@ -173,6 +174,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     slug: ["address", t("editor.fields.slug")],
     seoTitle: ["address", t("editor.fields.seoTitle")],
     seoDescription: ["address", t("editor.fields.seoDescription")],
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), under the same
+    // box the cost boxes live in.
+    discountNote: ["registration", t("editor.discountNote")],
   };
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);

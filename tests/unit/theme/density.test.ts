@@ -112,6 +112,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/events/[slug]/register/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // A group run's self-declaration (§NNN): born on the scale, the declare page's three containers.
+  { file: "src/app/[locale]/events/[slug]/declaration/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
   { file: "src/app/[locale]/calendar/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/pages/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/contact/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
