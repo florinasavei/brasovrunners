@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import sharp from "sharp";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -251,6 +252,66 @@ async function publishOpenRace(page: Page, created: Created): Promise<{ ro: stri
   await languageTab(page, "address", "en").click();
   await field("translations.en.slug").fill(`race-with-places-${suffix}`);
   await summary("en", "A race with places, for the card's registration door.");
+  await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
+  await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+  created.push({ title, dates: 1 });
+  await hydrated(page);
+
+  await page.context().clearCookies();
+  return { ro: title, en: titleEn };
+}
+
+/**
+ * A one-off run, not featured, whose Romanian summary is four long sentences with a picture written
+ * under them — the owner's case (§417) — published through the backoffice and signed out of. The
+ * picture goes in through the editor's own file input, as `route-description.spec.ts` puts its map.
+ */
+async function publishWithPicture(page: Page, created: Created): Promise<{ ro: string; en: string }> {
+  const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+  const title = `Tură cu poză ${suffix}`;
+  const titleEn = `Run with a picture ${suffix}`;
+  const field = (name: string) => page.locator(`[name="${name}"]`);
+  const today = new Date();
+  const day = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 9, 9));
+  const summaryEditor = async (locale: "ro" | "en") => {
+    const panel = languagePanel(page, "title", locale);
+    await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+    const editor = panel.locator(`[data-rich-text="translations.${locale}.excerptBody"]`);
+    await editor.locator("[data-field]").click();
+    return editor;
+  };
+
+  await signIn(page, "Dev Administrator");
+  await page.goto("/ro/admin/events/new");
+  await hydrated(page);
+  await fillDateField(page, "Începutul evenimentului", ymd(day));
+  await fillTimeField(page, "Ora", "18:30");
+  await field("event.locationName").fill("Parcul Titulescu");
+  await field("event.locationNameEn").fill("Titulescu Park");
+  await field("translations.ro.title").fill(title);
+  await field("translations.ro.slug").fill(`tura-cu-poza-${suffix}`);
+  const ro = await summaryEditor("ro");
+  await page.keyboard.type(
+    "Alergăm pe aleile parcului într-un ritm în care se poate vorbi, iar la final ne întindem lângă fântână. " +
+      "Traseul are opt kilometri, cu o buclă scurtă pentru cine vine prima dată și una lungă pentru cine vrea mai mult. " +
+      "Adu apă și chef de alergat; restul îl facem împreună, ca în fiecare săptămână, orice vreme ar fi afară.",
+  );
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Ne vedem la fântâna arteziană cu zece minute înainte de start, ca să apucăm să ne încălzim.");
+  const photo = await sharp({ create: { width: 1200, height: 900, channels: 3, background: "#228844" } }).jpeg().toBuffer();
+  await ro.locator('input[type="file"]').setInputFiles({ name: "poza-rezumat.jpg", mimeType: "image/jpeg", buffer: photo });
+  await expect(ro.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 20_000 });
+  const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
+  await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill("Alergători în parc");
+  await pictureWords.getByRole("button", { name: "Gata" }).click();
+  await expect(pictureWords).toHaveCount(0);
+  await languageTab(page, "title", "en").click();
+  await field("translations.en.title").fill(titleEn);
+  await languageTab(page, "address", "en").click();
+  await field("translations.en.slug").fill(`run-with-a-picture-${suffix}`);
+  await summaryEditor("en");
+  await page.keyboard.type("A run in the park at a talking pace, with a stretch by the fountain at the end.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
   await confirmDialog(page, "Creezi și publici evenimentul?");
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
@@ -577,19 +638,74 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
 
   test("clamp the summary to three lines and print no web address", async ({ page }) => {
     const list = await cards(page);
-    const summaries = list.locator('[data-testid="card-excerpt"]');
+    // The clamp is the words' own box (§417): no picture is ever inside it, so its height is lines.
+    const summaries = list.locator('[data-testid="card-excerpt-words"]');
     const count = await summaries.count();
     expect(count).toBeGreaterThan(0);
     for (let i = 0; i < count; i += 1) {
       const lines = await summaries.nth(i).evaluate((box) => {
         const paragraph = box.querySelector("p");
         const lineHeight = parseFloat(getComputedStyle(paragraph ?? box).lineHeight);
-        // A picture is not a line; the seed's summaries have none.
-        return box.querySelector("figure") ? 0 : Math.round(box.getBoundingClientRect().height / lineHeight);
+        return Math.round(box.getBoundingClientRect().height / lineHeight);
       });
+      expect.soft(await summaries.nth(i).locator("figure").count(), `summary ${i}: no picture inside the clamp`).toBe(0);
       expect.soft(lines, `summary ${i}`).toBeLessThanOrEqual(3);
     }
     await expect(page.locator("#main ul > li", { hasText: /https?:\/\// })).toHaveCount(0);
+  });
+
+  /**
+   * §417 — the owner, 2026-09-25: "am pus o poza pe cardul de rezumat dar nu apare si pe site". A
+   * summary of four long sentences with a picture written under them: the words stop at three lines
+   * and the picture is on the card, whole — not merely in the document, where a clamped box's hidden
+   * overflow would still give it a box: the point at its centre is the picture itself.
+   */
+  test("show a picture written under a long summary, outside the three clamped lines (§417)", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 60_000);
+    const created: Created = [];
+    let passed = false;
+    try {
+      const event = await publishWithPicture(page, created);
+      await page.goto("/ro/evenimente");
+      const card = await cardOnListing(page, event.ro);
+      await expect(card).toHaveCount(1);
+      const summary = card.getByTestId("card-excerpt");
+      const words = card.getByTestId("card-excerpt-words");
+      await expect(words).toContainText("Alergăm pe aleile parcului");
+      const picture = summary.locator("figure img[src*='/api/media/']");
+      await expect(picture).toHaveCount(1);
+      await expect(words.locator("figure")).toHaveCount(0);
+      await expect(picture).toBeVisible();
+      // Drawn whole, not clipped: walk the picture's ancestors up to the card and check each one
+      // that hides overflow against the picture's own box — none may cut it, which is what the
+      // clamped summary did to a picture under its third line.
+      const clippedBy = await picture.evaluate((img) => {
+        const own = img.getBoundingClientRect();
+        if (own.height === 0) return "no height";
+        for (let box = img.parentElement; box && box.tagName !== "LI"; box = box.parentElement) {
+          const style = getComputedStyle(box);
+          if (style.overflow === "visible" && style.overflowY === "visible") continue;
+          const around = box.getBoundingClientRect();
+          if (own.top < around.top - 1 || own.bottom > around.bottom + 1) return `${box.tagName} ${box.getAttribute("data-testid") ?? box.className}`;
+        }
+        return null;
+      });
+      expect(clippedBy).toBeNull();
+      // The words still stop at three lines.
+      const lines = await words.evaluate((box) => {
+        const lineHeight = parseFloat(getComputedStyle(box.querySelector("p") ?? box).lineHeight);
+        return Math.round(box.getBoundingClientRect().height / lineHeight);
+      });
+      expect(lines).toBeLessThanOrEqual(3);
+      // Under the words, where it was written.
+      const [wordsBox, pictureBox] = [await words.boundingBox(), await picture.boundingBox()];
+      expect(pictureBox?.y ?? 0).toBeGreaterThanOrEqual((wordsBox?.y ?? 0) + (wordsBox?.height ?? 0));
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+      passed = true;
+    } finally {
+      await removeCreated(page, created, !passed);
+    }
   });
 
   test("write a series card's next date on its own line with «Următoarea:», when the listing has a series", async ({ page }) => {

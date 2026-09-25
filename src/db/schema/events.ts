@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -68,10 +69,13 @@ export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL",
  * the reader's own language, and it also stops "Mediu", "mediu" and "Medium" being three
  * difficulties in a filter that does not exist yet but will.
  *
- * Three values, because three is what the club uses. A fourth is a migration, not a free-text
- * escape hatch — the point of the closed set is that adding to it is a decision.
+ * Three values at first, because three is what the club used; five since §412 (the owner,
+ * 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu") — `VERY_EASY` before `EASY` and
+ * `VERY_HARD` after `HARD`, so the enum's own order is the scale's order (migration `0078`,
+ * `ADD VALUE … BEFORE/AFTER`, the three old values untouched). A sixth is a migration, not a
+ * free-text escape hatch — the point of the closed set is that adding to it is a decision.
  */
-export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
+export const eventDifficulty = pgEnum("event_difficulty", ["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
 
 /**
  * Whether the event costs money, and how — three answers, not two.
@@ -200,6 +204,21 @@ export const events = pgTable(
      * one column until somebody needed both on the same event (`DECISIONS.md` §49).
      */
     mapUrl: text("map_url"),
+
+    /**
+     * «Coordonate»: the meeting point as two decimal numbers, typed by the organizer — optional,
+     * and read for one thing only, the weather (§416, amending §402). The forecast is asked for
+     * the pin the map link carries first (`weather/domain/place.ts`); these are the place when the
+     * link carries none (a short link, a venue page, no link at all), and the club's own
+     * coordinates (`CLUB_COORDINATES`) when these are empty too.
+     *
+     * Back beside `map_url` after migration `0023` took the old pair away (§61): not as the way
+     * to say where to meet — the link still is — but because a short share link names no place a
+     * server can read without asking the map provider, and the club asked for the forecast "exact
+     * pe locația selectată". Both or neither, and in range, at the database too.
+     */
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
 
     /**
      * The course: where the run actually goes (BR-REQ-011-01 criterion 8).
@@ -598,6 +617,12 @@ export const events = pgTable(
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The
+    // `IS NOT NULL`s are needed: half a pair makes the BETWEEN branch NULL, which a CHECK lets through.
+    check(
+      "events_coordinates_pair_in_range",
+      sql`(${t.latitude} IS NULL AND ${t.longitude} IS NULL) OR (${t.latitude} IS NOT NULL AND ${t.longitude} IS NOT NULL AND ${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`,
+    ),
     check("events_cost_url_is_https", sql`${t.costUrl} IS NULL OR ${t.costUrl} LIKE 'https://%'`),
     check(
       "events_route_url_is_https",

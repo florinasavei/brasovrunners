@@ -37,7 +37,6 @@
   },
   "Events": {
     "title": "Evenimente",
-    "loading": "Se încarcă…",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
@@ -46,12 +45,37 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Toate evenimentele ({count})",
+    "othersCountFiltered": "Evenimentele alese ({count})",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "pastCountFiltered": "Din trecut, după filtre ({count})",
     "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
-      "label": "Tipul evenimentului",
-      "all": "Toate",
-      "partner": "Colaborare"
+      "label": "Filtrele evenimentelor",
+      "button": "Filtre",
+      "buttonCount": "Filtre ({count})",
+      "help": "Într-un grup ajunge oricare bifă; între grupuri trebuie să se potrivească toate.",
+      "groups": {
+        "type": "Tipul",
+        "surface": "Terenul",
+        "difficulty": "Dificultatea",
+        "distance": "Distanța",
+        "cost": "Costul",
+        "more": "Altele"
+      },
+      "distance": {
+        "UP_TO_5": "Sub 5 km",
+        "FROM_5_TO_10": "5–10 km",
+        "FROM_10_TO_21": "10–21 km",
+        "OVER_21": "Peste 21 km"
+      },
+      "partner": "Colaborare",
+      "night": "Eveniment de noapte",
+      "registration": "Înscrieri deschise",
+      "apply": "Aplică",
+      "clear": "Șterge filtrele",
+      "remove": "Scoate filtrul",
+      "active": "Filtre active",
+      "none": "Niciun eveniment nu se potrivește filtrelor alese."
     },
     "calendar": {
       "previous": "Luna anterioară",
@@ -144,11 +168,8 @@
     "night": {
       "pill": "Eveniment de noapte",
       "runPill": "Alergare de noapte",
-      "tooltip": "Începe la {start}, apusul la {sunset} — ia o frontală",
-      "tooltipEnd": "Începe la {start}, apusul la {sunset}, se termină la {end} — ia o frontală",
-      "tooltipEndProgramme": "Începe la {start}, apusul la {sunset}, ultimul punct din program la {end} — ia o frontală",
-      "tooltipAfter": "Începe la {start}, după apusul de la {sunset} — ia o frontală",
-      "tooltipDawn": "Începe la {start}, înainte de răsăritul de la {sunrise} — ia o frontală",
+      "tooltip": "Soarele apune la {sunset}",
+      "tooltipDawn": "Soarele răsare la {sunrise}",
       "times": "începe la {start}, apusul la {sunset}",
       "timesEnd": "începe la {start}, apusul la {sunset}, se termină la {end}",
       "timesEndProgramme": "începe la {start}, apusul la {sunset}, ultimul punct din program la {end}",
@@ -270,9 +291,11 @@
       "EVENT_COMPLETED": "Evenimentul s-a încheiat"
     },
     "difficultyValues": {
+      "VERY_EASY": "Foarte ușor",
       "EASY": "Ușor",
       "MODERATE": "Mediu",
-      "HARD": "Avansat"
+      "HARD": "Greu",
+      "VERY_HARD": "Foarte greu"
     },
     "costValues": {
       "FREE": "Gratuit",
@@ -927,6 +950,13 @@
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "coordinates": "Coordonate (lat, lng)",
+      "coordinatesHelp": "Opțional: latitudine, longitudine — de ex. 45.6427, 25.5887. Copiază-le din Google Maps: clic dreapta pe punct → prima linie. Folosite doar pentru vreme, când linkul hărții nu le conține (un link scurt, pagina unui loc).",
+      "weatherPlace": {
+        "map": "Vremea se citește acum pentru punctul din linkul hărții ({coordinates}).",
+        "typed": "Vremea se citește acum pentru aceste coordonate ({coordinates}).",
+        "club": "Vremea se citește acum pentru {place} ({coordinates}): linkul hărții nu conține coordonate și nu sunt scrise altele."
+      },
       "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă — în română și în engleză, fiecare pe pagina limbii lui. Dacă se numește la fel în ambele, apasă „Același nume și în engleză”: cât timp cele două spun același lucru, ce scrii în română se scrie și în engleză.",
       "locationCopyToEnglish": "Același nume și în engleză",
       "locationEnglishLeftBehind": "În engleză scrie tot „{place}”. Dacă s-a mutat locul, schimbă-l și aici.",
@@ -1054,9 +1084,11 @@
       "delete": "Șterge",
       "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
       "difficultyValues": {
+        "VERY_EASY": "Foarte ușor",
         "EASY": "Ușor",
         "MODERATE": "Mediu",
-        "HARD": "Avansat"
+        "HARD": "Greu",
+        "VERY_HARD": "Foarte greu"
       },
       "costValues": {
         "FREE": "Gratuit",
@@ -2456,6 +2488,15 @@
       "image": "Imagine (încarcă din telefon sau calculator)",
       "imageUploading": "Se încarcă imaginea…",
       "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum.",
+      "imageQualityLegend": "Calitate",
+      "imageQualityNormal": "Normală (recomandat)",
+      "imageQualityHigh": "Înaltă (fișier mai mare)",
+      "imageQualityHelp": "Normală e potrivită pentru fotografii și păstrează până la {normalMax} px pe latura lungă. Alege Înaltă pentru afișe, grafice și poze cu text: păstrează până la {highMax} px, literele rămân clare, fișierul e mai mare. Se ține minte până închizi fila; o imagine lipită sau trasă în text și posterul unui film folosesc aceeași alegere.",
+      "imageChoose": "Alege imaginea",
+      "imageStored": "Imaginea e stocată la {width} × {height} px, {quality}: {size} pe un ecran lat, {files} fișiere de mărimi diferite ({total} în total), ca telefonul să o încarce pe cea potrivită.",
+      "imageStoredNormal": "calitate normală",
+      "imageStoredHigh": "calitate înaltă",
+      "imageStoredNearLossless": "calitate înaltă, aproape fără pierderi (grafică sau text)",
       "imageAlt": "Ce arată imaginea (text alternativ)",
       "imageAltHelp": "O propoziție pe care un cititor de ecran o rostește în locul imaginii. Lasă gol doar dacă imaginea este decorativă.",
       "imageCaption": "Legendă (opțional, sub imagine)",
@@ -2610,10 +2651,18 @@
       "noPhotosYet": "Albumul nu are nicio fotografie. Încarcă cel puțin una ca să poată fi publicat.",
       "photos": "Fotografii ({count})",
       "upload": "Încarcă fotografii",
-      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se micșorează în telefon înainte de trimitere; prima devine coperta.",
+      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se trimit așa cum sunt; doar una prea mare se micșorează în telefon înainte. Prima devine coperta.",
       "uploading": "Se încarcă {done} din {total}…",
       "uploaded": "{total} fotografii încărcate.",
       "uploadFailed": "Nu s-au putut încărca: {names}",
+      "qualityLegend": "Calitate",
+      "qualityNormal": "Normală (recomandat)",
+      "qualityHigh": "Înaltă (fișier mai mare)",
+      "qualityHelp": "Normală e potrivită pentru fotografii și păstrează până la {normalMax} px pe latura lungă. Alege Înaltă pentru afișe, grafice și poze cu text: păstrează până la {highMax} px, literele rămân clare, fișierul e mai mare. Se ține minte până închizi fila.",
+      "stored": "Ultima fotografie e stocată la {width} × {height} px, {quality}: {size} pe un ecran lat, {files} fișiere de mărimi diferite ({total} în total), ca telefonul să o încarce pe cea potrivită.",
+      "storedNormal": "calitate normală",
+      "storedHigh": "calitate înaltă",
+      "storedNearLossless": "calitate înaltă, aproape fără pierderi (grafică sau text)",
       "setCover": "Copertă",
       "removePhoto": "Șterge",
       "removePhotoTitle": "Ștergi fotografia?",
@@ -3892,7 +3941,7 @@
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
     "weather": {
       "title": "Prognoza vremii",
-      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
       "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",
@@ -4206,6 +4255,18 @@
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
+    "feelsLike": "se simte ca {degrees} °C",
+    "precipitation": "{amount} mm precipitații",
+    "gusts": "rafale {speed} km/h",
+    "humidity": "umiditate {percent}%",
+    "uv": "indice UV {index}",
+    "rainShort": "{percent}% ploaie",
+    "hours": "Pe ore, de la start",
+    "atStart": "Vremea la start",
+    "place": {
+      "event": "Pentru locul evenimentului",
+      "club": "Pentru {place}"
+    },
     "codes": {
       "clear": "Senin",
       "mainlyClear": "Predominant senin",

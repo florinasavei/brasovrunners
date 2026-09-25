@@ -135,20 +135,24 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     }
   });
 
-  test("the filter row sits one density-token step above the grid at 320/360/390/412px and on desktop (§376 fix round finding 6)", async ({
+  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §413)", async ({
     page,
   }) => {
     const isMobile = test.info().project.name === "mobile";
+    // Since §413 the filters are one «Filtre» button above the hero (the hero follows them), so the
+    // step is measured from the button's block to the first visible thing under it — the hero,
+    // the notice or the grid, whichever the page has — rather than to the grid alone.
     const measure = async (expectMin: number, expectMax: number) => {
       await page.goto("/ro/evenimente");
-      const filterRow = page.getByRole("navigation", { name: "Tipul evenimentului" });
-      await expect(filterRow).toBeVisible();
-      const grid = page.locator('[data-testid="other-events"], #main > ul').first();
-      await expect(grid).toBeVisible();
-      const [filterBox, gridBox] = await Promise.all([filterRow.boundingBox(), grid.boundingBox()]);
-      expect(filterBox, "the filter row has a box").not.toBeNull();
-      expect(gridBox, "the grid has a box").not.toBeNull();
-      const gap = gridBox!.y - (filterBox!.y + filterBox!.height);
+      const panel = page.locator("#main").getByTestId("listing-filters");
+      await expect(panel).toBeVisible();
+      const gap = await panel.evaluate((details) => {
+        const block = details.parentElement!.parentElement!;
+        let next = block.nextElementSibling;
+        while (next && next.getBoundingClientRect().height === 0) next = next.nextElementSibling;
+        if (!next) return Number.NaN;
+        return next.getBoundingClientRect().top - block.getBoundingClientRect().bottom;
+      });
       expect(gap).toBeGreaterThanOrEqual(expectMin);
       expect(gap).toBeLessThanOrEqual(expectMax);
     };
@@ -164,44 +168,51 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     }
   });
 
-  test("the «Colaborare» chip is offered once a partnered event exists, narrows the listing, and AND-combines with the kind", async ({
+  test("the «Colaborare» box is offered once a partnered event exists, narrows the listing, and AND-combines with the kind", async ({
     page,
   }) => {
     await page.goto("/ro/evenimente");
-    await expect(page.locator("#main ul > li h2, #main h1").first()).toBeAttached();
+    await hydrated(page);
+    // Since §413 «Colaborare» is a box under the «Filtre» button's "Altele" group, not a chip in a row.
+    const panel = page.locator("#main").getByTestId("listing-filters");
+    await panel.locator("summary").click();
+    const box = panel.getByRole("checkbox", { name: "Colaborare", exact: true });
+    await expect(box).toBeVisible();
+    await expect(panel.locator("label", { has: page.locator('input[name="partner"]') }).locator(HANDSHAKE)).toHaveCount(1);
 
-    const chip = page.locator("nav").filter({ hasText: "Colaborare" }).locator(".MuiChip-root", { hasText: "Colaborare" });
-    await expect(chip).toHaveCount(1);
-    await expect(chip.locator(HANDSHAKE)).toHaveCount(1);
-
-    // The grid, never the hero — the partner filter does not touch the hero, exactly like the
-    // kind filter (`listingSections`'s own rule, unchanged). A seeded weekly run, never
-    // partnered, is what proves the narrowing — checked by name rather than by a total count,
-    // since another project's run of this same spec may have left its own partnered event in
-    // this database (each run's title carries the project name and a timestamp, so the two
-    // never collide on the one this test actually looks for). `cardOnListing` opens the "other
-    // events" fold first, the way a reader on a phone with more than four cards would (§78).
+    // A seeded weekly run, never partnered, is what proves the narrowing — checked by name rather
+    // than by a total count, since another project's run of this same spec may have left its own
+    // partnered event in this database (each run's title carries the project name and a
+    // timestamp, so the two never collide on the one this test actually looks for).
+    // `cardOnListing` opens the "other events" fold first, the way a reader on a phone with more
+    // than four cards would (§78, §411).
     const seededRun = await cardOnListing(page, "Antrenament de intervale");
     await expect(seededRun).toBeVisible();
 
-    // Pressing it narrows the address and the grid to partnered events only.
-    await chip.click();
+    // Ticking it narrows the address and the list to partnered events only — at once, the fold
+    // left open (the island applies each tick, §413).
+    await box.check();
     await expect(page).toHaveURL(/[?&]partner=1/);
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
     await expect(seededRun).toHaveCount(0);
+    await expect(panel).toHaveAttribute("open", "");
 
     // AND-combined with the kind: this event's own kind still shows it…
     await page.goto("/ro/evenimente?type=COFFEE&partner=1");
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
-    // …a kind it does not carry shows nothing, even though the chip stays offered so the page
-    // can still say what it is filtered by (§133's own rule, extended to "Colaborare").
+    // …a kind it does not carry shows nothing, even though the box stays offered — and ticked — so
+    // the page can still say what it is filtered by (§133's own rule, extended to every box).
     await page.goto("/ro/evenimente?type=RACE&partner=1");
     await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
-    await expect(page.locator("nav").filter({ hasText: "Colaborare" }).locator(".MuiChip-root", { hasText: "Colaborare" })).toHaveCount(1);
+    // (By name and value: a box in a closed fold has no role to be found by.)
+    await expect(page.locator("#main").getByTestId("listing-filters").locator('input[name="partner"][value="1"]')).toBeChecked();
+    await expect(page.locator("#main").getByTestId("active-filters").getByRole("link", { name: "Scoate filtrul: Colaborare" })).toBeVisible();
 
     // The English page reads it in English, and never in Romanian.
     await page.goto(`/en/events?partner=1`);
     await expect(page.getByRole("heading", { name: englishTitle })).toBeVisible();
-    await expect(page.locator("nav").filter({ hasText: "Partnership" }).locator(".MuiChip-root", { hasText: "Partnership" })).toHaveCount(1);
+    await expect(page.locator("#main").getByTestId("active-filters").getByRole("link", { name: "Remove filter: Partnership" })).toBeVisible();
+    await expect(page.locator("#main").getByTestId("listing-filters").locator('input[name="partner"][value="1"]')).toBeChecked();
+    await expect(page.locator("#main").getByTestId("active-filters")).not.toContainText("Colaborare");
   });
 });

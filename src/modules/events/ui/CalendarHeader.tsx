@@ -36,8 +36,8 @@ export default async function CalendarHeader({
   now: Date;
   /** The page the calendar is on (§251): every control links back to it, never to /events. */
   pathname?: "/calendar" | "/events";
-  /** Other query parameters the month links keep — the type filter (§89), the layout (§137). */
-  query?: Record<string, string>;
+  /** Other query parameters the month links keep — the filters (§89, §413; a group ticked twice is an array), the layout (§137). */
+  query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
   const t = await getTranslations("Events");
@@ -52,7 +52,7 @@ export default async function CalendarHeader({
       : String(view.year);
   const basePath = getPathname({ locale, href: pathname });
   const href = (params: Record<string, string>, drop?: string) => {
-    const merged: Record<string, string> = { ...query, ...params };
+    const merged: Record<string, string | string[]> = { ...query, ...params };
     if (drop) delete merged[drop];
     return getPathname({ locale, href: { pathname, query: merged } });
   };

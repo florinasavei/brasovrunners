@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.98-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.99-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.98-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.99-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -116,7 +116,7 @@ sections and in `CHANGELOG.md`.
   calendar entry each (§117). A repeated event is **one line** on the listing and in the
   backoffice (§113); glyphs on type, surface, difficulty and cost (§112); the calendar picks
   a month or a year (§116); a group run takes no registration and has no programme (§111).
-- The listing: featured event, type filters, a month view (grid from `sm`, agenda on a phone)
+- The listing: featured event, a «Filtre» button with checkbox groups (§413, replacing §133's chips), a month view (grid from `sm`, agenda on a phone)
   (§89); Open Graph cards drawn from the event, a square one for Instagram, share links (§90);
   **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
   feed of every published event (§107). Race week: countdown, "come to the desk with the QR"
@@ -124,14 +124,14 @@ sections and in `CHANGELOG.md`.
   A place may be **"to be announced"** — withheld in SQL from every public surface and email until
   the switch goes off (§328); **"Linkuri și fișiere"**, up to twelve labelled links per event (a GPX on
   Drive, a PDF, an album) under `#links` (§332).
-- **Night events** (§394): whether a date is a night event is computed, never stored — a start at or after civil dusk (or before civil dawn)
+- **Night events** (§394, the tooltip §415): whether a date is a night event is computed, never stored — a start at or after civil dusk (or before civil dawn)
   at the club's place (`CLUB_COORDINATES`, default Brașov) on that date, through the NOAA solar algorithm in the platform; the pill «Eveniment de
   noapte» keeps the headlamp glyph and says the sunset; a series answers per date; the editor's «Eveniment de noapte: Automat / Da / Nu» overrides
   it (the column of §382 became the tri-state override); the reminder says the sunset and «ia o frontală» only on a night date.
 - **An external event paid at the organizer's** (§395): the cost row reads «Cu taxă, la organizator», the club's discount note in the reader's
   language under it (both languages or neither, only for EXTERNAL + PAID), the ics cost line, JSON-LD `offers.url` at the organizer's form.
 - **The partners as a block** (§401): «Împreună cu» on the event page is a collapsible block with the partner cards inside; the listing's filter row keeps a step of space above the grid and offers a «Colaborare» / «Partnership» chip while a partnered event is on the calendar.
-- **The weather** (§402): the forecast for the event's date and start hour at the club's place, from Open-Meteo (free, keyless, fetched on the server and cached an hour), on the event page within seven days and in the reminder; nothing when unavailable.
+- **The weather** (§402, §416): the forecast for the event's date and start hour at the event's own place (the map link's coordinates, else the typed «Coordonate», else the club's), from Open-Meteo (free, keyless, fetched on the server and cached an hour), on the event page within seven days and in the reminder; nothing when unavailable.
 - **A film's poster and volume** (§403): the club's own stored copy of a YouTube thumbnail before the click (nothing from Google until then), a server-rendered facade that works without JavaScript, a mute/volume bar after the click.
 - The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
@@ -318,6 +318,7 @@ sections and in `CHANGELOG.md`.
   la organizator», the ics cost line, JSON-LD offers at the organizer (§395, migration `0075`) · the public participant list says each runner's state and lists the ticked pending and waiting list, only while the notice in force names `{{participantListStates}}` (§396) · Panel's help variant («Ce înseamnă fiecare tip?», the email legend with an «i»), a new event free by default, the robot glyph on every automatic line (§398) · `/admin/tasks` → «Aplicația» renders `docs/QUEUE.md` read-only through the `/devs/docs` renderer, for Administrator, Superadministrator and Tehnic (§397).
 - **Batch 21 (2026-09-25, `BR-V1.97`):** the difficulty pill is a scale of dumbbells, the word beside it and in the accessible name (§399) · a YouTube film shows the club's own stored poster before the click and a mute/volume bar after it, the facade server-rendered, no poster fetch inside a transaction (§403, migration `0077`) · the backoffice's time field is the platform's own `<input type="time">`, 24-hour, any minute — §345's wheel picker gone, its date picker kept (§400) · «Împreună cu» is a collapsible block on the event page, the listing's filter row sits a step above the grid and offers a «Colaborare» chip while a partnered event is on the calendar (§401) · the weather for the event's date and hour from Open-Meteo (free, keyless) on the page within seven days and in the reminder (§402).
 - **Batch 22 (2026-09-25, `BR-V1.98`):** every night sentence names the start, the sunset and the end — «Începe la 19:00, apusul la 19:00, se termină la 20:40» — the tooltip, the month view, the .ics line, the reminder and the editor's line alike, a pre-dawn start with its own shape (§404) · the editor mirrors the page: one card per page section in the page's order with a page map, every closed card naming its missing required fields per language, create-and-publish always at full look and opening the refusal summary when something is missing (§406) · the programme card's rows are one grid with the help folded and a new row starting on the event's day (§405) · the confirmation window's second number accepts 0 — the place never expires before the start — and the card says when a runner can confirm (§407) · the registrants' count is said once under the editor's header, the orange outline alone marking the cards whose changes notify participants (§408) · the race's listing card carries the register button and a bold line with the free places, from the one availability count (§409) · the age sentence says the minimum and the parent's consent plainly — «Vârsta minimă: 14 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.» (§410) · the end-to-end specs read a listing card through its fold and the tasks page by its pathname, so the full two-project run no longer flakes on order (§411).
+- **Batch 23 (2026-09-25, `BR-V1.99`):** the difficulty has five levels — foarte ușor, ușor, mediu, greu, foarte greu — drawn as one gauge glyph with the needle at one of five positions, the dumbbells of §399 gone, migration `0078` (§412) · pictures are stored as a ladder of sizes per kind, WebP, never upscaled, and served with `srcSet` + `sizes`; «Calitate: Normală / Înaltă» beside every upload, the stored facts shown after it (§414) · the weather reads the event's own place — the map link's coordinates, else the typed «Coordonate», else the club's — the featured card carries the row and the small cards a glyph with the degrees, the page three hours and the start hour's details (§416) · the listing's filters are one «Filtre» button, collapsed by default, opening checkbox groups — type, surface, difficulty, distance, cost, night, collaboration, registration open — only the values on the calendar, the state in the address, working without JavaScript (§413) · the night pill's tooltip says only the sunset — «Soarele apune la 19:00» — (the sunrise on a pre-dawn start); the calendar entry, the .ics and the reminder keep §404's full sentence (§415) · a picture in the short description is on the listing card whatever the length of the words — the three-line clamp of §366 holds the words alone, never a picture (§417).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

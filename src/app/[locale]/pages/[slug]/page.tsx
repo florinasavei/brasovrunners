@@ -79,7 +79,7 @@ export default async function StandingPage({ params }: Props) {
         <Typography variant="h1" gutterBottom>
           {page.title}
         </Typography>
-        <RichText body={page.bodyJson} />
+        <RichText body={page.bodyJson} pictures="prose" />
       </Box>
     </Container>
   );

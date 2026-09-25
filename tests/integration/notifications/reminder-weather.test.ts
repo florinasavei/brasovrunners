@@ -17,11 +17,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const HOUR = 60 * 60 * 1000;
 const NOW = new Date("2026-09-24T09:00:00.000Z");
-const answer = { mode: "ok" as "ok" | "fail" };
+const answer = { mode: "ok" as "ok" | "fail", asked: [] as string[] };
 
 vi.mock("@/modules/weather/source", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/modules/weather/source")>();
-  const openMeteo = (async () => {
+  const openMeteo = (async (url: string) => {
+    answer.asked.push(String(url));
     if (answer.mode === "fail") return new Response("Bad Gateway", { status: 502 });
     const first = Math.floor(NOW.getTime() / HOUR) * HOUR;
     const time = Array.from({ length: 8 * 24 }, (_, index) => (first + index * HOUR) / 1000);
@@ -33,6 +34,12 @@ vi.mock("@/modules/weather/source", async (importOriginal) => {
           precipitation_probability: time.map(() => 80),
           weather_code: time.map(() => 63),
           wind_speed_10m: time.map(() => 17),
+          // The event page's details (§416) are in the same answer; the reminder never says them.
+          apparent_temperature: time.map(() => 2.1),
+          precipitation: time.map(() => 1.2),
+          wind_gusts_10m: time.map(() => 38),
+          relative_humidity_2m: time.map(() => 91),
+          uv_index: time.map(() => 0),
         },
       }),
       { status: 200 },
@@ -60,6 +67,7 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
 
   beforeEach(async () => {
     answer.mode = "ok";
+    answer.asked = [];
     await resetTables(db);
     const identity = canonicalizeEmail("ana@example.ro");
     const [participant] = await db
@@ -139,6 +147,27 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     // In the HTML, inside the facts block, the label bold as every row's.
     const block = message.html.match(/<div data-email-part="event-facts"[^]*?<\/div>/)?.[0] ?? "";
     expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h<br>Prognoză: Open-Meteo");
+  });
+
+  it("stays one line — the start hour's facts, never the page's details (§416)", async () => {
+    const message = await renderOutboxMessage(row("EVENT_REMINDER", "r3"), db, NOW);
+    expect(message.text).not.toContain("se simte ca");
+    expect(message.text).not.toContain("rafale");
+    expect(message.text).not.toContain("feels like");
+  });
+
+  it("is read at the event's own place: the typed «Coordonate», else the club's (§416)", async () => {
+    await renderOutboxMessage(row("EVENT_REMINDER", "r4"), db, NOW);
+    const club = new URL(answer.asked.at(-1) ?? "");
+    const { env } = await import("@/shared/config/env");
+    expect(Number(club.searchParams.get("latitude"))).toBeCloseTo(env.CLUB_COORDINATES.latitude, 3);
+
+    await db.update(events).set({ latitude: 45.51234, longitude: 25.36789 });
+    await renderOutboxMessage(row("EVENT_REMINDER", "r5"), db, NOW);
+    const own = new URL(answer.asked.at(-1) ?? "");
+    // Rounded to three decimals (≈ 100 m) — the cache key and the request are the same place.
+    expect(own.searchParams.get("latitude")).toBe("45.512");
+    expect(own.searchParams.get("longitude")).toBe("25.368");
   });
 
   it("goes out without the row when Open-Meteo fails", async () => {

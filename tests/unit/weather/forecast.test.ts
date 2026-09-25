@@ -114,6 +114,12 @@ describe("§402 the hour a start reads", () => {
       temperatureC: 13.6,
       precipitationProbability: 35,
       windKmh: 9.4,
+      // An answer without the page's detail columns (§416) is still a forecast, the details none.
+      feelsLikeC: null,
+      precipitationMm: null,
+      gustKmh: null,
+      humidity: null,
+      uvIndex: null,
     });
   });
 
@@ -168,7 +174,10 @@ describe("§402 the request, and every failure read as no forecast", () => {
     await fetchOpenMeteo(fetchImpl, () => NOW.getTime());
     const url = new URL(String((fetchImpl as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0]));
     expect(`${url.origin}${url.pathname}`).toBe(`${OPEN_METEO_API}/v1/forecast`);
-    expect(url.searchParams.get("hourly")).toBe("temperature_2m,precipitation_probability,weather_code,wind_speed_10m");
+    // §402's four, then the event page's details (§416) — one request.
+    expect(url.searchParams.get("hourly")).toBe(
+      "temperature_2m,precipitation_probability,weather_code,wind_speed_10m,apparent_temperature,precipitation,wind_gusts_10m,relative_humidity_2m,uv_index",
+    );
     expect(url.searchParams.get("timeformat")).toBe("unixtime");
     expect(url.searchParams.get("wind_speed_unit")).toBe("kmh");
     // No key: the API is public, and the request carries nothing of the club's.
@@ -307,7 +316,20 @@ describe("§402 where the forecast comes from, by environment", () => {
 });
 
 describe("§402 the forecast in words, in both languages", () => {
-  const reading = { hourAt: START.getTime(), code: 2, kind: "partlyCloudy", glyph: "partlyCloudy", temperatureC: 13.6, precipitationProbability: 20, windKmh: 11.4 } as const;
+  const reading = {
+    hourAt: START.getTime(),
+    code: 2,
+    kind: "partlyCloudy",
+    glyph: "partlyCloudy",
+    temperatureC: 13.6,
+    precipitationProbability: 20,
+    windKmh: 11.4,
+    feelsLikeC: null,
+    precipitationMm: null,
+    gustKmh: null,
+    humidity: null,
+    uvIndex: null,
+  } as const;
 
   it("says the kind, whole degrees, the chance of rain and the wind in Romanian", () => {
     const words = weatherWords(reading, "ro");

@@ -1,6 +1,7 @@
 import { env } from "@/shared/config/env";
 import { coHostDescription, primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
 import { hasAgeRule } from "./domain/event-type";
+import { forecastPlace } from "@/modules/weather/domain/place";
 import { CLUB_LOCALITY } from "./domain/place";
 import type { PublicEvent } from "./repository";
 
@@ -134,6 +135,14 @@ function organizers(event: PublicEvent, organizationName: string, locale?: "ro" 
  * The query has already withheld the typed place; this does not reach for it.
  */
 function eventPlace(event: PublicEvent) {
+  /*
+    `geo` is back (§416) when the event names its own point: the pin its map link carries, or the
+    «Coordonate» the organizer typed — the very point the weather is read for. Never the club's
+    fallback: a city centre given as the venue's coordinates is the guess §61 refused. The club's
+    place is passed only because `forecastPlace` needs one; its `source` says it was not used.
+  */
+  const point = forecastPlace(event, { latitude: 0, longitude: 0 });
+  const geo = point.source === "club" ? {} : { geo: { "@type": "GeoCoordinates", latitude: point.coordinates.latitude, longitude: point.coordinates.longitude } };
   if (event.locationToBeAnnounced) {
     return {
       "@type": "Place",
@@ -152,10 +161,11 @@ function eventPlace(event: PublicEvent) {
     },
     /**
      * The map link a person follows — the same one the page renders, so the two cannot
-     * disagree. No `geo` any more: the coordinates it was built from left with migration
-     * `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be wrong.
+     * disagree. `geo` only from the event's own point (above); the coordinates §61 dropped with
+     * migration `0023` were never read back, and a pin guessed from a place name would be wrong.
      */
     ...(event.mapUrl ? { hasMap: event.mapUrl } : {}),
+    ...geo,
   };
 }
 

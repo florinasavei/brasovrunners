@@ -32,6 +32,7 @@ const { default: VideoFacade } = await import("@/shared/ui/VideoFacade");
 const { default: VideoVolumeBar } = await import("@/shared/ui/VideoVolumeBar");
 const { default: EventVideo } = await import("@/modules/events/ui/EventVideo");
 const { youtubeEmbedUrl } = await import("@/modules/events/domain/video");
+const { default: RichTextVideo } = await import("@/modules/content/rich-text/ui/RichTextVideo");
 
 const LABELS = { play: "Redă filmul", mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" };
 
@@ -137,5 +138,44 @@ describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: 
   it("is hidden (not absent) until its disclosure opens — present in the markup so hydration and hotkeys never depend on a remount", () => {
     const html = renderToStaticMarkup(createElement(VideoVolumeBar, { frameId: "video-frame-2", labels: { mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" } }));
     expect(html).toContain('aria-pressed');
+  });
+});
+
+/**
+ * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414, found by re-review) — a club poster is an
+ * upload like any picture, stored with its ladder, and the facade draws it from that ladder: a
+ * phone takes a rung rather than the master. YouTube's own thumbnail (`yt-<id>`) and a poster
+ * stored before the ladder keep their one `src`.
+ */
+describe("§414 the poster's widths", () => {
+  const LADDER_POSTER = "/api/media/local/3f2a1b4c-0000-8abc-8def-000000000001/web.webp";
+  const render = async (props: Parameters<typeof RichTextVideo>[0]) =>
+    renderToStaticMarkup((await RichTextVideo(props)) as Parameters<typeof renderToStaticMarkup>[0]);
+
+  it("offers a club poster's rungs and says how wide the film is drawn", async () => {
+    const html = await render({ videoId: "dQw4w9WgXcQ", caption: "", poster: LADDER_POSTER, posterWidth: 3200, posterHeight: 1800 });
+    expect(html).toContain("/960w.webp 960w");
+    expect(html).toContain("/2400w.webp 2400w");
+    expect(html).toContain(`${LADDER_POSTER} 3200w`);
+    // The event page's column by default; a 16∶9 poster covers the 16∶9 box at its own width.
+    expect(html).toContain('sizes="(min-width: 1536px) 1488px, (min-width: 600px) calc(100vw - 48px), calc(100vw - 32px)"');
+  });
+
+  it("takes the film's share of the column and a standing page's measure", async () => {
+    const html = await render({ videoId: "dQw4w9WgXcQ", caption: "", poster: LADDER_POSTER, posterWidth: 1920, posterHeight: 1080, widthPercent: 50, pictures: "prose" });
+    expect(html).toContain('sizes="(min-width: 1008px) 480px, (min-width: 600px) calc(50vw - 24px), calc(100vw - 32px)"');
+  });
+
+  it("keeps YouTube's own thumbnail and a poster without a size as one file", async () => {
+    for (const props of [
+      { poster: "/api/media/local/yt-dQw4w9WgXcQ/web.webp", posterWidth: 480, posterHeight: 360 },
+      { poster: LADDER_POSTER, posterWidth: null, posterHeight: null },
+      { poster: null },
+    ]) {
+      const html = await render({ videoId: "dQw4w9WgXcQ", caption: "", ...props });
+      expect(html).not.toContain("srcSet");
+      expect(html).not.toContain("srcset");
+      expect(html).not.toContain("sizes=");
+    }
   });
 });

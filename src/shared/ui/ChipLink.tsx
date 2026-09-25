@@ -32,6 +32,9 @@ export default function ChipLink({
   current,
   strike = false,
   title,
+  ariaLabel,
+  closeMark = false,
+  keepScroll = false,
 }: {
   href: string;
   label: string;
@@ -43,6 +46,12 @@ export default function ChipLink({
   /** Struck through: a cancelled date. */
   strike?: boolean;
   title?: string;
+  /** The link's own name when the chip's word alone would not say what a press does — "Scoate filtrul: Cursă" (§413). */
+  ariaLabel?: string;
+  /** A drawn ✕ after the word: pressing this chip takes something away (the listing's active filters, §413). */
+  closeMark?: boolean;
+  /** Stay where the reader is on the page rather than scroll to the top — a filter changed under their thumb. */
+  keepScroll?: boolean;
 }) {
   const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };
   const sx = strike ? { textDecoration: "line-through", color: "text.secondary" } : undefined;
@@ -50,11 +59,17 @@ export default function ChipLink({
     <Box
       component={Link}
       href={href}
+      scroll={keepScroll ? false : undefined}
       aria-current={current}
+      aria-label={ariaLabel}
       title={title}
       sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none", color: "inherit" }}
     >
-      {glyph ? <GlyphChip glyph={glyph} label={label} {...look} sx={sx} /> : <Chip size="small" label={label} {...look} sx={sx} />}
+      {glyph ? (
+        <GlyphChip glyph={glyph} label={label} {...look} sx={sx} closeMark={closeMark} />
+      ) : (
+        <Chip size="small" label={label} {...look} sx={sx} />
+      )}
     </Box>
   );
 }

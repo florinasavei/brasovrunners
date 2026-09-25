@@ -233,6 +233,9 @@ function eventFieldsFrom(form: FormData) {
     costAmount: value("costAmount"),
     costUrl: value("costUrl"),
     mapUrl: value("mapUrl"),
+    // «Coordonate» (§416): only when the form carried the box, so a form without it (a reader
+    // who may not edit the place) reads as "not editing" rather than as a cleared pair.
+    coordinates: form.has("event.coordinates") ? value("coordinates") : undefined,
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),

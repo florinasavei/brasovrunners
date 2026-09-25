@@ -37,7 +37,6 @@
   },
   "Events": {
     "title": "Events",
-    "loading": "Loading…",
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
@@ -46,12 +45,37 @@
     "featuredCallToAction": "See the race details",
     "others": "Other events",
     "othersCount": "All events ({count})",
+    "othersCountFiltered": "Matching events ({count})",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
+    "pastCountFiltered": "Past, filtered ({count})",
     "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
-      "label": "Event type",
-      "all": "All",
-      "partner": "Partnership"
+      "label": "Event filters",
+      "button": "Filters",
+      "buttonCount": "Filters ({count})",
+      "help": "Within a group any tick will do; across groups, every one must match.",
+      "groups": {
+        "type": "Type",
+        "surface": "Surface",
+        "difficulty": "Difficulty",
+        "distance": "Distance",
+        "cost": "Cost",
+        "more": "More"
+      },
+      "distance": {
+        "UP_TO_5": "Under 5 km",
+        "FROM_5_TO_10": "5–10 km",
+        "FROM_10_TO_21": "10–21 km",
+        "OVER_21": "Over 21 km"
+      },
+      "partner": "Partnership",
+      "night": "Night event",
+      "registration": "Registration open",
+      "apply": "Apply",
+      "clear": "Clear filters",
+      "remove": "Remove filter",
+      "active": "Active filters",
+      "none": "No event matches the filters you chose."
     },
     "calendar": {
       "previous": "Previous month",
@@ -144,11 +168,8 @@
     "night": {
       "pill": "Night event",
       "runPill": "Night run",
-      "tooltip": "Starts at {start}, sunset at {sunset} — bring a headlamp",
-      "tooltipEnd": "Starts at {start}, sunset at {sunset}, ends at {end} — bring a headlamp",
-      "tooltipEndProgramme": "Starts at {start}, sunset at {sunset}, the programme's last row at {end} — bring a headlamp",
-      "tooltipAfter": "Starts at {start}, after the {sunset} sunset — bring a headlamp",
-      "tooltipDawn": "Starts at {start}, before sunrise at {sunrise} — bring a headlamp",
+      "tooltip": "The sun sets at {sunset}",
+      "tooltipDawn": "The sun rises at {sunrise}",
       "times": "starts at {start}, sunset at {sunset}",
       "timesEnd": "starts at {start}, sunset at {sunset}, ends at {end}",
       "timesEndProgramme": "starts at {start}, sunset at {sunset}, the programme's last row at {end}",
@@ -270,9 +291,11 @@
       "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
+      "VERY_EASY": "Very easy",
       "EASY": "Easy",
       "MODERATE": "Moderate",
-      "HARD": "Hard"
+      "HARD": "Hard",
+      "VERY_HARD": "Very hard"
     },
     "costValues": {
       "FREE": "Free",
@@ -927,6 +950,13 @@
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
+      "coordinates": "Coordinates (lat, lng)",
+      "coordinatesHelp": "Optional: latitude, longitude — e.g. 45.6427, 25.5887. Copy them from Google Maps: right-click the point → the first line. Used only for the weather, when the map link does not carry them (a short link, a venue's page).",
+      "weatherPlace": {
+        "map": "The weather is read for the point in the map link ({coordinates}).",
+        "typed": "The weather is read for these coordinates ({coordinates}).",
+        "club": "The weather is read for {place} ({coordinates}): the map link carries no coordinates and none are typed."
+      },
       "locationHelp": "The place, as you would tell a friend: a name, a street, or both — in Romanian and in English, each for its own language's page. If it is called the same in both, press “Same name in English”: while the two say the same, what you type in Romanian is written in English too.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
@@ -1054,9 +1084,11 @@
       "delete": "Delete",
       "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
       "difficultyValues": {
+        "VERY_EASY": "Very easy",
         "EASY": "Easy",
         "MODERATE": "Moderate",
-        "HARD": "Hard"
+        "HARD": "Hard",
+        "VERY_HARD": "Very hard"
       },
       "costValues": {
         "FREE": "Free",
@@ -2456,6 +2488,15 @@
       "image": "Picture (upload from your phone or computer)",
       "imageUploading": "Uploading the picture…",
       "imageFailed": "The picture could not be uploaded. Try a JPEG, PNG or WebP up to 6 MB; if this environment has no storage configured, /admin/tasks says how.",
+      "imageQualityLegend": "Quality",
+      "imageQualityNormal": "Normal (recommended)",
+      "imageQualityHigh": "High (larger file)",
+      "imageQualityHelp": "Normal suits photographs and keeps up to {normalMax} px on the long side. Choose High for posters, graphics and pictures with text: it keeps up to {highMax} px, the lettering stays sharp and the file is larger. Remembered until you close the tab; a picture pasted or dropped into the text and a film's poster use the same choice.",
+      "imageChoose": "Choose the picture",
+      "imageStored": "The picture is stored at {width} × {height} px, {quality}: {size} on a wide screen, {files} files of different sizes ({total} in all), so a phone loads the one it needs.",
+      "imageStoredNormal": "normal quality",
+      "imageStoredHigh": "high quality",
+      "imageStoredNearLossless": "high quality, near-lossless (graphics or text)",
       "imageAlt": "What the picture shows (alt text)",
       "imageAltHelp": "A sentence a screen reader says instead of the picture. Leave it empty only when the picture is decorative.",
       "imageCaption": "Caption (optional, under the picture)",
@@ -2610,10 +2651,18 @@
       "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
       "photos": "Photos ({count})",
       "upload": "Upload photos",
-      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover.",
+      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are sent as they are; only one that is too large is shrunk on the device first. The first becomes the cover.",
       "uploading": "Uploading {done} of {total}…",
       "uploaded": "{total} photos uploaded.",
       "uploadFailed": "Could not upload: {names}",
+      "qualityLegend": "Quality",
+      "qualityNormal": "Normal (recommended)",
+      "qualityHigh": "High (larger file)",
+      "qualityHelp": "Normal suits photographs and keeps up to {normalMax} px on the long side. Choose High for posters, graphics and pictures with text: it keeps up to {highMax} px, the lettering stays sharp and the file is larger. Remembered until you close the tab.",
+      "stored": "The last photo is stored at {width} × {height} px, {quality}: {size} on a wide screen, {files} files of different sizes ({total} in all), so a phone loads the one it needs.",
+      "storedNormal": "normal quality",
+      "storedHigh": "high quality",
+      "storedNearLossless": "high quality, near-lossless (graphics or text)",
       "setCover": "Cover",
       "removePhoto": "Remove",
       "removePhotoTitle": "Remove the photo?",
@@ -3892,7 +3941,7 @@
     "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
     "weather": {
       "title": "Weather forecast",
-      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast.",
+      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
       "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
       "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
       "stale": "Open-Meteo (public, keyless) — last answer at {when}, too old to show. The pages and the reminders show no weather until it answers.",
@@ -4206,6 +4255,18 @@
     "wind": "wind {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
+    "feelsLike": "feels like {degrees} °C",
+    "precipitation": "{amount} mm of precipitation",
+    "gusts": "gusts {speed} km/h",
+    "humidity": "humidity {percent}%",
+    "uv": "UV index {index}",
+    "rainShort": "{percent}% rain",
+    "hours": "Hour by hour, from the start",
+    "atStart": "Weather at the start",
+    "place": {
+      "event": "For the event's place",
+      "club": "For {place}"
+    },
     "codes": {
       "clear": "Clear",
       "mainlyClear": "Mostly clear",
