@@ -67,7 +67,8 @@ export default function PhotoUploader({
       try {
         const body = new FormData();
         // The shrunk photo, named after the original so the server records the name it had.
-        body.append("file", await shrink(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
+        // Shrunk to what the choice keeps (§NNN): 4000 pixels for «Înaltă», 3000 otherwise.
+        body.append("file", await shrink(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
         body.append("originalFilename", file.name);
         body.append("quality", quality);
         const response = await fetch(uploadUrl, { method: "POST", body });

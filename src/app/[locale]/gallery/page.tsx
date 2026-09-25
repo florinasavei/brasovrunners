@@ -115,10 +115,7 @@ async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSumma
                   // eslint-disable-next-line @next/next/no-img-element -- our own WebP thumbnail, sized on upload
                   <img
                     src={album.coverThumbUrl}
-                    // The cover is a card's width — a whole phone below `sm` — so the browser
-                    // chooses among the stored widths rather than enlarging the thumbnail (§NNN).
-                    srcSet={album.coverWebUrl ? pictureSrcSet(album.coverWebUrl, album.coverWidth, album.coverHeight) : undefined}
-                    sizes={pictureSizes("cover", 100, coverMagnification(album.coverWidth ?? 0, album.coverHeight ?? 0, 4 / 3))}
+                    {...coverWidths(album)}
                     alt=""
                     loading={index < 3 ? "eager" : "lazy"}
                     style={{ display: "block", width: "100%", aspectRatio: "4 / 3", objectFit: "cover" }}
@@ -139,6 +136,19 @@ async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSumma
       )}
     </Box>
   );
+}
+
+/**
+ * The cover's `srcset` and `sizes` (§NNN), or neither. The cover is a card's width — a whole
+ * phone below `sm` — so a cover stored with a ladder lets the browser choose among its widths
+ * rather than enlarge the thumbnail. A cover from before has no ladder and keeps its thumbnail
+ * alone: offered the 2400-pixel master beside it, a 390-pixel phone at 3× took the master for a
+ * 1074-pixel card (measured by the re-review).
+ */
+function coverWidths(album: PublicAlbumSummary): { srcSet?: string; sizes?: string } {
+  const srcSet = album.coverWebUrl ? pictureSrcSet(album.coverWebUrl, album.coverWidth) : undefined;
+  if (!srcSet) return {};
+  return { srcSet, sizes: pictureSizes("cover", 100, coverMagnification(album.coverWidth ?? 0, album.coverHeight ?? 0, 4 / 3)) };
 }
 
 /** The "last copy" line for the albums, once the query has settled (§281). */

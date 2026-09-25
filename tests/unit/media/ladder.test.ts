@@ -40,7 +40,11 @@ describe("§NNN the quality a request may ask for", () => {
 
 describe("§NNN the ladder", () => {
   it("stores every rung narrower than 0.9 of the master, and never one wider", () => {
-    expect(ladderWidths(2400)).toEqual([...LADDER_WIDTHS]);
+    // A «Normală» master is at most 2400, so it never gets the 2400 rung; a 4000 «Înaltă» one does.
+    expect(ladderWidths(2400)).toEqual([480, 640, 960, 1280, 1600, 1920]);
+    expect(ladderWidths(4000)).toEqual([...LADDER_WIDTHS]);
+    expect(ladderWidths(3000)).toEqual([...LADDER_WIDTHS]);
+    expect(ladderWidths(2600)).toEqual([480, 640, 960, 1280, 1600, 1920]);
     // A 1725-pixel portrait: 1600 would be the master again for 7% fewer bytes.
     expect(ladderWidths(1725)).toEqual([480, 640, 960, 1280]);
     expect(ladderWidths(1080)).toEqual([480, 640, 960]);
@@ -49,7 +53,7 @@ describe("§NNN the ladder", () => {
   });
 
   it("covers a phone at 3×, a card, a tile and a laptop at 2× with at most half again what is drawn", () => {
-    const all = [...LADDER_WIDTHS, 2400];
+    const all = [...LADDER_WIDTHS];
     for (let index = 1; index < all.length; index += 1) expect(all[index] / all[index - 1]).toBeLessThanOrEqual(1.5);
     // A 390-pixel phone's column at 3× is 1074 physical pixels: the 1280 rung, not the master.
     expect(all.find((width) => width >= (390 - 32) * 3)).toBe(1280);
@@ -66,28 +70,32 @@ describe("§NNN the ladder", () => {
 
 describe("§NNN srcset", () => {
   it("names every rung and then the master for a picture with a ladder", () => {
-    const srcSet = pictureSrcSet(r2(LADDER_PREFIX), 1725, 2400);
+    const srcSet = pictureSrcSet(r2(LADDER_PREFIX), 1725);
     expect(srcSet).toBe(
       [480, 640, 960, 1280].map((w) => `https://pub-example.r2.dev/production/${LADDER_PREFIX}/${w}w.webp ${w}w`).join(", ") +
         `, ${r2(LADDER_PREFIX)} 1725w`,
     );
     // The local store's relative address works the same way.
-    expect(pictureSrcSet(`/api/media/local/${LADDER_PREFIX}/web.webp`, 1080, 1350)).toContain(`/api/media/local/${LADDER_PREFIX}/960w.webp 960w`);
+    expect(pictureSrcSet(`/api/media/local/${LADDER_PREFIX}/web.webp`, 1080)).toContain(`/api/media/local/${LADDER_PREFIX}/960w.webp 960w`);
+    // A 4000-pixel master at «Înaltă» names the 2400 rung before itself.
+    expect(pictureSrcSet(r2(LADDER_PREFIX), 4000)).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 4000w$/);
   });
 
-  it("offers an older picture its thumbnail and its master, and nothing it does not have", () => {
-    // Every stored picture has had a thumbnail beside it; no older one has a rung.
-    expect(pictureSrcSet(r2(OLD_PREFIX), 2400, 1600)).toBe(
-      `https://pub-example.r2.dev/production/${OLD_PREFIX}/thumb.webp 640w, ${r2(OLD_PREFIX)} 2400w`,
-    );
-    // A portrait's thumbnail is 640 tall, so narrower.
-    expect(pictureSrcSet(r2(OLD_PREFIX), 1600, 2400)).toContain("thumb.webp 427w");
-    // Small enough that the thumbnail is the picture: nothing to choose.
-    expect(pictureSrcSet(r2(OLD_PREFIX), 600, 400)).toBeUndefined();
+  it("offers an older picture nothing: its one file, as a page always drew it", () => {
+    /*
+      The re-review's measurement (§NNN): an old album's cover across a 390-pixel phone at 3× is
+      1074 physical pixels, so "thumbnail 640w, master 2400w" sent the browser to the 2400-pixel
+      master — 381 KB where the thumbnail is 37 KB, for the same photograph. No `srcset` at all
+      keeps the thumbnail on the albums page and the master in a body, as before.
+    */
+    expect(pictureSrcSet(r2(OLD_PREFIX), 2400)).toBeUndefined();
+    expect(pictureSrcSet(r2(OLD_PREFIX), 1600)).toBeUndefined();
     // No size recorded (a body from before the upload route stored one), or not our address.
-    expect(pictureSrcSet(r2(OLD_PREFIX), null, null)).toBeUndefined();
+    expect(pictureSrcSet(r2(OLD_PREFIX), null)).toBeUndefined();
     expect(pictureSrcSet(r2(LADDER_PREFIX), undefined)).toBeUndefined();
-    expect(pictureSrcSet("https://example.test/picture.jpg", 2400, 1600)).toBeUndefined();
+    expect(pictureSrcSet("https://example.test/picture.jpg", 2400)).toBeUndefined();
+    // YouTube's own poster, kept under `yt-<id>`, is one small file too.
+    expect(pictureSrcSet("/api/media/local/yt-dQw4w9WgXcQ/web.webp", 480)).toBeUndefined();
   });
 });
 

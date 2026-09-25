@@ -109,8 +109,10 @@ export default async function AlbumPage({ params }: Props) {
                 src={photo.thumbUrl}
                 // The tile's width, magnified by the 4:3 cut of a wider photograph: the browser
                 // takes the smallest stored width that fills it at the screen's density (§NNN).
-                srcSet={pictureSrcSet(photo.webUrl, photo.width, photo.height)}
-                sizes={pictureSizes("tile", 100, coverMagnification(photo.width, photo.height, 4 / 3))}
+                // A photo from before has no ladder, no `srcset` and no `sizes`: its thumbnail,
+                // as it always was, rather than a 2400-pixel master on a wide tile.
+                srcSet={pictureSrcSet(photo.webUrl, photo.width)}
+                sizes={pictureSrcSet(photo.webUrl, photo.width) ? pictureSizes("tile", 100, coverMagnification(photo.width, photo.height, 4 / 3)) : undefined}
                 alt={t("photoAlt", { n: photo.position, total: album.photoCount, title: album.title })}
                 width={photo.width}
                 height={photo.height}

@@ -1,4 +1,4 @@
-import { THUMB_MAX } from "./limits";
+import { HIGH_WEB_MAX, WEB_MAX } from "./limits";
 
 /**
  * The widths a picture is stored at, and how a page asks for the right one (§NNN).
@@ -45,11 +45,22 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
 /**
  * The rungs, in CSS pixels × device pixels. 480 and 640 are a gallery tile and a card on a phone
  * at 2× and 3×; 960 and 1280 a phone's full column at 3× and a laptop's half column at 2×; 1600
- * and 1920 a laptop's full column at 1.5× and 2×. The master (≤ 2400) is the widest screen's.
- * Each rung is at most 1.5× the one below, so the browser never downloads more than half again
- * what it draws.
+ * and 1920 a laptop's full column at 1.5× and 2×. The master (≤ 2400 at «Normală») is the
+ * widest screen's. Each rung is at most 1.5× the one below, so the browser never downloads more
+ * than half again what it draws.
+ *
+ * 2400 is a rung only under a master at «Înaltă» (up to `HIGH_WEB_MAX`, 4000; §NNN): a
+ * «Normală» master is at most 2400 and so never gets it (`ladderWidths` keeps rungs under 0.9 of
+ * the master), and a 4000-pixel poster is not what a laptop at 2× has to download — it takes
+ * the same 2400 file a «Normală» picture's master is, and only a screen wider than that takes
+ * the whole master.
  */
-export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920] as const;
+export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920, 2400] as const;
+
+/** The master's long side for a choice (§NNN): what `images.ts` resizes to. */
+export function masterMaxEdge(quality: ImageQuality): number {
+  return quality === "high" ? HIGH_WEB_MAX : WEB_MAX;
+}
 
 /**
  * The rungs stored below a master of this width: those narrower than 0.9 of it. A 1725-pixel
@@ -93,32 +104,20 @@ export function rungSrc(masterSrc: string, width: number): string {
  * screen wider than every rung gets exactly what it got before.
  *
  * - **A picture with a ladder**: every rung, then the master.
- * - **A picture from before**: its thumbnail — every stored picture has had one, `thumb.webp`
- *   beside `web.webp`, at most `THUMB_MAX` on its long side — then the master. Two candidates
- *   are enough to stop the old failure both ways: a gallery tile or an album cover that was
- *   *always* the thumbnail can now take the master where the thumbnail would be enlarged (a
- *   3× phone), and a narrow picture that was always the master can take the thumbnail.
+ * - **A picture from before** (a version-4 prefix): no `srcset` — it is drawn exactly as it was,
+ *   the thumbnail where a page drew the thumbnail and the master where it drew the master. The
+ *   first version of this offered it "thumbnail, then master", and the re-review measured what
+ *   that did (§NNN): an old album's cover across a 390-pixel phone at 3× is 1074 physical
+ *   pixels, wider than the 640-pixel thumbnail, so the browser took the 2400-pixel master —
+ *   381 KB where its thumbnail is 37 KB (a 3455 × 2673 photograph, measured), on the albums
+ *   page, for every old album on it. Two candidates four times apart are not a ladder; a phone is
+ *   better served by the file it always had until the album is uploaded again.
  * - **No width recorded** (a body from before the upload route stored one): no `srcset`.
  */
-export function pictureSrcSet(
-  masterSrc: string,
-  masterWidth: number | null | undefined,
-  masterHeight?: number | null,
-): string | undefined {
+export function pictureSrcSet(masterSrc: string, masterWidth: number | null | undefined): string | undefined {
   const match = MASTER_SUFFIX.exec(masterSrc);
-  if (!match || !masterWidth) return undefined;
-  if (isLadderKeyPrefix(match[1])) {
-    return [...ladderWidths(masterWidth).map((width) => `${rungSrc(masterSrc, width)} ${width}w`), `${masterSrc} ${masterWidth}w`].join(", ");
-  }
-  if (!masterHeight) return undefined;
-  const thumbWidth = Math.round(masterWidth * Math.min(1, THUMB_MAX / Math.max(masterWidth, masterHeight)));
-  if (thumbWidth >= masterWidth * 0.9) return undefined;
-  return `${srcOfThumb(masterSrc)} ${thumbWidth}w, ${masterSrc} ${masterWidth}w`;
-}
-
-/** The thumbnail's address, from the master's. */
-export function srcOfThumb(masterSrc: string): string {
-  return masterSrc.replace(/\/web\.webp$/, "/thumb.webp");
+  if (!match || !masterWidth || !isLadderKeyPrefix(match[1])) return undefined;
+  return [...ladderWidths(masterWidth).map((width) => `${rungSrc(masterSrc, width)} ${width}w`), `${masterSrc} ${masterWidth}w`].join(", ");
 }
 
 /**

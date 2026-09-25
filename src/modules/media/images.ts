@@ -1,12 +1,13 @@
 import sharp, { type Metadata, type Sharp, type WebpOptions } from "sharp";
 import { DomainError } from "@/shared/errors/domain-error";
-import { DEFAULT_IMAGE_QUALITY, type ImageQuality, ladderWidths } from "./ladder";
+import { DEFAULT_IMAGE_QUALITY, type ImageQuality, ladderWidths, masterMaxEdge } from "./ladder";
 
 /**
  * What an uploaded image becomes before it is stored (AGENTS.md §17).
  *
- * One input, and since §NNN a ladder of WebP files: `web`, at most 2400px on its long side — the
- * master, what a wide screen draws and what every body's address names — `thumb`, at most 640px,
+ * One input, and since §NNN a ladder of WebP files: `web`, at most 2400px on its long side (4000
+ * at «Înaltă») — the master, what a wide screen draws and what every body's address names —
+ * `thumb`, at most 640px,
  * for the backoffice's own lists, and a rung at each of `LADDER_WIDTHS` narrower than the master
  * (`ladder.ts`), which is what a phone, a card and a gallery tile load. Nothing else is kept —
  * not the original, not its metadata. `sharp` drops every EXIF field unless asked to keep them
@@ -56,16 +57,34 @@ const THUMB_QUALITY = 78;
 const RUNG_QUALITY = 82;
 
 /**
- * "Înaltă" (§NNN). Lossy WebP at any quality smears text: a poster with a date and a list of
+ * "Înaltă" (§NNN) is two things, and the re-review found the first version had only one of them.
+ *
+ * **More pixels.** The master keeps up to `HIGH_WEB_MAX` (4000) on its long side rather than
+ * 2400, and the browser sends up to 4000 for this choice rather than 3000
+ * (`browser-shrink.ts`): a poster photographed at 4000 pixels had its lettering reduced to 60%
+ * whatever the encoder did afterwards, so "high" with the same 2400 pixels was no sharper
+ * anywhere a screen could show the difference. The ladder gains a 2400 rung under such a
+ * master (`LADDER_WIDTHS`), so a laptop at 2× still loads a 2400 file and only a wider screen, or
+ * a tap on an album photo, takes the whole master.
+ *
+ * **A better encode.** Lossy WebP at any quality smears text: a poster with a date and a list of
  * rules measured 37.8 dB at quality 82 and still only 39.1 dB at 92, because WebP's lossy mode
  * halves the colour resolution and rings around every letter. Near-lossless WebP measured
  * 56.8 dB — the letters as drawn — for 225 KB against lossy 92's 166 KB. On a photograph the same
  * setting is 5–7 times the bytes for a difference nobody sees, so "high" decides per picture: it
- * encodes a probe both ways and keeps near-lossless when that is at most twice lossy 92, and
- * lossy 92 otherwise. A poster comes out sharp; a photograph comes out at the best lossy quality
- * rather than several megabytes.
+ * encodes a probe both ways and keeps near-lossless when that is at most twice lossy 90, and
+ * lossy 90 otherwise. A poster comes out sharp; a photograph comes out at 90 rather than several
+ * megabytes more. 90 rather than 92: on a 4000-pixel master 92 measured 9–25% more bytes.
+ *
+ * **The bytes, measured** (four phone photographs of 6.5–12 megapixels and a 3200 × 4000
+ * poster, on the shared machine): a photograph's master at «Normală» is 279–418 KB (1542 KB for
+ * a leaf-covered hillside, the worst case), 0.7–1.1 MB in all its files; at «Înaltă» 650–742 KB
+ * (3.8 MB for the hillside), 1.8–2.4 MB in all (8.6 MB), in 5–11 seconds rather than 2–3.5. The
+ * poster at «Înaltă» is near-lossless: 218 KB for the 3200 × 4000 master, 1.3 MB in all. A
+ * phone still takes a rung, at 90 rather than 82 — 1.3–1.7 times the bytes of the same rung at
+ * «Normală» — and a laptop at 2× takes the 2400 rung, 305–453 KB (1.7 MB for the hillside).
  */
-const HIGH_QUALITY = 92;
+const HIGH_QUALITY = 90;
 const NEAR_LOSSLESS_QUALITY = 60;
 const NEAR_LOSSLESS_MAX_RATIO = 2;
 const PROBE_WIDTH = 960;
@@ -136,9 +155,10 @@ export async function processUploadedImage(
     refuses a truncated file rather than storing a half-decoded one; sRGB and 8 bits are what
     every file below is written in anyway.
   */
+  const masterEdge = masterMaxEdge(quality);
   const { data, info } = await sharp(input, { failOn: "error" })
     .rotate()
-    .resize({ width: WEB_MAX, height: WEB_MAX, fit: "inside", withoutEnlargement: true })
+    .resize({ width: masterEdge, height: masterEdge, fit: "inside", withoutEnlargement: true })
     .toColourspace("srgb")
     .raw({ depth: "uchar" })
     .toBuffer({ resolveWithObject: true });
@@ -164,7 +184,7 @@ export async function processUploadedImage(
   return { web, thumb, rungs, width: info.width, height: info.height, quality, encoding };
 }
 
-/** "Înaltă": near-lossless when it costs at most twice lossy 92 on a probe, lossy 92 otherwise. */
+/** "Înaltă": near-lossless when it costs at most twice lossy 90 on a probe, lossy 90 otherwise. */
 async function highEncoding(pixels: () => Sharp, masterWidth: number): Promise<ImageEncoding> {
   const probe = () => pixels().resize({ width: Math.min(PROBE_WIDTH, masterWidth) });
   const [asNearLossless, asLossy] = await Promise.all([

@@ -86,6 +86,9 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
           videoId={block.attrs.videoId}
           caption={block.attrs.caption}
           poster={block.attrs.poster}
+          posterWidth={block.attrs.posterWidth ?? null}
+          posterHeight={block.attrs.posterHeight ?? null}
+          pictures={pictures}
           widthPercent={block.attrs.widthPercent}
           align={block.attrs.align}
           floats={floats}

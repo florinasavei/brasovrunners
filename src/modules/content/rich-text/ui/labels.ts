@@ -1,4 +1,5 @@
 import type { getTranslations } from "next-intl/server";
+import { HIGH_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import type RichTextEditor from "./RichTextEditor";
 
 type Translate = Awaited<ReturnType<typeof getTranslations<"Admin.richText">>>;
@@ -75,7 +76,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       legend: rt("imageQualityLegend"),
       normal: rt("imageQualityNormal"),
       high: rt("imageQualityHigh"),
-      help: rt("imageQualityHelp"),
+      help: rt("imageQualityHelp", { normalMax: String(WEB_MAX), highMax: String(HIGH_WEB_MAX) }),
     },
     imageChoose: rt("imageChoose"),
     // Raw, with its six placeholders: the island substitutes the facts itself.

@@ -302,6 +302,11 @@ function RichTextEditorIsland({
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
   /**
+   * What the last poster became (§NNN), with its address: shown in a film's panel only while that
+   * film's poster is this one, so another film selected afterwards never shows these facts.
+   */
+  const [posterStored, setPosterStored] = useState<{ src: string; facts: StoredFacts } | null>(null);
+  /**
    * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
    * taken once when the dialog opens rather than read on every keystroke, and `null` while it is
    * shut so nothing is rendered twice behind it.
@@ -530,15 +535,7 @@ function RichTextEditorIsland({
     setImageBarOpen(false);
     setStored(null);
     try {
-      const body = new FormData();
-      body.append("file", await shrinkImageInBrowser(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
-      body.append("originalFilename", file.name);
-      // From the store, not from this render: a paste or a drop calls the function Tiptap kept
-      // from the first render, whose `imageQuality` is the default whatever was chosen since.
-      body.append("quality", readRemembered());
-      const response = await fetch("/api/admin/media", { method: "POST", body });
-      if (!response.ok) throw new Error(String(response.status));
-      const uploaded = (await response.json()) as { src: string; width: number; height: number; stored?: StoredFacts };
+      const uploaded = await uploadPicture(file);
       setStored(uploaded.stored ?? null);
       // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
       // and an empty alt is what the nag under the editor counts.
@@ -558,17 +555,23 @@ function RichTextEditorIsland({
    * shrink-and-upload `insertImage` uses, written to the *selected* youtube node's `poster`
    * rather than inserted as a picture of its own. `posterSource: "club"` is what keeps
    * `attachYoutubePosters` from ever replacing it with YouTube's own thumbnail on a later save.
+   *
+   * At the chosen quality, like every other upload, with the same facts under it (§NNN, found by
+   * re-review: the poster went up at «Normală» whatever was chosen, and said nothing). Its size
+   * goes on the node beside its address, `posterWidth` / `posterHeight`, because the page draws
+   * the poster from its ladder (`RichTextVideo`) and a `srcset` needs the master's width.
    */
   const pickPoster = async (file: File) => {
     setPosterState("uploading");
+    setPosterStored(null);
     try {
-      const body = new FormData();
-      body.append("file", await shrinkImageInBrowser(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
-      body.append("originalFilename", file.name);
-      const response = await fetch("/api/admin/media", { method: "POST", body });
-      if (!response.ok) throw new Error(String(response.status));
-      const uploaded = (await response.json()) as { src: string };
-      editor?.chain().focus().updateAttributes("youtube", { poster: uploaded.src, posterSource: "club" }).run();
+      const uploaded = await uploadPicture(file);
+      editor
+        ?.chain()
+        .focus()
+        .updateAttributes("youtube", { poster: uploaded.src, posterSource: "club", posterWidth: uploaded.width, posterHeight: uploaded.height })
+        .run();
+      setPosterStored(uploaded.stored ? { src: uploaded.src, facts: uploaded.stored } : null);
       setPosterState("idle");
     } catch {
       setPosterState("failed");
@@ -1537,6 +1540,13 @@ function RichTextEditorIsland({
               "Use YouTube's" only shows once a club poster is picked — it clears `posterSource`
               so `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
             */}
+            {/* The same choice as every upload (§NNN), remembered with it: a poster with lettering wants «Înaltă». */}
+            <ImageQualityChoice
+              value={imageQuality}
+              onChange={setImageQuality}
+              labels={labels.imageQuality}
+              disabled={posterState === "uploading"}
+            />
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
               <Button
                 size="small"
@@ -1549,7 +1559,13 @@ function RichTextEditorIsland({
                 <Button
                   size="small"
                   color="inherit"
-                  onClick={() => editor?.chain().focus().updateAttributes("youtube", { poster: null, posterSource: null }).run()}
+                  onClick={() => {
+                    editor
+                      ?.chain()
+                      .focus()
+                      .updateAttributes("youtube", { poster: null, posterSource: null, posterWidth: null, posterHeight: null })
+                      .run();
+                  }}
                 >
                   {labels.youtubePosterUseYoutube}
                 </Button>
@@ -1558,6 +1574,11 @@ function RichTextEditorIsland({
             {posterState === "failed" && (
               <Typography variant="body2" color="error">
                 {labels.youtubePosterFailed}
+              </Typography>
+            )}
+            {posterState === "idle" && posterStored && videoAttrs?.poster === posterStored.src && (
+              <Typography variant="body2" color="text.secondary" aria-live="polite" data-testid="rich-text-poster-stored">
+                {describeStoredImage(posterStored.facts, labels.imageStored, document.documentElement.lang || "ro")}
               </Typography>
             )}
             <input
@@ -1755,6 +1776,9 @@ const YoutubeNode = Node.create({
       // (`getJSON`/`setContent`) instead of being dropped as an attribute Tiptap never heard of.
       poster: { default: null },
       posterSource: { default: null },
+      // A club poster's size (§NNN), for the page's `srcset`; null for YouTube's own thumbnail.
+      posterWidth: { default: null },
+      posterHeight: { default: null },
     };
   },
   parseHTML() {
@@ -1789,6 +1813,25 @@ const YoutubeNode = Node.create({
 
 /** One stored picture, as `GET /api/admin/media` lists it. */
 type StoredPicture = { id: string; src: string; thumb: string; width: number; height: number; name: string };
+
+/**
+ * One picture up to `/api/admin/media` at the remembered quality (§NNN): shrunk in the browser
+ * only as far as that choice keeps, then the server's answer. Shared by a picture in the text and
+ * a film's poster, so the two cannot drift apart again.
+ *
+ * The choice is read from the store, not from a render: a paste or a drop calls the function
+ * Tiptap kept from the first render, whose `imageQuality` is the default whatever was chosen since.
+ */
+async function uploadPicture(file: File): Promise<{ src: string; width: number; height: number; stored?: StoredFacts }> {
+  const quality = readRemembered();
+  const body = new FormData();
+  body.append("file", await shrinkImageInBrowser(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
+  body.append("originalFilename", file.name);
+  body.append("quality", quality);
+  const response = await fetch("/api/admin/media", { method: "POST", body });
+  if (!response.ok) throw new Error(String(response.status));
+  return (await response.json()) as { src: string; width: number; height: number; stored?: StoredFacts };
+}
 
 /** How many pictures the document holds with nothing for a screen reader to say. */
 function countMissingAlt(doc: unknown): number {

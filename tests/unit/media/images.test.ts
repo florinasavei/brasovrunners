@@ -1,7 +1,8 @@
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { MAX_UPLOAD_BYTES, processUploadedImage, storedBytes, THUMB_MAX, WEB_MAX } from "@/modules/media/images";
-import { ladderWidths } from "@/modules/media/ladder";
+import { ladderWidths, masterMaxEdge } from "@/modules/media/ladder";
+import { HIGH_WEB_MAX } from "@/modules/media/limits";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -76,6 +77,25 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     );
     // A small photograph has no rung at all: nothing is made bigger than it is.
     expect((await processUploadedImage(await phonePhoto(640, 480))).rungs).toEqual([]);
+  });
+
+  it("keeps up to 4000 pixels at «Înaltă», with a 2400 rung, and 2400 at «Normală» (§NNN)", async () => {
+    // Found by re-review: «Înaltă» kept the same 2400-pixel master, so it was no sharper.
+    expect([masterMaxEdge("normal"), masterMaxEdge("high")]).toEqual([WEB_MAX, HIGH_WEB_MAX]);
+    const wide = await sharp({ create: { width: 4200, height: 2800, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
+    const high = await processUploadedImage(wide, { quality: "high" });
+    expect([high.width, high.height]).toEqual([HIGH_WEB_MAX, 2667]);
+    expect((await sharp(high.web).metadata()).width).toBe(HIGH_WEB_MAX);
+    expect(high.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
+    expect((await sharp(high.rungs[high.rungs.length - 1].body).metadata()).width).toBe(2400);
+
+    const normal = await processUploadedImage(wide, { quality: "normal" });
+    expect([normal.width, normal.height]).toEqual([WEB_MAX, 1600]);
+    expect(normal.rungs.map((rung) => rung.width)).not.toContain(2400);
+
+    // A picture smaller than either bound is kept as it is, at either choice.
+    const small = await sharp({ create: { width: 1800, height: 1200, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
+    expect((await processUploadedImage(small, { quality: "high" })).width).toBe(1800);
   });
 
   it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§NNN)", async () => {

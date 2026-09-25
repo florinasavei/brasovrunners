@@ -6,7 +6,7 @@ import FormHelperText from "@mui/material/FormHelperText";
 import FormLabel from "@mui/material/FormLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
-import { useCallback, useId, useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 import { DEFAULT_IMAGE_QUALITY, IMAGE_QUALITIES, type ImageQuality, parseImageQuality } from "../ladder";
 
 /**
@@ -25,21 +25,55 @@ import { DEFAULT_IMAGE_QUALITY, IMAGE_QUALITIES, type ImageQuality, parseImageQu
  * matches the server's HTML and the remembered choice arrives with hydration.
  */
 
+/*
+  `sessionStorage`, not `localStorage`, deliberately: the choice is about the pictures of one
+  sitting — an album of posters, a page with a map — and a shared backoffice laptop should not
+  start the next person, or the same person next week, on «Înaltă» because of what was uploaded
+  before. Closing the tab is the reset, and the recommendation is where every new tab starts.
+*/
 const SESSION_KEY = "br.imageQuality";
+/** This page's own copy, and the only one when the browser refuses the store. */
 let inMemory: ImageQuality = DEFAULT_IMAGE_QUALITY;
+/**
+ * Whether the store took the last choice. Once a write has thrown — a private window, a full
+ * quota, site data blocked — the store is not read again for this page: whatever it holds is
+ * older than the choice just made, and reading it back would undo that choice.
+ */
+let storeHoldsChoice = true;
 const listeners = new Set<() => void>();
 
 /**
  * The choice as it stands, outside React: for a handler registered once and called much later —
  * the editor's paste and drop, which Tiptap keeps from the first render — where a value from the
  * render it was made in would be the default, whatever was chosen since.
+ *
+ * The store when it works; this page's memory when it throws, when a write to it has thrown,
+ * when it holds nothing and when it holds something that is not a choice. (The first version
+ * read `parseImageQuality(stored) ?? inMemory`, and `parseImageQuality(null)` is the default,
+ * so the memory was never reached — found by re-review, §NNN.)
  */
 export function readRemembered(): ImageQuality {
+  if (!storeHoldsChoice) return inMemory;
+  let stored: string | null;
   try {
-    return parseImageQuality(window.sessionStorage.getItem(SESSION_KEY)) ?? inMemory;
+    stored = window.sessionStorage.getItem(SESSION_KEY);
   } catch {
     return inMemory;
   }
+  if (stored === null) return inMemory;
+  return parseImageQuality(stored) ?? inMemory;
+}
+
+/** Remember a choice for the rest of the session, in the store if it takes it. */
+export function rememberQuality(next: ImageQuality): void {
+  inMemory = next;
+  try {
+    window.sessionStorage.setItem(SESSION_KEY, next);
+    storeHoldsChoice = true;
+  } catch {
+    storeHoldsChoice = false;
+  }
+  for (const listener of listeners) listener();
 }
 
 function subscribe(listener: () => void): () => void {
@@ -50,16 +84,7 @@ function subscribe(listener: () => void): () => void {
 /** The remembered choice and the way to change it, shared by every uploader on the page. */
 export function useImageQuality(): [ImageQuality, (next: ImageQuality) => void] {
   const quality = useSyncExternalStore(subscribe, readRemembered, () => DEFAULT_IMAGE_QUALITY);
-  const choose = useCallback((next: ImageQuality) => {
-    inMemory = next;
-    try {
-      window.sessionStorage.setItem(SESSION_KEY, next);
-    } catch {
-      // The page's memory holds it instead; see above.
-    }
-    for (const listener of listeners) listener();
-  }, []);
-  return [quality, choose];
+  return [quality, rememberQuality];
 }
 
 export type ImageQualityLabels = {
@@ -86,9 +111,13 @@ export default function ImageQualityChoice({
       <FormLabel component="legend" sx={{ typography: "body2", fontWeight: 600 }}>
         {labels.legend}
       </FormLabel>
+      {/*
+        No `name`: MUI gives each group its own, so the picture bar, a film's panel and the other
+        language's editor are separate groups rather than one native group across the page — and
+        nothing called `quality` rides along with the editor's form when it is saved.
+      */}
       <RadioGroup
         row
-        name="quality"
         value={value}
         aria-describedby={helpId}
         onChange={(event) => {

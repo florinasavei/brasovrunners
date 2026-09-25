@@ -27,6 +27,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { HIGH_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteAlbumAction, deletePhotoAction, saveAlbumAction, setCoverAction, transitionAlbumAction } from "../actions";
@@ -141,7 +142,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                     legend: t("gallery.qualityLegend"),
                     normal: t("gallery.qualityNormal"),
                     high: t("gallery.qualityHigh"),
-                    help: t("gallery.qualityHelp"),
+                    help: t("gallery.qualityHelp", { normalMax: String(WEB_MAX), highMax: String(HIGH_WEB_MAX) }),
                   },
                   stored: {
                     template: t.raw("gallery.stored") as string,
