@@ -494,9 +494,23 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       checklist: eventTranslations.checklist,
       locationName: publicLocationName,
       mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
+      // The street under the place's name, in the emails' facts block (§NNN) — withheld with the
+      // place while it is to be announced (§328), as on the page.
+      locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
       locationToBeAnnounced: events.locationToBeAnnounced,
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,
+      // The route's facts and the cost, as the page's pills say them (§NNN, `eventFactsBlock`):
+      // the same public columns `PUBLIC_COLUMNS` reads, nothing a public page does not show.
+      surface: events.surface,
+      difficulty: events.difficulty,
+      distanceMeters: events.distanceMeters,
+      elevationGainMeters: events.elevationGainMeters,
+      headlampRequired: events.headlampRequired,
+      routeUrl: events.routeUrl,
+      costType: events.costType,
+      costAmount: events.costAmount,
+      costUrl: events.costUrl,
       startsAt: events.startsAt,
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,

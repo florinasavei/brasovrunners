@@ -3,6 +3,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
+import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { CLUB_NAME, COLOR } from "@/theme/brand";
@@ -47,6 +48,13 @@ export type TemplateContent = {
   links?: { label: string; url: string }[];
   /** Present on the confirmation: the QR the participant shows to pick up their number. */
   image?: { url: string; alt: string; caption: string };
+  /**
+   * The event's facts as one block (§NNN, `domain/event-facts.ts`): when, where, the programme, the
+   * route, the cost and the page's sections — under the words and the QR, above the button. On the
+   * confirmation, the reminder and the declaration request; the platform's, like the QR, so the
+   * club's words never carry it.
+   */
+  eventFacts?: EventFactsBlock;
   closing: string;
   /** "Reply to this email with questions" — on every message when the club has a reply address. */
   footer?: string;
@@ -92,6 +100,7 @@ export function renderContent(
       typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1")] : part.text,
     ),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
+    ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
     "",
@@ -143,6 +152,8 @@ export function renderContent(
           paragraph(escapeHtml(content.image.caption)),
         ]
       : []),
+    // The event's facts under the confirmation and its QR, above the button (§NNN).
+    ...(content.eventFacts ? [content.eventFacts.html] : []),
     // The one action as a button (§96): a link a thumb finds, in the club's blue.
     ...(content.action
       ? [
@@ -271,6 +282,9 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
+    // The facts block in the second half's language, from its own page (§NNN): its place's name,
+    // its programme labels, its page's sections — drawn once per half (§373).
+    ...(data.eventFactsOther ? { eventFacts: data.eventFactsOther } : {}),
     // The status in the other language's own words (§373, email follow-up), never the registrant's.
     ...(data.currentStatusOther ? { currentStatus: data.currentStatusOther } : {}),
     /*
@@ -375,9 +389,16 @@ export type TemplateData = {
   eventScheduleUrl?: string;
   /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§332); on the confirmation and the reminder. */
   eventLinksUrl?: string;
-  /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
+  /** The programme's rows as lines, in the message's language and in the other's (§117); on the update notice (§331). */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
+  /**
+   * What the facts block says about the event (§NNN, `domain/event-facts.ts`), in this half's
+   * language, and in the other's for the bilingual message's second half. Read by the confirmation,
+   * the reminder and the declaration request only; absent when the message is about no event.
+   */
+  eventFacts?: EmailEventFacts;
+  eventFactsOther?: EmailEventFacts;
   /**
    * When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`,
    * and only while it is ahead — past it the place is kept for as long as nobody waits (§160).
@@ -651,7 +672,7 @@ const T = {
       body: (d: TemplateData) => [
         // "Se apropie", never a number of days: a runner confirmed late gets this a day after confirming, nearer the start (§126, §357).
         `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
-        ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
+        // The programme is the facts block's own row now (§NNN), under the QR.
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
@@ -903,7 +924,6 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
-        ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
@@ -1247,12 +1267,24 @@ export function buildTemplateContent(
       ? entry.subject(data)
       : entry.subject;
 
+  /*
+    The event's facts as one block (§NNN), in this half's language, on the three messages a runner
+    keeps to know where and when: the confirmation, the reminder, the declaration request (which is
+    also the participation confirmation, §104). It says the date, the place and the map, so the one
+    bold line of §81 gives way to it there, and it carries the page's sections (`#schedule`,
+    `#rules`, `#route`, `#links`), so the list under the button does not name them a second time.
+    A club copy keeps it: every fact in it is on the public page (§320 takes only what is the
+    participant's own).
+  */
+  const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale) : undefined;
+  const linkData: TemplateData = factsBlock ? { ...data, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined } : data;
+
   return {
     // Each half of a bilingual subject carries its own language's mark, so a mailbox filter on
     // either word finds every copy whichever language the runner chose (§96).
     subject: clubCopy ? `${copy.clubCopy.subject}${subject}` : subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
-    facts: entry.facts?.(data),
+    facts: factsBlock ? undefined : entry.facts?.(data),
     /*
       The re-send says it is one (§235).
 
@@ -1303,14 +1335,15 @@ export function buildTemplateContent(
     ],
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
+    eventFacts: factsBlock,
     links: (() => {
-      const own = entry.links?.(data) ?? [];
+      const own = entry.links?.(linkData) ?? [];
       // The club's archive copy and the staff invitation are not a participant's message.
       if (messageType === "DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
         return own.length > 0 ? own : undefined;
       }
       const seen = new Set(own.map((link) => link.url));
-      return [...own, ...standardLinks(data, copy.moreLinks).filter((link) => !seen.has(link.url))];
+      return [...own, ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url))];
     })(),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
@@ -1359,6 +1392,13 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
  * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
  * and the staff invitation says what it keeps about the team in its own body.
  */
+/**
+ * The messages that carry the event's facts block (§NNN): the confirmation, the reminder, and the
+ * declaration request — which, for a race with a participation window, is the participation
+ * confirmation itself (§104), sent at once and again when the window opens.
+ */
+const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION"]);
+
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",

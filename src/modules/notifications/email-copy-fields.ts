@@ -22,6 +22,7 @@ import {
 } from "./domain/email-rich-text";
 import {
   EMAIL_SAMPLE,
+  EMAIL_SAMPLE_EVENT,
   EMAIL_SAMPLE_FORMER_INVITER,
   EMAIL_SAMPLE_FORMER_WHEN,
   type EmailSampleHit,
@@ -32,6 +33,7 @@ import {
   replaceEmailSampleLiterals,
 } from "./domain/email-sample";
 import { ORGANIZER_MESSAGE_PLACEHOLDERS } from "./domain/organizer-message";
+import type { EmailEventFacts } from "./domain/event-facts";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
 
@@ -104,6 +106,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventScheduleUrl: `${base}/${locale}/EXAMPLE-event#schedule`,
     // "Linkuri și fișiere" (§332): the sample event has some, so the preview shows the line.
     eventLinksUrl: `${base}/${locale}/EXAMPLE-event#links`,
+    // The facts block (§NNN), each half in its own language, from the sample event — never a fact typed here.
+    eventFacts: emailSampleEventFacts(locale),
+    eventFactsOther: emailSampleEventFacts(OTHER[locale]),
     manageUrl: `${base}/${locale}/EXAMPLE`,
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
     listConsentUrl: `${base}/${locale}/EXAMPLE-list`,
@@ -128,6 +133,31 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     organizerSubjectOther: other.organizerSubject,
     organizerBody: sample.organizerBody,
     organizerBodyOther: other.organizerBody,
+  };
+}
+
+/**
+ * The sample event's facts block data in one language (§NNN): `EMAIL_SAMPLE_EVENT` with the sample's
+ * place in that language, and the page's sections the sample event has — a programme, rules, a route
+ * description and a document under "Linkuri și fișiere" — so every row of the block shows.
+ */
+export function emailSampleEventFacts(locale: EmailLocale): EmailEventFacts {
+  const base = env.APP_BASE_URL;
+  return {
+    ...EMAIL_SAMPLE_EVENT,
+    scheduleItems: EMAIL_SAMPLE_EVENT.scheduleItems,
+    locationToBeAnnounced: false,
+    locationName: EMAIL_SAMPLE[locale].eventLocationName,
+    mapUrl: `${base}/#map`,
+    routeUrl: null,
+    stravaEventUrl: null,
+    facebookEventUrl: null,
+    costUrl: null,
+    pageUrl: `${base}/${locale}/EXAMPLE-event`,
+    hasRules: true,
+    hasSchedule: true,
+    hasRouteDescription: true,
+    hasOtherLinks: true,
   };
 }
 

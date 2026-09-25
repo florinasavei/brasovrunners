@@ -268,6 +268,7 @@
     },
     "route": "Route",
     "routeSection": "The route",
+    "linksLabel": "Links",
     "age": "Age",
     "openRoute": "View the route",
     "routeJump": "About the route",

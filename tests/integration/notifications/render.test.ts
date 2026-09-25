@@ -205,9 +205,11 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       NOW,
     );
 
-    // Sorted, at the event's wall clock (09:00 EEST), the Romanian half first and the English after.
-    expect(message.text).toContain("Programul: 09:00 — Ridicarea numerelor (Cort); 09:30 — Briefing.");
-    expect(message.text).toContain("The programme: 09:00 — Number pickup (Cort); 09:30 — Briefing.");
+    // Sorted, at the event's wall clock (09:00 EEST), the Romanian half first and the English after —
+    // the facts block's own row now (§NNN), one line per row, in place of the one sentence.
+    expect(message.text).toContain("Program: 09:00 — Ridicarea numerelor (Cort)\n  09:30 — Briefing");
+    expect(message.text).toContain("Programme: 09:00 — Number pickup (Cort)\n  09:30 — Briefing");
+    expect(message.text).not.toContain("Programul: 09:00");
   });
 
   it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {
@@ -243,9 +245,9 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     await db.update(events).set({ links: [{ kind: "GPX", url: drive, labelRo: null, labelEn: null }] }).where(eq(events.id, event.id));
     const withLinks = await renderOutboxMessage({ ...row, id: "row-l2", idempotencyKey: "test:l2" }, db, NOW);
     expect(withLinks.html).toMatch(/\/evenimente\/crosul#links"/);
-    // One line in each half of the bilingual message, naming the page — never the Drive address.
-    expect(withLinks.text).toContain("Linkuri și fișiere: pe pagina evenimentului");
-    expect(withLinks.text).toContain("Links and files: on the event's page");
+    // One link in each half's facts block (§NNN), to the page's section — never the Drive address.
+    expect(withLinks.text).toMatch(/Linkuri și fișiere: \S+\/evenimente\/crosul#links/);
+    expect(withLinks.text).toMatch(/Links and files: \S+\/evenimente\/crosul#links/);
     expect(withLinks.html).not.toContain(drive);
     expect(withLinks.text).not.toContain(drive);
   });
@@ -329,8 +331,8 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       NOW,
     );
     expect(withDoc.html).toMatch(/crosul-traseu#links"/);
-    expect(withDoc.text).toContain("Linkuri și fișiere: pe pagina evenimentului");
-    expect(withDoc.text).toContain("Links and files: on the event's page");
+    expect(withDoc.text).toMatch(/Linkuri și fișiere: \S+crosul-traseu#links/);
+    expect(withDoc.text).toMatch(/Links and files: \S+crosul-traseu#links/);
     expect(withDoc.html).not.toContain(doc);
     expect(withDoc.text).not.toContain(doc);
   });
