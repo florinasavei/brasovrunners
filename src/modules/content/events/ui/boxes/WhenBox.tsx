@@ -58,7 +58,7 @@ export default async function WhenBox({ event, mayEditSettings, risk, inSeries =
       )}
       {mayEditSettings ? (
         <Stack spacing={2}>
-          {/* A date and a 24-hour time each, on MUI's pickers, whatever clock the browser speaks (§70). */}
+          {/* A date on MUI's picker and a native 24-hour time, whatever clock the browser speaks (§70, §345). */}
           <WallTimeField
             name="event.startsAt"
             label={t("editor.startsAt")}

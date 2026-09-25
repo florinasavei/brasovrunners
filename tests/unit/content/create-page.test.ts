@@ -154,28 +154,23 @@ describe("no film box", () => {
   });
 });
 
-describe("the time is picked, always on the 24-hour clock", () => {
+describe("the time is the platform's own native input, always on the 24-hour clock", () => {
   const TIME_FIELD = read("src/shared/forms/pickers/TimeField.tsx");
-  const WALL_VALUES = read("src/shared/forms/pickers/wall-values.ts");
 
-  it("makes every time box MUI's picker, never a native input the browser's own locale could show as AM/PM", () => {
-    // §303's native `<input type="time">` still showed the OS's own clock face — "07:00 PM" on
-    // an English-language Chrome — which is the defect the picker replaced it for
-    // (`DECISIONS.md` §345, the owner: "vreau ca timpul să fie mereu în format de 24H"). The
-    // file's own doc comment still names the old markup as history, so the check is for what is
-    // actually rendered rather than for the substring's total absence from the file.
-    const rendered = WALL_TIME.slice(WALL_TIME.indexOf("export default function WallTimeField"));
-    expect(rendered).not.toContain('type="time"');
-    expect(rendered).not.toContain('type="date"');
+  it("makes every time box a native <input type=\"time\">, which reads HH:MM and never AM/PM (§345, amended)", () => {
+    // §345's own MUI wheel picker was replaced 2026-09-25 — the owner: "I simply hate this time
+    // picker" — by `type="time"`, which every browser already renders as a 24-hour or 12-hour
+    // control that always *posts* `HH:mm`; §345's date half is untouched, still MUI's picker.
     expect(WALL_TIME).toContain("<DateField");
     expect(WALL_TIME).toContain("<TimeField");
-    expect(ROWS).not.toContain('type="time"');
+    expect(WALL_TIME).not.toContain("TimePicker");
     expect(ROWS).toContain("<DateField");
     expect(ROWS.match(/<TimeField/g)).toHaveLength(2);
-    // Pinned to 24 hours in the picker itself, not left to the browser or the OS.
-    expect(TIME_FIELD).toContain("ampm={false}");
-    expect(WALL_VALUES).toContain('TIME_DISPLAY_FORMAT = "HH:mm"');
+    expect(TIME_FIELD).toContain('type="time"');
+    expect(TIME_FIELD).toContain("step: 60");
+    expect(TIME_FIELD).not.toContain("@mui/x-date-pickers");
     const pkg = JSON.parse(read("package.json"));
+    // The date half still needs the library; the time half no longer does.
     expect(pkg.dependencies["@mui/x-date-pickers"]).toMatch(/^\d+\.\d+\.\d+$/);
     expect(pkg.dependencies.dayjs).toMatch(/^\d+\.\d+\.\d+$/);
   });
