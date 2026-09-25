@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.93-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.94-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -439,6 +439,7 @@ coffee is run on nothing.
 10. The public form sent again with a registered address and a different name creates no registration and answers with the same screen as any other submission. The address receives one `REGISTER_ANOTHER_PERSON` message instead: a single-use link, hashed at rest, valid for the club's email-link window, to the event's form with the address fixed. When the address is at the club's limit, the message has no link (2026-09-25, `DECISIONS.md` §389).
 11. The club's limit on registrations per address per event (default 4, range 1-10) is read and enforced under the event's lock, which `submitRegistration` takes before it reads which runners the address holds. Five emailed links pressed at once with one slot left produce exactly one registration and four `addressAtCap` refusals, proven against a real PostgreSQL server by `tests/concurrency/family.test.ts` on every run (2026-09-25, `DECISIONS.md` §389).
 12. Two members of one family pressing the public form at once produce one registration and no error, on today's schema and after the contract release (2026-09-25, `DECISIONS.md` §389).
+13. The family flow's gate reads the catalogue: with `registrations_event_participant_unique` absent the flow is on, with it present the flow is dormant — proven both ways by `tests/integration/registrations/family-gate.test.ts` (2026-09-25, `DECISIONS.md` §390).
 
 **Verification:** integration `capacity/concurrency.test.ts` against real PostgreSQL; integration `cms/capacity-raise.test.ts`
 
@@ -750,6 +751,7 @@ registration — and it lists registrations and never changes an address.
 4. Given a participant registered for one distance of a race, when they register for another distance of the same race, then it is refused (BR-REQ-012-01).
 5. Given the one-per-address constraint has been dropped and an active registration on an address, when the public form is submitted again with the same address and a different runner's name, then no registration is created, the screen is the generic success, and the address receives one REGISTER_ANOTHER_PERSON email with a single-use link (or, at the limit, no link).
 6. Given the database, when a second row with the same (event_id, participant_id, name_key) is inserted directly, then the unique index registrations_event_participant_name_unique rejects it.
+7. (Amends criterion 2.) A duplicate insert for the same event, participant and runner's name key is rejected by the database (`registrations_event_participant_name_unique`); two runners with different name keys on one address are allowed, up to the club's limit per address. The old (event, participant) unique index is gone since migration `0073` (2026-09-25, `DECISIONS.md` §390).
 
 **Verification:** integration `registrations/uniqueness.test.ts`
 
