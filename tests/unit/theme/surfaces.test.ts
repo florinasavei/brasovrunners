@@ -35,4 +35,17 @@ describe("DECISIONS.md §272 a shared surface style crosses to a client componen
     expect(surfaces.specialCard.backgroundImage).toContain("var(--mui-palette-secondary-main)");
     expect(surfaces.specialCard.borderColor).toBe("secondary.main");
   });
+
+  /**
+   * §344 amended — the partner card's border and gray background, from theme tokens only.
+   * `action.selected` rather than `action.hover`: a 360-pixel screenshot in both colour schemes
+   * (review, 2026-09-25) found the hover tint too faint against the owner's "stands out" in
+   * light mode, so the card carries the stronger token `CalendarEventChip` and `RegistrationSteps`
+   * already use.
+   */
+  it("keeps the partner card's border and wash as theme tokens, never a literal colour", () => {
+    expect(surfaces.partnerCardSurface.borderColor).toBe("divider");
+    expect(surfaces.partnerCardSurface.bgcolor).toBe("action.selected");
+    expect(surfaces.partnerCardSurface.border).toBe(1);
+  });
 });

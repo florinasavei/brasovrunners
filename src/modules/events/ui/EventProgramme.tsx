@@ -6,6 +6,7 @@ import { formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { DENSITY } from "@/theme/density";
 import { localizedSchedule, readScheduleItems } from "../domain/schedule";
 import { dayKey } from "../domain/calendar";
 
@@ -36,7 +37,7 @@ export default async function EventProgramme({
   const time = (at: Date) => formatTime(at, { locale, timeZone });
 
   return (
-    <Box component="section" id="schedule" sx={{ mt: 4 }}>
+    <Box component="section" id="schedule" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
         {heading}
       </Typography>

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.87-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.88-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.87-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.88-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15510,3 +15510,56 @@ Implementation note for the next reader: the marker's glyph is `GLYPHS.partner` 
 PartnerEmoji, the emoji replacement for the partner glyph (introduced 2026-09-25 to replace the handshake icon), now matches SvgIcon's own accessibility default: aria-hidden is true unless the caller supplies its own aria-label or role, with an explicit caller aria-hidden still taking precedence — closing the gap where GlyphChip's bare rendering (no label or role of its own) read "handshake" aloud ahead of the chip's own visible text. The GLYPHS.partner registry entry now carries the one forwardRef-vs-SvgIconProps cast the component needs, rather than each call site casting it separately, and PartnerEmoji's fontSize prop now maps SvgIcon's keyword sizes to the rem values Material draws them at instead of forwarding the keyword directly as CSS.
 
 Baseline `BR-V1.87-2026-09-25`.
+
+## 380. Amending §366/§375: one phone density scale, so "tighter on mobile" is an edit to `src/theme/density.ts` and not a hunt through six components
+
+Amending §366/§375: one phone density scale, so "tighter on mobile" is an edit to `src/theme/density.ts` and not a hunt through six components.
+
+The owner, 2026-09-24, on his phone, after the listing and an event page: "There is a bit too much padding and whitespace on mobile, the space could be used more efficiently."
+
+**Decided: `src/theme/density.ts` exports `DENSITY`, six named MUI-spacing-unit steps** — `pagePadY` (1.5, was 2), `cardPadTop` (1.5, was 2), `cardGridGap` (1, was 1.5), `heroPad` (2, was 2.5), `gapSm` (1, was 2) and `sectionGapLg` (2.5, was 4), plus `sectionGap` (2, was 3) — used only as the `xs` side of a breakpoint object, `{ xs: DENSITY.x, sm: <the page's existing value> }`. `sm` and up are untouched everywhere this is used: a tablet or a desktop had no complaint, and the e2e desktop project (full viewport) still passes unchanged.
+
+Applied to: every public-page `<Container>`'s `py` (the listing, an event page, the calendar, a standing page); the listing's section gaps (the intro paragraph, the type filter, "Alte evenimente"/past-events fold, the grid gap between cards); the featured hero's own padding and foot margin; the event page's "back to events" row, its alerts, its divider, the registration-steps and share-links gaps, and the `mt: 4` sections ("Linkuri și fișiere", the programme, the rules); and the listing card's own top padding (`CARD_BODY_SX.pt`).
+
+**Deliberately not touched, and why:**
+- `card-layout.ts`'s `LINE_GAP`/`GROUP_GAP`. They are not a phone override — they apply at every width — and §366's title, the door and the fold measure their 44px tap targets against those exact numbers (10px reach above a title, 8px below). Moving them would silently break a proven tap-target height rather than merely add whitespace.
+- The listing card's horizontal padding (`CARD_BODY_SX.px`) and `EventFacts.tsx`'s row layout. §366/§375 measured the card's "when" row against an exact width budget — 94 reserved pixels at every phone width, a 226px row at 320px, the 376px breakpoint for a series' "Următoarea:" lead — in headless Chromium, character by character. Only the card's *vertical* top padding moved, so every number in those comments still holds; nothing needed remeasuring.
+- The registration form (`events/[slug]/register/page.tsx`). A distinct surface the owner did not name ("the listing and an event page"); left for a pass of its own.
+- `EventFacts.tsx`'s own `rowGap`/`pl`/`mb` on the event page's `<dl>` (the label column collapsing on a phone, §356) — alignment, not the padding-and-gaps whitespace the owner pointed at.
+
+**Measured, production build, 360px width, `#main`'s `scrollHeight`:**
+- The listing: 1685px → 1573px (−112px, −6.6%).
+- An event page (the seeded anniversary race, registration open, rules and programme present): 973px → 933px (−40px, −4.1%).
+
+**Tests:** `tests/unit/theme/density.test.ts` — the scale's own shape (every value smaller than what it replaced, all positive), a grep-style walk over `src/modules/events/ui`, `src/app/[locale]/events`, `src/app/[locale]/calendar` and `src/app/[locale]/pages` refusing any `xs`-literal spacing value that is not `0`, not a `DENSITY` value and not on a short, reasoned allowlist (a chip's own already-larger-on-phone tap padding, the event page's alignment split, the registration form's untouched `Container`), and an assertion that every converted line still reads its original `sm` value. `tests/e2e/listing-cards.spec.ts`, `listing-card-button.spec.ts` and `event-pages.spec.ts` pass on both Playwright projects against a production build.
+
+Review round 3 (2026-09-25). The scale has eight steps now. The new one is `gapXs` = 0.75 (6px), the tightest. It is used for the featured event's facts rows (was 8px; round 2 had put `gapSm` there, which was 1, the value already in place, so nothing changed) and, on an event page, for the space under one answer before the next question (the stacked `dd`'s margin, was 8px). One partner card under another in the "Împreună cu" row is now `gapSm` (8px, was 12). Two values on the stacked facts stay, and they are recorded here with their pixels. The 4px between a question and its answer (`rowGap` 0.5) is already the tight end: any less and the answer reads as the label's second line. The answer's 28px indent (`pl` 3.5, the 20-pixel glyph plus its 8-pixel gap, §356) lines the answer up with the label's first letter, so it is alignment rather than whitespace.
+
+The page padding now covers the whole public site on a phone, as the owner asked, so the content starts at the same height on every nav page. Every public `Container` is on `pagePadY` (12px, was 16): contact, the gallery and an album, privacy, terms, the registration form, the participant's link pages (confirm, declare, list, manage, mine, resend), the staff preview of an event, and sign-in. Only the error and not-found screens keep their 32px, because each is one centred sentence on an otherwise empty page and the room is the layout.
+
+The guard test (`tests/unit/theme/density.test.ts`) walks every page under `src/app/[locale]` except the backoffice (`admin`, `devs`), plus the event components. It refuses any spacing prop, `p`, `m` and `spacing` included, whose phone value is a written number rather than `DENSITY.<name>`, unless the line is on a per-file allowlist with a reason. That makes putting an old value back a failure. It also keeps a table of every converted site with the value it had before. The value from `sm` up must equal it, the step must be smaller than the old phone value, and the table must match the source in both directions.
+
+Measured on a production build at 360px, merge base against branch head, with the same procedure for both (database reset, build, start), `#main`'s height:
+- the listing: 1685 → 1567px in Romanian, 1629 → 1559px in English
+- the race's page: 921 → 871px
+- a group run's page: 698 → 650px
+- the calendar: 1025 → 997px
+- contact: 843 → 835px
+
+The §375 "when" row had 0.00px overflow at 320, 360, 390 and 412px in both languages, on every card the test measures.
+
+Baseline `BR-V1.88-2026-09-25`.
+
+## 381. Amending §375 once more: the partner card's wash and the launch race's bold time numbers
+
+Two follow-ups from review, both on the owner's 2026-09-25 phone screenshot (§375 amended by fix/partner-card-surface's first commit).
+
+**The partner card's wash.** `action.hover` (tried first) read as a faint wash in light mode next to the page's own paper — too close to the owner's "stands out" to trust without looking. A 360-pixel screenshot in both colour schemes confirmed it, so `theme/surfaces.ts#partnerCardSurface` now uses `action.selected`, the stronger token `CalendarEventChip` and `RegistrationSteps` already carry for the same "something sits here" purpose. Still a theme token, never a literal colour, so both schemes read it correctly without a second value.
+
+**The launch race's bold time.** The card's date already bolds like `<strong>`; the owner asked for the time to match. A bare time bolds whole, but a race's two named times ("gather at 08:00", "start at 09:00") carry a word before the number — bolding the whole phrase would bold that word too, which nobody asked for. Two new rich-text message keys, `gatheringAtBold` / `raceStartAtBold`, wrap only `{time}` in `<b>`; `ical.ts`'s plain calendar-description keys are untouched, since markup does not belong in an `.ics` line. Re-measured against real Roboto metrics: the widest §375 lead case grows about 1.2 pixels with the bold time (274→275px Romanian, 240→241px English) — the 376px breakpoint still clears it, with margin to spare rather than the original's.
+
+Round 2 of fix/partner-card-surface answered three review findings without changing scope: the race's own bold gathering/start times stay in both message catalogues under `gatheringAtBold`/`raceStartAtBold` (the dispatcher's decision: a race's card must read like the weekly-run cards' bold time, and the 21 November race is the launch item), now spelled with `<strong>` — matching every other rich message in the catalogues — rather than the `<b>` tag round 1 used; the corresponding render prop is named `strong` to match. The partner card surface's own comment was corrected: the border and radius are shared with `CalendarSection`, but `CalendarSection` does not carry the `action.selected` wash — only `CalendarEventChip` and `RegistrationSteps` do. Verification for this round ran the full listing-cards/event-pages/partner-marker e2e suite against a freshly reset local database and a production build, on both Playwright projects, one process at a time: desktop is fully green; mobile surfaces one pre-existing, untouched test (listing-cards.spec.ts's whole-row measurement) failing on the race scenario specifically — at 320px, on the year's widest Romanian weekday, the race's two named times now need 226.83px against a 226px budget, about 0.8px over, where roughly 1.6px of slack existed before round 2's bold time. This is a real, if narrow, side effect of bolding a race's own times and is recorded as a blocker for the owner rather than patched speculatively, since a CSS fix risks the LEAD_BREAKPOINT pixel accounting the same file documents in detail.
+
+The bold time on a race card cost it width. On the card, a race's «when» row wraps by design: the date on the first line, the two named times on the second. With the times' digits bold, that second line measured 226.83 pixels at 320 in Romanian on the widest weekday ("Duminică, 11 oct." alone on the first line), against the 226 the card leaves the row. It wrapped once more, to three lines, and the start time sat on a line of its own. The card's race row now takes a four-pixel gap between its pieces and before each separator, where every other row keeps six (`RACE_ROW_GAP` in `EventFacts.tsx`). Two pixels fewer on each side of the separator win back four. Re-measured on 2026-09-25 in headless Chromium on the built listing, the line is now 222.83 pixels at 320 in Romanian and 215.14 in English: two lines in both languages. At 360, 390 and 412 the date and the gathering time share the first line and the start time takes the second. The series row and the lead's breakpoint (`WHEN_LEAD_HIDDEN_BELOW_376`) are untouched: they never wrap, and the breakpoint was measured with the six-pixel gap. The spec's race fixture is pinned to the widest weekday (a Sunday with a two-digit day), so the case runs on every run rather than one week in seven.
+
+Baseline `BR-V1.88-2026-09-25`.

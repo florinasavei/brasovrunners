@@ -6,6 +6,7 @@ import { cachedStartListCounts, cachedStartListPage } from "@/modules/public-cac
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
 import { confirmedPhrase } from "./counted-phrases";
 
@@ -83,7 +84,7 @@ export default async function StartList({
       // the one thing a paginated disclosure must not do.
       open={view.page > 1 || undefined}
       sx={{
-        mt: 4,
+        mt: { xs: DENSITY.sectionGapLg, sm: 4 },
         border: 1,
         borderColor: "divider",
         borderRadius: 2,

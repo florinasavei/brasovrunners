@@ -13,6 +13,7 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH, PROSE_MEASURE } from "@/theme/brand";
+import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -70,7 +71,7 @@ export default async function StandingPage({ params }: Props) {
   if (!page) notFound();
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <LastGoodNotice read={read} />
       {/* As wide as the header, so the title sits on the logo's column; the prose stops at a
           readable measure rather than running the whole width (AGENTS.md §18.2). */}

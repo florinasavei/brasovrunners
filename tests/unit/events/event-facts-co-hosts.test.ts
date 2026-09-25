@@ -147,6 +147,31 @@ describe("BR-REQ-011-01 criterion 16 the partners' cards on the event page", () 
     const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [] }), now: NOW, stacked: true }));
     expect(html).not.toContain("Împreună cu");
   });
+
+  /**
+   * §344 amended — the owner, of the shared race with the Brașov Running Festival, 2026-09-25:
+   * "The partner card should have a border and a gray background so it stands out." Each
+   * partner's own box (`data-testid="partner-card"`) carries `theme/surfaces.ts`'s
+   * `partnerCardSurface`: an outline and a wash from theme tokens, never a literal colour, so
+   * both colour schemes read it correctly.
+   */
+  it("gives each partner's card an outlined, tinted surface from theme tokens (§344 amended)", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: TWO_PARTNERS }), now: NOW, stacked: true }));
+    const withoutStyles = html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    const cards = [...withoutStyles.matchAll(/<div class="MuiBox-root (css-[\w-]+)" data-testid="partner-card"/g)].map((match) => match[1]);
+    expect(cards).toHaveLength(2);
+    for (const cls of cards) {
+      const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
+      // `partnerCardSurface` names the theme's `divider` and `action.selected` tokens (never a
+      // literal colour) — the test theme resolves them to their default values since it renders
+      // outside a CSS-variable-aware provider, so it is the tokens, not their resolved paint,
+      // that `theme/surfaces.test.ts` asserts directly against `surfaces.partnerCardSurface`.
+      expect(rule).toContain("border:1px solid");
+      expect(rule).toMatch(/border-color:rgba\(0,\s*0,\s*0,\s*0\.12\)/);
+      expect(rule).toMatch(/background-color:rgba\(0,\s*0,\s*0,\s*0\.08\)/);
+      expect(rule).not.toMatch(/#[0-9a-f]{3,6}\b/i);
+    }
+  });
 });
 
 /**

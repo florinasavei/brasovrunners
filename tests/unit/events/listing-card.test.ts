@@ -311,6 +311,33 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(text(when)).toContain("10:00");
   });
 
+  it("gives the time the date's own weight on the card's «when» row (§375 amended — the owner, 2026-09-25: \"The time can be bolded here as well\")", async () => {
+    // Two `<strong>`s on the row: the date, as it always was, and now the time beside it.
+    const single1 = fact(await single(), "when");
+    const strongs1 = [...single1.matchAll(/<strong>([\s\S]*?)<\/strong>/g)].map((match) => text(match[1] ?? ""));
+    expect(strongs1).toHaveLength(2);
+    expect(strongs1[0]).toContain("Duminică, 27 sept. 2026");
+    expect(strongs1[1]).toBe("10:00");
+
+    // The series card's own row carries the same bold time, the lead in front unaffected.
+    const repeated1 = fact(await repeated(), "when");
+    const strongs2 = [...repeated1.matchAll(/<strong>([\s\S]*?)<\/strong>/g)].map((match) => text(match[1] ?? ""));
+    expect(strongs2[strongs2.length - 1]).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it("bolds only the numbers of a race's two named times, never the word in front of them (§375 amended once more)", async () => {
+    const html = await single({ raceStartsAt: new Date("2026-09-27T06:00:00Z") });
+    const when = fact(html, "when");
+    // Three bold pieces: the date, and each time's own number — never "întâlnire" or "start".
+    const strongs = [...when.matchAll(/<strong>([\s\S]*?)<\/strong>/g)].map((match) => text(match[1] ?? ""));
+    expect(strongs).toHaveLength(3);
+    expect(strongs[0]).toContain("2026");
+    expect(strongs[1]).toBe("10:00");
+    expect(strongs[2]).toBe("09:00");
+    expect(text(when)).toContain("întâlnire la");
+    expect(text(when)).toContain("start la");
+  });
+
   it("never wraps the when line onto a second line, except a race's two named times (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", () => {
     // `flow`'s row is `nowrap` only for a card, and only while it is not a race's two named
     // times (`card.wrap`, which stays `wrap` so a race's start time cannot be clipped, §366
@@ -319,6 +346,22 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
     expect(source).toMatch(/flexWrap:\s*card\s*&&\s*!card\.wrap\s*\?\s*"nowrap"\s*:\s*"wrap"/);
     expect(source).toContain("flexShrink: 0");
+  });
+
+  it("gives a race card's «when» row a four-pixel gap, and every other card row its six (§381)", async () => {
+    // With the times' digits bold, a race's second line — the two named times — measured 226.83
+    // pixels against 226 at 320 on the widest weekday and wrapped to a third line; two pixels
+    // fewer each side of the separator win it back. Only that row: a series' breakpoint was
+    // measured with the six-pixel gap.
+    const raceHtml = await single({ raceStartsAt: new Date("2026-09-27T06:00:00Z") });
+    const raceRow = [...fact(raceHtml, "when").matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(raceRow, "the race row's own emotion class").toBeTruthy();
+    expect(rulesFor(raceHtml, raceRow!)).toContain("column-gap:4px");
+
+    const plainHtml = await single();
+    const plainRow = [...fact(plainHtml, "when").matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(plainRow, "the plain row's own emotion class").toBeTruthy();
+    expect(rulesFor(plainHtml, plainRow!)).toContain("column-gap:6px");
   });
 
   it("wraps the when line rather than clip it, for a date more than a year out that keeps its year (a review, 2026-09-24)", async () => {
