@@ -47,6 +47,8 @@ test.describe("§NNN a lapsed or moved-on registration link never shows the wron
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
+    // The club's terms, their own required tick since §NNN.
+    await page.locator('[name="termsAccepted"]').check();
     await page.locator('[name="fitnessDeclared"]').check();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
