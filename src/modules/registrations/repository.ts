@@ -16,6 +16,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
+import { registrationNameKey } from "./domain/name-key";
 import { allowedFromStatuses, holdsAPlace, PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
@@ -64,6 +65,16 @@ export async function findRegistrationById<T extends Record<string, unknown>>(
   return row;
 }
 
+/**
+ * One registration of this address at this event — the active one when there is one, else the
+ * newest (§NNN).
+ *
+ * Until the contract release there is at most one row to find (`registrations_event_participant_unique`),
+ * and this returns it as it always did. Once an address may carry a family, a caller that asks for
+ * "the" registration — the staff entry's duplicate check, the test batch reading back what it just
+ * made — gets the one that matters, deterministically, rather than whichever row the planner reads
+ * first. A caller that needs every runner on the address reads `findRegistrationsByEventAndParticipant`.
+ */
 export async function findRegistrationByEventAndParticipant<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -73,8 +84,31 @@ export async function findRegistrationByEventAndParticipant<T extends Record<str
     .select()
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.participantId, participantId)))
+    .orderBy(
+      desc(inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES])),
+      desc(registrations.updatedAt),
+      desc(registrations.id),
+    )
     .limit(1);
   return row;
+}
+
+/**
+ * Every registration of this address at this event, oldest first (§NNN): the runners a family
+ * entered on one address, each their own row, whatever their state. `submitRegistration` reads it
+ * under the event's lock and decides by the runner's name (`domain/name-key.ts`) whether a
+ * submission is somebody already there or another person.
+ */
+export async function findRegistrationsByEventAndParticipant<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  participantId: string,
+): Promise<Registration[]> {
+  return db
+    .select()
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.participantId, participantId)))
+    .orderBy(asc(registrations.createdAt), asc(registrations.id));
 }
 
 /**
@@ -218,6 +252,8 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       createdByStaffUserId: input.createdByStaffUserId ?? null,
       locale: input.locale,
       registeredName: input.registeredName,
+      // Whose registration this is on the address (§NNN): the name folded, what the unique index keeps.
+      nameKey: registrationNameKey(input.registeredName),
 
       // BR-REQ-031-04. Every detail may be absent; the display name may not, and is derived
       // rather than defaulted to the legal name — see `resolveDisplayName`.

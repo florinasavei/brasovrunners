@@ -11,6 +11,7 @@ import { updateContactRecipients } from "@/modules/contact/recipients";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { updateDeadlines } from "@/modules/deadlines/deadlines";
+import { updateAddressCap } from "@/modules/registrations/address-cap";
 import { DEADLINE_KEYS } from "@/modules/deadlines/domain/deadlines";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
@@ -182,6 +183,27 @@ export async function updateDeadlinesAction(_previous: FormOutcome | null, form:
   revalidatePath(path);
   await flashOutcome({ saved: "deadlines" });
   redirect(`${path}?saved=deadlines#admin-alert`);
+}
+
+/**
+ * "Maxim de înscrieri pe o adresă (pe eveniment)" (§NNN), in the "Termene" fold: the same gates and
+ * the same shape as the deadlines' save above — the Administrator at the door and in the service,
+ * one whole number the service bounds, a refusal back as the form's state with the box as typed.
+ */
+export async function updateAddressCapAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/emails" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const raw = form.get("registrationsPerAddress");
+    await updateAddressCap(getDb(), actor, { registrationsPerAddress: typeof raw === "string" ? raw.trim() : "" }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  // The preview of the message that states the limit is on the same page.
+  revalidatePath(path);
+  redirect(`${path}?saved=addressCap#admin-alert`);
 }
 
 /**

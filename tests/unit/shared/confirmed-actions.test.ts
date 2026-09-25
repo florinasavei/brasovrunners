@@ -116,6 +116,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateNeonLimitsAction: [],
   // "Termene" (§377): every hold, offer and link given from now on takes the new numbers.
   updateDeadlinesAction: [],
+  // "Maxim de înscrieri pe o adresă" (§NNN): a limit every public submission meets from now on.
+  updateAddressCapAction: [],
 };
 
 /**

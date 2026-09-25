@@ -403,6 +403,19 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .superRefine(guardianRule)
   .superRefine(emergencyContactRule);
 
+/**
+ * The public form for another person on an address that is registered already (§NNN), reached
+ * only from the link emailed to that address. Everything the public form asks, but the runner's
+ * own telephone: the second person is often a child with none, and the address — and the emergency
+ * contact, still required — is how the club reaches the family. The address itself is never read
+ * from this form: the caller fixes it from the token.
+ */
+export const anotherPersonSubmissionSchema = submissionFields
+  .partial({ phone: true })
+  .superRefine(healthConsentRule)
+  .superRefine(guardianRule)
+  .superRefine(emergencyContactRule);
+
 export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionSchema>;
 
 /**

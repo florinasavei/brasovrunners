@@ -1,5 +1,5 @@
-ALTER TYPE "public"."email_message_type" ADD VALUE 'GROUP_RUN_DECLARATION_SIGNED';--> statement-breakpoint
-ALTER TYPE "public"."email_message_type" ADD VALUE 'GROUP_RUN_DECLARATION_ARCHIVE';--> statement-breakpoint
+ALTER TYPE "public"."email_message_type" ADD VALUE 'GROUP_RUN_DECLARATION_SIGNED' BEFORE 'REGISTER_ANOTHER_PERSON';--> statement-breakpoint
+ALTER TYPE "public"."email_message_type" ADD VALUE 'GROUP_RUN_DECLARATION_ARCHIVE' BEFORE 'REGISTER_ANOTHER_PERSON';--> statement-breakpoint
 ALTER TYPE "public"."legal_document_key" ADD VALUE 'GROUP_RUN_DECLARATION_ASPHALT';--> statement-breakpoint
 ALTER TYPE "public"."legal_document_key" ADD VALUE 'GROUP_RUN_DECLARATION_TRAIL';--> statement-breakpoint
 CREATE TABLE "group_run_declarations" (

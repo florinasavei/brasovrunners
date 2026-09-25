@@ -1,5 +1,6 @@
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import DrawIcon from "@mui/icons-material/Draw";
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -10,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedFamilyRegistrationOpen } from "@/modules/public-cache/reads";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 const STEPS = [
@@ -49,7 +50,7 @@ type Props = {
 export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
-  const deadlines = await cachedDeadlines();
+  const [deadlines, familyOpen] = await Promise.all([cachedDeadlines(), cachedFamilyRegistrationOpen()]);
   const words = deadlineWords(locale, deadlines);
   const reminderHours = reminderHoursFor({ reminderHoursBefore }, deadlines);
   const values = {
@@ -112,6 +113,32 @@ export default async function RegistrationSteps({ folded = false, window = null,
           </Typography>
         </Box>
       </Box>
+      {/*
+        A family on one address (§NNN; the owner: "document this … then that person can receive up
+        to 4 QR codes"): the one way to add a second runner is to send the form again, and the next
+        step arrives by email. Said only once the schema allows it (`family-gate.ts`) — before that,
+        sending the form again only re-sends the first person's message, and this would promise
+        something else. A sentence about the flow, never about any address: it reads the same to
+        everybody (§39).
+      */}
+      {familyOpen && (
+        <Box component="li" sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }} data-testid="steps-family">
+          <Box
+            sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "action.selected", display: "flex", alignItems: "center", justifyContent: "center" }}
+            aria-hidden="true"
+          >
+            <FamilyRestroomIcon fontSize="small" />
+          </Box>
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {t("steps.family.title")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("steps.family.body")}
+            </Typography>
+          </Box>
+        </Box>
+      )}
     </Stack>
   );
 
