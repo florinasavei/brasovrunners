@@ -3,19 +3,23 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §350 (the editor's boxes, building on §170 and §260) — the event editor as one
- * page of boxes, in the order of the questions they answer.
+ * `DECISIONS.md` §350 (the editor's boxes, building on §170 and §260), as amended by §406 — the
+ * event editor as one page of boxes, **in the order of the public page** (the owner, 2026-09-25:
+ * "am nevoie de mai multe căsuțe la editor ca să văd exact ce flow am în pagină").
  *
- * The owner asked for the editor to read "like the event's fact sheet": each box answers one
- * question and says its answer while shut. The order is pinned here because it is what drifts —
- * the next field added lands in whichever box is nearest unless something says where boxes go:
+ * Each box answers one question and says its answer while shut. The order is pinned because it is
+ * what drifts — the next field added lands in whichever box is nearest unless something says where
+ * boxes go:
  *
- *   Evenimentul — what kind, with its three cards inside it (§358; the owner: "these 3 cards
- *   should be in the first one, both on edit and create mode") — the status, the course, the
- *   links and files — then title and summary, description;
- *   Ziua evenimentului și participanții — date and time, place, programme, rules, registration;
- *   Parteneri și prezentare — partners, promotion, page address;
+ *   Pagina evenimentului, de sus în jos — the type, title and summary, description, date and time,
+ *   place, the course, the cost, registration, partners, (the share links, automatic), links and files,
+ *   programme, rules, the film, the public list: the page's sections in `PAGE_SECTIONS`' order,
+ *   which `events/page-sections.test.ts` holds both the page and these pages to;
+ *   Nu apar pe pagină — the status, promotion, page address;
  *   then Salvare, always open.
+ *
+ * §358 nested the status, the course and the links inside the first box; §406 took them out again,
+ * each to where the page draws it.
  *
  * Source assertions, like the rest of this folder: these are Server Components rendering what
  * they are handed, and the thing pinned is the order and the shape.
@@ -32,63 +36,60 @@ const at = (source: string, needle: string) => {
 };
 
 const EDITOR_ORDER = [
-  't("editor.groups.event")',
+  't("editor.groups.page")',
   "<KindBox",
-  "<StatusBox",
-  "<CourseBox",
-  "<LinksBox",
-  "</KindBox>",
   "<TitleSummaryBox",
   "<DescriptionBox",
-  't("editor.groups.day")',
   "<WhenBox",
   "<PlaceBox",
+  "<CourseBox",
+  "<CostBox",
+  "<RegistrationBox",
+  "<CoHostsBox",
+  "<AutomaticSection",
+  "<LinksBox",
   "<ProgrammeBox",
   "<RulesBox",
-  "<RegistrationBox",
-  't("editor.groups.details")',
-  "<CoHostsBox",
+  "<VideoBox",
+  "<StartListBox",
+  't("editor.groups.offPage")',
+  "<StatusBox",
   "<PromotionBox",
   "<AddressBox",
   'id="box-save"',
 ];
 
-/** The page's source between `<KindBox` and `</KindBox>`: what the first box is handed. */
-const firstBoxOf = (source: string) => source.slice(at(source, "<KindBox"), at(source, "</KindBox>"));
-
-describe("§350 the editor's boxes, in order", () => {
-  it("renders the three groups and their boxes in the order of the design, then Salvare", () => {
+describe("§350 the editor's boxes, in order (§406: the page's)", () => {
+  it("renders the page's cards in the page's order, then the ones not on the page, then Salvare", () => {
     const positions = EDITOR_ORDER.map((needle) => at(EDIT, needle));
     for (let index = 1; index < positions.length; index += 1) {
       expect(positions[index], `${EDITOR_ORDER[index]} after ${EDITOR_ORDER[index - 1]}`).toBeGreaterThan(positions[index - 1]);
     }
   });
 
-  it("nests the status, the course and the links inside the first box, on both pages, each once (§358)", () => {
+  it("gives the status, the course and the links a box each, out of the first box, on both pages, each once (§406)", () => {
     const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
     for (const [page, source] of [
       ["edit", EDIT],
       ["create", CREATE],
     ] as const) {
-      const first = firstBoxOf(source);
-      for (const card of ["<StatusBox", "<CourseBox", "<LinksBox"]) {
-        expect(first, `${page}: ${card} inside <KindBox>`).toContain(card);
+      // The first box is the type alone: it closes on itself and holds no card.
+      expect(source, page).toMatch(/<KindBox \{\.\.\.box\}[^>]*\/>/);
+      expect(source, page).not.toContain("</KindBox>");
+      for (const card of ["<StatusBox", "<CourseBox", "<CostBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
-      expect(first.indexOf("<StatusBox")).toBeLessThan(first.indexOf("<CourseBox"));
-      expect(first.indexOf("<CourseBox")).toBeLessThan(first.indexOf("<LinksBox"));
-      // Nothing else went in with them.
-      expect(first.match(/<[A-Z]\w*Box\b/g), page).toEqual(["<KindBox", "<StatusBox", "<CourseBox", "<LinksBox"]);
     }
-    // Named level-3 cards with their own ids, so a deep link or a refusal still lands on them —
-    // a fold for whoever may change it, the same heading and id without the fold for a reader.
+    // Boxes of their own, with the ids they always had, so a deep link or a refusal still lands on
+    // them — a fold for whoever may change it, the same heading and id without the fold for a reader.
     for (const [file, id] of [
       ["StatusBox", "box-status"],
       ["CourseBox", "box-course"],
       ["LinksBox", "box-links"],
     ] as const) {
       const source = read(`src/modules/content/events/ui/boxes/${file}.tsx`);
-      expect(source, file).toMatch(new RegExp(`level: 3,\\s+id: "${id}"`));
+      expect(source, file).toMatch(new RegExp(`const card = \\{\\s+id: "${id}"`));
+      expect(source, file).not.toContain("level: 3");
       expect(source, file).toContain("<Panel collapsible {...card}>");
       // The course card keeps its fold for a reader who may write a language's route description
       // (§387), and is its heading alone for one who may write neither the settings nor the texts.
@@ -140,12 +141,10 @@ describe("§350 the editor's boxes, in order", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
-    // The first box holds the status card, so it wears the mark too — closed, it is the only place
-    // the count can be seen (§350, §358). Its opening tag only: the cards inside are read above.
-    const kind = at(EDIT, "<KindBox");
-    expect(EDIT.slice(kind, EDIT.indexOf(">", kind) + 1)).toContain("risk={risk}");
-    // The course and the links sit in the same box and reach nobody; nor do the partners or the promotion.
-    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
+    // The first box no longer holds the status (§406): the status box wears the mark itself, and
+    // the type's box, the course, the links, the partners, the promotion, the film and the list
+    // reach nobody.
+    for (const box of ["<KindBox", "<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }

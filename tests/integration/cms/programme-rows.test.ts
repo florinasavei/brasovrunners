@@ -105,6 +105,23 @@ describe("BR-REQ-050-02 criterion 13 — the programme's rows", () => {
     ]);
   });
 
+  it("drops a row whose only box is its date: the editor opens every row on the event's start date (§405)", async () => {
+    const event = await createDraft();
+    const spare = { date: "2026-10-11", time: "", endTime: "", ro: "", en: "", place: "" };
+    await save(event.id, event.version, { ...FIELDS, scheduleRows: [ROWS[0], spare] });
+    expect(readScheduleItems((await reload(event.id)).scheduleItems)).toEqual([
+      { startsAt: "2026-10-11T07:00:00.000Z", endsAt: null, label: { ro: "Start", en: "Start" }, place: null },
+    ]);
+    // Only the spare line: nothing is stored, and nothing is refused.
+    const reloaded = await reload(event.id);
+    await save(event.id, reloaded.version, { ...FIELDS, scheduleRows: [spare] });
+    expect((await reload(event.id)).scheduleItems).toBeNull();
+    // A date and a time is a row being written, still refused by its number for the label.
+    expect(await codeOf(save(event.id, (await reload(event.id)).version, { ...FIELDS, scheduleRows: [{ ...spare, time: "10:00" }] }))).toContain(
+      "schedule[1]: the label is needed in both languages",
+    );
+  });
+
   it("refuses a half-filled row by its number, and an end before its start", async () => {
     const event = await createDraft();
     expect(await codeOf(save(event.id, event.version, { ...FIELDS, scheduleRows: [ROWS[0], { ...ROWS[1], en: "" }] }))).toContain("schedule[2]: the label is needed in both languages");

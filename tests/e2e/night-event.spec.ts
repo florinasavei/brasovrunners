@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §394, replacing §382's checkbox) — "Eveniment de
@@ -37,14 +37,6 @@ let editorUrl = "";
 
 /** The event page's "Traseu" / "Route" row, the `<dd>` after its label. */
 const routeRow = (page: Page, label: string) => page.locator("dt").filter({ hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
-
-/** The listing card with this title, every fold opened once the list has streamed in (§166). */
-async function card(page: Page, path: string, heading: string) {
-  await page.goto(path);
-  await expect(page.locator("#main ul > li h2").first()).toBeAttached();
-  await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
-  return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
-}
 
 /** The "Traseul" card's automatic line. */
 const autoLine = (page: Page) => page.getByTestId("night-auto-line");
@@ -82,9 +74,9 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(page.getByRole("radio", { name: "Automat (după apus)", exact: true })).toBeChecked();
 
     await fillDateField(page, "Începutul evenimentului", NOVEMBER);
-    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, apusul e la 16:\d\d — alege ora startului$/);
+    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, apusul la 16:\d\d — alege ora startului$/);
     await fillTimeField(page, "Ora", "19:00");
-    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, apusul e la 16:\d\d — eveniment de noapte$/);
+    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, începe la 19:00, apusul la 16:\d\d — eveniment de noapte$/);
 
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
     await field("event.locationNameEn").fill("Tâmpa cable car station");
@@ -131,7 +123,8 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Apusul la 16:\d\d — ia o frontală$/);
+    // The start named first, then the sunset (§404): the sunset is never read as the start.
+    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 19:00, după apusul de la 16:\d\d — ia o frontală$/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
@@ -139,20 +132,24 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
     await expect(englishPill).toHaveCount(1);
     await expect(englishPill.locator(TORCH)).toHaveCount(1);
+    await englishPill.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 19:00, after the 16:\d\d sunset — bring a headlamp$/);
     await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
   });
 
   test("the listing card and the calendar entry carry it", async ({ page }) => {
-    const roCard = await card(page, "/ro/evenimente", title);
+    await page.goto("/ro/evenimente");
+    const roCard = await cardOnListing(page, title);
     await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" })).toHaveCount(1);
     await expect(roCard.locator(TORCH)).toHaveCount(1);
-    const enCard = await card(page, "/en/events", englishTitle);
+    await page.goto("/en/events");
+    const enCard = await cardOnListing(page, englishTitle);
     await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
 
     await page.goto(`/ro/calendar?month=${MONTH}`);
     await expect(page.locator(`#main [role=table] a[aria-label*="${title}"]`)).toHaveAttribute(
       "aria-label",
-      new RegExp(`^19:00 ${title}\\. Alergare de noapte — apusul la 16:\\d\\d$`),
+      new RegExp(`^19:00 ${title}\\. Alergare de noapte: începe la 19:00, după apusul de la 16:\\d\\d$`),
     );
   });
 
@@ -163,7 +160,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await openEditorBox(page, "Data și ora");
     await fillDateField(page, "Începutul evenimentului", JUNE);
     await openEditorBox(page, "Traseul");
-    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 16 iun\. 2027, apusul e la 21:\d\d — nu e eveniment de noapte$/);
+    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/);
     await saveWithChoice(page, "Automat (după apus)", true);
 
     await page.goto(`/ro/evenimente/${slug}`);
@@ -210,6 +207,10 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await pill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Apusul la 16:\d\d, sfârșitul la 17:30 — ia o frontală$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 16:00, apusul la 16:\d\d, se termină la 17:30 — ia o frontală$/);
+    await page.goto(`/en/events/${englishSlug}`);
+    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
+    await englishPill.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 16:00, sunset at 16:\d\d, ends at 17:30 — bring a headlamp$/);
   });
 });

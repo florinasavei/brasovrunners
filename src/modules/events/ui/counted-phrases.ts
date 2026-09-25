@@ -24,6 +24,16 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
 }
 
 /**
+ * "7 locuri libere din 10" / "7 places left out of 10" — the listing card's count (§409): the free
+ * places the button offers, read against the event's size. Both numbers are `RegistrationCta`'s
+ * own (`registration-door.ts`), never a second count. The free number picks the wording: "1 loc
+ * liber din 10", "19 locuri libere din 50", "20 de locuri libere din 50".
+ */
+export function freePlacesPhrase(say: Say, locale: string, free: number, capacity: number): string {
+  return say(`cta.freeOf.${countForm(free, locale)}`, { count: free, places: capacity });
+}
+
+/**
  * "Mai sunt 3 locuri pe lista de așteptare" / "3 places left on the waiting list" (§348): the
  * room a capped waiting list has left, under its button. Romanian's "de" from twenty on, as the
  * rest: "Mai este 1 loc", "Mai sunt 19 locuri", "Mai sunt 20 de locuri".

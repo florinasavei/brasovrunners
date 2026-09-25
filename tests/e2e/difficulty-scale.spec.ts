@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { cardOnListing } from "./support/fold";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -26,6 +27,11 @@ import { hydrated, signIn } from "./support/featured-event";
  * gets its own dumbbell counts at each width (fix round, finding 4: the first pass measured only
  * "no sideways scroll", true of the old, narrower icon too and so never actually exercised the
  * wider one), and its measured pixel width is attached to the test report and printed at both.
+ *
+ * The listing card sits inside the "other events" fold, which opens by itself only up to four
+ * other events (§89) — a seeded database past that count leaves it closed on a phone, and a
+ * lookup by heading text alone found nothing to click and failed, flakily, only once enough
+ * sample events had piled up. `cardOnListing` (`support/fold.ts`) opens that fold first.
  */
 test.describe("BR-REQ-041-01 the difficulty scale (§399)", () => {
   test("the event page's route row keeps the word beside the scale, two of three dumbbells lit", async ({ page }) => {
@@ -46,7 +52,7 @@ test.describe("BR-REQ-041-01 the difficulty scale (§399)", () => {
     }, testInfo) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente");
-      const card = page.locator("li", { hasText: "Tură pe Tâmpa" }).first();
+      const card = await cardOnListing(page, "Tură pe Tâmpa");
       const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu" });
       await expect(pill).toBeVisible();
       await expect(pill.locator("svg")).toHaveAttribute("aria-hidden", "true");

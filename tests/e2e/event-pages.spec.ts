@@ -63,6 +63,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await page.goto("/ro/evenimente");
     // Folded or not, they are text: with more than four cards a phone folds them all (§78), which
     // another spec's events — `listing-cards.spec.ts`'s series among them — can make true for a moment.
+    // Every card's own text is read below, not one by heading, so `cardOnListing`
+    // (`support/fold.ts`) does not fit — every fold must open.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 2 and BR-REQ-070-03 criterion 2: facts as text, not styling or an image.
@@ -144,7 +146,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await page.goto("/ro/evenimente");
     // "Other events" folds on a phone once other specs have published a fifth event
     // (`DECISIONS.md` §78); a link in a closed fold measures 0×0 and is not a tap target yet.
-    // Open every fold, so the links are measured as a reader would see them.
+    // Open every fold, so the links are measured as a reader would see them — every title on the
+    // page, not one by heading, so `cardOnListing` (`support/fold.ts`) does not fit.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 6. Every card's title is its link (§366; no card is one whole link any more) — 44
