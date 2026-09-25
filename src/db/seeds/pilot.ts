@@ -129,6 +129,11 @@ async function seed() {
       distanceMeters: 14000,
       elevationGainMeters: 600,
       locationName: "Stația de telecabină Tâmpa",
+      // «Coordonate» typed (§NNN): the cable car's lower station, so a seeded trail run reads the
+      // weather at its own trailhead and says «Pentru locul evenimentului». No map link carries a
+      // pin here: a map link is a hostname, which no file under `src/` may hold (AGENTS.md §8).
+      latitude: 45.6384,
+      longitude: 25.5921,
       difficulty: "MODERATE" as const,
       costType: "FREE" as const,
       ro: {
@@ -183,6 +188,8 @@ async function seed() {
         // The same event in either language (`DECISIONS.md` §36).
         locationName: row.locationName,
         locationAddress: "locationAddress" in row ? row.locationAddress : undefined,
+        latitude: "latitude" in row ? row.latitude : undefined,
+        longitude: "longitude" in row ? row.longitude : undefined,
         difficulty: row.difficulty,
         costType: row.costType,
         /**

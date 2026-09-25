@@ -143,11 +143,13 @@ export function forecastPlace(event: PlaceColumns, club: Coordinates): ForecastP
 }
 
 /**
- * How finely a place is told apart for the forecast: two decimals, about 1.1 km north–south and
- * 0.8 km east–west in Brașov — finer than Open-Meteo's own grid (a few kilometres), so two pins
- * in one park share one cached answer and one request an hour, and a pin across town gets its own.
+ * How finely a place is told apart for the forecast: three decimals, about 110 m north–south and
+ * 80 m east–west in Brașov (the brief's "three decimals ≈ 100 m") — so two pins in one car park
+ * share one cached answer and one request an hour, ten events at the club's centre are one
+ * request, and a trailhead across town gets its own. Finer would split one meeting point into
+ * several entries for nothing: Open-Meteo's own grid is a few kilometres.
  */
-export const PLACE_DECIMALS = 2;
+export const PLACE_DECIMALS = 3;
 
 export function roundPlace(place: Coordinates): Coordinates {
   const factor = 10 ** PLACE_DECIMALS;

@@ -918,8 +918,8 @@
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
-      "coordinates": "Coordonate",
-      "coordinatesHelp": "Opțional: latitudine, longitudine — de ex. 45.6427, 25.5887 (pe hartă: clic dreapta pe punct, apoi copiază coordonatele). Folosite doar pentru vreme, când linkul hărții nu le conține (un link scurt, pagina unui loc).",
+      "coordinates": "Coordonate (lat, lng)",
+      "coordinatesHelp": "Opțional: latitudine, longitudine — de ex. 45.6427, 25.5887. Copiază-le din Google Maps: clic dreapta pe punct → prima linie. Folosite doar pentru vreme, când linkul hărții nu le conține (un link scurt, pagina unui loc).",
       "weatherPlace": {
         "map": "Vremea se citește acum pentru punctul din linkul hărții ({coordinates}).",
         "typed": "Vremea se citește acum pentru aceste coordonate ({coordinates}).",
@@ -3828,7 +3828,7 @@
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
     "weather": {
       "title": "Prognoza vremii",
-      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
       "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",

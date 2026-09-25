@@ -5,13 +5,15 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
+import { forecastForEvent, forecastsForEvents } from "@/modules/weather/source";
+import WeatherCredit from "@/modules/weather/ui/WeatherCredit";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections, partnerFilterOffered, presentEventTypes } from "@/modules/events/domain/listing";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
@@ -217,6 +219,9 @@ async function ListingLead({
   const { featured } = listingSections(events, type, hasUpcoming, partner);
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
+  // The hero's «Vremea» (§NNN — the owner: "aș vrea să văd vremea și pe cardul principal"): at its own
+  // place, within seven days of its start, null otherwise and on any failure — never a wake (§402).
+  const featuredWeather = featured ? await forecastForEvent(featured, now) : null;
   // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
   // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
   const presentTypes = presentEventTypes(events, type);
@@ -239,7 +244,7 @@ async function ListingLead({
         </Alert>
       )}
 
-      {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} />}
+      {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} weather={featuredWeather} />}
 
       {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133),
           plus "Colaborare" / "Partnership" (§401, the owner, 22:15, 2026-09-25) when the club has

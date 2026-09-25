@@ -617,10 +617,11 @@ export const events = pgTable(
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
-    // «Coordonate» (§NNN): both or neither, each in its range — a pair the forecast can ask for.
+    // «Coordonate» (§NNN): both or neither, each in its range — a pair the forecast can ask for. The
+    // `IS NOT NULL`s are needed: half a pair makes the BETWEEN branch NULL, which a CHECK lets through.
     check(
       "events_coordinates_pair_in_range",
-      sql`(${t.latitude} IS NULL AND ${t.longitude} IS NULL) OR (${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`,
+      sql`(${t.latitude} IS NULL AND ${t.longitude} IS NULL) OR (${t.latitude} IS NOT NULL AND ${t.longitude} IS NOT NULL AND ${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`,
     ),
     check("events_cost_url_is_https", sql`${t.costUrl} IS NULL OR ${t.costUrl} LIKE 'https://%'`),
     check(

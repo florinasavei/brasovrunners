@@ -554,6 +554,13 @@
       "when": 1790351112536,
       "tag": "0078_difficulty_five",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1790360613048,
+      "tag": "0079_event_coordinates",
+      "breakpoints": true
     }
   ]
 }
