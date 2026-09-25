@@ -14,13 +14,14 @@ export function clubNightEvent(event: NightEventSource & { startsAt: Date }, occ
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * The pill's tooltip (§394, §404), a sentence of its own: «Începe la 19:00, apusul la 19:00, se
- * termină la 20:40 — ia o frontală» — or null when there is no time to name. `t` is the `Event`
- * namespace.
+ * The pill's tooltip (§394, §NNN) — the sunset alone, "Apusul la 16:44": the owner, 2026-09-25,
+ * "la alergarea de noapte, pe tooltip trebuie doar să zic când apune soarele". §404's five shapes
+ * (naming the start, and the end when it is the reason) stay on the calendar entry, the `.ics`
+ * line and the reminder (`nightLine`) — only the tooltip was asked to say one thing. Null when the
+ * day has no sunset to name (a polar day or night). `t` is the `Event` namespace.
  */
 export function nightTooltip(facts: NightEventFacts, t: Translate): string | null {
-  const shape = nightShape(facts);
-  return shape ? t(`night.tooltip${shape.suffix}`, shape.values) : null;
+  return facts.sunset ? t("night.tooltip", { sunset: facts.sunset }) : null;
 }
 
 /**
