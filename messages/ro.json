@@ -3678,6 +3678,7 @@
       "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză.",
       "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
       "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
+      "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns e prea vechi ({when}); pagina și reamintirile nu mai arată vremea până la unul nou.",
       "stub": "prognoza de test (E2E_WEATHER_STUB) — aceeași oră fixă, fără nicio cerere către Open-Meteo.",
       "off": "oprită în acest mediu."
     },

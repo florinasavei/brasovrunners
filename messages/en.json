@@ -3678,6 +3678,7 @@
       "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast.",
       "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
       "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
+      "stale": "Open-Meteo (public, no key) — the last answer is too old ({when}); pages and reminders show no weather until a new one arrives.",
       "stub": "the test forecast (E2E_WEATHER_STUB) — the same fixed hour, and no request to Open-Meteo.",
       "off": "off in this environment."
     },

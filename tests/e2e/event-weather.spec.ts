@@ -2,6 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 
 /**
  * BR-REQ-020-01 (§NNN) — «Vremea» / «Weather» on the event page, within seven days of the start.
+ * A new criterion of that requirement, as the partner marker and the headlamp pill each got theirs
+ * (criteria 18–19, 23); `docs:land` adds it alongside `DECISIONS.md` §NNN.
  *
  * The suite's server answers every forecast with one fixed hour (`E2E_WEATHER_STUB`, set by
  * `playwright.config.ts`): partly cloudy, 14 °C, a 20% chance of rain, an 11 km/h wind — and never

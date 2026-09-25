@@ -26,14 +26,23 @@ import {
  * §328), so one forecast for the club's coordinates serves every event page and every reminder:
  * eight days of hours, a few kilobytes, kept in Next's data cache for an hour under the tag
  * `weather:forecast` (`WEATHER_CACHE_TAG`). The page is still rendered per request (§333); the
- * forecast under it is not refetched per request. A cached answer an hour old is served while the
- * next one is fetched, which is what "cached an hour" means in a stale-while-revalidate cache.
+ * forecast under it is not refetched per request.
+ *
+ * **A cached answer is not aged by the cache alone.** `unstable_cache`'s stale-while-revalidate
+ * hands back the entry it has immediately and revalidates in the background (Next 16.3.4,
+ * `unstable-cache.js`) — including when that background revalidation keeps failing, which it
+ * swallows rather than surfacing. Left alone, that means an Open-Meteo outage does not empty the
+ * cache; it freezes it, and every visitor for as long as the outage lasts reads whatever hour the
+ * last good answer happened to hold for their event's start. So `fetchedAt` is checked against
+ * `MAX_FORECAST_AGE_MS` wherever a forecast is read (`freshReading`, `readWeatherStatus`): an
+ * answer older than that is treated exactly like a failure, never shown.
  *
  * **Failure is silence.** Three seconds and no answer, an HTTP error, a body that is not a
- * forecast: `null`, and the page and the reminder say nothing about the weather — never "vremea
- * nu este disponibilă", which tells a runner nothing they can act on. A failure is not cached (the
- * load throws inside `unstable_cache`), and for five minutes after one this instance does not ask
- * again, so an outage costs one visitor three seconds rather than every visitor.
+ * forecast, or a cached answer past `MAX_FORECAST_AGE_MS`: `null`, and the page and the reminder
+ * say nothing about the weather — never "vremea nu este disponibilă", which tells a runner
+ * nothing they can act on. A failure is not cached (the load throws inside `unstable_cache`), and
+ * for five minutes after one this instance does not ask again, so an outage costs one visitor
+ * three seconds rather than every visitor.
  *
  * `/api/health` does not read it: a page without a forecast is a working page, and a monitor
  * woken by somebody else's API would be a false alarm about the club's site (§98). The system
@@ -62,6 +71,21 @@ export const WEATHER_TIMEOUT_MS = 3_000;
 
 /** How long this instance leaves Open-Meteo alone after a failure. */
 const QUIET_AFTER_FAILURE_MS = 5 * 60 * 1000;
+
+/**
+ * How old a cached answer may be before it is treated as no forecast at all: twice the cache's
+ * own step. A routine revalidation never reaches this — the entry is at most `WEATHER_CACHE_SECONDS`
+ * old before Next asks again — so only an outage across more than one revalidation trips it. This
+ * is the one bound `freshReading` and `readWeatherStatus` both read, so "nothing is shown when the
+ * forecast is unavailable" holds through a stale-while-revalidate cache, not only between two
+ * routine hours.
+ */
+export const MAX_FORECAST_AGE_MS = 2 * WEATHER_CACHE_SECONDS * 1000;
+
+/** Whether a forecast answer is older than `MAX_FORECAST_AGE_MS`. */
+export function isForecastStale(forecast: HourlyForecast, now: number): boolean {
+  return now - forecast.fetchedAt > MAX_FORECAST_AGE_MS;
+}
 
 /** The request, built in one place so the test reads the same address the server asks. */
 export function openMeteoUrl(place: { latitude: number; longitude: number } = WEATHER_PLACE): string {
@@ -196,10 +220,22 @@ export async function readClubForecast(
 }
 
 /**
+ * The reading for an already-read forecast, or null when it holds no such hour or is older than
+ * `MAX_FORECAST_AGE_MS` — the one gate `weatherForEvent` and `readWeatherStatus` share, so a
+ * stale-while-revalidate cache cannot hand either one an outage's old answer as if it were
+ * current.
+ */
+export function freshReading(forecast: HourlyForecast, at: Date, now: number): WeatherReading | null {
+  if (isForecastStale(forecast, now)) return null;
+  return pickHour(forecast, at);
+}
+
+/**
  * The forecast for an event's start, or null — the one call the page and the reminder make.
  *
  * Null without a request when the start is behind us or more than seven days away
- * (`withinWeatherWindow`), when the event is not going ahead, and on any failure.
+ * (`withinWeatherWindow`), when the event is not going ahead, on any failure, and when the
+ * cached answer is older than `MAX_FORECAST_AGE_MS` (an outage the cache is still serving through).
  */
 export async function weatherForEvent(
   event: { startsAt: Date; raceStartsAt?: Date | null; eventStatus?: string | null },
@@ -210,24 +246,30 @@ export async function weatherForEvent(
   const at = weatherInstant(event);
   if (!withinWeatherWindow(at, now)) return null;
   const read = await readClubForecast({ now: now.getTime(), ...deps });
-  return read.ok ? pickHour(read.forecast, at) : null;
+  return read.ok ? freshReading(read.forecast, at, now.getTime()) : null;
 }
 
 /**
  * What the system panel says about the service (§NNN): the source, and its last answer — when it
  * was read and how many hours it holds — or why there is none. Reads the same cached entry the
- * pages read, so opening the panel costs no request inside the hour.
+ * pages read, so opening the panel costs no request inside the hour. A cached answer older than
+ * `MAX_FORECAST_AGE_MS` reads as `reason: "stale"`, amber like every other `ok: false` — never
+ * green on an entry an outage has been serving for hours or days.
  */
 export type WeatherStatus =
   | { source: "off" | "stub" }
   | { source: "open-meteo"; ok: true; fetchedAt: Date; hours: number }
-  | { source: "open-meteo"; ok: false; reason: WeatherFailure | "resting"; failedAt: Date | null };
+  | { source: "open-meteo"; ok: false; reason: WeatherFailure | "resting" | "stale"; failedAt: Date | null };
 
 export async function readWeatherStatus(): Promise<WeatherStatus> {
   const source = env.WEATHER_SOURCE;
   if (source !== "open-meteo") return { source };
   const read = await readClubForecast();
-  if (read.ok) return { source, ok: true, fetchedAt: new Date(read.forecast.fetchedAt), hours: read.forecast.time.length };
+  if (read.ok) {
+    const fetchedAt = read.forecast.fetchedAt;
+    if (isForecastStale(read.forecast, Date.now())) return { source, ok: false, reason: "stale", failedAt: new Date(fetchedAt) };
+    return { source, ok: true, fetchedAt: new Date(fetchedAt), hours: read.forecast.time.length };
+  }
   return {
     source,
     ok: false,

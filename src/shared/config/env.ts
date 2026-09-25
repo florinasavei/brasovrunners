@@ -468,6 +468,12 @@ export const envSchema = z
        * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
        * needs both, and either one missing shows the club's address instead.
        */
+      CONTACT_FORM_MODE:
+        value.APP_ENV === "local" || value.APP_ENV === "test"
+          ? ("capture" as const)
+          : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD
+            ? ("smtp" as const)
+            : ("off" as const),
       /**
        * Where the weather forecast comes from (§NNN). Derived, never set: `stub` for the
        * end-to-end suite's server (`E2E_WEATHER_STUB`, whatever its APP_ENV — CI runs the suite
@@ -483,12 +489,6 @@ export const envSchema = z
           : value.APP_ENV === "test"
             ? ("off" as const)
             : ("open-meteo" as const),
-      CONTACT_FORM_MODE:
-        value.APP_ENV === "local" || value.APP_ENV === "test"
-          ? ("capture" as const)
-          : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD
-            ? ("smtp" as const)
-            : ("off" as const),
     };
   });
 

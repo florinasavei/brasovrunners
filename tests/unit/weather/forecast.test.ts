@@ -13,6 +13,9 @@ import {
 import { GLYPH_BY_KIND, WEATHER_GLYPH_NAMES, WEATHER_KINDS, weatherKind } from "@/modules/weather/domain/wmo";
 import {
   fetchOpenMeteo,
+  freshReading,
+  isForecastStale,
+  MAX_FORECAST_AGE_MS,
   OPEN_METEO_BASE,
   openMeteoUrl,
   readClubForecast,
@@ -222,6 +225,30 @@ describe("§NNN the request, and every failure read as no forecast", () => {
     // The stub covers the whole window from its clock, so any start inside it finds its hour.
     const hours = stubForecast(NOW.getTime());
     expect(pickHour(hours, new Date(NOW.getTime() + WEATHER_WINDOW_DAYS * 24 * HOUR))).not.toBeNull();
+  });
+});
+
+describe("§NNN a cached answer too old to trust", () => {
+  it("bounds the age at twice the cache's own step", () => {
+    expect(MAX_FORECAST_AGE_MS).toBe(2 * WEATHER_CACHE_SECONDS * 1000);
+  });
+
+  it("is not stale a moment after it was fetched, or exactly at the bound", () => {
+    const fresh = forecast();
+    expect(isForecastStale(fresh, NOW.getTime())).toBe(false);
+    expect(isForecastStale(fresh, NOW.getTime() + MAX_FORECAST_AGE_MS)).toBe(false);
+  });
+
+  it("is stale past the bound — stale-while-revalidate cannot serve an outage's old answer as current", () => {
+    const fresh = forecast();
+    expect(isForecastStale(fresh, NOW.getTime() + MAX_FORECAST_AGE_MS + 1)).toBe(true);
+  });
+
+  it("reads no hour from a forecast fetched 3 hours before now, even though the hour is in it", () => {
+    const stale = { ...forecast(), fetchedAt: NOW.getTime() - 3 * HOUR };
+    expect(freshReading(stale, START, NOW.getTime())).toBeNull();
+    // The same forecast, fresh, does hold that hour — staleness is the only difference.
+    expect(freshReading(forecast(), START, NOW.getTime())).not.toBeNull();
   });
 });
 

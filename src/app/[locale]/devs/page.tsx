@@ -824,12 +824,16 @@ export default async function DevsPage({ params, searchParams }: Props) {
                       when: formatDay(weather.fetchedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
                       hours: weather.hours,
                     })
-                  : weather.failedAt
-                    ? t("weather.failedAt", {
+                  : weather.reason === "stale" && weather.failedAt
+                    ? t("weather.stale", {
                         when: formatDay(weather.failedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
-                        reason: weather.reason,
                       })
-                    : t("weather.failed", { reason: weather.reason })}
+                    : weather.failedAt
+                      ? t("weather.failedAt", {
+                          when: formatDay(weather.failedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+                          reason: weather.reason,
+                        })
+                      : t("weather.failed", { reason: weather.reason })}
             </Typography>
           </Stack>
         </Box>
