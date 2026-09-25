@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
 import { DIFFICULTY_LEVELS } from "./difficulty-levels";
 
-
 /** Material's own `FitnessCenterIcon` path (`@mui/icons-material/FitnessCenter`, on its own
  * 24-unit grid) — drawn `DIFFICULTY_LEVELS.length` times rather than the three hand-drawn bars
  * the fix round found running together (finding 1): the brief asked for Material's glyph, one
@@ -33,7 +32,7 @@ const FITNESS_CENTER_PATH =
  *
  * The chip's clone width (`sx={{ width: … }}`) and `level`'s own type are both derived from
  * `DIFFICULTY_LEVELS.length` rather than written as `'3em'` and `1 | 2 | 3` — a fourth level
- * added to the closed set above widens the icon and the type on its own, instead of the
+ * added to the closed set (`difficulty-levels.ts`) widens the icon and the type on its own, instead of the
  * viewBox growing while the width and the accepted levels stayed at three (fix round, finding 3).
  *
  * `aria-hidden` throughout, like every glyph in the registry (§112) — the pill's word and its
