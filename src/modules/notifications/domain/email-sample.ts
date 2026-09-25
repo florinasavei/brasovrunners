@@ -1,6 +1,8 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
+import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { EmailCopyPlaceholder } from "./email-copy";
 import { registrationStatusWords } from "./registration-status-words";
@@ -50,6 +52,28 @@ export function emailSampleWhen(locale: EmailLocale): string {
   return sampleMoment(EMAIL_SAMPLE_STARTS_AT, locale);
 }
 
+/** The four deadline fields of the closed set (§377). */
+export type EmailSampleDeadlines = Pick<EmailSampleValues, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours">;
+
+/**
+ * The club's deadlines as the four fields' values, in one language (§377) — through the branch's one
+ * words helper (`deadlineWords`), which says each duration exactly as `templates.ts` fills the field
+ * at send time: "48 de ore", "30 de minute", "24 de ore", "2 zile". Empty for a reminder the club
+ * does not send, as the message leaves it (a paragraph with only it is then not sent).
+ *
+ * The sample reads the defaults, the numbers an unset "Termene" has; the page's legend reads the
+ * setting in force, so its example is the one the preview above it prints (`emailFieldLegend`).
+ */
+export function emailSampleDeadlines(locale: EmailLocale, deadlines: Deadlines = DEFAULT_DEADLINES): EmailSampleDeadlines {
+  const words = deadlineWords(locale, deadlines);
+  return {
+    confirmationHours: words.confirmation,
+    holdMinutes: words.hold,
+    offerHours: words.offer,
+    reminderHours: words.reminder ?? "",
+  };
+}
+
 export type EmailSampleValues = {
   participantName: string;
   eventTitle: string;
@@ -62,6 +86,11 @@ export type EmailSampleValues = {
   /** The hold's deadline and the time of signing (§104, §95), so every field of the set has a sample value (§373). */
   holdExpiresAtFormatted: string;
   signedAtFormatted: string;
+  /** The club's deadlines as words (§377), from `DEFAULT_DEADLINES` (`emailSampleDeadlines`). */
+  confirmationHours: string;
+  holdMinutes: string;
+  offerHours: string;
+  reminderHours: string;
   /**
    * The staff invitation (§141): a made-up colleague, added by a made-up administrator — a name
    * nobody at the club has, so it is refused in every message, as the runner's is (§359).
@@ -93,6 +122,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     eventChecklist: "Apă, o haină de ploaie, bună dispoziție",
     holdExpiresAtFormatted: sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "ro"),
     signedAtFormatted: sampleMoment(EMAIL_SAMPLE_SIGNED_AT, "ro"),
+    ...emailSampleDeadlines("ro"),
     staffRole: "Organizator",
     inviterName: "Ion Exemplu",
     staffEmail: "ana.popescu@example.org",
@@ -116,6 +146,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     eventChecklist: "Water, a rain jacket, good spirits",
     holdExpiresAtFormatted: sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "en"),
     signedAtFormatted: sampleMoment(EMAIL_SAMPLE_SIGNED_AT, "en"),
+    ...emailSampleDeadlines("en"),
     staffRole: "Organizator",
     inviterName: "Ion Exemplu",
     staffEmail: "ana.popescu@example.org",

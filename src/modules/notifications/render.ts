@@ -30,6 +30,10 @@ import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./doma
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
+import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
@@ -81,8 +85,6 @@ const ROUTE_BY_PURPOSE: Record<
   LIST_CONSENT: "/registrations/list/[token]",
 };
 
-/** A sensible default when the triggering registration has no deadline of its own to borrow. */
-const DEFAULT_TOKEN_HOURS = 14 * 24;
 
 type RendererDb = Parameters<EmailRenderer>[1];
 
@@ -218,6 +220,21 @@ async function renderRow(
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
   /*
+    The deadlines the words state (§377), as numbers — the club's "Termene" in force now, this
+    event's own reminder lead, its window's opening and the link's lifetime — so a message never
+    promises "48 de ore" when the club chose otherwise. From the instance's minute-long memo: a
+    batch of twenty rows reads the setting once, not twenty times.
+  */
+  const settings = await currentDeadlines(db);
+  data.timings = {
+    confirmationHours: settings.confirmationHours,
+    holdMinutes: settings.holdMinutes,
+    offerHours: settings.offerHours,
+    reminderHours: reminderHoursFor({ reminderHoursBefore: eventDetails?.reminderHoursBefore ?? null }, settings),
+    ...(eventDetails ? { confirmationOpensDays: eventDetails.confirmationOpensDaysBefore } : {}),
+    linkDays: DEFAULT_TOKEN_HOURS / 24,
+  };
+  /*
     The second half in its own language's words (§373, email follow-up; the owner: "multi-lingual,
     always"). The title, "what to bring" and the place's name are the translation's, so the English
     half of a Romanian registrant's message read the Romanian checklist until now. The other
@@ -235,7 +252,7 @@ async function renderRow(
   if (clubCopy) data.clubCopy = true;
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a
-  // deadline more than a day away is the week-before confirmation, not the thirty minutes. A
+  // deadline more than a day away is the week-before confirmation, not the club's hold (§377). A
   // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
   if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
     // Each half of the bilingual message in its own words (§96, §349).
@@ -243,6 +260,11 @@ async function renderRow(
     data.holdExpiresAtFormatted = formatInSentence(registration.holdExpiresAt, holdZone, locale);
     data.holdExpiresAtFormattedOther = formatInSentence(registration.holdExpiresAt, holdZone, otherLocale(locale));
     data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
+    // Once the participation window is open this message is itself the reminder (the send when
+    // the window opens, or a resend after it), so it must not promise "or when we remind you".
+    if (eventDetails) {
+      data.windowOpen = participationWindowOpen(eventDetails.startsAt, eventDetails.confirmationOpensDaysBefore, now);
+    }
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
   /*

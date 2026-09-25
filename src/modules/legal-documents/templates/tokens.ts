@@ -1,4 +1,6 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { DEADLINE_MERGE_FIELDS, deadlineMergeValues } from "../domain/merge-fields";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -74,6 +76,14 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
       formatDay(TOKEN_EXAMPLE_SIGNED_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
     ),
   },
+  // The club's deadlines (§377), in any of the three texts, filled from "Termene" when the text is
+  // shown — the examples are what an unset setting fills in, in the words it is filled with.
+  // Each language's example in its own words, as the text in that language is filled (§369).
+  ...DEADLINE_MERGE_FIELDS.map((field) => ({
+    token: `{{${field}}}`,
+    messageKey: field,
+    example: inBoth((locale) => deadlineMergeValues(locale, DEFAULT_DEADLINES)[field]),
+  })),
 ];
 
 /** Which tokens a body already uses — what the legend marks as "in this text". */

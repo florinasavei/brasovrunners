@@ -78,7 +78,7 @@
     "raceWeek": {
       "today": "Azi, {when}",
       "tomorrow": "Mâine, {when}",
-      "inDays": "În {days} zile, {when}"
+      "inDays": "În {days}, {when}"
     },
     "pastCountOfType": "Din trecut — {type} ({count})"
   },
@@ -621,8 +621,8 @@
       "registrationModeTitle": "Modul de înscriere, din setările evenimentului",
       "columnDate": "Data",
       "seriesDates": "Datele acestei serii",
-      "seriesRenewsUntil": "Se reînnoiește automat: platforma creează datele mereu {weeks} săptămâni înainte, până pe {until}.",
-      "seriesRenewsForever": "Se reînnoiește automat: platforma creează datele mereu {weeks} săptămâni înainte, la nesfârșit.",
+      "seriesRenewsUntil": "Se reînnoiește automat: platforma creează datele mereu cu {horizon} înainte, până pe {until}.",
+      "seriesRenewsForever": "Se reînnoiește automat: platforma creează datele mereu cu {horizon} înainte, la nesfârșit.",
       "seriesEdit": "Editează următoarea dată",
       "seriesDeleteNote": "O serie se șterge din bara de deasupra listei: bifeaz-o, apoi „Șterge cele bifate”.",
       "deskCounts": "{confirmed} confirmate · {checkedIn} prezente",
@@ -645,8 +645,8 @@
       },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
-      "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
-      "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
+      "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până pe {until} — următoarele {horizon}. Restul le creează platforma singură, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
+      "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până pe {until} — următoarele {horizon}. Restul le creează platforma singură, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
       "seriesDraftsOne": "{dates} în ciornă, nu e pe site:",
       "seriesDraftsMany": "{dates} în ciornă, nu sunt pe site:",
       "seriesNewDates": {
@@ -659,7 +659,7 @@
       "seriesDraftsSourceOne": "{dates} a seriei nu e pe site — seria nu e publicată:",
       "seriesDraftsSourceMany": "{dates} ale seriei nu sunt pe site — seria nu e publicată:",
       "seriesDraftsMore": "și încă {count}",
-      "seriesDraftsHintNew": "Seria își creează singură datele pe următoarele {weeks} săptămâni; cu publicarea automată oprită, fiecare dată nouă rămâne ciornă până o publici.",
+      "seriesDraftsHintNew": "Seria își creează singură datele pe următoarele {horizon}; cu publicarea automată oprită, fiecare dată nouă rămâne ciornă până o publici.",
       "seriesDraftsHintSource": "Seria pornește dintr-un eveniment care nu e publicat; până îl publici, și datele pe care le creează rămân ciorne.",
       "seriesDraftsPublish": "Publică",
       "seriesDraftsPublishTitle": "Publici {dates}?",
@@ -743,7 +743,7 @@
       "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nu s-a schimbat nimic: scoaterea limitei de pe producție cere aceeași bifă de confirmare — fără limită, producția nu mai are niciun plafon de cheltuieli.",
       "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
-      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură în 48 de ore.",
+      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură, când trece termenul linkului de confirmare (la „Termene”, pe pagina Emailuri).",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
@@ -842,7 +842,7 @@
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
       "capacity": "Număr de locuri",
       "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
-      "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte 24 h fiecare.",
+      "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte {offer} fiecare.",
       "waitlistCapacity": "Lungimea maximă a listei de așteptare",
       "waitlistCapacityHelp": "Lasă gol pentru nelimitat. 0 înseamnă fără listă de așteptare: când locurile se termină, înscrierile se opresc. Contează doar cu un număr de locuri. Coborâtă sub câți așteaptă deja, nu scoate pe nimeni de pe listă — doar nu mai primește alții.",
       "registrationOpensAt": "Înscrierile se deschid",
@@ -873,7 +873,7 @@
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
-      "repeatHelp": "Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusul orar al evenimentului, până la o dată sau la nesfârșit. Următoarele opt săptămâni se creează acum, iar platforma creează singură săptămânile care urmează — fiecare dată e un eveniment al ei: o anulezi sau o muți fără să atingi restul. Fiecare dată primește o adresă cu ziua ei („alergare-de-duminica-2026-10-04”). Datele sunt ciorne, dacă nu bifezi publicarea.",
+      "repeatHelp": "Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusul orar al evenimentului, până la o dată sau la nesfârșit. Următoarele {horizon} se creează acum, iar platforma creează singură săptămânile care urmează — fiecare dată e un eveniment al ei: o anulezi sau o muți fără să atingi restul. Fiecare dată primește o adresă cu ziua ei („alergare-de-duminica-2026-10-04”). Datele sunt ciorne, dacă nu bifezi publicarea.",
       "repeatUntil": "Până la (opțional)",
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
       "repeatRuleForever": "{sentence} — la nesfârșit",
@@ -893,7 +893,7 @@
       "savedSeriesOfferedOne": "Salvat — și pe încă {dates} a seriei; locuri oferite listei de așteptare: {offered}.",
       "savedSeriesOfferedMany": "Salvat — și pe încă {dates} ale seriei; locuri oferite listei de așteptare: {offered}.",
       "savedOffered": "Salvat — locuri oferite listei de așteptare: {offered}.",
-      "placeAnnouncedLive": "Locația e anunțată: apare acum pe pagina evenimentului, pe carduri, în calendar și în emailurile trimise de acum încolo. Cei deja înscriși nu primesc automat un email despre ea; memento-ul de cu 48 de ore înainte de eveniment o va conține.",
+      "placeAnnouncedLive": "Locația e anunțată: apare acum pe pagina evenimentului, pe carduri, în calendar și în emailurile trimise de acum încolo. Cei deja înscriși nu primesc automat un email despre ea; reminderul dinaintea startului o va conține, dacă evenimentul trimite unul.",
       "placeAnnouncedDraft": "Locația e anunțată: va apărea pe toate paginile când evenimentul e publicat. Nimeni nu primește un email despre ea.",
       "scope": {
         "title": "Salvează pentru:",
@@ -997,7 +997,7 @@
       "bodyHelp": "Opțional, în ambele limbi sau în niciuna. Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
-      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
+      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc ({hold}), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
       "typeNotes": {
         "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
@@ -1016,6 +1016,14 @@
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
       "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
       "minAge": "Vârsta minimă (ani)",
+      "reminder": {
+        "label": "Reminderul dinaintea startului",
+        "usual": "Ca de obicei ({lead})",
+        "before": "cu {lead} înainte de start",
+        "none": "Fără reminder",
+        "clubNone": "fără reminder, implicit",
+        "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
+      },
       "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea o face un părinte. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
@@ -1115,13 +1123,13 @@
       "repeatPublishOffHelp": "Oprit: datele noi se creează ca ciorne; le publici tu din lista de evenimente.",
       "repeatPublishDraftSource": "Cât timp evenimentul e ciornă, și datele noi sunt ciorne.",
       "repeatNextDates": "Datele următoare",
-      "repeatRenewal": "Platforma ține mereu create următoarele opt săptămâni; ultima creată: {date}.",
+      "repeatRenewal": "Platforma ține mereu create următoarele {horizon}; ultima creată: {date}.",
       "repeatPublishSave": "Salvează setarea",
       "repeatAdminOnly": "Doar un administrator poate porni sau opri recurența.",
       "repeatAllInList": "Toate datele ({count}) în lista de evenimente",
       "repeatRuleLiveForever": " — la nesfârșit.",
       "repeatRuleLiveUntil": " — până la {until}.",
-      "repeatRuleLiveHorizon": "Se creează acum datele din următoarele opt săptămâni.",
+      "repeatRuleLiveHorizon": "Se creează acum datele din următoarele {horizon}.",
       "groups": {
         "event": "Evenimentul",
         "day": "Ziua evenimentului și participanții",
@@ -1142,9 +1150,9 @@
           "few": "{count} înscriși",
           "other": "{count} de înscriși"
         },
-        "when": "Înscrieri la această dată: {count}, pentru {date}. O dată nouă nu le anulează înscrierea; reamintirea de 48 de ore, fereastra de confirmare și intrarea din calendar o urmează. Ca să afle, bifează „Anunță participanții” la Salvare.",
+        "when": "Înscrieri la această dată: {count}, pentru {date}. O dată nouă nu le anulează înscrierea; reamintirea dinaintea startului, fereastra de confirmare și intrarea din calendar o urmează. Ca să afle, bifează „Anunță participanții” la Salvare.",
         "place": "Înscrieri: {count}, care știu locul „{place}”. Dacă îl schimbi, bifează „Anunță participanții” la Salvare.",
-        "programme": "Reamintirea de 48 de ore repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
+        "programme": "Reamintirea dinaintea startului repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
         "registration": "Înscrierile făcute rămân. Locurile adăugate se oferă listei de așteptare la salvare, în ordine.",
         "status": "Anularea oprește înscrierile și, dacă lași bifa, îi anunță pe cei înscriși ({count}) cu motivul scris aici."
       },
@@ -1189,6 +1197,9 @@
           "title": "Condiții de participare și declarația",
           "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
         },
+        "reminder": {
+          "title": "Reminderul dinaintea startului"
+        },
         "confirmation": {
           "title": "Fereastra de confirmare",
           "dates": "Pentru {date}: cerută din {opens}, termen {due}."
@@ -1227,7 +1238,7 @@
         "save": {
           "title": "Salvare",
           "createDraft": "Se creează ca ciornă",
-          "createWithSeries": "și datele seriei din următoarele opt săptămâni."
+          "createWithSeries": "și datele seriei din următoarele {horizon}."
         },
         "pickDates": {
           "title": "Alege datele una câte una"
@@ -1461,7 +1472,7 @@
       "holds": "Rezervate",
       "free": "Libere",
       "waiting": "În așteptare",
-      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). O rezervare cu termenul depășit rămâne a persoanei — poate semna online oricând sau pe hârtie la masă — și se eliberează doar când cineva așteaptă un loc, când se înscrie cineva pe care lista de așteptare nu îl mai poate primi, sau când începe evenimentul. Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul; cât lista de așteptare e plină, publicul vede liber și locul unei rezervări expirate, pentru că următorul înscris îl primește.",
+      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația ({hold}, sau până la termenul de confirmare pentru evenimentele mai departe de fereastra lor) sau răspunde la o ofertă de pe lista de așteptare ({offer}). O rezervare cu termenul depășit rămâne a persoanei — poate semna online oricând sau pe hârtie la masă — și se eliberează doar când cineva așteaptă un loc, când se înscrie cineva pe care lista de așteptare nu îl mai poate primi, sau când începe evenimentul. Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul; cât lista de așteptare e plină, publicul vede liber și locul unei rezervări expirate, pentru că următorul înscris îl primește.",
       "lineTitle": "Lista de așteptare ({count})",
       "lineTitleLimited": "Lista de așteptare ({count} din {limit})",
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
@@ -1475,7 +1486,7 @@
       "interestRemove": "Șterge din listă",
       "interestRemoved": "Adresa a fost ștearsă din lista de anunțare.",
       "interestNotFound": "Adresa nu era pe lista acestui eveniment. Verifică dacă a scris de pe altă adresă.",
-      "simulate": "Cum simulezi lista de așteptare (nu în producție): pune un număr mic de locuri în Setări, salvează, apoi adaugă mai jos mai multe înscrieri de test decât locuri — primele iau locurile (ca rezervări de 30 de minute), restul intră aici, în ordine. Anulează una confirmată, lasă o rezervare să expire (jobul de întreținere rulează la 15 minute) sau mărește numărul de locuri și prima din listă primește oferta; emailul ei apare în Outbox, la înscrierea respectivă."
+      "simulate": "Cum simulezi lista de așteptare (nu în producție): pune un număr mic de locuri în Setări, salvează, apoi adaugă mai jos mai multe înscrieri de test decât locuri — primele iau locurile (ca rezervări de câte {hold}), restul intră aici, în ordine. Anulează una confirmată, lasă o rezervare să expire (jobul de întreținere rulează la 15 minute) sau mărește numărul de locuri și prima din listă primește oferta; emailul ei apare în Outbox, la înscrierea respectivă."
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -1594,7 +1605,7 @@
       },
       "tokens": {
         "title": "Câmpurile care se completează singure",
-        "intro": "Numai în declarație. Le lași exact așa cum sunt în text — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
+        "intro": "Le lași exact așa cum sunt în text. Cele ale participantului și ale evenimentului — numai în declarație — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă; cele patru termene, în oricare dintre cele trei texte, cu valorile de la „Termene”, pe pagina Emailuri. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
         "inText": "în text",
         "participant": "Numele cu care s-a înscris participantul",
         "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
@@ -1605,7 +1616,11 @@
         "event": "Titlul evenimentului",
         "eventDate": "Data evenimentului, în fusul lui",
         "eventLocation": "Locul de întâlnire",
-        "signedAt": "Momentul semnării"
+        "signedAt": "Momentul semnării",
+        "confirmationHours": "Cât e valabil linkul de confirmare a adresei, din „Termene”",
+        "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
+        "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
+        "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2500,7 +2515,7 @@
         "REGISTRATION_MANAGE_LINK": "Linkul tău de înscriere",
         "PROFILE_MANAGE_LINK": "Înscrierile mele",
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
-        "EVENT_REMINDER": "Reminder cu 48 de ore înainte",
+        "EVENT_REMINDER": "Reminderul dinaintea startului",
         "EVENT_THANKS": "Mulțumim după cursă",
         "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
         "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
@@ -2513,17 +2528,17 @@
         "ORGANIZER_MESSAGE": "Mesaj de la organizatori"
       },
       "when": {
-        "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
-        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut 30 de minute. Termenul contează doar dacă așteaptă cineva: altfel locul rămâne al persoanei până la start, iar declarația se semnează online sau pe hârtie la masă. Cu două zile înainte de start pleacă o ultimă dată, către cine încă nu a semnat.",
+        "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil {confirmation}.",
+        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut {hold}. Termenul contează doar dacă așteaptă cineva: altfel locul rămâne al persoanei până la start, iar declarația se semnează online sau pe hârtie la masă.",
         "WAITLIST_JOINED": "După confirmarea adresei, când nu mai sunt locuri.",
-        "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. 24 de ore să semneze.",
+        "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. Are {offer} să semneze.",
         "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
         "REGISTRATION_CANCELLED": "Când participantul se retrage sau un organizator anulează înscrierea.",
-        "WAITLIST_OFFER_EXPIRED": "Nu se mai trimite: când cele 24 de ore ale unui loc oferit trec fără semnătură, locul trece la următorul de pe listă fără niciun email către cel care nu a semnat.",
+        "WAITLIST_OFFER_EXPIRED": "Nu se mai trimite: când cele {offer} ale unui loc oferit trec fără semnătură, locul trece la următorul de pe listă fără niciun email către cel care nu a semnat.",
         "REGISTRATION_MANAGE_LINK": "Nu se mai trimite: „Retrimite linkul” trimite confirmarea întreagă (cu linkul de gestionare, codul QR și numărul), iar „Înscrierile mele” are mesajul lui.",
         "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
-        "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
+        "EVENT_REMINDER": "Automat, cu {reminder} înainte de start (sau cât e ales pe eveniment), tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici) — doar pentru înscrieri reale. Fără niciun link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
@@ -2542,11 +2557,11 @@
         "WAITLIST_SPOT_OFFER": "când se eliberează un loc",
         "REGISTRATION_CONFIRMED": "după semnarea declarației",
         "REGISTRATION_CANCELLED": "la retragere sau anulare",
-        "WAITLIST_OFFER_EXPIRED": "când trec cele 24 de ore ale ofertei",
+        "WAITLIST_OFFER_EXPIRED": "când trec cele {offer} ale ofertei",
         "REGISTRATION_MANAGE_LINK": "la cerere, „Retrimite linkul”",
         "PROFILE_MANAGE_LINK": "la cerere, toate înscrierile",
         "REGISTRATION_STATE_NOTICE": "retrimis de un organizator",
-        "EVENT_REMINDER": "cu două zile înainte de start",
+        "EVENT_REMINDER": "cu {reminder} înainte de start",
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
         "DECLARATION_ARCHIVE": "odată cu declarația semnată, către arhivă",
@@ -2638,7 +2653,11 @@
             "signedAtFormatted": "Când a semnat declarația",
             "eventChecklist": "Ce să aducă — rândul scris la eveniment, în limba acestui text",
             "staffRole": "Rolul colegului invitat în echipă",
-            "inviterName": "Cine l-a invitat în echipă"
+            "inviterName": "Cine l-a invitat în echipă",
+            "confirmationHours": "Cât e valabil linkul care confirmă adresa, din „Termene” — unitatea vine cu el, deci nu mai adăuga „ore” după el",
+            "holdMinutes": "Cât e ținut locul cât timp se semnează declarația, din „Termene”, cu unitatea cu tot",
+            "offerHours": "Cât rămâne deschisă o ofertă de pe lista de așteptare, din „Termene”, cu unitatea cu tot",
+            "reminderHours": "Cu cât înainte de start pleacă reminderul — al evenimentului, altfel al clubului din „Termene” — cu unitatea cu tot; nimic când evenimentul nu trimite reminder"
           }
         },
         "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân ale platformei: ele duc token-uri și fișiere, nu cuvinte.",
@@ -2721,6 +2740,43 @@
         "sender": "Contul din care pleacă mesajele nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
       },
       "neverSent": "nu se mai trimite",
+      "lastCall": "Odată cu reminderul — cu {reminder} înainte de start, sau cât e ales pe eveniment — pleacă o ultimă dată, către cine încă nu a semnat.",
+      "lastCallOff": "Pentru un eveniment care are ales un reminder, pleacă o ultimă dată odată cu el, către cine încă nu a semnat.",
+      "reminderOff": {
+        "when": "Oprit implicit, la „Termene”: pleacă doar pentru evenimentele care au ales un reminder în editor, tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
+        "whenShort": "doar unde evenimentul are ales un reminder"
+      },
+      "deadlines": {
+        "title": "Termene",
+        "intro": "Cât durează fiecare termen pe care platforma îl dă unui participant. Se aplică de la salvare înainte: un link, un loc ținut sau o ofertă deja date își păstrează termenul primit. Numerele apar singure oriunde sunt scrise — în emailuri, pe formular și în cei cinci pași, în ghid, pe această pagină și în textele legale aprobate din șablonul nou.",
+        "aside": "Link {confirmation} · loc ținut {hold} · ofertă {offer} · reminder {reminder}",
+        "reminderOff": "fără",
+        "bounds": "Între {min} și {max}; implicit {default}.",
+        "fields": {
+          "confirmationHours": "Linkul de confirmare a adresei e valabil (ore)",
+          "holdMinutes": "Locul e ținut pentru semnarea declarației (minute)",
+          "offerHours": "Oferta de pe lista de așteptare stă deschisă (ore)",
+          "reminderHours": "Reminderul pleacă înainte de start cu (ore)",
+          "selfCheckinHours": "„Am ajuns” se poate apăsa înainte de start cu (ore)",
+          "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
+          "seriesHorizonDays": "O serie își are datele create înainte cu (zile)"
+        },
+        "help": {
+          "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră și numărul provizoriu se eliberează.",
+          "holdMinutes": "Pentru un eveniment fără fereastră de confirmare, sau aflat deja în ea. O cursă mai departe de fereastră ține locul până la termenul ales pe eveniment.",
+          "offerHours": "Cât are primul de pe listă ca să semneze; niciodată după închiderea înscrierilor sau după start.",
+          "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare și înscrieri”.",
+          "selfCheckinHours": "Butonul din pagina participantului, „Am ajuns — marchează-mă prezent”.",
+          "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
+          "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești."
+        },
+        "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablonul platformei, care le citește de aici.",
+        "updatedAt": "Setat {when}.",
+        "save": "Salvează termenele",
+        "saving": "Se salvează…",
+        "saved": "Termenele au fost salvate; se aplică de acum înainte.",
+        "readOnly": "Termenele le schimbă Administratorul; tu vezi valorile în vigoare."
+      },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici."
     },
     "guide": {
@@ -2750,10 +2806,10 @@
           "title": "Participant — cum arată din partea lui",
           "who": "Fără cont. Totul prin email.",
           "steps": [
-            "Se înscrie de pe pagina evenimentului. Primește un email de verificare; apasă linkul și locul e rezervat (30 de minute, sau până la termenul de confirmare pentru un eveniment mai departe de o săptămână). Termenul se aplică doar dacă între timp așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
+            "Se înscrie de pe pagina evenimentului. Primește un email de verificare; apasă linkul și locul e rezervat ({hold}, sau până la termenul de confirmare pentru un eveniment mai departe de fereastra lui). Termenul se aplică doar dacă între timp așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
             "Citește și semnează declarația online, cu numele tastat — sau pe hârtie, la masă, în ziua cursei, înainte să-și ridice numărul. Înscrierea devine „confirmată” și primește emailul de confirmare cu codul QR.",
-            "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, din ziua dinaintea startului, poate apăsa „Am ajuns”.",
-            "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are 24 de ore să semneze declarația.",
+            "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, începând cu {checkin} înainte de start, poate apăsa „Am ajuns”.",
+            "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are {offer} să semneze declarația.",
             "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc.",
             "În calendarul lui: pe fiecare eveniment sunt „Google Calendar” și „Adaugă în calendar (.ics)”; pe pagina de evenimente, „Abonează-te” pune tot calendarul clubului în telefon și se actualizează singur când publicați ceva nou."
           ],
@@ -2987,12 +3043,12 @@
       "next": {
         "open": {
           "title": "Deschizi emailul și apeși linkul",
-          "body": "Atât. Linkul e valabil {hours} de ore."
+          "body": "Atât. Linkul e valabil {confirmation}."
         },
         "declare": {
           "title": "Semnezi declarația",
           "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
-          "bodyLater": "Locul e al tău. Cu {opensDays} zile înainte de start îți cerem confirmarea: semnezi declarația online — sau pe hârtie, la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere."
+          "bodyLater": "Locul e al tău. Îți cerem confirmarea cu {opens} înainte de start: semnezi declarația online — sau pe hârtie, la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere."
         },
         "confirmed": {
           "title": "Ești înscris",
@@ -3000,7 +3056,7 @@
         }
       },
       "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
-      "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {hours} de ore, așa că ai timp.",
+      "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {confirmation}, așa că ai timp.",
       "backToEvent": "Înapoi la eveniment"
     },
     "deliveryNotice": {
@@ -3124,16 +3180,17 @@
       },
       "email": {
         "title": "Confirmi adresa de email",
-        "body": "Primești un link. Apasă-l în {hours} de ore — altfel înscrierea expiră și locul rămâne liber."
+        "body": "Primești un link. Apasă-l în {confirmation} — altfel înscrierea expiră și locul rămâne liber."
       },
       "declaration": {
         "title": "Semnezi declarația",
-        "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {minutes} de minute; dacă se formează listă de așteptare, după acest termen trece la următorul.",
-        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opensDays} zile înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până cu {deadlineDays} zile înainte de start; după, trece la următorul."
+        "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {hold}; dacă se formează listă de așteptare, după acest termen trece la următorul.",
+        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până cu {deadline} înainte de start; după, trece la următorul."
       },
       "confirmed": {
         "title": "Ești înscris",
-        "body": "Primești emailul de confirmare, cu codul QR și numărul de concurs. Cu două zile înainte îți trimitem un reminder."
+        "body": "Primești emailul de confirmare, cu codul QR și numărul de concurs. Îți trimitem un reminder cu {reminder} înainte de start.",
+        "bodyNoReminder": "Primești emailul de confirmare, cu codul QR și numărul de concurs."
       },
       "raceDay": {
         "title": "În ziua cursei",
@@ -3141,7 +3198,7 @@
       },
       "waitingList": {
         "title": "Dacă nu mai sunt locuri",
-        "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offerHours} de ore să semnezi declarația."
+        "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offer} să semnezi declarația."
       }
     },
     "journey": {
@@ -3223,8 +3280,8 @@
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
-      "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil 48 de ore de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
-      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil 48 de ore de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou."
+      "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
+      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou."
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
@@ -3248,7 +3305,7 @@
       "nextTitle": "Ce urmează",
       "nextConfirmed": [
         "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
-        "Cu două zile înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
+        "Cu {reminder} înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
         "Dacă nu mai poți veni, anulezi din linkul din email: locul tău merge la cineva de pe lista de așteptare."
       ],
       "nextWaitlisted": [
@@ -3362,7 +3419,7 @@
       "codeIntro": "Arată acest cod la masa de ridicare a numerelor. Îl ai și în emailul de confirmare.",
       "qrAlt": "Codul tău QR {code}",
       "selfCheckIn": "Am ajuns — marchează-mă prezent",
-      "selfCheckInHelp": "Poți face asta din ziua dinaintea startului. Numărul îl ridici tot de la masă.",
+      "selfCheckInHelp": "Poți face asta începând cu {checkin} înainte de start. Numărul îl ridici tot de la masă.",
       "selfCheckInDone": "Ești marcat prezent. Ridică-ți numărul de la masă.",
       "selfCheckInClosed": "Marcarea prezenței se deschide din {date}.",
       "selfCheckInFailed": "Nu am putut marca prezența. Spune la masă, se rezolvă acolo."

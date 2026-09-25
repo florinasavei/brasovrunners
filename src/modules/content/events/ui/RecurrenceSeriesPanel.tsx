@@ -3,6 +3,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -49,7 +51,8 @@ type Props = {
  *
  * - where this date sits ("Seria „…” · data 3 din 8"), the dates on either side, the first one;
  * - the rule in words, read from the source; the next five dates as links; how the series renews
- *   itself (the job keeps eight weeks created, §122), or that it is stopped;
+ *   itself (the job keeps the club's horizon created, eight weeks unless changed — §122, §377), or
+ *   that it is stopped;
  * - "Publică datele noi automat" with its own "Salvează setarea" (`setRepeatPublish`, on the
  *   source's rule, from any date) — its own form, because it changes the rule at the press;
  * - "Oprește recurența", aimed at the source from any date (`stopRepeat` resolves it).
@@ -62,6 +65,8 @@ export default async function RecurrenceSeriesPanel(props: Props) {
     props;
   const running = ruleSentence !== null && !ended;
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
+  // How far ahead the job keeps the dates created — the club's number (§377), in words.
+  const horizon = daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays);
 
   return (
     <Panel collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
@@ -118,7 +123,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
         )}
 
         <Typography variant="body2" color="text.secondary">
-          {running ? t("editor.repeatRenewal", { date: lastCreated ?? "—" }) : t("editor.repeatStopped")}
+          {running ? t("editor.repeatRenewal", { date: lastCreated ?? "—", horizon }) : t("editor.repeatStopped")}
         </Typography>
 
         {/* Whether the dates made from now on go live by themselves (the hints branch's switch, §350),
@@ -166,7 +171,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
 
         <Panel collapsible level={3} title={t("editor.repeatHelpSummary")}>
           <Typography variant="body2" color="text.secondary">
-            {t("editor.repeatHelp")}
+            {t("editor.repeatHelp", { horizon })}
           </Typography>
         </Panel>
       </Stack>

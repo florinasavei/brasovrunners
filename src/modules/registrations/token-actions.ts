@@ -9,6 +9,8 @@ import {
   readSpentActionTokenScope,
 } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 import { findEventForRegistrationById, findEventNotificationDetails } from "@/modules/events/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -233,9 +235,6 @@ export async function consumeAndSignDeclaration(
   });
 }
 
-/** How long before the start a participant may say "I am here" from their own link. */
-export const SELF_CHECKIN_OPENS_HOURS = 24;
-
 /**
  * What the participant's own page shows about race day (BR-REQ-037-08): the desk code and
  * whether the self check-in window is open. The manage token is read, never spent — the same
@@ -250,7 +249,10 @@ export async function readRaceDayContext(secret: string, now: Date) {
   const registration = await findRegistrationById(db, context.token.registrationId ?? "");
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await loadEventForRegistration(db, registration.eventId);
-  const opensAt = new Date(event.startsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000);
+  // How long before the start a participant may say "I am here" from their own link: the club's
+  // hours (§377), a day unless changed.
+  const deadlines = await currentDeadlines(db);
+  const opensAt = selfCheckinOpensAt(event.startsAt, deadlines);
   // A cancelled race has no race day (§331): the page says so, and offers no desk code or "I am here".
   const eventCancelled = event.eventStatus === "CANCELLED";
   return {
@@ -259,6 +261,8 @@ export async function readRaceDayContext(secret: string, now: Date) {
     eventCancelled,
     selfCheckinOpen: registration.status === "CONFIRMED" && !eventCancelled && now >= opensAt,
     selfCheckinOpensAt: opensAt,
+    /** How many hours before the start that is, for the sentence that says so (§377). */
+    selfCheckinHours: deadlines.selfCheckinHours,
     /** The zone that instant is read in on the page — the event's own. */
     eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
   };
@@ -267,14 +271,14 @@ export async function readRaceDayContext(secret: string, now: Date) {
 /**
  * Self check-in from the participant's own link (BR-REQ-037-08). Not a consuming action: the
  * token authorizes the person, check-in is idempotent, and spending the manage link on it
- * would cost them the ability to cancel. Only from the day before the start — an "I am here"
- * a week early is not information.
+ * would cost them the ability to cancel. Only from the club's hours before the start (a day
+ * unless changed, §377) — an "I am here" a week early is not information.
  */
 export async function checkInSelf(secret: string, now: Date) {
   const context = await readRaceDayContext(secret, now);
   if (!context.ok) return context;
   if (!context.selfCheckinOpen) {
-    throw new DomainError("VALIDATION_ERROR", "self check-in opens the day before the event");
+    throw new DomainError("VALIDATION_ERROR", "self check-in is not open yet: it opens the club's check-in lead before the start");
   }
   const registration = await checkIn(getDb(), context.registration.id, null, now);
   return { ok: true as const, registration };

@@ -10,6 +10,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import type { Locale } from "@/i18n/routing";
 import type { EmailCopyEntry, EmailCopyPlaceholder } from "@/modules/notifications/domain/email-copy";
 import { emailDocFromParagraphs } from "@/modules/notifications/domain/email-rich-text";
@@ -35,6 +36,8 @@ type Props = {
   shipped: EmailCopyPrefill;
   /** The sample values the club's saved words still hold (§359); empty when there are none. */
   samples: readonly EmailSampleHit[];
+  /** The club's deadlines in force (§377): the legend's four deadline rows show what the preview prints. */
+  deadlines?: Deadlines;
 };
 
 /**
@@ -62,7 +65,7 @@ type Props = {
  * field nobody can see the name of is a field nobody uses. What is *not* editable is said under it
  * — the button, the QR and the links are the message's machinery (`domain/email-copy.ts` argues why).
  */
-export default async function EmailCopyEditor({ locale, emailLocale, messageType, written, shipped, samples }: Props) {
+export default async function EmailCopyEditor({ locale, emailLocale, messageType, written, shipped, samples, deadlines }: Props) {
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Admin.richText");
   const current = written ?? shipped;
@@ -144,7 +147,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
           {t("emails.copy.paragraphsHelp")}
         </Typography>
         {/* The fields, as the declaration's editor lists its tokens (§373, email follow-up): a named card, closed. */}
-        <EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} />
+        <EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} deadlines={deadlines} />
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.machinery")}
         </Typography>

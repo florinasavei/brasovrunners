@@ -187,6 +187,12 @@ export type InsertPendingRegistrationInput = {
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
   listOptOut: boolean;
+  /**
+   * When this registration's email link lapses unconfirmed (§377) — the club's hours at the moment
+   * of submission. Absent, the row lapses at `submitted_at` plus the setting in force, as rows
+   * written before the column do.
+   */
+  emailLinkExpiresAt?: Date | null;
   now: Date;
 };
 
@@ -251,6 +257,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       resultsConsentVersion: input.resultsConsentVersion,
       listOptOut: input.listOptOut,
       submittedAt: input.now,
+      emailLinkExpiresAt: input.emailLinkExpiresAt ?? null,
       createdAt: input.now,
       updatedAt: input.now,
     })
@@ -505,11 +512,19 @@ export async function countEligibleWaitlisted<T extends Record<string, unknown>>
   return row?.count ?? 0;
 }
 
-/** WEEKEND.md's registration lifecycle diagram: an unconfirmed email link expires after 48h. */
-export const EMAIL_CONFIRMATION_HOLD_HOURS = 48;
+/**
+ * When a `PENDING_EMAIL_CONFIRMATION` row's link lapses, as SQL (§377): the instant written on the
+ * row when it entered the state, or — for a row written before the column existed — its
+ * submission plus the club's hours in force. One expression, so the sweep below and the job's
+ * plan (`jobs/next-work.ts`) cannot disagree about when a link lapses.
+ */
+export function emailLinkLapseSql(confirmationHours: number) {
+  return sql<Date>`coalesce(${registrations.emailLinkExpiresAt}, ${registrations.submittedAt} + make_interval(hours => ${confirmationHours}))`;
+}
 
 /**
- * Expire registrations still waiting on email confirmation 48h after submission.
+ * Expire registrations still waiting on email confirmation once their link has lapsed — the
+ * club's hours after the submission (48 unless changed, §377), as written on the row.
  *
  * Global, not per-event: `PENDING_EMAIL_CONFIRMATION` never occupies capacity (§10.6 rule 6),
  * so there is no allocation to serialize and no event-row lock to take — unlike
@@ -518,8 +533,8 @@ export const EMAIL_CONFIRMATION_HOLD_HOURS = 48;
 export async function expireStalePendingEmailConfirmations<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
+  deadlines: { confirmationHours: number },
 ): Promise<number> {
-  const staleBefore = new Date(now.getTime() - EMAIL_CONFIRMATION_HOLD_HOURS * 60 * 60_000);
   const rows = await db
     .update(registrations)
     // The provisional number goes with the place (§214, §220). These bulk sweeps do not go
@@ -529,7 +544,7 @@ export async function expireStalePendingEmailConfirmations<T extends Record<stri
     .where(
       and(
         eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
-        lte(registrations.submittedAt, staleBefore),
+        sql`${emailLinkLapseSql(deadlines.confirmationHours)} <= ${now.toISOString()}::timestamptz`,
       ),
     )
     .returning({ id: registrations.id });

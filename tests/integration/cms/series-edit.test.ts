@@ -346,6 +346,27 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     for (const date of [source, ...dates]) expect((await reload(date.id)).minAge).toBe(0);
   });
 
+  // §377: one reminder rule, like the confirmation window — the dates a rule makes inherit it, and a
+  // series edit carries a new one; a save that does not post the select leaves it alone.
+  it("gives every date the source's reminder lead, and carries a new one to the dates the save reaches", async () => {
+    const { source, dates } = await seedSeries({ reminderHoursBefore: 72 });
+    const [oct18, oct25, nov1, nov8] = dates;
+    for (const date of dates) expect(date.reminderHoursBefore).toBe(72);
+
+    expect((await save(await reload(source.id), "all", { fields: { capacity: "40" } })).appliedTo).toBe(4);
+    for (const date of dates) expect((await reload(date.id)).reminderHoursBefore).toBe(72);
+
+    // No reminder from 1 November on; the dates before keep three days.
+    expect((await save(await reload(nov1.id), "following", { fields: { reminderHoursBefore: "0" } })).appliedTo).toBe(1);
+    expect((await reload(nov1.id)).reminderHoursBefore).toBe(0);
+    expect((await reload(nov8.id)).reminderHoursBefore).toBe(0);
+    for (const earlier of [source, oct18, oct25]) expect((await reload(earlier.id)).reminderHoursBefore).toBe(72);
+
+    // Back to "as usual" — the club's lead — for the whole series.
+    expect((await save(await reload(source.id), "all", { fields: { reminderHoursBefore: "" } })).appliedTo).toBe(4);
+    for (const date of [source, ...dates]) expect((await reload(date.id)).reminderHoursBefore).toBeNull();
+  });
+
   it("is ignored on an event that is not part of a series", async () => {
     const [alone] = await db
       .insert(events)

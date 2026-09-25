@@ -148,13 +148,13 @@ describe("§373 the fields of an email's words, as a legend", () => {
     expect(html.endsWith("</details>")).toBe(true);
     expect(html.match(/<details[^>]*>/)?.[0]).not.toMatch(/\sopen/);
     expect(html).toContain('id="email-fields-REGISTRATION_CONFIRMED"');
-    expect(html).toMatch(/<summary[^>]*><h4[^>]*>Câmpurile pe care le poți folosi<span[^>]*>12 câmpuri · 4 câmpuri folosite aici<\/span><\/h4><\/summary>/);
+    expect(html).toMatch(/<summary[^>]*><h4[^>]*>Câmpurile pe care le poți folosi<span[^>]*>16 câmpuri · 4 câmpuri folosite aici<\/span><\/h4><\/summary>/);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.intro);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.missing);
 
-    expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("12 câmpuri · 1 câmp folosit aici");
-    expect(text(await render("PROFILE_MANAGE_LINK", "ro"))).toContain("12 câmpuri · niciunul folosit aici");
-    expect(text(await render("REGISTRATION_CONFIRMED", "en"))).toContain("The fields you can use 12 fields · 4 fields used here");
+    expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("16 câmpuri · 1 câmp folosit aici");
+    expect(text(await render("PROFILE_MANAGE_LINK", "ro"))).toContain("16 câmpuri · niciunul folosit aici");
+    expect(text(await render("REGISTRATION_CONFIRMED", "en"))).toContain("The fields you can use 16 fields · 4 fields used here");
   });
 
   it("gives the examples of the language being edited, whatever the backoffice's language", async () => {
@@ -174,7 +174,7 @@ describe("§373 the fields of an email's words, as a legend", () => {
     const editor = readFileSync(path.join(process.cwd(), "src/modules/notifications/ui/EmailCopyEditor.tsx"), "utf8");
     expect(editor).not.toContain("email-copy-placeholders");
     expect(editor).not.toContain("placeholdersUsed");
-    expect(editor).toContain("<EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} />");
+    expect(editor).toContain("<EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} deadlines={deadlines} />");
     for (const catalogue of [ro, en]) {
       expect(catalogue.Admin.emails.copy).not.toHaveProperty("placeholders");
       expect(catalogue.Admin.emails.copy).not.toHaveProperty("placeholdersUsed");

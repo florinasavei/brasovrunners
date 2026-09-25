@@ -42,7 +42,9 @@ import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
 import { countForm } from "@/i18n/count-form";
 import EditionMark, { type EditionNote } from "@/modules/events/ui/EditionMark";
 import { editionNote, renewalOf } from "@/modules/events/ui/series-sentence";
-import { HORIZON_DAYS } from "@/modules/events/domain/repeat";
+import { seriesHorizonEnd } from "@/modules/deadlines/domain/deadlines";
+import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
@@ -137,6 +139,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const db = getDb();
   const now = new Date();
+  // How far ahead a series keeps its dates — the club's number (§377) — for the lines that say so.
+  const deadlines = await deadlinesForThisRequest();
+  const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
   const [events, entriesByEvent, deskByEvent] = await Promise.all([
     listEventsForBackoffice(db),
     countRegistrationsByEvent(db),
@@ -273,12 +278,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {(() => {
               const renewal = renewalOf(members.map((member) => member.event.repeatRule));
               if (!renewal) return null;
-              const weeks = HORIZON_DAYS / 7;
               return (
                 <Typography variant="body2" color="text.secondary">
                   {renewal.until
-                    ? t("events.seriesRenewsUntil", { weeks, until: formatCalendarDay(renewal.until, { locale, style: "long", position: "inline" }) })
-                    : t("events.seriesRenewsForever", { weeks })}
+                    ? t("events.seriesRenewsUntil", { horizon, until: formatCalendarDay(renewal.until, { locale, style: "long", position: "inline" }) })
+                    : t("events.seriesRenewsForever", { horizon })}
                 </Typography>
               );
             })()}
@@ -392,7 +396,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 // One short sentence where the words leave a question, none where they do not.
                 hint={
                   reason === "autoPublishOff"
-                    ? t("events.seriesDraftsHintNew", { weeks: HORIZON_DAYS / 7 })
+                    ? t("events.seriesDraftsHintNew", { horizon })
                     : reason === "sourceNotPublished"
                       ? t("events.seriesDraftsHintSource")
                       : null
@@ -496,7 +500,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
               dates: datesWords(countOf(created)),
               // Inside the sentence, in the club's zone (§350 weekday on every date).
-              until: formatDay(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+              until: formatDay(seriesHorizonEnd(now, deadlines), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+              horizon,
             })}
           </Alert>
         )}

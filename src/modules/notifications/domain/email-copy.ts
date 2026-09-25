@@ -46,6 +46,13 @@ export const EMAIL_COPY_PLACEHOLDERS = [
   "eventChecklist",
   "staffRole",
   "inviterName",
+  // The club's deadlines as words, number and noun together — "48 de ore", "30 de minute", "24 de
+  // ore", "2 zile" (§377): the email link, the declaration hold, the waiting-list offer and this
+  // event's reminder lead, in the half's own language. Set by `buildTemplateContent`.
+  "confirmationHours",
+  "holdMinutes",
+  "offerHours",
+  "reminderHours",
 ] as const;
 
 export type EmailCopyPlaceholder = (typeof EMAIL_COPY_PLACEHOLDERS)[number];
@@ -114,6 +121,9 @@ export const EMAIL_COPY_CONDITIONAL_FACTS: ReadonlySet<string> = new Set<EmailCo
   "holdExpiresAtFormatted",
   "signedAtFormatted",
   "eventChecklist",
+  // The reminder's lead is empty when the event sends no reminder (§377): "cu  înainte" is not a
+  // sentence, so a paragraph whose only field is the lead goes with the reminder it describes.
+  "reminderHours",
 ]);
 
 /**

@@ -6,6 +6,8 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
 import type { Database } from "@/db/types";
+import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { computeOccupied } from "../domain/capacity";
 import { countOccupied } from "../repository";
 import { listQueueForEvent } from "../admin-repository";
@@ -35,6 +37,8 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
 }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
+  // The hold and the offer the help sentences name: the club's (§377), the lengths new ones get.
+  const words = deadlineWords(locale, await deadlinesForThisRequest());
   /*
     Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§349), and
     in the event's own zone (§369), like every other time of the event: the offer's deadline is
@@ -86,7 +90,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {figure(t("queue.waiting"), waiting)}
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t("queue.holdsHelp")}
+        {t("queue.holdsHelp", { hold: words.hold, offer: words.offer })}
       </Typography>
 
       <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
@@ -131,7 +135,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
       )}
 
       <Typography variant="body2" sx={{ mt: 2, whiteSpace: "pre-line" }}>
-        {t("queue.simulate")}
+        {t("queue.simulate", { hold: words.hold })}
       </Typography>
     </Box>
   );

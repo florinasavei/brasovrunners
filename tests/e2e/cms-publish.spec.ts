@@ -686,7 +686,7 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await expect(recurrence.getByRole("checkbox", { name: "Lu" })).toBeDisabled();
     await recurrence.getByRole("checkbox", { name: "Mi" }).check();
     await expect(recurrence.getByTestId("repeat-rule-sentence")).toContainText("În fiecare luni și miercuri, la 18:30 — la nesfârșit.");
-    await expect(page.getByTestId("create-draft-line")).toContainText("și datele seriei din următoarele opt săptămâni");
+    await expect(page.getByTestId("create-draft-line")).toContainText("și datele seriei din următoarele 8 săptămâni");
 
     await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
     await page.getByRole("button", { name: "Creează și publică" }).click();
