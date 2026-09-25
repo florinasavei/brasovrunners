@@ -9,7 +9,7 @@ import {
   cachedStartListOthersPage,
   cachedStartListPage,
 } from "@/modules/public-cache/reads";
-import type { PublicListGroup } from "@/modules/registrations/domain/public-list-states";
+import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -100,18 +100,7 @@ export default async function StartList({
   const extra = statesOn ? othersPhrases(t, locale, others) : [];
   /** The word beside a name — only behind the gate; without it a row carries no state. */
   const stateOf = (group: PublicListGroup) =>
-    statesOn ? (
-      <ListStateLabel
-        group={group}
-        label={
-          group === "CONFIRMED"
-            ? t("startList.states.confirmed")
-            : group === "PENDING"
-              ? t("startList.states.pending")
-              : t("startList.states.waitlisted")
-        }
-      />
-    ) : null;
+    statesOn ? <ListStateLabel group={group} label={t(`startList.states.${LIST_STATE_KEYS[group]}`)} /> : null;
 
   /** A relative query, so the link stays on this event whatever its address is (§8). */
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;
@@ -144,10 +133,14 @@ export default async function StartList({
         </Typography>
       ) : (
         <>
-          {/* How many are confirmed, and how many of them are named (§346). */}
-          <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: extra.length > 0 ? 0.5 : 1 }}>
-            {confirmedPhrase(t, locale, { confirmed: view.confirmed, named })}
-          </Typography>
+          {/* How many are confirmed, and how many of them are named (§346) — left out when nobody
+              is confirmed yet and the rows below are all pending or waiting, where "0 confirmed —
+              0 named" would only be noise above them. */}
+          {(view.confirmed > 0 || extra.length === 0) && (
+            <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: extra.length > 0 ? 0.5 : 1 }}>
+              {confirmedPhrase(t, locale, { confirmed: view.confirmed, named })}
+            </Typography>
+          )}
           {/* Behind the notice's gate (§NNN): how many of the rows after the confirmed ones are
               in each group — only those who ticked, since only they are rows. */}
           {extra.length > 0 && (

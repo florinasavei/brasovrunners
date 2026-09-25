@@ -22,7 +22,11 @@ import { signIn } from "./support/featured-event";
  * approved in `/admin/legal`, which expires the public pages' cached copy of the notice (§333). The
  * draft is written straight to the table — the setup, not the subject — and approved through the
  * page. The spec ends by approving the marker-carrying text again, so the database is left with a
- * notice that describes the states, as it found it.
+ * notice that describes the states, whatever it found. **It is not a clean round trip:** every run
+ * leaves two more approved PRIVACY_NOTICE versions behind (an approved version is never removed,
+ * §46), so run it on a local or worktree database only; and it needs one seeded from the current
+ * templates (a notice that has carried the marker) — on an older one it stops at the start and asks
+ * for a reset.
  *
  * The notice is one row for the whole database, so the two projects must not flip it at once: a
  * PostgreSQL advisory lock, held for the test, makes the second wait for the first.
