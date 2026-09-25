@@ -13,6 +13,7 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
+import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
@@ -58,15 +59,18 @@ const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-
  * short of room, the lead gives way, never the time.
  *
  * The breakpoint is the widest case, measured in headless Chromium on the built listing (Roboto,
- * 14 pixels, the date bold; 2026-09-25): every day of a year, the date as the card prints it on a
- * phone (the year dropped), the lead, the separator, the clock and the time. Widest in Romanian:
- * "Următoarea: Duminică, 27 sept. · [clock] 18:30", 274 pixels; in English: "Next: Wednesday,
- * 30 Sept · [clock] 18:30", 240. What the page and the card take around the row — the gutters,
- * the card's padding, the row's own calendar glyph — is 94 pixels at every phone width (a
- * 320-pixel viewport leaves the row 226, a 360-pixel one 266). So the lead fits every weekday and
- * every month from 368 pixels up; the breakpoint is 376, eight pixels over, so a font rendered a
- * hair wider elsewhere (Linux against Windows, a system's own hinting) does not push the time
- * off the row. One number for both languages: the Romanian lead is the wider.
+ * 14 pixels, the date **and** the time bold — re-measured 2026-09-25 against the bold time,
+ * §375 amended once more): every day of a year, the date as the card prints it on a phone (the
+ * year dropped), the lead, the separator, the clock and the time. Widest in Romanian:
+ * "Următoarea: Duminică, 27 sept. · [clock] 18:30", 275 pixels (was 274 with a regular time —
+ * Roboto's digits are not quite the same width bold, "18:30" gains about 1.2 pixels); in
+ * English: "Next: Wednesday, 30 Sept · [clock] 18:30", 241 (was 240). What the page and the card
+ * take around the row — the gutters, the card's padding, the row's own calendar glyph — is 94
+ * pixels at every phone width (a 320-pixel viewport leaves the row 226, a 360-pixel one 266). So
+ * the lead fits every weekday and every month from 369 pixels up; the breakpoint stays 376,
+ * seven pixels over now rather than eight, so a font rendered a hair wider elsewhere (Linux
+ * against Windows, a system's own hinting) still does not push the time off the row. One number
+ * for both languages: the Romanian lead is the wider.
  *
  * Below it the lead is clipped visually (a one-pixel box, never `display: none`), so a screen
  * reader still reads it at every width. The date does something else with its year: it swaps two
@@ -82,6 +86,23 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
     whiteSpace: "nowrap",
   },
 } as const;
+
+/**
+ * The gap between a race card's «when» pieces, and before each separator, on the card row only
+ * (§375 amended, §NNN): four pixels where every other row keeps six. A race's row wraps by
+ * design (`flow`, below), the date on the first line and the two named times on the second —
+ * and with those times' digits bold (`whenPieces`' `boldTime`), the second line measured, in
+ * headless Chromium on the built listing at 320 pixels in Romanian on the widest weekday
+ * ("Duminică, 27 sept." alone on the first line), 226.83 pixels for
+ * "[clock] întâlnire la 08:00 · start la 09:00" against the 226 the card leaves the row: it
+ * wrapped once more, to three lines, and a runner read the start time on a line of its own.
+ * Two pixels fewer each side of the separator give back four: re-measured 2026-09-25, the line is
+ * now 222.83 pixels at 320 in Romanian (215.14 in English), two lines in all; from 360 up the
+ * date and the gathering time share the first line and the start time takes the second, in both
+ * languages, at 360, 390 and 412. The series row and `WHEN_LEAD_HIDDEN_BELOW_376` are untouched —
+ * they never wrap, and their breakpoint was measured with the six-pixel gap.
+ */
+const RACE_ROW_GAP = 0.5;
 
 /**
  * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
@@ -261,25 +282,45 @@ export default async function EventFacts({
      lone time ("începe la 09:00") only because the page had put it on a bullet of its own; the
      page's "când" is one line again (§356), so the name went with the bullet. The times are led
      by a clock (§366), once — before the first, so a race's two read as one group — in the size
-     of the glyphs around it: the row glyph's on the page and the cards, the hero's own there. */
-  const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX): ReactNode[] => {
+     of the glyphs around it: the row glyph's on the page and the cards, the hero's own there.
+
+     `boldTime` (§375 amended — the owner, 2026-09-25, of the listing card's row: "The time can
+     be bolded here as well") gives the bare time the date's own weight, `<strong>` like `day`
+     above, on the compact card row only — the card's own caller passes it, the page's and the
+     hero's do not. A race's two named times ("gather at 08:00", "start at 09:00") carry a word
+     before the number, so bolding the plain-time key would bold that word too; `gatheringAtBold`
+     / `raceStartAtBold` wrap only `{time}` in `<strong>`, so the launch race's card matches the
+     weekly-run cards without the word going bold with it. `ical.ts`'s calendar description
+     keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line.
+
+     The bold digits cost a race's card width (§NNN): its second line, the two named times, grew
+     to 226.83 pixels at 320 in Romanian on the widest weekday against the row's 226, and wrapped
+     to a third line. The card's race row takes a four-pixel gap instead of six for it
+     (`RACE_ROW_GAP`, above, with the measurement before and after); the lead's breakpoint and
+     the series row keep theirs. */
+  const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX, boldTime = false): ReactNode[] => {
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
+    const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
     if (event.raceStartsAt) {
       return [
         day,
         <>
           {clock}
-          {t("gatheringAt", { time: time(event.startsAt) })}
+          {boldTime
+            ? t.rich("gatheringAtBold", { time: time(event.startsAt), strong })
+            : t("gatheringAt", { time: time(event.startsAt) })}
         </>,
-        t("raceStartAt", { time: time(event.raceStartsAt) }),
+        boldTime
+          ? t.rich("raceStartAtBold", { time: time(event.raceStartsAt), strong })
+          : t("raceStartAt", { time: time(event.raceStartsAt) }),
       ];
     }
     return [
       day,
       <>
         {clock}
-        {time(event.startsAt)}
+        {boldTime ? <strong>{time(event.startsAt)}</strong> : time(event.startsAt)}
       </>,
     ];
   };
@@ -407,8 +448,8 @@ export default async function EventFacts({
     reader still reads it; the date's year is swapped with `display` instead, two renderings of
     which one shows.
   */
-  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean }) => (
-    <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
+  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean; tight?: boolean }) => (
+    <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: card?.tight ? RACE_ROW_GAP : 0.75, minWidth: 0 }}>
       {card?.lead && (
         <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, ...WHEN_LEAD_HIDDEN_BELOW_376 }}>
           {card.lead}
@@ -418,7 +459,7 @@ export default async function EventFacts({
         <span key={index} style={card ? { whiteSpace: "nowrap", flexShrink: 0 } : undefined}>
           {item}
           {index < items.length - 1 && (
-            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", ml: 0.75 }}>
+            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75 }}>
               ·
             </Box>
           )}
@@ -552,7 +593,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) }))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort), tight: !!event.raceStartsAt }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (
@@ -853,6 +894,17 @@ export default async function EventFacts({
     Held with other organizations (§121, §168), each its own card of links (§344, §352) — last,
     after the short facts a runner scans first, because a partner's card is the tallest thing in
     the block; spaced one under another, never bulleted.
+
+    Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the shared
+    race with the Brașov Running Festival: "The partner card should have a border and a gray
+    background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) — the card sits on
+    the page's own background otherwise, and a border with no fill read as one more row among the
+    page's plain facts. The box is a `<div>`, never a MUI `Paper`, because `partnerFacts` returns
+    inline content built to sit inside a `<dd>`; the surface shares its border and radius with
+    every outlined box on the site already (`CalendarSection`, which does not share its wash),
+    and its wash — `action.selected`, stronger than a mere hover tint — with `CalendarEventChip`
+    and `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name, the
+    description and the links clear of its edge.
   */
   if (coHosts.length > 0) {
     rows.push({
@@ -862,7 +914,9 @@ export default async function EventFacts({
       value: (
         <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start" }}>
           {coHosts.map((host, index) => (
-            <div key={index}>{links ? partnerFacts(host) : host.name}</div>
+            <Box key={index} data-testid="partner-card" sx={{ ...partnerCardSurface, p: 2, maxWidth: "100%" }}>
+              {links ? partnerFacts(host) : host.name}
+            </Box>
           ))}
         </Box>
       ),
