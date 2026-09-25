@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { type CalendarDayWords, composeCalendarDay } from "@/i18n/dates";
-import { NIGHT_CHOICES, type NightChoice, nightSpan } from "@/modules/events/domain/night";
+import { NIGHT_CHOICES, type NightChoice, type NightEventFacts, nightShape, nightSpan } from "@/modules/events/domain/night";
 import { type Coordinates, sunTimes, wallClockTime } from "@/modules/events/domain/sun";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { paintedScheduler } from "@/shared/forms/after-paint";
@@ -92,17 +92,28 @@ export function nightAutoLine(
   const startsAt = fromWallTimeInput(`${start.date}T${start.time}`, start.timeZone);
   const spanEnd = startsAt ? formSpanEnd(startsAt, start, durationMinutes, programme) : null;
   const { night, nightAtStart } = nightSpan(startsAt, spanEnd?.end ?? null, place, start.timeZone);
-  // The start is named before the sunset, so the sunset is never read as the start (§NNN) — and a
-  // night start before that day's sunrise names the sunrise instead, as the pill does (`nightShape`).
   const sunrise = sun.sunrise ? wallClockTime(sun.sunrise, start.timeZone) : null;
   const verdict = night ? words.verdictNight : words.verdictDay;
+  // The start is named before the sunset, so the sunset is never read as the start (§NNN) — and the
+  // shape (Dawn, End, EndProgramme, After or plain) is `nightShape`'s own answer, the same rule the
+  // pill, the calendar and the reminder ask, never decided a second time here.
+  const named = night && !nightAtStart && spanEnd ? spanEnd.source : null;
+  const facts: NightEventFacts = {
+    night,
+    source: "automatic",
+    start: start.time,
+    sunset,
+    sunrise,
+    endSource: named,
+    end: named && spanEnd ? wallClockTime(spanEnd.end, start.timeZone) : null,
+  };
+  const shape = nightShape(facts);
   const line =
-    night && sunrise && start.time < sunrise
-      ? fillIn(words.autoLineDawn, { day, start: start.time, sunrise, verdict })
+    shape?.suffix === "Dawn"
+      ? fillIn(words.autoLineDawn, { day, start: start.time, sunrise: shape.values.sunrise, verdict })
       : fillIn(words.autoLine, { day, start: start.time, sunset, verdict });
-  if (!night || nightAtStart || !spanEnd) return { line, endLine: null };
-  const end = wallClockTime(spanEnd.end, start.timeZone);
-  return { line, endLine: fillIn(spanEnd.source === "programme" ? words.endLineProgramme : words.endLine, { end }) };
+  if (!shape?.values.end) return { line, endLine: null };
+  return { line, endLine: fillIn(shape.suffix === "EndProgramme" ? words.endLineProgramme : words.endLine, { end: shape.values.end }) };
 }
 
 /** The programme rows the form posts, gathered by index — `ScheduleRowsEditor`'s own names. */
