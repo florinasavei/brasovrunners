@@ -676,7 +676,7 @@ export default async function EventFacts({
     ];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
     // Held with other organizations (§121, §168).
-    if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: GLYPHS.partner as Glyph, value: [coHostSentence()] });
+    if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: GLYPHS.partner, value: [coHostSentence()] });
     if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
     if (state === "NOT_APPLICABLE" && mentionsRegistration) {
       lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });
@@ -857,7 +857,7 @@ export default async function EventFacts({
     rows.push({
       key: "coHost",
       label: t("coHost"),
-      icon: GLYPHS.partner as Glyph,
+      icon: GLYPHS.partner,
       value: (
         <Box sx={{ display: "grid", rowGap: 1.5, justifyItems: "start" }}>
           {coHosts.map((host, index) => (

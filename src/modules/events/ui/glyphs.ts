@@ -101,7 +101,7 @@ export const GLYPHS = {
   series: EventRepeatIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
-  partner: PartnerEmoji,
+  partner: PartnerEmoji as Glyph,
 };
 
 export type GlyphName = keyof typeof GLYPHS;
