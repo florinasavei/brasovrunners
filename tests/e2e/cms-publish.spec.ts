@@ -675,11 +675,113 @@ test.describe("BR-REQ-050-02 the programme card: one grid per row, the help in t
       expect(at.place.width).toBeGreaterThanOrEqual(200);
       sameLine(at.ro, at.en);
       expect(at.ro.middle).toBeGreaterThan(at.place.middle + 30);
+
+      // Re-review finding 1: the band a viewport breakpoint never lands on but a real phone in
+      // landscape or a split screen can — a list width of roughly 416 to 454 pixels, where the
+      // four MEDIUM columns (428px of minimums and gaps) used to be asked to fit inside less
+      // room than the row's own padding left. 500px keeps the side column off (it pins from
+      // `md`, 900px) and puts the list itself inside that band once the page's own gutters are
+      // taken off; nothing should stick out past the row's own border at any width.
+      await page.setViewportSize({ width: 500, height: 720 });
+      at = await measure();
+      const bandRow = await row.boundingBox();
+      if (!bandRow) throw new Error("the row is not drawn");
+      const bandRight = bandRow.x + bandRow.width;
+      for (const rect of Object.values(at)) expect(rect.right).toBeLessThanOrEqual(bandRight + 0.5);
+      expect(bandRight).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
     }
 
     // The bin removes its own row.
     await page.getByRole("button", { name: "Șterge rândul 2", exact: true }).click();
     await expect(field("event.schedule[1].date")).toHaveCount(0);
+  });
+});
+
+/*
+  Re-review finding 2 on §NNN's card: the two specs above build and read back the rows in the
+  editor alone. Neither publishes, so nothing proved a saved row actually reaches a reader — the
+  public page's programme list (`#schedule`, `EventProgramme.tsx`) or a VEVENT of its own in the
+  `.ics` feed (`ical.ts`). This one row: add it, fill it in both languages, publish, then read it
+  back from both public surfaces.
+*/
+test.describe("BR-REQ-050-02 a saved programme row reaches the public page and the .ics (§117, §NNN)", () => {
+  test("the row's label and time are on the event page's programme list and in a VEVENT of its own", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `ziua-cursei-${suffix}`;
+    const englishSlug = `race-day-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+
+    await fillDateField(page, "Începutul evenimentului", "2027-06-20");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Piața Sfatului");
+    await field("event.locationNameEn").fill("Council Square");
+    await field("translations.ro.title").fill(`Ziua cursei ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await summary("ro", "O cursă cu un program pe ore.");
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Race day ${suffix}`);
+    await languageTab(page, "address", "en").click();
+    await field("translations.en.slug").fill(englishSlug);
+    await summary("en", "A race with a timed programme.");
+
+    // "Concurs" has a programme (§111); the create page defaults to a type that does not.
+    await openEditorBox(page, "Ce fel de eveniment");
+    await page.getByRole("combobox", { name: "Tip eveniment" }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+
+    await openEditorBox(page, "Programul zilei și ce să aduci");
+    const row = programmeRow(page, 0);
+    await fillDateField(row, "Data", "2027-06-20");
+    await fillTimeField(row, "Ora", "08:30");
+    await field("event.schedule[0].place").fill("Cortul de start");
+    await field("event.schedule[0].ro").fill("Predarea kitului de concurs");
+    await field("event.schedule[0].en").fill("Race kit pickup");
+
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    const editorUrl = page.url();
+
+    // The Romanian page: the row's time and label under "#schedule".
+    await page.goto(`/ro/evenimente/${slug}`);
+    const scheduleRo = page.locator("#schedule");
+    await expect(scheduleRo.getByText("08:30")).toBeVisible();
+    await expect(scheduleRo).toContainText("Predarea kitului de concurs");
+    await expect(scheduleRo).toContainText("Cortul de start");
+
+    // The Romanian .ics: a VEVENT of its own, its SUMMARY carrying the event's title and the
+    // row's own label (`ical.ts`) — unfolded first, RFC 5545 folds a long line at 75 octets.
+    const icsRoResponse = await page.request.get(`/ro/events/${slug}/calendar.ics`);
+    const icsRo = (await icsRoResponse.text()).replace(/\r\n /g, "");
+    expect(icsRo).toContain(`SUMMARY:Ziua cursei ${suffix} — Predarea kitului de concurs`);
+
+    // The English page and its own .ics read the same row in English.
+    await page.goto(`/en/events/${englishSlug}`);
+    const scheduleEn = page.locator("#schedule");
+    await expect(scheduleEn.getByText("08:30")).toBeVisible();
+    await expect(scheduleEn).toContainText("Race kit pickup");
+    await expect(scheduleEn).toContainText("Cortul de start");
+
+    const icsEnResponse = await page.request.get(`/en/events/${englishSlug}/calendar.ics`);
+    const icsEn = (await icsEnResponse.text()).replace(/\r\n /g, "");
+    expect(icsEn).toContain(`SUMMARY:Race day ${suffix} — Race kit pickup`);
+
+    // Off the site again, so this run leaves no card behind for another spec to count.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });
 

@@ -74,11 +74,15 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
 // Measured on a production build: at 36rem "Unde" was left some 115 pixels beside the times on a
 // 700-pixel window; from 40rem it has 150 or more.
 const WIDE = "@container programme-rows (min-width: 40rem)";
-const MEDIUM = "@container programme-rows (min-width: 26rem)";
+// The four MEDIUM columns need at least 9.5rem + 6.5rem + 6.5rem + 44px + three 8px gaps =
+// 428px of inner width; the row's own padding and border (12px × 2 + 2px on `sm`) take 26px off
+// the container, so the threshold has to clear 428 + 26 = 454px. 29rem (464px) is the first
+// round number past it (§NNN, the review that found 26rem overflowing from ~416 to ~454px).
+const MEDIUM = "@container programme-rows (min-width: 29rem)";
 
 const ROW_SX = {
   display: "grid",
-  gap: DENSITY.gapSm,
+  gap: { xs: DENSITY.gapSm, sm: 1 },
   alignItems: "start",
   p: { xs: DENSITY.gapSm, sm: 1.5 },
   border: 1,
@@ -101,7 +105,7 @@ const ROW_SX = {
 const WHAT_SX = {
   gridArea: "what",
   display: "grid",
-  gap: DENSITY.gapSm,
+  gap: { xs: DENSITY.gapSm, sm: 1 },
   gridTemplateColumns: "minmax(0, 1fr)",
   [MEDIUM]: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" },
 } as const;
