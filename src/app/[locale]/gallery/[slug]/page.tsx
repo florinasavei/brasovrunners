@@ -16,6 +16,7 @@ import ContactLink from "@/shared/ui/ContactLink";
 import { cachedPublishedAlbumBySlug, cachedPublishedAlbumTranslations } from "@/modules/public-cache/reads";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
+import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -64,7 +65,7 @@ export default async function AlbumPage({ params }: Props) {
   const t = await getTranslations("Gallery");
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <LastGoodNotice read={read} />
 
       <Typography variant="body2" sx={{ mb: 2 }}>

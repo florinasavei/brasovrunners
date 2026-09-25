@@ -12,6 +12,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestRegistrationLinkAction } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -45,7 +46,7 @@ export default async function ResendPage({ params, searchParams }: Props) {
   const t = await getTranslations("Registration");
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom>
         {t("resend.title")}
       </Typography>

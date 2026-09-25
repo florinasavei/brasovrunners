@@ -10,6 +10,7 @@ import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { accentOnHover } from "@/theme/surfaces";
+import { DENSITY } from "@/theme/density";
 import { publicFill, registrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -100,7 +101,7 @@ export default async function RegistrationCta({
 
   if (cta.kind === "EXTERNAL") {
     return (
-      <Box sx={{ mt: 3 }}>
+      <Box sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
         <Button
           // `component="a"` with the organizer's own URL: this leaves the site, so it is a
           // plain anchor rather than the locale-aware Link. `nofollow` as well as `noopener
@@ -125,7 +126,7 @@ export default async function RegistrationCta({
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     const fill = publicFill(capacity, availablePlaces);
     return (
-      <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
+      <Stack spacing={1} sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, alignItems: "flex-start" }}>
         <ButtonLink
           variant="contained"
           // The one action the page exists for, so it is the one button that lights up under
@@ -175,7 +176,7 @@ export default async function RegistrationCta({
   if (cta.kind === "WAITLIST_FULL" || cta.kind === "FULL_NO_WAITLIST") {
     const fill = publicFill(capacity, availablePlaces);
     return (
-      <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
+      <Stack spacing={1} sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, alignItems: "flex-start" }}>
         <Typography variant="body1" data-testid="registration-full" sx={{ fontWeight: 500 }}>
           {cta.kind === "WAITLIST_FULL" ? t("cta.waitlistFull") : t("cta.fullNoWaitlist")}
         </Typography>
@@ -214,7 +215,7 @@ export default async function RegistrationCta({
         variant="h3"
         component="p"
         data-testid="registration-opens-on"
-        sx={{ mt: 3, fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main" }}
+        sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main" }}
       >
         {sentence}
       </Typography>
@@ -222,7 +223,7 @@ export default async function RegistrationCta({
   }
 
   return (
-    <Typography variant="body1" sx={{ mt: 3, fontWeight: 500 }}>
+    <Typography variant="body1" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, fontWeight: 500 }}>
       {sentence}
     </Typography>
   );
@@ -240,7 +241,7 @@ async function CapacityUnknown({ slug }: { slug: string }) {
   return (
     <Alert
       severity="warning"
-      sx={{ mt: 3 }}
+      sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}
       action={
         // This page again, by its own address: the only thing that can change the answer is
         // asking the database a second time.

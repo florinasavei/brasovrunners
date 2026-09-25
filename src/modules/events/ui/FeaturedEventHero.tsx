@@ -14,6 +14,7 @@ import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 import RegistrationCta from "./RegistrationCta";
+import { DENSITY } from "@/theme/density";
 import { fadeIn } from "@/theme/motion";
 import { heroSurface } from "@/theme/surfaces";
 
@@ -54,8 +55,8 @@ export default async function FeaturedEventHero({
       sx={{
         // Arrives with the page rather than snapping in; static for reduced motion.
         ...fadeIn,
-        mb: 4,
-        p: { xs: 2.5, sm: 4 },
+        mb: { xs: DENSITY.sectionGapLg, sm: 4 },
+        p: { xs: DENSITY.heroPad, sm: 4 },
         borderRadius: 2,
         // The one event the club is leading with looks like it (the owner, 2026-09-18: "the
         // main event must be more highlighted, the rest can be other events"): a two-pixel

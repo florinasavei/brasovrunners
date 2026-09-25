@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import { DENSITY } from "@/theme/density";
 import { type EventLinkKind, eventLinkHost, eventLinkLabel, readEventLinks } from "../domain/links";
 import { LINK_GLYPH } from "./link-glyphs";
 
@@ -38,7 +39,7 @@ export default function EventLinks({
   if (rows.length === 0) return null;
 
   return (
-    <Box component="section" id="links" sx={{ mt: 4 }}>
+    <Box component="section" id="links" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
         {heading}
       </Typography>

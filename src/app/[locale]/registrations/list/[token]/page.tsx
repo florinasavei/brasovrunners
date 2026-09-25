@@ -14,6 +14,7 @@ import { readListConsent } from "@/modules/registrations/list-consent";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { setListConsentAction } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -47,7 +48,7 @@ export default async function ListConsentPage({ params, searchParams }: Props) {
   const context = invalid ? null : await readListConsent(getDb(), token, locale, new Date());
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("list.title")}
       </Typography>

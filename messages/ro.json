@@ -90,6 +90,8 @@
     "gatheringTime": "Ora de întâlnire",
     "gatheringAt": "întâlnire la {time}",
     "raceStartAt": "start la {time}",
+    "gatheringAtBold": "întâlnire la <strong>{time}</strong>",
+    "raceStartAtBold": "start la <strong>{time}</strong>",
     "when": "Când",
     "where": "Unde",
     "raceStartTime": "Startul cursei",
