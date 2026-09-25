@@ -3,7 +3,6 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
-import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
@@ -22,6 +21,7 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
+import PartnerEmoji from "./PartnerEmoji";
 import RoadIcon from "./RoadIcon";
 
 /** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
@@ -86,10 +86,10 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * beside three that have one was exactly the "some with a glyph, some without" the owner
  * pointed at.
  *
- * `partner` is the handshake (§367; the owner: "show like a handshake icon on the card and in the
- * calendar"): an event held with another organization, on the listing card's chip, beside the
- * calendar entry and on the event page's overline — the same glyph the facts' "Împreună cu" row
- * has worn since §168, so the marker and the row it summarises are one picture.
+ * `partner` marks an event held with another organization, on the listing card's chip, the
+ * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): the 🤝
+ * emoji everywhere (§NNN, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
+ * and the facts row's own copy of it — the owner hates the icon on every surface, not some).
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -101,7 +101,7 @@ export const GLYPHS = {
   series: EventRepeatIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
-  partner: HandshakeIcon,
+  partner: PartnerEmoji as Glyph,
 };
 
 export type GlyphName = keyof typeof GLYPHS;
