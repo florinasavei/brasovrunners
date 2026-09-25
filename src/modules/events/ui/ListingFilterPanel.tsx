@@ -1,5 +1,4 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -86,6 +85,8 @@ export default async function ListingFilterPanel({
         return t("filter.partner");
       case "night":
         return t("filter.night");
+      case "registration":
+        return t("filter.registration");
     }
   };
   const glyph = (group: FilterGroup | FilterFlag, value: string): GlyphName => {
@@ -96,6 +97,8 @@ export default async function ListingFilterPanel({
         return "partner";
       case "night":
         return "headlamp";
+      case "registration":
+        return "registration";
       default:
         return `${group}:${value}` as GlyphName;
     }
@@ -124,7 +127,7 @@ export default async function ListingFilterPanel({
     <Box sx={{ "& > details[open] + [data-active-filters]": { display: "none" } }}>
       <Box component="details" data-testid="listing-filters" sx={{ "&[open] > summary .filters-caret": { transform: "rotate(180deg)" } }}>
         <Box component="summary" sx={SUMMARY_SX}>
-          <FilterListIcon aria-hidden="true" sx={{ fontSize: 20 }} />
+          <GLYPHS.filters aria-hidden="true" sx={{ fontSize: 20 }} />
           {count > 0 ? t("filter.buttonCount", { count }) : t("filter.button")}
           <ExpandMoreIcon className="filters-caret" aria-hidden="true" sx={{ fontSize: 20, transition: "transform 120ms" }} />
         </Box>

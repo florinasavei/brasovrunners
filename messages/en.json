@@ -64,12 +64,14 @@
         "more": "More"
       },
       "distance": {
-        "SHORT": "Up to 10 km",
-        "MEDIUM": "10–21 km",
-        "LONG": "Over 21 km"
+        "UP_TO_5": "Under 5 km",
+        "FROM_5_TO_10": "5–10 km",
+        "FROM_10_TO_21": "10–21 km",
+        "OVER_21": "Over 21 km"
       },
       "partner": "Partnership",
       "night": "Night event",
+      "registration": "Registration open",
       "apply": "Show events",
       "clear": "Clear filters",
       "remove": "Remove filter",

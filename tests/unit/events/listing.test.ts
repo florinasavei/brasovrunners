@@ -14,6 +14,8 @@ import { listingFilterKey, matchesListingFilter, parseListingFilter } from "@/mo
  * What the filters are and what the panel offers is `listing-filter.test.ts` (§NNN).
  */
 
+const NOW = new Date("2026-01-01T00:00:00Z");
+
 const event = (id: string, type: string, featured = false, hasPartner = false) => ({
   id,
   type,
@@ -25,12 +27,20 @@ const event = (id: string, type: string, featured = false, hasPartner = false) =
   coHosts: hasPartner ? [{ name: "Brașov Running Festival" }] : null,
   coHostName: null,
   coHostUrl: null,
+  // The registration window (§NNN): open throughout, since none of these tests are about it —
+  // `listing-filter.test.ts` covers the "Înscrieri deschise" flag itself.
+  registrationMode: "INTERNAL" as const,
+  eventStatus: "SCHEDULED" as const,
+  startsAt: new Date("2026-06-01T00:00:00Z"),
+  registrationOpensAt: null,
+  registrationClosesAt: null,
+  publishedAt: new Date("2025-01-01T00:00:00Z"),
 });
 
 type Row = ReturnType<typeof event>;
 const matching = (params: Record<string, string | string[]>) => {
   const filter = parseListingFilter(params);
-  return (row: Row) => matchesListingFilter(row, filter, () => false);
+  return (row: Row) => matchesListingFilter(row, filter, () => false, NOW);
 };
 
 describe("listingSections divides the listing the way it always did", () => {

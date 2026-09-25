@@ -64,12 +64,14 @@
         "more": "Altele"
       },
       "distance": {
-        "SHORT": "Până la 10 km",
-        "MEDIUM": "10–21 km",
-        "LONG": "Peste 21 km"
+        "UP_TO_5": "Sub 5 km",
+        "FROM_5_TO_10": "5–10 km",
+        "FROM_10_TO_21": "10–21 km",
+        "OVER_21": "Peste 21 km"
       },
       "partner": "Colaborare",
       "night": "Eveniment de noapte",
+      "registration": "Înscrieri deschise",
       "apply": "Arată evenimentele",
       "clear": "Șterge filtrele",
       "remove": "Scoate filtrul",

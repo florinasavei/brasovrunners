@@ -2,6 +2,7 @@ import { DIFFICULTY_LEVELS, type DifficultyLevel } from "../ui/difficulty-levels
 import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_COST_TYPES, type EventCostType } from "./cost";
 import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "./event-type";
+import { registrationState, type RegistrationWindowInput } from "./registration-window";
 
 /**
  * The listing's filters (§NNN, amending §133 and §401 — the owner, 2026-09-25: "un buton de
@@ -19,29 +20,36 @@ import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "
  */
 
 /**
- * The distance, in three bands a runner thinks in: a short run, up to a half marathon, longer.
- * `MEDIUM` ends at 21.1 km so that a half marathon, however the club rounded it (21 097 m, 21 100 m),
- * is a half marathon and not "longer"; an event with no distance stated is in no band.
+ * The distance, in four bands a runner thinks in: sub 5 km, 5–10, 10–21, over 21. `FROM_10_TO_21`
+ * ends at 21.1 km so that a half marathon, however the club rounded it (21 097 m, 21 100 m),
+ * lands in that band and not "over 21"; an event with no distance stated is in no band.
  */
-export const DISTANCE_BANDS = ["SHORT", "MEDIUM", "LONG"] as const;
+export const DISTANCE_BANDS = ["UP_TO_5", "FROM_5_TO_10", "FROM_10_TO_21", "OVER_21"] as const;
 export type DistanceBand = (typeof DISTANCE_BANDS)[number];
 
-const SHORT_MAX_METERS = 10_000;
-const MEDIUM_MAX_METERS = 21_100;
+const UP_TO_5_MAX_METERS = 5_000;
+const FROM_5_TO_10_MAX_METERS = 10_000;
+const FROM_10_TO_21_MAX_METERS = 21_100;
 
 export function distanceBand(distanceMeters: number | null): DistanceBand | null {
   if (distanceMeters === null || distanceMeters <= 0) return null;
-  if (distanceMeters <= SHORT_MAX_METERS) return "SHORT";
-  if (distanceMeters <= MEDIUM_MAX_METERS) return "MEDIUM";
-  return "LONG";
+  if (distanceMeters <= UP_TO_5_MAX_METERS) return "UP_TO_5";
+  if (distanceMeters <= FROM_5_TO_10_MAX_METERS) return "FROM_5_TO_10";
+  if (distanceMeters <= FROM_10_TO_21_MAX_METERS) return "FROM_10_TO_21";
+  return "OVER_21";
 }
 
 /** The four closed sets a filter ticks values of, in the order the panel draws them. */
 export const FILTER_GROUPS = ["type", "surface", "difficulty", "distance", "cost"] as const;
 export type FilterGroup = (typeof FILTER_GROUPS)[number];
 
-/** The two yes-or-no filters, under "Altele" / "More": held with a partner (§401), a night event (§394). */
-export const FILTER_FLAGS = ["partner", "night"] as const;
+/**
+ * The three yes-or-no filters, under "Altele" / "More": held with a partner (§401), a night
+ * event (§394), and registration open on the site right now (§NNN) — the same answer
+ * `registrationState` gives `RegistrationCta` (`registration-cta.ts`), read off the cached rows'
+ * own window columns, never a second query for availability.
+ */
+export const FILTER_FLAGS = ["partner", "night", "registration"] as const;
 export type FilterFlag = (typeof FILTER_FLAGS)[number];
 
 type GroupValues = {
@@ -70,20 +78,32 @@ export const NO_FILTER: ListingFilter = {
   cost: [],
   partner: false,
   night: false,
+  registration: false,
 };
 
-/** What a filter has to know of an event: its closed-set columns, and whatever `readCoHosts` reads. */
+/**
+ * What a filter has to know of an event: its closed-set columns, whatever `readCoHosts` reads,
+ * and the window columns `registrationState` reads (all on the public row already — `RegistrationCta`
+ * reads the same ones for the same event).
+ */
 export type FilterableEvent = {
   type: string;
   surface: string | null;
   difficulty: string | null;
   distanceMeters: number | null;
   costType: string | null;
-} & CoHostSource;
+} & CoHostSource &
+  RegistrationWindowInput;
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-const all = (value: string | string[] | undefined): string[] => (value === undefined ? [] : Array.isArray(value) ? value : [value]);
+/**
+ * Every value a parameter names, whichever shape the address wrote it in: repeated
+ * (`?type=RACE&type=HIKE`, what the GET form submits) or comma-separated (`?type=RACE,HIKE`, the
+ * shape a hand-written link might use) — both parse to the same tick set.
+ */
+const all = (value: string | string[] | undefined): string[] =>
+  (value === undefined ? [] : Array.isArray(value) ? value : [value]).flatMap((entry) => entry.split(","));
 
 /**
  * The filter the address names. A value outside its closed set is not an error — it is ignored,
@@ -103,6 +123,7 @@ export function parseListingFilter(params: SearchParams): ListingFilter {
     cost: pick("cost"),
     partner: all(params.partner).includes("1"),
     night: all(params.night).includes("1"),
+    registration: all(params.registration).includes("1"),
   };
 }
 
@@ -136,7 +157,7 @@ export function listingFilterKey(filter: ListingFilter): string {
 
 /** The same filter with one box unticked — the active chip's own link. */
 export function withoutValue(filter: ListingFilter, group: FilterGroup | FilterFlag, value?: string): ListingFilter {
-  if (group === "partner" || group === "night") return { ...filter, [group]: false };
+  if (group === "partner" || group === "night" || group === "registration") return { ...filter, [group]: false };
   return { ...filter, [group]: (filter[group] as string[]).filter((candidate) => candidate !== value) } as ListingFilter;
 }
 
@@ -156,8 +177,23 @@ function valueOf(event: FilterableEvent, group: FilterGroup): string | null {
   }
 }
 
-function flagOf(event: FilterableEvent, flag: FilterFlag, isNight: (event: FilterableEvent) => boolean): boolean {
-  return flag === "partner" ? readCoHosts(event).length > 0 : isNight(event);
+function flagOf(
+  event: FilterableEvent,
+  flag: FilterFlag,
+  isNight: (event: FilterableEvent) => boolean,
+  now: Date,
+): boolean {
+  switch (flag) {
+    case "partner":
+      return readCoHosts(event).length > 0;
+    case "night":
+      return isNight(event);
+    case "registration":
+      // The same window `RegistrationCta` reads (`registration-cta.ts`), off the columns every
+      // public row already carries — whatever the button would say once `now` is fixed, short of
+      // counting places: a full event still on a waiting list is registration that is open.
+      return registrationState(event, now) === "OPEN";
+  }
 }
 
 /**
@@ -168,6 +204,7 @@ export function matchesListingFilter<T extends FilterableEvent>(
   event: T,
   filter: ListingFilter,
   isNight: (event: T) => boolean,
+  now: Date,
 ): boolean {
   for (const group of FILTER_GROUPS) {
     const ticked = filter[group] as string[];
@@ -176,7 +213,7 @@ export function matchesListingFilter<T extends FilterableEvent>(
     if (value === null || !ticked.includes(value)) return false;
   }
   for (const flag of FILTER_FLAGS) {
-    if (filter[flag] && !flagOf(event, flag, isNight as (event: FilterableEvent) => boolean)) return false;
+    if (filter[flag] && !flagOf(event, flag, isNight as (event: FilterableEvent) => boolean, now)) return false;
   }
   return true;
 }
@@ -194,6 +231,11 @@ export type FilterOffer = {
  * to choose between"; a value no event carries would empty the page. A box the address ticks stays,
  * so a filtered page can always say what it is filtered by, even where it now matches nothing.
  *
+ * **A group needs at least two values to choose between** (§NNN, restoring §133's own rule): a
+ * group where only one value would narrow is not offered — one box asking a question every other
+ * row already answers the same way is nothing to choose between — unless the address already
+ * ticks something in it, which always stays so a filtered page can say what it is filtered by.
+ *
  * Read off every event the page shows, the lead event included — the lead follows the filter now
  * (§NNN) — and never off the filtered rows, so ticking one box never takes another away.
  */
@@ -201,17 +243,24 @@ export function offeredFilters<T extends FilterableEvent>(
   events: readonly T[],
   filter: ListingFilter,
   isNight: (event: T) => boolean,
+  now: Date,
 ): FilterOffer {
   const narrows = (count: number) => count > 0 && count < events.length;
   const groups = FILTER_GROUPS.map((group) => {
     const ticked = filter[group] as string[];
+    const eligible = (GROUP_VALUES[group] as readonly string[]).filter((value) =>
+      narrows(events.filter((event) => valueOf(event, group) === value).length),
+    );
+    const offerAll = eligible.length >= 2;
     const values = (GROUP_VALUES[group] as readonly string[]).filter(
-      (value) => ticked.includes(value) || narrows(events.filter((event) => valueOf(event, group) === value).length),
+      (value) => ticked.includes(value) || (offerAll && eligible.includes(value)),
     );
     return { group, values };
   }).filter((entry) => entry.values.length > 0);
   const flags = FILTER_FLAGS.filter(
-    (flag) => filter[flag] || narrows(events.filter((event) => flagOf(event, flag, isNight as (event: FilterableEvent) => boolean)).length),
+    (flag) =>
+      filter[flag] ||
+      narrows(events.filter((event) => flagOf(event, flag, isNight as (event: FilterableEvent) => boolean, now)).length),
   );
   return { groups, flags };
 }

@@ -20,6 +20,11 @@ import {
  * offers a box only where ticking it would change what the page shows, or the address ticks it.
  */
 
+/** A fixed instant: after every row's own `publishedAt` and before every row's own `startsAt`. */
+const NOW = new Date("2026-01-01T00:00:00Z");
+const PAST = new Date("2025-01-01T00:00:00Z");
+const FUTURE = new Date("2026-06-01T00:00:00Z");
+
 type Row = FilterableEvent & { id: string; night?: boolean };
 const row = (id: string, fields: Partial<Row> = {}): Row => ({
   id,
@@ -31,12 +36,20 @@ const row = (id: string, fields: Partial<Row> = {}): Row => ({
   coHosts: null,
   coHostName: null,
   coHostUrl: null,
+  // The window a row carries when nothing about registration is under test: open, from before
+  // `NOW` to well after it.
+  registrationMode: "INTERNAL",
+  eventStatus: "SCHEDULED",
+  startsAt: FUTURE,
+  registrationOpensAt: null,
+  registrationClosesAt: null,
+  publishedAt: PAST,
   ...fields,
 });
 const isNight = (event: Row) => event.night === true;
 const ids = (rows: Row[], params: Record<string, string | string[]>) => {
   const filter = parseListingFilter(params);
-  return rows.filter((event) => matchesListingFilter(event, filter, isNight)).map((event) => event.id);
+  return rows.filter((event) => matchesListingFilter(event, filter, isNight, NOW)).map((event) => event.id);
 };
 
 describe("parseListingFilter reads the address", () => {
@@ -59,11 +72,23 @@ describe("parseListingFilter reads the address", () => {
     });
   });
 
+  it("reads a comma-separated value the same way — a hand-written link, not only the GET form's own shape", () => {
+    expect(parseListingFilter({ type: "RACE,GROUP_RUN" })).toEqual(parseListingFilter({ type: ["RACE", "GROUP_RUN"] }));
+    // The closed set's own order (`EVENT_TYPES`), whichever order the address named them in.
+    expect(parseListingFilter({ type: "RACE,GROUP_RUN", surface: "TRAIL,ASPHALT" })).toEqual({
+      ...NO_FILTER,
+      type: ["GROUP_RUN", "RACE"],
+      surface: ["ASPHALT", "TRAIL"],
+    });
+  });
+
   it("ignores a value outside its closed set, and a tick given twice", () => {
-    expect(parseListingFilter({ type: ["NOPE", "RACE", "RACE"], difficulty: "IMPOSSIBLE", distance: "SHORT", cost: "FREE", partner: "yes" })).toEqual({
+    expect(
+      parseListingFilter({ type: ["NOPE", "RACE", "RACE"], difficulty: "IMPOSSIBLE", distance: "UP_TO_5", cost: "FREE", partner: "yes" }),
+    ).toEqual({
       ...NO_FILTER,
       type: ["RACE"],
-      distance: ["SHORT"],
+      distance: ["UP_TO_5"],
       cost: ["FREE"],
     });
   });
@@ -82,9 +107,18 @@ describe("the filter goes back into the address in the form's own shape", () => 
   });
 
   it("round-trips: what it writes, it reads back as the same state", () => {
-    const filter = parseListingFilter({ type: ["HIKE", "RACE"], surface: "TRAIL", difficulty: "HARD", distance: "LONG", cost: "PAID", partner: "1", night: "1" });
+    const filter = parseListingFilter({
+      type: ["HIKE", "RACE"],
+      surface: "TRAIL",
+      difficulty: "HARD",
+      distance: "OVER_21",
+      cost: "PAID",
+      partner: "1",
+      night: "1",
+      registration: "1",
+    });
     expect(parseListingFilter(listingFilterQuery(filter))).toEqual(filter);
-    expect(activeFilterCount(filter)).toBe(8);
+    expect(activeFilterCount(filter)).toBe(9);
   });
 
   it("gives one key per state, whatever order the boxes were ticked in", () => {
@@ -97,6 +131,11 @@ describe("the filter goes back into the address in the form's own shape", () => 
     const filter = parseListingFilter({ type: ["RACE", "HIKE"], partner: "1" });
     expect(withoutValue(filter, "type", "RACE")).toEqual({ ...filter, type: ["HIKE"] });
     expect(withoutValue(filter, "partner")).toEqual({ ...filter, partner: false });
+  });
+
+  it("unticks the registration flag the same way as the other two", () => {
+    const filter = parseListingFilter({ registration: "1" });
+    expect(withoutValue(filter, "registration")).toEqual({ ...filter, registration: false });
   });
 });
 
@@ -124,24 +163,38 @@ describe("matchesListingFilter: OR within a group, AND across groups", () => {
     expect(ids(rows, { cost: ["FREE", "PAID", "DONATION"] })).not.toContain("hike");
   });
 
-  it("reads the distance in three bands, a half marathon being a half marathon", () => {
-    expect(ids(rows, { distance: "SHORT" })).toEqual(["race-road", "run-night"]);
-    expect(ids(rows, { distance: "MEDIUM" })).toEqual(["race-trail"]);
-    expect(ids(rows, { distance: "LONG" })).toEqual(["hike"]);
-    expect([distanceBand(null), distanceBand(0), distanceBand(10_000), distanceBand(10_001), distanceBand(21_100), distanceBand(21_101)]).toEqual([
-      null,
-      null,
-      "SHORT",
-      "MEDIUM",
-      "MEDIUM",
-      "LONG",
-    ]);
+  it("reads the distance in four bands, a half marathon being a half marathon", () => {
+    expect(ids(rows, { distance: "UP_TO_5" })).toEqual([]);
+    expect(ids(rows, { distance: "FROM_5_TO_10" })).toEqual(["race-road", "run-night"]);
+    expect(ids(rows, { distance: "FROM_10_TO_21" })).toEqual(["race-trail"]);
+    expect(ids(rows, { distance: "OVER_21" })).toEqual(["hike"]);
+    expect(
+      [5_000, 5_001, 10_000, 10_001, 21_100, 21_101].map((meters) => distanceBand(meters)),
+    ).toEqual(["UP_TO_5", "FROM_5_TO_10", "FROM_5_TO_10", "FROM_10_TO_21", "FROM_10_TO_21", "OVER_21"]);
+    expect(distanceBand(null)).toBeNull();
+    expect(distanceBand(0)).toBeNull();
   });
 
   it("asks the caller whether a date is a night event (§394), never the clock itself", () => {
     const filter = parseListingFilter({ night: "1" });
-    expect(matchesListingFilter(rows[0], filter, () => true)).toBe(true);
-    expect(matchesListingFilter(rows[0], filter, () => false)).toBe(false);
+    expect(matchesListingFilter(rows[0], filter, () => true, NOW)).toBe(true);
+    expect(matchesListingFilter(rows[0], filter, () => false, NOW)).toBe(false);
+  });
+
+  it("reads registration-open off the row's own window, the same rule RegistrationCta gives", () => {
+    const open = row("open");
+    const notYetOpen = row("not-yet-open", { registrationOpensAt: FUTURE });
+    const closed = row("closed", { registrationClosesAt: PAST, startsAt: PAST });
+    const cancelled = row("cancelled", { eventStatus: "CANCELLED" });
+    const external = row("external", { registrationMode: "EXTERNAL" });
+    const none = row("none", { registrationMode: "NONE" });
+    const filter = parseListingFilter({ registration: "1" });
+    expect(matchesListingFilter(open, filter, isNight, NOW)).toBe(true);
+    expect(matchesListingFilter(notYetOpen, filter, isNight, NOW)).toBe(false);
+    expect(matchesListingFilter(closed, filter, isNight, NOW)).toBe(false);
+    expect(matchesListingFilter(cancelled, filter, isNight, NOW)).toBe(false);
+    expect(matchesListingFilter(external, filter, isNight, NOW)).toBe(false);
+    expect(matchesListingFilter(none, filter, isNight, NOW)).toBe(false);
   });
 
   it("lets everything through with no filter", () => {
@@ -150,50 +203,65 @@ describe("matchesListingFilter: OR within a group, AND across groups", () => {
 });
 
 describe("offeredFilters offers a box only where ticking it would change the page (§133's rule, generalised)", () => {
+  const offered = (rows: Row[], filter = NO_FILTER) => offeredFilters(rows, filter, isNight, NOW);
+
   it("offers nothing when every event is the same kind — fewer than two kinds is nothing to choose between", () => {
     const rows = [row("a"), row("b")];
-    expect(offeredFilters(rows, NO_FILTER, isNight)).toEqual({ groups: [], flags: [] });
-    expect(offersAnything(offeredFilters(rows, NO_FILTER, isNight))).toBe(false);
+    expect(offered(rows)).toEqual({ groups: [], flags: [] });
+    expect(offersAnything(offered(rows))).toBe(false);
   });
 
   it("offers each kind the club has when there are two or more, in the closed set's order", () => {
     const rows = [row("a", { type: "HIKE" }), row("b", { type: "RACE" }), row("c", { type: "HIKE" })];
-    expect(offeredFilters(rows, NO_FILTER, isNight).groups).toEqual([{ group: "type", values: ["RACE", "HIKE"] }]);
+    expect(offered(rows).groups).toEqual([{ group: "type", values: ["RACE", "HIKE"] }]);
   });
 
   it("offers a value some events carry and others leave unanswered, and never one every event carries", () => {
-    const rows = [row("a", { surface: "TRAIL" }), row("b"), row("c", { costType: "FREE" }), row("d", { costType: "FREE" })];
-    const offer = offeredFilters(
-      rows.map((event) => ({ ...event, costType: "FREE" })),
-      NO_FILTER,
-      isNight,
-    );
+    const rows = [row("a", { surface: "TRAIL" }), row("b", { surface: "ASPHALT" }), row("c", { costType: "FREE" }), row("d", { costType: "FREE" })];
+    const offer = offered(rows.map((event) => ({ ...event, costType: "FREE" })));
     // Every row free: "Gratuit" would narrow nothing.
     expect(offer.groups.find((entry) => entry.group === "cost")).toBeUndefined();
-    expect(offer.groups.find((entry) => entry.group === "surface")).toEqual({ group: "surface", values: ["TRAIL"] });
+    expect(offer.groups.find((entry) => entry.group === "surface")).toEqual({ group: "surface", values: ["ASPHALT", "TRAIL"] });
   });
 
-  it("offers «Colaborare» while some events carry a partner, and «Eveniment de noapte» while some dates are dark", () => {
-    const rows = [row("a", { coHosts: [{ name: "Salvamont" }] }), row("b", { night: true }), row("c")];
-    expect(offeredFilters(rows, NO_FILTER, isNight).flags).toEqual(["partner", "night"]);
-    expect(offeredFilters([row("a"), row("b")], NO_FILTER, isNight).flags).toEqual([]);
+  it("does not offer a group where only one value would narrow — one box with nothing to choose between (§NNN, restoring §133's own rule)", () => {
+    // Only ASPHALT ever narrows here: the other two rows leave `surface` unanswered, which
+    // narrows nothing on its own (there is no "unanswered" box to tick).
+    const rows = [row("a", { surface: "ASPHALT" }), row("b"), row("c")];
+    expect(offered(rows).groups.find((entry) => entry.group === "surface")).toBeUndefined();
+  });
+
+  it("keeps a single ticked value even where nothing else in the group would narrow", () => {
+    const rows = [row("a", { surface: "ASPHALT" }), row("b"), row("c")];
+    const offer = offered(rows, parseListingFilter({ surface: "ASPHALT" }));
+    expect(offer.groups.find((entry) => entry.group === "surface")).toEqual({ group: "surface", values: ["ASPHALT"] });
+  });
+
+  it("offers «Colaborare» while some events carry a partner, «Eveniment de noapte» while some dates are dark, and «Înscrieri deschise» while some are open", () => {
+    const rows = [
+      row("a", { coHosts: [{ name: "Salvamont" }] }),
+      row("b", { night: true }),
+      row("c", { registrationMode: "NONE" }),
+    ];
+    expect(offered(rows).flags).toEqual(["partner", "night", "registration"]);
+    expect(offered([row("a"), row("b")]).flags).toEqual([]);
   });
 
   it("keeps a box the address ticks, even where it now matches nothing, so the page says what it is filtered by", () => {
-    const offer = offeredFilters([row("a"), row("b")], parseListingFilter({ type: "COFFEE", partner: "1", distance: "LONG" }), isNight);
+    const offer = offered([row("a"), row("b")], parseListingFilter({ type: "COFFEE", partner: "1", distance: "OVER_21" }));
     expect(offer.groups).toEqual([
       { group: "type", values: ["COFFEE"] },
-      { group: "distance", values: ["LONG"] },
+      { group: "distance", values: ["OVER_21"] },
     ]);
     expect(offer.flags).toEqual(["partner"]);
   });
 
   it("reads the whole list, never the filtered rows, so ticking one box never takes another away", () => {
     const rows = [row("a", { type: "RACE" }), row("b", { type: "HIKE" })];
-    expect(offeredFilters(rows, parseListingFilter({ type: "RACE" }), isNight)).toEqual(offeredFilters(rows, NO_FILTER, isNight));
+    expect(offered(rows, parseListingFilter({ type: "RACE" }))).toEqual(offered(rows));
   });
 
   it("offers nothing at all when there is nothing", () => {
-    expect(offeredFilters([], NO_FILTER, isNight)).toEqual({ groups: [], flags: [] });
+    expect(offered([])).toEqual({ groups: [], flags: [] });
   });
 });

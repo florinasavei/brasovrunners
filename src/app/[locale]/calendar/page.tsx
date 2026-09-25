@@ -47,6 +47,7 @@ type Props = {
     distance?: string | string[];
     cost?: string | string[];
     night?: string | string[];
+    registration?: string | string[];
   }>;
 };
 
@@ -120,7 +121,10 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
   // From the public cache (§333): the range is the key, and an event save expires it.
   const period = readWithLastGood(key, () => cachedPublishedEventsBetween(locale, range.from, range.to), now);
-  const events = period.then((read) => ({ ...read, value: read.value.filter((event) => matchesListingFilter(event, filter, isNight)) }));
+  const events = period.then((read) => ({
+    ...read,
+    value: read.value.filter((event) => matchesListingFilter(event, filter, isNight, now)),
+  }));
   // The calendar's own panel (§NNN): what it offers is read off the period on view, the rows the
   // filter narrows here — the same rule the listing applies to its own rows.
   const monthOrYear: Record<string, string> =
@@ -146,12 +150,17 @@ export default async function CalendarPage({ params, searchParams }: Props) {
         <CalendarStaleNotice events={events} />
       </Suspense>
 
-      <Suspense fallback={null}>
+      {/* A fixed-height placeholder (§NNN) rather than `fallback={null}`: the button pops in
+          after the rows resolve, and an empty fallback let it push the calendar down under it —
+          the same layout shift the listing avoids by rendering the panel inside its lead's
+          skeleton boundary. 44 px is the button's own height (`TAP_TARGET`). */}
+      <Suspense fallback={<Box sx={{ mb: 1, minHeight: 44 }} />}>
         <CalendarFilters
           locale={locale}
           filter={filter}
           rows={period.then((read) => read.value)}
           keep={{ ...monthOrYear, ...(layout === "list" ? { view: "list" } : {}) }}
+          now={now}
         />
       </Suspense>
 
@@ -178,13 +187,15 @@ async function CalendarFilters({
   filter,
   rows,
   keep,
+  now,
 }: {
   locale: "ro" | "en";
   filter: ListingFilter;
   rows: Promise<PublicEvent[]>;
   keep: Record<string, string>;
+  now: Date;
 }) {
-  const offer = offeredFilters(await rows, filter, isNight);
+  const offer = offeredFilters(await rows, filter, isNight, now);
   if (!offersAnything(offer) && activeFilterCount(filter) === 0) return null;
   return (
     <Box sx={{ mb: 1 }}>

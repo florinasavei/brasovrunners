@@ -54,6 +54,7 @@ type Props = {
     distance?: string | string[];
     cost?: string | string[];
     night?: string | string[];
+    registration?: string | string[];
   }>;
 };
 
@@ -234,13 +235,13 @@ async function ListingLead({
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
   // The filter decides the hero too (§NNN): a lead event that does not match is not shown.
-  const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight), hasUpcoming);
+  const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight, now), hasUpcoming);
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // What the panel offers (§NNN, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the hero's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
-  const offer = offeredFilters(events, filter, isNight);
+  const offer = offeredFilters(events, filter, isNight, now);
 
   return (
     <>
@@ -331,7 +332,7 @@ async function PastEvents({
   // The one the lead is already showing, when there is nothing to come (§167) — by its id, not
   // as "the first row": with a kind narrowed at the source, the first row is the latest of that
   // kind, which is not the club's latest event the lead shows.
-  const events = rows.filter((event) => event.id !== leadId && matchesListingFilter(event, filter, isNight));
+  const events = rows.filter((event) => event.id !== leadId && matchesListingFilter(event, filter, isNight, now));
   if (events.length === 0) return null;
 
   const t = await getTranslations("Events");
@@ -411,7 +412,7 @@ async function ListingBody({
   // The same division the lead made, and it has to be given the same arguments or the two
   // disagree: a past event the lead refused to hero must appear in the list (§167), and a lead
   // event the filter hides must not reappear here as a card (§NNN).
-  const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight), hasUpcoming);
+  const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight, now), hasUpcoming);
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
