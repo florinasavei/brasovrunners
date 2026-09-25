@@ -4,9 +4,11 @@ import { partnerPhrase } from "./counted-phrases";
 import GlyphChip from "./GlyphChip";
 
 /**
- * A pill that wraps rather than ending in MUI's ellipsis, like the event page's pills (§356):
- * the generic "Eveniment în parteneriat" marker (§367) is still a full word wider than some
- * 320-pixel cards leave it. A plain object in module scope, because it crosses to `GlyphChip`.
+ * A pill that wraps rather than ending in MUI's ellipsis, like the event page's pills (§356),
+ * kept even now the marker reads "Colaborare" / "Partnership" (§379 — shorter than the old
+ * "Eveniment în parteneriat" / "Partnered event", which was a full word wider than some
+ * 320-pixel cards leave it) — a card narrower still, or a phone's own font-size setting, is
+ * still safer wrapped than clipped. A plain object in module scope, because it crosses to `GlyphChip`.
  */
 const PARTNER_CHIP_SX = {
   height: "auto",
@@ -18,8 +20,9 @@ const PARTNER_CHIP_SX = {
 /**
  * The partner marker on a listing card (§367, amended §375 — the owner, 2026-09-24: "For the
  * partnership, I just need 1 icon, I do not need to show the full partners list, there might be
- * multiple partners"): one small outlined chip in the card's chips row, the handshake and a
- * generic "Eveniment în parteneriat" — the size and the colour of the surface chip beside it, so
+ * multiple partners"), and again (§379 — "the chip is too long, just say 'colaborare' in the
+ * Romanian one"): one small outlined chip in the card's chips row, the gray handshake and a
+ * generic "Colaborare" — the size and the colour of the surface chip beside it, so
  * it reads as one more fact about the event rather than a badge that competes with "Ediție
  * specială".
  *

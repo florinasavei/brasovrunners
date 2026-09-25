@@ -11,7 +11,7 @@ import PartnerMark from "./PartnerMark";
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
  * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Frontală necesară" when
  * the organizer marked the date (§382) — after the place, since both say how the evening will be —
- * then the generic "Eveniment în parteneriat" marker when it is held with one. The grid's tooltip shows them as
+ * then the generic "Colaborare" marker when it is held with one. The grid's tooltip shows them as
  * lines; the link's accessible name reads them as sentences, each ended so a screen reader pauses
  * between them.
  */
@@ -83,7 +83,7 @@ export default function CalendarEventChip({
   note: EditionNote | null;
   /** "Frontală necesară" / "Headlamp required" (§382), made on the server — or null for a date that needs no light. */
   headlamp?: string | null;
-  /** The generic "Eveniment în parteneriat" marker (§367), made on the server — or null for an event with no partner. */
+  /** The generic "Colaborare" marker (§367, §379), made on the server — or null for an event with no partner. */
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;
@@ -168,7 +168,7 @@ export default function CalendarEventChip({
   );
 }
 
-/** The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Eveniment în parteneriat" / "Partnered event". */
+/** The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Colaborare" / "Partnership". */
 function PartnerGlyph({ size }: { size: number }) {
   const Icon = GLYPHS.partner;
   return <Icon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />;

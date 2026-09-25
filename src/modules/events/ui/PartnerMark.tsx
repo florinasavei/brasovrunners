@@ -6,7 +6,7 @@ import { GLYPHS } from "./glyphs";
 /**
  * The handshake beside a calendar entry held with a partner (§367; the owner: "show like a
  * handshake icon on the card and in the calendar"), for the agenda, where the entry has no
- * tooltip of its own (§261): the generic "Eveniment în parteneriat" marker (§367) in a tooltip
+ * tooltip of its own (§261): the generic "Colaborare" marker (§367, §379) in a tooltip
  * and as the glyph's accessible name, the way `EditionMark` says a date's note.
  *
  * In the month grid the entry's own tooltip already carries that line, so the grid draws the bare

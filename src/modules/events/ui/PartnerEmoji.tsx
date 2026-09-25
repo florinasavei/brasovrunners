@@ -45,6 +45,17 @@ const FONT_SIZE: Record<"small" | "medium" | "large" | "inherit", string> = {
  *
  * A `.tsx` file of its own: `glyphs.ts` carries no JSX, and every other glyph there is a
  * component `@mui/icons-material` already built.
+ *
+ * Grayscale ink (§379 addendum, 2026-09-25): the owner, on the listing card, "This icon
+ * handshake must be gray" — the emoji's own colours (skin-tone hands) read as the one bright
+ * spot beside the runner glyph's flat `text.secondary` ink. `filter: grayscale(1) brightness(…)`
+ * desaturates it and then scales the result to match `text.secondary`'s own measured brightness
+ * in each scheme — `COLOR.inkMuted` (`#5b574f`, light) and `COLOR_DARK.inkMuted` (`#b5b2a9`,
+ * dark) render at very different lightness, so one multiplier cannot serve both; the dark
+ * variant is picked with the same plain-object `"[data-dark] &"` selector `theme/surfaces.ts`
+ * uses, not `theme.applyStyles`, so this stays a plain object a Server Component can pass
+ * straight through the caller's `sx` prop (`AGENTS.md` §14.1). Set ahead of the array spread so
+ * a caller's own `filter` (none exist yet) still wins.
  */
 const PartnerEmoji = forwardRef<HTMLSpanElement, SvgIconProps>(function PartnerEmoji({ sx, fontSize, ...rest }, ref) {
   return (
@@ -65,6 +76,8 @@ const PartnerEmoji = forwardRef<HTMLSpanElement, SvgIconProps>(function PartnerE
           height: "1em",
           overflow: "visible",
           textDecoration: "none",
+          filter: "grayscale(1) brightness(0.55)",
+          "[data-dark] &": { filter: "grayscale(1) brightness(1.55)" },
         },
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
