@@ -90,6 +90,8 @@
     "gatheringTime": "Gathering time",
     "gatheringAt": "gather at {time}",
     "raceStartAt": "start at {time}",
+    "gatheringAtBold": "gather at <b>{time}</b>",
+    "raceStartAtBold": "start at <b>{time}</b>",
     "when": "When",
     "where": "Where",
     "raceStartTime": "Race start",

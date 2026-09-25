@@ -325,14 +325,17 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(strongs2[strongs2.length - 1]).toMatch(/^\d{2}:\d{2}$/);
   });
 
-  it("leaves a race's two named times unbolded — they carry a word before the number, not a bare time (§375 amended)", async () => {
+  it("bolds only the numbers of a race's two named times, never the word in front of them (§375 amended once more)", async () => {
     const html = await single({ raceStartsAt: new Date("2026-09-27T06:00:00Z") });
     const when = fact(html, "when");
-    // Still one bold piece — the date — never the "gather at"/"start at" sentences.
-    const strongs = [...when.matchAll(/<strong>([\s\S]*?)<\/strong>/g)];
-    expect(strongs).toHaveLength(1);
-    expect(text(when)).toContain("10:00");
-    expect(text(when)).toContain("09:00");
+    // Three bold pieces: the date, and each time's own number — never "întâlnire" or "start".
+    const strongs = [...when.matchAll(/<strong>([\s\S]*?)<\/strong>/g)].map((match) => text(match[1] ?? ""));
+    expect(strongs).toHaveLength(3);
+    expect(strongs[0]).toContain("2026");
+    expect(strongs[1]).toBe("10:00");
+    expect(strongs[2]).toBe("09:00");
+    expect(text(when)).toContain("întâlnire la");
+    expect(text(when)).toContain("start la");
   });
 
   it("never wraps the when line onto a second line, except a race's two named times (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", () => {

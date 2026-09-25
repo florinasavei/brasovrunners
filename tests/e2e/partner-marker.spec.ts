@@ -63,9 +63,17 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await field("translations.en.title").fill(englishTitle);
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
-    // The partner's card (§344): a name is all a partner needs; no description, no link.
+    // The partner's card (§344): a name, a description in both languages and one link — the
+    // fullest card the box can hold — so the no-overflow check below (§375 amended, finding 5)
+    // covers more than the smallest possible card, a name alone.
     await openEditorBox(page, "Parteneri");
     await field("event.coHosts[0].name").fill(partner);
+    const coHostsSection = page.locator('[id="field-event.coHosts"]');
+    await field("event.coHosts[0].descriptionRo").fill("Organizăm împreună acest eveniment, an de an.");
+    await field("event.coHosts[0].descriptionEn").fill("We organize this event together, year after year.");
+    await coHostsSection.getByRole("group", { name: "Linkul 1 al partenerului 1", exact: true }).getByRole("combobox").click();
+    await page.getByRole("option", { name: "Înscriere la partener" }).click();
+    await field("event.coHosts[0].links[0].url").fill("https://bm.example.test/inscriere");
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
     await hydrated(page);
@@ -125,6 +133,16 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(overline.locator(HANDSHAKE)).toHaveCount(1);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+
+    // The partner's own card — description and a link, not a name alone — stays inside its
+    // `<dd>` at the narrowest viewport the suite runs (§375 amended, finding 5): the name has
+    // no `overflowWrap` of its own (the description and the link labels do), so this is the
+    // check that would catch it running long.
+    const partnerCard = page.getByTestId("partner-card");
+    await expect(partnerCard).toContainText("Organizăm împreună");
+    await expect(partnerCard.getByRole("link", { name: `Înscriere la ${partner}` })).toBeVisible();
+    const [cardBox, ddBox] = await Promise.all([partnerCard.boundingBox(), partnerCard.locator("xpath=ancestor::dd[1]").boundingBox()]);
+    expect(cardBox && ddBox && cardBox.x + cardBox.width).toBeLessThanOrEqual((ddBox?.x ?? 0) + (ddBox?.width ?? 0) + 0.5);
 
     await page.goto(`/en/events/${englishSlug}`);
     await expect(page.getByTestId("overline-partner")).toContainText("Partnered event");

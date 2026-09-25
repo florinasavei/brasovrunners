@@ -162,13 +162,13 @@ describe("BR-REQ-011-01 criterion 16 the partners' cards on the event page", () 
     expect(cards).toHaveLength(2);
     for (const cls of cards) {
       const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
-      // `partnerCardSurface` names the theme's `divider` and `action.hover` tokens (never a
+      // `partnerCardSurface` names the theme's `divider` and `action.selected` tokens (never a
       // literal colour) — the test theme resolves them to their default values since it renders
       // outside a CSS-variable-aware provider, so it is the tokens, not their resolved paint,
       // that `theme/surfaces.test.ts` asserts directly against `surfaces.partnerCardSurface`.
       expect(rule).toContain("border:1px solid");
       expect(rule).toMatch(/border-color:rgba\(0,\s*0,\s*0,\s*0\.12\)/);
-      expect(rule).toMatch(/background-color:rgba\(0,\s*0,\s*0,\s*0\.04\)/);
+      expect(rule).toMatch(/background-color:rgba\(0,\s*0,\s*0,\s*0\.08\)/);
       expect(rule).not.toMatch(/#[0-9a-f]{3,6}\b/i);
     }
   });

@@ -59,15 +59,18 @@ const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-
  * short of room, the lead gives way, never the time.
  *
  * The breakpoint is the widest case, measured in headless Chromium on the built listing (Roboto,
- * 14 pixels, the date bold; 2026-09-25): every day of a year, the date as the card prints it on a
- * phone (the year dropped), the lead, the separator, the clock and the time. Widest in Romanian:
- * "Următoarea: Duminică, 27 sept. · [clock] 18:30", 274 pixels; in English: "Next: Wednesday,
- * 30 Sept · [clock] 18:30", 240. What the page and the card take around the row — the gutters,
- * the card's padding, the row's own calendar glyph — is 94 pixels at every phone width (a
- * 320-pixel viewport leaves the row 226, a 360-pixel one 266). So the lead fits every weekday and
- * every month from 368 pixels up; the breakpoint is 376, eight pixels over, so a font rendered a
- * hair wider elsewhere (Linux against Windows, a system's own hinting) does not push the time
- * off the row. One number for both languages: the Romanian lead is the wider.
+ * 14 pixels, the date **and** the time bold — re-measured 2026-09-25 against the bold time,
+ * §375 amended once more): every day of a year, the date as the card prints it on a phone (the
+ * year dropped), the lead, the separator, the clock and the time. Widest in Romanian:
+ * "Următoarea: Duminică, 27 sept. · [clock] 18:30", 275 pixels (was 274 with a regular time —
+ * Roboto's digits are not quite the same width bold, "18:30" gains about 1.2 pixels); in
+ * English: "Next: Wednesday, 30 Sept · [clock] 18:30", 241 (was 240). What the page and the card
+ * take around the row — the gutters, the card's padding, the row's own calendar glyph — is 94
+ * pixels at every phone width (a 320-pixel viewport leaves the row 226, a 360-pixel one 266). So
+ * the lead fits every weekday and every month from 369 pixels up; the breakpoint stays 376,
+ * seven pixels over now rather than eight, so a font rendered a hair wider elsewhere (Linux
+ * against Windows, a system's own hinting) still does not push the time off the row. One number
+ * for both languages: the Romanian lead is the wider.
  *
  * Below it the lead is clipped visually (a one-pixel box, never `display: none`), so a screen
  * reader still reads it at every width. The date does something else with its year: it swaps two
@@ -267,20 +270,27 @@ export default async function EventFacts({
      `boldTime` (§375 amended — the owner, 2026-09-25, of the listing card's row: "The time can
      be bolded here as well") gives the bare time the date's own weight, `<strong>` like `day`
      above, on the compact card row only — the card's own caller passes it, the page's and the
-     hero's do not. It bolds the plain time alone, never a race's two named times
-     ("gather at 08:00", "start at 09:00"): those sentences carry a word before the number, and
-     bolding the whole phrase would bold that word too, which nobody asked for. */
+     hero's do not. A race's two named times ("gather at 08:00", "start at 09:00") carry a word
+     before the number, so bolding the plain-time key would bold that word too; `gatheringAtBold`
+     / `raceStartAtBold` wrap only `{time}` in `<b>`, so the launch race's card matches the
+     weekly-run cards without the word going bold with it. `ical.ts`'s calendar description
+     keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line. */
   const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX, boldTime = false): ReactNode[] => {
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
+    const bold = (chunks: ReactNode) => <strong>{chunks}</strong>;
     if (event.raceStartsAt) {
       return [
         day,
         <>
           {clock}
-          {t("gatheringAt", { time: time(event.startsAt) })}
+          {boldTime
+            ? t.rich("gatheringAtBold", { time: time(event.startsAt), b: bold })
+            : t("gatheringAt", { time: time(event.startsAt) })}
         </>,
-        t("raceStartAt", { time: time(event.raceStartsAt) }),
+        boldTime
+          ? t.rich("raceStartAtBold", { time: time(event.raceStartsAt), b: bold })
+          : t("raceStartAt", { time: time(event.raceStartsAt) }),
       ];
     }
     return [
@@ -867,9 +877,11 @@ export default async function EventFacts({
     background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) — the card sits on
     the page's own background otherwise, and a border with no fill read as one more row among the
     page's plain facts. The box is a `<div>`, never a MUI `Paper`, because `partnerFacts` returns
-    inline content built to sit inside a `<dd>`; the surface is the same border, radius and wash
-    every outlined box on the site already uses (`CalendarSection`), only bordering a block wide
-    enough to keep the marker, the name, the description and the links clear of its edge.
+    inline content built to sit inside a `<dd>`; the surface shares its border and radius with
+    every outlined box on the site already (`CalendarSection`), and its wash — `action.selected`,
+    stronger than a mere hover tint — with `CalendarEventChip` and `RegistrationSteps`, only
+    bordering a block wide enough to keep the marker, the name, the description and the links
+    clear of its edge.
   */
   if (coHosts.length > 0) {
     rows.push({

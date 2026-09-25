@@ -101,15 +101,19 @@ const SPECIAL_WASH = "color-mix(in srgb, var(--mui-palette-secondary-main) 4%, t
  * than the page's own background, so the card the club shares its event with reads as its own
  * box among the page's plain rows.
  *
- * `action.hover` rather than a literal gray: MUI's own "something sits here" tint, already
- * tuned against both schemes' text (`theme.ts`'s palettes), so light and dark each get a wash
- * that reads as gray without a second value to keep in step with the brand.
+ * `action.selected` rather than a literal gray: MUI's own stronger "something sits here" tint
+ * (`CalendarEventChip` and `RegistrationSteps` already lean on it for the same reason), tuned
+ * against both schemes' text (`theme.ts`'s palettes) so light and dark each get a wash that
+ * reads as gray without a second value to keep in step with the brand. `action.hover` — the
+ * calendar header's own wash — was tried first and screenshotted at 360 pixels in both colour
+ * schemes; in light it sat too close to the page's own paper next to the owner's "stands out",
+ * so the card moved to the stronger token.
  */
 export const partnerCardSurface = {
   border: 1,
   borderColor: "divider",
   borderRadius: 2,
-  bgcolor: "action.hover",
+  bgcolor: "action.selected",
 } as const;
 
 export const specialCard = {
