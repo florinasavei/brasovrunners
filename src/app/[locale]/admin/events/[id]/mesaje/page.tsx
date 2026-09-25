@@ -139,7 +139,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     when: [{ field: "audience", equals: choice.value }],
     title: choice.confirmTitle,
     body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
-    email: words.email(choice.real),
+    // No "0 participants" for a group of test rows alone: the test line says who is written to.
+    ...(choice.real > 0 ? { email: words.email(choice.real) } : {}),
     confirmLabel: t("participantMessages.confirmSend"),
     cancelLabel: words.cancel,
   }));

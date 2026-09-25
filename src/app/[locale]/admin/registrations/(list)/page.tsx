@@ -27,6 +27,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -51,6 +52,7 @@ import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { NeverKeptField } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -277,6 +279,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const mayManage = canManageRegistrations(actor.role);
   // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
   const printedOnPage = printedNumbersACancelWouldVoid(rows);
+  /*
+    The bulk cancel's email line (§NNN): each ticked row the cancel can reach is one "your
+    registration is cancelled", summed in the browser over the ticks at the press. A row whose
+    status has no edge to CANCELLED is refused by the service and emails nobody; a test row is
+    emailed but counted nowhere the club is given (§30), like the toast afterwards.
+  */
+  const bulkCancelEmailCount: EmailCount = {
+    field: "registrationId",
+    base: 0,
+    counts: Object.fromEntries(rows.filter((row) => row.kind !== "TEST" && canTransition(row.status, "CANCELLED")).map((row) => [row.id, 1])),
+    forms: t.raw("confirm.email") as EmailCount["forms"],
+    locale,
+  };
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -1124,9 +1139,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Checkbox
                 name="registrationId"
                 value={row.id}
-                form={BULK_FORM}
                 slotProps={{
-                  input: { "aria-label": t("registrations.selectRow", { name: row.registeredName }) },
+                  // `form` on the `<input>` itself: as a prop of the Checkbox it landed on MUI's
+                  // wrapping span, no tick belonged to the bulk form, and both bulk verbs posted
+                  // nothing — the events list's §114 trap, found here by the email count (§NNN).
+                  input: { form: BULK_FORM, "aria-label": t("registrations.selectRow", { name: row.registeredName }) },
                 }}
                 sx={CHECKBOX_TAP_TARGET}
               />
@@ -1395,7 +1412,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   icon="cancel"
                   title={t("confirm.bulkCancelTitle")}
                   body={t("confirm.bulkCancelBody")}
-                  email={words.each}
+                  emailCount={bulkCancelEmailCount}
                   confirmLabel={t("registrations.bulkCancelAction")}
                   cancelLabel={words.cancel}
                   color="warning"

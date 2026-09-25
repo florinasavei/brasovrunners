@@ -252,13 +252,17 @@ export async function countEventThanksRecipients<T extends Record<string, unknow
  * The thank-you, sent once per event by an organizer to everyone who was checked in
  * (`DECISIONS.md` §82). Manual and never automatic; audited with the event and the count,
  * never the recipients; `events.thanks_sent_at` is what makes it once.
+ *
+ * Returns every row written (`recipients`, the audit's number) and the same split the dialog
+ * states: `real` is what the toast and the banner say, `test` is written to and counted nowhere
+ * the club is given (§30).
  */
 export async function sendEventThanks<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   input: { eventId: string; url?: string | null },
   now: Date,
-): Promise<{ recipients: number }> {
+): Promise<{ recipients: number; real: number; test: number }> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not send the thank-you`);
   }
@@ -286,6 +290,7 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
         registrationId: registrations.id,
         participantId: registrations.participantId,
         locale: registrations.locale,
+        kind: registrations.kind,
         recipientEmail: participants.deliveryEmail,
       })
       .from(registrations)
@@ -315,6 +320,7 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
       now,
     });
 
-    return { recipients: rows.length };
+    const test = rows.filter((row) => row.kind === "TEST").length;
+    return { recipients: rows.length, real: rows.length - test, test };
   });
 }

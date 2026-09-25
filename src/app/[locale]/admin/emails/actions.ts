@@ -180,6 +180,7 @@ export async function updateDeadlinesAction(_previous: FormOutcome | null, form:
   // The when-lines and the previews under the panel say these numbers; without this the page
   // comes back saying the old ones (the trap §164 and §100 documented above).
   revalidatePath(path);
+  await flashOutcome({ saved: "deadlines" });
   redirect(`${path}?saved=deadlines#admin-alert`);
 }
 

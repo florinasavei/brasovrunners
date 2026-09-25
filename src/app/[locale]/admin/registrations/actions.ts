@@ -455,11 +455,12 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
   }
 
   let cancelled = 0;
+  let test = 0;
   let failed = 0;
   let voided: number[] = [];
   try {
     const actor = await requireStaffRole("ADMIN");
-    ({ cancelled, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
+    ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
   } catch (error) {
     return backTo(returnTo, outcomeOf(error));
   }
@@ -468,9 +469,11 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
   // which is all the page needs to say which bibs come out of the pile.
   const separator = returnTo.includes("?") ? "&" : "?";
   const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
-  await flashOutcome({ saved: "registrationsCancelled", cancelled: String(cancelled), failed: String(failed) });
+  // The real rows only (§30): each was cancelled and sent its email, the number the dialog stated.
+  const real = cancelled - test;
+  await flashOutcome({ saved: "registrationsCancelled", cancelled: String(real), failed: String(failed) });
   redirect(
-    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${cancelled}&failed=${failed}${voidedQuery}#admin-alert`,
+    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${real}&failed=${failed}${voidedQuery}#admin-alert`,
   );
 }
 

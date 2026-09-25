@@ -22,11 +22,14 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  * the form, and the Server Action behind it asserts the role, the version and every rule exactly
  * as it did before the dialog existed. With JavaScript off there is no dialog and the form posts.
  *
- * The safe button — cancel — takes the focus on open, so a stray Enter or Space cancels. Enter
- * anywhere in the dialog confirms one that is not destructive (`confirmOnKey`): the reader who
- * pressed Enter in a box to send the form meant to send it, and the question is a pause, not a
- * trap. A destructive dialog answers only to its own red button; Escape and the backdrop cancel
- * either. An email the action will queue is a line of its own, in bold, so it is never missed.
+ * The safe button — cancel — takes the focus on open, so a stray Space cancels. Enter anywhere in
+ * the dialog confirms one that is not destructive (`confirmOnKey`): the reader who pressed Enter
+ * in a box to send the form meant to send it, and the question is a pause, not a trap. In a
+ * destructive dialog Enter never confirms — it reaches the focused cancel button and cancels — so
+ * only the red button itself does. A held key's repeats are swallowed: the Enter that submitted
+ * the form, still down when the dialog opens, neither confirms nor cancels it. Escape and the
+ * backdrop cancel either. An email the action will queue is a line of its own, in bold, so it is
+ * never missed.
  */
 export default function ConfirmDialog({
   spec,
@@ -50,6 +53,11 @@ export default function ConfirmDialog({
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       onKeyDown={(event) => {
+        // A held Enter's repeats: the press that opened the dialog is not an answer to it.
+        if (event.repeat) {
+          if (event.key === "Enter") event.preventDefault();
+          return;
+        }
         if (confirmOnKey(event.key, spec.destructive) !== "confirm") return;
         // Before the focused cancel button turns the Enter into its own click.
         event.preventDefault();

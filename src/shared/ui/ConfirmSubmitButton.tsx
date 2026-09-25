@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import type { ConfirmSpec } from "@/shared/feedback/notice";
+import { type ConfirmSpec, type EmailCount, resolveEmailCount } from "@/shared/feedback/notice";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
 type Props = {
@@ -15,6 +15,12 @@ type Props = {
   cancelLabel: string;
   /** "An email will be sent to N participants", worded on the server (`ConfirmSpec.email`). */
   email?: string;
+  /**
+   * The same sentence counted at the press from the form's ticked values (`ConfirmSpec.emailCount`):
+   * the bulk cancel's ticks exist only in the browser, so the server hands the count each tick adds
+   * and the dialog sums the ticked ones when it opens. Replaces `email`.
+   */
+  emailCount?: EmailCount;
   color?: "primary" | "error" | "warning";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium";
@@ -71,6 +77,7 @@ export default function ConfirmSubmitButton({
   confirmLabel,
   cancelLabel,
   email,
+  emailCount,
   color = "primary",
   variant = "outlined",
   size = "small",
@@ -79,10 +86,10 @@ export default function ConfirmSubmitButton({
   disabled,
   pendingLabel,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<ConfirmSpec | null>(null);
   const anchor = useRef<HTMLButtonElement>(null);
   const Icon = icon ? ACTION_ICONS[icon] : null;
-  const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, email, destructive: color === "error" };
+  const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, email, emailCount, destructive: color === "error" };
   // The parent form's status: meaningful only for a button inside its form (not one tied by `form=`).
   const status = useFormStatus();
   const pending = pendingLabel !== undefined && status.pending && status.data?.get(SUBMITTER_FIELD) === label;
@@ -111,7 +118,10 @@ export default function ConfirmSubmitButton({
         onClick={(event) => {
           event.preventDefault();
           if (pending) return;
-          setOpen(true);
+          // The ticks as they are at this press, the checkboxes tied by `form=` included.
+          const target = anchor.current?.form;
+          const data = target ? new FormData(target) : null;
+          setOpen(resolveEmailCount(spec, (field) => (data ? data.getAll(field).filter((value): value is string => typeof value === "string") : [])));
         }}
       >
         {pending ? pendingLabel : label}
@@ -119,11 +129,11 @@ export default function ConfirmSubmitButton({
 
       {open && (
         <ConfirmDialog
-          spec={spec}
+          spec={open}
           open
-          onCancel={() => setOpen(false)}
+          onCancel={() => setOpen(null)}
           onConfirm={() => {
-            setOpen(false);
+            setOpen(null);
             // `requestSubmit` rather than `submit()`: it runs the form's own validation and
             // fires the submit event React's Server Action handler is listening for. The
             // plain `submit()` bypasses both and posts nothing useful.

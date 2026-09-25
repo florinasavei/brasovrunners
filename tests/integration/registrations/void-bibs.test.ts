@@ -304,7 +304,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
     const outcome = await bulkCancelRegistrationsByStaff(db, admin, [twentySeven.id, twelve.id, five.id, already.id], "nu mai vin", NOW);
     // The already-cancelled row refuses and is counted, and voided nothing *now*: it is on the
     // bibs panel already, and the banner is about this press.
-    expect(outcome).toEqual({ cancelled: 3, failed: 1, voided: [12, 27] });
+    expect(outcome).toEqual({ cancelled: 3, test: 0, failed: 1, voided: [12, 27] });
     expect((await voidBibsFor(db, eventId)).map((bib) => bib.bibNumber)).toEqual([3, 12, 27]);
     // Each row wrote its own audit row, printed number and all.
     const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.cancelled_by_staff"));

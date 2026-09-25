@@ -24,7 +24,7 @@ const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8
 describe("§NNN ConfirmDialog", () => {
   const source = read("src/shared/feedback/ConfirmDialog.tsx");
 
-  it("focuses the safe button on open, so a stray Enter or Space cancels", () => {
+  it("focuses the safe button on open, so a stray Space — or Enter in a destructive dialog — cancels", () => {
     expect(source).toMatch(/<Button onClick=\{onCancel\} autoFocus/);
     expect(source).not.toMatch(/onClick=\{onConfirm\}[^>]*autoFocus/);
   });
@@ -32,6 +32,10 @@ describe("§NNN ConfirmDialog", () => {
   it("lets Enter confirm only a dialog that is not destructive, and stops the focused cancel from taking the key", () => {
     expect(source).toMatch(/if \(confirmOnKey\(event\.key, spec\.destructive\) !== "confirm"\) return;/);
     expect(source).toMatch(/event\.preventDefault\(\);\s*onConfirm\(\);/);
+  });
+
+  it("swallows a held Enter's repeats, so the press that opened the dialog neither confirms nor cancels it", () => {
+    expect(source).toMatch(/if \(event\.repeat\) \{\s*if \(event\.key === "Enter"\) event\.preventDefault\(\);\s*return;\s*\}\s*if \(confirmOnKey/);
   });
 
   it("cancels on Escape and on the backdrop — MUI's onClose is the cancel", () => {

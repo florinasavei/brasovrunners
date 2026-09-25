@@ -221,8 +221,8 @@ export type ConfirmSpec = {
   confirmLabel: string;
   cancelLabel: string;
   /**
-   * Hard to undo: the confirm button is red, and Enter does nothing — only the button itself
-   * confirms. Off, Enter confirms, because the safe button has the focus and a press of Enter
+   * Hard to undo: the confirm button is red, and Enter never confirms — it reaches the focused
+   * cancel button, which cancels — so only the red button itself does. Off, Enter confirms, because the safe button has the focus and a press of Enter
    * on it would otherwise cancel a dialog the reader is trying to agree with.
    */
   destructive?: boolean;

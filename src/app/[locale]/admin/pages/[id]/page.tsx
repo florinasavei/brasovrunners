@@ -202,7 +202,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
         <Box>
           <ActionForm
             action={deletePageAction}
-            confirm={{ title: t("pages.deleteTitle"), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
+            confirm={{ title: t("pages.deleteTitle", { title: pageTitle }), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
             data-testid="delete-page-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />

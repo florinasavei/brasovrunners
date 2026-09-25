@@ -730,7 +730,6 @@
         "few": "Se trimit acum {count} emailuri din coadă.",
         "other": "Se trimit acum {count} de emailuri din coadă."
       },
-      "emailEach": "Fiecare înscriere anulată primește un email.",
       "publishTitle": "Publici „{title}”?",
       "publishBody": "Apare pe site în ambele limbi. Un eveniment cu înscrieri pe site își deschide înscrierile în fereastra lui.",
       "createPublishTitle": "Creezi și publici evenimentul?",
@@ -743,7 +742,7 @@
       "bulkArchiveTitle": "Arhivezi evenimentele bifate?",
       "bulkArchiveBody": "Dispar de pe site în ambele limbi. Le poți readuce mai târziu, una câte una.",
       "saveNoticeTitle": "Salvezi și anunți participanții?",
-      "saveNoticeBody": "Modificările se salvează, iar participanții primesc „Detalii actualizate” cu nota ta, fiecare în limba lui.",
+      "saveNoticeBody": "Modificările se salvează, iar participanții primesc „Detalii actualizate”, fiecare în limba lui — dacă s-a schimbat locul, ora sau programul, sau ai scris o notă.",
       "cancelEventTitle": "Anulezi „{title}”?",
       "cancelEventBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții primesc „Eveniment anulat” cu motivul tău.",
       "cancelEventQuietBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții nu sunt anunțați.",
@@ -793,6 +792,8 @@
       "honeypotOnBody": "Un câmp ascuns pe care oamenii nu îl văd; un formular care îl completează este refuzat.",
       "honeypotOffTitle": "Oprești honeypot-ul?",
       "honeypotOffBody": "Câmpul rămâne și se notează în jurnal, dar nu mai refuză pe nimeni.",
+      "deadlinesTitle": "Salvezi termenele?",
+      "deadlinesBody": "Fiecare loc ținut, ofertă și link dat de acum înainte primește numerele noi, iar emailurile și paginile le spun. Nimic din ce s-a dat deja nu se schimbă: un link, un loc ținut sau o ofertă își păstrează termenul primit.",
       "jobCadenceTitle": "Salvezi intervalul?",
       "jobCadenceBody": "Emailurile din coadă și întreținerea rulează cel mult o dată la intervalul ales; un email poate aștepta atât.",
       "neonLimitsTitle": "Salvezi limitele Neon?",
@@ -2325,7 +2326,7 @@
       "incomplete": "Ambele limbi trebuie completate înainte de publicare. Lipsesc: {detail}.",
       "readOnly": "Rolul tău poate citi paginile, dar nu le poate modifica.",
       "delete": "Șterge pagina",
-      "deleteTitle": "Ștergi pagina?",
+      "deleteTitle": "Ștergi pagina „{title}”?",
       "deleteBody": "Pagina și ambele traduceri dispar definitiv. Dacă pagina a fost publicată și vrei doar să o scoți de pe site, folosește „Arhivează”.",
       "viewPublic": "Vezi pagina publică →",
       "columnTitle": "Titlu",
@@ -3966,9 +3967,9 @@
       "bibsPrinted": "Marcat ca printat.",
       "bibsUnprinted": "Marcat ca neprintat.",
       "registrationsCancelled": {
-        "one": "{count} înscriere anulată; emailul e pus la coadă.",
-        "few": "{count} înscrieri anulate; emailurile sunt puse la coadă.",
-        "other": "{count} de înscrieri anulate; emailurile sunt puse la coadă."
+        "one": "{count} înscriere anulată; {count} email pus la coadă.",
+        "few": "{count} înscrieri anulate; {count} emailuri puse la coadă.",
+        "other": "{count} de înscrieri anulate; {count} de emailuri puse la coadă."
       },
       "registrationsErased": {
         "one": "{count} înscriere ștearsă definitiv.",
@@ -4021,6 +4022,7 @@
       "honeypotOff": "Honeypot: oprit.",
       "neonPlan": "Plan Neon salvat.",
       "jobCadence": "Interval salvat.",
+      "deadlines": "Termene salvate.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
     }

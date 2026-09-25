@@ -87,9 +87,12 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** Where the browser goes next, with either a success flag or an error code. */
-async function backTo(path: string, outcome: Record<string, string | undefined>): Promise<never> {
-  await flashOutcome(outcome);
+/**
+ * Where the browser goes next, with either a success flag or an error code. `toast` is the
+ * outcome the toast reads when it must differ from the page's banner (`inviteStaffAction`).
+ */
+async function backTo(path: string, outcome: Record<string, string | undefined>, toast: Record<string, string | undefined> = outcome): Promise<never> {
+  await flashOutcome(toast);
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
@@ -790,7 +793,8 @@ export async function sendEventThanksAction(_previous: FormOutcome | null, form:
   try {
     const actor = await requireStaff();
     const result = await sendEventThanks(getDb(), actor, { eventId, url: text(form, "url") }, new Date());
-    outcome = { saved: "thanksSent", recipients: String(result.recipients) };
+    // The real rows (§30): the number the dialog stated, never the test rows written to beside them.
+    outcome = { saved: "thanksSent", recipients: String(result.real) };
   } catch (error) {
     return refused(error, form);
   }
@@ -933,6 +937,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
   const path = getPathname({ locale, href: "/admin/staff" });
 
   let outcome: Record<string, string | undefined>;
+  let toast: Record<string, string | undefined>;
   try {
     // The coarse gate first, so a non-Administrator never reaches the service; the service
     // asserts it again for callers that are not this action.
@@ -950,11 +955,15 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
         ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
         : ({ kind: "unconfigured" } as const);
     outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+    // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
+    // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
+    // says why nobody was invited — no green tick (`notice.ts`, PROVIDER_DONE).
+    toast = env.STAFF_AUTH_MODE === "provider" ? outcome : { saved: "invited" };
   } catch (error) {
     return refused(error, form);
   }
 
-  return backTo(path, outcome);
+  return backTo(path, outcome, toast);
 }
 
 /** The invitation again, for somebody whose first one is lost (§123). */

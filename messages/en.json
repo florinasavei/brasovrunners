@@ -730,7 +730,6 @@
         "few": "{count} emails from the queue are sent now.",
         "other": "{count} emails from the queue are sent now."
       },
-      "emailEach": "Every cancelled registration receives an email.",
       "publishTitle": "Publish “{title}”?",
       "publishBody": "It appears on the site in both languages. An event with registration on the site opens it within its window.",
       "createPublishTitle": "Create and publish the event?",
@@ -743,7 +742,7 @@
       "bulkArchiveTitle": "Archive the ticked events?",
       "bulkArchiveBody": "They disappear from the site in both languages. You can bring them back later, one at a time.",
       "saveNoticeTitle": "Save and tell the participants?",
-      "saveNoticeBody": "The changes are saved, and the participants receive “Details updated” with your note, each in their language.",
+      "saveNoticeBody": "The changes are saved, and the participants receive “Details updated”, each in their language — if the place, the start or the programme changed, or you wrote a note.",
       "cancelEventTitle": "Cancel “{title}”?",
       "cancelEventBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants receive “Event cancelled” with your reason.",
       "cancelEventQuietBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants are not told.",
@@ -793,6 +792,8 @@
       "honeypotOnBody": "A hidden field people never see; a form that fills it in is refused.",
       "honeypotOffTitle": "Turn the honeypot off?",
       "honeypotOffBody": "The field stays and is logged, but refuses nobody any more.",
+      "deadlinesTitle": "Save the deadlines?",
+      "deadlinesBody": "Every hold, offer and link given from now on takes the new numbers, and the emails and pages say them. Nothing already given changes: a link, a held place or an offer keeps the deadline it got.",
       "jobCadenceTitle": "Save the interval?",
       "jobCadenceBody": "The email queue and the maintenance run at most once per chosen interval; an email may wait that long.",
       "neonLimitsTitle": "Save the Neon limits?",
@@ -2325,7 +2326,7 @@
       "incomplete": "Both languages must be complete before publishing. Missing: {detail}.",
       "readOnly": "Your role can read pages but not change them.",
       "delete": "Delete page",
-      "deleteTitle": "Delete this page?",
+      "deleteTitle": "Delete “{title}”?",
       "deleteBody": "The page and both translations go permanently. If it was published and you only want it off the site, use “Archive”.",
       "viewPublic": "View the public page →",
       "columnTitle": "Title",
@@ -3966,9 +3967,9 @@
       "bibsPrinted": "Marked as printed.",
       "bibsUnprinted": "Marked as not printed.",
       "registrationsCancelled": {
-        "one": "{count} registration cancelled; the email is queued.",
-        "few": "{count} registrations cancelled; the emails are queued.",
-        "other": "{count} registrations cancelled; the emails are queued."
+        "one": "{count} registration cancelled; {count} email queued.",
+        "few": "{count} registrations cancelled; {count} emails queued.",
+        "other": "{count} registrations cancelled; {count} emails queued."
       },
       "registrationsErased": {
         "one": "{count} registration erased.",
@@ -4021,6 +4022,7 @@
       "honeypotOff": "Honeypot: off.",
       "neonPlan": "Neon plan saved.",
       "jobCadence": "Interval saved.",
+      "deadlines": "Deadlines saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed."
     }

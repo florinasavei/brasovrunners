@@ -9,8 +9,8 @@ import { countForm } from "@/i18n/count-form";
  *
  * `email(n)`: "Se va trimite un email către {n} participanți" — for a verb that writes to the
  * people registered. `queue(n)`: "Se trimit acum {n} emailuri din coadă" — for the outbox's
- * "Trimite acum", which sends messages, not participants. `each`: for the bulk cancel, whose
- * count is the ticks in the browser and is therefore not a number the server can state.
+ * "Trimite acum", which sends messages, not participants. The bulk cancel's count is the ticks
+ * in the browser, so it hands `Admin.confirm.email` raw to the button (`EmailCount`) instead.
  */
 export async function confirmWords() {
   const t = await getTranslations("Admin");
@@ -19,7 +19,6 @@ export async function confirmWords() {
     cancel: t("confirm.cancel"),
     email: (count: number) => t(`confirm.email.${countForm(count, locale)}`, { count }),
     queue: (count: number) => t(`confirm.emailMessages.${countForm(count, locale)}`, { count }),
-    each: t("confirm.emailEach"),
   };
 }
 

@@ -170,6 +170,9 @@ describe("§NNN the dialog's count is the send's recipients", () => {
     // The dialog states the real one; the test row is written to too, and named apart (§12.6).
     expect(counted).toEqual({ real: 1, test: 1 });
     expect(sent.recipients).toBe(counted.real + counted.test);
+    // The toast and the banner flash `real`: the dialog's number, the test row in neither (§30).
+    expect(sent.real).toBe(counted.real);
+    expect(sent.test).toBe(counted.test);
     const rows = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "EVENT_THANKS"), isNotNull(emailOutbox.participantId)));
     expect(rows).toHaveLength(counted.real + counted.test);
   });

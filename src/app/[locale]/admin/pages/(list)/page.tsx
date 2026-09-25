@@ -218,7 +218,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                     id={`delete-${row.id}`}
                     action={deletePageAction}
                     hidden
-                    confirm={{ title: t("pages.deleteTitle"), body: t("pages.deleteBody", { title: row.title ?? t("pages.untitled") }), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
+                    confirm={{ title: t("pages.deleteTitle", { title: row.title ?? t("pages.untitled") }), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
                   >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="pageId" value={row.id} />

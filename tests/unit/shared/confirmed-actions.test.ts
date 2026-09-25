@@ -9,8 +9,8 @@ import { describe, expect, it } from "vitest";
  * The rule: an action of class (a) — publish, take off the site, archive, cancel an event, tell
  * the participants, resend, cancel / erase / rename a registration, give a place, set a number,
  * approve or withdraw a legal version, add or remove a colleague, delete an album or a picture,
- * drain the outbox, change a plan, a limit, an interval, the contact recipients, the club's
- * copies, an email's wording back to the platform's — is
+ * drain the outbox, change a plan, a limit, an interval, the club's deadlines, the contact
+ * recipients, the club's copies, an email's wording back to the platform's — is
  * posted through a form that asks: an `ActionForm` with `confirm`, or, where one form carries
  * several verbs, a `ConfirmSubmitButton` (which draws the same `ConfirmDialog`). A plain `<form>`
  * counts only when a `ConfirmSubmitButton` is among its children. A form whose question has
@@ -112,6 +112,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateBotCheckAction: [],
   updateJobCadenceAction: [],
   updateNeonLimitsAction: [],
+  // "Termene" (§377): every hold, offer and link given from now on takes the new numbers.
+  updateDeadlinesAction: [],
 };
 
 /**
