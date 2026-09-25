@@ -42,9 +42,10 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
   test("offer the square card for Instagram: the picture as a download, or the share sheet where the browser has one", async ({ page }) => {
     await page.goto(EVENT);
     const main = page.locator("#main");
-    // The server renders the download; a browser that can share a file from a touch screen
-    // turns it into a button once hydrated. Either is the card, and either is a 44px target.
-    const control = main.getByRole("link", { name: /Instagram/ }).or(main.getByRole("button", { name: /Instagram/ }));
+    // The server renders the download ("Descarcă poza"); a browser that can share a file from
+    // a touch screen turns it into a button once hydrated, labelled "Instagram". Either is the
+    // card, and either is a 44px target.
+    const control = main.getByRole("link", { name: /Descarcă poza/ }).or(main.getByRole("button", { name: /Instagram/ }));
     await expect(control).toBeVisible();
     const href = await control.getAttribute("href");
     if (href !== null) {
