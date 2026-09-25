@@ -81,7 +81,7 @@ afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
   gap.hideAddressOnce = false;
-  for (const key of ["PRIVACY_NOTICE", "EVENT_DECLARATION"] as const) {
+  for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
       { locale: "en", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
@@ -148,6 +148,7 @@ const submission = (firstName: string, email: string, when: Date = NOW) => ({
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
@@ -220,7 +221,8 @@ async function secretOf(row: typeof emailOutbox.$inferSelect, when: Date): Promi
 describe("§NNN §389 BR-REQ-036-02 every 'register another person' email keeps its own link", () => {
   const EMAIL = "ana@example.ro";
   const other = (firstName: string, when: Date) => {
-    const posted: Record<string, unknown> = { ...submission(firstName, EMAIL, when) };
+    // An adult on the family link acknowledges the fitness statement rather than making it (§NNN).
+    const posted: Record<string, unknown> = { ...submission(firstName, EMAIL, when), fitnessAcknowledged: true };
     delete posted.email;
     return posted;
   };

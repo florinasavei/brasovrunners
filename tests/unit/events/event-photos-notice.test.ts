@@ -30,6 +30,52 @@ afterEach(() => {
   currentLocale = "ro";
 });
 
+/** The amendment's words, verbatim — the text the counsel review wrote, tags as the catalogue carries them. */
+const AMENDMENT = {
+  ro: "La evenimentele clubului se pot face fotografii și filmări, pe care clubul le publică în galerie și pe canalele sale. Nu vrei să apari? Spune-i fotografului sau scrie-ne și scoatem fotografia, fără să ne spui de ce. Detalii în nota de confidențialitate.",
+  en: "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or write to us and we take the photo down, no reason needed. Details in the privacy notice.",
+} as const;
+const UPLOAD_RULE = {
+  ro: "Nu încărca un portret sau o fotografie în care un copil apare în prim-plan fără acordul scris al persoanei, respectiv cererea scrisă a părintelui (păstrează e-mailul). Cine cere să fie scos: ștergi fotografia în cel mult o lună.",
+  en: "Do not upload a portrait, or a photograph in which a child is the subject, without the person's written agreement or the parent's written request (keep the email). If someone asks to be taken down, delete the photo within a month.",
+} as const;
+
+/** The rendered text alone: tags out, the new-tab hint (a visually hidden span) out. */
+function textOf(html: string): string {
+  return html
+    .replace(/<span[^>]*>[^<]*opens in a new tab[^<]*<\/span>|<span[^>]*>[^<]*se deschide într-o filă nouă[^<]*<\/span>/g, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+describe("the photographs amendment's words", () => {
+  it("are the event page's notice, verbatim, in both languages — the objection at collection and «filmări» included", async () => {
+    const ro = (await import("../../../messages/ro.json")).default;
+    const en = (await import("../../../messages/en.json")).default;
+    for (const [locale, messages] of [["ro", ro], ["en", en]] as const) {
+      expect(messages.Event.photosNotice.replace(/<\/?(contact|privacy)>/g, ""), locale).toBe(AMENDMENT[locale]);
+    }
+    expect(ro.Event.photosNotice).toContain("<contact>scrie-ne</contact>");
+    expect(en.Event.photosNotice).toContain("<privacy>privacy notice</privacy>");
+  });
+
+  it("end the gallery's upload help with the upload rule, verbatim, in both languages", async () => {
+    const ro = (await import("../../../messages/ro.json")).default;
+    const en = (await import("../../../messages/en.json")).default;
+    expect(ro.Admin.gallery.uploadHelp.endsWith(UPLOAD_RULE.ro)).toBe(true);
+    expect(en.Admin.gallery.uploadHelp.endsWith(UPLOAD_RULE.en)).toBe(true);
+  });
+
+  it("render as the notice reads, in each language", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      currentLocale = locale;
+      expect(textOf(renderToStaticMarkup(await EventPhotosNotice())), locale).toContain(AMENDMENT[locale].slice(0, 60));
+    }
+  });
+});
+
 describe("EventPhotosNotice", () => {
   it("names a way to object and links the privacy notice — Romanian", async () => {
     const html = renderToStaticMarkup(await EventPhotosNotice());

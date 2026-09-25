@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEADLINE_RULES, DEFAULT_DEADLINES, publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
+import { DEADLINE_RULES, DEFAULT_DEADLINES, deadlinesSettingSchema, publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
 
 /**
  * §NNN — a public participant list closes by itself, the club's number of days after the event
@@ -31,11 +31,19 @@ afterEach(() => {
 });
 
 describe("§NNN the public list's period", () => {
-  it("is thirty days by default, one to ninety, and counts from the end when the event has one", () => {
+  it("is thirty days by default, one to 365, and counts from the end when the event has one", () => {
     expect(DEFAULT_DEADLINES.publicListDays).toBe(30);
-    expect(DEADLINE_RULES.publicListDays).toMatchObject({ unit: "days", min: 1, max: 90 });
+    expect(DEADLINE_RULES.publicListDays).toMatchObject({ unit: "days", min: 1, max: 365 });
     expect(publicListClosesAt({ startsAt, endsAt }, DEFAULT_DEADLINES)).toEqual(new Date(endsAt.getTime() + 30 * DAY));
     expect(publicListClosesAt({ startsAt, endsAt: null }, { publicListDays: 7 })).toEqual(new Date(startsAt.getTime() + 7 * DAY));
+  });
+
+  it("takes a year at most on a «Termene» save, and refuses a day more or none", () => {
+    const valid = { ...DEFAULT_DEADLINES };
+    expect(deadlinesSettingSchema.safeParse({ ...valid, publicListDays: 365 }).success).toBe(true);
+    expect(deadlinesSettingSchema.safeParse({ ...valid, publicListDays: 366 }).success).toBe(false);
+    expect(deadlinesSettingSchema.safeParse({ ...valid, publicListDays: 0 }).success).toBe(false);
+    expect(publicListClosesAt({ startsAt, endsAt }, { publicListDays: 365 })).toEqual(new Date(endsAt.getTime() + 365 * DAY));
   });
 
   it("is open up to the instant it closes, and shut after it", () => {

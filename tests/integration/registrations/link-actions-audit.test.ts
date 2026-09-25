@@ -57,7 +57,7 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
-  for (const key of ["PRIVACY_NOTICE", "EVENT_DECLARATION"] as const) {
+  for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
       { locale: "en", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
@@ -111,6 +111,7 @@ function registrationForm(firstName: string, email: string): FormData {
     emergencyContactPhone: "0722222222",
     emergencyContactPhoneCountry: "RO",
     fitnessDeclared: "on",
+    termsAccepted: "on",
     rulesAcknowledged: "on",
     privacyAcknowledged: "on",
     honeypot: "",

@@ -87,7 +87,7 @@
     "backToEvents": "Back to events",
     "editInBackoffice": "Edit",
     "opensInNewTab": "opens in a new tab",
-    "photosNotice": "Photos are taken at this event and published in the gallery and on the club's channels. Recognise yourself and want one taken down? <contact>Write to us</contact> and we remove it, no reason needed — see our <privacy>privacy notice</privacy>.",
+    "photosNotice": "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or <contact>write to us</contact> and we take the photo down, no reason needed. Details in the <privacy>privacy notice</privacy>.",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
@@ -2630,7 +2630,7 @@
       "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
       "photos": "Photos ({count})",
       "upload": "Upload photos",
-      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover. Once published, each event page names the way someone can ask for a photo to be taken down.",
+      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover. Do not upload a portrait, or a photograph in which a child is the subject, without the person's written agreement or the parent's written request (keep the email). If someone asks to be taken down, delete the photo within a month.",
       "uploading": "Uploading {done} of {total}…",
       "uploaded": "{total} photos uploaded.",
       "uploadFailed": "Could not upload: {names}",
@@ -3704,7 +3704,8 @@
     },
     "terms": {
       "accept": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
-      "missing": "We cannot take registrations just now: the club has no approved terms and conditions yet. Please come back soon."
+      "missing": "We cannot take registrations just now: the club has no approved terms and conditions yet. Please come back soon.",
+      "changed": "The terms and conditions changed while you were filling in the form. Read the version named below and tick the box again."
     }
   },
   "Registrations": {

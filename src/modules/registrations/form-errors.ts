@@ -77,3 +77,28 @@ export const ERROR_SUMMARY_ID = "registration-errors";
  * `signDeclarationAction` and the page that renders the target, for the same reason as above.
  */
 export const DECLARATION_ERROR_SUMMARY_ID = "declaration-errors";
+
+/**
+ * The terms tick after a refused submit (§NNN).
+ *
+ * The draft cookie brings every tick back as it was posted (§142, §315) — right for a refusal
+ * about something else, wrong for this one: when the refusal names `termsAccepted`, either the box
+ * was not ticked, or it was ticked under a version that is no longer the one in force (the
+ * service's `termsVersionShown` check). Ticked again by the page, the second case would record an
+ * acceptance of a text the reader's tick never named. So a refusal naming the tick always brings
+ * it back **unticked**, and `changed` says whether it was the version that moved — the draft's
+ * posted tick, or its posted version differing from the one in force now — so the page can say
+ * so above the box. A draft dropped for its size leaves `changed` false: the box is still unticked
+ * and the summary still names it.
+ */
+export function acceptanceAfterRefusal(input: {
+  invalid: ReadonlySet<string>;
+  draft: Readonly<Record<string, string>> | null;
+  versionInForce: number | null;
+}): { ticked: boolean; changed: boolean } {
+  const { invalid, draft, versionInForce } = input;
+  if (!invalid.has("termsAccepted")) return { ticked: draft?.termsAccepted === "on", changed: false };
+  const postedVersion = draft?.termsVersionShown === undefined ? null : Number(draft.termsVersionShown);
+  const versionMoved = postedVersion !== null && versionInForce !== null && postedVersion !== versionInForce;
+  return { ticked: false, changed: draft?.termsAccepted === "on" || versionMoved };
+}

@@ -33,7 +33,7 @@ import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/p
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
-import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
+import { acceptanceAfterRefusal, ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
 import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice";
@@ -324,6 +324,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   happened to exist in the catalogue.
 */
   const prefill = (name: string, fallback?: string) => draft?.[name] ?? fallback;
+  /*
+    The terms tick is the one box the draft does not simply bring back (§NNN): a refusal naming it
+    returns it unticked, and says so when the version in force moved (`acceptanceAfterRefusal`).
+  */
+  const acceptance = acceptanceAfterRefusal({ invalid, draft, versionInForce: termsVersion });
   const field = (name: string, help?: string) => ({
     id: fieldId(name),
     name,
@@ -1271,7 +1276,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   between the render and the submit, rather than silently recording the newer
                   one under an older tick. */}
               {termsVersion !== null && <input type="hidden" name="termsVersionShown" value={termsVersion} />}
-              <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required defaultChecked={prefill("termsAccepted") === "on"}>
+              {/* A refusal about the tick never brings it back ticked (§NNN): a version that moved
+                  between the render and the submit is said here, above the box, and read anew. */}
+              {acceptance.changed && (
+                <Alert severity="warning" sx={{ mb: 1 }} data-testid="registration-terms-changed">
+                  {t("terms.changed")}
+                </Alert>
+              )}
+              <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required defaultChecked={acceptance.ticked}>
                 {t.rich("terms.accept", {
                   version: termsVersion ?? "—",
                   // The words as one string: `LegalLink` names itself from a string child.

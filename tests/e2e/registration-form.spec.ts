@@ -189,6 +189,41 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
   });
 
+  test("a tick given under terms that changed comes back unticked, says so, and the next tick is taken", async ({ page }) => {
+    /*
+      §NNN. The service refuses a tick whose rendered version (`termsVersionShown`) is no longer the
+      one in force; the draft cookie brings every other box back as posted, but this one must come
+      back unticked, or the runner accepts a version they never saw. A newer version approved in
+      another tab is what happens in life; here the posted version is moved one ahead instead.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    const shown = page.locator('input[type="hidden"][name="termsVersionShown"]');
+    const inForce = Number(await shown.inputValue());
+    expect(inForce).toBeGreaterThan(0);
+    await shown.evaluate((node, version) => ((node as HTMLInputElement).value = String(version)), inForce + 1);
+
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+
+    await expect(page).toHaveURL(/fields=termsAccepted/);
+    await expect(page.getByTestId("registration-terms-changed")).toBeVisible();
+    await expect(page.locator('[name="termsAccepted"]')).not.toBeChecked();
+    // Every other tick is the draft's, as posted (§142).
+    await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
+    await expect(page.locator('[name="fitnessDeclared"]')).toBeChecked();
+    await expect(shown).toHaveValue(String(inForce));
+
+    await page.locator('[name="termsAccepted"]').check();
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+  });
+
   test("refuses a paste into the second address box, and offers a way through", async ({ page }) => {
     /*
       §227. The paste that matters is from the box above — copy, paste, and the second box has
