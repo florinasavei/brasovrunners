@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.93-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.94-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -160,8 +160,7 @@ sections and in `CHANGELOG.md`.
   A **minor's declaration is signed by the minor and the parent**, each with their own identity document, once the declaration in force names `{{participantIdDocument}}` — until the club approves such a text, the parent signs alone as before (§330). The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99), the identity document masked (§320).
 - A **family on one address** (§389): the form sent again with another name creates nothing and emails the address a single-use link
   to register the other person, the address fixed; the club's limit per address is in "Termene" (default 4); each person confirms, signs
-  and gets their own QR code. It switches on by itself when `BR-V1.94`'s contract migration drops `registrations_event_participant_unique`
-  (migration `0072` is the expand).
+  and gets their own QR code. It is on since `BR-V1.94` (migration `0073` dropped `registrations_event_participant_unique`; §390).
 - Race numbers in registration order from the event's own first number (§173, reversing §94),
   never reused; a picture of every bib, a bib
   sheet, and the small print the club composes per event — one or two lines, the same on the paper and the preview (§317); a preferential number typed by hand among the free ones, emailed to the runner
@@ -287,6 +286,9 @@ sections and in `CHANGELOG.md`.
   address a single-use link to register the other person, the address fixed; the club's limit per address in "Termene" (default 4); each
   person confirms, signs and gets their own QR code; dormant until `BR-V1.94`'s contract migration drops the old one-per-address index
   (§389, migration `0072`) · the share picture's button says "Descarcă poza" / "Download the picture".
+- **Batch 18 (2026-09-25, `BR-V1.94`):** the family flow is open — the contract migration `0073` drops the old one-registration-per-address
+  index; the gate reads the catalogue, so the flow switched itself on with no setting; the privacy-notice template says whose data is entered
+  and whose inbox receives the messages; `migrations:check` still misses `DROP CONSTRAINT` as a contract (a chore) (§390).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -381,8 +383,8 @@ it is the authority, this is the summary):
 14. **The privacy notice, once more** — the template now says a person may register someone else on their own address, entering
     that person's data on their behalf and receiving their messages (§389); the notice in force on production says none of it until
     the club approves a new version from the platform's text (`/admin/legal`, the same click as item 8).
-15. **The family flow's contract release, `BR-V1.94`** — one contract-only migration drops `registrations_event_participant_unique`;
-    until it is on production the family flow is dormant (the form, the guide and the steps line say so), with no setting to touch.
+15. ~~**The family flow's contract release, `BR-V1.94`**~~ — done 2026-09-25 (§390): — one contract-only migration drops `registrations_event_participant_unique`;
+    the flow is on wherever migration `0073` ran; production got it with this release. What is left is item 14, the notice.
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

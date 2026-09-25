@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.93-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.93-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.94-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15840,3 +15840,17 @@ This round of fixes answers three review findings on the family-registration bra
 3. `tests/concurrency/family.test.ts`'s `afterAll` no longer trusts a local `droppedLegacyConstraint` flag to decide whether to put the legacy constraint back. It now re-reads the constraint catalogue with `familyRegistrationOpen(db)` after deleting the suite's own rows, so a run that crashed between dropping the constraint and reaching this teardown — this run's crash or an earlier run's — still leaves the shared concurrency database with the constraint restored the next time anything runs against it. The now-unused `droppedLegacyConstraint` variable and its one assignment were removed along with it.
 
 Baseline `BR-V1.93-2026-09-25`.
+
+## 390. The family flow opens: the contract migration drops the one-registration-per-address index
+
+**2026-09-25, the release right after the one that carried migration `0072`.** BR-V1.93 shipped the family flow (a family on one address, through the inbox) as an expand: the runner's name key, its backfill and the new unique index `registrations_event_participant_name_unique` — and kept the old index `registrations_event_participant_unique` (one registration per event and participant), because a migration expands or contracts, never both (AGENTS.md §7.6). The code shipped with a gate, `registrations/family-gate.ts`, that reads `pg_constraint` at runtime and keeps the flow dormant while the old index exists: the form, the steps line and the staff guide said so.
+
+**Decision.** Migration `0073_drop_registration_participant_unique` is one statement, `ALTER TABLE "registrations" DROP CONSTRAINT "registrations_event_participant_unique"`, and nothing else. No code changes: the gate reads the catalogue, so the moment the migration runs on an environment the family flow is on there — no setting, no deploy of its own beyond the release that carries the migration. The surviving guarantee is the name-keyed index: the same runner (the same folded name) never has two registrations for one event on one address; two runners on one address may.
+
+**Proof.** `yarn test:concurrency` runs the family cases against the real post-contract schema (two members of one family pressing the public form at once → one registration; five emailed links pressed at once with one slot left → one registration and four refusals at the club's limit); the PGlite suites apply 0000–0073 from scratch; `resubmitted.test.ts`'s database-level refusal now names the name-keyed index and sets the name key on the duplicate row, because PostgreSQL treats NULL as distinct in a unique index.
+
+**Tooling gap found.** `scripts/migration-check.mjs` classifies a migration as a contract by `DROP (COLUMN|TABLE|TYPE)`, `RENAME`, `ALTER COLUMN … TYPE` and `SET NOT NULL`; `DROP CONSTRAINT` is not in the list, so this migration passed as neither — the branch carries the `-- contract:` note by hand. The check gains `DROP CONSTRAINT` and `DROP INDEX` as a chore (docs/QUEUE.md).
+
+**Still owed by the club.** The privacy notice in force on production must describe the flow before people use it: the template's sentence shipped with BR-V1.93; the club approves a new version from the platform's text in `/admin/legal` (CLAUDE.md "Still owed", item 14).
+
+Baseline `BR-V1.94-2026-09-25`.
