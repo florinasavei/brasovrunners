@@ -841,17 +841,19 @@ describe("§404 the night sentences name the start, the sunset and the end", () 
   // §NNN: the tooltip says only the sunset — the owner, 2026-09-25, "pe tooltip trebuie doar să
   // zic când apune soarele" — whatever shape §404 picks for the calendar, the `.ics` and the
   // reminder. Every shape here shares the same day's sunset, "19:00", except "january" (16:57).
+  // "dawn" and "january" are both pre-dawn starts (§404's `Dawn` shape): the sunset is hours
+  // after the run ends, so the tooltip names the sunrise instead (§NNN).
   it.each([
     ["ro", "start", "Soarele apune la 19:00"],
     ["ro", "end", "Soarele apune la 19:00"],
     ["ro", "programme", "Soarele apune la 19:00"],
-    ["ro", "dawn", "Soarele apune la 19:00"],
+    ["ro", "dawn", "Soarele răsare la 07:14"],
     ["en", "start", "The sun sets at 19:00"],
     ["en", "end", "The sun sets at 19:00"],
     ["en", "programme", "The sun sets at 19:00"],
-    ["en", "dawn", "The sun sets at 19:00"],
-    ["ro", "january", "Soarele apune la 16:57"],
-    ["en", "january", "The sun sets at 16:57"],
+    ["en", "dawn", "The sun rises at 07:14"],
+    ["ro", "january", "Soarele răsare la 07:55"],
+    ["en", "january", "The sun rises at 07:55"],
   ] as const)("the pill's tooltip, %s, %s", (locale, shape, words) => {
     expect(nightTooltip(shapes[shape], tr(locale === "ro" ? ro : en, locale))).toBe(words);
   });

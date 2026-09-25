@@ -145,6 +145,7 @@
       "pill": "Eveniment de noapte",
       "runPill": "Alergare de noapte",
       "tooltip": "Soarele apune la {sunset}",
+      "tooltipDawn": "Soarele răsare la {sunrise}",
       "times": "începe la {start}, apusul la {sunset}",
       "timesEnd": "începe la {start}, apusul la {sunset}, se termină la {end}",
       "timesEndProgramme": "începe la {start}, apusul la {sunset}, ultimul punct din program la {end}",
