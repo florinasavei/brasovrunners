@@ -2,7 +2,7 @@ import { z } from "zod";
 import { raceWeek } from "@/modules/events/domain/race-week";
 
 /**
- * The club's deadlines — "Termene" (§NNN; the owner, 2026-09-24: "Why is this reminder
+ * The club's deadlines — "Termene" (§377; the owner, 2026-09-24: "Why is this reminder
  * hardcoded?", then "this needs to be a configuration!", and, asked which ones: all of them).
  *
  * Every participant-facing timing the platform used to keep as a constant, as one club setting
@@ -87,7 +87,7 @@ export const DEFAULT_DEADLINES: Deadlines = Object.freeze(
 /** The per-event reminder's column bounds (`events.reminder_hours_before`): 0 is "no reminder". */
 export const EVENT_REMINDER_MAX_HOURS = DEADLINE_RULES.reminderHours.max;
 
-/** The editor's choices for one event (§NNN), besides "as usual" (null) and "no reminder" (0). */
+/** The editor's choices for one event (§377), besides "as usual" (null) and "no reminder" (0). */
 export const EVENT_REMINDER_CHOICES = [24, 48, 72] as const;
 
 /**
@@ -145,7 +145,7 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 /**
- * When an email link sent now lapses unconfirmed (§NNN): stored on the registration at the moment
+ * When an email link sent now lapses unconfirmed (§377): stored on the registration at the moment
  * it is created (`registrations.email_link_expires_at`), so a later change of the setting never
  * moves a deadline somebody was already told.
  */
@@ -188,7 +188,7 @@ export function selfCheckinOpensAt(startsAt: Date, deadlines: Pick<Deadlines, "s
 
 /**
  * Whether an event is inside race week — the backoffice's "print the bibs now" attention (§311).
- * Counted exactly as the public countdown counts it (`events/domain/race-week.ts#raceWeek`, §NNN):
+ * Counted exactly as the public countdown counts it (`events/domain/race-week.ts#raceWeek`, §377):
  * whole calendar days on the event's own wall clock, the start still ahead. So "0 = on race day
  * only", as the setting's help says, is what both do — the bib card and the homepage open on the
  * same morning.

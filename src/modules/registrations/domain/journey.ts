@@ -7,7 +7,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
  * declaration, if he checked in and picked up his bib" — and, on the order, "there should be
  * a 'place reserved' first, then declaration signed and then 'place confirmed'". That is the
  * lifecycle of AGENTS.md §10.5 read forwards: the form, the email link, a place held (the
- * club's hold (§NNN), the participation window, or a waiting-list offer), the declaration, the
+ * club's hold (§377), the participation window, or a waiting-list offer), the declaration, the
  * confirmation, the desk.
  *
  * Pure: one row in, six steps out, no clock and no catalogue. Every word is a key, and the

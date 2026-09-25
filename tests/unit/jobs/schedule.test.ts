@@ -169,7 +169,7 @@ describe("§334 the five-minute slots", () => {
 
 describe("§334 when a registration change can matter to the maintenance job", () => {
   const day = 24 * 60 * 60_000;
-  // The reminder lead in force for the event — the club's forty-eight hours unset (§NNN).
+  // The reminder lead in force for the event — the club's forty-eight hours unset (§377).
   const race = { startsAt: new Date(RAN.getTime() + 30 * day), registrationClosesAt: null, reminderHours: 48 };
 
   it("is the hold the change created, on a race weeks away", () => {
@@ -180,7 +180,7 @@ describe("§334 when a registration change can matter to the maintenance job", (
     expect(maintenanceDueFor(race, RAN)).toEqual(new Date(race.startsAt.getTime() - 2 * day));
   });
 
-  it("is the event's own reminder lead, and has no reminder instant when it sends none (§NNN)", () => {
+  it("is the event's own reminder lead, and has no reminder instant when it sends none (§377)", () => {
     // Seventy-two hours chosen on the event: three days before the start.
     expect(maintenanceDueFor({ ...race, reminderHours: 72 }, RAN)).toEqual(new Date(race.startsAt.getTime() - 3 * day));
     // No reminder: the close is the start here, so the start is the next instant.

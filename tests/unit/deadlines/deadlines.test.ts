@@ -20,7 +20,7 @@ import {
 } from "@/modules/deadlines/domain/deadlines";
 
 /**
- * §NNN — the club's deadlines ("Termene"): one setting for the seven participant-facing timings
+ * §377 — the club's deadlines ("Termene"): one setting for the seven participant-facing timings
  * that were constants. What is protected here: unset means exactly the constants they replaced,
  * so nothing changes on a deployment until an Administrator changes it; a save is refused outside
  * the bounds, blank, fractional or with a key this code does not know; a stored value this code
@@ -32,7 +32,7 @@ const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-describe("§NNN the club's deadlines, unset", () => {
+describe("§377 the club's deadlines, unset", () => {
   it("are the constants they replaced: 48 h link, 30 min hold, 24 h offer, 48 h reminder, 24 h check-in, 7-day race week, 56-day horizon", () => {
     expect(DEFAULT_DEADLINES).toEqual({
       confirmationHours: 48,
@@ -60,7 +60,7 @@ describe("§NNN the club's deadlines, unset", () => {
   });
 });
 
-describe("§NNN a save", () => {
+describe("§377 a save", () => {
   const valid = { ...DEFAULT_DEADLINES };
 
   it("takes whole numbers or the digits a form box posts", () => {
@@ -95,7 +95,7 @@ describe("§NNN a save", () => {
   });
 });
 
-describe("§NNN a stored value this code cannot fully read", () => {
+describe("§377 a stored value this code cannot fully read", () => {
   it("is today's constants when absent or not an object", () => {
     expect(readDeadlinesValue(null)).toEqual(DEFAULT_DEADLINES);
     expect(readDeadlinesValue("48")).toEqual(DEFAULT_DEADLINES);
@@ -116,7 +116,7 @@ describe("§NNN a stored value this code cannot fully read", () => {
   });
 });
 
-describe("§NNN the timings: one function each, the only arithmetic on these numbers", () => {
+describe("§377 the timings: one function each, the only arithmetic on these numbers", () => {
   it("the email link lapses the club's hours after now", () => {
     expect(emailLinkExpiresAt(NOW, DEFAULT_DEADLINES)).toEqual(new Date(NOW.getTime() + 48 * HOUR));
     expect(emailLinkExpiresAt(NOW, { confirmationHours: 12 })).toEqual(new Date(NOW.getTime() + 12 * HOUR));
@@ -153,7 +153,7 @@ describe("§NNN the timings: one function each, the only arithmetic on these num
     expect(withinRaceWeek(at(new Date(NOW.getTime() - HOUR)), NOW, DEFAULT_DEADLINES)).toBe(false);
   });
 
-  it("race week counts calendar days on the event's wall clock, as the public countdown does (§NNN)", () => {
+  it("race week counts calendar days on the event's wall clock, as the public countdown does (§377)", () => {
     const zone = "Europe/Bucharest";
     // Saturday 07:00 in Brașov (05:00 UTC in November); the race-day morning and the evening before.
     const race = { startsAt: new Date("2026-11-21T05:00:00.000Z"), timezone: zone };

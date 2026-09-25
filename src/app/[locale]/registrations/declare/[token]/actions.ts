@@ -54,7 +54,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     // Signed: a draft kept by an earlier refused press has nothing left to fill in.
     await clearFormDraft(path);
     /*
-      "What is next" says when the reminder comes (§NNN): this event's own lead, or the club's, as
+      "What is next" says when the reminder comes (§377): this event's own lead, or the club's, as
       whole hours in the address — the page has spent its token and reads nothing else. Only words
       on the runner's own page depend on it; the page bounds it and falls back to the club's number.
     */

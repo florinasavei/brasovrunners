@@ -91,7 +91,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
   const { error } = await searchParams;
   const declarations = await listApprovedVersions(getDb(), "EVENT_DECLARATION", locale);
-  // The club's deadlines (§NNN): the reminder an event left "as usual" gets, and how far ahead a series is created.
+  // The club's deadlines (§377): the reminder an event left "as usual" gets, and how far ahead a series is created.
   const deadlines = await deadlinesForThisRequest();
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
   const t = await getTranslations("Admin");

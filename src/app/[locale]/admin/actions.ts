@@ -258,7 +258,7 @@ function eventFieldsFrom(form: FormData) {
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`).
     minAge: value("minAge"),
-    // The event's own reminder lead (§NNN), only when the form carried its select: the empty
+    // The event's own reminder lead (§377), only when the form carried its select: the empty
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),

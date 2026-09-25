@@ -369,7 +369,7 @@ export const registrations = pgTable(
 
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     /**
-     * When the email link of this cycle lapses unconfirmed (§NNN): written when the registration
+     * When the email link of this cycle lapses unconfirmed (§377): written when the registration
      * enters `PENDING_EMAIL_CONFIRMATION` — the first submission and a restart alike — from the
      * club's "Termene" in force at that moment, and never rewritten by a later change of it.
      * Null on rows written before the column: they lapse at `submitted_at` plus the setting, as

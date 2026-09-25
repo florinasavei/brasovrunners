@@ -151,7 +151,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
 }
 
 /**
- * "Termene" — the club's deadlines (§NNN). Administrator at the door and in the service, like
+ * "Termene" — the club's deadlines (§377). Administrator at the door and in the service, like
  * every other setting on this page; every box is a whole number the service checks against its
  * bounds, and a refusal comes back as the form's state with every box as typed (§315). The seven
  * boxes post under their own names (`DEADLINE_KEYS`), read here as strings: the service's schema

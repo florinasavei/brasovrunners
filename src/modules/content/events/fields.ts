@@ -727,7 +727,7 @@ export const eventFieldsSchema = z
      */
     minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: 0, max: 99 }),
     /**
-     * How many hours before the start this event's reminder goes (§81, §NNN): empty is "as usual"
+     * How many hours before the start this event's reminder goes (§81, §377): empty is "as usual"
      * — the club's number from "Termene", stored as null — zero is no reminder, anything else this
      * event's own, within the column's CHECK. The editor offers four choices (24, 48, 72, none)
      * beside "as usual"; any whole number in the bounds is accepted, so a value a script stored is

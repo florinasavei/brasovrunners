@@ -21,7 +21,7 @@ export function daysUntilOnWallClock(startsAt: Date, now: Date, timeZone: string
 /**
  * Whether the event is within race week — the last days before it, during which the homepage
  * counts down (`DECISIONS.md` §78): still ahead, and starting within the club's number of calendar
- * days (seven unless changed, §NNN). Null otherwise — an event that has started is the desk's
+ * days (seven unless changed, §377). Null otherwise — an event that has started is the desk's
  * business, and one further out is an ordinary listing.
  */
 export function raceWeek(

@@ -37,7 +37,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
 }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
-  // The hold and the offer the help sentences name: the club's (§NNN), the lengths new ones get.
+  // The hold and the offer the help sentences name: the club's (§377), the lengths new ones get.
   const words = deadlineWords(locale, await deadlinesForThisRequest());
   /*
     Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§349), and

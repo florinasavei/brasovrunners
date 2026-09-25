@@ -366,7 +366,7 @@ export async function cachedBotCheckSiteKey(): Promise<string | undefined> {
 }
 
 /**
- * The club's deadlines (§NNN) for the public pages that state them — the form's five steps, the
+ * The club's deadlines (§377) for the public pages that state them — the form's five steps, the
  * countdown on the listing, the "check your email" screen, the terms and the privacy notice — from
  * the data cache, so a visitor reading "the link is valid 48 hours" wakes nothing. A save expires
  * it (`updateDeadlines`). When the database cannot answer, today's constants: the same numbers an

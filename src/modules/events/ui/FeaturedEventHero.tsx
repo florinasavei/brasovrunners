@@ -36,13 +36,13 @@ export default async function FeaturedEventHero({
 }: {
   event: PublicEvent;
   now: Date;
-  /** How many days before the start the countdown shows — the club's "Termene" (§NNN), read by the page. */
+  /** How many days before the start the countdown shows — the club's "Termene" (§377), read by the page. */
   raceWeekDays: number;
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   const locale = await getLocale();
-  // The last days before the start (`DECISIONS.md` §78; seven unless the club changed it, §NNN):
+  // The last days before the start (`DECISIONS.md` §78; seven unless the club changed it, §377):
   // a countdown line, counted on the event's own calendar, above the button — the one thing a
   // visitor wants to know that week.
   const week = raceWeek(event, now, { raceWeekDays });
@@ -105,7 +105,7 @@ export default async function FeaturedEventHero({
           sx={{ fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main", mb: 2 }}
         >
           {t(week.days === 0 ? "raceWeek.today" : week.days === 1 ? "raceWeek.tomorrow" : "raceWeek.inDays", {
-            // "3 zile", "20 de zile" — the noun agreeing with the number (§NNN: race week can be three weeks now).
+            // "3 zile", "20 de zile" — the noun agreeing with the number (§377: race week can be three weeks now).
             days: durationPhrase(locale, week.days, "days"),
             // "În 3 zile, sâmbătă, 21 nov. 2026, 10:00" — after the comma, lower case (§349).
             when: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),

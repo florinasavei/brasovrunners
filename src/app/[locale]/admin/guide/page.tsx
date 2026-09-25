@@ -42,7 +42,7 @@ export default async function GuidePage({ params }: Props) {
   const others = all.filter((section) => !section.roles.includes(staffUser.role));
   const sections = [...mine, ...others];
   /*
-    The deadlines the steps name — "{hold}", "{offer}", "{checkin}" — are the club's (§NNN), filled
+    The deadlines the steps name — "{hold}", "{offer}", "{checkin}" — are the club's (§377), filled
     into the catalogue's raw lines here, since `t.raw` hands the sentences over unformatted.
   */
   const words = deadlineWords(locale, await deadlinesForThisRequest());

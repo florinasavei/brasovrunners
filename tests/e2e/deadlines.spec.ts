@@ -5,7 +5,7 @@ import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN — "Termene" on `/admin/emails`: the club's deadlines, one box each, the Administrator's.
+ * §377 — "Termene" on `/admin/emails`: the club's deadlines, one box each, the Administrator's.
  *
  * One round trip that ends where it began: the defaults are read, one deadline is changed and read
  * back in the panel's line and in the reminder's when-line under it. The defaults come back in an
@@ -50,7 +50,7 @@ async function restoreDefaults(browser: Browser, defaults: Record<string, string
     await context.close();
   }
 }
-test.describe("§NNN the club's deadlines on /admin/emails", () => {
+test.describe("§377 the club's deadlines on /admin/emails", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });

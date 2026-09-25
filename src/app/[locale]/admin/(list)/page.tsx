@@ -139,7 +139,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const db = getDb();
   const now = new Date();
-  // How far ahead a series keeps its dates — the club's number (§NNN) — for the lines that say so.
+  // How far ahead a series keeps its dates — the club's number (§377) — for the lines that say so.
   const deadlines = await deadlinesForThisRequest();
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
   const [events, entriesByEvent, deskByEvent] = await Promise.all([

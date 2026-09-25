@@ -266,7 +266,7 @@ test.describe("§336 the emails participants receive, as a card of cards", () =>
     // Each card's summary: the message's name, as a heading under the card's, and when it goes out.
     const reminder = card.locator("#email-EVENT_REMINDER");
     await expect(reminder.getByRole("heading", { name: "Reminderul dinaintea startului", level: 3 })).toBeVisible();
-    // The club's lead in words (§NNN): two days, unset.
+    // The club's lead in words (§377): two days, unset.
     await expect(reminder.locator(":scope > summary")).toContainText("cu 2 zile înainte de start");
     await openFold(reminder);
     await expect(reminder.locator("iframe")).toBeVisible();

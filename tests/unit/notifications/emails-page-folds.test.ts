@@ -26,7 +26,7 @@ const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/st
 
 const TYPES = emailMessageType.enumValues as readonly EmailMessageType[];
 
-/** The page fills the club's deadlines into the when-lines (§NNN); these are the unset ones' words. */
+/** The page fills the club's deadlines into the when-lines (§377); these are the unset ones' words. */
 const DEADLINE_WORDS: Record<string, string> = { confirmation: "48 de ore", hold: "30 de minute", offer: "24 de ore", reminder: "2 zile" };
 const filled = (template: string) => template.replace(/\{(\w+)\}/g, (whole, name: string) => DEADLINE_WORDS[name] ?? whole);
 

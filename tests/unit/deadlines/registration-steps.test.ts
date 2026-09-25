@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN × §91 — the five steps on the form and the event page promise exactly what the allocator
+ * §377 × §91 — the five steps on the form and the event page promise exactly what the allocator
  * keeps: the club's link, hold and offer, and this event's reminder — in words that agree with the
  * number — read through the public data cache, never from a constant.
  */
@@ -25,7 +25,7 @@ async function render(props: Parameters<typeof RegistrationSteps>[0]): Promise<s
   return renderToStaticMarkup((await RegistrationSteps(props)) as ReactElement).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the five steps say the club's numbers", () => {
+describe("§377 the five steps say the club's numbers", () => {
   beforeEach(() => {
     deadlines.reminderHours = 48;
   });

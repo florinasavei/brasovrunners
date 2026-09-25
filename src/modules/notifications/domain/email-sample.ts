@@ -52,11 +52,11 @@ export function emailSampleWhen(locale: EmailLocale): string {
   return sampleMoment(EMAIL_SAMPLE_STARTS_AT, locale);
 }
 
-/** The four deadline fields of the closed set (§NNN). */
+/** The four deadline fields of the closed set (§377). */
 export type EmailSampleDeadlines = Pick<EmailSampleValues, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours">;
 
 /**
- * The club's deadlines as the four fields' values, in one language (§NNN) — through the branch's one
+ * The club's deadlines as the four fields' values, in one language (§377) — through the branch's one
  * words helper (`deadlineWords`), which says each duration exactly as `templates.ts` fills the field
  * at send time: "48 de ore", "30 de minute", "24 de ore", "2 zile". Empty for a reminder the club
  * does not send, as the message leaves it (a paragraph with only it is then not sent).
@@ -86,7 +86,7 @@ export type EmailSampleValues = {
   /** The hold's deadline and the time of signing (§104, §95), so every field of the set has a sample value (§373). */
   holdExpiresAtFormatted: string;
   signedAtFormatted: string;
-  /** The club's deadlines as words (§NNN), from `DEFAULT_DEADLINES` (`emailSampleDeadlines`). */
+  /** The club's deadlines as words (§377), from `DEFAULT_DEADLINES` (`emailSampleDeadlines`). */
   confirmationHours: string;
   holdMinutes: string;
   offerHours: string;

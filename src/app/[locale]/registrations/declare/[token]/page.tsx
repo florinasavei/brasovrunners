@@ -46,7 +46,7 @@ type Props = {
 };
 
 /**
- * The reminder lead the signature's redirect named (§NNN) — this event's own, or the club's — as
+ * The reminder lead the signature's redirect named (§377) — this event's own, or the club's — as
  * whole hours inside the column's bounds; anything else in the address is the club's number. Only
  * words on this page depend on it.
  */
@@ -56,7 +56,7 @@ function reminderHours(param: string | undefined, deadlines: Deadlines): number 
 }
 
 /**
- * "What is next", with the reminder's lead in words (§NNN): the line that names it is filled in,
+ * "What is next", with the reminder's lead in words (§377): the line that names it is filled in,
  * and dropped when the event sends no reminder — a promise nobody keeps is worse than none.
  */
 function nextLines(lines: readonly string[], locale: string, hours: number): string[] {
@@ -449,7 +449,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
-              // The club's deadlines, should the declaration name one (§NNN) — as the PDF fills them.
+              // The club's deadlines, should the declaration name one (§377) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
             }}
           />

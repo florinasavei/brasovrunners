@@ -12,7 +12,7 @@ import RepeatRuleFields, { RepeatPublishField, type RuleSentenceWords } from "./
 /**
  * How an event repeats (BR-REQ-050-02 criterion 7, §122): the cadence, the days of the week,
  * until when — a date, or nothing for a series without an end, which the maintenance job keeps
- * to the club's series horizon (§NNN) — and whether the dates it makes go live by themselves (§350). The same
+ * to the club's series horizon (§377) — and whether the dates it makes go live by themselves (§350). The same
  * fields on the create page and on an event's Recurență box, so the two cannot drift.
  *
  * `prefix` namespaces the fields (`repeat.cadence` on the creation form, bare on the event page,
@@ -53,7 +53,7 @@ export default async function RepeatFields({
     atTime: tEvent.raw("series.atTime") as string,
     forever: t.raw("editor.repeatRuleLiveForever") as string,
     until: t.raw("editor.repeatRuleLiveUntil") as string,
-    // How far ahead the dates are created at once — the club's number (§NNN), in words.
+    // How far ahead the dates are created at once — the club's number (§377), in words.
     horizon: t("editor.repeatRuleLiveHorizon", { horizon: daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays) }),
     weekdayNames: weekdayNames(locale),
     untilDay: calendarDayWords(locale),

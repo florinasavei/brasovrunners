@@ -220,7 +220,7 @@ async function renderRow(
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
   /*
-    The deadlines the words state (§NNN), as numbers — the club's "Termene" in force now, this
+    The deadlines the words state (§377), as numbers — the club's "Termene" in force now, this
     event's own reminder lead, its window's opening and the link's lifetime — so a message never
     promises "48 de ore" when the club chose otherwise. From the instance's minute-long memo: a
     batch of twenty rows reads the setting once, not twenty times.
@@ -252,7 +252,7 @@ async function renderRow(
   if (clubCopy) data.clubCopy = true;
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a
-  // deadline more than a day away is the week-before confirmation, not the club's hold (§NNN). A
+  // deadline more than a day away is the week-before confirmation, not the club's hold (§377). A
   // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
   if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
     // Each half of the bilingual message in its own words (§96, §349).

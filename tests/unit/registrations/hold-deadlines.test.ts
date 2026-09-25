@@ -13,7 +13,7 @@ import {
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
-/** The club's deadlines when nobody has set them (§NNN): thirty minutes and twenty-four hours. */
+/** The club's deadlines when nobody has set them (§377): thirty minutes and twenty-four hours. */
 const deadlines = DEFAULT_DEADLINES;
 
 /** BR-REQ-033-01 criterion 4, BR-REQ-035-02 criterion 3 — capped at the earlier of the two. */
@@ -58,7 +58,7 @@ describe("hold deadlines", () => {
     expect(expiry).toEqual(eventStartsAt);
   });
 
-  it("gives the lengths the club set (§NNN), still capped by the close and the start", () => {
+  it("gives the lengths the club set (§377), still capped by the close and the start", () => {
     const eventStartsAt = new Date("2026-10-01T09:00:00.000Z");
     expect(computeDeclarationHoldExpiry({ now: NOW, registrationClosesAt: null, eventStartsAt, deadlines: { holdMinutes: 90 } })).toEqual(
       new Date(NOW.getTime() + 90 * MINUTE),
@@ -112,7 +112,7 @@ describe("the participation window", () => {
   });
 });
 
-describe("§104 §NNN whether the participation window is open", () => {
+describe("§104 §377 whether the participation window is open", () => {
   const startsAt = new Date("2026-10-11T07:00:00.000Z");
   const day = 24 * HOUR;
   it("is closed before the opening day, open from it, and never for an event with no window", () => {

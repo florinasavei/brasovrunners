@@ -19,7 +19,7 @@
  * retention periods, which are the same for every event.
  *
  * The hold, the offer and the reminder are merge fields — `{{holdMinutes}}`, `{{offerHours}}`,
- * `{{reminderClause}}` — filled from the club's "Termene" when the notice is shown (§NNN). The
+ * `{{reminderClause}}` — filled from the club's "Termene" when the notice is shown (§377). The
  * reminder is a whole clause rather than a number, so that a club sending none by default (zero)
  * reads "un memento înainte de start, dacă evenimentul trimite unul" — an event may still send one
  * — instead of promising "un memento cu 0 ore înainte". The retention periods

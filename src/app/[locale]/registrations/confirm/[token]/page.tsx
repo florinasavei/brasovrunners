@@ -51,7 +51,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
           {t("confirm.title")}
         </Typography>
         <Alert severity="warning" data-testid="confirm-waitlist-full">
-          {/* How long the link stays good: the club's hours (§NNN), which a link sent now was given. */}
+          {/* How long the link stays good: the club's hours (§377), which a link sent now was given. */}
           {t(full === "closed" ? "confirm.noWaitlist" : "confirm.waitlistFull", {
             confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
           })}

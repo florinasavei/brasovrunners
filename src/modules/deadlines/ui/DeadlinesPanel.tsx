@@ -28,7 +28,7 @@ type Props = {
 };
 
 /**
- * "Termene" (§NNN): the club's deadlines, one box each, on `/admin/emails` — above the messages
+ * "Termene" (§377): the club's deadlines, one box each, on `/admin/emails` — above the messages
  * whose when-lines and previews state them, so a changed number is read back in the next card
  * down. A Server Component with one form, the Mailgun plan's shape (§100): every box a whole
  * number with the bounds the service enforces (`DEADLINE_RULES`), carried as `min`/`max` so the

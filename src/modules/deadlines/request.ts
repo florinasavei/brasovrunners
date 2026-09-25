@@ -4,7 +4,7 @@ import { readDeadlines } from "./deadlines";
 import type { Deadlines } from "./domain/deadlines";
 
 /**
- * The club's deadlines for one backoffice render (§NNN), read once however many Server Components
+ * The club's deadlines for one backoffice render (§377), read once however many Server Components
  * on the page ask — the editor's registration card, the series box, the queue panel — through
  * React's per-request `cache`, and straight from the database: a backoffice page is where
  * somebody may have just changed them, and it must say the numbers now in force.

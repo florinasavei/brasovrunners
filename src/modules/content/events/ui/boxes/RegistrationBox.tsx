@@ -95,7 +95,7 @@ export default async function RegistrationBox({
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
   /**
-   * The club's deadlines (§NNN), read by the page: the reminder an event left "as usual" gets, the
+   * The club's deadlines (§377), read by the page: the reminder an event left "as usual" gets, the
    * hold the confirmation card names, and the race week that opens the bib card by itself (§311).
    */
   clubDeadlines: Pick<Deadlines, "reminderHours" | "holdMinutes" | "offerHours" | "raceWeekDays">;
@@ -129,7 +129,7 @@ export default async function RegistrationBox({
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.footer.${field}`));
 
-  // The reminder card (§NNN): the club's lead in words, the owner's choices plus a number a script
+  // The reminder card (§377): the club's lead in words, the owner's choices plus a number a script
   // stored, and the closed line — "Ca de obicei (cu 2 zile înainte de start)", "Cu 3 zile înainte
   // de start", "Fără reminder".
   const before = (hours: number) => t("editor.reminder.before", { lead: leadPhrase(locale, hours) });
@@ -370,7 +370,7 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/*
-                    8.3b — the reminder before the start (§81, §NNN): the club's lead unless this
+                    8.3b — the reminder before the start (§81, §377): the club's lead unless this
                     event says otherwise. A native select of the owner's four choices — "as usual",
                     24, 48, 72 hours, none — and the stored number too when a script set another,
                     so a save never quietly changes it.

@@ -353,7 +353,7 @@ export function decidePing(now: Date, due: DueSlot | null, floor: FloorSlot | nu
  * and the instants still ahead that the job acts on for the event: the start (holds and the
  * waiting list close), the registration close (the numbers settle), the reminder lead before the
  * start (the reminders — the event's own or the club's hours, handed in as `reminderHours`, none
- * when zero; §NNN), the participation window's opening (§104). An instant already behind is left
+ * when zero; §377), the participation window's opening (§104). An instant already behind is left
  * out: the run that passed it has done its work, and counting it as "now" would wake the job on
  * every signature of race week for nothing. Null when nothing the change touches is ahead.
  */

@@ -20,7 +20,7 @@ describe("race week", () => {
     expect(daysUntilOnWallClock(race.startsAt, new Date("2026-09-23T10:00:00Z"), TZ)).toBe(3);
   });
 
-  // The club's race week, unset (§NNN): seven days.
+  // The club's race week, unset (§377): seven days.
   const week = { raceWeekDays: 7 };
 
   it("is race week within seven calendar days and not before, and never once the event has started", () => {
@@ -31,7 +31,7 @@ describe("race week", () => {
     expect(raceWeek(race, new Date("2026-09-27T04:00:00Z"), week)).toBeNull();
   });
 
-  it("follows the club's number of days (§NNN): ten days reach the eighth, zero is the race day alone", () => {
+  it("follows the club's number of days (§377): ten days reach the eighth, zero is the race day alone", () => {
     expect(raceWeek(race, new Date("2026-09-18T10:00:00Z"), { raceWeekDays: 10 })).toEqual({ days: 8 });
     expect(raceWeek(race, new Date("2026-09-15T10:00:00Z"), { raceWeekDays: 10 })).toBeNull();
     expect(raceWeek(race, new Date("2026-09-25T10:00:00Z"), { raceWeekDays: 0 })).toBeNull();

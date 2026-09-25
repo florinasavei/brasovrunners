@@ -36,7 +36,7 @@ type Props = {
   shipped: EmailCopyPrefill;
   /** The sample values the club's saved words still hold (§359); empty when there are none. */
   samples: readonly EmailSampleHit[];
-  /** The club's deadlines in force (§NNN): the legend's four deadline rows show what the preview prints. */
+  /** The club's deadlines in force (§377): the legend's four deadline rows show what the preview prints. */
   deadlines?: Deadlines;
 };
 

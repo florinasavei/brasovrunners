@@ -6,7 +6,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — "Termene", the club's deadlines as a setting: the §100 shape. Unset reads today's
+ * §377 — "Termene", the club's deadlines as a setting: the §100 shape. Unset reads today's
  * constants; an Administrator (and only an Administrator, asserted on the server) saves it; every
  * save is audited with what moved, from and to; a refused save leaves no row and no audit; a
  * value this code cannot read falls back field by field; and a save is seen at once on this
@@ -49,7 +49,7 @@ async function refusal(promise: Promise<unknown>): Promise<string> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN the club's deadlines as a setting", () => {
+describe("§377 the club's deadlines as a setting", () => {
   it("reads today's constants when nobody has set them", async () => {
     expect(await readDeadlines(db)).toEqual({ deadlines: DEFAULT_DEADLINES, updatedAt: null });
     expect(await currentDeadlines(db)).toEqual(DEFAULT_DEADLINES);

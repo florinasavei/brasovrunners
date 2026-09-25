@@ -26,7 +26,7 @@ const STEPS = [
  * and, folded, on the event page (`DECISIONS.md` §91; the owner: "it must be super clear for
  * users what the flow is").
  *
- * The numbers are the club's own deadlines (§NNN) — the very values the allocator gives a new
+ * The numbers are the club's own deadlines (§377) — the very values the allocator gives a new
  * hold or offer, read from the data cache so a visitor wakes no database (§333) — so this can never
  * promise a deadline the allocator does not keep, and they are words that agree with the number
  * ("30 de minute", "o oră"). Each step has a glyph, because the same five appear in the emails and
@@ -40,7 +40,7 @@ type Props = {
    */
   window?: { opensDays: number; deadlineDays: number } | null;
   /**
-   * The event's own reminder lead (`events.reminder_hours_before`, §NNN): null is the club's, zero
+   * The event's own reminder lead (`events.reminder_hours_before`, §377): null is the club's, zero
    * is none — then the fourth step promises no reminder.
    */
   reminderHoursBefore?: number | null;

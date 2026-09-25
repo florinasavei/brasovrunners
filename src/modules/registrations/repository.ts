@@ -188,7 +188,7 @@ export type InsertPendingRegistrationInput = {
   resultsConsentVersion: number;
   listOptOut: boolean;
   /**
-   * When this registration's email link lapses unconfirmed (§NNN) — the club's hours at the moment
+   * When this registration's email link lapses unconfirmed (§377) — the club's hours at the moment
    * of submission. Absent, the row lapses at `submitted_at` plus the setting in force, as rows
    * written before the column do.
    */
@@ -513,7 +513,7 @@ export async function countEligibleWaitlisted<T extends Record<string, unknown>>
 }
 
 /**
- * When a `PENDING_EMAIL_CONFIRMATION` row's link lapses, as SQL (§NNN): the instant written on the
+ * When a `PENDING_EMAIL_CONFIRMATION` row's link lapses, as SQL (§377): the instant written on the
  * row when it entered the state, or — for a row written before the column existed — its
  * submission plus the club's hours in force. One expression, so the sweep below and the job's
  * plan (`jobs/next-work.ts`) cannot disagree about when a link lapses.
@@ -524,7 +524,7 @@ export function emailLinkLapseSql(confirmationHours: number) {
 
 /**
  * Expire registrations still waiting on email confirmation once their link has lapsed — the
- * club's hours after the submission (48 unless changed, §NNN), as written on the row.
+ * club's hours after the submission (48 unless changed, §377), as written on the row.
  *
  * Global, not per-event: `PENDING_EMAIL_CONFIRMATION` never occupies capacity (§10.6 rule 6),
  * so there is no allocation to serialize and no event-row lock to take — unlike

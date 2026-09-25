@@ -6,7 +6,7 @@ import { EMAIL_SAMPLE, emailSampleValueOf } from "@/modules/notifications/domain
 import { emailFieldLegend } from "@/modules/notifications/email-copy-fields";
 
 /**
- * §NNN — the emails say the club's numbers. Each half of a bilingual message words the deadlines
+ * §377 — the emails say the club's numbers. Each half of a bilingual message words the deadlines
  * it is handed in its own language; the club's own copy (§247) may name them through four
  * placeholders that fill in number and noun together; and a message rendered without the numbers
  * — a fixture — reads today's constants rather than a blank.
@@ -17,7 +17,7 @@ const timings = { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminde
 const text = (content: ReturnType<typeof buildTemplateContent>) =>
   content.paragraphs.map((part) => (typeof part === "string" ? part : part.text.join("\n"))).join("\n");
 
-describe("§NNN the emails word the club's deadlines", () => {
+describe("§377 the emails word the club's deadlines", () => {
   it("says the event is coming rather than a lead, in each half's language (§357)", () => {
     const both = renderBilingual("EVENT_REMINDER", "ro", { ...base, timings }, "https://example.test/x");
     expect(both.text).toContain("Crosul de toamnă se apropie.");
@@ -81,7 +81,7 @@ describe("§NNN the emails word the club's deadlines", () => {
   });
 });
 
-describe("§NNN the deadline fields in the sample and the legend (merged with §373)", () => {
+describe("§377 the deadline fields in the sample and the legend (merged with §373)", () => {
   it("gives each deadline field a sample value in both languages, from the defaults through the words helper", () => {
     expect(EMAIL_SAMPLE.ro).toMatchObject({ confirmationHours: "48 de ore", holdMinutes: "30 de minute", offerHours: "24 de ore", reminderHours: "2 zile" });
     expect(EMAIL_SAMPLE.en).toMatchObject({ confirmationHours: "48 hours", holdMinutes: "30 minutes", offerHours: "24 hours", reminderHours: "2 days" });

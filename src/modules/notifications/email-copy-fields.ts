@@ -161,7 +161,7 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  *   saved text on a thank-you sent without one; the button, which names itself, is the machinery;
  * - **the programme's lines, the organizer's note and the cancellation's reason are absent**: they
  *   have no field, and the platform adds the note and the reason after the words whoever wrote them;
- * - **the declaration's first wording is the club's hold's (§NNN)**, as the preview shows it; a
+ * - **the declaration's first wording is the club's hold's (§377)**, as the preview shows it; a
  *   saved text replaces both wordings, as it always has (§247);
  * - **the reply line of the cancellation follows the deployment's reply address**, as the send does.
  */
@@ -353,7 +353,7 @@ export function emailFieldLegend(
   messageType: EmailMessageType,
   locale: EmailLocale,
   /**
-   * The club's deadlines in force, which the page's preview prints (§NNN): the four deadline fields'
+   * The club's deadlines in force, which the page's preview prints (§377): the four deadline fields'
    * examples are then these, not the sample's defaults, so a row never shows "48 de ore" beside a
    * preview that says "36 de ore". Left out, the sample's (`EMAIL_SAMPLE`).
    */

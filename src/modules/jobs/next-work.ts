@@ -18,7 +18,7 @@ import type { JobName } from "./schedule";
  * Each duty below mirrors the query of the job that performs it, and names it. A duty missing
  * here is not a wrong answer, it is a late one: the cap in `planQuiet` looks for real within the
  * hour whatever this says. The sweeps measured in days — the retention windows (`retention.ts`,
- * `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing series to the club's series horizon (§NNN)
+ * `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing series to the club's series horizon (§377)
  * (§122) — are left to the cap on purpose: an hour late on a seven-day window is nothing, and a
  * query to say so would be one more thing to keep in step.
  */
@@ -61,13 +61,13 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const any = db as unknown as AnyDb;
   const nowIso = now.toISOString();
   /*
-    The club's deadlines (§NNN): the ones the run that calls this has just read fresh at its start
+    The club's deadlines (§377): the ones the run that calls this has just read fresh at its start
     (`readDeadlinesForRun`), from the memo — the plan and the work agree on one value, and the
     setting costs no second query in the run.
   */
   const settings = await currentDeadlines(db);
 
-  // `expireStalePendingEmailConfirmations`: the link lapses when the row says (§NNN), or the club's
+  // `expireStalePendingEmailConfirmations`: the link lapses when the row says (§377), or the club's
   // hours after the submission for a row older than the column — the sweep's own expression.
   const lapse = emailLinkLapseSql(settings.confirmationHours);
   const [pendingEmail] = await any
@@ -103,7 +103,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     The instants of each event still ahead that has anybody on it: its start (holds end, the
     waiting list closes — `closeWaitlistForStartedEvent`), its registration close (the numbers
     settle, §214), the reminder lead before the start — the event's own or the club's, none when
-    it is zero (the reminders, §81, and the last call to sign, §160; §NNN) — and the participation
+    it is zero (the reminders, §81, and the last call to sign, §160; §377) — and the participation
     window's opening (the confirmation asked again, §104).
   */
   const perEvent = await any
@@ -188,7 +188,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     const confirmedAt = toDate(row.confirmedAt);
     const startsAt = toDate(row.startsAt);
     if (!confirmedAt || !startsAt) return null;
-    // No reminder at all for an event that sends none (§NNN).
+    // No reminder at all for an event that sends none (§377).
     const opensAt = reminderOpensAt(startsAt, reminderHoursFor({ reminderHoursBefore: toCount(row.reminderHoursBefore) }, settings));
     if (!opensAt) return null;
     const at = Math.max(opensAt.getTime(), confirmedAt.getTime() + DAY);

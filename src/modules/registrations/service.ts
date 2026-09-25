@@ -87,11 +87,11 @@ export type EventForRegistration = {
   capacity: number | null;
   raceId: string | null;
   publishedAt: Date | null;
-  /** The participation window (§104); absent on a partial row means the club's declaration hold (§NNN). */
+  /** The participation window (§104); absent on a partial row means the club's declaration hold (§377). */
   confirmationOpensDaysBefore?: number | null;
   confirmationDeadlineDaysBefore?: number | null;
   /**
-   * The event's own reminder lead (`events.reminder_hours_before`, §NNN), for when the job next
+   * The event's own reminder lead (`events.reminder_hours_before`, §377), for when the job next
    * has work (§334) — null or absent is the club's number. It moves no place and no deadline.
    */
   reminderHoursBefore?: number | null;
@@ -238,7 +238,7 @@ function wakeMaintenance(
   settings: Deadlines,
   ...deadlines: (Date | null | undefined)[]
 ): void {
-  // The event's own reminder lead, or the club's (§NNN): a partial row without the column reads as the club's.
+  // The event's own reminder lead, or the club's (§377): a partial row without the column reads as the club's.
   const dueAt = maintenanceDueFor({ ...event, reminderHours: reminderHoursFor(event, settings) }, now, ...deadlines);
   if (dueAt) wakeJobs("registration-maintenance", dueAt, now);
 }
@@ -299,7 +299,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   event: LockedEventForRegistration,
   registrationId: string,
   now: Date,
-  /** The club's deadlines (§NNN), read by the caller before its transaction: a new hold's length comes from here. */
+  /** The club's deadlines (§377), read by the caller before its transaction: a new hold's length comes from here. */
   settings: Deadlines,
 ): Promise<Registration> {
   await repo.expireStaleHolds(db, event, now);
@@ -341,7 +341,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
             now,
             registrationClosesAt: event.registrationClosesAt,
             eventStartsAt: event.startsAt,
-            // A week-before confirmation for a race still far off (§104); the club's minutes otherwise (§NNN).
+            // A week-before confirmation for a race still far off (§104); the club's minutes otherwise (§377).
             window: confirmationWindow(event),
             deadlines: settings,
           }),
@@ -424,7 +424,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   event: EventForRegistration,
   now: Date,
   /**
-   * The club's deadlines (§NNN), required: every caller reads them before its transaction and
+   * The club's deadlines (§377), required: every caller reads them before its transaction and
    * passes them in — each path in this file, the editor's capacity raise before it locks the event,
    * and the maintenance job once per run through `readDeadlinesForRun`. Nothing is read here, so
    * no offer can be dated from a memo older than the caller's own reading.
@@ -460,7 +460,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       now,
       registrationClosesAt: event.registrationClosesAt,
       eventStartsAt: event.startsAt,
-      // The club's offer window (§NNN) at the moment the offer is made; an offer already out keeps its own.
+      // The club's offer window (§377) at the moment the offer is made; an offer already out keeps its own.
       deadlines: settings,
     });
 
@@ -1093,7 +1093,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   /** The deadlines this submission created, for the maintenance job (§334); none on a resend. */
   let createdDeadlines = undefined as (Date | null)[] | undefined;
   /*
-    The club's deadlines (§NNN), read before the transaction and from the instance's memo when it
+    The club's deadlines (§377), read before the transaction and from the instance's memo when it
     is fresh, so a registration costs no extra round trip: the email link's lapse is written on
     the row from them, and a hold or an offer the allocator makes on the way takes its length
     from them.
@@ -1236,7 +1236,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // same allocator a first-time registration uses.
       if (!participant.emailVerifiedAt) {
         /*
-          The link of this cycle lapses from now (§NNN), with the club's hours in force now. Before
+          The link of this cycle lapses from now (§377), with the club's hours in force now. Before
           the column, the lapse was measured from `submitted_at`, which a restart does not rewrite —
           so a row restarted days after its first submission lapsed at the very next run of the job,
           minutes after its new verification email went out.
@@ -1288,7 +1288,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const lockedForCreate = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedForCreate) throw new DomainError("NOT_FOUND", "no such event");
 
-    // When the link lapses unconfirmed, written on the row (§NNN): the club's hours now, kept however they change.
+    // When the link lapses unconfirmed, written on the row (§377): the club's hours now, kept however they change.
     const linkExpiresAt = emailLinkExpiresAt(now, settings);
     const created = await repo.insertPendingEmailRegistration(tx, {
       emailLinkExpiresAt: linkExpiresAt,
@@ -1340,7 +1340,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
   registrationId: string,
   now: Date,
 ): Promise<Registration> {
-  // The club's hold and offer lengths (§NNN), before the lock and from the memo when it is fresh.
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
   const result = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -1360,7 +1360,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       race that will not happen — so nothing is written and nothing is sent. The registration is
       returned still unconfirmed, which is how the confirmation page knows to say why rather
       than "confirmed, now sign" (`registrations/confirm/[token]/actions.ts`), and it lapses with
-      the other unconfirmed ones when its link does (§NNN). Read under the event lock, so a
+      the other unconfirmed ones when its link does (§377). Read under the event lock, so a
       cancellation that lands between the click and this line is the one that counts.
     */
     if (lockedEvent.eventStatus !== "SCHEDULED") return { registration: current, allocated: false };
@@ -1422,7 +1422,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     );
   }
 
-  // The club's hold and offer lengths (§NNN), before the lock and from the memo when it is fresh.
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
   const signed = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -1591,7 +1591,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
 
     return { registration: confirmed, offered };
   });
-  // A confirmation is a reminder the club's reminder lead out (§NNN); a re-allocation onto the waiting list may have
+  // A confirmation is a reminder the club's reminder lead out (§377); a re-allocation onto the waiting list may have
   // made an offer, and so may a released hold (§334).
   wakeMaintenance(event, now, settings, signed.registration.holdExpiresAt, signed.offered > 0 ? offerDeadline(event, now, settings) : null);
   return signed.registration;
@@ -1780,7 +1780,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
   actor: StaffActor,
   now: Date,
 ): Promise<Registration> {
-  // The club's hold and offer lengths (§NNN), before the lock and from the memo when it is fresh.
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
   const confirmed = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -1830,7 +1830,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
   actor: StaffActor,
   now: Date,
 ): Promise<Registration> {
-  // The club's hold and offer lengths (§NNN), before the lock and from the memo when it is fresh.
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
   const promoted = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -1936,7 +1936,7 @@ export async function unregister<T extends Record<string, unknown>>(
    */
   options: { notify?: boolean } = {},
 ): Promise<Registration> {
-  // The club's hold and offer lengths (§NNN), before the lock and from the memo when it is fresh.
+  // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
   const unregistered = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);

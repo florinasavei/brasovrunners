@@ -51,7 +51,7 @@ type Props = {
  *
  * - where this date sits ("Seria „…” · data 3 din 8"), the dates on either side, the first one;
  * - the rule in words, read from the source; the next five dates as links; how the series renews
- *   itself (the job keeps the club's horizon created, eight weeks unless changed — §122, §NNN), or
+ *   itself (the job keeps the club's horizon created, eight weeks unless changed — §122, §377), or
  *   that it is stopped;
  * - "Publică datele noi automat" with its own "Salvează setarea" (`setRepeatPublish`, on the
  *   source's rule, from any date) — its own form, because it changes the rule at the press;
@@ -65,7 +65,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
     props;
   const running = ruleSentence !== null && !ended;
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
-  // How far ahead the job keeps the dates created — the club's number (§NNN), in words.
+  // How far ahead the job keeps the dates created — the club's number (§377), in words.
   const horizon = daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays);
 
   return (

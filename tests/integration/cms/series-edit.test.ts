@@ -346,7 +346,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     for (const date of [source, ...dates]) expect((await reload(date.id)).minAge).toBe(0);
   });
 
-  // §NNN: one reminder rule, like the confirmation window — the dates a rule makes inherit it, and a
+  // §377: one reminder rule, like the confirmation window — the dates a rule makes inherit it, and a
   // series edit carries a new one; a save that does not post the select leaves it alone.
   it("gives every date the source's reminder lead, and carries a new one to the dates the save reaches", async () => {
     const { source, dates } = await seedSeries({ reminderHoursBefore: 72 });

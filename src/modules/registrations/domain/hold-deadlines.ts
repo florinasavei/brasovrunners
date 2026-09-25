@@ -5,7 +5,7 @@ import { declarationHoldEndsAt, type Deadlines, offerEndsAt } from "@/modules/de
  * criterion 3): a hold's natural length, capped at the earlier of registration close or event
  * start — never handed out for longer than registration itself remains meaningful.
  *
- * The natural lengths are the club's (§NNN, "Termene" on `/admin/emails`): a declaration hold
+ * The natural lengths are the club's (§377, "Termene" on `/admin/emails`): a declaration hold
  * thirty minutes and a waiting-list offer twenty-four hours until an Administrator says
  * otherwise (BR-REQ-033-01 criterion 1, BR-REQ-035-02 criterion 2). Every caller hands in the
  * setting it read; nothing here has a number of its own, so a hold cannot be given a length the
@@ -39,7 +39,7 @@ export const DEFAULT_CONFIRMATION_DEADLINE_DAYS = 2;
  *
  * Null when the event has no window: `opensDaysBefore` is zero (switched off), or the two
  * numbers are in the wrong order (a deadline before or at the opening is no window), or the
- * fields are absent — a caller built from a partial row keeps the club's hold (§NNN).
+ * fields are absent — a caller built from a partial row keeps the club's hold (§377).
  */
 export function confirmationWindow(event: {
   startsAt: Date;
@@ -60,7 +60,7 @@ export function confirmationWindow(event: {
  * Whether an event's participation window (§104) has opened by `now` — the start is within its
  * `opensDaysBefore` days. False for an event with no window (zero or absent). The declaration
  * email reads it: once the window is open the message is itself the reminder, so it no longer
- * promises one (§NNN).
+ * promises one (§377).
  */
 export function participationWindowOpen(startsAt: Date, opensDaysBefore: number | null | undefined, now: Date): boolean {
   if (!opensDaysBefore || opensDaysBefore <= 0) return false;
@@ -70,7 +70,7 @@ export function participationWindowOpen(startsAt: Date, opensDaysBefore: number 
 /**
  * When a hold on a place lapses unsigned.
  *
- * The club's declaration hold (§NNN) — unless the event has a
+ * The club's declaration hold (§377) — unless the event has a
  * participation window that has not opened yet (§104): then the place is the runner's until the
  * window's deadline, and the signature is the confirmation asked a week before. Inside the
  * window, and on an event without one, the club's minutes stand: the place is scarce now and the

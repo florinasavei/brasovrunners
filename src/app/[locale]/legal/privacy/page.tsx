@@ -83,7 +83,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
               date: formatDay(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
             })}
           </Typography>
-          {/* The club's deadlines in the text's merge fields (§NNN), from the data cache like the text itself. */}
+          {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text itself. */}
           <LegalDocumentBody body={document.body} values={deadlineMergeValues(locale, await cachedDeadlines())} emphasizeFilled={false} />
         </>
       ) : (

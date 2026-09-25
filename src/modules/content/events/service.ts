@@ -443,7 +443,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     // Who may enter, counted on the event's day at every door (§329).
     minAge: fields.minAge,
-    // The event's own reminder lead (§NNN), by the partners' discipline: a caller that did not post
+    // The event's own reminder lead (§377), by the partners' discipline: a caller that did not post
     // the select writes nothing, so a save that never mentioned it keeps what the organizer chose.
     ...(fields.reminderHoursBefore === undefined ? {} : { reminderHoursBefore: fields.reminderHoursBefore }),
     registrationOpensAt: times.registrationOpensAt,
@@ -1417,7 +1417,7 @@ const SERIES_COLUMNS = [
   "confirmationDeadlineDaysBefore",
   // One race, one age rule: every date of a series takes the same people (§329).
   "minAge",
-  // One reminder rule, like the confirmation window beside it (§NNN): "as usual", a lead, or none.
+  // One reminder rule, like the confirmation window beside it (§377): "as usual", a lead, or none.
   "reminderHoursBefore",
   "declarationDocumentId",
   "participantListVisibility",
@@ -1484,7 +1484,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
     /** Hand back each touched date as it was and as it was written, for its participants' notice (§331). */
     collect?: boolean;
     now: Date;
-    /** The club's deadlines, read before the transaction, for the offers a raised capacity makes (§NNN). */
+    /** The club's deadlines, read before the transaction, for the offers a raised capacity makes (§377). */
     deadlines: Deadlines;
   },
 ): Promise<{ applied: number; offered: number; dates: SavedDate[] }> {
@@ -1671,7 +1671,7 @@ function capacityRaised(
  * commit together or not at all, and after the event row is locked, the serialization point
  * every capacity-changing decision takes (AGENTS.md §10.6). `fillAvailableSpots` is the one
  * thing that offers; this only asks it, with the row as it now stands. Returns the offers made.
- * `deadlines` is the club's setting, read by the caller before its transaction (§NNN), so nothing
+ * `deadlines` is the club's setting, read by the caller before its transaction (§377), so nothing
  * here reads `platform_settings` while the event row is locked.
  */
 async function offerRaisedCapacity<T extends Record<string, unknown>>(
@@ -1743,7 +1743,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
   /*
-    The club's deadlines the offers of a raised capacity are made with (§NNN), read here, before the
+    The club's deadlines the offers of a raised capacity are made with (§377), read here, before the
     transaction: inside it the event row is locked, and a stale memo would otherwise read
     `platform_settings` while that lock is held.
   */
@@ -2186,7 +2186,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
     // of a series keep the source's minimum age, like its capacity.
     minAge: source.minAge,
-    // And its reminder rule (§NNN), like the confirmation window it sits beside.
+    // And its reminder rule (§377), like the confirmation window it sits beside.
     reminderHoursBefore: source.reminderHoursBefore,
     registrationMode: source.registrationMode,
     registrationOpensAt: source.registrationOpensAt,
@@ -2245,7 +2245,7 @@ export type RepeatEventInput = {
  * The same event again, every week, fortnight or month — a standing series (`DECISIONS.md`
  * §64, §122): "every Monday and Wednesday, until 20 December, or for ever".
  *
- * The rule is written on the source, and the occurrences inside the club's series horizon (§NNN)
+ * The rule is written on the source, and the occurrences inside the club's series horizon (§377)
  * are created at once; from then on the maintenance job creates each week as it comes into the horizon
  * (`materializeStandingRepeats`). Each occurrence is the source shifted on the wall clock in
  * its own zone (`addWallClockInterval`), everything with a time moving with it, the slug
@@ -2300,7 +2300,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   }
 
   await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
-  // As far ahead as the club keeps its series (§NNN), read as the job reads it.
+  // As far ahead as the club keeps its series (§377), read as the job reads it.
   const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now, await currentDeadlines(db));
   // Even with every date a draft, the source's rule is public: a date of a series is not history,
   // so it leaves the listing's past events (§275).
@@ -2312,7 +2312,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
 }
 
 /**
- * The occurrences a source's rule still owes inside the club's horizon (§NNN) — from the latest
+ * The occurrences a source's rule still owes inside the club's horizon (§377) — from the latest
  * one that exists (or the source itself) up to `horizonEnd` — created in one transaction. A horizon
  * shortened later deletes nothing: the dates already created stay, and the next ones wait until
  * they come inside it. Idempotent:
@@ -2422,7 +2422,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
 export async function materializeStandingRepeats<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  /** The club's deadlines, read once by the maintenance run (§NNN). */
+  /** The club's deadlines, read once by the maintenance run (§377). */
   deadlines: Pick<Deadlines, "seriesHorizonDays">,
 ): Promise<{ sources: number; created: number }> {
   const sources = await db.select().from(events).where(sql`${events.repeatRule} IS NOT NULL`);

@@ -79,7 +79,7 @@ export type MyRegistration = {
   bibNumber: number | null;
   /** The number held before the settle (§214); what the runner is shown until then. */
   provisionalBibNumber: number | null;
-  /** "I am here" is offered from the club's check-in lead before the start ("Termene", §NNN), confirmed registrations only — never at a cancelled event. */
+  /** "I am here" is offered from the club's check-in lead before the start ("Termene", §377), confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
   /**
    * The event was cancelled (§331). The registration keeps its own status — it is the record of
@@ -136,7 +136,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
     )
     .orderBy(asc(events.startsAt), asc(registrations.id));
 
-  // "I am here" opens the club's hours before the start (§NNN), read once for the whole list.
+  // "I am here" opens the club's hours before the start (§377), read once for the whole list.
   const deadlines = rows.length > 0 ? await currentDeadlines(db) : null;
   return rows.map(({ listOptOut, eventStatus, ...row }) => ({
     ...row,

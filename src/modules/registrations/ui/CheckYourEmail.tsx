@@ -48,7 +48,7 @@ type Props = {
  *
  * Warmth, not cuteness: a first name in the heading when there is one, the event and its date,
  * the address the message went to (§224), three short steps with a glyph each, the wait in
- * bold and once (§224), the spam folder, how long the link lives — the club's own hours (§NNN),
+ * bold and once (§224), the spam folder, how long the link lives — the club's own hours (§377),
  * the very number the link just sent was given, so this cannot promise what the platform does
  * not keep — and the sentence that keeps it true
  * for somebody who was already registered (§229). Then the two ways out when nothing arrives

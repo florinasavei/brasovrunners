@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — "Termene" on `/admin/emails`: the panel says the numbers in force, on its closed line and
+ * §377 — "Termene" on `/admin/emails`: the panel says the numbers in force, on its closed line and
  * in its boxes, each box carrying the bounds the service enforces; a reader who may not change
  * them reads the same numbers and no form. The catalogues carry a label and a help for every
  * deadline, in both languages, since the panel asks for them by a key it builds.
@@ -29,7 +29,7 @@ async function render(mayEdit: boolean, deadlines = DEFAULT_DEADLINES): Promise<
   return html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the 'Termene' panel", () => {
+describe("§377 the 'Termene' panel", () => {
   it("says the four a participant meets most on its closed line, in words", async () => {
     const html = await render(true, { ...DEFAULT_DEADLINES, holdMinutes: 60, reminderHours: 72 });
     expect(html).toContain("Link 48 de ore · loc ținut o oră · ofertă 24 de ore · reminder 3 zile");

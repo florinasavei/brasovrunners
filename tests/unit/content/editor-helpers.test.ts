@@ -84,7 +84,7 @@ describe("§350 the rule in one live sentence", () => {
     atTime: ro.Event.series.atTime,
     forever: ro.Admin.editor.repeatRuleLiveForever,
     until: ro.Admin.editor.repeatRuleLiveUntil,
-    // Formatted on the server with the club's horizon in words (§NNN): "8 săptămâni" unset.
+    // Formatted on the server with the club's horizon in words (§377): "8 săptămâni" unset.
     horizon: ro.Admin.editor.repeatRuleLiveHorizon.replace("{horizon}", "8 săptămâni"),
     // Written on the server (`series-sentence.ts#weekdayNames`) and handed to the island (§324).
     weekdayNames: weekdayNames("ro"),

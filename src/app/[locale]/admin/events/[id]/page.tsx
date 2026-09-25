@@ -172,7 +172,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const now = new Date();
-  // The club's deadlines (§NNN), straight through: the reminder card's "as usual", race week, the series horizon.
+  // The club's deadlines (§377), straight through: the reminder card's "as usual", race week, the series horizon.
   const { deadlines } = await readDeadlines(db);
   // "1 dată", "7 date", "20 de date" (§341), for the banners that count a series' dates. The
   // count arrives in the query string, so anything that is not a number reads as none.

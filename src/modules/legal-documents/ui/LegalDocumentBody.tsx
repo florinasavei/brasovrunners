@@ -24,7 +24,7 @@ export default function LegalDocumentBody({
   body: unknown;
   /**
    * Whether the filled-in parts are bold (§225). A declaration's are — they are what the signer
-   * checks. The terms and the privacy notice fill in only the club's deadlines (§NNN), which are
+   * checks. The terms and the privacy notice fill in only the club's deadlines (§377), which are
    * part of the sentence like any other word, so their pages turn it off.
    */
   emphasizeFilled?: boolean;

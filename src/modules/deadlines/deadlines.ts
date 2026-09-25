@@ -17,7 +17,7 @@ import {
 import { forgetCachedDeadlines, memoizedDeadlines, rememberDeadlines } from "./memo";
 
 /**
- * Where the club's deadlines are kept and read (§NNN): one `platform_settings` row, the shape the
+ * Where the club's deadlines are kept and read (§377): one `platform_settings` row, the shape the
  * Mailgun plan (§100), the contact recipients (§164) and the declaration copies (§244) proved — a
  * strict schema, the Administrator's role asserted here and not only by the hidden form, and an
  * audit row naming who changed what from what to what.

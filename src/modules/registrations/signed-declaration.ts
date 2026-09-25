@@ -189,7 +189,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The city while the place is to be announced (§328), never the typed place: a signed PDF
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
-      // The club's deadlines, should the declaration name one (§NNN): read when the PDF is drawn,
+      // The club's deadlines, should the declaration name one (§377): read when the PDF is drawn,
       // like the event's facts above — from the instance's memo, once per batch of PDFs.
       ...deadlineMergeValues(locale, await currentDeadlines(db)),
     },

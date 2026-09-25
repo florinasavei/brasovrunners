@@ -20,7 +20,7 @@ import { enqueueEmail } from "./outbox";
  */
 
 /**
- * The reminder lead of each event, in SQL (§NNN): the event's own hours
+ * The reminder lead of each event, in SQL (§377): the event's own hours
  * (`events.reminder_hours_before`) or, when the organizer left it "as usual", the club's — zero
  * from either is no reminder. Measured on the event's own instant.
  */
@@ -40,14 +40,14 @@ function insideReminderWindow(now: Date, clubHours: number) {
 /**
  * Queue the reminder for every confirmed participant of every event that starts within its
  * reminder lead — two days unless the club or the organizer says otherwise (`DECISIONS.md` §81,
- * §NNN). Called by the maintenance job, so the window is wide open — "starts within the lead, has
+ * §377). Called by the maintenance job, so the window is wide open — "starts within the lead, has
  * not started" — and the idempotency key is what keeps a registration to one reminder across the
  * runs that see it in that window. A lead changed after the reminder went sends no second one; a
  * lead lengthened reaches the events newly inside it at the next run.
  *
  * Confirmed only: a waiting-list entry has nothing to be reminded of, and a registration that
  * still owes its declaration gets its own email from `queueDeclarationReminders` below, in
- * the same reminder lead (§160, §NNN). Scheduled events only: a cancelled or completed event reminds
+ * the same reminder lead (§160, §377). Scheduled events only: a cancelled or completed event reminds
  * nobody. Test registrations are included — they behave as real ones everywhere (§12.6) and
  * their addresses go nowhere. The number returned counts both messages.
  */
@@ -86,7 +86,7 @@ export async function queueParticipationConfirmations<T extends Record<string, u
         sql`${events.startsAt} > ${now.toISOString()}::timestamptz + make_interval(days => ${events.confirmationDeadlineDaysBefore})`,
       ),
     );
-  // Only the holds the window gave: the club's hold (§NNN) taken inside the window is a person
+  // Only the holds the window gave: the club's hold (§377) taken inside the window is a person
   // signing right now, not somebody to remind a week later.
   const waiting = rows.filter((row) => row.holdExpiresAt && row.holdExpiresAt.getTime() - now.getTime() > day);
   if (waiting.length === 0) return 0;
@@ -113,7 +113,7 @@ export async function queueParticipationConfirmations<T extends Record<string, u
 export async function queueEventReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  /** The club's deadlines, read once by the run (§NNN): the reminder lead of an event left "as usual". */
+  /** The club's deadlines, read once by the run (§377): the reminder lead of an event left "as usual". */
   deadlines: Pick<Deadlines, "reminderHours">,
 ): Promise<number> {
   const rows = await db
@@ -161,7 +161,7 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
 }
 
 /**
- * The last call to sign, inside the same reminder window (`DECISIONS.md` §160, §NNN) — and, like
+ * The last call to sign, inside the same reminder window (`DECISIONS.md` §160, §377) — and, like
  * the reminder, none for an event that sends no reminder.
  *
  * §160 keeps the place of somebody who forgot — and the population it keeps it for is the one

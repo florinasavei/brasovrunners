@@ -5,7 +5,7 @@ import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "./zon
 /**
  * A standing recurrence (`DECISIONS.md` §122): "every Monday and Wednesday, until 20 December
  * — or for ever". Stored on the source event as `repeat_rule`; the maintenance job keeps the
- * club's series horizon of occurrences created from it (eight weeks unless changed, §NNN), each
+ * club's series horizon of occurrences created from it (eight weeks unless changed, §377), each
  * its own row, so one date can be cancelled or moved on its own. The owner: "for a recurring
  * event I need a start and end date but I also need to update a certain edition"; "indefinitely,
  * not set how many weeks".
@@ -56,7 +56,7 @@ export function untilEnd(rule: RepeatRule, timeZone: string): Date | null {
 }
 
 /**
- * Up to where the job creates: the rule's end or the club's horizon (§NNN), whichever comes first.
+ * Up to where the job creates: the rule's end or the club's horizon (§377), whichever comes first.
  * How far ahead is the club's to say — eight weeks, so "next month" is always there, unless changed.
  */
 export function horizonEnd(rule: RepeatRule, timeZone: string, now: Date, deadlines: Pick<Deadlines, "seriesHorizonDays">): Date {

@@ -140,7 +140,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     {t("manage.selfCheckInClosed", {
-                      // It opens at an hour, the club's check-in lead before the start, in the event's zone (§349, §NNN).
+                      // It opens at an hour, the club's check-in lead before the start, in the event's zone (§349, §377).
                       date: formatDay(confirmed.selfCheckinOpensAt, { locale, timeZone: confirmed.eventTimezone, style: "long", withTime: true, position: "inline" }),
                     })}
                   </Typography>

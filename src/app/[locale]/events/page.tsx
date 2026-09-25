@@ -202,7 +202,7 @@ async function ListingLead({
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
   const { featured } = listingSections(events, type, hasUpcoming);
-  // The countdown's days are the club's (§NNN), from the data cache like the rows: no wake for a visitor.
+  // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
   // filter nothing, so it is not offered — the one in the address stays, so the page can say so.

@@ -15,7 +15,7 @@ type Props = {
   /** The language being edited: the examples are this language's sample (§96). */
   emailLocale: EmailLocale;
   messageType: EmailMessageType;
-  /** The club's deadlines in force (§NNN), so the four deadline rows show what the preview prints. */
+  /** The club's deadlines in force (§377), so the four deadline rows show what the preview prints. */
   deadlines?: Deadlines;
 };
 

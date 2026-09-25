@@ -16,7 +16,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN × AGENTS.md §10.5–§10.6 — the allocator takes the club's deadlines, and never rewrites one
+ * §377 × AGENTS.md §10.5–§10.6 — the allocator takes the club's deadlines, and never rewrites one
  * it already gave.
  *
  * What is protected: a hold, an offer and an email link created after a change get the new length;
@@ -79,7 +79,7 @@ function submission(email: string, at: Date, firstName = "Ana") {
   };
 }
 
-describe("§NNN the allocator and the club's deadlines", () => {
+describe("§377 the allocator and the club's deadlines", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: { id: string; role: "ADMIN" };

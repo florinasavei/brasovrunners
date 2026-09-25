@@ -132,7 +132,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       preview, and showing them what they saved thirty seconds ago would read as a lost edit.
     */
     readEmailCopy(db),
-    // The club's deadlines (§NNN), straight through like the words: the panel that sets them, the
+    // The club's deadlines (§377), straight through like the words: the panel that sets them, the
     // when-lines that state them and the previews that print them, as they now stand.
     readDeadlines(db),
   ]);
@@ -146,7 +146,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     reminder: pageWords.reminder ?? "",
   };
   /*
-    When each message goes, in the club's numbers (§NNN). The reminder's lines say "off by default"
+    When each message goes, in the club's numbers (§377). The reminder's lines say "off by default"
     when the club sends none — an event may still choose one — and the declaration's last call is a
     sentence of its own after its when-line, for the same reason.
   */
@@ -162,7 +162,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
   const emailsPath = getPathname({ locale, href: "/admin/emails" });
-  // The club's deadlines (§NNN), as the outbox gives every message: the numbers the words say.
+  // The club's deadlines (§377), as the outbox gives every message: the numbers the words say.
   const timings = {
     confirmationHours: deadlines.deadlines.confirmationHours,
     holdMinutes: deadlines.deadlines.holdMinutes,
@@ -182,7 +182,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       email follow-up: the legend under the editor dims them, and the preview says the same).
     */
     const sample = emailSampleFor(messageType, emailLocale);
-    // The club's deadlines in force (§NNN), which the send gives every message as numbers.
+    // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is
@@ -264,7 +264,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "contactRecipients" }}
       />
 
-      {/* "Termene" (§NNN): the numbers the messages below state, right above them, so a change is read back in the next card. */}
+      {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
       <DeadlinesPanel locale={locale} state={deadlines} mayEdit={mayEditEmail} openWhen={{ saved: saved === "deadlines" }} />
 
       <ParticipantEmailsPanel
@@ -318,7 +318,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                    values (§359): what the box starts from while the club has written nothing. */
                 shipped={emailCopyPrefill(messageType, emailLocale)}
                 samples={samples}
-                // The deadlines the preview above prints (§NNN), for the legend's four rows.
+                // The deadlines the preview above prints (§377), for the legend's four rows.
                 deadlines={deadlines.deadlines}
               />
             ) : undefined,

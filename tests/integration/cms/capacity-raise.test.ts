@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /*
   Every read of the club's deadlines, noted with whether it went through a transaction: a raise
   must not read `platform_settings` inside the save's transaction, which holds the event row lock
-  (§NNN) — the editor reads the setting before it opens.
+  (§377) — the editor reads the setting before it opens.
 */
 const deadlineReads = vi.hoisted(() => ({ insideTransaction: 0, outside: 0 }));
 vi.mock("@/modules/deadlines/deadlines", async (importOriginal) => {
@@ -298,7 +298,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect((await reload(row.id)).capacity).toBe(2);
   });
 
-  it("offers with the club's offer hours, read before the save's transaction — never inside it, with the event row locked (§NNN)", async () => {
+  it("offers with the club's offer hours, read before the save's transaction — never inside it, with the event row locked (§377)", async () => {
     const row = await seedEvent(1);
     await enter(row, "Ana", NOW, true);
     const bogdan = await enter(row, "Bogdan", new Date(NOW.getTime() + 1000));

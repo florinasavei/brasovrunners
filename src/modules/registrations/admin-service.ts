@@ -361,7 +361,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
         The last place and the last slot in the line taken between the entry above and this
         confirmation (§348) — two transactions, so a window, however small. The entry stands,
         unconfirmed, with its audit row, and no email went to the person (`atTheDesk`); it lapses
-        when its link does, like any unconfirmed registration (§NNN), or the desk confirms it on paper once a slot
+        when its link does, like any unconfirmed registration (§377), or the desk confirms it on paper once a slot
         opens. The desk is told exactly that rather than the "nothing changed" of a refusal at the
         entry itself.
       */
@@ -661,7 +661,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   /**
    * AGENTS.md §10.5 has no `PENDING_EMAIL_CONFIRMATION -> CANCELLED` edge, and this does not add
    * one: a registration whose address has never been confirmed lapses on its own when its email
-   * link does (`email_link_expires_at`, from the club's "Termene", §NNN; `expireStalePendingEmailConfirmations`), and it occupies no place in the meantime, so there
+   * link does (`email_link_expires_at`, from the club's "Termene", §377; `expireStalePendingEmailConfirmations`), and it occupies no place in the meantime, so there
    * is nothing for an organizer to release. Refused with a sentence rather than with the bare
    * CONFLICT the guarded UPDATE would produce — the difference matters to whoever is reading it
    * with somebody waiting at a desk. `DECISIONS.md` §33 records this as the club's question to

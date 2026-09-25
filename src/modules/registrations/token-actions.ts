@@ -250,7 +250,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await loadEventForRegistration(db, registration.eventId);
   // How long before the start a participant may say "I am here" from their own link: the club's
-  // hours (§NNN), a day unless changed.
+  // hours (§377), a day unless changed.
   const deadlines = await currentDeadlines(db);
   const opensAt = selfCheckinOpensAt(event.startsAt, deadlines);
   // A cancelled race has no race day (§331): the page says so, and offers no desk code or "I am here".
@@ -261,7 +261,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
     eventCancelled,
     selfCheckinOpen: registration.status === "CONFIRMED" && !eventCancelled && now >= opensAt,
     selfCheckinOpensAt: opensAt,
-    /** How many hours before the start that is, for the sentence that says so (§NNN). */
+    /** How many hours before the start that is, for the sentence that says so (§377). */
     selfCheckinHours: deadlines.selfCheckinHours,
     /** The zone that instant is read in on the page — the event's own. */
     eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
@@ -272,7 +272,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
  * Self check-in from the participant's own link (BR-REQ-037-08). Not a consuming action: the
  * token authorizes the person, check-in is idempotent, and spending the manage link on it
  * would cost them the ability to cancel. Only from the club's hours before the start (a day
- * unless changed, §NNN) — an "I am here" a week early is not information.
+ * unless changed, §377) — an "I am here" a week early is not information.
  */
 export async function checkInSelf(secret: string, now: Date) {
   const context = await readRaceDayContext(secret, now);

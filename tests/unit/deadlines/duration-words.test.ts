@@ -5,11 +5,11 @@ import { deadlineMergeValues, isMergeField, mergeText, mergeTextSegments } from 
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
- * §NNN — a deadline as words that agree with its number, in both languages: the one copy the
+ * §377 — a deadline as words that agree with its number, in both languages: the one copy the
  * pages, the emails, the PDF and the legal merge fields share. Romanian takes `countForm`'s three
  * forms (§341): "o oră", "2 ore", "20 de ore".
  */
-describe("§NNN durations as words", () => {
+describe("§377 durations as words", () => {
   it("says every unit in Romanian's three forms, and English's two", () => {
     expect([1, 2, 19, 20, 48, 101].map((n) => durationPhrase("ro", n, "hours"))).toEqual(["o oră", "2 ore", "19 ore", "20 de ore", "48 de ore", "101 ore"]);
     expect([1, 5, 30].map((n) => durationPhrase("ro", n, "minutes"))).toEqual(["un minut", "5 minute", "30 de minute"]);
@@ -57,7 +57,7 @@ describe("§NNN durations as words", () => {
   });
 });
 
-describe("§NNN the deadlines as legal merge fields", () => {
+describe("§377 the deadlines as legal merge fields", () => {
   it("are merge fields, and fill a text in either language from the setting", () => {
     for (const field of ["confirmationHours", "holdMinutes", "offerHours", "reminderClause"]) expect(isMergeField(field)).toBe(true);
     expect(isMergeField("reminderHours")).toBe(false);

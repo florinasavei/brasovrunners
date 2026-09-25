@@ -17,7 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the reminder before the start (§81) is the club's lead unless the event chose its own:
+ * §377 — the reminder before the start (§81) is the club's lead unless the event chose its own:
  * `events.reminder_hours_before` null is "as usual", zero is no reminder, 24/48/72 (or anything a
  * script stored inside the CHECK) is the event's. What is protected: the job queues the reminder —
  * and the last call to sign (§160) — inside exactly that window and not at all when it is off; the
@@ -28,7 +28,7 @@ const NOW = new Date("2026-10-09T09:00:00.000Z");
 const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
-describe("§NNN the reminder lead, the event's or the club's", () => {
+describe("§377 the reminder lead, the event's or the club's", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let participantId: string;

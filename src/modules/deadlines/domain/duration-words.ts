@@ -2,7 +2,7 @@ import { countForm, type CountForm } from "@/i18n/count-form";
 import type { Deadlines } from "./deadlines";
 
 /**
- * A number of minutes, hours, days or weeks as words, in both languages (§NNN) — so that every
+ * A number of minutes, hours, days or weeks as words, in both languages (§377) — so that every
  * sentence that states a deadline says the number the platform actually keeps.
  *
  * **One copy of these words, in code, for every surface.** The same "48 de ore" is written by a
@@ -82,7 +82,7 @@ export function daysPhrase(locale: string, days: number): string {
 }
 
 /**
- * The club's deadlines as the phrases the catalogues' sentences take (§NNN) — one call per page,
+ * The club's deadlines as the phrases the catalogues' sentences take (§377) — one call per page,
  * the same placeholder names everywhere: `{confirmation}` "48 de ore", `{hold}` "30 de minute",
  * `{offer}` "24 de ore", `{reminder}` "2 zile", `{checkin}` "o zi", `{horizon}` "8 săptămâni".
  *

@@ -2,12 +2,12 @@
  * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
  * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>. The
  * deadlines it states are merge fields — `{{confirmationHours}}`, `{{holdMinutes}}`,
- * `{{offerHours}}` — filled from the club's "Termene" when the page is shown (§NNN), so the text
+ * `{{offerHours}}` — filled from the club's "Termene" when the page is shown (§377), so the text
  * says the numbers the platform keeps.
  * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.
  *
  * No hardcoded value (§357): the courts are "the club's registered seat", never a town written
- * in, and the club's hold (§NNN) says the participation window's deadline where an event has one
+ * in, and the club's hold (§377) says the participation window's deadline where an event has one
  * (§104) — a sentence true of one event and false of the next is a value, not a rule.
  */
 import type { LegalDocumentBody } from "../domain/content-hash";

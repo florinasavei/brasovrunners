@@ -388,13 +388,13 @@ export type TemplateData = {
   /** True when the hold is the participation window's (§104), not the club's minutes. */
   confirmLater?: boolean;
   /**
-   * True when the event's participation window is already open (§104, §NNN): the message is the
+   * True when the event's participation window is already open (§104, §377): the message is the
    * send when the window opens (or a resend after it), itself the reminder, so it does not promise
    * "or when we remind you".
    */
   windowOpen?: boolean;
   /**
-   * The deadlines this message states, as numbers (§NNN): the club's "Termene" in force when it is
+   * The deadlines this message states, as numbers (§377): the club's "Termene" in force when it is
    * rendered, this event's own reminder lead, its participation window's opening, and how long a
    * link with no deadline of its own lives. Each half of a bilingual message words them in its own
    * language (`buildTemplateContent`), so the English half never carries "48 de ore".
@@ -1335,7 +1335,7 @@ function defaultLinkLifetime(locale: EmailLocale): string {
 }
 
 /**
- * The deadlines a message states, as words in one half's language (§NNN).
+ * The deadlines a message states, as words in one half's language (§377).
  *
  * The renderer and the preview always hand the numbers over; a caller that does not — a test, a
  * fixture — reads the club's defaults, which are exactly the numbers an unset setting has, so a

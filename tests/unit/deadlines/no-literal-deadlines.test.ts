@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the owner's standing rule, "no hardcoded values in documents and emails": the deadlines
+ * §377 — the owner's standing rule, "no hardcoded values in documents and emails": the deadlines
  * that became the club's setting are nowhere a constant any more, and nowhere written as words a
  * setting cannot change. A guard, grep-shaped on purpose, so the next sentence that types
  * "48 de ore" is refused by the suite rather than found by the owner.
@@ -32,7 +32,7 @@ function flatten(messages: Record<string, unknown>, prefix = ""): Record<string,
   return out;
 }
 
-describe("§NNN the former constants are gone", () => {
+describe("§377 the former constants are gone", () => {
   it("no source file names one of the seven constants the setting replaced", () => {
     const names = /\b(EMAIL_CONFIRMATION_HOLD_HOURS|DECLARATION_HOLD_MINUTES|WAITLIST_OFFER_HOLD_HOURS|REMINDER_HOURS_BEFORE|SELF_CHECKIN_OPENS_HOURS|RACE_WEEK_DAYS|HORIZON_DAYS)\b/;
     const offenders = sourceFiles(path.join(ROOT, "src")).filter((file) => names.test(readFileSync(file, "utf8")));
@@ -51,7 +51,7 @@ describe("§NNN the former constants are gone", () => {
   });
 });
 
-describe("§NNN no sentence states a deadline the setting cannot change", () => {
+describe("§377 no sentence states a deadline the setting cannot change", () => {
   /*
     What the catalogues said before, word for word. A key may still carry one of these phrases
     for a reason that is not a deadline — "Ora pe 24 de ore" is the 24-hour clock, the monitor's

@@ -3,7 +3,7 @@ import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/doma
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
- * The club's deadlines as merge fields (§NNN), for any of the three texts — unlike the fields
+ * The club's deadlines as merge fields (§377), for any of the three texts — unlike the fields
  * below, which only a declaration signed by one person for one event can fill. The platform's
  * templates of the terms and the privacy notice state the email link, the hold, the offer and the
  * reminder through these, so the words follow "Termene" instead of freezing today's numbers into

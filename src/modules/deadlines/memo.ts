@@ -1,12 +1,12 @@
 import type { Deadlines } from "./domain/deadlines";
 
 /**
- * This server instance's copy of the club's deadlines (§NNN), apart from `deadlines.ts` so the
+ * This server instance's copy of the club's deadlines (§377), apart from `deadlines.ts` so the
  * test helpers can drop it between tests without importing the database or `next/cache`.
  *
  * How long a copy is kept: a minute. A save is on the page that made it at once (the panel reads
  * straight through, and the save drops this copy), and on every other instance within the minute.
- * What that minute can cost is spelled out in §NNN: a hold or an offer created in it gets the
+ * What that minute can cost is spelled out in §377: a hold or an offer created in it gets the
  * previous length — which is still a length the club chose, never an existing deadline rewritten.
  * Wall-clock time, not a caller's `now`: this is about round trips, not about the domain's clock.
  */
