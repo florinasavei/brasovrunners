@@ -1,6 +1,5 @@
 "use client";
 
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -75,21 +74,16 @@ export default function TimeField({ name, label, defaultValue = "", required = f
       error={named}
       helperText={help}
       size={size}
-      // Chromium and Edge draw their own clock icon inside `type="time"`; without hiding it, a
-      // 140-pixel box (the schedule rows, `WallTimeField`) carries two clocks. The icon is
-      // decoration only — it has no popup of its own, so hiding it loses nothing.
-      sx={[{ "& input::-webkit-calendar-picker-indicator": { display: "none" } }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+      sx={sx}
       slotProps={{
         inputLabel: { shrink: true },
         // `pattern` is inert on `type="time"` in every shipping browser — kept only for the
         // scriptless render (`pickers-js-off.test.ts`) and as documentation of the shape.
         htmlInput: { step: 60, pattern: TIME_PATTERN, title: t("pickers.timeTyped") },
         input: {
-          startAdornment: (
-            <InputAdornment position="start">
-              <AccessTimeIcon fontSize="small" aria-hidden />
-            </InputAdornment>
-          ),
+          // Chromium and Edge draw their own clock icon inside `type="time"`; clicking it opens
+          // that browser's own time popup (Chrome 83+), so it stays visible and untouched — an
+          // `AccessTimeIcon` start adornment would only sit beside it as a second, dead clock.
           endAdornment: clearable ? (
             <InputAdornment position="end">
               <IconButton aria-label={t("pickers.clearTime")} onClick={clear} sx={{ minWidth: 44, minHeight: 44 }} size="small">
