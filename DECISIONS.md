@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.86-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.87-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.86-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.87-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15473,3 +15473,40 @@ The legend promises "the example beside a field is the value it gets in the prev
 The optional parameter and its memo fallback were a hole in exactly the property the previous round was about: a caller that forgot to pass the deadlines would have read `platform_settings` under the event row lock. Typecheck now refuses such a caller.
 
 Baseline `BR-V1.86-2026-09-25`.
+
+## 378. The footer's privacy notice: a question mark after the fold, "GDPR" from sm, a 6-pixel phone gap
+
+**Asked (the owner, 2026-09-25, of §372's one-row footer):** "it should be a question mark, not a lock, and it should be after the about accordion; the mobile footer icons can be a bit more spaced out", and "Use GDPR for desktop as well."
+
+**Decided.**
+
+- **One DOM order at every width, with no CSS `order`:** the theme switch, the "Despre club" fold, the privacy notice, Facebook / Instagram / Strava, then the languages. The desktop uses the same order.
+- **Below `sm` the privacy link is `HelpOutlineOutlined`** (the circled `help_outline`, which `Hint` already uses) instead of §372's lock. It is not the bare `QuestionMark`: at 20 px in a 24 px square the bare mark is a thin stroke that reads as a stray character, while the circle has the same round weight as the social marks beside it.
+- **From `sm` the visible word is "GDPR" in both languages** (`Legal.privacyLinkShort`). It replaces "Confidențialitate" / "Privacy" and stays a 44 px target.
+- **The accessible name is the notice's own in both languages:** "Nota de confidențialitate (GDPR)" and "Privacy notice (GDPR)". The English name gained "(GDPR)" in review, because "Privacy notice" alone did not contain the visible word (WCAG 2.5.3, label in name, level A; BR-REQ-041-01 criterion 21). A unit test checks both catalogues.
+- **A phone's bar items are 6 px apart** (`FOOTER_GAP_PHONE`, `footer-target.ts`): between the row's own items, between the marks and between the flags. From `sm` nothing changed.
+
+**The gap, measured.** On the built listing in headless Chromium (Pixel 5 emulation and desktop Chrome gave the same numbers), with the fold closed and open. There are eight items and seven gaps. The squares are 24 px at 320 and 28 from 360. The summary is 90.3 px as "Despre club" and 105.8 px as "About the club". With no gap, the English summary at 320 had 46.2 px to spare, and 46.2 / 7 = 6.6.
+
+| width | gap | fold | spare beside "Despre club" | spare beside "About the club" |
+| --- | --- | --- | --- | --- |
+| 320 | 6 | 110 | 19.7 | 4.2 |
+| 360 | 6 | 122 | 31.7 | 16.2 |
+| 390 | 6 | 152 | 61.7 | 46.2 |
+| 412 | 6 | 174 | 83.7 | 68.2 |
+
+At 7 px the English summary at 320 is cut (84 px of words in 81 px), so 6 px is the largest whole gap. **Risk, recorded:** 4.2 px is thin. A fallback font that renders a little wider could ellipsise "About the club" at 320. Pull requests run e2e on the desktop project only (§209), so the phone-project `footer.spec.ts` should run before a release. The fallback is 5 px, which leaves about 11 px to spare.
+
+**Replaces:** §372's lock glyph and its place at the end of the row, and §323 / §324's "Confidențialitate" / "Privacy" word from `sm`. BR-REQ-041-01 criteria 21 and 23 are rewritten to match.
+
+Baseline `BR-V1.87-2026-09-25`.
+
+## 379. Partner marker: the 🤝 emoji, not the handshake icon
+
+Amends §367 and §375. The owner, 2026-09-25: "I hate the partnership handshake icon, use the emoji 🤝." Every surface the marker draws on — the listing card's chip, the series card, the featured hero, the calendar's grid chip and agenda mark, and the event page's overline — now shows 🤝 as text instead of the Material `Handshake` SVG, in the same box (`sx.fontSize`), with the same generic label ("Eveniment în parteneriat" / "Partnered event") and the same tooltip and accessible name §367 and §375 gave it. The facts' "Împreună cu" row (§168), a different feature naming the actual partners, is unchanged and keeps its own handshake icon.
+
+Implementation note for the next reader: the marker's glyph is `GLYPHS.partner` in `src/modules/events/ui/glyphs.ts`, now a small `PartnerEmoji` component (`src/modules/events/ui/PartnerEmoji.tsx`) rather than an `@mui/icons-material` import — everywhere that read it by name needed no change of its own.
+
+PartnerEmoji, the emoji replacement for the partner glyph (introduced 2026-09-25 to replace the handshake icon), now matches SvgIcon's own accessibility default: aria-hidden is true unless the caller supplies its own aria-label or role, with an explicit caller aria-hidden still taking precedence — closing the gap where GlyphChip's bare rendering (no label or role of its own) read "handshake" aloud ahead of the chip's own visible text. The GLYPHS.partner registry entry now carries the one forwardRef-vs-SvgIconProps cast the component needs, rather than each call site casting it separately, and PartnerEmoji's fontSize prop now maps SvgIcon's keyword sizes to the rem values Material draws them at instead of forwarding the keyword directly as CSS.
+
+Baseline `BR-V1.87-2026-09-25`.

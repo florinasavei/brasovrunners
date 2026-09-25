@@ -3017,7 +3017,8 @@
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
     "privacyLinkLabel": "Privacy",
-    "privacyLinkName": "Privacy notice",
+    "privacyLinkName": "Privacy notice (GDPR)",
+    "privacyLinkShort": "GDPR",
     "termsLinkLabel": "Racing TOS",
     "botCheckNotice": "The “I'm not a robot” check is run by Cloudflare, which sees your IP address and browser details for that purpose only.",
     "inForce": "Version {version}, in force since {date}",

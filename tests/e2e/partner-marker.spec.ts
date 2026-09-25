@@ -26,11 +26,11 @@ const DATE = "2027-04-17";
 const MONTH = "2027-04";
 
 /**
- * The handshake glyph, by its drawing: a production build has no `data-testid="HandshakeIcon"` —
- * MUI writes that attribute only outside production — so the glyph is found by the start of its
- * path, `@mui/icons-material/Handshake`'s own.
+ * The partner marker's glyph, 🤝 as text (§379, replacing the `Handshake` SVG §367 chose): its
+ * own `data-testid`, set in the markup rather than by MUI's dev-only `SvgIcon` machinery, so it
+ * survives a production build the way the SVG's never did.
  */
-const HANDSHAKE = 'svg:has(path[d^="M16.48 10.41"])';
+const HANDSHAKE = '[data-testid="PartnerEmoji"]';
 
 let title = "";
 let englishTitle = "";

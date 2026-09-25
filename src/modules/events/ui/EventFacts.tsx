@@ -1,6 +1,5 @@
 import CakeIcon from "@mui/icons-material/Cake";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import HandshakeIcon from "@mui/icons-material/Handshake";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
@@ -22,7 +21,7 @@ import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import GlyphChip from "./GlyphChip";
-import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
+import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
 import { orderRoutePills, type Pill } from "./route-pills";
 
 /**
@@ -677,7 +676,7 @@ export default async function EventFacts({
     ];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
     // Held with other organizations (§121, §168).
-    if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: HandshakeIcon, value: [coHostSentence()] });
+    if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: GLYPHS.partner, value: [coHostSentence()] });
     if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
     if (state === "NOT_APPLICABLE" && mentionsRegistration) {
       lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });
@@ -858,7 +857,7 @@ export default async function EventFacts({
     rows.push({
       key: "coHost",
       label: t("coHost"),
-      icon: HandshakeIcon,
+      icon: GLYPHS.partner,
       value: (
         <Box sx={{ display: "grid", rowGap: 1.5, justifyItems: "start" }}>
           {coHosts.map((host, index) => (

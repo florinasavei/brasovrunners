@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.87-2026-09-25
+
+- **The footer's privacy notice is a question mark after "Despre club" on a phone and reads "GDPR" from sm in both languages; its name is "Nota de confidențialitate (GDPR)" / "Privacy notice (GDPR)"; a phone's footer items are 6 px apart and still one row at 320 px.** §378.
+- Fixed the partner emoji's accessibility (hidden from screen readers by default, like every other glyph, unless a caller names it) and two related type/sizing cleanups. (§379) §379.
 ## BR-V1.86-2026-09-25
 
 - **The club's deadlines are one setting, "Termene", on `/admin/emails`**: the email link (48 h), the declaration hold (30 min), the waiting-list offer (24 h), the reminder before the start (48 h, 0 for none), "I am here" (24 h), race week (7 days) and how far ahead a series is created (56 days). An Administrator changes them within fixed bounds and the change is audited; every other role reads them. A hold, an offer or an email link keeps the deadline it was given when the setting changes later, and the email link's lapse is now written on the registration. Each event may pick its own reminder (as usual, none, 24, 48 or 72 hours). The emails, the pages, the job's plan and the platform's legal templates take their words from the setting through `{{confirmationHours}}`, `{{holdMinutes}}`, `{{offerHours}}` and `{{reminderClause}}`. The reminder clause is hedged for the event's own choice and never reads "0 ore". The token legend gives each example in both languages. The emails' field legend lists `{confirmationHours}`, `{holdMinutes}`, `{offerHours}` and `{reminderHours}` with a row each, and their examples are the deadlines in force, as the preview prints them. Every path that offers a place reads the setting before its transaction, so no offer reads settings under the event row lock. §377.
