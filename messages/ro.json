@@ -1889,7 +1889,8 @@
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
-        "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate"
+        "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
+        "publicListPeriod": "Cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -3058,7 +3059,8 @@
           "reminderHours": "Reminderul pleacă înainte de start cu (ore)",
           "selfCheckinHours": "„Am ajuns” se poate apăsa înainte de start cu (ore)",
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
-          "seriesHorizonDays": "O serie își are datele create înainte cu (zile)"
+          "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
+          "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră și numărul provizoriu se eliberează.",
@@ -3067,7 +3069,8 @@
           "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare și înscrieri”.",
           "selfCheckinHours": "Butonul din pagina participantului, „Am ajuns — marchează-mă prezent”.",
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
-          "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești."
+          "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
+          "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablonul platformei spune acest număr."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablonul platformei, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -3544,7 +3547,9 @@
       "guardianName": "Părinte / tutore",
       "fitnessDeclared": "Declarația că ești apt medical",
       "rulesAcknowledged": "condițiile concursului",
-      "emailConfirm": "adresa scrisă a doua oară"
+      "emailConfirm": "adresa scrisă a doua oară",
+      "termsAccepted": "Acceptarea termenilor și condițiilor",
+      "fitnessAcknowledged": "Confirmarea despre declarația de sănătate a persoanei"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -3644,7 +3649,9 @@
       "agreeButton": "Am citit și sunt de acord",
       "close": "Închide",
       "agreed": "Ai citit condițiile concursului și ești de acord cu ele.",
-      "plain": "Am citit și sunt de acord cu condițiile concursului:"
+      "plain": "Am citit și sunt de acord cu condițiile concursului:",
+      "plainPage": "Am citit și sunt de acord cu condițiile concursului, de pe",
+      "pageLink": "pagina evenimentului"
     },
     "opensInNewTab": "se deschide într-o filă nouă",
     "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele.",
@@ -3663,7 +3670,7 @@
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
       "title": "Înscrii o altă persoană cu aceeași adresă",
-      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment. Pentru un adult nu completezi informațiile medicale, lista publică sau Strava și Instagram: acestea țin de acordul persoanei însăși.",
       "emailFixed": "Adresa la care a venit linkul. Nu se poate schimba aici: pentru altă adresă, completează formularul obișnuit.",
       "phoneOptional": "Opțional pentru această persoană — de exemplu un copil fără telefon. Contactul de urgență de mai jos rămâne obligatoriu.",
       "alreadyOnAddress": "Persoana aceasta este deja înscrisă cu această adresă. Nu s-a creat nimic. Pentru altcineva, schimbă numele și trimite din nou — linkul rămâne valabil.",
@@ -3673,7 +3680,12 @@
         "one": "o persoană",
         "few": "{count} persoane",
         "other": "{count} de persoane"
-      }
+      },
+      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul."
+    },
+    "terms": {
+      "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
+      "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând."
     }
   },
   "Registrations": {

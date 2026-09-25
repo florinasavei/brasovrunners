@@ -157,6 +157,7 @@ describe("§321 the rule on the schema, for whichever caller adds it", () => {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: false,
     listOptOut: false,

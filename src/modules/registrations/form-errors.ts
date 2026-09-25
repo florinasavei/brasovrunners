@@ -37,7 +37,11 @@ export const REGISTRATION_FORM_FIELDS = [
   // Both are `z.literal(true)`, so an unticked one is a rejection the summary must be able to
   // name and link to — unlike the optional boxes, which cannot fail (§171).
   "fitnessDeclared",
+  // The family form's stand-in for the statement above, for another adult (§NNN).
+  "fitnessAcknowledged",
   "rulesAcknowledged",
+  // The club's terms (§NNN), `z.literal(true)` like the two above.
+  "termsAccepted",
   "emailConfirm",
   "privacyAcknowledged",
 ] as const;

@@ -57,9 +57,10 @@ async function createEvent(): Promise<PublicEvent> {
     { eventId: event.id, locale: "ro", slug: "cros-randare", title: "Cros" },
     { eventId: event.id, locale: "en", slug: "cross-render", title: "Cross" },
   ]);
-  // Only `id` and `participantListVisibility` are read by the component; the rest of
-  // `PublicEvent`'s shape is asserted nowhere here, so a cast stands in for the full query.
-  return { id: event.id, participantListVisibility: "NAMES" } as unknown as PublicEvent;
+  // Only `id`, `participantListVisibility` and the two dates the list's period counts from (§NNN)
+  // are read by the component; the rest of `PublicEvent`'s shape is asserted nowhere here, so a
+  // cast stands in for the full query.
+  return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function createRegistration(

@@ -295,6 +295,34 @@ describe("retention sweep", () => {
     expect(old.auditLogs).toBe(1);
   });
 
+  /**
+   * §NNN — the emergency contact is a third person's name and number, asked for race day and for
+   * nothing after it: cleared seven days after the event with the documents and the note, the row
+   * kept, and counted on its own.
+   */
+  it("clears the emergency contact seven days after the event, and keeps the registration and the runner's own phone", async () => {
+    await db
+      .update(registrations)
+      .set({ emergencyContactName: "Ion Vecinul", emergencyContactPhone: "+40722222222", phone: "+40711111111" })
+      .where(eq(registrations.id, registrationId));
+
+    const soon = await pruneExpiredRows(db, new Date("2026-10-07T09:00:00.000Z"));
+    expect(soon.emergencyContacts).toBe(0);
+    expect((await db.select().from(registrations).where(eq(registrations.id, registrationId)))[0]).toMatchObject({
+      emergencyContactName: "Ion Vecinul",
+      emergencyContactPhone: "+40722222222",
+    });
+
+    const later = await pruneExpiredRows(db, new Date("2026-10-09T10:00:00.000Z"));
+    expect(later.emergencyContacts).toBe(1);
+    expect(later.failures).toEqual([]);
+    const [registration] = await db.select().from(registrations).where(eq(registrations.id, registrationId));
+    expect(registration).toMatchObject({ emergencyContactName: null, emergencyContactPhone: null, phone: "+40711111111", status: "CONFIRMED" });
+
+    // Nothing left to clear: the next run counts nothing.
+    expect((await pruneExpiredRows(db, new Date("2026-10-09T11:00:00.000Z"))).emergencyContacts).toBe(0);
+  });
+
   /** A participant of their own, so the orphan-participant delete is visible in the counts. */
   async function participant(email: string): Promise<string> {
     const identity = canonicalizeEmail(email);

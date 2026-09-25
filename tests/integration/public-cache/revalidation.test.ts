@@ -165,7 +165,7 @@ describe("§333 writes expire the public cache", () => {
   });
 
   describe("places", () => {
-    async function approve(key: "PRIVACY_NOTICE" | "EVENT_DECLARATION") {
+    async function approve(key: "TERMS" | "PRIVACY_NOTICE" | "EVENT_DECLARATION") {
       const translations: LegalDocumentTranslationInput[] = [
         { locale: "ro", title: "Text", body: { sections: [{ paragraphs: ["p"] }] } },
         { locale: "en", title: "Text", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -218,6 +218,7 @@ describe("§333 writes expire the public cache", () => {
           locale: "ro",
           privacyAcknowledged: true,
           fitnessDeclared: true,
+          termsAccepted: true,
           rulesAcknowledged: true,
           resultsNameConsent: true,
           listOptOut: false,
@@ -233,6 +234,7 @@ describe("§333 writes expire the public cache", () => {
     }
 
     beforeEach(async () => {
+      await approve("TERMS");
       await approve("PRIVACY_NOTICE");
       await approve("EVENT_DECLARATION");
     });

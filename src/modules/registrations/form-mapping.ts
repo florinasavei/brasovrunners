@@ -97,7 +97,11 @@ export function readRegistrationForm(
     healthConsent: checked(form, "healthConsent"),
     // "Declar că sunt apt" (§171) — required on the public form, absent on a staff entry.
     fitnessDeclared: checked(form, "fitnessDeclared"),
+    // The family form's tick for another adult (§NNN), in place of the statement above.
+    fitnessAcknowledged: checked(form, "fitnessAcknowledged"),
     rulesAcknowledged: checked(form, "rulesAcknowledged"),
+    // The club's terms, accepted expressly (§NNN) — required on the public form and the family link.
+    termsAccepted: checked(form, "termsAccepted"),
 
     // The language of the emails and the declaration (§97): chosen on the form, the page's
     // language until chosen — a runner on the Romanian site may still want English.

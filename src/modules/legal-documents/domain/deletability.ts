@@ -18,7 +18,8 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
  *
  * Deliberately wider than the two foreign keys. A privacy notice is referenced by *number* from
  * `registrations` — `privacy_notice_version`, `results_consent_version` and
- * `health_consent_version` are plain integers with no foreign key — so a notice hundreds of people
+ * `health_consent_version` are plain integers with no foreign key, and so, for a terms version,
+ * is `terms_version` (§NNN) — so a notice hundreds of people
  * acknowledged is invisible to the acceptance and event counts alike, and the database would raise
  * nothing at all if it were removed.
  */
@@ -179,8 +180,11 @@ export function dependantObstacle(
  *    no number.
  * 2. **The shared question** — a signature, an event, a registration that recorded the number, or
  *    the text in force — before anything narrower, because withdrawing is the step that moves.
- * 3. **A terms version somebody accepted.** A registration records `privacy_notice_version` and
- *    never a terms version, so the three counts are vacuous for this key. What *can* be shown is
+ * 3. **A terms version somebody accepted.** Since §NNN a registration records the terms version
+ *    its tick named (`terms_version`), and that count is step 2's, like a notice's
+ *    acknowledgements. Rows written before the column record none, so for them — and for the
+ *    declaration's own "sunt de acord cu termenii", and a restart that overwrote an earlier
+ *    number — the window below still answers. What *can* be shown is
  *    when it was accepted: the terms are agreed to at the instant the form is submitted, and again
  *    when the declaration — "sunt de acord cu termenii, condițiile și regulamentul evenimentului"
  *    — is signed, and whatever was in force at that instant is what was agreed to. So the question

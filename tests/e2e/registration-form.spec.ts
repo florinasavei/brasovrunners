@@ -56,6 +56,7 @@ async function fillRequired(page: Page, omit?: string) {
     rules to the seed and wonders why this stops working.
   */
   await page.locator('[name="rulesAcknowledged"]').check();
+  await page.locator('[name="termsAccepted"]').check();
   // "Declar că sunt apt medical să particip" (§171): required on the public form, like the
   // privacy acknowledgment beside it.
   await page.locator('[name="fitnessDeclared"]').check();
@@ -83,9 +84,22 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       "fitnessDeclared",
       "privacyAcknowledged",
       "rulesAcknowledged",
+      "termsAccepted",
     ]) {
       await expect(page.locator(`[name="${name}"]`), `${name} is asked up front`).toBeVisible();
     }
+
+    /*
+      The club's terms, accepted expressly (§NNN): their own tick, required, naming the version in
+      force and the unusual clauses — and the event-rules tick beside it no longer points at them.
+    */
+    const termsLabel = page.locator("label").filter({ has: page.locator('[name="termsAccepted"]') });
+    await expect(page.locator('[name="termsAccepted"]')).toHaveAttribute("required", /.*/);
+    await expect(termsLabel).toContainText(/\(versiunea \d+\)/);
+    await expect(termsLabel).toContainText("în mod expres");
+    await expect(termsLabel.getByRole("link", { name: /Termenii și condițiile/ })).toBeVisible();
+    const rulesLabel = page.locator("label").filter({ has: page.locator('[name="rulesAcknowledged"]') });
+    await expect(rulesLabel.getByRole("link", { name: /Termeni/ })).toHaveCount(0);
 
     // The public-results consent is not asked (§322): there are no results to consent to.
     await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);

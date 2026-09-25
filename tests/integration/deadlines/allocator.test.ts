@@ -41,6 +41,7 @@ async function approveLegalDocuments(db: TestDatabase) {
     { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["d"] }] } },
   ];
   for (const [key, translations] of [
+    ["TERMS", privacy],
     ["PRIVACY_NOTICE", privacy],
     ["EVENT_DECLARATION", declaration],
   ] as const) {
@@ -71,6 +72,7 @@ function submission(email: string, at: Date, firstName = "Ana") {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,

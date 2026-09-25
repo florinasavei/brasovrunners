@@ -47,6 +47,15 @@ beforeEach(async () => {
     translations: privacy,
     now: NOW,
   });
+  await insertLegalDocumentVersion(db, {
+    key: "TERMS",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(privacy),
+    translations: privacy,
+    now: NOW,
+  });
 });
 
 async function createInternalEvent(): Promise<EventForRegistration> {
@@ -87,6 +96,7 @@ const submission = (overrides: Record<string, unknown> = {}) => ({
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,

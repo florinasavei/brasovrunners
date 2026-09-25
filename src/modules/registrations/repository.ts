@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
@@ -286,6 +286,8 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       healthConsentAt: input.details?.healthConsentAt ?? null,
       fitnessDeclaredAt: input.details?.fitnessDeclaredAt ?? null,
       rulesAcknowledgedAt: input.details?.rulesAcknowledgedAt ?? null,
+      termsVersion: input.details?.termsVersion ?? null,
+      termsAcceptedAt: input.details?.termsAcceptedAt ?? null,
 
       privacyNoticeVersion: input.privacyNoticeVersion,
       privacyAcknowledgedAt: input.privacyAcknowledgedAt,
@@ -492,6 +494,13 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
 export async function listPublicStartListOthers<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
+  /**
+   * The first privacy notice that described the states (`findFirstStatesNoticeVersion`, §NNN):
+   * only a registration that recorded it or a later one is listed here. A tick given under an
+   * older notice agreed to a list of confirmed names, and that is where such a runner appears —
+   * once confirmed, as before. Required, so no caller can forget it.
+   */
+  firstStatesNoticeVersion: number,
   page?: { offset: number; limit: number },
 ): Promise<Array<{ displayName: string; clubName: string | null; group: "PENDING" | "WAITLISTED" }>> {
   const waiting = inArray(registrations.status, [...WAITLISTED_LIST_STATUSES]);
@@ -502,7 +511,15 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
       group: sql<"PENDING" | "WAITLISTED">`case when ${waiting} then 'WAITLISTED' else 'PENDING' end`,
     })
     .from(registrations)
-    .where(and(eq(registrations.eventId, eventId), inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]), eq(registrations.kind, "REAL"), eq(registrations.listOptOut, false)))
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]),
+        eq(registrations.kind, "REAL"),
+        eq(registrations.listOptOut, false),
+        gte(registrations.privacyNoticeVersion, firstStatesNoticeVersion),
+      ),
+    )
     .orderBy(
       sql`case when ${waiting} then 1 else 0 end`,
       sql`case when ${waiting} then ${registrations.waitlistedAt} else coalesce(${registrations.emailConfirmedAt}, ${registrations.submittedAt}) end`,
@@ -518,6 +535,8 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
 export async function countPublicStartListOthers<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
+  /** As `listPublicStartListOthers` (§NNN): consent given under an older notice is not counted here. */
+  firstStatesNoticeVersion: number,
 ): Promise<{ pending: number; waitlisted: number }> {
   const [row] = await db
     .select({
@@ -531,6 +550,7 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
         inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]),
         eq(registrations.kind, "REAL"),
         eq(registrations.listOptOut, false),
+        gte(registrations.privacyNoticeVersion, firstStatesNoticeVersion),
       ),
     );
   return { pending: Number(row?.pending ?? 0), waitlisted: Number(row?.waitlisted ?? 0) };

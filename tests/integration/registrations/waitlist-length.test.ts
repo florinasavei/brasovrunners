@@ -59,7 +59,7 @@ beforeEach(async () => {
     { locale: "ro", title: "Document", body },
     { locale: "en", title: "Document", body },
   ];
-  for (const key of ["PRIVACY_NOTICE", "EVENT_DECLARATION"] as const) {
+  for (const key of ["TERMS", "PRIVACY_NOTICE", "EVENT_DECLARATION"] as const) {
     await insertLegalDocumentVersion(db, {
       key,
       version: 1,
@@ -117,6 +117,7 @@ function submission(email: string, at: Date) {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: false,
     listOptOut: false,

@@ -82,7 +82,8 @@ async function createEvent(): Promise<PublicEvent> {
     { eventId: event.id, locale: "ro", slug: "cros-stari", title: "Cros" },
     { eventId: event.id, locale: "en", slug: "cross-states", title: "Cross" },
   ]);
-  return { id: event.id, participantListVisibility: "NAMES" } as unknown as PublicEvent;
+  // The two dates the list's period counts from (§NNN), beside what the list itself reads.
+  return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function register(
@@ -96,6 +97,8 @@ async function register(
     confirmedAt?: Date;
     emailConfirmedAt?: Date;
     waitlistedAt?: Date;
+    /** The notice this registration was given (§NNN); 1 unless said. */
+    privacyNoticeVersion?: number;
   },
 ) {
   const email = `${input.name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.org`;
@@ -119,7 +122,7 @@ async function register(
     registeredName: input.name,
     displayName: resolveDisplayName({ legalName: input.name }),
     clubName: input.club ?? null,
-    privacyNoticeVersion: 1,
+    privacyNoticeVersion: input.privacyNoticeVersion ?? 1,
     privacyAcknowledgedAt: NOW,
     resultsNameConsent: false,
     resultsConsentVersion: 1,
@@ -209,6 +212,26 @@ describe("§396 with a notice that describes the states", () => {
     for (const word of ["Confirmed", "Registered, awaiting confirmation", "On the waiting list"]) expect(html).toContain(word);
     expect(html).toContain("2 registered, awaiting confirmation · 2 on the waiting list");
     for (const name of NEVER) expect(html).not.toContain(name);
+  });
+
+  /**
+   * §NNN — a tick given under the older notice covered confirmed names only: such a runner is not
+   * published as pending or waiting, and is on the list once confirmed, as that notice said.
+   */
+  it("lists pending and waiting only those registered under the first notice that described the states", async () => {
+    await approveNotice(OLDER_NOTICE, 1);
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn }, 2);
+    const event = await createEvent();
+    await register(event.id, { name: "Ana Popescu", status: "CONFIRMED", confirmedAt: at(1), privacyNoticeVersion: 1 });
+    await register(event.id, { name: "Carmen Semneaza", status: "PENDING_DECLARATION", emailConfirmedAt: at(5), privacyNoticeVersion: 1 });
+    await register(event.id, { name: "Elena Asteapta", status: "WAITLISTED", waitlistedAt: at(9), privacyNoticeVersion: 1 });
+    await register(event.id, { name: "Dan Oferta", status: "WAITLIST_OFFERED", emailConfirmedAt: at(4), privacyNoticeVersion: 2 });
+    await register(event.id, { name: "Florin Primul", status: "WAITLISTED", waitlistedAt: at(6), privacyNoticeVersion: 2 });
+
+    const html = renderToStaticMarkup(await StartList({ event }));
+
+    expect(rowNames(html)).toEqual(["Ana Popescu", "Dan Oferta", "Florin Primul"]);
+    expect(html).toContain("1 înscris în așteptarea confirmării · 1 pe lista de așteptare");
   });
 });
 

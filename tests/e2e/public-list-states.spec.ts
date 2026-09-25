@@ -150,7 +150,11 @@ async function seedEvent(tag: string): Promise<Seeded> {
         `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name,
            privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out,
            email_confirmed_at, confirmed_at, waitlisted_at)
-         VALUES ($1, $2, $3::registration_status, 'ro', $4, $4, 1, now(), false, 1, $5,
+         VALUES ($1, $2, $3::registration_status, 'ro', $4, $4,
+           -- The newest approved notice, as a registration made now records (§NNN: the pending and
+           -- waiting rows list only ticks given under a notice that described the states).
+           (SELECT coalesce(max(version), 1) FROM legal_documents WHERE key = 'PRIVACY_NOTICE' AND is_approved AND withdrawn_at IS NULL),
+           now(), false, 1, $5,
            CASE WHEN $3::text <> 'PENDING_EMAIL_CONFIRMATION' THEN ${moment} END,
            CASE WHEN $3::text = 'CONFIRMED' THEN ${moment} END,
            CASE WHEN $3::text = 'WAITLISTED' THEN ${moment} END)`,

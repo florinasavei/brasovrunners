@@ -19,7 +19,8 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
  *
  * Every window this sweep enforces, in the order it runs them (§322):
  *
- *     identity document, health note   7 days after the event's start (cleared, the rows stay)
+ *     identity document, health note,  7 days after the event's start (cleared, the rows stay)
+ *     emergency contact                  (the contact since §NNN)
  *     a group run's self-declarations  7 days after the event's start (the rows go; §393)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
@@ -140,6 +141,8 @@ export type PruneCounts = {
   participants: number;
   identityDocuments: number;
   healthNotes: number;
+  /** Registrations whose emergency contact was cleared, seven days after the event (§NNN). */
+  emergencyContacts: number;
   /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
   minorSocials: number;
   /** A group run's self-declarations, gone seven days after the run (§393). */
@@ -211,6 +214,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     participants: 0,
     identityDocuments: 0,
     healthNotes: 0,
+    emergencyContacts: 0,
     minorSocials: 0,
     groupRunDeclarations: 0,
     auditLogs: 0,
@@ -253,8 +257,25 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .set({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null, updatedAt: now })
       .where(and(isNotNull(registrations.healthNotes), inArray(registrations.id, recent)))
       .returning({ id: registrations.id });
+    /*
+      The emergency contact (§NNN): a third person's name and number, asked for race day and for
+      nothing after it. Cleared with the documents and the note — a separate statement, so the
+      count says how many rows lost a contact rather than a note — and kept no longer than seven
+      days because nobody is rung about a race that is over.
+    */
+    const clearedContacts = await tx
+      .update(registrations)
+      .set({ emergencyContactName: null, emergencyContactPhone: null, updatedAt: now })
+      .where(
+        and(
+          or(isNotNull(registrations.emergencyContactName), isNotNull(registrations.emergencyContactPhone)),
+          inArray(registrations.id, recent),
+        ),
+      )
+      .returning({ id: registrations.id });
     counts.identityDocuments = clearedDocuments.length;
     counts.healthNotes = clearedHealth.length;
+    counts.emergencyContacts = clearedContacts.length;
   });
 
   /*
@@ -453,6 +474,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.participants +
     counts.identityDocuments +
     counts.healthNotes +
+    counts.emergencyContacts +
     counts.minorSocials +
     counts.groupRunDeclarations +
     counts.auditLogs

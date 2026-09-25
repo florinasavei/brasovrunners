@@ -43,6 +43,15 @@ async function approvePrivacyNotice(db: TestDatabase, now: Date) {
     translations,
     now,
   });
+  await insertLegalDocumentVersion(db, {
+    key: "TERMS",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(translations),
+    translations,
+    now,
+  });
 }
 
 async function approveDeclaration(db: TestDatabase, now: Date) {
@@ -103,6 +112,7 @@ function submissionInput(email: string) {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,

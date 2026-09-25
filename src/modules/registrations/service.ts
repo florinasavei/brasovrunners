@@ -52,6 +52,7 @@ import {
   minimumAgeRule,
   registrationSubmissionSchema,
   staffRegistrationSubmissionSchema,
+  withoutAnotherAdultsConsents,
 } from "./fields";
 import {
   composeLegalName,
@@ -939,7 +940,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         ? anotherPersonSubmissionSchema
         : registrationSubmissionSchema
   ).superRefine(minimumAgeRule(eventDay, event.minAge ?? MIN_PARTICIPANT_AGE));
-  const parsed = schema.safeParse(rawInput);
+  /*
+    Another adult on the address (§389, §NNN): the consents only that adult can give — the health
+    note, the socials, the public list, the first-person fitness statement — are dropped whatever
+    was posted, before anything reads them. A minor's parent still consents for the child.
+  */
+  const parsed = schema.safeParse(origin.anotherPerson ? withoutAnotherAdultsConsents(rawInput, now) : rawInput);
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -1014,6 +1020,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       "VALIDATION_ERROR",
       "no approved privacy notice exists yet; registration cannot be accepted",
     );
+  }
+  /*
+    The club's terms, accepted expressly on the form (§NNN): the version in force now is the one the
+    tick names and the one recorded. Only where the tick is asked — the public form and the family
+    link; a staff entry or a desk walk-in makes it on paper and records none. With no approved terms
+    there is nothing to accept, and the registration is refused like one with no privacy notice.
+  */
+  const terms = origin.source === "PUBLIC" ? await findCurrentApprovedDocument(db, "TERMS", input.locale, now) : undefined;
+  if (origin.source === "PUBLIC" && !terms) {
+    throw new DomainError("VALIDATION_ERROR", "no approved terms exist yet; registration cannot be accepted");
   }
 
   const identity = canonicalizeEmail(input.email);
@@ -1122,6 +1138,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // the paper declaration at the desk carries it, and nobody declares it on another's behalf.
     fitnessDeclaredAt: input.fitnessDeclared ? now : null,
     rulesAcknowledgedAt: input.rulesAcknowledged ? now : null,
+    // The terms version the tick named and the moment (§NNN); rewritten with everything else on a
+    // restart, like `privacy_notice_version`. Null on a staff entry: the paper carries it.
+    termsVersion: terms && input.termsAccepted ? terms.version : null,
+    termsAcceptedAt: terms && input.termsAccepted ? now : null,
   };
 
   /** The deadlines this submission created, for the maintenance job (§334); none on a resend. */

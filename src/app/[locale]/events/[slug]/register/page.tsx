@@ -16,7 +16,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
-import { cachedListStatesDisclosed, cachedPublicAvailability } from "@/modules/public-cache/reads";
+import { cachedCurrentApprovedDocument, cachedListStatesDisclosed, cachedPublicAvailability } from "@/modules/public-cache/reads";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -49,6 +49,7 @@ import {
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
+import ShownForMinor from "@/modules/registrations/ui/ShownForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
@@ -283,6 +284,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       unstable_rethrow(failure);
     }
   }
+  /*
+    The club's terms in force (§NNN): the tick names their version, read from the text in force and
+    never typed. The public cache's read, as the legal page makes it; the service asks the database
+    again when the form is sent and records the version it finds. None approved: the form says
+    registrations cannot be taken, and the service refuses them.
+  */
+  const termsVersion = (await cachedCurrentApprovedDocument("TERMS", locale, now))?.version ?? null;
   const t = await getTranslations("Registration");
   // "4 persoane" / "4 people": the club's limit per address, in words that agree with it (§389, §341).
   const people = capCount !== null ? t(`another.people.${countForm(capCount, locale)}`, { count: capCount }) : "";
@@ -594,6 +602,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
+          {/* No terms approved (§NNN): there is nothing to accept, and the service would refuse. */}
+          {termsVersion === null && (
+            <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-terms-missing">
+              {t("terms.missing")}
+            </Alert>
+          )}
           {fullNotice && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-full-notice">
               {fullNotice === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
@@ -1104,7 +1118,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   person can skip without the form being any less complete. Adults only
                   (§323): gone once the birth date says under eighteen — disabled as well as
                   hidden, so neither box is validated or posted — and never stored for a minor
-                  whatever is posted. A rejection naming either box shows it whatever the date. */}
+                  whatever is posted. A rejection naming either box shows it whatever the date.
+                  Never on the family form (§NNN): a minor keeps none, and another adult's
+                  socials are that adult's to give — the service drops them whatever is posted. */}
+              {!family && (
               <HiddenForMinor
                 birthDateId={fieldId("birthDate")}
                 forceOpen={invalid.has("stravaUrl") || invalid.has("instagramHandle")}
@@ -1136,6 +1153,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
               </HiddenForMinor>
+              )}
 
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
@@ -1150,7 +1168,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 nowhere and this was everywhere. The statement is a required tick down in the
                 consents; this is the optional note for the person who wants the medical team
                 to know something, and it says so.
+
+                On the family form, only for a minor (§NNN): the parent consents for the child;
+                another adult's health note is art. 9 data only that adult can consent to.
               */}
+              {(() => {
+                const healthBlock = (
               <Box component="details" sx={disclosureSx} open={invalid.has("healthConsent")}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.health")}
@@ -1172,6 +1195,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   </CheckboxField>
                 </Stack>
               </Box>
+                );
+                return family ? (
+                  <ShownForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("healthConsent") || invalid.has("healthNotes")}>
+                    {healthBlock}
+                  </ShownForMinor>
+                ) : (
+                  healthBlock
+                );
+              })()}
 
               </Stack>
               </Box>
@@ -1202,8 +1234,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 The race's own conditions, read before they can be agreed to (§195).
 
                 Only when this event wrote any. An event with no rules of its own has nothing to
-                open, so the tick points at the club's terms as a plain link — the requirement is
-                the same, the panel would just be an empty box.
+                open, so the tick points at the event's own page as a plain link — the requirement
+                is the same, the panel would just be an empty box. It no longer points at the
+                club's terms (§NNN): those have a tick of their own, below, that names them.
               */}
               {hasRules ? (
                 <ReadAndAgree
@@ -1222,15 +1255,52 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               ) : (
                 <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required defaultChecked={prefill("rulesAcknowledged") === "on"}>
-                  {t("rules.plain")}{" "}
-                  <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
-                    {t("facts.terms")}
+                  {t("rules.plainPage")}{" "}
+                  <LegalLink href={{ pathname: "/events/[slug]", params: { slug } }} newTabLabel={t("opensInNewTab")}>
+                    {t("rules.pageLink")}
                   </LegalLink>
                 </CheckboxField>
               )}
-              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
-                {t("fitnessDeclared")}
+              {/*
+                The club's terms, accepted expressly (§NNN; Codul civil art. 1203): one tick, in both
+                branches above, never folded, naming the version in force and the unusual clauses.
+                The link opens in a tab of its own (§197), like the facts line's.
+              */}
+              <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required defaultChecked={prefill("termsAccepted") === "on"}>
+                {t.rich("terms.accept", {
+                  version: termsVersion ?? "—",
+                  // The words as one string: `LegalLink` names itself from a string child.
+                  terms: (chunks) => (
+                    <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
+                      {[chunks].flat().join("")}
+                    </LegalLink>
+                  ),
+                })}
               </CheckboxField>
+              {/*
+                The fitness statement. On the family form (§389, §NNN) it is the parent's to make
+                for a minor, as on the ordinary form, and nobody's to make for another adult: then
+                the address holder acknowledges that the person makes it in the declaration they
+                sign. The birth date decides which one is shown; the server decides which one is owed.
+              */}
+              {family ? (
+                <>
+                  <ShownForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("fitnessDeclared")}>
+                    <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
+                      {t("fitnessDeclared")}
+                    </CheckboxField>
+                  </ShownForMinor>
+                  <HiddenForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("fitnessAcknowledged")}>
+                    <CheckboxField id={fieldId("fitnessAcknowledged")} name="fitnessAcknowledged" required defaultChecked={prefill("fitnessAcknowledged") === "on"}>
+                      {t("another.fitnessAcknowledged")}
+                    </CheckboxField>
+                  </HiddenForMinor>
+                </>
+              ) : (
+                <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
+                  {t("fitnessDeclared")}
+                </CheckboxField>
+              )}
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required defaultChecked={prefill("privacyAcknowledged") === "on"}>
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
@@ -1245,22 +1315,29 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 is noise. Switching the list on later means asking the people already
                 registered — the notice, not a pre-answered box.
               */}
-              {event.participantListVisibility === "NAMES" && (
-                <CheckboxField name="listOptIn" defaultChecked={prefill("listOptIn") === "on"}>
-                  {`${t("listOptIn")} — ${t("optionalSuffix")}`}
-                </CheckboxField>
-              )}
-              {/* What the list shows beside the name, once the notice in force says so (§396) —
-                  the same three words the list prints, from its own catalogue keys. */}
-              {event.participantListVisibility === "NAMES" && listStatesOn && (
-                <Typography variant="body2" color="text.secondary" data-testid="list-opt-in-states" sx={{ mt: -0.5 }}>
-                  {t("listOptInStates", {
-                    pending: tEvent("startList.states.pending"),
-                    waitlisted: tEvent("startList.states.waitlisted"),
-                    confirmed: tEvent("startList.states.confirmed"),
-                  })}
-                </Typography>
-              )}
+              {event.participantListVisibility === "NAMES" &&
+                (() => {
+                  const listQuestion = (
+                    <>
+                      <CheckboxField name="listOptIn" defaultChecked={prefill("listOptIn") === "on"}>
+                        {`${t("listOptIn")} — ${t("optionalSuffix")}`}
+                      </CheckboxField>
+                      {/* What the list shows beside the name, once the notice in force says so (§396) —
+                          the same three words the list prints, from its own catalogue keys. */}
+                      {listStatesOn && (
+                        <Typography variant="body2" color="text.secondary" data-testid="list-opt-in-states" sx={{ mt: -0.5 }}>
+                          {t("listOptInStates", {
+                            pending: tEvent("startList.states.pending"),
+                            waitlisted: tEvent("startList.states.waitlisted"),
+                            confirmed: tEvent("startList.states.confirmed"),
+                          })}
+                        </Typography>
+                      )}
+                    </>
+                  );
+                  // On the family form, a minor's only (§NNN): another adult consents to the list themselves.
+                  return family ? <ShownForMinor birthDateId={fieldId("birthDate")}>{listQuestion}</ShownForMinor> : listQuestion;
+                })()}
 
               {/*
                 Pressable, always, and deliberately — and, since 2026-09-17, honest about it.
