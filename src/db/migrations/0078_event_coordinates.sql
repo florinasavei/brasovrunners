@@ -1,3 +1,0 @@
-ALTER TABLE "events" ADD COLUMN "latitude" double precision;--> statement-breakpoint
-ALTER TABLE "events" ADD COLUMN "longitude" double precision;--> statement-breakpoint
-ALTER TABLE "events" ADD CONSTRAINT "events_coordinates_pair_in_range" CHECK (("events"."latitude" IS NULL AND "events"."longitude" IS NULL) OR ("events"."latitude" BETWEEN -90 AND 90 AND "events"."longitude" BETWEEN -180 AND 180));

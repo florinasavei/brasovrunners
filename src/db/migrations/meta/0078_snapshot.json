@@ -1,5 +1,5 @@
 {
-  "id": "15095840-4e57-4b3c-ba74-32c38fb73b55",
+  "id": "07fc02c4-8569-4c4f-ba3e-ed0942258531",
   "prevId": "702b9941-49e2-4168-84ba-f1e057cd6690",
   "version": "7",
   "dialect": "postgresql",
@@ -1086,18 +1086,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "latitude": {
-          "name": "latitude",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "longitude": {
-          "name": "longitude",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": false
-        },
         "route_url": {
           "name": "route_url",
           "type": "text",
@@ -1615,10 +1603,6 @@
         "events_map_url_is_https": {
           "name": "events_map_url_is_https",
           "value": "\"events\".\"map_url\" IS NULL OR \"events\".\"map_url\" LIKE 'https://%'"
-        },
-        "events_coordinates_pair_in_range": {
-          "name": "events_coordinates_pair_in_range",
-          "value": "(\"events\".\"latitude\" IS NULL AND \"events\".\"longitude\" IS NULL) OR (\"events\".\"latitude\" BETWEEN -90 AND 90 AND \"events\".\"longitude\" BETWEEN -180 AND 180)"
         },
         "events_cost_url_is_https": {
           "name": "events_cost_url_is_https",
@@ -4040,9 +4024,11 @@
       "name": "event_difficulty",
       "schema": "public",
       "values": [
+        "VERY_EASY",
         "EASY",
         "MODERATE",
-        "HARD"
+        "HARD",
+        "VERY_HARD"
       ]
     },
     "public.event_status": {

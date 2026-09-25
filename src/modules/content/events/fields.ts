@@ -6,6 +6,7 @@ import { isYoutubeLink } from "@/modules/events/domain/video";
 import { parseTypedCoordinates } from "@/modules/weather/domain/place";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
+import { DIFFICULTY_LEVELS } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import {
   type CoHost,
@@ -611,7 +612,7 @@ export const eventFieldsSchema = z
      * Closed sets since migration `0018`, and optional because "the club has not said" is a
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
-    difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
+    difficulty: optionalEnum(DIFFICULTY_LEVELS),
     // §398 — optional, like `costAmount`/`costUrl` below: absent means this caller is not
     // editing the cost fields at all, not "clear it". The service defaults an *absent* value to
     // `FREE` only on create (`eventColumnsFrom`, the owner: "by default toate evenimentele sunt

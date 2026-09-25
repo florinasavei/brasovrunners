@@ -671,8 +671,8 @@ export default async function EventFacts({
        D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
        elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
        beside the event's type already says it, so difficulty leads here, before distance and
-       elevation. Difficulty carries its own glyph (§399: a scale of dumbbells, one through three
-       lit, replacing §112's phone-signal bars); distance and elevation do not, on the hero as
+       elevation. Difficulty carries its own glyph (§NNN: a gauge, its needle at one of five
+       positions, replacing §399's scale of weights); distance and elevation do not, on the hero as
        before. */
     const route: ReactNode[] = [];
     if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
