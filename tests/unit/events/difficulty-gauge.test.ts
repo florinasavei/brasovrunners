@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — five levels and a gauge (the owner, 2026-09-25: "vreau să fie foarte
+ * `DECISIONS.md` §412 — five levels and a gauge (the owner, 2026-09-25: "vreau să fie foarte
  * ușor, ușor, mediu, greu și foarte greu — sau un gauge icon custom mai degrabă"), replacing §399's
  * scale of weights.
  *
@@ -33,14 +33,14 @@ function needleTip(html: string) {
   return { x: Number(match[1]), y: Number(match[2]) };
 }
 
-describe("§NNN the difficulty's five levels, one ordered list", () => {
+describe("§412 the difficulty's five levels, one ordered list", () => {
   it("is the database enum's own values, in the enum's own order — very easy to very hard", () => {
     expect([...DIFFICULTY_LEVELS]).toEqual(["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
     expect([...eventDifficulty.enumValues]).toEqual([...DIFFICULTY_LEVELS]);
   });
 });
 
-describe("§NNN DifficultyGaugeIcon — a half-dial, the needle at one of five positions", () => {
+describe("§412 DifficultyGaugeIcon — a half-dial, the needle at one of five positions", () => {
   it.each(DIFFICULTY_LEVELS.map((level, index) => [level, index + 1] as const))("%s lights %i of five segments", (level, lit) => {
     const html = renderToStaticMarkup(createElement(DIFFICULTY_ICONS[level]));
     expect(counts(html)).toEqual({ on: lit, off: DIFFICULTY_LEVELS.length - lit });

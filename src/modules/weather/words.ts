@@ -28,7 +28,7 @@ export type WeatherWords = {
   /** The credit the data's licence asks for, «Prognoză: Open-Meteo». */
   credit: string;
   /**
-   * The event page's details for the start hour (§NNN): how warm it feels, how much falls (only
+   * The event page's details for the start hour (§416): how warm it feels, how much falls (only
    * when anything does), the gusts, the humidity, the UV index (only when the sun is up to it) —
    * each only when the hour has it. Never on the reminder or the cards.
    */
@@ -80,7 +80,7 @@ function weatherCatalogue(locale: "ro" | "en") {
 }
 
 /**
- * Which place the forecast is for, in words (§NNN): «Pentru locul evenimentului» when it was read
+ * Which place the forecast is for, in words (§416): «Pentru locul evenimentului» when it was read
  * at the event's own pin or typed pair, «Pentru Brașov» when it fell back to the club's place — so
  * a runner never reads the city's forecast as the trailhead's.
  */

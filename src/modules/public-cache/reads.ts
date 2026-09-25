@@ -16,7 +16,6 @@ import {
   findPublishedPageTranslationsForPages,
   listPublishedPages,
 } from "@/modules/content/pages/repository";
-import type { EventType } from "@/modules/events/domain/event-type";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
   findEventForRegistrationById,
@@ -117,12 +116,15 @@ export async function cachedLatestPastEvent(locale: Locale, now: Date) {
   return publicRead(["events.latest-past", locale, window], ["events"], () => findLatestPastEvent(getDb(), locale, now));
 }
 
-/** `listPastEvents`: the folded section at the foot of the listing (§267). */
-export async function cachedPastEvents(locale: Locale, now: Date, limit: number, type?: EventType) {
+/**
+ * `listPastEvents`: the folded section at the foot of the listing (§267). Never narrowed by kind
+ * here: the listing reads one window whatever the address ticks and filters it in memory (§413),
+ * so there is one entry per language and clock window — the page's one `limit` — and no filter
+ * combination can mint entries of its own.
+ */
+export async function cachedPastEvents(locale: Locale, now: Date, limit: number) {
   const window = await listingWindow(locale, now);
-  return publicRead(["events.past", locale, window, limit, type ?? "all"], ["events"], () =>
-    listPastEvents(getDb(), locale, now, limit, type),
-  );
+  return publicRead(["events.past", locale, window, limit], ["events"], () => listPastEvents(getDb(), locale, now, limit));
 }
 
 /** `listPublishedEventsBetween`: one month or one year of the calendar. No clock: the range is the key. */

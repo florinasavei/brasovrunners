@@ -4,7 +4,7 @@ import { OPEN_METEO_SITE } from "../domain/credit";
 import { weatherListWords } from "../words";
 
 /**
- * The listing's one credit for the forecasts on its cards (§NNN): «Prognoză: Open-Meteo», a link to
+ * The listing's one credit for the forecasts on its cards (§416): «Prognoză: Open-Meteo», a link to
  * Open-Meteo's site as its CC BY licence asks (§402), under the cards and only when a card carries
  * a forecast. One line for the page rather than one per card: a card's pill is a glyph and a
  * number, and a link inside every card would be one more 44-pixel target on each. A thumb's 44

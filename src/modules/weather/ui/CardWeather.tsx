@@ -4,7 +4,7 @@ import { weatherListWords, weatherWords } from "../words";
 import { WEATHER_GLYPH } from "./glyphs";
 
 /**
- * The weather at the start on a listing card (§NNN; the owner, 2026-09-25: "aș vrea să văd vremea
+ * The weather at the start on a listing card (§416; the owner, 2026-09-25: "aș vrea să văd vremea
  * și pe cardul principal"): the forecast's glyph and the degrees — «☁ 14 °C» — in the card's row of
  * chips, drawn like them (24 pixels, outlined, rounded) so it is one more fact a runner scans, not a
  * line of its own that would make every card taller.

@@ -136,7 +136,7 @@ function organizers(event: PublicEvent, organizationName: string, locale?: "ro" 
  */
 function eventPlace(event: PublicEvent) {
   /*
-    `geo` is back (§NNN) when the event names its own point: the pin its map link carries, or the
+    `geo` is back (§416) when the event names its own point: the pin its map link carries, or the
     «Coordonate» the organizer typed — the very point the weather is read for. Never the club's
     fallback: a city centre given as the venue's coordinates is the guess §61 refused. The club's
     place is passed only because `forecastPlace` needs one; its `source` says it was not used.

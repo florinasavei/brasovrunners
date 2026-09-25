@@ -105,7 +105,7 @@ export default async function PreviewEventPage({ params }: Props) {
     raceStartsAt: event.raceStartsAt,
     timezone: event.timezone,
     mapUrl: placeLater ? null : event.mapUrl,
-    // «Coordonate» (§NNN): withheld with the place, as the public query withholds them.
+    // «Coordonate» (§416): withheld with the place, as the public query withholds them.
     latitude: placeLater ? null : event.latitude,
     longitude: placeLater ? null : event.longitude,
     routeUrl: event.routeUrl,

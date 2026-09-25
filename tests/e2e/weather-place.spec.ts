@@ -1,10 +1,11 @@
 import { existsSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import pg from "pg";
-import { hydrated, signIn } from "./support/featured-event";
+import { FEATURED, fillDateField, hydrated, signIn, withFeaturedEventLock } from "./support/featured-event";
+import { openEditorBox } from "./support/fold";
 
 /**
- * BR-REQ-011-01 and BR-REQ-041-01 (§NNN, amending §402) — the weather at the event's own place, with
+ * BR-REQ-011-01 and BR-REQ-041-01 (§416, amending §402) — the weather at the event's own place, with
  * more of it. The owner, 2026-09-25: "aș vrea să văd vremea și pe cardul principal" and "la vreme aș
  * vrea să văd exact pe locația selectată, să văd mai multe date".
  *
@@ -77,7 +78,7 @@ async function noSidewaysScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-test.describe("BR-REQ-011-01 the weather block at the event's own place (§NNN)", () => {
+test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)", () => {
   test("a map link with a pin: the start and the two hours after it, the start's details, «Pentru locul evenimentului»", async ({ page }) => {
     const id = await insertDraft({ mapUrl: "https://www.google.com/maps?q=45.6384,25.5921" }, "pin");
     try {
@@ -159,7 +160,13 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§NNN)"
   });
 });
 
-test.describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
+test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
+  // The third test below mutates the shared singleton `FEATURED` event for its own duration; kept
+  // from ever overlapping the second, which reads it too (`mode: "serial"` only orders tests
+  // inside one project's own run of this file — `mobile` and `desktop` each run it in a separate
+  // process, so that test also takes `withFeaturedEventLock`, the advisory lock the two share).
+  test.describe.configure({ mode: "serial" });
+
   test("a card within seven days of its start wears the glyph and the degrees; the listing credits Open-Meteo once", async ({ page }) => {
     await page.goto("/ro/evenimente");
     const main = page.locator("#main");
@@ -194,4 +201,91 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
     await expect(page.locator("#main ul > li h2").first()).toBeAttached();
     await expect(page.getByTestId("hero-weather")).toHaveCount(0);
   });
+
+  /**
+   * The positive case of the hero's «Vremea» row (a review finding, §416): the test above only
+   * proves it is absent three weeks out. The featured event is the shared `FEATURED` singleton
+   * (`DECISIONS.md` §28: the database refuses a second), so both its gathering and its gun time —
+   * `weatherInstant` reads `raceStartsAt` over `startsAt` when the event has one (`forecast.ts`),
+   * and `events_race_start_within_event` requires `raceStartsAt >= startsAt` — are moved into the
+   * seven-day window together, and back out again in a `finally`, inside the lock the other specs
+   * that touch `FEATURED` all take.
+   *
+   * Through the editor, not a direct write (unlike `insertDraft`'s own drafts above): the listing
+   * reads the forecast through Next's own data cache (§333), which only a save's own
+   * `revalidateTag`/`revalidatePath` clears — a raw `UPDATE` moved the row but left the page
+   * showing the old date, the way `event-cost-external-discount.spec.ts`'s own `FEATURED` case
+   * already found for its cost row.
+   */
+  test("a featured event within seven days: the hero carries the word, the degrees, the rain and the wind, both languages", async ({ page }) => {
+    // Two full editor saves (the move and the `finally`'s own restore) plus four page reads —
+    // past the 30-second default (`event-cost-external-discount.spec.ts`'s own featured-hero
+    // case takes the same allowance for the same reason).
+    test.setTimeout(90_000);
+    await withFeaturedEventLock(() => runFeaturedHeroWeatherCase(page));
+  });
 });
+
+async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
+  const gathering = new Date(Date.now() + 2 * DAY).toISOString().slice(0, 10);
+  await signIn(page, "Dev Administrator");
+  await page.goto("/ro/admin");
+  await page.getByRole("link", { name: FEATURED.title }).first().click();
+  await expect(page).toHaveURL(/\/admin\/events\//);
+  await hydrated(page);
+  const editorUrl = page.url();
+
+  await openEditorBox(page, "Data și ora");
+  // What is there now, read back from the hidden inputs `WallTimeField` posts under, so the
+  // `finally` below can put exactly this back — the seed's own `nextWeekday(0, 21)` has no
+  // fixed value to restore to.
+  const original = {
+    startDate: await page.locator('input[name="event.startsAtDate"]').inputValue(),
+    startTime: await page.locator('input[name="event.startsAtTime"]').inputValue(),
+    raceDate: await page.locator('input[name="event.raceStartsAtDate"]').inputValue(),
+    raceTime: await page.locator('input[name="event.raceStartsAtTime"]').inputValue(),
+  };
+
+  try {
+    await moveFeaturedRaceTimes(page, gathering, "09:00", gathering, "10:00");
+
+    await page.goto("/ro/evenimente");
+    const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
+    await expect(hero).toBeVisible();
+    const weather = hero.getByTestId("hero-weather");
+    await expect(weather).toBeVisible();
+    await expect(weather).toContainText("Parțial noros");
+    await expect(weather).toContainText("14 °C");
+    await expect(weather).toContainText("20% șanse de ploaie");
+    await expect(weather).toContainText("vânt 11 km/h");
+
+    await page.goto("/en/events");
+    const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
+    const weatherEn = heroEn.getByTestId("hero-weather");
+    await expect(weatherEn).toBeVisible();
+    await expect(weatherEn).toContainText("Partly cloudy");
+    await expect(weatherEn).toContainText("14 °C");
+    await expect(weatherEn).toContainText("20% chance of rain");
+    await expect(weatherEn).toContainText("wind 11 km/h");
+  } finally {
+    // Whatever the assertions above found, `FEATURED` is left exactly as every other spec
+    // expects it — three weeks out, the seed's own dates — even on a failed assertion.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await openEditorBox(page, "Data și ora");
+    await moveFeaturedRaceTimes(page, original.startDate, original.startTime, original.raceDate, original.raceTime);
+  }
+}
+
+/** Fills both `WallTimeField`s the featured race carries and saves — `event.startsAt` first,
+ * `event.raceStartsAt` second, whose own "Ora" is the *second* one in source order (`WhenBox`). */
+async function moveFeaturedRaceTimes(page: Page, startDate: string, startTime: string, raceDate: string, raceTime: string): Promise<void> {
+  await fillDateField(page, "Începutul evenimentului", startDate);
+  await page.getByRole("textbox", { name: "Ora", exact: true }).nth(0).fill(startTime);
+  await fillDateField(page, "Startul cursei", raceDate);
+  await page.getByRole("textbox", { name: "Ora", exact: true }).nth(1).fill(raceTime);
+  const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
+  if (await acknowledge.count()) await acknowledge.check();
+  await page.getByRole("button", { name: "Salvează", exact: true }).click();
+  await page.waitForURL(/[?&]saved=/);
+}

@@ -8,7 +8,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §402) — «Coordonate», the pair the forecast reads when the map link carries no pin:
+ * §416 (amending §402) — «Coordonate», the pair the forecast reads when the map link carries no pin:
  * saved from the editor's one box as two columns, cleared by an empty box, left alone by a caller that
  * does not post it, refused when it is not a pair in range, withheld from the public with the place
  * while it is to be announced (§328), and refused by the database itself when half a pair or a pair
@@ -48,7 +48,7 @@ const TRANSLATIONS = {
   en: { slug: "tampa-trail", title: "Tâmpa trail run", excerpt: "Up Tâmpa." },
 };
 
-describe("§NNN the event's «Coordonate»", () => {
+describe("§416 the event's «Coordonate»", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

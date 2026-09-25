@@ -96,7 +96,8 @@ export function nightAutoLine(
   const verdict = night ? words.verdictNight : words.verdictDay;
   // The start is named before the sunset, so the sunset is never read as the start (§404) — and the
   // shape (Dawn, End, EndProgramme, After or plain) is `nightShape`'s own answer, the same rule the
-  // pill, the calendar and the reminder ask, never decided a second time here.
+  // calendar and the reminder ask, never decided a second time here; the pill's tooltip names only
+  // the sunset (§415) and asks nothing of it.
   const named = night && !nightAtStart && spanEnd ? spanEnd.source : null;
   const facts: NightEventFacts = {
     night,

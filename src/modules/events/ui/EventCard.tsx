@@ -48,7 +48,7 @@ export default async function EventCard({
   event: PublicEvent;
   index: number;
   now: Date;
-  /** The forecast at the start (§NNN), read by the listing for every card at once (`forecastsForEvents`); null outside the seven days or on any failure. */
+  /** The forecast at the start (§416), read by the listing for every card at once (`forecastsForEvents`); null outside the seven days or on any failure. */
   weather?: WeatherReading | null;
 }) {
   const tEvent = await getTranslations("Event");
@@ -73,7 +73,7 @@ export default async function EventCard({
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
           {/* Held with a partner (§367, amended §375, §379): the handshake and the generic "Colaborare" / "Partnership". */}
           <PartnerChip event={event} />
-          {/* The weather at the start, a glyph and the degrees (§NNN), within seven days of it. */}
+          {/* The weather at the start, a glyph and the degrees (§416), within seven days of it. */}
           {weather && <CardWeather reading={weather} locale={locale} />}
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}

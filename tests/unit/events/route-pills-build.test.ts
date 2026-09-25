@@ -127,7 +127,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
   // screen reader is given — the chip's visible word, then the visually-hidden span — so a wrong
   // key or a missing locale in `routePillParts`'s `srSuffix` line fails here.
   it.each([
-    // Five levels since §NNN (the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu").
+    // Five levels since §412 (the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu").
     ["ro", "VERY_EASY", "Foarte ușor", "Dificultate"],
     ["ro", "EASY", "Ușor", "Dificultate"],
     ["ro", "MODERATE", "Mediu", "Dificultate"],

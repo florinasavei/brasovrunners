@@ -5,7 +5,7 @@ import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
 import { DIFFICULTY_LEVELS } from "../domain/difficulty";
 
 /**
- * The difficulty as a gauge (§NNN; the owner, 2026-09-25: "vreau să fie foarte ușor, ușor, mediu,
+ * The difficulty as a gauge (§412; the owner, 2026-09-25: "vreau să fie foarte ușor, ușor, mediu,
  * greu și foarte greu — sau un gauge icon custom mai degrabă"), replacing §399's scale of
  * weights. One half-dial on the same 24-unit grid as every other glyph (`RoadIcon`), one
  * `<svg>` — what `GlyphChip`'s clone and `.MuiChip-icon`'s sizing expect — and one icon-width

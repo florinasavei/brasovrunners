@@ -2,7 +2,7 @@ import type { events } from "@/db/schema/events";
 
 /**
  * The closed set's own levels, in ascending order — the index into this tuple *is* the level
- * (1-based), and the gauge's needle position (§NNN). Five since §NNN (the owner, 2026-09-25:
+ * (1-based), and the gauge's needle position (§412). Five since §412 (the owner, 2026-09-25:
  * "vreau să fie foarte ușor, ușor, mediu, greu și foarte greu"), three before it (migration
  * `0018`); migration `0078` added `VERY_EASY` before `EASY` and `VERY_HARD` after `HARD`, so the
  * enum's own order is this one.

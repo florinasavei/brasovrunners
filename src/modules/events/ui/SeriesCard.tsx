@@ -41,7 +41,7 @@ export default async function SeriesCard({
   members: readonly PublicEvent[];
   index: number;
   now: Date;
-  /** The forecast at the next date's start (§NNN) — the date whose facts the card shows; null outside the seven days. */
+  /** The forecast at the next date's start (§416) — the date whose facts the card shows; null outside the seven days. */
   weather?: WeatherReading | null;
 }) {
   const t = await getTranslations("Event");
@@ -94,7 +94,7 @@ export default async function SeriesCard({
           {special && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
           {/* The next date's partners (§367) — the date whose facts the card shows below. */}
           <PartnerChip event={next} />
-          {/* The next date's weather at its start, a glyph and the degrees (§NNN). */}
+          {/* The next date's weather at its start, a glyph and the degrees (§416). */}
           {weather && <CardWeather reading={weather} locale={locale} />}
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Box>

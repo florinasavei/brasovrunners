@@ -5,7 +5,7 @@ import DifficultyGaugeIcon from "./DifficultyGaugeIcon";
 
 /**
  * One registry glyph per level, mapped over `DIFFICULTY_LEVELS` — the gauge's needle at the
- * level's own position (§NNN). A sixth level is a sixth glyph and a sixth `difficulty:*` name
+ * level's own position (§412). A sixth level is a sixth glyph and a sixth `difficulty:*` name
  * with no edit anywhere else.
  *
  * Plain components in a module with no `"use client"` of its own, each rendering the client

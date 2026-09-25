@@ -168,7 +168,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     expect(new Set(glyphClasses).size).toBe(1);
     expect(route.dd).toContain('data-testid="StraightenIcon"');
     expect(route.dd).toContain('data-testid="TrendingUpIcon"');
-    // "Ușor" (EASY) is the gauge at the second of five positions: two segments lit, three faint (§NNN).
+    // "Ușor" (EASY) is the gauge at the second of five positions: two segments lit, three faint (§412).
     expect(route.dd).toContain("data-level=\"2\"");
     expect((route.dd.match(/data-testid="difficulty-gauge-on"/g) ?? []).length).toBe(2);
     expect((route.dd.match(/data-testid="difficulty-gauge-off"/g) ?? []).length).toBe(3);

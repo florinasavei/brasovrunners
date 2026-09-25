@@ -186,7 +186,7 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
       expect(roFlat[`Event.surface.${surface}`], `ro label for ${surface}`).toBeDefined();
       expect(enFlat[`Event.surface.${surface}`], `en label for ${surface}`).toBeDefined();
     }
-    // The five difficulty levels (§NNN): the public pill reads `Event.difficultyValues`, the
+    // The five difficulty levels (§412): the public pill reads `Event.difficultyValues`, the
     // editor's select `Admin.editor.difficultyValues` — both, in both locales, for every level.
     const { DIFFICULTY_LEVELS } = await import("@/modules/events/domain/difficulty");
     for (const level of DIFFICULTY_LEVELS) {

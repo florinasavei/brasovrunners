@@ -30,7 +30,7 @@ export type { EventForecast } from "./domain/forecast";
  * nothing from a third party until the visitor asks) — the server asks, and the page carries words.
  *
  * **One request an hour per place.** §402 asked once for the club's coordinates; the owner then
- * wanted it "exact pe locația selectată" (§NNN), so each event reads its own place (below) — eight
+ * wanted it "exact pe locația selectată" (§416), so each event reads its own place (below) — eight
  * days of hours, a few kilobytes, kept in Next's data cache for an hour under the tag
  * `weather:forecast` (`WEATHER_CACHE_TAG`), keyed by the rounded place. The page is still rendered
  * per request (§333); the forecast under it is not refetched per request.
@@ -58,7 +58,7 @@ export type { EventForecast } from "./domain/forecast";
  */
 
 /*
-  Where the forecast is asked for (§NNN, amending §402's "one forecast for the club's place"): the
+  Where the forecast is asked for (§416, amending §402's "one forecast for the club's place"): the
   event's own place — the pin its map link carries, else the «Coordonate» the organizer typed,
   else the club's `CLUB_COORDINATES` (§394) — read by `domain/place.ts#forecastPlace`, rounded to
   three decimals (`roundPlace`, about 100 m) so pins in one car park share one cached answer. One entry
@@ -111,7 +111,7 @@ export function openMeteoUrl(place: Coordinates = env.CLUB_COORDINATES): string 
   const query = new URLSearchParams({
     latitude: String(place.latitude),
     longitude: String(place.longitude),
-    // §402's four, then the page's details (§NNN): how warm it feels, how much falls, the gusts,
+    // §402's four, then the page's details (§416): how warm it feels, how much falls, the gusts,
     // the humidity and the UV index — one request, the same few kilobytes.
     hourly: OPEN_METEO_HOURLY.join(","),
     wind_speed_unit: "kmh",
@@ -168,7 +168,7 @@ export async function fetchOpenMeteo(
 /**
  * The end-to-end suite's forecast (`WEATHER_SOURCE=stub`): every hour from the last one to eight
  * days ahead, partly cloudy, 14 °C, a 20% chance of rain and an 11 km/h wind — and the page's
- * details (§NNN): feels like 12 °C, 0.4 mm, gusts of 24 km/h, 72% humidity, UV index 3 — fixed, so
+ * details (§416): feels like 12 °C, 0.4 mm, gusts of 24 km/h, 72% humidity, UV index 3 — fixed, so
  * a spec can read the words, and built from the clock, so any start inside the window finds its
  * hour. The same at every place: the stub answers without asking where.
  */
@@ -215,7 +215,7 @@ function dataCacheAvailable(): boolean {
  * the forecast is the same whoever asks. The place — rounded (`roundPlace`) — is the cached
  * function's argument, which `unstable_cache` folds into the key: one entry per place per hour, and
  * a changed `CLUB_COORDINATES` or a moved pin never reads the old place's entry. `v2` since the
- * page's details joined the answer (§NNN).
+ * page's details joined the answer (§416).
  */
 const CACHE_KEY = ["weather", "open-meteo", "v2"];
 
@@ -229,7 +229,7 @@ let quietUntil = 0;
 let lastFailure: { at: number; reason: WeatherFailure } | null = null;
 
 /**
- * The places this instance read a forecast for, by rounded key, with when (§NNN): what the /devs
+ * The places this instance read a forecast for, by rounded key, with when (§416): what the /devs
  * «Stare» row counts — "how many places were read this hour" — so a pin that splits the club's one
  * request into several is seen. In memory, per instance, like `lastFailure`: a serverless instance
  * is short-lived, and the count is what this one saw, never a total across them.
@@ -262,6 +262,13 @@ export type ForecastDeps = {
   now?: number;
   timeoutMs?: number;
   cached?: () => Promise<HourlyForecast>;
+  /**
+   * False keeps this read out of `placesRead` (§416, a review finding): `readWeatherStatus`'s own
+   * check of the club's place is the panel asking, never a visitor's page, so it must not count
+   * toward "how many places were read this hour" — that figure is for real traffic. Every other
+   * caller leaves this at its default (true).
+   */
+  record?: boolean;
 };
 
 /** The club's own place's forecast (§394's `CLUB_COORDINATES`) — what the system panel reads. */
@@ -299,7 +306,7 @@ export async function readForecast(at: Coordinates, deps: ForecastDeps = {}): Pr
   try {
     let forecast = cached ? await cached() : await ask();
     if (isForecastStale(forecast, now)) forecast = await ask();
-    placesRead.set(placeKey(place), now);
+    if (deps.record !== false) placesRead.set(placeKey(place), now);
     return { ok: true, forecast };
   } catch (error) {
     const reason: WeatherFailure = error instanceof WeatherUnavailable ? error.reason : "unreadable";
@@ -355,7 +362,7 @@ export async function weatherForEvent(event: ForecastEvent, now: Date, deps: For
 }
 
 /**
- * Every listed event's forecast at once, by id (§NNN — the owner: "aș vrea să văd vremea și pe
+ * Every listed event's forecast at once, by id (§416 — the owner: "aș vrea să văd vremea și pe
  * cardul principal"): the listing's hero and cards. An event outside the window asks nothing, and
  * events that meet at one rounded place share one read — the club's weekly runs are one request.
  */
@@ -403,11 +410,12 @@ export type WeatherStatus =
 export async function readWeatherStatus(): Promise<WeatherStatus> {
   const source = env.WEATHER_SOURCE;
   if (source !== "open-meteo") return { source };
-  const read = await readClubForecast();
+  // `record: false` (§416, a review finding): the panel's own check of the club's place is not a
+  // visitor's page, so it must not inflate "how many places were read this hour" below.
+  const read = await readClubForecast({ record: false });
   if (read.ok) {
     const fetchedAt = read.forecast.fetchedAt;
     if (isForecastStale(read.forecast, Date.now())) return { source, ok: false, reason: "stale", failedAt: new Date(fetchedAt) };
-    // The club's own place was just read above, so the count is at least one (§NNN).
     return { source, ok: true, fetchedAt: new Date(fetchedAt), hours: read.forecast.time.length, places: placesReadWithinHour(Date.now()) };
   }
   return {

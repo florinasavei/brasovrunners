@@ -3,7 +3,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, openEditorBox } from "./support/fold";
 
 /**
- * `DECISIONS.md` §NNN — five difficulty levels and a gauge (the owner, 2026-09-25: "vreau să fie
+ * `DECISIONS.md` §412 — five difficulty levels and a gauge (the owner, 2026-09-25: "vreau să fie
  * foarte ușor, ușor, mediu, greu și foarte greu — sau un gauge icon custom mai degrabă"),
  * replacing §399's scale of weights. One glyph, drawn by `DifficultyGaugeIcon.tsx` and shared
  * through `RoutePills` (§388) by every surface: the event page's pill, the listing card's, the
@@ -28,7 +28,7 @@ async function expectGauge(pill: Locator, level: number) {
   await expect(gauge.locator('[data-testid="difficulty-gauge-needle"]')).toHaveCount(1);
 }
 
-test.describe("BR-REQ-041-01 the difficulty gauge (§NNN)", () => {
+test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
   test("the event page's route row keeps the word beside the gauge, the needle at the third of five", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
     const traseu = page.getByTestId("event-facts").locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
@@ -56,7 +56,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§NNN)", () => {
       await expect(pill).toBeVisible();
       await expect(pill).toContainText("Mediu — Dificultate");
       await expectGauge(pill, 3);
-      // The hardest end of the scale, on the seeded interval session (§NNN's seed).
+      // The hardest end of the scale, on the seeded interval session (§412's seed).
       const hardest = page.locator("li", { hasText: "Antrenament de intervale" }).first().locator('[data-fact="pills"] .MuiChip-root', { hasText: "Foarte greu" });
       await expect(hardest).toContainText("Foarte greu — Dificultate");
       await expectGauge(hardest, 5);

@@ -9,12 +9,12 @@ import {
   roundPlace,
   typedCoordinates,
 } from "@/modules/weather/domain/place";
-import { placeKey, placesReadWithinHour, readForecast } from "@/modules/weather/source";
+import { placeKey, placesReadWithinHour, readClubForecast, readForecast } from "@/modules/weather/source";
 import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
 import { eventFieldsSchema } from "@/modules/content/events/fields";
 
 /**
- * §NNN (amending §402) — the forecast at the event's own place, and more of it: the place resolver's
+ * §416 (amending §402) — the forecast at the event's own place, and more of it: the place resolver's
  * order (the map link's pin, the typed «Coordonate», the club), the short link that is never
  * followed, the rounding that is the cache's key, the page's details and its three hours, and their
  * words in both languages. No socket: every request goes through a `fetch` handed in.
@@ -23,7 +23,7 @@ import { eventFieldsSchema } from "@/modules/content/events/fields";
 const CLUB = { latitude: 45.6427, longitude: 25.5887 };
 const HOUR = 60 * 60 * 1000;
 
-describe("§NNN the coordinates a map link carries in its own address", () => {
+describe("§416 the coordinates a map link carries in its own address", () => {
   it("reads Google's `?q=` and `?query=`, a pin, a search path and the map's centre", () => {
     expect(coordinatesInMapLink("https://maps.google.com/?q=45.64,25.58")).toEqual({ latitude: 45.64, longitude: 25.58 });
     expect(coordinatesInMapLink("https://www.google.com/maps/search/?api=1&query=45.6384%2C25.5921")).toEqual({ latitude: 45.6384, longitude: 25.5921 });
@@ -53,7 +53,7 @@ describe("§NNN the coordinates a map link carries in its own address", () => {
   });
 });
 
-describe("§NNN where an event's forecast is asked for, in order", () => {
+describe("§416 where an event's forecast is asked for, in order", () => {
   const pin = "https://maps.google.com/?q=45.61,25.61";
 
   it("1. the map link's pin, over a typed pair", () => {
@@ -84,7 +84,7 @@ describe("§NNN where an event's forecast is asked for, in order", () => {
   });
 });
 
-describe("§NNN the editor's «Coordonate» box", () => {
+describe("§416 the editor's «Coordonate» box", () => {
   it("takes what a map's «copy coordinates» gives, and the Romanian decimal comma", () => {
     expect(parseTypedCoordinates("45.6427, 25.5887")).toEqual({ latitude: 45.6427, longitude: 25.5887 });
     expect(parseTypedCoordinates("45.6427,25.5887")).toEqual({ latitude: 45.6427, longitude: 25.5887 });
@@ -118,7 +118,7 @@ describe("§NNN the editor's «Coordonate» box", () => {
   });
 });
 
-describe("§NNN one cached forecast per rounded place", () => {
+describe("§416 one cached forecast per rounded place", () => {
   it("rounds to three decimals, about a hundred metres, and never keeps a -0", () => {
     expect(PLACE_DECIMALS).toBe(3);
     expect(roundPlace({ latitude: 45.64271, longitude: 25.58869 })).toEqual({ latitude: 45.643, longitude: 25.589 });
@@ -152,9 +152,23 @@ describe("§NNN one cached forecast per rounded place", () => {
     // An hour and a minute on, neither is counted.
     expect(placesReadWithinHour(now + HOUR + 60_000)).toBe(0);
   });
+
+  it("a `record: false` read (the status panel's own check) never inflates the count (§416)", async () => {
+    const now = new Date("2100-01-02T00:00:00Z").getTime();
+    const fetchImpl = (async () => {
+      const time = Array.from({ length: 3 }, (_, index) => now / 1000 + index * 3600);
+      const column = time.map(() => 1);
+      return new Response(JSON.stringify({ hourly: { time, temperature_2m: column, precipitation_probability: column, weather_code: column, wind_speed_10m: column } }));
+    }) as unknown as typeof fetch;
+    await readClubForecast({ fetch: fetchImpl, source: "open-meteo", now, record: false });
+    expect(placesReadWithinHour(now)).toBe(0);
+    // A read with no `record` at all still counts, exactly as before.
+    await readForecast(CLUB, { fetch: fetchImpl, source: "open-meteo", now: now + 1 });
+    expect(placesReadWithinHour(now + 1)).toBe(1);
+  });
 });
 
-describe("§NNN the start hour's details and the hours after it", () => {
+describe("§416 the start hour's details and the hours after it", () => {
   const START = new Date("2026-09-26T05:00:00Z");
   const first = new Date("2026-09-24T09:00:00Z").getTime();
 
@@ -198,7 +212,7 @@ describe("§NNN the start hour's details and the hours after it", () => {
   });
 });
 
-describe("§NNN the details, in words, in both languages", () => {
+describe("§416 the details, in words, in both languages", () => {
   const reading = {
     hourAt: 0,
     code: 61,

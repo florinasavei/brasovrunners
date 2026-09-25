@@ -385,7 +385,8 @@ async function renderRow(
       data.nightEventSunset = night.sunset ?? "";
       data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
       // The start named before the sunset, and the end when it is the reason (§404) — the shape
-      // decided by `nightShape`, the same rule as the pill, the calendar and the `.ics`.
+      // decided by `nightShape`, the same rule as the calendar and the `.ics`; the pill's tooltip
+      // names only the sunset (§415) and does not ask it.
       if (night.start) data.nightEventStart = night.start;
       const shape = nightShape(night);
       if ((shape?.suffix === "End" || shape?.suffix === "EndProgramme") && night.end) {

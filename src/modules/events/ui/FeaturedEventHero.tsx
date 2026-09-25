@@ -41,7 +41,7 @@ export default async function FeaturedEventHero({
   now: Date;
   /** How many days before the start the countdown shows — the club's "Termene" (§377), read by the page. */
   raceWeekDays: number;
-  /** The forecast at the start, read by the listing (§NNN): «Vremea» among the hero's facts, within seven days of it. */
+  /** The forecast at the start, read by the listing (§416): «Vremea» among the hero's facts, within seven days of it. */
   weather?: EventForecast | null;
 }) {
   const t = await getTranslations("Events");

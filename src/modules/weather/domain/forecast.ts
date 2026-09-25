@@ -41,7 +41,7 @@ export type WeatherReading = {
   /** Wind at ten metres in km/h; null when the hour has none. */
   windKmh: number | null;
   /*
-    The details the event page adds under the start hour (§NNN, amending §402; the owner: "să văd
+    The details the event page adds under the start hour (§416, amending §402; the owner: "să văd
     mai multe date") — what a runner dresses and packs by, beyond the word and the degrees. Each
     null when the hour has none; the reminder and the cards never read them.
   */
@@ -58,7 +58,7 @@ export type WeatherReading = {
 };
 
 /**
- * An event's forecast as the page draws it (§NNN): the start's hour with its details, the hours
+ * An event's forecast as the page draws it (§416): the start's hour with its details, the hours
  * after it (`pickHours`, the start's first), and which place it was asked for — the page says
  * "for the event's place" or "for Brașov". The listing reads `start` alone.
  */
@@ -92,7 +92,7 @@ const column = z.array(z.number().nullable());
  * same length. Anything else — an error object, a missing column, arrays that disagree — is not a
  * forecast, and reads as a failure (`null` further up), never as a partial one.
  *
- * The page's details (§NNN) are asked for in the same request, but an answer without one of them
+ * The page's details (§416) are asked for in the same request, but an answer without one of them
  * is still a forecast: the word, the degrees, the rain and the wind are what §402 shows, and a
  * detail Open-Meteo stopped sending is a detail the page leaves out, never a forecast it hides.
  * When a detail's column is there, it must be as long as the others, like every column.
@@ -186,7 +186,7 @@ function readingAt(forecast: HourlyForecast, hourAt: number): WeatherReading | n
 }
 
 /**
- * How many hours the event page shows, from the start's own (§NNN): the start and the two after
+ * How many hours the event page shows, from the start's own (§416): the start and the two after
  * it — the hour a group run or a 10 km race is out on the course, and what the sky does while
  * they are. Three, because a fourth does not fit a 320-pixel phone beside the others as a row, and
  * a run's weather after the second hour is the long run's, not the club's usual evening.

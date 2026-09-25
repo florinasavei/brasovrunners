@@ -30,8 +30,8 @@ export default function CalendarPicker({
 }: {
   /** The listing's own localized path, such as `/ro/evenimente`. */
   basePath: string;
-  /** The other query parameters the address keeps — the type filter. */
-  query: Record<string, string>;
+  /** The other query parameters the address keeps — the filters (a group ticked twice is an array, §413). */
+  query: Record<string, string | string[]>;
   view: "month" | "year";
   year: number;
   /** 1–12. */
@@ -43,7 +43,8 @@ export default function CalendarPicker({
 }) {
   const router = useRouter();
   const go = (next: { year: number; month: number }) => {
-    const params = new URLSearchParams(query);
+    const params = new URLSearchParams();
+    for (const [name, value] of Object.entries(query)) for (const one of Array.isArray(value) ? value : [value]) params.append(name, one);
     if (view === "year") params.set("year", String(next.year));
     else params.set("month", `${next.year}-${String(next.month).padStart(2, "0")}`);
     router.push(`${basePath}?${params.toString()}#calendar`);

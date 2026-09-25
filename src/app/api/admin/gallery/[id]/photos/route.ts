@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { addPhoto } from "@/modules/content/gallery/service";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
+import { parseImageQuality } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { canEditEventFields } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+
+/** Up to nine WebP encodes per photo (§414); the same ceiling as `/api/admin/media`. */
+export const maxDuration = 60;
 
 /**
  * One photo into an album (BR-REQ-054-01). `POST` multipart with a `file`; the uploader sends
@@ -42,6 +46,9 @@ export async function POST(
     return NextResponse.json({ error: "VALIDATION_ERROR", detail: "too large" }, { status: 413 });
   }
   const originalFilename = String(form.get("originalFilename") || file.name || "photo");
+  // The choice beside the upload (§414): absent is "normal", anything else must be one of the two.
+  const quality = parseImageQuality(form.get("quality"));
+  if (!quality) return NextResponse.json({ error: "VALIDATION_ERROR", detail: "quality" }, { status: 400 });
 
   try {
     const result = await addPhoto(getDb(), {
@@ -49,6 +56,7 @@ export async function POST(
       albumId: id,
       file: Buffer.from(await file.arrayBuffer()),
       originalFilename,
+      quality,
     });
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
