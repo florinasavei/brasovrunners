@@ -16034,7 +16034,7 @@ When the start alone was not dark, the end is named with its time and where it c
 
 Baseline `BR-V1.96-2026-09-25`.
 
-## 395. A club discount note on an external event's own fee — the review round's fixes
+## 395. A discount note, not a second price, for an external event paid at another organizer's form
 
 The owner, 2026-09-25: "another friend's race where we just go as a group but we pay for it; they gave us a discount so that they appear on our calendar." An `EXTERNAL`-registration, `PAID` event's cost row says the fee is settled at the organizer's own form, never the club's, and carries the club's own discount note per language when there is one — on the event page, the listing card and, since this round, the featured hero too.
 
