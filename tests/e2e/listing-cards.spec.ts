@@ -676,8 +676,9 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       await expect(picture).toHaveCount(1);
       await expect(words.locator("figure")).toHaveCount(0);
       await expect(picture).toBeVisible();
-      // Drawn whole, not clipped: no box around it up to the card that hides its overflow cuts any
-      // of it — which is what the clamped summary did to a picture under its third line.
+      // Drawn whole, not clipped: walk the picture's ancestors up to the card and check each one
+      // that hides overflow against the picture's own box — none may cut it, which is what the
+      // clamped summary did to a picture under its third line.
       const clippedBy = await picture.evaluate((img) => {
         const own = img.getBoundingClientRect();
         if (own.height === 0) return "no height";

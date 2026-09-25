@@ -102,6 +102,13 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_WORDS_SX.overflowWrap).toBe("anywhere");
   });
 
+  it("wraps a long unbroken word on the outer box too, not only the words' clamp (§412)", () => {
+    // The words' box carries its own `overflowWrap` for the clamp; a figure's caption sits
+    // outside that box, so the net is the outer box's own rule — a long address typed into a
+    // caption still wraps inside a 320-pixel card instead of overflowing it.
+    expect(CARD_EXCERPT_SX.overflowWrap).toBe("anywhere");
+  });
+
   it("leaves the event page and the hero exactly as they were", () => {
     // No figure rule at all: on a page, the width the organizer chose is the point.
     expect(Object.keys(PAGE_EXCERPT_SX)).toEqual(["color", "mb", "& p:last-of-type"]);
