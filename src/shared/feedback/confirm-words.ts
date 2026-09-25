@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 
 /**
- * The words every confirmation dialog shares, translated once on the server (§NNN): the cancel
+ * The words every confirmation dialog shares, translated once on the server (§384): the cancel
  * button, and the email sentences the owner asked for — "I need to know each time a participant
  * will be emailed!" — each counted with `countForm` from a number the page read with the same
  * query the send uses, never guessed on the client.

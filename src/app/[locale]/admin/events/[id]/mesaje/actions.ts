@@ -83,7 +83,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
 
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });
   const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}`;
-  // The toast (§NNN): what was queued, for how many — the same count the banner shows.
+  // The toast (§384): what was queued, for how many — the same count the banner shows.
   await flash(
     result.kind === "duplicate"
       ? { kind: "info", key: "participantMessageDuplicate" }

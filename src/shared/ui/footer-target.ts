@@ -4,7 +4,7 @@
  *
  * The owner, 2026-09-24: the bar keeps every item but not every word. Eight items with their
  * words need about 370 pixels and a phone has 288 to 328, so on a phone the privacy notice is the
- * short word "GDPR" (§NNN; a lock, then a question mark, until 2026-09-25) and the languages are
+ * short word "GDPR" (§385; a lock, then a question mark, until 2026-09-25) and the languages are
  * flags, and every item on the bar is a smaller target — a square, but for the summary and the
  * word — 24 pixels below 360 (WCAG 2.2 SC 2.5.8, AA, is 24), 28 from 360, and the ordinary 44
  * from `sm` up.
@@ -21,7 +21,7 @@ export const FOOTER_TARGET = { xs: 24, phoneWide: 28, sm: 44 } as const;
 /**
  * The space between two neighbouring items on a phone's bar, in pixels, by the same two bands as
  * the targets: 4 below 360, 6 from 360 (§378, the owner, 2026-09-25: "the mobile footer icons can
- * be a bit more spaced out"; §NNN, the same day: "GDPR" instead of the question mark, and a rule
+ * be a bit more spaced out"; §385, the same day: "GDPR" instead of the question mark, and a rule
  * before the languages). §372 set none, to fit the words. §378 measured 6 as the largest whole gap
  * at which the row was one line at 320 pixels in both languages. The word is 13.6 pixels wider
  * than the glyph and the rule adds an item and a gap, so below 360 the gap is 4 — the largest at
@@ -42,7 +42,7 @@ export const FOOTER_GAP = { xs: 4, phoneWide: 6 } as const;
  * for another property (`display: { xs: "flex", sm: "none" }`, `ml: { sm: 1 }`) writes its own
  * `@media (min-width:600px)` entry, and a literal `SM_UP` key after it replaces that entry
  * rather than merging with it — the language box showed on a desktop in the first draft of
- * §NNN. MUI emits its breakpoint queries first, so the closed 360 band still comes after the
+ * §385. MUI emits its breakpoint queries first, so the closed 360 band still comes after the
  * `xs` one and wins inside it (the unit test checks the order).
  */
 export function footerGapSx(properties: readonly string[], smValue: number | string) {

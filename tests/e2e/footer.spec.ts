@@ -20,7 +20,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * items are 6px apart — the largest gap at which the English row still fitted at 320px with its
  * summary uncut, measured and recorded in `SiteFooter.tsx`.
  *
- * §NNN, the owner, later that day: "GDPR" instead of the question mark on a phone too, a 1px rule
+ * §385, the owner, later that day: "GDPR" instead of the question mark on a phone too, a 1px rule
  * before the languages, a condensed fold, and the build stamp in a chip. The word and the rule
  * take 14.6px more at 320 and 10.6px more at 360, so a phone's gap is `FOOTER_GAP` — 4px below
  * 360, 6px from 360 — and the summary's own padding is 2px a side; with that, "About the club" is
@@ -66,10 +66,10 @@ function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă|theme/i }),
     // On the bar since §323, named for the notice at every width; the word "GDPR" at every
-    // width (§378 from `sm`, §NNN on a phone).
+    // width (§378 from `sm`, §385 on a phone).
     privacy: footer.getByRole("link", { name: where.privacyName, exact: true }),
     word: footer.getByTestId("footer-privacy-word"),
-    // The phone's rule before the languages (§NNN).
+    // The phone's rule before the languages (§385).
     rule: footer.getByTestId("footer-language-rule"),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
     language,
@@ -111,7 +111,7 @@ function expectDisjoint(boxes: Array<[string, Box]>, width: number) {
  */
 const panelContent = (fold: Locator) => fold.getByTestId("footer-about-panel").locator(":scope > *").first();
 
-/** The rule's name in `rowItems`: the one item that is not a target (§NNN). */
+/** The rule's name in `rowItems`: the one item that is not a target (§385). */
 const RULE = "the rule";
 
 /**
@@ -140,7 +140,7 @@ async function rowItems(page: Page, where: (typeof PAGES)[number], phone: boolea
   return items;
 }
 
-/** A phone's gap between neighbouring items on the bar (`FOOTER_GAP`, §378, §NNN): 4px below 360, 6px from 360. */
+/** A phone's gap between neighbouring items on the bar (`FOOTER_GAP`, §378, §385): 4px below 360, 6px from 360. */
 const phoneGapAt = (width: number) => (width >= 360 ? 6 : 4);
 
 /**
@@ -213,14 +213,14 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       expect(items[0]![1].x).toBeLessThan(4);
 
       // Criterion 6 and its footer-bar exception (§372): every item at least the bar's target,
-      // in width and in height, on one row — the rule centred on it (§NNN).
+      // in width and in height, on one row — the rule centred on it (§385).
       expectOneRow(items, width, target, "closed");
       for (let i = 0; i < count; i++) await marks.nth(i).click({ trial: true });
       await privacy.click({ trial: true });
       if (phone) await other.click({ trial: true });
 
       // §323: the notice is reachable from every page without opening anything. Its name and
-      // tooltip are the notice's; the word "GDPR" is on screen at every width (§378, §NNN).
+      // tooltip are the notice's; the word "GDPR" is on screen at every width (§378, §385).
       await expect(privacy).toHaveAttribute("title", "Nota de confidențialitate (GDPR)");
       await expect(privacy).toHaveAttribute("href", /\/ro\/confidentialitate$/);
       await expect(word).toBeVisible();
@@ -270,12 +270,12 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
  * row twice before: the fold's panel is inside the `<details>` again (review finding 4), and
  * every row item keeps the switch's top however tall the open fold grows.
  *
- * §378 and §NNN: at the four widths the gap was measured at — 320, 360, 390 and 412 — in the
+ * §378 and §385: at the four widths the gap was measured at — 320, 360, 390 and 412 — in the
  * owner's order (the word "GDPR" right after the fold, the rule before the flags), every item the
  * phone's gap from the next (4px below 360, 6px from 360), the English summary uncut at 320 and
- * 360, and the last flag inside the viewport. Open, the panel is condensed (§NNN).
+ * 360, and the last flag inside the viewport. Open, the panel is condensed (§385).
  */
-test.describe("§372 §378 §NNN one row on a phone, in both languages, fold closed and open", () => {
+test.describe("§372 §378 §385 one row on a phone, in both languages, fold closed and open", () => {
   for (const where of PAGES) {
     for (const width of [320, 360, 390, 412] as const) {
       for (const state of ["closed", "open"] as const) {
@@ -298,7 +298,7 @@ test.describe("§372 §378 §NNN one row on a phone, in both languages, fold clo
           expectDisjoint(items, width);
           expectOrderedAndSpaced(items, width, true);
 
-          // The word "GDPR", named for the notice in this language (§NNN), and the rule before
+          // The word "GDPR", named for the notice in this language (§385), and the rule before
           // the languages, drawn in the theme's divider colour.
           await expect(word).toBeVisible();
           await expect(word).toHaveText("GDPR");
@@ -329,7 +329,7 @@ test.describe("§372 §378 §NNN one row on a phone, in both languages, fold clo
             const terms = fold.getByRole("link", { name: /termeni|racing tos/i });
             await terms.click({ trial: true });
 
-            // Condensed (§NNN): every link and the stamp a 44px target, the lines 44px apart with
+            // Condensed (§385): every link and the stamp a 44px target, the lines 44px apart with
             // no margin between them, "Scrie-ne" once, and the whole panel shorter than the 188px
             // it was at 360 in Romanian (with the club's address configured) before the change.
             const panelControls = panelContent(fold).locator("a, [role=button]");

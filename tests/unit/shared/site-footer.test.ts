@@ -13,7 +13,7 @@ import { describe, expect, it, vi } from "vitest";
  * notice a glyph, the languages flags, every item a square of 24px below 360, 28px from 360 and
  * 44px from `sm` (`footer-target.ts`), where §365 had two lines. The owner, 2026-09-25 (§378):
  * the glyph a question mark rather than a lock, the notice right after the fold, "GDPR" as its
- * word from `sm`, and a phone's items 6px apart. The owner, later that day (§NNN): "GDPR" on the
+ * word from `sm`, and a phone's items 6px apart. The owner, later that day (§385): "GDPR" on the
  * phone too, a rule before the languages, a condensed panel and the version in a chip — with the
  * phone's gap 4px below 360 and 6px from 360. The e2e suite measures the bar in a browser
  * (`footer.spec.ts`, `build-badge.spec.ts`); pull requests run it on the desktop project only
@@ -52,7 +52,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
       CLUB_FACEBOOK_URL: "https://facebook.com/brasovrunners",
       CLUB_INSTAGRAM_URL: "https://instagram.com/brasovrunners",
       CLUB_STRAVA_URL: "https://strava.com/clubs/brasovrunners",
-      // The club's mailbox, so the panel's "Scrie-ne: <address>" line renders (§NNN).
+      // The club's mailbox, so the panel's "Scrie-ne: <address>" line renders (§385).
       EMAIL_REPLY_TO: "contact@example.org",
     },
   };
@@ -229,8 +229,8 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(between).not.toMatch(/aria-label="/);
   });
 
-  it("marks the privacy notice with the word GDPR at every width, named for the notice, no glyph (§NNN)", async () => {
-    // §NNN, the owner, 2026-09-25: "It would fit to say GDPR instead of just a question mark
+  it("marks the privacy notice with the word GDPR at every width, named for the notice, no glyph (§385)", async () => {
+    // §385, the owner, 2026-09-25: "It would fit to say GDPR instead of just a question mark
     // here." The word on a phone too, where §378 had the circled question mark and §372 a lock.
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -271,7 +271,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("spaces a phone's bar items 4px apart below 360 and 6px from 360 — the row, the marks, the rule and the flags — and leaves `sm` as it was", async () => {
-    // §378 measured 6px as the largest whole gap for the row it had; §NNN's word and rule take
+    // §378 measured 6px as the largest whole gap for the row it had; §385's word and rule take
     // 14.6px more at 320 and 10.6px more at 360, so below 360 the gap is 4px — the largest at
     // which "About the club" is still whole at 320 — and 6px from 360 (`footer-target.ts`,
     // measured in `SiteFooter.tsx`).
@@ -309,7 +309,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("gives the summary 2px of padding a side on a phone so its words stay whole beside the word and the rule", async () => {
-    // §NNN: four pixels the English summary needs at 320 and 360 (the table in `SiteFooter.tsx`).
+    // §385: four pixels the English summary needs at 320 and 360 (the table in `SiteFooter.tsx`).
     const html = await renderFooter();
     const summary = rulesOf(cssOnly(html), emotionClassOf(markupOnly(html), "<summary"));
     expect(summary).toMatch(/(^|[;{])padding-left:2px;padding-right:2px;/);
@@ -317,7 +317,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("draws a 1px rule in the divider colour before the languages, hidden from assistive technology, on a phone only", async () => {
-    // §NNN, the owner, 2026-09-25: "I need a separator before the language switchers."
+    // §385, the owner, 2026-09-25: "I need a separator before the language switchers."
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
@@ -341,7 +341,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("condenses the fold's panel: one wrapping row of 44px links, no margin between lines, 'Scrie-ne' once, the stamp last", async () => {
-    // §NNN, the owner, 2026-09-25: "the info from the expanded footer must be more condensed."
+    // §385, the owner, 2026-09-25: "the info from the expanded footer must be more condensed."
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
@@ -380,7 +380,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("draws the build stamp as a small outlined chip in both places, the name and the title on its 44px box", async () => {
-    // §NNN, the owner, 2026-09-25: "Version must be within a chip."
+    // §385, the owner, 2026-09-25: "Version must be within a chip."
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);

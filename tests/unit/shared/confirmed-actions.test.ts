@@ -4,7 +4,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — every irreversible or outward-facing staff action asks first.
+ * `DECISIONS.md` §384 — every irreversible or outward-facing staff action asks first.
  *
  * The rule: an action of class (a) — publish, take off the site, archive, cancel an event, tell
  * the participants, resend, cancel / erase / rename a registration, give a place, set a number,
@@ -222,7 +222,7 @@ for (const file of sourceFiles(path.join(ROOT, "src"))) {
   walk(source);
 }
 
-describe("§NNN every irreversible or outward-facing staff action asks first", () => {
+describe("§384 every irreversible or outward-facing staff action asks first", () => {
   it("is posted somewhere — a verb that moved to a bare form fails here, not on a phone", () => {
     const unseen = [...SITES].filter(([, sites]) => sites.length === 0).map(([name]) => name);
     expect(unseen, "actions never found behind action={…} or formAction={…}").toEqual([]);

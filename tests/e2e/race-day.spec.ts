@@ -81,7 +81,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const rowAgain = page.getByTestId("desk-row").filter({ hasText: suffix });
     await expect(rowAgain).toContainText(bib);
     await rowAgain.getByRole("button", { name: "Marchează prezent", exact: true }).click();
-    // Check-in asks nothing (§NNN): one tap per runner at the desk.
+    // Check-in asks nothing (§384): one tap per runner at the desk.
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator("#admin-alert")).toContainText("Marcat prezent", { timeout: 15_000 });
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toContainText("Prezent la");

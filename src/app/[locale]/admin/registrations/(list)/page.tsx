@@ -211,7 +211,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       ? declarationAsksMinorToSignByLocale(db, new Date())
       : Promise.resolve({ ro: false, en: false }),
   ]);
-  // Every verb that writes asks first and says who is emailed (§NNN).
+  // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
@@ -280,7 +280,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
   const printedOnPage = printedNumbersACancelWouldVoid(rows);
   /*
-    The bulk cancel's email line (§NNN): each ticked row the cancel can reach is one "your
+    The bulk cancel's email line (§384): each ticked row the cancel can reach is one "your
     registration is cancelled", summed in the browser over the ticks at the press. A row whose
     status has no edge to CANCELLED is refused by the service and emails nobody; a test row is
     emailed but counted nowhere the club is given (§30), like the toast afterwards.
@@ -1150,7 +1150,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 slotProps={{
                   // `form` on the `<input>` itself: as a prop of the Checkbox it landed on MUI's
                   // wrapping span, no tick belonged to the bulk form, and both bulk verbs posted
-                  // nothing — the events list's §114 trap, found here by the email count (§NNN).
+                  // nothing — the events list's §114 trap, found here by the email count (§384).
                   input: { form: BULK_FORM, "aria-label": t("registrations.selectRow", { name: row.registeredName }) },
                 }}
                 sx={CHECKBOX_TAP_TARGET}
@@ -1305,7 +1305,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`checkin-${row.id}`}
                       action={checkInAction}
                       hidden
-                      // Check-in asks nothing: it emails nobody and is undone from the same menu (§NNN).
+                      // Check-in asks nothing: it emails nobody and is undone from the same menu (§384).
                     >
                       {hidden}
                       <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
@@ -1413,7 +1413,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 required
               />
               <Box>
-                {/* Two verbs in one form (§287): each button asks its own question (§NNN). */}
+                {/* Two verbs in one form (§287): each button asks its own question (§384). */}
                 <ConfirmSubmitButton
                   label={t("registrations.bulkCancelAction")}
                   // "Se anulează…" while the batch is on its way (§371).

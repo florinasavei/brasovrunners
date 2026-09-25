@@ -67,7 +67,7 @@ export const STAFF_CLIENT_MESSAGES = [
   "Admin.editor.boxes.pickDates.title",
   "Event.series.count",
   // ToastProvider (`shared/feedback`): every "it worked" sentence, looked up by a `saved` code
-  // at runtime, so the whole namespace — a few kilobytes, on pages only staff open (§NNN).
+  // at runtime, so the whole namespace — a few kilobytes, on pages only staff open (§384).
   "Feedback",
 ] as const;
 

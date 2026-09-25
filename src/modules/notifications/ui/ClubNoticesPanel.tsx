@@ -98,7 +98,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
       {/* A refused list comes back as typed (§315). */}
       <ActionForm
         action={updateClubNoticesAction}
-        // Who receives the signed declarations and the confirmations, with their personal data (§NNN).
+        // Who receives the signed declarations and the confirmations, with their personal data (§384).
         confirm={{ title: t("confirm.clubNoticesTitle"), body: t("confirm.clubNoticesBody"), confirmLabel: t("emails.clubNotices.save"), cancelLabel: words.cancel }}
         messages={await refusalMessages({
           declarationsTo: t("emails.clubNotices.declarationsTo"),

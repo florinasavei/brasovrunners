@@ -137,7 +137,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const { error, saved, archived, failed, created, published, deleted, erased } = current;
 
   const t = await getTranslations("Admin");
-  // The cancel button and the email sentences every question shares (§NNN).
+  // The cancel button and the email sentences every question shares (§384).
   const words = await confirmWords();
   const tEvent = await getTranslations("Event");
 
@@ -677,7 +677,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             */}
             {canCreateEvent(staffUser.role) && (
               <>
-                {/* Each verb's form asks its own question (§NNN); the menu only submits it. */}
+                {/* Each verb's form asks its own question (§384); the menu only submits it. */}
                 <ActionForm
                   id={`duplicate-${event.id}`}
                   action={duplicateEventAction}

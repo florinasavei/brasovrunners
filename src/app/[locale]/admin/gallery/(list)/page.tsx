@@ -134,7 +134,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
           // The verbs in the same menu every other list uses (§256); the two forms beside it
           // are the Server Actions it submits, and the server checks the role and the version.
           <>
-            {/* Each verb's form asks its own question (§NNN); the menu only submits it. */}
+            {/* Each verb's form asks its own question (§384); the menu only submits it. */}
             <ActionForm
               id={`album-publish-${row.id}`}
               action={transitionAlbumAction}

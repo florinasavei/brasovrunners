@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — a single-row confirmation dialog hard-coded `email: words.email(1)`
+ * `DECISIONS.md` §384 — a single-row confirmation dialog hard-coded `email: words.email(1)`
  * whatever the row's own `kind`, so confirming, giving a place, setting a bib, resending or
  * cancelling a TEST row's dialog said "an email will be sent to 1 participant" — a number the
  * club is never given (`AGENTS.md` §12.6: a test registration is counted in no total the club
@@ -27,7 +27,7 @@ function singleEmailCalls(source: string): string[] {
   return calls;
 }
 
-describe("§NNN a TEST row's dialog names no participant email", () => {
+describe("§384 a TEST row's dialog names no participant email", () => {
   it("gates every single-row email line on the desk", () => {
     const desk = read("src/modules/registrations/ui/DeskRow.tsx");
     const calls = singleEmailCalls(desk);

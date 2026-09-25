@@ -99,7 +99,7 @@ const PREVIEW_PAUSE_MS = 500;
  * cancels the pause still running from typing (`preview-pause.ts`), so the copy under a tab is
  * always that tab's. Without JavaScript there is no preview, and the form still sends.
  *
- * **Send asks first** — through the form's own question (`ActionForm confirm`, §NNN): the page
+ * **Send asks first** — through the form's own question (`ActionForm confirm`, §384): the page
  * words one dialog per group, with the count the send queues from, and the form opens the one
  * the chosen radio names. The browser's own checks run before it: an empty box is pointed at
  * before any question, so the question is only ever about sending.

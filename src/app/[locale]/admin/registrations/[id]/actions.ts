@@ -38,7 +38,7 @@ export async function resendRegistrationEmailAction(_previous: FormOutcome | nul
   }
 
   // `#admin-alert`, like every other backoffice redirect: land on the outcome — and the toast
-  // (§NNN) says which message went, from the same flag.
+  // (§384) says which message went, from the same flag.
   if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
   redirect(
     outcome === "sent"

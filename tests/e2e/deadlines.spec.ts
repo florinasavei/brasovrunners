@@ -92,7 +92,7 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
     changed = true;
     await panel.locator('input[name="reminderHours"]').fill("72");
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
-    // It asks first (§NNN), naming what changes and what does not.
+    // It asks first (§384), naming what changes and what does not.
     await expect(page.getByRole("dialog", { name: "Salvezi termenele?" })).toContainText("Nimic din ce s-a dat deja nu se schimbă");
     await confirmDialog(page, "Salvezi termenele?");
     await expect(main.getByText("Termenele au fost salvate", { exact: false })).toBeVisible();

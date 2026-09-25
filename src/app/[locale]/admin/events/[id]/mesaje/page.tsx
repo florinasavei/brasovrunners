@@ -131,7 +131,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
 
   const words = await confirmWords();
   /*
-    Send asks first, per group (§NNN): the question names how many, and the email line the same
+    Send asks first, per group (§384): the question names how many, and the email line the same
     number — `countParticipantMessageAudiences`, the count the send itself queues from. One spec
     per radio choice, picked by the `audience` the form posts, so the dialog is the group's own.
   */

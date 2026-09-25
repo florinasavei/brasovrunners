@@ -84,7 +84,7 @@ describe("§351 SeriesDraftLine — the words, the dates and the fix on one line
   });
 
   it("switches the SOURCE's rule on and comes back to the list — never the editor, never an address", () => {
-    // The switch's form is an `ActionForm` since §NNN, whose action takes `useActionState`'s two arguments.
+    // The switch's form is an `ActionForm` since §384, whose action takes `useActionState`'s two arguments.
     const html = render({ autoPublish: { action: async () => null, sourceId: "source-id", label: "Publică automat de acum", ...confirmed } });
     const [auto] = forms(html);
     expect(Object.fromEntries([...auto.fields].map(([name, values]) => [name, values.join(",")]))).toEqual({
@@ -253,7 +253,7 @@ describe("§341 the editor's repeat-publish switch", () => {
 
   it("posts the tick as the rule's new flag, ticked as the rule is now", () => {
     expect(panel).toContain('<CheckboxField name="publish" defaultChecked={publish}>');
-    // An `ActionForm` since §NNN, so the save toasts; turning it on asks, as the list's
+    // An `ActionForm` since §384, so the save toasts; turning it on asks, as the list's
     // "Publică automat de acum" does — turning it off, or saving it as it was, asks nothing.
     expect(panel).toContain("action={actions.setRepeatPublish}");
     expect(panel).toContain('when: [{ field: "publish", equals: "on" }],');

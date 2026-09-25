@@ -20,7 +20,7 @@ vi.mock("next-intl/server", async () => {
   const messages = (await import("../../../messages/ro.json")).default;
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Admin" }),
-    // The confirmation's words (`confirmWords`, §NNN) count in the page's language.
+    // The confirmation's words (`confirmWords`, §384) count in the page's language.
     getLocale: async () => "ro",
   };
 });

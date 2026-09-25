@@ -188,7 +188,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {t("legal.approveHelp")}
             </Typography>
-            {/* Approval asks first (§NNN): the one act on this page that cannot be undone. */}
+            {/* Approval asks first (§384): the one act on this page that cannot be undone. */}
             <ActionForm
               action={approveLegalVersionAction}
               confirm={{ title: t("confirm.approveVersionTitle", { version: document.version }), body: t("confirm.approveVersionBody"), confirmLabel: t("legal.approveAction"), cancelLabel: words.cancel, destructive: true }}

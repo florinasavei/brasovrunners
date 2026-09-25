@@ -18,7 +18,7 @@ vi.mock("next-intl/server", async () => {
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Admin" }),
     getFormatter: async () => createFormatter({ locale: "ro" }),
-    // The confirmation's words (`confirmWords`, §NNN) count in the page's language.
+    // The confirmation's words (`confirmWords`, §384) count in the page's language.
     getLocale: async () => "ro",
   };
 });

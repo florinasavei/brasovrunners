@@ -616,7 +616,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(message.text).toContain(formatDay(third.startsAt, { locale: "en", timeZone: ZONE, style: "long" }));
   });
 
-  it("§NNN a series save's dialog states what the save queues: this date, plus each later date ticked", async () => {
+  it("§384 a series save's dialog states what the save queues: this date, plus each later date ticked", async () => {
     const source = await seedEvent({ type: "GROUP_RUN", registrationMode: "INTERNAL", capacity: null });
     await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
     const dates = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));

@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * `DECISIONS.md` §NNN — feedback and safety across the backoffice: a toast after every action
+ * `DECISIONS.md` §384 — feedback and safety across the backoffice: a toast after every action
  * that worked, and a question before every one that is hard to undo or faces the site.
  *
  * On an event of this spec's own (each project makes one, named after itself, and deletes it at
@@ -17,7 +17,7 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
  * close button a thumb can hit, is not repeated by a refresh, and paints only after the action
  * answered — nothing of it runs inside the press.
  */
-test.describe("§NNN toasts and confirmations", () => {
+test.describe("§384 toasts and confirmations", () => {
   test("a save toasts, publishing asks first, a destructive question is safe by default, a refresh repeats nothing", async ({ page }) => {
     test.setTimeout(180_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;

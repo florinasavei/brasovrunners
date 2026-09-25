@@ -139,7 +139,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
             {mayChange && (
               /*
                 Turning it on puts every date the series creates from now on on the site by itself:
-                it asks, as the list's "Publică automat de acum" does (§NNN). Turning it off, or
+                it asks, as the list's "Publică automat de acum" does (§384). Turning it off, or
                 saving it as it was, asks nothing.
               */
               <ActionForm

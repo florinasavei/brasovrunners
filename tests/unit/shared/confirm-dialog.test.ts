@@ -9,7 +9,7 @@ import { NextIntlClientProvider } from "next-intl";
 import type { ComponentProps } from "react";
 
 /**
- * `DECISIONS.md` §NNN — the one confirmation dialog and the one toast provider, as the source
+ * `DECISIONS.md` §384 — the one confirmation dialog and the one toast provider, as the source
  * writes them and as the server renders them.
  *
  * Source-level for the rules a Node render cannot exercise (MUI's `Dialog` is a portal, which
@@ -21,7 +21,7 @@ import type { ComponentProps } from "react";
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN ConfirmDialog", () => {
+describe("§384 ConfirmDialog", () => {
   const source = read("src/shared/feedback/ConfirmDialog.tsx");
 
   it("focuses the safe button on open, so a stray Space — or Enter in a destructive dialog — cancels", () => {
@@ -63,7 +63,7 @@ describe("§NNN ConfirmDialog", () => {
   });
 });
 
-describe("§NNN ToastProvider", () => {
+describe("§384 ToastProvider", () => {
   const source = read("src/shared/feedback/ToastProvider.tsx");
   const messages = JSON.parse(readFileSync(path.join(ROOT, "messages/ro.json"), "utf8")) as { Feedback: Record<string, unknown> };
 

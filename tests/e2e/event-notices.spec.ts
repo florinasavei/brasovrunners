@@ -143,7 +143,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await field("cancel.reasonRo").fill("Avertizare meteo de cod portocaliu: traseul nu este sigur.");
     await field("cancel.reasonEn").fill("An orange weather warning: the route is not safe.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
-    // The question names the event and says who is emailed, from the same count (§NNN).
+    // The question names the event and says who is emailed, from the same count (§384).
     const cancelDialog = page.getByRole("dialog", { name: `Anulezi „Cursa anunțată ${suffix}”?` });
     await expect(cancelDialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
     await confirmDialog(page);

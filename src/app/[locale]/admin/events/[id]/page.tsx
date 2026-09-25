@@ -358,7 +358,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const box = { event, mayEditSettings: maySaveSettings } as const;
   const heading = orderedTranslations[0]?.title || t("editor.untitled");
   const thanksDue = canManageRegistrations(staffUser.role) && internal && event.eventStatus !== "CANCELLED" && event.startsAt.getTime() <= now.getTime();
-  // The thank-you's recipients, counted with the send's own condition (§NNN): the dialog says
+  // The thank-you's recipients, counted with the send's own condition (§384): the dialog says
   // "an email will be sent to N participants" from the real number, names the test rows apart
   // (§12.6), and says nothing about email when nobody was checked in.
   const thanksRecipients = thanksDue && !event.thanksSentAt ? await countEventThanksRecipients(db, event.id) : { real: 0, test: 0 };
@@ -388,7 +388,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         }
       : undefined;
   /*
-    What each verb asks before it runs (§NNN). The publication steps that face outward — publish,
+    What each verb asks before it runs (§384). The publication steps that face outward — publish,
     take a live event off the site, archive — ask; "send for review" changes nothing anybody sees
     and asks nothing. The save asks only when it writes to people: the notice box ticked, or the
     status set to cancelled — with the count of who is emailed, from `countEventNoticeRecipients`,
@@ -585,7 +585,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   {transitions.length > 0 ? (
                     <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
                       {transitions.map((to) => (
-                        // Publishing, taking off the site and archiving ask first (§NNN); review asks nothing.
+                        // Publishing, taking off the site and archiving ask first (§384); review asks nothing.
                         <ActionForm action={transitionEventAction} key={to} confirm={transitionConfirm(to)} data-testid={`transition-${to}`}>
                           <input type="hidden" name="uiLocale" value={locale} />
                           <input type="hidden" name="eventId" value={event.id} />

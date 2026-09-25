@@ -12,7 +12,7 @@ import {
 } from "@/shared/feedback/notice";
 
 /**
- * `DECISIONS.md` §NNN — one mechanism for "it worked" and "are you sure" across the backoffice.
+ * `DECISIONS.md` §384 — one mechanism for "it worked" and "are you sure" across the backoffice.
  *
  * The pure half, held down in Node: the toast queue (one at a time, in order, dismiss brings the
  * next), the flash's encoding (a cookie the browser could rewrite), the notice a redirect's
@@ -20,7 +20,7 @@ import {
  * them are `ToastProvider` and `ConfirmDialog`; the browser side is
  * `tests/e2e/toasts-and-confirms.spec.ts`.
  */
-describe("§NNN the toast queue", () => {
+describe("§384 the toast queue", () => {
   const saved = { kind: "success" as const, key: "event" };
   const archived = { kind: "success" as const, key: "eventsArchived", values: { count: "3" } };
 
@@ -52,7 +52,7 @@ describe("§NNN the toast queue", () => {
   });
 });
 
-describe("§NNN the notice a redirect's outcome becomes", () => {
+describe("§384 the notice a redirect's outcome becomes", () => {
   it("names the sentence by the `saved` code and carries nothing but the count", () => {
     // `offered` counts nothing the sentence says; it stays in the URL for the banner.
     expect(noticeOf({ saved: "event", offered: "2" })).toEqual({ kind: "success", key: "event" });
@@ -141,7 +141,7 @@ describe("§NNN the notice a redirect's outcome becomes", () => {
   });
 });
 
-describe("§NNN the flash cookie", () => {
+describe("§384 the flash cookie", () => {
   it("round-trips a notice, values as strings, in a value a cookie header can carry", () => {
     const notice = { kind: "info" as const, key: "participantMessageDuplicate", values: { count: "2", test: "1" } };
     const encoded = encodeFlash(notice);
@@ -167,7 +167,7 @@ describe("§NNN the flash cookie", () => {
   });
 });
 
-describe("§NNN which question a form's values pick", () => {
+describe("§384 which question a form's values pick", () => {
   const cancelNotify = { when: [{ field: "event.eventStatus", equals: "CANCELLED" }, { field: "cancel.notify", equals: "on" }], title: "cancel+email", body: "", confirmLabel: "", cancelLabel: "" };
   const cancelQuiet = { when: [{ field: "event.eventStatus", equals: "CANCELLED" }], title: "cancel", body: "", confirmLabel: "", cancelLabel: "" };
   const notice = { when: [{ field: "notice.notify", equals: "on" }], title: "notice", body: "", confirmLabel: "", cancelLabel: "" };
@@ -185,7 +185,7 @@ describe("§NNN which question a form's values pick", () => {
     expect(pickConfirm(undefined, values({}))).toBeNull();
   });
 
-  it("only the publish submitter of the create form asks (§NNN)", () => {
+  it("only the publish submitter of the create form asks (§384)", () => {
     const publish = { when: [{ field: "then", equals: "publish" }], title: "publish", body: "", confirmLabel: "", cancelLabel: "" };
     expect(pickConfirm([publish], values({ then: "publish" }))?.title).toBe("publish");
     expect(pickConfirm([publish], values({}))).toBeNull();
@@ -201,7 +201,7 @@ describe("§NNN which question a form's values pick", () => {
   });
 });
 
-describe("§NNN what Enter does in the dialog", () => {
+describe("§384 what Enter does in the dialog", () => {
   it("confirms a dialog that is not destructive, and nothing else", () => {
     expect(confirmOnKey("Enter", false)).toBe("confirm");
     expect(confirmOnKey("Enter", undefined)).toBe("confirm");

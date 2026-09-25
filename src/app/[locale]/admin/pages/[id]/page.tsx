@@ -94,7 +94,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
   */
   const maySave = canEditTexts(actor.role);
   const mayDelete = canEditEventFields(actor.role);
-  // The page as the questions name it (§NNN): its title in the backoffice's language.
+  // The page as the questions name it (§384): its title in the backoffice's language.
   const pageTitle = translations.find((row) => row.locale === locale)?.title ?? t("pages.untitled");
 
   return (
@@ -134,7 +134,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
       {transitions.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
           {transitions.map((to) => (
-            // Publishing, taking off the site and archiving ask first (§NNN); review asks nothing.
+            // Publishing, taking off the site and archiving ask first (§384); review asks nothing.
             <ActionForm
               action={transitionPageAction}
               key={to}

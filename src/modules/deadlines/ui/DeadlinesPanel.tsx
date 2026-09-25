@@ -87,7 +87,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen 
         </Stack>
       ) : (
         /* A refused save comes back with every box as typed (§315); `scope` keeps its ids apart from the page's other forms. */
-        /* Asks first (§NNN): the numbers every participant is given from now on change with it. */
+        /* Asks first (§384): the numbers every participant is given from now on change with it. */
         <ActionForm
           action={updateDeadlinesAction}
           messages={await refusalMessages(labels)}

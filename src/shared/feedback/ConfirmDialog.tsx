@@ -11,7 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { type ConfirmSpec, confirmOnKey } from "./notice";
 
 /**
- * The one confirmation dialog of the backoffice (`DECISIONS.md` §NNN): "are you sure", worded
+ * The one confirmation dialog of the backoffice (`DECISIONS.md` §384): "are you sure", worded
  * on the server with the consequence and its values, drawn on the client.
  *
  * Driven by `ActionForm`'s `confirm` prop for every single-verb form, by `ConfirmSubmitButton`

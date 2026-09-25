@@ -60,7 +60,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
           {mayAssign && (
             <Box>
-              {/* The question is the assign form's own (`BibPrintForms`, §NNN); this button only submits it. */}
+              {/* The question is the assign form's own (`BibPrintForms`, §384); this button only submits it. */}
               <GlyphButton icon="number" type="submit" form={BIB_ASSIGN_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
                 {t("bibs.assign")}
               </GlyphButton>
@@ -136,7 +136,7 @@ export async function BibPrintForms({
   return (
     <>
       {mayAssign && (
-        // The form asks (§NNN): the card's button submits it, and the question opens from here.
+        // The form asks (§384): the card's button submits it, and the question opens from here.
         <ActionForm
           id={BIB_ASSIGN_FORM}
           action={assignAction}

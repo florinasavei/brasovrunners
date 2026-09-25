@@ -35,7 +35,7 @@ const BAR_HEIGHT = 44;
  * - the theme switch, in the bar's own corner (criterion 11);
  * - the "Despre club" fold's summary, with its words — the one label on the row;
  * - the privacy notice as the word "GDPR", whose tooltip and accessible name are the notice's
- *   name, the same page it always linked to (§378 from `sm`, §NNN on a phone);
+ *   name, the same page it always linked to (§378 from `sm`, §385 on a phone);
  * - Facebook, Instagram, Strava;
  * - on a phone, a one-pixel rule, then RO and EN as flags only, the current one ringed and
  *   `aria-current` (`LocaleSwitcher`).
@@ -43,7 +43,7 @@ const BAR_HEIGHT = 44;
  * §378 (the owner, 2026-09-25): "it should be a question mark, not a lock, and it should be after
  * the about accordion; the mobile footer icons can be a bit more spaced out" and "Use GDPR for
  * desktop as well." So the notice moved ahead of the marks, the word from `sm` became "GDPR", and
- * a phone's items were spaced apart. §NNN (the owner, the same day, from his phone): "It would fit
+ * a phone's items were spaced apart. §385 (the owner, the same day, from his phone): "It would fit
  * to say GDPR instead of just a question mark here", "I need a separator before the language
  * switchers", "the info from the expanded footer must be more condensed" and "Version must be
  * within a chip". So the question mark is the word on a phone too, a rule stands before the flags,
@@ -54,7 +54,7 @@ const BAR_HEIGHT = 44;
  * except the summary and the word, which are as wide as their words. The rule is decoration, not
  * a target. It is a footer-bar-only exception to criterion 6: the fold's panel is 44 throughout.
  *
- * ## The gap, measured (§378, §NNN)
+ * ## The gap, measured (§378, §385)
  *
  * Measured on the built listing in headless Chromium (Pixel 5 emulation and desktop Chrome, the
  * same numbers in both), fold closed and open (the same numbers: the panel's box is zero wide).
@@ -71,7 +71,7 @@ const BAR_HEIGHT = 44;
  * | 390   | 6   | 152  | 61.7                       | 46.2                          |
  * | 412   | 6   | 174  | 83.7                       | 68.2                          |
  *
- * §NNN's row: nine items, eight gaps — the rule is an item, with a gap on each side. "GDPR" is
+ * §385's row: nine items, eight gaps — the rule is an item, with a gap on each side. "GDPR" is
  * 33.6 pixels of 13-pixel Roboto; with 2 pixels a side the link is 37.6 wide, 13.6 more than the
  * 24-pixel glyph square and 9.6 more than the 28-pixel one. The rule is 1 wide. With 6-pixel gaps
  * that is 20.6 more at 320 and 16.6 more at 360, and "About the club" is cut at both: by 16.4 at
@@ -93,7 +93,7 @@ const BAR_HEIGHT = 44;
  * with a metric-matched fallback, so a missing font file changes little; `footer.spec.ts` checks
  * the label is not ellipsised at the four widths in both languages, on both Playwright projects.
  *
- * ## The open panel, measured (§NNN)
+ * ## The open panel, measured (§385)
  *
  * Before, at 360 in Romanian with the club's address configured: 188 pixels — the terms and "my
  * registrations" on a 44-pixel line, "Scrie-ne" alone on a second, twelve pixels, "Scrie-ne:
@@ -118,7 +118,7 @@ const BAR_HEIGHT = 44;
  * From `sm` the content's width is the viewport's less 80 pixels — more than a classic desktop
  * scrollbar (17 pixels on Windows) plus the widest switch and a margin need — capped at 40rem, so
  * it never reaches past the page's edge nor runs under the scrollbar on a narrow desktop window.
- * On a phone it is less 60 below 360 and less 68 from 360 (§NNN). The box is border-box
+ * On a phone it is less 60 below 360 and less 68 from 360 (§385). The box is border-box
  * (CssBaseline), so the panel's indent is inside that width, not added to it: starting 28 and
  * 34 pixels in, the panel ends 32 pixels short of the edge below 360 and 34 from 360 — the switch
  * there is 24 or 28 pixels rather than 44.
@@ -131,7 +131,7 @@ const BAR_HEIGHT = 44;
  * `display`: one inside the panel (below `md`, unchanged from §365), one outside the fold,
  * absolutely positioned at the bar's own bottom-right corner and shown only from `md`, anchored
  * to the bar — which the footer's own `position: sticky` makes a containing block for — rather
- * than floating over the page as it did before §365. Both are a small outlined chip since §NNN
+ * than floating over the page as it did before §365. Both are a small outlined chip since §385
  * (`BuildBadge`), inside the same 44-pixel staff entrance.
  *
  * ## Sticky at the bottom
@@ -182,7 +182,7 @@ export default async function SiteFooter() {
         sx={{
           display: "flex",
           alignItems: "flex-start",
-          // The phone's gap between neighbouring items (§378, §NNN, `footer-target.ts`: 4px below
+          // The phone's gap between neighbouring items (§378, §385, `footer-target.ts`: 4px below
           // 360, 6px from 360); from `sm` the items' own padding spaces them, as before.
           ...footerGapSx(["columnGap"], 0),
         }}
@@ -221,7 +221,7 @@ export default async function SiteFooter() {
               ...DISCLOSURE_SUMMARY_SX,
               ...footerTargetSx(["minHeight", "lineHeight"]),
               py: 0,
-              // 2px each side on a phone (§NNN; 4px until "GDPR" took the question mark's place):
+              // 2px each side on a phone (§385; 4px until "GDPR" took the question mark's place):
               // the four pixels that keep "About the club" whole at 320 and 360 with the word and
               // the rule on the row. Padding inside a summary with no background is invisible;
               // the words and the arrow do not move against each other.
@@ -261,7 +261,7 @@ export default async function SiteFooter() {
               under the row to the bar's right edge. */}
           <Box data-testid="footer-about-panel" sx={{ width: 0, overflow: "visible" }}>
             {/*
-              The panel, condensed (§NNN, the owner, 2026-09-25: "the info from the expanded
+              The panel, condensed (§385, the owner, 2026-09-25: "the info from the expanded
               footer must be more condensed" — his screenshot had four sparse rows: the terms and
               "my registrations", "Scrie-ne" alone, "Scrie-ne: <address>" again 12 pixels further
               down, then the stamp). One wrapping row of 44-pixel targets (BR-REQ-041-01 criterion
@@ -326,7 +326,7 @@ export default async function SiteFooter() {
                   </Box>
                 )}
               </Box>
-              {/* The build stamp and the staff entrance (§34), a chip since §NNN: below `md` this
+              {/* The build stamp and the staff entrance (§34), a chip since §385: below `md` this
                   is the only place it shows, opened on purpose, and the panel's last item. From
                   `md` a second copy is pinned to the bar's own corner (below), so this one steps
                   aside there rather than repeat it. */}
@@ -349,7 +349,7 @@ export default async function SiteFooter() {
           "Privacy notice (GDPR)" (review finding: a screen reader once said "GDPR, link"), and a
           tooltip says the same. The visible word is "GDPR" at every width, which both names
           contain (WCAG 2.5.3, label in name; BR-REQ-041-01 criterion 21): from `sm` since §378
-          (the owner: "Use GDPR for desktop as well"), and on a phone since §NNN (the owner,
+          (the owner: "Use GDPR for desktop as well"), and on a phone since §385 (the owner,
           2026-09-25: "It would fit to say GDPR instead of just a question mark here"), where
           §378's circled question mark had replaced §372's lock. On a phone the link is the bar's
           target tall and as wide as the word plus 2 pixels a side: 37.6 pixels at 13 pixels of
@@ -418,7 +418,7 @@ export default async function SiteFooter() {
         )}
 
         {/* The language, on a phone only (§262: `sm` up keeps the header's own copy); the row's
-            last item, two flags side by side, after a rule (§NNN, the owner, 2026-09-25: "I need
+            last item, two flags side by side, after a rule (§385, the owner, 2026-09-25: "I need
             a separator before the language switchers"): one pixel of the theme's `divider`,
             16 pixels tall on the 24-pixel bar and 18 on the 28-pixel one, centred on the row
             (this box is the flags' height and centres what is in it), the bar's gap on each

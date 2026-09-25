@@ -69,7 +69,7 @@ export default function BuildBadgeLink({
       // double-click and the press. `userSelect` and the touch callout are off so a long press
       // selects no text and offers no "copy" bubble instead of opening the door. Everything else
       // about the box — its place in the footer's fold, its size — is the same, and the comment
-      // in `BuildBadge.tsx` explains why each of those matters. The chip inside it (§NNN) is
+      // in `BuildBadge.tsx` explains why each of those matters. The chip inside it (§385) is
       // drawn by the server and arrives as `children`; this box is the 44-pixel target around it.
       sx={{
         ...sx,

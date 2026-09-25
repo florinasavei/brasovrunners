@@ -63,7 +63,7 @@ export async function countEventNoticeRecipients<T extends Record<string, unknow
 }
 
 /**
- * The real recipients of each of several dates, for a series save's dialog (§331, §NNN): a save
+ * The real recipients of each of several dates, for a series save's dialog (§331, §384): a save
  * with the notice ticked tells every date it reaches, so "an email will be sent to N" is the sum
  * over the dates ticked, and each date's number is this — the same condition as the one above.
  * A date with nobody is absent. The caller leaves out a date already run: `announceSave` tells it

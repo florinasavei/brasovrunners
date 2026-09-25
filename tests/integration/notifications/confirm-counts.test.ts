@@ -12,7 +12,7 @@ import { countParticipantMessageAudiences, sendParticipantMessage } from "@/modu
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — "I need to know each time a participant will be emailed!"
+ * `DECISIONS.md` §384 — "I need to know each time a participant will be emailed!"
  *
  * The confirmation dialog says "an email will be sent to N participants" from a count the page
  * read on the server, and the number has to be the number of rows the send then queues. Both
@@ -21,7 +21,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * `countEventThanksRecipients` beside the thank-you — and this proves the pair agree, over a
  * queue that holds every status there is, a test row among them (counted apart, §12.6).
  */
-describe("§NNN the dialog's count is the send's recipients", () => {
+describe("§384 the dialog's count is the send's recipients", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let organizer: StaffUser;

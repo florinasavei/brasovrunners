@@ -29,7 +29,7 @@ export type RowMenuItem =
       icon?: RowMenuIcon;
       /**
        * The id of a form already in the page whose Server Action this item submits — an
-       * `ActionForm` carrying its own `confirm` where the verb asks first (§NNN): the menu only
+       * `ActionForm` carrying its own `confirm` where the verb asks first (§384): the menu only
        * submits, and the form is what asks.
        */
       formId: string;
@@ -51,7 +51,7 @@ export type RowMenuItem =
  * rendered — the action, the event id, the UI locale — and ends in `requestSubmit()` on it, so
  * nothing behind the menu changed: the role check, the version guard and the refusal to delete
  * an event with registrations against it are the server's, and this only decides which form to
- * post. The question — "delete this event?" — is the form's own (`ActionForm confirm`, §NNN),
+ * post. The question — "delete this event?" — is the form's own (`ActionForm confirm`, §384),
  * asked by the one `ConfirmDialog` the backoffice has, so this menu draws none.
  */
 export default function RowMenu({ items, ariaLabel }: { items: RowMenuItem[]; ariaLabel: string }) {

@@ -5,7 +5,7 @@ import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * `DECISIONS.md` §NNN — the registrations list's bulk cancel says how many it will email.
+ * `DECISIONS.md` §384 — the registrations list's bulk cancel says how many it will email.
  *
  * The ticks exist only in the browser, so the server hands the dialog what each row adds and the
  * dialog sums the ticked ones at the press: a real registration the cancel can reach is one
@@ -95,7 +95,7 @@ async function removeEvents(ids: readonly string[]): Promise<void> {
   });
 }
 
-test.describe("§NNN the bulk cancel counts the emails it will send", () => {
+test.describe("§384 the bulk cancel counts the emails it will send", () => {
   const created: string[] = [];
   test.afterAll(async () => removeEvents(created));
 

@@ -92,7 +92,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
       {transitions.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
           {transitions.map((to) => (
-            // Publishing, taking off the site and archiving ask first (§NNN); review asks nothing.
+            // Publishing, taking off the site and archiving ask first (§384); review asks nothing.
             <ActionForm
               action={transitionAlbumAction}
               key={to}

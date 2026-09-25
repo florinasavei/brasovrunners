@@ -15,13 +15,16 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| Toasts after every backoffice action and a confirmation dialog before every irreversible or outward-facing one — an action that emails participants says so, with the count | `feat/toasts-and-confirms` | |
+| A rich-text route / training description per event in the route card, shown under the pills with the GPX and Strava links (migration `0071`) | `feat/route-description` | its own release |
+| A family on one address: the second sign-up becomes an email with a link for the extra person, a cap per address, one QR per person | `feat/family-registration` | its own release; before the weekend |
+| The backoffice event cards wear the public card's type chip and route pills | `feat/backoffice-card-pills` | queued |
+| An optional self-declaration for group runs (asfalt, trail), signed on the site and emailed to the club (migration) | `feat/group-run-declaration` | queued; the trail one on by default (Salvamont) |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.90` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.91` |
 
 ## Next, queued
 
@@ -49,11 +52,14 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 - `yarn test:e2e:dev` (the `next dev` walk of every page, minutes) is on demand; say if it should also run nightly on qa.
 - The public site's own toasts: the contact form's sent state, self-unregistration, the participation confirmation (after `feat/toasts-and-confirms`).
 - The reminder email's checklist could say «Frontală necesară» for a marked event, through a template placeholder (the `.ics` attached to the confirmation and reminder emails already carries the line) — say if you want it.
+- The public site's own toasts (the contact form's sent state, self-unregistration, the participation confirmation) — say if you want them.
+- `yarn ship` waits until no check is pending before judging; `docs:land` refuses a blank fix report; `event-pages.spec` measures tap targets to a tenth of a pixel (the tooling chores found tonight).
 
 ## Released
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.91` | a toast after every backoffice action and one confirmation dialog before every irreversible or outward-facing one, naming how many real participants are emailed; check-in stays one tap; the bulk cancel's ticks belong to their form · the phone footer says "GDPR", a rule before RO/EN, a condensed fold, the version as a chip · the 🤝 marker in gray ink; the chip says "Colaborare" / "Partnership" |
 | `BR-V1.90` | "Următoarele emailuri automate": every automatic email of the next fourteen days on `/admin/emails`, from the jobs' own formula, with recipient counts and the "Copie club" line |
 | `BR-V1.89` | "Necesită frontală": a per-event headlamp mark — a checkbox in the editor's route card (a series carries it by scope), a headlamp pill after elevation on the card, the hero and the event page, a line in the calendar entry and the `.ics`; migration `0070` |
 | `BR-V1.88` | less whitespace on a phone: one density scale on every public page, the listing 118 px shorter at 360 px, desktop untouched · the partner card is an outlined, tinted surface; the listing card's time is bold like its date |

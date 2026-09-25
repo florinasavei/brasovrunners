@@ -90,7 +90,7 @@ export default function LocaleSwitcher() {
         flexDirection: "row",
         alignItems: "center",
         // Below `sm` this copy is only on the footer's bar, whose items are spaced by one gap
-        // (§378, §NNN, `footer-target.ts`: 4px below 360, 6px from 360); the two flags take the
+        // (§378, §385, `footer-target.ts`: 4px below 360, 6px from 360); the two flags take the
         // same. From `sm`, the header's.
         ...footerGapSx(["gap"], 0.25),
         flexShrink: 0,

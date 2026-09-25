@@ -30,7 +30,7 @@ export type FormOutcome = {
   error?: string;
   /**
    * "It worked", for an action that answers without redirecting (`shared/feedback/notice.ts`,
-   * §NNN): `ActionForm` hands it to the toast provider. An action that redirects flashes it
+   * §384): `ActionForm` hands it to the toast provider. An action that redirects flashes it
    * instead (`flash.ts`) and never returns.
    */
   notice?: FormNotice;
@@ -103,7 +103,7 @@ export function refused(
 
 /**
  * The outcome of a submit that worked and stays on its page: no refusal, nothing to recall, and
- * the notice the toast provider says (§NNN). An action that redirects flashes instead.
+ * the notice the toast provider says (§384). An action that redirects flashes instead.
  */
 export function succeeded(notice: FormNotice): FormOutcome {
   return { notice, fields: [], values: {} };

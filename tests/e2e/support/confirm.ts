@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 /**
- * The backoffice's one confirmation dialog (`DECISIONS.md` §NNN, `ConfirmDialog`), answered the
+ * The backoffice's one confirmation dialog (`DECISIONS.md` §384, `ConfirmDialog`), answered the
  * way a person does: wait for it, press its confirm button, wait for it to go.
  *
  * Every spec that presses a verb which asks first goes through here, so the day the dialog

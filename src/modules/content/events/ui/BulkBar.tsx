@@ -17,7 +17,7 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  * see the row checkboxes, which belong to this form by `form={formId}` and live in the table
  * above. The bar owns the `<form>`; each verb is a submit button with its own Server Action
  * as `formAction`, so the browser posts the same ticks to whichever was pressed. Every verb
- * asks first (§NNN) — publishing and archiving face the site, deleting cannot be undone — through
+ * asks first (§384) — publishing and archiving face the site, deleting cannot be undone — through
  * the one `ConfirmSubmitButton`, since one selection feeds three actions and a form-level question
  * could not tell them apart. Without JavaScript the buttons still post — only the counter, "select
  * all" and the questions go quiet, and the server refuses exactly as before.

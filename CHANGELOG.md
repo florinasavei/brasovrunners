@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.91-2026-09-25
+
+- **Every backoffice action says it worked, and the ones that are hard to undo or face the site ask first** — one toast after each save, publish, send and setting (above the phone's footer, gone by itself, never twice on a refresh), one confirmation dialog on every irreversible or outward-facing verb (cancel focused, Escape leaves things as they were, Enter agrees only where nothing is destroyed), and each dialog for an action that emails participants says so with the exact count — "Se va trimite un email către 12 participanți" — read from the same query the send uses. §384.
+- **The phone's footer says "GDPR", separates the languages, and folds up tighter:** the privacy link shows the word "GDPR" at every width, not a question mark on a phone. A thin rule stands before the RO/EN flags. The open "Despre club" panel is one wrapping row of links with "Scrie-ne: <address>" said once, 136 px tall instead of 188 at 360 px. The version stamp is a small outlined chip, still the staff entrance. §385.
+- **The partner marker reads gray, and says less.** The 🤝 now matches the other listing-card glyphs' ink instead of its own bright colours, and the Romanian chip says the shorter "Colaborare" rather than "Eveniment în parteneriat"; on a filled race calendar entry it takes the entry's own near-white or near-black, where it had all but vanished. §386.
 ## BR-V1.90-2026-09-25
 
 - The "Următoarele emailuri automate" forecast on /admin/emails now keeps a last call to sign that falls before the hold's own lapse to the next in line (previously dropped whenever any lapse was foreseen, regardless of order), the panel marks an event title borrowed from the other language with its language code instead of showing it unlabelled, and the two "how many lapsed holds does the queue want" formulas are now documented as the two different, and where they agree, rules they are. §383.

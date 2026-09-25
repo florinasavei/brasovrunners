@@ -126,7 +126,7 @@ describe("§350 the editor's boxes, in order", () => {
   it("offers repeat, stop and duplicate only to the role the service allows", () => {
     expect(EDIT).toContain("const mayChangeSeries = canCreateEvent(staffUser.role);");
     expect(EDIT).toMatch(/\{mayChangeSeries \? \(\s*\/\* A refused rule/);
-    // An `ActionForm` that asks first since §NNN — the duplicate makes a whole event.
+    // An `ActionForm` that asks first since §384 — the duplicate makes a whole event.
     expect(EDIT).toMatch(/\{mayChangeSeries && \(\s*<ActionForm\s*action=\{duplicateEventAction\}/);
     expect(EDIT).toContain("mayChange={mayChangeSeries}");
   });

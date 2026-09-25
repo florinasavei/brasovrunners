@@ -1,5 +1,5 @@
 /**
- * One shape for "it worked" across the backoffice (`DECISIONS.md` §NNN): a toast.
+ * One shape for "it worked" across the backoffice (`DECISIONS.md` §384): a toast.
  *
  * A Server Action that succeeds says so with a **notice** — a kind, a key into `Feedback.toast`
  * and the values its sentence needs — and never with a translated string: the action stays
@@ -136,7 +136,7 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
     const text = String(value);
     return /^\d{1,9}$/.test(text) ? text : undefined;
   };
-  // A bulk cancel that also cancelled test rows (§30, §NNN): the club's own count stays the real
+  // A bulk cancel that also cancelled test rows (§30, §384): the club's own count stays the real
   // rows only, and a variant sentence — never the plain one — says the test rows moved too, so
   // "0 anulate" is not read as nothing having happened.
   const testCount = key === "registrationsCancelled" ? numberOf("test") : undefined;
@@ -259,7 +259,7 @@ export type ConfirmSpec = {
 export type FormCondition = { field: string; equals?: string; notEquals?: string };
 
 /**
- * "An email will be sent to N participants" for the dates a series save reaches (§331, §NNN):
+ * "An email will be sent to N participants" for the dates a series save reaches (§331, §384):
  * the numbers read on the server with the send's own query, one per date, summed in the browser
  * over the dates ticked at the press — the ticks exist only there.
  */

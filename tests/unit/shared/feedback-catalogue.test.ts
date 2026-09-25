@@ -7,7 +7,7 @@ import { STAFF_CLIENT_MESSAGES } from "@/i18n/client-messages";
 import { DERIVED_TOAST_KEYS } from "@/shared/feedback/notice";
 
 /**
- * `DECISIONS.md` §NNN — every "it worked" a backoffice action redirects with is a sentence.
+ * `DECISIONS.md` §384 — every "it worked" a backoffice action redirects with is a sentence.
  *
  * The toast provider looks a `saved` code up under `Feedback.toast` and falls back to the
  * generic "saved" for a code it does not know, so a missing sentence is never a crash — it is a
@@ -50,7 +50,7 @@ function savedCodes(): string[] {
 
 type Toasts = Record<string, string | { one: string; few: string; other: string }>;
 
-describe("§NNN every saved code has a toast sentence", () => {
+describe("§384 every saved code has a toast sentence", () => {
   const toasts = { ro: (ro as { Feedback: { toast: Toasts } }).Feedback.toast, en: (en as { Feedback: { toast: Toasts } }).Feedback.toast };
   const codes = savedCodes();
 

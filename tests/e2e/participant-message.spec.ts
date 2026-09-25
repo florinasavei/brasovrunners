@@ -190,7 +190,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Trimiți mesajul la 2 participanți?");
-    // Who is emailed, from the same count the send queues from (§NNN).
+    // Who is emailed, from the same count the send queues from (§384).
     await expect(dialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 2 participanți.");
     await confirmDialog(page);
     await expect(page.getByTestId("participant-message-sent")).toContainText("Mesaj pus la coadă pentru 2 participanți.", { timeout: 30_000 });

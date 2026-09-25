@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type FormNotice, noticeOf } from "./notice";
 
 /**
- * The flash: a notice that survives one redirect (`notice.ts`, `DECISIONS.md` §NNN).
+ * The flash: a notice that survives one redirect (`notice.ts`, `DECISIONS.md` §384).
  *
  * Every backoffice success redirects — to the editor with `?saved=event`, to the list with
  * `?saved=eventsArchived&archived=3` — and a toast that lived in the action's own response would

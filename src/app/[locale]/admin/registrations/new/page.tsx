@@ -129,7 +129,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             participantLocale: t("registrations.participantLocale"),
             relayedByParticipantRequest: t("registrations.relayConfirmation"),
           })}
-          // The entry emails the person — the link, or the confirmation on the fast track — and says so (§NNN).
+          // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
           confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
           data-testid="registration-new-form"
         >

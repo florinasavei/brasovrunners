@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.90-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.91-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.90-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.91-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15293,8 +15293,6 @@ Baseline `BR-V1.84-2026-09-25`.
 
 ## 375. Amending §366 and §367: the partner marker loses names, the card's date row stays one line on a phone, the pills read terrain-first
 
-No DECISIONS.md edit made — the reviewer's own instructions said no DECISIONS/CHANGELOG/SPECS/baseline edits for this fix-one-branch pass, matching the implementer's original round. The §375 placeholders already present in the branch (and added here) are the `land-batch.mjs` convention the owner's batch-landing script fills in when this PR lands; they are intentionally left as literal `§375` text in code comments, not resolved here.
-
 A review, 2026-09-24/25, of the series card's «Următoarea:» / «Next:» lead found it hidden below MUI's `sm` breakpoint (600px), losing it on every phone rather than only the ones too narrow for it. Its own breakpoint is 345 pixels (measured: the lead next to the date, the clock and the time needs about 245px; a 320-pixel card gives about 226, a 360-pixel one about 266), and below it the lead is visually hidden by a clip technique rather than `display: none`, so a screen reader still reads it at every width. Separately, a card whose date is genuinely more than a year out keeps its year and now wraps between whole pieces rather than being clipped by the card's own `overflow: hidden` — but only for that case (`dateMoreThanYearOut`, a distance check), not for every date lacking the short (no-year) rendering: a past-dated event also lacks that rendering but does not need the extra room, and a first draft of the fix (using `!dateShort` as the review's own literal suggestion) wrapped such a card unnecessarily, caught by the seed's own past-dated card in e2e.
 
 A third review, 2026-09-24, amended the card's "when" row twice more.
@@ -15308,8 +15306,6 @@ The e2e check now makes its own fixtures rather than relying on what the databas
 Baseline `BR-V1.85-2026-09-25`.
 
 ## 376. The /admin/legal notice says what the code enforces and folds shut; a malformed admin id is refused before it reaches the database
-
-No DECISIONS.md edit made (repo convention: docs:land fills §376 placeholders later; this is application code under the fast lane per CLAUDE.md). If a decisions entry is wanted, it would read: the legal-versions explanation now states exactly what the service and deletability rules enforce (frozen once approved; deletable only if unrelied-on and not in force; declaration+notice must both be in effect, not approved, together) and is shown only on /admin/legal rather than on every backoffice page.
 
 §336 addendum: the legal-versions notice on `/admin/legal` was found saying more than the code does — "refused unless a declaration and a privacy notice are both in effect at the same time" reads as one joint condition, where `registerForEvent` refuses on a missing `PRIVACY_NOTICE` alone and the declaration is checked separately, at confirmation. Both language files now say the two refusals apart: no privacy notice blocks registration; no declaration blocks confirming a place. The notice itself also moved: it was rendered by the section's `layout.tsx`, above `{children}` — so it sat over the list page's own saved/refusal alert, its heading and the platform-approve card, the one thing on the page most in need of being seen first when something needs the club's attention. It now lives in `(list)/page.tsx`, directly under the legal.title / legal.intro / whatIs block, as `id="legal-versions"` so `/admin/legal#legal-versions` opens it like every other §336 panel; the layout is back to being a plain role gate. `BackofficeShell`'s `notice` prop, which nothing had called since the notice moved out of it, is removed along with its render slot.
 
@@ -15642,3 +15638,108 @@ The job asks "is it due now?". The forecast asks "when?" of the same function, o
 §383 (this round) — The forecast's "last call vs. released to the queue" tie-break (§160) is now order-aware rather than blanket-suppressing: a declaration hold's lapse to the next in line only pre-empts that registration's last call to sign when the lapse is due at or before the last call's own instant, matching the maintenance job's own run order (`expireStaleHolds` before `queueEventReminders` in one pass); a last call due earlier than the lapse is still promised and still sent. Separately, `wantedLapsedHoldReleases` (registrations/domain/capacity.ts) and `nextInLineOffers` (notifications/domain/automatic-sends.ts) are recorded as two distinct formulas for the same §160 question — the job's, which reads a live "free" count, and the forecast's, which cannot, because at a forecast instant nothing has actually lapsed yet for a query to count — that are proven to agree whenever free is 0, the only condition either is ever evaluated under. And the "Următoarele emailuri automate" panel's cross-language event-title fallback (§354, "no unmarked fallback") now marks a borrowed title with its language code rather than presenting it as the reader's own locale's words.
 
 Baseline `BR-V1.90-2026-09-25`.
+
+## 384. One toast and one confirmation dialog across the backoffice
+
+The owner: "I need more toasts and confirmation dialogs in the app!" and "I need to know each time a participant will be emailed!"
+
+**Toasts.** Every backoffice success says so with a toast. There is one `ToastProvider` in the admin layout, and one toast shows at a time, queued, for 5.5 s or until its 44 px close button. It sits above the footer's sticky bar and the editor's save row. The toast is drawn inside a `role="status"` region that is mounted empty with the provider, so a screen reader announces the sentence. A redirecting action writes its outcome into a 60-second `br-flash` cookie (not httpOnly: the island clears it); the layout reads it on the page the redirect lands on. A refresh therefore repeats nothing. A refusal is never a toast: §47's summary stays where it was.
+
+**What the cookie carries.** `noticeOf` keeps only numbers: `count`, plus the dates a series sentence names. It never carries the desk's search box (a participant's name) or a provider's error text. The desk's own query travels in the URL around the flash.
+
+**A toast only for what happened.** A staff verb that reaches Zitadel (invite, re-invite, password reset, deactivate, reactivate) toasts only when Zitadel answered invited, exists or done. On failed, missing or unconfigured there is no toast, and the banner says why (§171, §288). A count of zero, "address was not on Notify me" and "limits were already these" toast as info, not green. The event save names what it did beyond saving: for a series it counts the dates; when it told participants it says how many update or cancellation emails were queued. When it cancelled quietly, it says that no email left.
+
+**Questions.** An irreversible or outward-facing verb asks first through one `ConfirmDialog`: an `ActionForm` with `confirm`, or a `ConfirmSubmitButton` where one form carries several verbs. The safe button has the focus. Enter confirms only a dialog that is not destructive; Escape and the backdrop cancel. A dialog with `when` conditions asks only for the press that matches them:
+- the event save, when the notice is ticked or the status is set to cancelled;
+- the create form, for "Creează și publică" only;
+- the series auto-publish switch, when it is turned on;
+- the email wording, for "Revino la textul platformei" only.
+
+Every question that emails participants says how many, from the same query the send uses. For real participants only, test rows are named apart (AGENTS.md §12.6). A series save sums each later date's count over the dates ticked at the press, and a date already run is counted nowhere because it is told nothing. A verb that emails nobody says nothing about email.
+
+**What asks nothing, and why.** `tests/unit/shared/confirmed-actions.test.ts` holds both lists, and a new exported action must be in one of them.
+- Check-in emails nobody and is undone from the same row; a dialog per runner would double the desk's taps.
+- Editorial saves (albums, pages, drafts, legal drafts, the email wording) toast only; their publish and delete verbs ask.
+- Cover, page order and the printed-bib mark are undone by the same control.
+- Test registrations are counted nowhere and removed by a verb that asks.
+- The hard delete, the erase from the list, the approved-version delete and the bulk erase are guarded by typing, which is the question.
+- A preview, a lookup, and sign-in and sign-out change no data.
+
+A dialog is only a courtesy: every rule stays on the server (BR-REQ-060-01), and without JavaScript the form posts.
+
+**Round three — the review's nine findings, after merging qa (2026-09-25).** "Termene" (§377) arrived on qa with neither a dialog nor a toast. It now asks "Salvezi termenele?" and says in both languages what changes and what does not: every hold, offer and link given from now on takes the new numbers, and anything already given keeps its deadline. It toasts "Termene salvate.", a sentence of its own so it does not repeat the banner. It is in the inventory as an (a) action.
+
+**The bulk cancel says how many it emails.** The ticks exist only in the browser. So the page gives `ConfirmSubmitButton` an `emailCount` (the shape a series save already used), and the button sums it over the ticked `registrationId` values at the press. A row counts as one when it is real and its status has an edge to CANCELLED. An address that was never confirmed is refused by the service and emails nobody. A test row is emailed but counted nowhere the club is given (§30). The toast and the banner after it count the same rows, from the service's own answer (`bulkCancelRegistrationsByStaff` now returns `test` beside `cancelled`).
+
+Writing the e2e for this found that the list's row checkboxes had never belonged to the bulk form. `form={BULK_FORM}` was a prop of MUI's `Checkbox`, which puts it on the wrapping span. Every bulk cancel and bulk erase therefore posted no ids and answered "nothing selected". This is the trap §114 recorded and fixed on the events list only. `form` is now on the `<input>` through `slotProps.input`.
+
+**Counts the club is given never include test rows (§30), in a toast too.** `sendEventThanks` returns `{ recipients, real, test }`: the audit keeps `recipients`, and the toast and banner say `real`, the dialog's own number. A message to a group of test rows alone shows no email line ("0 participants"), only its test line.
+
+**Smaller corrections.** The notice save's dialog says the email goes only if the place, the start or the programme changed, or a note was written. Deleting a page names it in the question. In a destructive dialog Enter reaches the focused cancel button and cancels. A held Enter's repeats are swallowed, so the press that opened a dialog neither confirms nor cancels it. Adding a colleague where the development switcher is the provider toasts "added to the team", because the allowlist row is the whole verb there; under Zitadel, "unconfigured" still toasts nothing and the banner says why. The desk's check-in stays without a dialog, one tap per runner, and keeps its toast.
+
+Round-2 fix on feat/toasts-and-confirms (built on 0ca4e068), addressing review findings: single-row confirmation dialogs on the desk, the registrations list's row menu, and the registration page now condition their bold email line on the row's own `kind`, so a TEST row's 'confirm on paper' / 'give a place' / 'set a bib' / 'resend' / 'cancel' dialog no longer states a participant count the club is never given (`AGENTS.md` §12.6). The event editor's 'save and tell the participants?' dialog now names a reinstated event among the reasons participants are told, alongside a changed place, start or programme, or a written note — closing the gap where the bold email line promised an email the qualified body's list did not account for. A bulk cancel of TEST rows alone now says so, in a toast (`registrationsCancelledTest`) and a banner line reusing the participant-message composer's own test-rows sentence, so '0 înscrieri anulate' from a test-only batch is never read as nothing having happened, while the club's own count stays the real rows only (§30).
+
+Baseline `BR-V1.91-2026-09-25`.
+
+## 385. Amending §378 and §365: "GDPR" on the phone's bar, a rule before the languages, a condensed fold, and the version in a chip
+
+**Asked (the owner, 2026-09-25, from his phone, of §378's one-row footer):** "It would fit to say GDPR instead of just a question mark here"; "I need a separator before the language switchers"; "the info from the expanded footer must be more condensed" (his screenshot of the open fold showed four sparse rows: "Termeni de concurs" and "Înscrierile mele", then "Scrie-ne" alone, then 12 px lower "Scrie-ne: contact@…", then the stamp); and "Version must be within a chip".
+
+**Decided.**
+
+- **The privacy link says "GDPR" at every width** (`Legal.privacyLinkShort`). §378's circled question mark, which had replaced §372's lock, is gone. On a phone the link is the bar's target tall (24 px below 360, 28 from 360) and as wide as the word plus 2 px on each side: 37.6 px at 13 px Roboto. That is 13.6 px more than the 24-px glyph square and 9.6 px more than the 28-px one. The accessible name ("Nota de confidențialitate (GDPR)" / "Privacy notice (GDPR)"), the `title`, the href and the position (right after the fold's summary, before the marks) are unchanged. The name still contains the visible word (WCAG 2.5.3).
+- **A rule before the languages, on a phone.** It is one pixel of the theme's `divider`, `aria-hidden`, 16 px tall on the 24-px bar and 18 on the 28-px bar. It is centred on the row, with the bar's gap on each side. From `sm` the languages are in the header (§262) and the bar has nothing to separate, so the rule is hidden with the phone-only language box.
+- **The phone's gap is 4 px below 360 and 6 px from 360** (`FOOTER_GAP` in `footer-target.ts`, replacing `FOOTER_GAP_PHONE = 6`). It is the same between the row's items, the marks, the rule and the flags. **The summary's own padding on a phone is 2 px a side** (was 4). From `sm` nothing changed.
+- **The fold's panel is one wrapping row of 44-px targets.** Criterion 6 still holds: the panel keeps 44 px at every width.
+  - Two links on a line are 8 px apart (`DENSITY.gapSm`, §380), and 16 px from `sm`.
+  - Lines have no margin between them. A 44-px link already has 12 px above and below its words, which is as tight as it gets.
+  - Text is 14 px, the size the address already had.
+  - "Scrie-ne" appears once. The `/contact` link reads "Scrie-ne:" (`Footer.about.contact`) and is followed by the mail link to the club's `EMAIL_REPLY_TO`. The two are one item, so the address wraps under its own lead rather than onto a line elsewhere. With no address configured, the link reads "Scrie-ne" alone.
+  - The build stamp is the panel's last item.
+  - On a phone the content is `100vw − 60px` wide below 360 and `100vw − 68px` from 360 (was `100vw − 80px`). The box is border-box (CssBaseline), so the 12 px indent is inside the width, and the panel ends 32 px short of the screen edge below 360 (288 of 320) and 34 px short from 360 (326 of 360). From `sm` it is unchanged.
+- **The build stamp is a small outlined MUI `Chip`** (`size="small"`, `variant="outlined"`, `text.secondary`, 11 px tabular figures). It shows the same text as before: the environment prefix where there is one, `app-ver`, the baseline, the short sha and the date. It appears in both places the stamp lives: the fold's last item below `md`, and the pinned corner from `md` (§372). Its label wraps instead of being cut with an ellipsis, because the exact build is the point of it and a 320-px panel is narrower than a QA stamp.
+  - The chip is the 24 px you see. It stands in the same 44-px `<p>` box, which carries the accessible name and the `title` exactly as before.
+  - That box is still the staff entrance (§34, `BuildBadgeLink`): double-click, long press or Enter opens sign-in, and a single tap does nothing. With `STAFF_AUTH_MODE=disabled` it is an inert label with `pointerEvents: none`.
+  - `BuildBadge` stays a Server Component. The chip is rendered there with a text label and no element props, and reaches the client island as `children` (§370).
+
+**The row, measured.** Measured on the production-built listing in headless Chromium. Pixel 5 emulation and desktop Chrome gave the same numbers, fold closed and open. There are now nine items and eight gaps, because the rule is an item. At §378's 6-px gap, the word, the rule and the extra gap take 20.6 px more at 320 and 16.6 more at 360. "About the club" was cut by 16.4 px at 320 and by 0.4 px at 360. A 4-px gap below 360 alone was still 0.4 px short at 320, which is where the question mark would have had to come back. The 2-px summary padding gives back 4 px at both widths.
+
+| width | gap | fold | summary RO / EN | spare beside "Despre club" | spare beside "About the club" |
+| --- | --- | --- | --- | --- | --- |
+| 320 | 4 | 105.4 | 86.3 / 101.8 | 19.1 | 3.6 |
+| 360 | 6 | 105.4 | 86.3 / 101.8 | 19.1 | 3.6 |
+| 390 | 6 | 135.4 | 86.3 / 101.8 | 49.1 | 33.6 |
+| 412 | 6 | 157.4 | 86.3 / 101.8 | 71.1 | 55.6 |
+
+**No fallback.** The word is on the bar at every width in both languages. Every item is on the switch's row, and the last flag ends exactly at the row's right edge.
+
+**Risk, recorded:** 3.6 px of spare beside "About the club" at 320 and 360 is thinner than §378's 4.2. The font is self-hosted Roboto with a metric-matched fallback. `footer.spec.ts` checks that the label is not ellipsised at the four widths in both languages, on both Playwright projects. It runs on the phone project only if someone runs it before a release: pull requests run the desktop project (§209).
+
+**A defect caught while building it.** An `sx` that has a breakpoint object for one property (`display: { xs: "flex", sm: "none" }`, `ml: { sm: 1 }`) and a literal `@media (min-width:600px)` key after it does not merge the two. The literal key replaces MUI's own entry. The first draft therefore showed the phone's language box on a desktop. `footerGapSx` writes its `sm` value as a breakpoint object. The unit test pins three things: the 360 band comes after the 4-px rule, the language box keeps `display:none` from `sm`, and the marks keep their `sm` margin.
+
+**The open panel, measured at 360 in Romanian with the club's address configured:**
+- **Before:** 188 px. That was a 44-px line of two links, "Scrie-ne" alone on a second, 12 px, the address paragraph of 20 px, 12 px, the 44-px stamp, and 12 px of padding.
+- **After:** 136 px. That is three 44-px lines (the two links; "Scrie-ne: <address>"; the stamp) and 4 px of padding. It is 136 px at 320, 360, 390 and 412 in both languages, where it was 208 at 320 and 144 in English from 390.
+
+**Replaces:** §378's question mark below `sm` and its uniform 6-px `FOOTER_GAP_PHONE`. It also replaces §365's panel layout: the stacked `spacing`, the separate "Scrie-ne" link and address line, and the stamp as a plain muted line of text. The fold, the zero-width panel inside the `<details>` (§372) and the stamp's two places (§372) are unchanged. BR-REQ-041-01 criteria 21, 23 and 28 are rewritten to match.
+
+**Tests:**
+- `tests/unit/shared/site-footer.test.ts`: the word and no glyph, the link's 2-px padding and bar target, the gaps and the order of their media rules, the rule, the summary's padding, the panel's structure, "Scrie-ne" once, and the chip in both copies.
+- `tests/e2e/footer.spec.ts`: one row with every item and the rule centred, at 320/359/360/393/640/768/1280 and at 320/360/390/412 in both languages, fold closed and open. The spacing is 4 or 6 px, and the summary is uncut. The panel's controls are 44 px tall, its lines are 44 px apart, "Scrie-ne" appears once, the stamp comes last, and the height is under 188.
+- `tests/e2e/build-badge.spec.ts`: the chip as the staff entrance on both projects, in the fold and pinned.
+
+Baseline `BR-V1.91-2026-09-25`.
+
+## 386. Amending §379: gray ink and shorter Romanian words for the partner marker
+
+The owner, 2026-09-25, on the listing card: "This icon handshake must be gray, the chip is too long, just say 'colaborare' in the Romanian one."
+
+**Gray ink.** `PartnerEmoji`'s base `sx` now carries `filter: "grayscale(1) brightness(0.45)"`, with a `"[data-dark] &": { filter: "grayscale(1) brightness(0.92)" }` override — the same plain-object dark-scheme selector `theme/surfaces.ts` uses rather than `theme.applyStyles`, so the fragment still crosses a Server Component boundary unchanged. The multipliers were chosen so the desaturated 🤝 reads close to `text.secondary`'s own measured brightness in each scheme (`COLOR.inkMuted` `#5b574f` light, `COLOR_DARK.inkMuted` `#b5b2a9` dark) — set once in the component, so every surface (the listing chip, the overline, the calendar's grid and agenda marks) inherits it without a change of its own. Verified against the "Alergare de grup" runner glyph at 360px, both schemes, screenshots sent to the owner.
+
+**Shorter words.** `partner.marker` is now "Colaborare" (ro) / "Partnership" (en) in both catalogues — the chip's visible text, its `title` tooltip, its `aria-label`, and the calendar entry's tooltip and accessible name all read from this one key, so nothing needed a separate word change. Measured at a 320px viewport: the label's unconstrained width went from ~178px to ~101px, well inside the chip's own room; `PartnerChip.tsx`'s wrap-not-clip handling is left in place as a defensive margin for a narrower card or a larger phone font, not because the new words still need it.
+
+Review round (2026-09-25): fixed the partner handshake's gray ink: the dark-scheme filter was measured landing the emoji near-white instead of matching `text.secondary`, and the light-scheme filter a shade too pale — both corrected and re-verified in Chromium, with the full e2e suite for the touched pages passing on both viewports.
+
+§379 addendum, 2026-09-25 (review round on the "gray handshake, shorter Romanian label" change): the grayscale filter that reads correctly against a card's `action.selected` background and the overline's `text.secondary` all but disappeared on a **filled** calendar entry — a RACE date, drawn in `primary.main` with `primary.contrastText` — because `primary.contrastText` swaps ends between colour schemes rather than staying a fixed "light" or "dark" tone: light draws it near-white on the club's dark blue, dark draws it near-black on the lighter dark-scheme blue (`theme/theme.ts`). `CalendarEventChip` now carries a `filled`-only filter override, passed to `PartnerMark` (which gained an `sx` prop) and to the grid's bare `PartnerGlyph`: `grayscale(1) brightness(1.6)` in light (near `COLOR.paper`'s own mean brightness, ~249) and `grayscale(1) brightness(0.1)` under `[data-dark] &` in dark (near `COLOR_DARK.paper`'s, ~20) — the emoji's own default filter, tuned to `text.secondary`, is untouched everywhere the chip is not filled. Separately: `PartnerEmoji`'s JSDoc now records, rather than closes, a smaller known gap — the glyph reads a shade lighter than intended inside `GlyphChip`'s "Alergare de grup" chip on the dark scheme, because MUI's own `.MuiChip-icon` rule (`Chip.defaultIconColor`, grey-300 dark ≈ 224) sits slightly above the `text.secondary` target (≈ 178) this glyph is tuned to; closing it exactly would need a second, chip-only dark-scheme filter value that no other glyph in the registry carries, judged not worth it for a one-shade difference.
+
+Baseline `BR-V1.91-2026-09-25`.

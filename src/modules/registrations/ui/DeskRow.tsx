@@ -83,7 +83,7 @@ export default async function DeskRow({
   minorSigns: Readonly<Record<Locale, boolean>>;
 }) {
   const t = await getTranslations("Admin");
-  // Every desk verb asks first and says who is emailed (§NNN); the service decides, as before.
+  // Every desk verb asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
   const canConfirm =
     row.status === "PENDING_EMAIL_CONFIRMATION" ||
@@ -380,7 +380,7 @@ export default async function DeskRow({
                 </ActionForm>
               )}
               {/*
-                Check-in asks nothing, either way (§NNN): it emails nobody and is undone from this
+                Check-in asks nothing, either way (§384): it emails nobody and is undone from this
                 same row, and a dialog per runner would double the taps at the desk on race morning.
                 The toast says it happened.
               */}

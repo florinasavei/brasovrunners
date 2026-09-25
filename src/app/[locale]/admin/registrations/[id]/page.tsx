@@ -98,7 +98,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
-  // Every verb here asks first and says who is emailed (§NNN); the service decides, as before.
+  // Every verb here asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.

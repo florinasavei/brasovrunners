@@ -78,7 +78,7 @@ function sentenceFor(template: string, values: Readonly<Record<string, string>> 
  * The summary is §47's: focusable, first in the form, naming each field as a link to its box.
  * A label for an indexed box (`event.schedule[2].date`) falls back to its unindexed name.
  *
- * ## Asking first, and saying it worked (§NNN)
+ * ## Asking first, and saying it worked (§384)
  *
  * `confirm` puts the one `ConfirmDialog` in front of the submit: the `submit` event is caught,
  * the form as it stands is read (with the submitter, so a two-verb form asks the right question),
@@ -153,7 +153,7 @@ export default function ActionForm({
     });
     if (!spec) return;
     event.preventDefault();
-    // A series save's email line, summed over the dates ticked at this press (§NNN).
+    // A series save's email line, summed over the dates ticked at this press (§384).
     const resolved = resolveEmailCount(spec, (field) => data.getAll(field).filter((value): value is string => typeof value === "string"));
     setAsking({ spec: resolved, submitter });
   };

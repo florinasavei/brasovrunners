@@ -7,7 +7,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import { succeeded } from "@/shared/forms/outcome";
 
 /**
- * `DECISIONS.md` §NNN — `ActionForm` is where a form asks first and where "it worked" leaves for
+ * `DECISIONS.md` §384 — `ActionForm` is where a form asks first and where "it worked" leaves for
  * the toast provider.
  *
  * The wiring, held down at the source: the `submit` event is the gate, `preventDefault()` on it
@@ -21,12 +21,12 @@ import { succeeded } from "@/shared/forms/outcome";
 const ROOT = path.resolve(__dirname, "../../..");
 const source = readFileSync(path.join(ROOT, "src/shared/forms/ActionForm.tsx"), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN ActionForm asks first", () => {
+describe("§384 ActionForm asks first", () => {
   it("gates the submit event and stops the action with preventDefault when a question matches", () => {
     expect(source).toMatch(/<form ref=\{form\} action=\{formAction\}[^>]*onSubmit=\{onSubmit\}>/);
     expect(source).toMatch(/const spec = pickConfirm\(confirm, \(field\) => \{/);
     expect(source).toMatch(/if \(!spec\) return;\s*event\.preventDefault\(\);/);
-    // A series save's email line is summed over the dates ticked at this press, then asked (§NNN).
+    // A series save's email line is summed over the dates ticked at this press, then asked (§384).
     expect(source).toMatch(/const resolved = resolveEmailCount\(spec, [^\n]*\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
   });
 

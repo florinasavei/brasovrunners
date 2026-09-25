@@ -233,7 +233,7 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
 
 /**
  * Who the thank-you reaches: everyone checked in at the event. One condition for the send below
- * and for the count the confirmation dialog states before the press (§NNN), so the number the
+ * and for the count the confirmation dialog states before the press (§384), so the number the
  * organizer reads is the number of rows the send writes.
  */
 function thanksRecipientsOf(eventId: string) {

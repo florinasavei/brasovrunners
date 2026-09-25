@@ -22,7 +22,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
  *
  * The visible text is deliberately short: which deployment this is, and when the code behind it
  * last changed. The exact build — the baseline and the commit — is in the `title` and the
- * accessible name too. Since §NNN it is drawn as a small outlined chip, in both places.
+ * accessible name too. Since §385 it is drawn as a small outlined chip, in both places.
  *
  * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a
  * phone, or `Enter` when it has focus, opens it (`BuildBadgeLink`, §34). That replaced a "Staff"
@@ -60,7 +60,7 @@ export default async function BuildBadge() {
    * panel, or on the bar's corner from `md` — is not a press on it), never wider than its line,
    * and 44 pixels tall, like everything else in the panel below `md`, because a long press is
    * aimed at it (BR-REQ-041-01 criterion 6). The chip is the 24 pixels you see; this box is the
-   * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§NNN).
+   * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§385).
    */
   const sx = {
     alignSelf: "flex-start",
@@ -73,7 +73,7 @@ export default async function BuildBadge() {
   };
 
   /**
-   * The stamp as a small outlined chip (§NNN, the owner, 2026-09-25: "Version must be within a
+   * The stamp as a small outlined chip (§385, the owner, 2026-09-25: "Version must be within a
    * chip"), in `text.secondary` ink, the same words as before. A chip's label is one line cut
    * with an ellipsis by default; this one wraps instead (`height: auto`, `white-space: normal`),
    * because the exact build is the whole point of it and a 320-pixel panel is narrower than a

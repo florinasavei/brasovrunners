@@ -51,7 +51,7 @@ export default async function AdminLayout({ children, params }: Props) {
   }
 
   const messages = await getMessages({ locale });
-  // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §NNN): shown once by
+  // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §384): shown once by
   // the provider below, which also clears the cookie, so a refresh shows nothing.
   const flash = await readFlash();
 
@@ -65,7 +65,7 @@ export default async function AdminLayout({ children, params }: Props) {
       <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
         {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,
             `DECISIONS.md` §345) — never on a public route, which never imports this shell. The
-            toasts the same: one provider, every backoffice form's "it worked" (§NNN). */}
+            toasts the same: one provider, every backoffice form's "it worked" (§384). */}
         <ToastProvider flash={flash}>
           <PickerProvider>{children}</PickerProvider>
         </ToastProvider>

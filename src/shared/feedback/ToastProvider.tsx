@@ -11,7 +11,7 @@ import { EMPTY_TOAST_QUEUE, FLASH_COOKIE, type FormNotice, TOAST_AUTO_HIDE_MS, t
 import { type ToastApi, ToastContext } from "./toast-context";
 
 /**
- * The backoffice's toasts (`DECISIONS.md` §NNN; the owner: "I need more toasts and confirmation
+ * The backoffice's toasts (`DECISIONS.md` §384; the owner: "I need more toasts and confirmation
  * dialogs in the app!"), mounted once in the admin layout.
  *
  * One at a time: a notice that arrives while another is showing waits its turn

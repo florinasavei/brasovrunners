@@ -123,7 +123,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   };
   const box = { event: null, mayEditSettings: true } as const;
   /*
-    "Creează și publică" puts an event on the site in one press (§NNN): it asks first, as the
+    "Creează și publică" puts an event on the site in one press (§384): it asks first, as the
     editor's "Publică" does. The plain create makes a draft nobody sees and asks nothing — the
     question is chosen by the button that was pressed (`then=publish`).
   */

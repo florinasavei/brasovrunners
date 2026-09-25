@@ -198,7 +198,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
               */}
               {canEditTexts(actor.role) && (
                 <>
-                  {/* Each verb's form asks its own question (§NNN); the menu only submits it. */}
+                  {/* Each verb's form asks its own question (§384); the menu only submits it. */}
                   <ActionForm
                     id={`publish-${row.id}`}
                     action={transitionPageAction}

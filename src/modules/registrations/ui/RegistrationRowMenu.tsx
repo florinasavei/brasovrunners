@@ -25,7 +25,7 @@ import { ACTION_ICONS, type ActionIconName } from "@/shared/ui/action-icons";
  * The same shape as `EventRowMenu` and for the same reasons: the Server Component renders a
  * hidden form per verb, already carrying its action and its fields, and this island calls
  * `requestSubmit()` on the one that was chosen. Nothing about authorization lives here, and
- * since §NNN nothing about asking either: a verb that asks first is an `ActionForm` with its own
+ * since §384 nothing about asking either: a verb that asks first is an `ActionForm` with its own
  * `confirm`, and the one `ConfirmDialog` of the backoffice opens from the form, not from here.
  */
 /*

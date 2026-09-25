@@ -55,7 +55,7 @@ type Props = {
 const SUBMITTER_FIELD = "confirmedVerb";
 
 /**
- * A submit button that asks first — for a form with **several verbs** (§NNN).
+ * A submit button that asks first — for a form with **several verbs** (§384).
  *
  * A single-verb form asks through `ActionForm`'s `confirm` prop, which is where the question
  * belongs when there is one; this button is for the bulk bars, where one selection feeds two or

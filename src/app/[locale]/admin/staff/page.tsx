@@ -366,7 +366,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 somebody in, while switching the account off happens at the provider and
                 outlives the row.
               */}
-              {/* Each verb's form asks its own question (§NNN); the menu only submits it. */}
+              {/* Each verb's form asks its own question (§384); the menu only submits it. */}
               <ActionForm
                 id={`invite-${member.id}`}
                 action={resendStaffInviteAction}
