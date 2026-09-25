@@ -24,7 +24,7 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
 }
 
 /**
- * "7 locuri libere din 10" / "7 places left out of 10" — the listing card's count (§NNN): the free
+ * "7 locuri libere din 10" / "7 places left out of 10" — the listing card's count (§409): the free
  * places the button offers, read against the event's size. Both numbers are `RegistrationCta`'s
  * own (`registration-door.ts`), never a second count. The free number picks the wording: "1 loc
  * liber din 10", "19 locuri libere din 50", "20 de locuri libere din 50".

@@ -13,7 +13,7 @@ import {
 } from "@/modules/events/domain/page-sections";
 
 /**
- * §NNN — the event editor mirrors the page. The owner, 2026-09-25: "am nevoie de mai multe căsuțe
+ * §406 — the event editor mirrors the page. The owner, 2026-09-25: "am nevoie de mai multe căsuțe
  * la editor ca să văd exact ce flow am în pagină."
  *
  * One list (`events/domain/page-sections.ts`) names the page's sections top to bottom; the public
@@ -79,7 +79,7 @@ function pageSequence(): PageSectionId[] {
 /** Each section where the page first draws something of it. */
 const firstAppearances = (sequence: readonly PageSectionId[]) => sequence.filter((id, index) => sequence.indexOf(id) === index);
 
-describe("§NNN the page's sections, one list", () => {
+describe("§406 the page's sections, one list", () => {
   it("names every section once, in the order of the ids", () => {
     expect(ids).toEqual([...PAGE_SECTION_IDS]);
     expect(new Set(ids).size).toBe(ids.length);
@@ -130,7 +130,7 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<StartListBox ", "startList"],
 ];
 
-describe("§NNN the editor lays its cards out in the page's order, on both pages", () => {
+describe("§406 the editor lays its cards out in the page's order, on both pages", () => {
   for (const [name, source] of [
     ["edit", EDIT],
     ["create", CREATE],
@@ -180,7 +180,7 @@ const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", con
 const drawn = (data: PageSectionData) =>
   Object.fromEntries(pageSectionStates(data).map((section) => [section.id, section.isDrawn])) as Record<PageSectionId, boolean>;
 
-describe("§NNN whether the page draws each section", () => {
+describe("§406 whether the page draws each section", () => {
   it("draws the type, the title, the date and the share links of a bare event, and nothing else", () => {
     const states = drawn(bare());
     expect(Object.entries(states).filter(([, on]) => on).map(([id]) => id)).toEqual(["kind", "title", "when", "share"]);

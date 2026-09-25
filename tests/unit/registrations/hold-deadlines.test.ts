@@ -135,11 +135,11 @@ describe("§104 the participation window's defaults", () => {
 });
 
 /**
- * BR-REQ-033-01 criterion 6 (`DECISIONS.md` §NNN, amending §104; the owner, 2026-09-25:
+ * BR-REQ-033-01 criterion 6 (`DECISIONS.md` §407, amending §104; the owner, 2026-09-25:
  * "fereastra de confirmare trebuie să fie 0 la final, să nu expire") — a deadline of zero is the
  * start, and every sentence says "la start" beside the date through one helper.
  */
-describe("§NNN a confirmation deadline of zero days is the start", () => {
+describe("§407 a confirmation deadline of zero days is the start", () => {
   const DAY = 24 * HOUR;
   const startsAt = new Date("2026-10-11T06:00:00.000Z");
 

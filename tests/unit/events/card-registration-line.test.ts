@@ -7,7 +7,7 @@ import { cardRegistrationLine } from "@/modules/events/ui/CardRegistration";
 import type { RegistrationDoor } from "@/modules/events/ui/registration-door";
 
 /**
- * §NNN — the listing card's registration line, as words: the pure half of `CardRegistration`,
+ * §409 — the listing card's registration line, as words: the pure half of `CardRegistration`,
  * over the real catalogues. `card-registration.test.ts` renders every state from a real database;
  * this covers what a database cannot be made to do on cue — a count that could not be read (§281)
  * — and pins which states are bold and which carry the page's button.
@@ -44,7 +44,7 @@ const known = (cta: Extract<RegistrationDoor, { kind: "KNOWN" }>["cta"], fill: {
   fill,
 });
 
-describe("§NNN cardRegistrationLine — the card's registration, in words", () => {
+describe("§409 cardRegistrationLine — the card's registration, in words", () => {
   it("says the window and the free places, in bold, with the page's register button", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 7 }, { taken: 3, capacity: 10 }));
     expect(line).toEqual({

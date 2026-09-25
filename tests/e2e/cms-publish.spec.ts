@@ -114,7 +114,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
     await expect(readOnly).toBeVisible();
     await expect(readOnly).toHaveCount(1);
-    // The status, the cost, the links and the public list are boxes of their own since §NNN, where
+    // The status, the cost, the links and the public list are boxes of their own since §406, where
     // the page draws them — or apart, the status — and for this reader each is its heading and its
     // line, nothing to open, the sentence said once above (§358). The course keeps a fold: its route
     // description is words, and the words are theirs (§387).
@@ -381,7 +381,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Creat și publicat într-o singură apăsare.");
 
-    // The button is its full self whatever is missing (§NNN; it used to dim to 38%, which read as
+    // The button is its full self whatever is missing (§406; it used to dim to 38%, which read as
     // no button at all). The English tab is empty, and the closed card and its tabs say so.
     const publish = page.getByRole("button", { name: "Creează și publică" });
     await expect(publish).toHaveCSS("opacity", "1");
@@ -556,7 +556,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await page.getByRole("option", { name: "Alt eveniment" }).click();
     await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
-    // The spare line took the start date the moment it was typed (§NNN): its default day is the
+    // The spare line took the start date the moment it was typed (§405): its default day is the
     // event's, never an empty box whose calendar opens on today.
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-10");
     await fillDateField(row, "Data", "2027-05-10");
@@ -589,7 +589,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
 });
 
 /*
-  §NNN — the programme card made consistent with the rest of the editor (the owner, 2026-09-25,
+  §405 — the programme card made consistent with the rest of the editor (the owner, 2026-09-25,
   of «Programul zilei și ce să aduci»: "This is super ugly and inconsistent."). Three things a
   server render cannot see, checked in the browser on both projects:
 
@@ -605,7 +605,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
 
   Nothing is saved: the create page is left as it is, so no run leaves an event behind.
 */
-test.describe("BR-REQ-050-02 the programme card: one grid per row, the help in the «i» fold, rows on the event's day (§NNN)", () => {
+test.describe("BR-REQ-050-02 the programme card: one grid per row, the help in the «i» fold, rows on the event's day (§405)", () => {
   test("lays the rows out by the list's width, folds the help, and opens every row on the start date", async ({ page }, testInfo) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
@@ -717,13 +717,13 @@ test.describe("BR-REQ-050-02 the programme card: one grid per row, the help in t
 });
 
 /*
-  Re-review finding 2 on §NNN's card: the two specs above build and read back the rows in the
+  Re-review finding 2 on §405's card: the two specs above build and read back the rows in the
   editor alone. Neither publishes, so nothing proved a saved row actually reaches a reader — the
   public page's programme list (`#schedule`, `EventProgramme.tsx`) or a VEVENT of its own in the
   `.ics` feed (`ical.ts`). This one row: add it, fill it in both languages, publish, then read it
   back from both public surfaces.
 */
-test.describe("BR-REQ-050-02 a saved programme row reaches the public page and the .ics (§117, §NNN)", () => {
+test.describe("BR-REQ-050-02 a saved programme row reaches the public page and the .ics (§117, §405)", () => {
   test("the row's label and time are on the event page's programme list and in a VEVENT of its own", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `ziua-cursei-${suffix}`;

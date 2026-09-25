@@ -35,7 +35,7 @@ export type SectionMapWords = {
 };
 
 /**
- * The event page as a row of chips, top to bottom (§NNN; the owner: "ca să văd exact ce flow am în
+ * The event page as a row of chips, top to bottom (§406; the owner: "ca să văd exact ce flow am în
  * pagină"): each section's number, glyph and name, and a dot — filled while the page draws it,
  * empty while it does not. Each chip is a 44-pixel link to its card's `#box-…` that opens it
  * (§336: `OpenFoldFromHash` answers the address, and the press opens the fold at once for the

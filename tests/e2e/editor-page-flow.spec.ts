@@ -3,7 +3,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { editorBox, languageTab, openEditorBox } from "./support/fold";
 
 /**
- * §NNN — the event editor mirrors the page (BR-REQ-050-01). The owner, 2026-09-25: "am nevoie de
+ * §406 — the event editor mirrors the page (BR-REQ-050-01). The owner, 2026-09-25: "am nevoie de
  * mai multe căsuțe la editor ca să văd exact ce flow am în pagină"; "I need to see on the cards as
  * well what info is required"; "I am missing the create and publish for some new events… this
  * should be consistent!"
@@ -19,7 +19,7 @@ let editorUrl = "";
 /** A chip of the map, by the section's short name. */
 const chip = (page: Page, name: RegExp) => page.getByTestId("section-map").getByRole("link", { name });
 
-test.describe.serial("§NNN the editor is the page, top to bottom", () => {
+test.describe.serial("§406 the editor is the page, top to bottom", () => {
   test("the create page: the map, the numbered cards, a chip that opens its card, the required line", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     await signIn(page, "Dev Administrator");

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 /**
  * The one page the create form and the editor share (§350): a main column of boxes — the page's
- * sections in the page's order, then the ones that are not on the page (§NNN) — and a narrow side
+ * sections in the page's order, then the ones that are not on the page (§406) — and a narrow side
  * column — Publicare, Recurență and the page's map — that comes **first on a phone** (it is what you came to check, and forty fields above it are a scroll nobody makes) and
  * stays pinned on the right from `md` up.
  *
@@ -39,7 +39,7 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
 
 /**
  * A group's plain overline — "Pagina evenimentului, de sus în jos" over the cards in the page's
- * order, "Nu sunt secțiuni ale paginii" over the rest (§NNN; it was three groups by subject,
+ * order, "Nu sunt secțiuni ale paginii" over the rest (§406; it was three groups by subject,
  * §350, §358) — two of the three under it (the special-edition chip, a cancelled or finished
  * notice) still draw on the page, just never as a numbered section of it —
  * not a box: it says what the boxes under it are about.
@@ -53,7 +53,7 @@ export function EditorGroup({ label }: { label: string }) {
 }
 
 /**
- * Where the page draws a section nobody writes (§NNN): the share links, after the partners — named
+ * Where the page draws a section nobody writes (§406): the share links, after the partners — named
  * in its place among the cards, a dashed line and not a card, so the column reads as the page does
  * from top to bottom and nobody looks for a box that cannot exist.
  */

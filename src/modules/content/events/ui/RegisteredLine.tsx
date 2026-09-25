@@ -14,7 +14,7 @@ export const MARKED_BOXES = ["when", "place", "registration", "programme", "stat
 
 /**
  * "3 înscriși · o schimbare în cardurile cu margine portocalie ajunge la ei" — the registrants'
- * count, said once on the editor (§NNN; the owner, 2026-09-25: "informația «3 înscriși» se repetă
+ * count, said once on the editor (§408; the owner, 2026-09-25: "informația «3 înscriși» se repetă
  * de prea multe ori pe fiecare card"). It stood as a chip on each of the five boxes a change
  * reaches (§350, §358); those boxes keep their amber outline — the mark — and this line, under the
  * page map, is the number. Its "?" names the marked cards; its button opens the registrations list

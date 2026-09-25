@@ -22,7 +22,7 @@ export function doorButtonLabel(say: Say, cta: ButtonCta): string {
 /**
  * The registration button itself — "Înscrie-te la eveniment", "Intră pe lista de așteptare" or
  * "Înscrie-te pe {provider}" — one component for the event page (`RegistrationCta`) and the
- * listing card (`CardRegistration`, §NNN), so a race's card and its page offer the same door in
+ * listing card (`CardRegistration`, §409), so a race's card and its page offer the same door in
  * the same words (`doorButtonLabel`).
  *
  * The one action the page exists for, so it is the one button that lights up under a pointer

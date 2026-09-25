@@ -50,7 +50,7 @@ describe("the create page is the editor's page", () => {
   });
 
   it("puts Recurență first, then the boxes in the page's own order, then the ones not on the page, then Salvare", () => {
-    // The page's order itself is `events/page-sections.test.ts`'s to hold (§NNN); this is the frame.
+    // The page's order itself is `events/page-sections.test.ts`'s to hold (§406); this is the frame.
     const order = [
       'id="box-recurrence"',
       'id="box-map"',
@@ -80,7 +80,7 @@ describe("the create page is the editor's page", () => {
       for (let index = 1; index < positions.length; index += 1) {
         expect(positions[index], `${order[index]} after ${order[index - 1]}`).toBeGreaterThan(positions[index - 1]);
       }
-      // No box holds another any more: the first box is the type alone (§NNN, undoing §358's nesting).
+      // No box holds another any more: the first box is the type alone (§406, undoing §358's nesting).
       expect(page).not.toContain("</KindBox>");
     }
   });

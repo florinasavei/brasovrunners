@@ -207,7 +207,7 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
 /**
  * A race that takes registrations here, open now with twelve places, not featured — so it stands
  * on the listing as a card, not as the hero — published through the backoffice and signed out of
- * (§NNN). Nobody registers: an event with registrations cannot be deleted, and the spec must leave
+ * (§409). Nobody registers: an event with registrations cannot be deleted, and the spec must leave
  * the listing as it found it. The waiting-list and full states are the integration test's
  * (`card-registration.test.ts`), on a real database.
  */
@@ -516,7 +516,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     }
   });
 
-  test("carry a race's registration door on its card: the state in bold with the free places, and the page's own button to the form (§NNN)", async ({ page }) => {
+  test("carry a race's registration door on its card: the state in bold with the free places, and the page's own button to the form (§409)", async ({ page }) => {
     /*
       The owner, 2026-09-25: "trebuie să văd butonul de înscrieri pe card pentru evenimentele de tip
       concurs; să fac bold pe asta cu înscrierile și să văd câte locuri sunt disponibile". A race of

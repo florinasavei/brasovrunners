@@ -323,7 +323,7 @@ export function renderBilingual(
 }
 
 /**
- * The reminder's night line's facts (§394, §NNN): empty strings for what is not named. `after`
+ * The reminder's night line's facts (§394, §404): empty strings for what is not named. `after`
  * marks the shape where the sun alone made the call and the start was already past sunset — no
  * end was ever named, and the line says the start came after that sunset instead of leaving the
  * sunset looking like the reason on its own. `sunrise` (non-empty) marks the dawn shape: an
@@ -402,26 +402,26 @@ export type TemplateData = {
    */
   nightEventIsGroupRun?: boolean;
   /**
-   * Set alongside `nightEventSunset` (§NNN): the date's start on the event's clock, "19:00" — named
+   * Set alongside `nightEventSunset` (§404): the date's start on the event's clock, "19:00" — named
    * before the sunset, so the sunset is never read as the start. Absent or empty: the line says the
    * sunset alone.
    */
   nightEventStart?: string;
   /**
-   * Set alongside `nightEventSunset` only when the end is why the date is dark (§394, §NNN): that
+   * Set alongside `nightEventSunset` only when the end is why the date is dark (§394, §404): that
    * end on the event's clock, and whether «Durata» (`event`) or the day's last programme row
    * (`programme`) gave it.
    */
   nightEventEnd?: string;
   nightEventEndSource?: "event" | "programme";
   /**
-   * Set alongside `nightEventSunset` (§NNN): the sun alone made the call and the start was
+   * Set alongside `nightEventSunset` (§404): the sun alone made the call and the start was
    * already past that sunset, so no end was ever named — the line says the start came *after*
    * the sunset instead of leaving the sunset looking like the reason on its own.
    */
   nightEventAfter?: boolean;
   /**
-   * Set alongside `nightEventSunset` (§NNN) for the dawn shape: the start is before that day's
+   * Set alongside `nightEventSunset` (§404) for the dawn shape: the start is before that day's
    * sunrise, "07:52" — the line names the sunrise, never an evening sunset the run is not after.
    */
   nightEventSunrise?: string;
@@ -988,7 +988,7 @@ const T = {
     nightEvent: (night: NightReminderLine) => {
       const label = night.isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
       if (!night.sunset) return `${label}: ia o frontală.`;
-      // Every time named, the start first (§NNN): «începe la 19:00, apusul la 19:00» is not «apusul începe» — the same wording as the pill and the calendar (§NNN nit).
+      // Every time named, the start first (§404): «începe la 19:00, apusul la 19:00» is not «apusul începe» — the same wording as the pill and the calendar (§404 nit).
       const start = night.start ? `începe la ${night.start}, ` : "";
       if (night.sunrise) return `${label}: ${start}înainte de răsăritul de la ${night.sunrise}. Ia o frontală.`;
       if (night.after) return `${label}: ${start}după apusul de la ${night.sunset}. Ia o frontală.`;

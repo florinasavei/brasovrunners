@@ -75,7 +75,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // returns instantly, which raced the save against the navigation that followed it.
     editorUrl = page.url();
     await hydrated(page);
-    // "Traseul" is a box of its own since §NNN, where the page draws the route's pills.
+    // "Traseul" is a box of its own since §406, where the page draws the route's pills.
     const course = await openEditorBox(page, "Traseul");
     await expect(course).toHaveAttribute("open", "");
 
@@ -92,7 +92,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page).not.toHaveURL(/saved=event/);
 
     await field("event.routeUrl").fill(ROUTE_LINK);
-    // "Linkuri și fișiere", the card where the page draws `#links` (§332, §NNN).
+    // "Linkuri și fișiere", the card where the page draws `#links` (§332, §406).
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.

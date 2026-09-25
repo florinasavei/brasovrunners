@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite". A new event's
  * cost select preselects `FREE` (`initialCostTypeOf`, tested on its own in
- * `box-summaries.test.ts`); this checks that `CostBox` (the cost's own card since §NNN) actually reads the select's
+ * `box-summaries.test.ts`); this checks that `CostBox` (the cost's own card since §406) actually reads the select's
  * `defaultValue`, and `CostFields`' visibility switch, off that one function — so the create
  * page and the closed summary can never drift apart on what "default" means.
  *

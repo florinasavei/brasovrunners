@@ -18,7 +18,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * "Cost" (§343, §356, §394, §398, §NNN): its own card, where the page draws its own row — after the
+ * "Cost" (§343, §356, §394, §398, §406): its own card, where the page draws its own row — after the
  * course, before who may enter and the button (`page-sections.ts`). It was the top of "Participare
  * și înscrieri" and moved whole: the same select, the same names, the same `CostFields`, the same
  * discount-note strip. The owner, 2026-09-25: "am nevoie de mai multe căsuțe la editor ca să văd

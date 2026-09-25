@@ -35,7 +35,7 @@ function publicationGaps(form: HTMLFormElement, locales: readonly string[]): Pub
  * publish, posting the same form with `then=publish` so the action creates the event and walks
  * the two transitions in the create's own transaction.
  *
- * **Always its full self** (§NNN; the owner, 2026-09-25: "I am missing the create and publish for
+ * **Always its full self** (§406; the owner, 2026-09-25: "I am missing the create and publish for
  * some new events… this should be consistent!"). It used to dim to 38% while a box publication
  * needs was empty, and a dimmed button reads as no button. Now it looks the same on every kind of
  * event at every moment, and the press is what answers: while something is missing it posts
@@ -83,7 +83,7 @@ export default function CreateAndPublishButton({ label, pendingLabel, locales, s
           const form = ref.current?.form;
           if (!form) return;
           // The click runs before the browser validates the form it submits: while publication
-          // would be refused, nothing is posted and the summary says why (§NNN).
+          // would be refused, nothing is posted and the summary says why (§406).
           if (publicationGaps(form, locales).length > 0) {
             event.preventDefault();
             askPublishGaps(summaryId);

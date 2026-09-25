@@ -19,7 +19,7 @@ import { blankTranslation } from "@/modules/content/events/ui/TranslationFields"
 import { BLANK_PAGE_SECTION_DATA, type PageSectionData } from "@/modules/events/domain/page-sections";
 
 /**
- * §NNN — the event editor mirrors the page, and says from outside each card what publication
+ * §406 — the event editor mirrors the page, and says from outside each card what publication
  * still needs. The owner, 2026-09-25: "am nevoie de mai multe căsuțe la editor ca să văd exact ce
  * flow am în pagină"; at 20:20, of a closed «Titlu și rezumat» whose tabs said only «incomplet»:
  * "I need to see on the cards as well what info is required"; at 20:25: "I am missing the create
@@ -69,7 +69,7 @@ function language(locale: "ro" | "en", blank: readonly ("title" | "excerpt" | "s
 const entries = (...translations: ReturnType<typeof language>[]): LanguageEntry[] =>
   translations.map((translation) => ({ translation, mayEdit: true, label: translation.locale === "ro" ? "Română" : "English" }));
 
-describe("§NNN one check, seen from each card", () => {
+describe("§406 one check, seen from each card", () => {
   it("groups a card's gaps by field, each with the languages it lacks", () => {
     const gaps = missingForPublish(storedPublishReader(NO_PLACE, [language("ro", ["excerpt"]), language("en", ["title", "excerpt", "slug"])]), LOCALES);
     expect(cardGaps(gaps, "titleSummary")).toEqual([
@@ -120,7 +120,7 @@ describe("§NNN one check, seen from each card", () => {
   });
 });
 
-describe("§NNN the closed card says what it lacks, with the warning glyph", () => {
+describe("§406 the closed card says what it lacks, with the warning glyph", () => {
   it("names the title card's gaps per language, from the card's own translations", async () => {
     const html = markup(renderToStaticMarkup(await requiredLine("titleSummary", null, entries(language("ro", ["excerpt"]), language("en", ["title", "excerpt"])))));
     expect(html).toContain('data-missing="true"');
@@ -146,7 +146,7 @@ describe("§NNN the closed card says what it lacks, with the warning glyph", () 
   });
 });
 
-describe("§NNN the language tabs count what is missing", () => {
+describe("§406 the language tabs count what is missing", () => {
   const counted = (missing: readonly number[]) =>
     markup(
       renderToStaticMarkup(
@@ -187,7 +187,7 @@ describe("§NNN the language tabs count what is missing", () => {
   });
 });
 
-describe("§NNN the cards' headings and the map", () => {
+describe("§406 the cards' headings and the map", () => {
   const saved = (): PageSectionData => ({
     event: { ...BLANK_PAGE_SECTION_DATA.event, locationName: "Parcul Tractorul" },
     texts: [{ title: "Crosul Tâmpei", bodyJson: null, rulesJson: null, scheduleJson: null, routeDescriptionJson: null, locationName: null }],
@@ -243,7 +243,7 @@ describe("§NNN the cards' headings and the map", () => {
   });
 });
 
-describe("§NNN «Creează și publică» and «Publică», always there", () => {
+describe("§406 «Creează și publică» and «Publică», always there", () => {
   const LABELS: PublishGapLabels = {
     boxes: { titleSummary: "Titlu și rezumat", place: "Locul", address: "Adresa paginii și motoarele de căutare" },
     fields: { title: "Titlu", excerpt: "Rezumat", locationName: "Punct de întâlnire", slug: "Adresa paginii" },

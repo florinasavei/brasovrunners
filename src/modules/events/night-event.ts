@@ -14,7 +14,7 @@ export function clubNightEvent(event: NightEventSource & { startsAt: Date }, occ
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * The pill's tooltip (§394, §NNN), a sentence of its own: «Începe la 19:00, apusul la 19:00, se
+ * The pill's tooltip (§394, §404), a sentence of its own: «Începe la 19:00, apusul la 19:00, se
  * termină la 20:40 — ia o frontală» — or null when there is no time to name. `t` is the `Event`
  * namespace.
  */
@@ -25,7 +25,7 @@ export function nightTooltip(facts: NightEventFacts, t: Translate): string | nul
 
 /**
  * The calendar entry's line («Alergare de noapte: începe la 19:00, apusul la 19:00, …») or the
- * `.ics` description's (the same, then «— ia o frontală»), §394, §NNN: the label by type — a group
+ * `.ics` description's (the same, then «— ia o frontală»), §394, §404: the label by type — a group
  * run is «Alergare de noapte» — then the same times the tooltip names. The label alone when there
  * is no time to name.
  */

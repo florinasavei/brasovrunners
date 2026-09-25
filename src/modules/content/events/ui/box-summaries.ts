@@ -184,7 +184,7 @@ export const BLANK = {
 
 /**
  * Box 2: `„Crosul Tâmpei” · „Tâmpa Cross”`. What is missing is said before it, by the card's
- * required line (§NNN: «lipsesc: Titlu (EN) · Rezumat (EN)», `publish-check.ts#cardGapLine`), from
+ * required line (§406: «lipsesc: Titlu (EN) · Rezumat (EN)», `publish-check.ts#cardGapLine`), from
  * the check publication runs — not a second time here.
  */
 export function titleSummarySummary(words: SummaryWords, translations: readonly SummaryTranslation[]): string {
@@ -395,7 +395,7 @@ export function conditionsSummary(
 
 /**
  * Sub-card 8.3: `Cerută cu 7 zile înainte, termen cu 2 zile înainte`; `…, termen la start` when the
- * deadline is zero (§NNN — the one test, `confirmationDueAtStart`); and the sentence for no window
+ * deadline is zero (§407 — the one test, `confirmationDueAtStart`); and the sentence for no window
  * at all — the first number zero, or a deadline at or before the opening (§104's
  * `confirmationWindow`) — rather than two numbers the allocator ignores.
  */

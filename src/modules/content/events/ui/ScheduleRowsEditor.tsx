@@ -56,7 +56,7 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
 }
 
 /**
- * One row's layout (§NNN; the owner, 2026-09-25, of this card: "super ugly and inconsistent").
+ * One row's layout (§405; the owner, 2026-09-25, of this card: "super ugly and inconsistent").
  * One CSS grid per row, laid out by the width the **list** has, not the window's: from `md` up
  * the editor's side column is pinned beside the boxes (§350), so the list is narrower on a
  * 900-pixel window than on a 700-pixel one, and a viewport breakpoint would squeeze "Unde" to
@@ -77,7 +77,7 @@ const WIDE = "@container programme-rows (min-width: 40rem)";
 // The four MEDIUM columns need at least 9.5rem + 6.5rem + 6.5rem + 44px + three 8px gaps =
 // 428px of inner width; the row's own padding and border (12px × 2 + 2px on `sm`) take 26px off
 // the container, so the threshold has to clear 428 + 26 = 454px. 29rem (464px) is the first
-// round number past it (§NNN, the review that found 26rem overflowing from ~416 to ~454px).
+// round number past it (§405, the review that found 26rem overflowing from ~416 to ~454px).
 const MEDIUM = "@container programme-rows (min-width: 29rem)";
 
 const ROW_SX = {
@@ -125,7 +125,7 @@ const REMOVE_SX = { gridArea: "remove", minHeight: 44, minWidth: 44, justifySelf
  * Rows keep a key of their own across removals, so removing the second line does not hand
  * the third line's boxes the second line's values.
  *
- * **The default day is the event's** (§NNN): the spare line opens on the event's start date
+ * **The default day is the event's** (§405): the spare line opens on the event's start date
  * (`startDate`, written by the server in the event's zone), a new row on whatever the start box
  * holds now, and the rows follow the start date: when "Începutul evenimentului" —
  * `startDateName`, a sibling input of the same form — moves from one day to another, every row

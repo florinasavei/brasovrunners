@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §350 (the editor's boxes, building on §170 and §260), as amended by §NNN — the
+ * `DECISIONS.md` §350 (the editor's boxes, building on §170 and §260), as amended by §406 — the
  * event editor as one page of boxes, **in the order of the public page** (the owner, 2026-09-25:
  * "am nevoie de mai multe căsuțe la editor ca să văd exact ce flow am în pagină").
  *
@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
  *   Nu apar pe pagină — the status, promotion, page address;
  *   then Salvare, always open.
  *
- * §358 nested the status, the course and the links inside the first box; §NNN took them out again,
+ * §358 nested the status, the course and the links inside the first box; §406 took them out again,
  * each to where the page draws it.
  *
  * Source assertions, like the rest of this folder: these are Server Components rendering what
@@ -59,7 +59,7 @@ const EDITOR_ORDER = [
   'id="box-save"',
 ];
 
-describe("§350 the editor's boxes, in order (§NNN: the page's)", () => {
+describe("§350 the editor's boxes, in order (§406: the page's)", () => {
   it("renders the page's cards in the page's order, then the ones not on the page, then Salvare", () => {
     const positions = EDITOR_ORDER.map((needle) => at(EDIT, needle));
     for (let index = 1; index < positions.length; index += 1) {
@@ -67,7 +67,7 @@ describe("§350 the editor's boxes, in order (§NNN: the page's)", () => {
     }
   });
 
-  it("gives the status, the course and the links a box each, out of the first box, on both pages, each once (§NNN)", () => {
+  it("gives the status, the course and the links a box each, out of the first box, on both pages, each once (§406)", () => {
     const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
     for (const [page, source] of [
       ["edit", EDIT],
@@ -141,7 +141,7 @@ describe("§350 the editor's boxes, in order (§NNN: the page's)", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
-    // The first box no longer holds the status (§NNN): the status box wears the mark itself, and
+    // The first box no longer holds the status (§406): the status box wears the mark itself, and
     // the type's box, the course, the links, the partners, the promotion, the film and the list
     // reach nobody.
     for (const box of ["<KindBox", "<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {

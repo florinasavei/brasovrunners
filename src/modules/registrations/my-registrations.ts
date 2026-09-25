@@ -79,7 +79,7 @@ export type MyRegistration = {
   checkedInAt: Date | null;
   /**
    * When an unsigned place lapses — the declaration hold or the waiting-list offer (§104) — so the
-   * page can say by when to confirm, "până la start" when it is the start itself (§NNN).
+   * page can say by when to confirm, "până la start" when it is the start itself (§407).
    */
   holdExpiresAt: Date | null;
   /** The race number, once given (§87). */

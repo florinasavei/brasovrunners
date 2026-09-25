@@ -9,8 +9,8 @@ import OnlyForType from "../OnlyForType";
 import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * "Lista publică a participanților" (BR-REQ-039-01, §32, §NNN): the last card, because the page
- * draws the list last — under the film, at the bottom (§NNN; it was card 8.5 inside "Participare
+ * "Lista publică a participanților" (BR-REQ-039-01, §32, §406): the last card, because the page
+ * draws the list last — under the film, at the bottom (§406; it was card 8.5 inside "Participare
  * și înscrieri", and moved whole: the same checkbox, the same name, the same id, the same help).
  *
  * Off unless somebody deliberately turns it on: a disclosure, so the help says what it publishes.

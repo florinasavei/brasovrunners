@@ -186,7 +186,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
 
 /**
  * §350 — the event editor's boxes: cards within cards, named properly (the owner), so `Panel`
- * takes a heading level, a tone and a frame that never folds (its badge went in §NNN: the count
+ * takes a heading level, a tone and a frame that never folds (its badge went in §408: the count
  * is said once, not on every box). Rendered the way the
  * server sends it.
  */
@@ -201,7 +201,7 @@ describe("§350 Panel's levels, tones and static frame", () => {
     expect(panel({ collapsible: true, level: 4 })).toMatch(/<summary[^>]*><h4/);
   });
 
-  it("draws no chip beside the title (§NNN): a box's mark is its tone, the count is said once elsewhere", () => {
+  it("draws no chip beside the title (§408): a box's mark is its tone, the count is said once elsewhere", () => {
     const html = panel({ collapsible: true, tone: "risk" });
     expect(html).not.toMatch(/MuiChip/);
     expect(html).toMatch(/<summary[^>]*><h2[^>]*>Numere de concurs \(BIB\)<\/h2>/);

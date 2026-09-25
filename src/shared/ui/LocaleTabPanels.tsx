@@ -72,7 +72,7 @@ export type LocalePanel = {
 };
 
 /**
- * A strip whose boxes publication needs counts them on each tab instead of the bare mark (§NNN;
+ * A strip whose boxes publication needs counts them on each tab instead of the bare mark (§406;
  * the owner: "I need to see on the cards as well what info is required"): «Română · 2 obligatorii
  * lipsă», «English · complet». The three counted forms (`countForm`) with `{count}`, the word for
  * none, the reader's language to choose the form in, and the card whose publication gaps are
@@ -278,7 +278,7 @@ export default function LocaleTabPanels({
         // too — and MUI's `Tabs` measures its tabs after every render it makes, a forced layout.
         setIncomplete((current) => (current.length === next.length && current.every((mark, index) => mark === next[index]) ? current : next));
         if (requiredCount && watch.rule === "required") {
-          // The publication check itself, over the whole form as it stands (§NNN): the same gaps the
+          // The publication check itself, over the whole form as it stands (§406): the same gaps the
           // card's closed line and "Publică" name. A language with no boxes here (the reader may not
           // write it) keeps the server's count.
           const form = container.closest("form") ?? container;

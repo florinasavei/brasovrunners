@@ -12,8 +12,8 @@ import LinkRowsEditor from "../LinkRowsEditor";
 import { type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * "Linkuri și fișiere" (§332, §350, §358, §NNN): its own card, at the place the page draws its
- * section, `#links` — after the share links, before the programme (§NNN; it was card 1.3 inside
+ * "Linkuri și fișiere" (§332, §350, §358, §406): its own card, at the place the page draws its
+ * section, `#links` — after the share links, before the programme (§406; it was card 1.3 inside
  * "Ce fel de eveniment", and moved whole). The GPX on Google Drive, the map on a platform, a PDF,
  * the album, the results, and the Strava and Facebook events, which the page draws in the route's
  * row; with a route description, the GPX and the map go to `#route` (§387).

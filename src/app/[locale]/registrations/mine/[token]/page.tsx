@@ -149,7 +149,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 </Alert>
               )}
               {/*
-                By when to confirm (§104, §NNN; the owner: "nu e clar când pot confirma"): a place
+                By when to confirm (§104, §407; the owner: "nu e clar când pot confirma"): a place
                 held for a declaration, still ahead of its deadline, says the date — and "până la
                 start" beside it when the deadline is the start itself (`confirmationDueMoment`).
                 Not a waiting-list offer: its email already says its day, and paper on race day

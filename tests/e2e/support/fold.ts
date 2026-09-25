@@ -11,7 +11,7 @@ const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * title — "Locul Parcul Titulescu · hartă".
  *
  * A card that writes a section of the public page carries the section's number before its title
- * (§NNN: "4 · Data și ora — apare pe pagină"), so the title may follow "N · " and nothing else: a
+ * (§406: "4 · Data și ora — apare pe pagină"), so the title may follow "N · " and nothing else: a
  * spec names the card, and the number is `events/domain/page-sections.ts`'s to move.
  *
  * Found whether or not it can be seen: a card inside a closed box — a card of "Participare și
@@ -32,7 +32,7 @@ export function editorBox(scope: Page | Locator, title: string): Locator {
  *
  * Every box around it first, outermost first — a card inside a closed box cannot be pressed until
  * the box is open (the cards of "Participare și înscrieri"; §358's cards inside "Ce fel de
- * eveniment" are boxes of their own since §NNN).
+ * eveniment" are boxes of their own since §406).
  */
 export async function openEditorBox(scope: Page | Locator, title: string): Promise<Locator> {
   const box = editorBox(scope, title);
@@ -89,7 +89,7 @@ export async function openFold(fold: Locator) {
  * (§375's own family) found nothing there and failed, flakily, only once enough sample events
  * had accumulated. `difficulty-scale.spec.ts`, `event-cost-external-discount.spec.ts`, `night-
  * event.spec.ts` and `partner-marker.spec.ts` each grew their own copy of the fix; this is the
- * one helper for all four, called after the caller's own `page.goto` to the listing (§NNN).
+ * one helper for all four, called after the caller's own `page.goto` to the listing (§411).
  *
  * Waits for the list to have streamed in past the shell first (§166) — the fold and the cards
  * inside it are attached only once it has — then opens the fold, then filters by heading, the

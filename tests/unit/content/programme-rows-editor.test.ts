@@ -7,7 +7,7 @@ import type { RiskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (BR-REQ-050-02 criterion 13, building on §117, §362, §398) — the owner, 2026-09-25, of the
+ * §405 (BR-REQ-050-02 criterion 13, building on §117, §362, §398) — the owner, 2026-09-25, of the
  * editor's «Programul zilei și ce să aduci»: "This is super ugly and inconsistent."
  *
  * The box is rendered to the HTML the server sends, because what is being fixed is the markup:
@@ -55,7 +55,7 @@ const WITH_ROWS = {
   scheduleItems: [{ startsAt: "2027-05-10T07:00:00.000Z", endsAt: null, label: { ro: "Startul", en: "The start" }, place: "Cortul" }],
 } as unknown as EditableEvent;
 
-const RISK: RiskMark = { count: 23, chip: "23 înscriși" };
+const RISK: RiskMark = { count: 23 };
 
 async function box(event: EditableEvent | null, risk: RiskMark | null = null): Promise<string> {
   const element = (await ProgrammeBox({ event, mayEditSettings: true, risk, languages: [] })) as ReactElement;
@@ -76,7 +76,7 @@ function valueOf(html: string, name: string): string | undefined {
   return tag?.match(/\svalue="([^"]*)"/)?.[1] ?? (tag ? "" : undefined);
 }
 
-describe("BR-REQ-050-02 criterion 13 — the programme's help is the compact «i» fold (§398, §NNN)", () => {
+describe("BR-REQ-050-02 criterion 13 — the programme's help is the compact «i» fold (§398, §405)", () => {
   it("folds the explanation under one closed line with the «i», before the rows", async () => {
     const html = await box(EVENT);
     const fold = html.match(/<details[^>]*data-testid="programme-help"[^>]*>/)?.[0];
@@ -89,9 +89,9 @@ describe("BR-REQ-050-02 criterion 13 — the programme's help is the compact «i
     expect(html.indexOf(ro.Admin.editor.programmeHelp)).toBeLessThan(html.indexOf('name="event.schedule[0].date"'));
   });
 
-  it("with people registered: the box stays amber with the count, and the sentence about them is in the fold, not an amber box", async () => {
+  it("with people registered: the box stays amber without the count (said once under the map, §NNN), and the sentence about them is in the fold, not an amber box", async () => {
     const html = await box(EVENT, RISK);
-    expect(html).toContain("23 înscriși");
+    expect(html).not.toContain("23 înscriși");
     expect(html).not.toContain('data-testid="risk-line"');
     const help = html.slice(html.indexOf('data-testid="programme-help"'), html.indexOf('name="event.schedule[0].date"'));
     expect(help).toContain('data-testid="programme-risk"');
@@ -100,7 +100,7 @@ describe("BR-REQ-050-02 criterion 13 — the programme's help is the compact «i
   });
 });
 
-describe("BR-REQ-050-02 criterion 13 — one grid per row, in reading order (§NNN)", () => {
+describe("BR-REQ-050-02 criterion 13 — one grid per row, in reading order (§405)", () => {
   it("draws each row as a named group whose boxes read when, where, what (română), what (engleză), and the bin last", async () => {
     const html = await box(WITH_ROWS);
     const start = html.indexOf('role="group" aria-label="Rândul 1"');
@@ -125,7 +125,7 @@ describe("BR-REQ-050-02 criterion 13 — one grid per row, in reading order (§N
   });
 });
 
-describe("BR-REQ-050-02 criterion 13 — a row's default day is the event's start date (§NNN)", () => {
+describe("BR-REQ-050-02 criterion 13 — a row's default day is the event's start date (§405)", () => {
   it("opens the spare line on the event's start date, in the event's zone", async () => {
     expect(valueOf(await box(EVENT), "event.schedule[0].date")).toBe("2027-05-10");
   });

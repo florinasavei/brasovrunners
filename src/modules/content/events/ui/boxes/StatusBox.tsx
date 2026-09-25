@@ -23,13 +23,13 @@ type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength
 type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
 /**
- * "Starea evenimentului" (§350, §358, §NNN) — a box of its own among the cards that are not a
- * section of the page, at the end of both pages (§NNN: the editor is the page, in its order, and a
+ * "Starea evenimentului" (§350, §358, §406) — a box of its own among the cards that are not a
+ * section of the page, at the end of both pages (§406: the editor is the page, in its order, and a
  * scheduled event's status is drawn nowhere; a cancelled or finished one is a notice over the
  * title, which the status box still says on its closed line). It was card 1.1 inside "Ce fel de
  * eveniment" (§358); it moved whole — its fields, its names, its id — and, as one of the five boxes
  * whose change reaches people, it wears the amber outline (the count is said once, under the page
- * map, §NNN).
+ * map, §408).
  *
  * **On the create page it is read-only**: "Programat", and one line saying the status can be
  * changed once the event exists. The page posts a hidden `SCHEDULED` beside it — this card posts

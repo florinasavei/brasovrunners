@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the registrants' count is said once in the event editor (BR-REQ-050-02; the owner,
+ * §408 — the registrants' count is said once in the event editor (BR-REQ-050-02; the owner,
  * 2026-09-25: "informația «3 înscriși» se repetă de prea multe ori pe fiecare card").
  *
  * It was a chip on each of the five boxes a change reaches (§350, §358). Now: one line under the
@@ -51,7 +51,7 @@ const text = (html: string): string =>
     .replace(/&quot;/g, '"')
     .replace(/&#x27;/g, "'");
 
-describe("§NNN the line under the page map", () => {
+describe("§408 the line under the page map", () => {
   it("says the count once, in each language's counted form", async () => {
     expect(text(await line(1))).toContain("1 înscris · o schimbare în cardurile cu margine portocalie ajunge la ei");
     expect(text(await line(3))).toContain("3 înscriși · ");
@@ -88,7 +88,7 @@ describe("§NNN the line under the page map", () => {
   });
 });
 
-describe("§NNN the count is said nowhere else in the editor", () => {
+describe("§408 the count is said nowhere else in the editor", () => {
   it("draws no chip on any box: Panel has no badge, and no box passes one", () => {
     expect(read("src/shared/ui/Panel.tsx")).not.toMatch(/\bbadge\b/);
     const dir = "src/modules/content/events/ui/boxes";

@@ -40,7 +40,7 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
   const own = (locale: "ro" | "en") => translations.find((translation) => translation.locale === locale)?.locationName;
   const inBox = (locale: "ro" | "en") => (event ? placeInBox(event, own(locale)) : "");
   const place = inBox("ro");
-  // What publication still needs from this box, in each language (§NNN): the meeting point.
+  // What publication still needs from this box, in each language (§406): the meeting point.
   const required = await requiredLine("place", event, languages);
 
   return (

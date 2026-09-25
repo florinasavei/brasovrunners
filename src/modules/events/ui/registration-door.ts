@@ -7,7 +7,7 @@ import type { PublicEvent } from "../repository";
 /**
  * What the one registration door says for an event right now: the state `registrationCta` picks,
  * and how full the event is — read once, for the event page's `RegistrationCta` and the listing
- * card's `CardRegistration` (§NNN) alike, so the two can never disagree about a race.
+ * card's `CardRegistration` (§409) alike, so the two can never disagree about a race.
  *
  * `UNKNOWN` is the count that could not be read (§281): the caller shows no button, because a
  * button would lead to a form whose first act is the query that just failed.
@@ -33,7 +33,7 @@ export type RegistrationDoor =
  * lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`). The same entry
  * carries the event's size beside the free places (§346) and the waiting list's room and limit
  * (§348), off the same row the count was taken against, so neither line costs more. On the
- * listing that is one cached entry per open race card, and nothing for any other card (§NNN).
+ * listing that is one cached entry per open race card, and nothing for any other card (§409).
  */
 export async function readRegistrationDoor(event: PublicEvent, now: Date): Promise<RegistrationDoor> {
   let availablePlaces: number | null = null;

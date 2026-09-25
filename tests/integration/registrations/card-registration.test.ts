@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the race's listing card carries the event page's registration door: the state as a bold
+ * §409 — the race's listing card carries the event page's registration door: the state as a bold
  * line with the free places ("Înscrieri deschise până pe … · 7 locuri libere din 10"), and the
  * page's own button under it. The owner, 2026-09-25: "trebuie să văd butonul de înscrieri pe card
  * pentru evenimentele de tip concurs; să fac bold pe asta cu înscrierile și să văd câte locuri sunt
@@ -150,7 +150,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("BR-REQ-041-01 the race's card carries the page's registration door, the places in bold (§NNN)", () => {
+describe("BR-REQ-041-01 the race's card carries the page's registration door, the places in bold (§409)", () => {
   it("says until when and how many places are free, in bold, with the page's register button to the form", async () => {
     const event = await publish({ capacity: 10 });
     await take(event.id, 3);

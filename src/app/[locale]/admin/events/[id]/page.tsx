@@ -133,7 +133,7 @@ export const dynamic = "force-dynamic";
  *
  * **The same page as the create form** (`EventEditorLayout`): a side column — Publicare, Recurență
  * and the page's map, first on a phone, pinned on the right from `md` up — and a main column that is
- * **the public page, top to bottom** (§NNN; the owner: "am nevoie de mai multe căsuțe la editor ca
+ * **the public page, top to bottom** (§406; the owner: "am nevoie de mai multe căsuțe la editor ca
  * să văd exact ce flow am în pagină"): one card per section the page draws, in the page's order
  * (`events/domain/page-sections.ts`), each numbered and headed by whether the page shows it, the
  * share links named where the page puts them; then, apart, what is not a section of the page — the
@@ -312,7 +312,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   /*
     "Ce lipsește pentru publicare", in the words on the screen (§170, §350): each gap named by the
-    box and the tab that hold it, and linked to the box itself. Since §NNN from the one check the
+    box and the tab that hold it, and linked to the box itself. Since §406 from the one check the
     create page runs as it is typed (`missingForPublish`), over what is saved — the check each
     card's closed line, the map's chips and "Publică" read too; it reads the row the way the
     publication guard does (`storedPublishReader`), so the list names what the guard would refuse.
@@ -336,7 +336,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const storedGaps = missingForPublish(storedRead, routing.locales);
   const gapLines = storedGaps.map((gap) => ({ label: publishGapLabel(gap, gapLabels), name: gap.name }));
   const missingDetail = gapLines.map((line) => line.label).join(" · ");
-  // The page this event makes, section by section (§NNN): the cards' numbers and states, the map.
+  // The page this event makes, section by section (§406): the cards' numbers and states, the map.
   // Night (§394) is the occurrence's own start against the sun, the same answer the headlamp pill
   // and the card's closed line draw — not a stored column, so it is read here, not in the data.
   const flow = await pageFlow({ event, texts: orderedTranslations, night: clubNightEvent(event).night });
@@ -582,7 +582,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           )}
         </Box>
 
-        {/* What publication still needs, read once for every card line and chip (§NNN): from the
+        {/* What publication still needs, read once for every card line and chip (§406): from the
             saved event on arrival, then from the save form's boxes as they are typed. */}
         <PublishCheckProvider formId="event-save-form" locales={routing.locales} initial={storedGaps} stored={publishCheckValues(storedRead, routing.locales)}>
         <EventEditorLayout
@@ -636,7 +636,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           <input type="hidden" name="expectedVersion" value={event.version} />
                           <input type="hidden" name="to" value={to} />
                           {to === "PUBLISHED" ? (
-                            /* The same button on every event (§NNN): while the saved event lacks a
+                            /* The same button on every event (§406): while the saved event lacks a
                                box publication needs, the press opens the summary instead of posting. */
                             <PublishGateButton label={EDITORIAL_TRANSITION_LABEL[to]} blocked={storedGaps.length > 0} summaryId="publish-gaps" />
                           ) : (
@@ -722,8 +722,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 </Panel>
               )}
 
-              {/* S3 — the page, top to bottom (§NNN): a chip per section, each opening its card —
-                  and under it, once, how many are registered (§NNN): the amber outline on a card
+              {/* S3 — the page, top to bottom (§408): a chip per section, each opening its card —
+                  and under it, once, how many are registered (§408): the amber outline on a card
                   says a change there reaches them; the number is said here, not on every card. */}
               <Panel static id="box-map" title={flow.label}>
                 <Stack spacing={1.5}>
@@ -753,7 +753,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 ))}
 
                 <Stack spacing={2}>
-                  {/* "Publică" pressed while the saved event lacks what publication needs (§NNN). */}
+                  {/* "Publică" pressed while the saved event lacks what publication needs (§406). */}
                   <PublishGapsSummary
                     id="publish-gaps"
                     title={t("editor.publishGaps.title")}
@@ -761,7 +761,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     gaps={storedGaps}
                   />
-                  {/* The page, top to bottom (§NNN): each card where the page draws the first thing
+                  {/* The page, top to bottom (§406): each card where the page draws the first thing
                       it holds, numbered and headed by whether the page shows it — the order of
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
                   <EditorGroup label={t("editor.groups.page")} />

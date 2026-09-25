@@ -101,7 +101,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(timezoneSummary(words, "Europe/Vienna")).toBe("Europe/Vienna");
   });
 
-  it("Titlu și rezumat: the titles — what is missing is the card's required line's to say (§NNN)", () => {
+  it("Titlu și rezumat: the titles — what is missing is the card's required line's to say (§406)", () => {
     const both = [language("ro", { title: "Crosul Tâmpei", excerptJson: doc("Sus pe Tâmpa.") }), language("en", { title: "Tâmpa Cross", excerptJson: doc("Up Tâmpa.") })];
     expect(titleSummarySummary(words, both)).toBe("„Crosul Tâmpei” · „Tâmpa Cross”");
     // A missing summary is named before this line, once, by `cardGapLine` — not a second time here.
@@ -222,7 +222,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(conditionsSummary(words, 14, { version: 3, title: "Declarația" })).toBe("de la 14 ani · declarația v3");
     expect(conditionsSummary(words, 16, null)).toBe(`de la 16 ani · ${words.conditions.noDeclaration}`);
     expect(confirmationSummary(words, 7, 2)).toBe("Cerută cu 7 zile înainte, termen cu 2 zile înainte");
-    // §NNN: a deadline of zero is the start, and no window says so rather than two dead numbers.
+    // §407: a deadline of zero is the start, and no window says so rather than two dead numbers.
     expect(confirmationSummary(words, 7, 0)).toBe("Cerută cu 7 zile înainte, termen la start");
     expect(confirmationSummary(wordsEn, 7, 0)).toBe("Asked 7 days before, due at the start");
     expect(confirmationSummary(words, 0, 0)).toBe(words.confirmation.off);

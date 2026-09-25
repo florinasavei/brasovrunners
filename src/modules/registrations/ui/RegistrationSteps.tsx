@@ -60,7 +60,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
     offer: words.offer,
     reminder: reminderHours > 0 ? leadPhrase(locale, reminderHours) : "",
     opens: daysPhrase(locale, window?.opensDays ?? 0),
-    // "cu 2 zile înainte de start" / "la start" (§NNN): the one helper decides which.
+    // "cu 2 zile înainte de start" / "la start" (§407): the one helper decides which.
     due: confirmationDueWords(locale, window?.deadlineDays ?? 0),
   };
   const stepBody = (key: string) =>

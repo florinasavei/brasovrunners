@@ -534,7 +534,7 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
     );
   });
 
-  it("a 05:30 January start names that day's sunrise, never the evening's sunset, in both languages (§NNN)", () => {
+  it("a 05:30 January start names that day's sunrise, never the evening's sunset, in both languages (§404)", () => {
     const january = { date: "2027-01-13", time: "05:30", timeZone: ZONE };
     expect(nightAutoLine(lineWords(ro, "ro"), january, BRASOV).line).toBe(
       "Automat: pe mie., 13 ian. 2027, începe la 05:30, înainte de răsăritul de la 07:55 — eveniment de noapte",
@@ -752,12 +752,12 @@ describe("§394 the migration", () => {
 });
 
 /**
- * §NNN — the owner, 2026-09-25, on the tooltip «Apusul la 19:00, sfârșitul la 20:40» of a 19:00
+ * §404 — the owner, 2026-09-25, on the tooltip «Apusul la 19:00, sfârșitul la 20:40» of a 19:00
  * run: "evenimentul începe atunci, nu apusul începe atunci!". Every sentence names the start first,
  * then the sunset, then the end when it is the reason — so a sunset that happens to fall on the
  * start's own minute can no longer be read as the start.
  */
-describe("§NNN the night sentences name the start, the sunset and the end", () => {
+describe("§404 the night sentences name the start, the sunset and the end", () => {
   /** "Running up that hill" on Wednesday 30 September 2026, 19:00 in Brașov, 100 minutes long. */
   const SEPT_30_19 = at("2026-09-30T19:00");
   const SEPT_30_2040 = at("2026-09-30T20:40");
@@ -807,28 +807,28 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
       SEPT_30_19,
       BRASOV,
     ),
-    // §NNN: civil dawn on 30 September is 06:44, sunrise 07:14 — a 06:30 start is a night event
+    // §404: civil dawn on 30 September is 06:44, sunrise 07:14 — a 06:30 start is a night event
     // (before civil dawn) with no end ever named, and before that day's sunrise too, so the
     // `After` shape ("after the sunset") would read backwards for this early-morning run.
     dawn: nightEvent({ nightOverride: null, timezone: ZONE }, at("2026-09-30T06:30"), BRASOV),
-    // The review's own case (§NNN): a 05:30 group run on Wednesday 13 January 2027 at the club's
+    // The review's own case (§404): a 05:30 group run on Wednesday 13 January 2027 at the club's
     // place (`CLUB_COORDINATES`, through `clubNightEvent`) — sunrise 07:55, sunset 16:57. Never
     // «după apusul de la 16:57»: the evening is eleven hours away.
     january: clubNightEvent({ nightOverride: null, timezone: ZONE, startsAt: at("2027-01-13T05:30") }),
   };
 
-  it("a 05:30 January start at the club's place is the dawn shape, the sunrise named (§NNN)", () => {
+  it("a 05:30 January start at the club's place is the dawn shape, the sunrise named (§404)", () => {
     expect(shapes.january).toEqual({ night: true, source: "automatic", start: "05:30", sunset: "16:57", sunrise: "07:55", endSource: null, end: null });
     expect(nightShape(shapes.january)).toEqual({ suffix: "Dawn", values: { start: "05:30", sunrise: "07:55" } });
   });
 
-  it("a 07:40 January start at the club's place — after civil dawn, before sunrise — is a day verdict with the plain shape, not the dawn words (§NNN)", () => {
+  it("a 07:40 January start at the club's place — after civil dawn, before sunrise — is a day verdict with the plain shape, not the dawn words (§404)", () => {
     const dayVerdict = clubNightEvent({ nightOverride: null, timezone: ZONE, startsAt: at("2027-01-13T07:40") });
     expect(dayVerdict.night).toBe(false);
     expect(nightShape(dayVerdict)).toEqual({ suffix: "", values: { start: "07:40", sunset: "16:57" } });
   });
 
-  it("an automatic night event whose start is before civil dawn carries the day's sunrise too, with no end named (§NNN)", () => {
+  it("an automatic night event whose start is before civil dawn carries the day's sunrise too, with no end named (§404)", () => {
     expect(shapes.dawn).toEqual({
       night: true,
       source: "automatic",
@@ -884,14 +884,14 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
       ["ro", {}, "Eveniment de noapte: începe la 19:00, apusul la 19:00. Ia o frontală."],
       ["ro", { nightEventEnd: "20:40", nightEventEndSource: "event" }, "Eveniment de noapte: începe la 19:00, apusul la 19:00, se termină la 20:40. Ia o frontală."],
       ["ro", { nightEventEnd: "20:15", nightEventEndSource: "programme", nightEventIsGroupRun: true }, "Alergare de noapte: începe la 19:00, apusul la 19:00, ultimul punct din program la 20:15. Ia o frontală."],
-      // The start already past sunset, no end ever named (§NNN): the sunset alone would read as
+      // The start already past sunset, no end ever named (§404): the sunset alone would read as
       // the reason, so the line says the start came after it.
       ["ro", { nightEventAfter: true }, "Eveniment de noapte: începe la 19:00, după apusul de la 19:00. Ia o frontală."],
       ["en", {}, "Night event: starts at 19:00, sunset at 19:00. Bring a headlamp."],
       ["en", { nightEventEnd: "20:40", nightEventEndSource: "event", nightEventIsGroupRun: true }, "Night run: starts at 19:00, sunset at 19:00, ends at 20:40. Bring a headlamp."],
       ["en", { nightEventEnd: "20:15", nightEventEndSource: "programme" }, "Night event: starts at 19:00, sunset at 19:00, the programme's last row at 20:15. Bring a headlamp."],
       ["en", { nightEventAfter: true }, "Night event: starts at 19:00, after the 19:00 sunset. Bring a headlamp."],
-      // The dawn shape (§NNN): a 05:30 January group run names that day's sunrise, never the
+      // The dawn shape (§404): a 05:30 January group run names that day's sunrise, never the
       // evening's sunset.
       [
         "ro",

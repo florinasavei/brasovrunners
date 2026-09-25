@@ -27,14 +27,14 @@ export type BoxProps = {
    */
   groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", boolean>;
   /**
-   * The card's heading as the page's section it writes (§NNN): "4 · Data și ora — apare pe
+   * The card's heading as the page's section it writes (§406): "4 · Data și ora — apare pe
    * pagină", from `pageFlow`. Absent: the card's own name alone.
    */
   heading?: string;
 };
 
 /**
- * A card's required line (§NNN): «lipsesc: Titlu (RO, EN) · Rezumat (RO)» or «complet», for a
+ * A card's required line (§406): «lipsesc: Titlu (RO, EN) · Rezumat (RO)» or «complet», for a
  * card that holds a box publication needs — first from what the card was drawn with (the saved
  * event, or the blank create form), then as the form is typed (`PublishCheckProvider`). The one
  * check the Publicare list and "Publică" run (`missingForPublish`), filtered to this card.
@@ -75,7 +75,7 @@ export async function cardGapWords(): Promise<CardGapWords> {
  * what a change does to them — only on the editor, only with at least one real registration (a
  * test row is counted nowhere the club looks, `AGENTS.md` §12.6).
  *
- * The number itself is said once, on the line under the page map (`RegisteredLine`, §NNN; the
+ * The number itself is said once, on the line under the page map (`RegisteredLine`, §408; the
  * owner: "informația «3 înscriși» se repetă de prea multe ori pe fiecare card"), never on a box:
  * the outline is the mark, the line is the count.
  */

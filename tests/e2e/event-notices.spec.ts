@@ -93,7 +93,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(field("notice.noteRo")).toBeVisible();
     await expect(field("notice.noteEn")).toBeVisible();
 
-    // The count, said once (§NNN): one line under the page map, linking to this event's list —
+    // The count, said once (§408): one line under the page map, linking to this event's list —
     // and on no card's heading, where it used to repeat as a chip on each of five.
     const registeredLine = page.getByTestId("registered-line");
     await expect(registeredLine).toHaveCount(1);

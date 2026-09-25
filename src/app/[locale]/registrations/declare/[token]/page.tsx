@@ -220,7 +220,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       ? formatDay(registration.holdExpiresAt, { locale, timeZone: eventDetails.timezone, style: "long", withTime: true, position: "inline" })
       : undefined;
   /**
-   * A hold that ends at the start itself (§NNN, a deadline of zero days): "rezervat până la start,
+   * A hold that ends at the start itself (§407, a deadline of zero days): "rezervat până la start,
    * …: nu expiră înainte" rather than the waiting-list caveat, which the start makes moot — the
    * waiting list closes then (§104). The one helper decides.
    */

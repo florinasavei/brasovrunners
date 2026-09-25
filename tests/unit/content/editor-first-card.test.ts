@@ -12,7 +12,7 @@ import type { FoldNode } from "@/shared/ui/fold";
  *
  * §358 (2026-09-24; the owner: "these 3 cards should be in the first one, both on edit and create
  * mode") nested "Starea evenimentului", "Traseul" and "Linkuri și fișiere" inside "Ce fel de
- * eveniment". §NNN (2026-09-25; the owner: "am nevoie de mai multe căsuțe la editor ca să văd exact
+ * eveniment". §406 (2026-09-25; the owner: "am nevoie de mai multe căsuțe la editor ca să văd exact
  * ce flow am în pagină") lays the editor out as the page instead, card by card in the page's order,
  * and the three are drawn in three different places on the page — or, the status, nowhere — so
  * each is a box of its own again, moved whole: the same fields, the same names, the same ids, the
@@ -21,7 +21,7 @@ import type { FoldNode } from "@/shared/ui/fold";
  * What §358 settled and still holds is kept here: the create page's status is read-only
  * ("Programat", nothing posted); a role that may only read the settings sees each box as its
  * heading and its line; the status box wears the amber outline of a box whose change reaches people
- * (the count itself is said once, under the page map, §NNN); a refusal
+ * (the count itself is said once, under the page map, §408); a refusal
  * opens the box it names — one fold now, not two.
  *
  * The boxes are async Server Components; each is awaited into the element tree it hands React and
@@ -87,7 +87,7 @@ const EVENT = {
 /** The same event with its link's label in Romanian only — what the next save refuses (§354). */
 const ONE_LANGUAGE_LABEL = { ...EVENT, links: [{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: null }] } as unknown as EditableEvent;
 
-/** 23 real registrations: the amber outline a box that reaches people wears (§350, §NNN). */
+/** 23 real registrations: the amber outline a box that reaches people wears (§350, §408). */
 const RISK: RiskMark = { count: 23 };
 
 const NOTICE = {
@@ -164,7 +164,7 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
   return { node: { tagName: "INPUT", parentElement: parent, dispatchEvent: () => true }, details };
 }
 
-describe("§NNN the first box is the type alone, and the three cards are boxes of their own", () => {
+describe("§406 the first box is the type alone, and the three cards are boxes of their own", () => {
   it("holds no card: its only fold is itself, closed on the editor, with the type as its line", async () => {
     const { kind } = await boxes(EVENT);
     expect(foldTags(kind).filter((tag) => !/data-rich|help/.test(tag)).map(idOf)[0]).toBe("box-kind");
@@ -216,11 +216,11 @@ describe("§NNN the first box is the type alone, and the three cards are boxes o
   });
 });
 
-describe("§NNN with people registered, the status box says so itself", () => {
+describe("§406 with people registered, the status box says so itself", () => {
   it("wears the outline and its sentence on the status box, never the count, and neither on the type, the course or the links", async () => {
     const drawn = await boxes(EVENT, { risk: RISK });
     expect(drawn.status).toContain('data-testid="risk-line"');
-    // The number is said once, under the page map (§NNN) — on no box, shut or open.
+    // The number is said once, under the page map (§408) — on no box, shut or open.
     for (const key of ["kind", "status", "course", "links"] as const) expect(drawn[key], key).not.toMatch(/\b23\b/);
     for (const key of ["kind", "course", "links"] as const) expect(drawn[key], key).not.toContain('data-testid="risk-line"');
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
@@ -255,7 +255,7 @@ describe("§358 a role that may only read the settings", () => {
       expect(section, id).toContain(line);
       expect(section.replace(/<h2[\s\S]*<\/h2>/, ""), id).toBe("");
     }
-    // The status box wears the amber outline and no number — the page's one line says it (§NNN);
+    // The status box wears the amber outline and no number — the page's one line says it (§408);
     // nothing is posted or offered.
     expect(drawn.status).not.toMatch(/\b23\b/);
     expect(Object.values(drawn).join("")).not.toMatch(/name="event\./);
@@ -283,7 +283,7 @@ describe("§358 the create page's status is read-only", () => {
   });
 });
 
-describe("§NNN a refusal opens the box it names", () => {
+describe("§406 a refusal opens the box it names", () => {
   it("opens «Traseul» for a refused route link, «Linkuri și fișiere» for a link, «Starea evenimentului» for the status", async () => {
     const drawn = await boxes(EVENT);
     for (const [key, field, id] of [

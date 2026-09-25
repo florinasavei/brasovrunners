@@ -219,13 +219,13 @@ describe("the participation window (§104)", () => {
   });
 
   /*
-    §NNN (amending §104; the owner, 2026-09-25: "fereastra de confirmare trebuie să fie 0 la final,
+    §407 (amending §104; the owner, 2026-09-25: "fereastra de confirmare trebuie să fie 0 la final,
     să nu expire"): a deadline of zero days is the start itself. The place given before the window
     opens lapses nowhere before the race begins — not even with somebody waiting — the email says
     "până la start" beside the date, the desk confirms on paper on the race morning (§67), and at
     the start the unsigned place ends and the waiting list closes, as for every race (§160).
   */
-  it("a deadline of zero holds the place until the start, says so, and releases nothing before it (§NNN)", async () => {
+  it("a deadline of zero holds the place until the start, says so, and releases nothing before it (§407)", async () => {
     await approve(db);
     const event = await createEvent(db, { confirmationDeadlineDaysBefore: 0 }); // capacity 1
     expect(confirmationWindow(event)).toEqual({ opensAt: new Date(START.getTime() - 7 * DAY), deadline: START });
@@ -262,7 +262,7 @@ describe("the participation window (§104)", () => {
     expect(confirmed.status).toBe("CONFIRMED");
   });
 
-  it("at the start of a zero-deadline race the unsigned place ends and the waiting list closes, as for every race (§NNN, §160)", async () => {
+  it("at the start of a zero-deadline race the unsigned place ends and the waiting list closes, as for every race (§407, §160)", async () => {
     await approve(db);
     const event = await createEvent(db, { confirmationDeadlineDaysBefore: 0 }); // capacity 1
     const first = await verified(event, "first@example.ro");

@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-050-02 (`DECISIONS.md` §NNN, amending §104) — the confirmation window's deadline may be
+ * BR-REQ-050-02 (`DECISIONS.md` §407, amending §104) — the confirmation window's deadline may be
  * zero, "until the start", and the card says when a runner can confirm. The owner, 2026-09-25:
  * "fereastra de confirmare trebuie să fie 0 la final, să nu expire — nu e clar când pot confirma".
  *

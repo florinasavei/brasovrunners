@@ -47,7 +47,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await field("translations.en.slug").fill(englishSlug);
     await excerpt("en", "A free run, with an optional donation for Wings for Life.");
 
-    // The cost is a card of its own (§NNN), with its two extra boxes under the select. Before a
+    // The cost is a card of its own (§406), with its two extra boxes under the select. Before a
     // kind is chosen, those are not on screen.
     await openEditorBox(page, "Cost");
     await expect(field("event.costUrl")).toBeHidden();

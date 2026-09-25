@@ -94,7 +94,7 @@ export function EventCancelFields({ statusSelectName, initialStatus, wasCancelle
   if (status === "CANCELLED" && !wasCancelled) {
     return (
       <Alert severity="warning" icon={false} data-testid="cancel-fields" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
-        {/* An h3: the status is a box of its own again, an h2 (§NNN; it was a card inside the first box, §358). */}
+        {/* An h3: the status is a box of its own again, an h2 (§406; it was a card inside the first box, §358). */}
         <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
           {labels.cancelTitle}
         </Typography>

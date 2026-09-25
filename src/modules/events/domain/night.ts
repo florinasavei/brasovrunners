@@ -23,7 +23,7 @@ export type NightEventFacts = {
   /** Where the answer came from: the organizer's "Da"/"Nu", or the sun. */
   source: "override" | "automatic";
   /**
-   * The occurrence's own start on its wall clock, "19:00" (§NNN) — every sentence names it before
+   * The occurrence's own start on its wall clock, "19:00" (§404) — every sentence names it before
    * the sunset, so "Apusul la 19:00" on a 19:00 run cannot be read as the start: the owner,
    * 2026-09-25, "evenimentul începe atunci, nu apusul începe atunci!". Null without a start.
    */
@@ -31,7 +31,7 @@ export type NightEventFacts = {
   /** Sunset of the occurrence's own day on its wall clock, "16:36" — for the pill's tooltip and the lines. */
   sunset: string | null;
   /**
-   * Sunrise of the occurrence's own day on its wall clock, "07:14" (§NNN) — so a start before it
+   * Sunrise of the occurrence's own day on its wall clock, "07:14" (§404) — so a start before it
    * (an automatic night event with no named end, chosen by the start alone rather than the span
    * running into the dark) can be told from one after sunset: the pill then says the run starts
    * before that sunrise, never "after the sunset", which an early-morning date is not.
@@ -135,7 +135,7 @@ export function nightEvent(event: NightEventSource, occurrenceStartsAt: Date | n
 }
 
 /**
- * Which of the five shapes a night event's sentence takes (§NNN): the start and the sunset
+ * Which of the five shapes a night event's sentence takes (§404): the start and the sunset
  * always, and the end only when it is why the date is dark — «Durata»'s end (`End`) or the day's
  * last programme row (`EndProgramme`). The start is named first so the sunset is never read as it
  * — the owner, 2026-09-25, "evenimentul începe atunci, nu apusul începe atunci!". When the sun

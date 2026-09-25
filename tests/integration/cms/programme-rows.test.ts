@@ -105,7 +105,7 @@ describe("BR-REQ-050-02 criterion 13 — the programme's rows", () => {
     ]);
   });
 
-  it("drops a row whose only box is its date: the editor opens every row on the event's start date (§NNN)", async () => {
+  it("drops a row whose only box is its date: the editor opens every row on the event's start date (§405)", async () => {
     const event = await createDraft();
     const spare = { date: "2026-10-11", time: "", endTime: "", ro: "", en: "", place: "" };
     await save(event.id, event.version, { ...FIELDS, scheduleRows: [ROWS[0], spare] });

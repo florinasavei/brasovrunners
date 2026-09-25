@@ -284,7 +284,7 @@ async function renderRow(
     // Each half of the bilingual message in its own words (§96, §349).
     const holdZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
     /*
-      A hold that ends at the start itself — a deadline of zero days (§NNN) — reads "până la start,
+      A hold that ends at the start itself — a deadline of zero days (§407) — reads "până la start,
       sâm., 21 nov. 2026, 09:00" / "by the start, Sat, 21 Nov 2026, 09:00": the "until the start"
       form beside the date, decided by the one helper, in the value itself, so a text the club
       wrote with `{holdExpiresAtFormatted}` (§359) says it too.
@@ -384,7 +384,7 @@ async function renderRow(
     if (night.night) {
       data.nightEventSunset = night.sunset ?? "";
       data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
-      // The start named before the sunset, and the end when it is the reason (§NNN) — the shape
+      // The start named before the sunset, and the end when it is the reason (§404) — the shape
       // decided by `nightShape`, the same rule as the pill, the calendar and the `.ics`.
       if (night.start) data.nightEventStart = night.start;
       const shape = nightShape(night);
@@ -393,10 +393,10 @@ async function renderRow(
         data.nightEventEndSource = shape.suffix === "EndProgramme" ? "programme" : "event";
       } else if (shape?.suffix === "After") {
         // No end was ever named: the sun alone made the call and the start was already past
-        // sunset (§NNN) — say so, instead of leaving the sunset looking like the reason alone.
+        // sunset (§404) — say so, instead of leaving the sunset looking like the reason alone.
         data.nightEventAfter = true;
       } else if (shape?.suffix === "Dawn" && night.sunrise) {
-        // An early-morning start before that day's sunrise (§NNN): the line names the sunrise,
+        // An early-morning start before that day's sunrise (§404): the line names the sunrise,
         // never «după apusul» of the evening before it.
         data.nightEventSunrise = night.sunrise;
       }

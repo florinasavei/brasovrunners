@@ -10,7 +10,7 @@ import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
  * announced (§328, §362), and a page address in every language.
  *
  * One function for everything that asks it, on both pages — the "Ce lipsește pentru publicare"
- * list in the Publicare box, which names them all; since §NNN each card's closed line and its tabs'
+ * list in the Publicare box, which names them all; since §406 each card's closed line and its tabs'
  * counts, the map's chips, and "Creează și publică" and "Publică", which open the summary of gaps
  * instead of posting while one is left (over what is typed on the create page, over what is saved
  * on the editor, `storedPublishReader`) — so none of them disagree. In the order of the editor's
@@ -65,11 +65,11 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
     .join(" › ");
 }
 
-// --- The same gaps, seen from outside each card (§NNN) --------------------------------------
+// --- The same gaps, seen from outside each card (§406) --------------------------------------
 
 /**
  * The card each gap belongs to, by its `#box-…` id: where "Publică" scrolls to and whose closed
- * line names it (§NNN; the owner, of a closed "Titlu și rezumat" whose tabs said only "incomplet":
+ * line names it (§406; the owner, of a closed "Titlu și rezumat" whose tabs said only "incomplet":
  * "I need to see on the cards as well what info is required").
  */
 export const PUBLISH_GAP_CARD: Readonly<Record<PublishGapBox, `box-${string}`>> = {
@@ -152,7 +152,7 @@ export function storedPublishReader(event: StoredPublishEvent, translations: rea
 
 /**
  * The value of every box `missingForPublish` reads, as a plain record a Server Component can hand
- * an island (§NNN): the islands read a box the form does not draw from here.
+ * an island (§406): the islands read a box the form does not draw from here.
  */
 export function publishCheckValues(read: (name: string) => string, locales: readonly string[]): Record<string, string> {
   const names = new Set<string>(["event.locationToBeAnnounced"]);

@@ -6,7 +6,7 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
 /**
  * `DECISIONS.md` §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite".
  * The create page's cost select preselects "Gratuit"; a save that never opens the "Cost" card
- * (§NNN) still writes it, and the public page reads "Gratuit" without anyone having touched
+ * (§406) still writes it, and the public page reads "Gratuit" without anyone having touched
  * the cost box at all.
  */
 test.describe("a new event starts free (§398)", () => {

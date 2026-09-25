@@ -23,7 +23,7 @@ import {
 
 const NO_GAPS: readonly PublishGap[] = [];
 
-/** How `usePublishGaps` starts and where it reads (§NNN). */
+/** How `usePublishGaps` starts and where it reads (§406). */
 export type PublishGapsOptions = {
   /**
    * The server's answer for the first paint: the saved event on the editor, the blank form on the
@@ -31,7 +31,7 @@ export type PublishGapsOptions = {
    * arrives. Nothing, for a list that may start empty.
    */
   initial?: readonly PublishGap[];
-  /** The form to read, by id, for an island that sits outside it (the editor's map, §NNN). */
+  /** The form to read, by id, for an island that sits outside it (the editor's map, §406). */
   formId?: string;
   /**
    * The saved value of each box the check reads, for a box the form does not draw: a language the

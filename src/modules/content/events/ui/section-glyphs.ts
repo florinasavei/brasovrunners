@@ -18,7 +18,7 @@ import type { ComponentType } from "react";
 import type { PageSectionGlyph } from "@/modules/events/domain/page-sections";
 
 /**
- * The event page's sections as the editor's map draws them (§NNN), one glyph per section, looked
+ * The event page's sections as the editor's map draws them (§406), one glyph per section, looked
  * up **by name** (`PageSectionGlyph`): the list in `events/domain/page-sections.ts` names a picture
  * without importing one, and the map is a client island that makes the element itself, so no
  * element crosses from a Server Component (`AGENTS.md` §14.1, §370). The backoffice's only: no

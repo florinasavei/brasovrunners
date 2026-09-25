@@ -4,7 +4,7 @@ import type { PublishGapBox } from "./publish-check";
 import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
 
 /**
- * The event editor as the page it makes (§NNN; the owner, 2026-09-25: "am nevoie de mai multe
+ * The event editor as the page it makes (§406; the owner, 2026-09-25: "am nevoie de mai multe
  * căsuțe la editor ca să văd exact ce flow am în pagină"): every card that writes a section of the
  * public page is headed by the section's number and whether the page shows it — "4 · Data și ora —
  * apare pe pagină", "12 · Film — gol, nu apare pe pagină" — and the map under Publicare and

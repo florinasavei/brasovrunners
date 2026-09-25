@@ -23,7 +23,7 @@ export type CardRegistrationLine = {
 };
 
 /**
- * The listing card's registration, in words (§NNN). The owner, 2026-09-25: "trebuie să văd
+ * The listing card's registration, in words (§409). The owner, 2026-09-25: "trebuie să văd
  * butonul de înscrieri pe card pentru evenimentele de tip concurs; să fac bold pe asta cu
  * înscrierile și să văd câte locuri sunt disponibile".
  *
@@ -76,7 +76,7 @@ export function cardRegistrationLine(say: Say, locale: string, event: PublicEven
     case "EXTERNAL":
       return { lead: say("registrationState.EXTERNAL"), detail: null, bold: true, button };
     default:
-      // Closed, cancelled, held, or none needed: the state's own words, quiet, as before §NNN.
+      // Closed, cancelled, held, or none needed: the state's own words, quiet, as before §409.
       return { lead: say(`registrationState.${registrationState(event, now)}`), detail: null, bold: false, button: null };
   }
 }

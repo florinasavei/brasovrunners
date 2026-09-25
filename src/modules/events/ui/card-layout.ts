@@ -75,7 +75,7 @@ export const CARD_BODY_SX = {
  * alignment, whichever question the row answers. The owner, 2026-09-24: "address with address
  * icons not consistent". One object, so a row cannot drift from the others; the unit test reads
  * the class Emotion gives it and finds the same one on every row. Here rather than in
- * `EventFacts` since the card's registration line (`CardRegistration`, §NNN) draws it too.
+ * `EventFacts` since the card's registration line (`CardRegistration`, §409) draws it too.
  */
 export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
 

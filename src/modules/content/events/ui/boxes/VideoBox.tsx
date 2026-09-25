@@ -7,12 +7,12 @@ import Panel from "@/shared/ui/Panel";
 import { BoxNote, type BoxProps } from "./box-kit";
 
 /**
- * "Filmul" (§69, §110, §NNN): the card for the page's film section — last year's film, behind one
+ * "Filmul" (§69, §110, §406): the card for the page's film section — last year's film, behind one
  * press, under the rules (`EventVideo`). The editor had no card for it: the box was taken away on
  * the owner's word ("link video should not be present anymore since we have the rich text
  * editor"), and a film has been a figure in the description since, placed with the rich text's
  * YouTube button (§266). The page still draws the section for an older event that carries the
- * link, so the editor that mirrors the page (§NNN) says where it is.
+ * link, so the editor that mirrors the page (§406) says where it is.
  *
  * **Read-only, on purpose.** It posts nothing — `videoUrl` absent from a save means "not editing
  * the film", so the stored link survives every save (§266) — and offers no box, which would bring

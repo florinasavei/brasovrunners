@@ -400,7 +400,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     programme: event.programme,
   });
   // A group run is «Alergare de noapte», as on its card and in its reminder (§394).
-  // The start, the sunset and — when it is the reason — the end, all named (§NNN).
+  // The start, the sunset and — when it is the reason — the end, all named (§404).
   const nightLine = night.night ? nightWords(night, t, event.type === "GROUP_RUN", "ics") : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.

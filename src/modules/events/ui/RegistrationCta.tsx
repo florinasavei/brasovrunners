@@ -41,7 +41,7 @@ export default async function RegistrationCta({
 
   /*
     The state and the count, read once (`registration-door.ts`, shared with the listing card since
-    §NNN): only an open internal event costs a read, from the public cache (§333), and it is still
+    §409): only an open internal event costs a read, from the public cache (§333), and it is still
     the allocator's number for this instant. When that one read cannot be answered (§281), this one
     block says so and the page around it stands. A refresh is what fixes it, and it is offered as a
     link rather than a promise.

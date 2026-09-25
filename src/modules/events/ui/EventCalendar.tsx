@@ -109,7 +109,7 @@ export default async function EventCalendar({
     const facts = clubNightEvent(event);
     if (!facts.night) return null;
     // A group run is «Alergare de noapte», as on its card and in its reminder (§394).
-    // The start, the sunset and — when it is the reason — the end, all named (§NNN).
+    // The start, the sunset and — when it is the reason — the end, all named (§404).
     return nightWords(facts, tEvent, event.type === "GROUP_RUN", "calendar");
   };
 
@@ -126,7 +126,7 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
-        // "Eveniment de noapte: începe la 19:00, apusul la 16:36" (§394, §NNN, where §382 put the headlamp) in the tooltip
+        // "Eveniment de noapte: începe la 19:00, apusul la 16:36" (§394, §404, where §382 put the headlamp) in the tooltip
         // and the entry's name, after the place's note: this date's own answer, from its own sunset.
         night={nightLine(event)}
         // Held with a partner (§367, amended §375, §379): the handshake beside the entry, the generic

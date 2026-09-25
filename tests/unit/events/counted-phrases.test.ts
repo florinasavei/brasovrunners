@@ -78,7 +78,7 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
   });
 });
 
-describe("§NNN freePlacesPhrase — the listing card's free places, out of the event's size", () => {
+describe("§409 freePlacesPhrase — the listing card's free places, out of the event's size", () => {
   it("reads Romanian's singular, its plural and its 'de' from twenty on, the free number choosing", () => {
     const say = translator("ro");
     expect(freePlacesPhrase(say, "ro", 1, 10)).toBe("1 loc liber din 10");

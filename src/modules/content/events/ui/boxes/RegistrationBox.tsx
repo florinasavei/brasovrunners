@@ -62,11 +62,11 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 
 /**
  * "Participare și înscrieri" (§350): how people register — here, with another organizer, or not at
- * all — and under which rules; on the page, who may enter and the button, under the cost row (§NNN:
+ * all — and under which rules; on the page, who may enter and the button, under the cost row (§406:
  * the cost is its own card, `CostBox`, just above this one, where the page draws its row). Registration's rules are
  * in this one box, as named cards: the period, who may enter and what they sign, the confirmation
  * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
- * printing). The public list was the fifth card here (owner requirement 1 of §350); since §NNN it is
+ * printing). The public list was the fifth card here (owner requirement 1 of §350); since §406 it is
  * its own card, last, because the page draws it last (`StartListBox`).
  *
  * **Only what the chosen mode needs is shown** (`OnlyForMode`): "Pe site" shows the capacity and
@@ -144,7 +144,7 @@ export default async function RegistrationBox({
         : capitalizeFirst(before(storedReminder), locale);
 
   /*
-    The confirmation card's saved numbers as dates (§104), in the one form that is true (§NNN): no
+    The confirmation card's saved numbers as dates (§104), in the one form that is true (§407): no
     window at all — the allocator's own `confirmationWindow` test — a deadline that is the start
     itself ("termen la start", `confirmationDueAtStart`), or two dates.
   */
@@ -164,7 +164,7 @@ export default async function RegistrationBox({
 
   const summary = registrationSummary(words, event, {
     takesRegistrations: takesRegistrations(initialType),
-    // The cost is its own card since §NNN (`CostBox`), and its closed line says it.
+    // The cost is its own card since §406 (`CostBox`), and its closed line says it.
     declarationVersion: declaration?.version ?? null,
     defaultMinAge: MIN_PARTICIPANT_AGE,
     locale,
@@ -423,7 +423,7 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
                   {/* The public list was 8.5 here; it is its own card now, last, where the page
-                      draws it (§NNN, `StartListBox`). */}
+                      draws it (§406, `StartListBox`). */}
                 </Stack>
               </OnlyForMode>
             </Stack>

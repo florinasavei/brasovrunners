@@ -62,7 +62,7 @@ export const dynamic = "force-dynamic";
  * WordPress-like editor" and then for create and edit to stop drifting apart ("this event create
  * page is a bit inconsistent with the event edit"). So it is the editor's layout
  * (`EventEditorLayout`): the side column with Publicare, Recurență and the page's map, first on a
- * phone, and the main column's cards in the page's own order (§NNN), numbered and headed by
+ * phone, and the main column's cards in the page's own order (§406), numbered and headed by
  * whether the page will show each, under the same titles, with the same field names and the same
  * Română | English tabs; then the cards that are not on the page. The status card is the one that
  * is read-only here: it says "Programat" and that the status can be changed once the event exists, and a hidden
@@ -85,7 +85,7 @@ export const dynamic = "force-dynamic";
  * input reads the recalled values. A named box three folds deep opens itself.
  *
  * **Create and publish in one press**, for a role that may publish (§315): the second button is
- * always its full self (§NNN); pressed while a box publication needs is empty, it posts nothing and
+ * always its full self (§406); pressed while a box publication needs is empty, it posts nothing and
  * opens the summary at the top of the column, each gap by its box and tab, from the same check the
  * Publicare box's list and every card's closed line run (`missingForPublish`).
  */
@@ -132,7 +132,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   };
   // Which group-run declarations the club has approved (§393): the route card's checkbox asks.
   const box = { event: null, mayEditSettings: true, groupRunDeclarations: await groupRunDeclarationsInForce(getDb(), new Date()) } as const;
-  // The page a new event makes, as it opens (§NNN): the same numbers, states and map as the editor.
+  // The page a new event makes, as it opens (§406): the same numbers, states and map as the editor.
   const flow = await pageFlow(BLANK_PAGE_SECTION_DATA);
   // What publication needs of the blank form: every card's first answer, before anything is typed.
   const blankGaps = missingForPublish(
@@ -170,7 +170,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             and this is what posts (§358). */}
         <input type="hidden" name="event.eventStatus" value="SCHEDULED" />
 
-        {/* What publication still needs, read once for every card line and chip as it is typed (§NNN). */}
+        {/* What publication still needs, read once for every card line and chip as it is typed (§406). */}
         <PublishCheckProvider formId="event-create-form" locales={localeCodes} initial={blankGaps}>
         <EventEditorLayout
           side={
@@ -217,7 +217,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                 </Stack>
               </Panel>
 
-              {/* S3 — the page, top to bottom (§NNN): the editor's same map. */}
+              {/* S3 — the page, top to bottom (§406): the editor's same map. */}
               <Panel static id="box-map" title={flow.label}>
                 <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
               </Panel>
@@ -225,9 +225,9 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           }
           main={
             <Stack spacing={2}>
-              {/* "Creează și publică" pressed while something publication needs is empty (§NNN). */}
+              {/* "Creează și publică" pressed while something publication needs is empty (§406). */}
               <PublishGapsSummary id="publish-gaps" title={t("editor.publishGaps.title")} intro={t("editor.publishGaps.intro")} labels={gapLabels} />
-              {/* The page, top to bottom (§NNN): the editor's same cards, in the same order. */}
+              {/* The page, top to bottom (§406): the editor's same cards, in the same order. */}
               <EditorGroup label={t("editor.groups.page")} />
               <KindBox {...box} heading={flow.headings.kind} />
               <TitleSummaryBox languages={languages} creating heading={flow.headings.title} />

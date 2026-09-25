@@ -231,7 +231,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   /**
    * The programme's rows (§117). A row left blank in every box is the editor's spare line and
    * is dropped — and so is one whose only box is its date, because the editor writes that date
-   * itself: every row opens on the event's start date (§NNN), so a date alone is the default the
+   * itself: every row opens on the event's start date (§405), so a date alone is the default the
    * organizer never touched, not something typed. Anything else must say when, and what in both
    * languages — the page shows the rows in either language, so a label in one is a row missing
    * from the other. The end, when given, is a time on the same day, at or after the start.

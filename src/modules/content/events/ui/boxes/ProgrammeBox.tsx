@@ -36,7 +36,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
     const end = item.endsAt ? toWallTimeInput(new Date(item.endsAt), zone) : "";
     return { date: start.slice(0, 10), time: start.slice(11, 16), endTime: end.slice(11, 16), ro: item.label.ro, en: item.label.en, place: item.place ?? "" };
   });
-  // The day a new row opens on (§NNN): the event's own start date, as its start box shows it —
+  // The day a new row opens on (§405): the event's own start date, as its start box shows it —
   // "" on the create page, where the rows take it once it is typed.
   const startDate = toWallTimeInput(event?.startsAt ?? null, zone).slice(0, 10);
   const programmeTypes = EVENT_TYPES.filter(hasProgramme);
@@ -57,7 +57,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
         <OnlyForType type={programmeTypes} selectName="event.type" initialType={initialType}>
           {mayEditSettings ? (
             <Stack spacing={1}>
-              {/* How the rows work, as the compact «i» fold (§398, reused; §NNN), closed by default
+              {/* How the rows work, as the compact «i» fold (§398, reused; §405), closed by default
                   (§336) — the paragraph that used to stand above the rows. With people registered,
                   the box stays amber and wears the count like the other four boxes a change reaches
                   (§350), and the sentence that went with it joins this fold: it said what the help
@@ -76,7 +76,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
                 </Stack>
               </Panel>
               {/* The rows follow the start date: `WallTimeField` posts `event.startsAtDate`, and the
-                  rows island listens to the date box by that name. A new row opens on it (§NNN). */}
+                  rows island listens to the date box by that name. A new row opens on it (§405). */}
               <ScheduleRowsEditor
                 initial={scheduleRows}
                 startDateName="event.startsAtDate"

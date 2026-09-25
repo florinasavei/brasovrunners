@@ -8,7 +8,7 @@ import { youtubeVideoId } from "./video";
 
 /**
  * The event page's sections, top to bottom — the one list the public page is drawn in and the
- * event editor lays its cards out by (§NNN; the owner, 2026-09-25: "am nevoie de mai multe căsuțe
+ * event editor lays its cards out by (§406; the owner, 2026-09-25: "am nevoie de mai multe căsuțe
  * la editor ca să văd exact ce flow am în pagină").
  *
  * **The page's own order, as a list.** `app/[locale]/events/[slug]/page.tsx` draws the overline,

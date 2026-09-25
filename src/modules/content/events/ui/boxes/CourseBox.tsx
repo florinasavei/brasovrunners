@@ -22,7 +22,7 @@ import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * "Traseul" (§350, §358, §NNN): its own card, where the page first draws what it holds — the
+ * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
  * route's pills in the facts, then the declaration offer under them (§393) and, further down, the
  * route section under `#route` (§387). It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how

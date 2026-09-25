@@ -250,7 +250,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(night.text).toContain("Alergare de noapte: începe la 19:00, după apusul de la 16:44. Ia o frontală.");
     expect(night.text).toContain("Night run: starts at 19:00, after the 16:44 sunset. Bring a headlamp.");
 
-    // A 05:30 group run on Wednesday 13 January 2027 (§NNN): night before that day's sunrise, and
+    // A 05:30 group run on Wednesday 13 January 2027 (§404): night before that day's sunrise, and
     // the line names the sunrise (07:55) — never «după apusul de la 16:57», an evening eleven hours on.
     await db.update(events).set({ startsAt: new Date("2027-01-13T03:30:00.000Z") }).where(eq(events.id, event.id));
     const dawn = await render();

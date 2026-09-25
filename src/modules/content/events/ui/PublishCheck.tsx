@@ -13,7 +13,7 @@ import { usePublishGaps } from "./MissingForPublish";
 import { type CardGapWords, cardGapLine, cardGaps, PUBLISH_GAP_CARD, type PublishGap, type PublishGapBox, publishGapLabel, type PublishGapLabels } from "./publish-check";
 
 /**
- * What publication still needs, seen from outside every card (§NNN; the owner, 2026-09-25, of a
+ * What publication still needs, seen from outside every card (§406; the owner, 2026-09-25, of a
  * closed "Titlu și rezumat" whose tabs said only "incomplet": "I need to see on the cards as well
  * what info is required", and of "Creează și publică" dimmed out of sight: "this should be
  * consistent!").
@@ -87,7 +87,7 @@ const NO_GAPS: readonly PublishGap[] = [];
 const ASK_EVENT = "br:publish-gaps";
 
 /**
- * Open the summary `id` names (§NNN): what a publish press does instead of posting while a box
+ * Open the summary `id` names (§406): what a publish press does instead of posting while a box
  * publication needs is empty. A window event, because the press and the summary sit in different
  * columns — on the editor, in different forms.
  */
@@ -96,7 +96,7 @@ export function askPublishGaps(id: string): void {
 }
 
 /**
- * The editor's "Publică" (§NNN): the same button on every event, whatever it lacks — never dimmed,
+ * The editor's "Publică" (§406): the same button on every event, whatever it lacks — never dimmed,
  * never hidden. While the saved event misses a box publication needs (`blocked`, read on the
  * server by `missingForPublish` over what is stored — publishing publishes what is saved), the
  * press posts nothing and opens the summary instead; otherwise it is the plain submit of its
@@ -123,7 +123,7 @@ export function PublishGateButton({ label, blocked, summaryId }: { label: string
 }
 
 /**
- * The §47 summary for a publication that cannot happen yet (§NNN): focusable, first in the column,
+ * The §47 summary for a publication that cannot happen yet (§406): focusable, first in the column,
  * one link per missing box and language ("Titlu și rezumat › English › Titlu"), each opening the
  * folds and the tab around its box. Drawn only once a publish press asked for it, and gone when
  * nothing is missing any more.

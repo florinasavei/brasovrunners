@@ -105,7 +105,7 @@ describe("the programme's rows follow the event's date", () => {
 });
 
 /**
- * BR-REQ-050-02 criterion 13 (§117, §NNN): the editor's default day for a row is the event's start
+ * BR-REQ-050-02 criterion 13 (§117, §405): the editor's default day for a row is the event's start
  * date — the spare line with no date yet takes it when the start is typed or moved, and the dated
  * rows move by the same number of days as before.
  */

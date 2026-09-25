@@ -9,11 +9,11 @@ import TypeNote from "../TypeNote";
 import { type BoxProps, SettingsReadOnly } from "./box-kit";
 
 /**
- * Card 1, "Ce fel de eveniment" (§350, §NNN): the type, which the page's overline says first — and
+ * Card 1, "Ce fel de eveniment" (§350, §406): the type, which the page's overline says first — and
  * which switches other cards' fields on and off: a group run has no registration and no programme
  * (§111), only a race has a gun time (§71).
  *
- * **The type alone since §NNN.** §358 put three cards inside it — the status, the course, the links
+ * **The type alone since §406.** §358 put three cards inside it — the status, the course, the links
  * — because all three described the event itself. The editor is the page now, card by card in the
  * page's order (`events/domain/page-sections.ts`), and those three are drawn in three different
  * places on the page, or not at all: the course where the facts draw its pills, the links where

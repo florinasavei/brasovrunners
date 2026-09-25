@@ -123,7 +123,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
-    // The start named first, then the sunset (§NNN): the sunset is never read as the start.
+    // The start named first, then the sunset (§404): the sunset is never read as the start.
     await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 19:00, după apusul de la 16:\d\d — ia o frontală$/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);

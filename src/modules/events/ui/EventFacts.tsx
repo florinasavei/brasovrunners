@@ -129,7 +129,7 @@ const RACE_ROW_GAP = 0.5;
  * which has no button and deserves the one sentence "no registration needed". The compact
  * variant on a listing card says the state as a line of its own — bold, with the free places —
  * and, where the page has a registration button, carries the same button under it
- * (`CardRegistration`, §NNN).
+ * (`CardRegistration`, §409).
  */
 export default async function EventFacts({
   event,
@@ -545,7 +545,7 @@ export default async function EventFacts({
           ? outLink(event.mapUrl, t("openMap"), undefined, reach)
           : null;
 
-    // The state of registration and, where the page has one, its door (§NNN): read through the
+    // The state of registration and, where the page has one, its door (§409): read through the
     // page's own `readRegistrationDoor` — one cached entry for an open race, nothing for any
     // other card — never a formula of this file's own.
     const registration = mentionsRegistration
@@ -553,7 +553,7 @@ export default async function EventFacts({
       : null;
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
-    // The registration line draws the same shape in `CardRegistration` (§NNN).
+    // The registration line draws the same shape in `CardRegistration` (§409).
     const cardLine = (key: string, Icon: Glyph, value: ReactNode) => (
       <Typography
         component="div"
@@ -583,7 +583,7 @@ export default async function EventFacts({
         )}
         {/* The state of registration, last, where BR-REQ-011-01 criterion 18 reads it — and on a
             card whose page has a registration door, that door too, with the free places in bold
-            (§NNN; the owner: "trebuie să văd butonul de înscrieri pe card"). */}
+            (§409; the owner: "trebuie să văd butonul de înscrieri pe card"). */}
         {registration && <CardRegistration slug={event.slug} line={registration} />}
       </Box>
     );

@@ -25,7 +25,7 @@ import { type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
  * description, the rules, the page address. Each has its own Română | English tabs — five strips on
  * one page with the programme's, so each carries its box's `idPrefix` — and each tab says what it
  * lacks by its own rule: a count of the boxes publication needs still empty here (the title and
- * the summary, the address — «Română · 2 obligatorii lipsă», «English · complet», §NNN), or
+ * the summary, the address — «Română · 2 obligatorii lipsă», «English · complet», §406), or
  * "· incomplet" for an optional text written in the other language and not in this one (the
  * description, the rules).
  */
@@ -39,7 +39,7 @@ const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translatio
  * everywhere): the same words in both is an amber line over the panels and a mark on the English
  * tab — computed here from what is stored for the first paint, re-read in the browser as typed.
  *
- * `required` names the card's publication gaps (§NNN): each tab then counts the boxes publication
+ * `required` names the card's publication gaps (§406): each tab then counts the boxes publication
  * needs that its language still lacks, first from `missingForPublish` over what the strip was drawn
  * with — the check the card's closed line and Publicare read — then as it is typed.
  */
@@ -128,7 +128,7 @@ function lineOf(required: ReactNode, summary: string | undefined): ReactNode {
  * "Titlu și rezumat" (§350): open on create, where it is the first thing a new event is asked —
  * the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a language
  * lacks either (`attention`: something inside asks for action). Its closed line starts with what
- * publication still needs from it (§NNN).
+ * publication still needs from it (§406).
  */
 export async function TitleSummaryBox({ languages, creating, heading }: { languages: readonly LanguageEntry[]; creating: boolean; heading?: string }) {
   const t = await getTranslations("Admin");
@@ -196,7 +196,7 @@ export async function RulesBox({ languages, heading }: { languages: readonly Lan
 /**
  * "Adresa paginii și motoarele de căutare": open while any address is blank — so open on create,
  * where the address also fills itself from the title until it is typed (`SlugFromTitle`). Not a
- * section of the page — it is the page's address — so it sits with the cards that are not (§NNN).
+ * section of the page — it is the page's address — so it sits with the cards that are not (§406).
  */
 export async function AddressBox({
   languages,
