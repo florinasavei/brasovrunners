@@ -22,7 +22,14 @@ import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type For
  * query parameters, which carry none either, §14.5).
  */
 export async function flash(notice: FormNotice): Promise<void> {
-  const jar = await cookies();
+  let jar: Awaited<ReturnType<typeof cookies>>;
+  try {
+    jar = await cookies();
+  } catch {
+    // No request to write a cookie on — an action driven from a test, or a caller outside the
+    // request scope. The toast is a courtesy; the redirect that follows is the work, and it goes on.
+    return;
+  }
   jar.set(FLASH_COOKIE, encodeFlash(notice), {
     path: "/",
     maxAge: FLASH_MAX_AGE_SECONDS,

@@ -1,6 +1,8 @@
 "use client";
 
+import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
@@ -101,10 +103,14 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
             role="status"
             severity={current.kind}
             variant="filled"
-            onClose={() => dispatch({ type: "dismiss" })}
-            closeText={t("close")}
-            slotProps={{ closeButton: { sx: { minWidth: 44, minHeight: 44, alignSelf: "center" } } }}
-            sx={{ width: "100%", alignItems: "center", boxShadow: 6 }}
+            // The close button drawn here rather than through `onClose`: MUI's own is 28 px, and a
+            // thumb's target is 44 (BR-REQ-041-01 criterion 6).
+            action={
+              <IconButton aria-label={t("close")} color="inherit" onClick={() => dispatch({ type: "dismiss" })} sx={{ minWidth: 44, minHeight: 44 }}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            }
+            sx={{ width: "100%", alignItems: "center", boxShadow: 6, "& .MuiAlert-action": { pt: 0, alignSelf: "center" } }}
           >
             {sentence(current)}
           </Alert>

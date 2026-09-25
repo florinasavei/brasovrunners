@@ -3799,7 +3799,7 @@
   "Feedback": {
     "close": "Închide",
     "toast": {
-      "saved": "Modificările au fost salvate.",
+      "saved": "Salvat.",
       "event": "Evenimentul a fost salvat.",
       "eventSeries": {
         "one": "Salvat pe {count} dată a seriei.",
@@ -3807,14 +3807,14 @@
         "other": "Salvat pe {count} de date ale seriei."
       },
       "created": "Evenimentul a fost creat, ca ciornă.",
-      "createdPublished": "Evenimentul a fost creat și publicat.",
+      "createdPublished": "Creat și publicat: pe site în ambele limbi.",
       "duplicated": "Copia a fost creată, ca ciornă.",
       "eventsRepeated": {
         "one": "S-a creat {count} dată nouă.",
         "few": "S-au creat {count} date noi.",
         "other": "S-au creat {count} de date noi."
       },
-      "repeatStopped": "Seria e oprită: nu se mai creează date noi.",
+      "repeatStopped": "Recurența a fost oprită.",
       "repeatPublishOn": "Publicarea automată e pornită.",
       "repeatPublishOff": "Publicarea automată e oprită.",
       "bibsAssigned": {
@@ -3843,19 +3843,19 @@
       "interestRemoved": "Adresa a fost retrasă de la „Anunță-mă”.",
       "interestNotFound": "Adresa nu era la „Anunță-mă”.",
       "eventsArchived": {
-        "one": "{count} eveniment arhivat.",
-        "few": "{count} evenimente arhivate.",
-        "other": "{count} de evenimente arhivate."
+        "one": "Arhivat: {count} eveniment.",
+        "few": "Arhivate: {count} evenimente.",
+        "other": "Arhivate: {count} de evenimente."
       },
       "eventsPublished": {
-        "one": "{count} eveniment publicat.",
-        "few": "{count} evenimente publicate.",
-        "other": "{count} de evenimente publicate."
+        "one": "Publicat: {count} eveniment.",
+        "few": "Publicate: {count} evenimente.",
+        "other": "Publicate: {count} de evenimente."
       },
       "eventsDeleted": {
-        "one": "{count} eveniment șters.",
-        "few": "{count} evenimente șterse.",
-        "other": "{count} de evenimente șterse."
+        "one": "Șters: {count} eveniment.",
+        "few": "Șterse: {count} evenimente.",
+        "other": "Șterse: {count} de evenimente."
       },
       "PUBLISHED": "Publicat. Este pe site în ambele limbi.",
       "IN_REVIEW": "Trimis spre verificare.",
@@ -3870,9 +3870,9 @@
       "revoked": "Accesul a fost retras.",
       "registrationConfirmed": "Înscrierea a fost confirmată; emailul cu numărul e pus la coadă.",
       "registrationWaitlisted": "Nu mai era loc: înscrierea a intrat pe lista de așteptare.",
-      "bibSet": "Numărul a fost salvat.",
-      "checkedIn": "Marcat prezent.",
-      "checkinUndone": "Prezența a fost anulată.",
+      "bibSet": "Număr salvat.",
+      "checkedIn": "Prezent la masă.",
+      "checkinUndone": "Nu mai e marcat prezent.",
       "registrationCreated": "Persoana a fost adăugată; emailul e pus la coadă.",
       "nameCorrected": "Numele a fost schimbat.",
       "registrationCancelled": "Înscrierea a fost anulată; emailul e pus la coadă.",
@@ -3889,7 +3889,7 @@
         "few": "{count} înscrieri șterse definitiv.",
         "other": "{count} de înscrieri șterse definitiv."
       },
-      "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
+      "registrationDeleted": "Înscriere ștearsă definitiv.",
       "outboxSent": {
         "one": "{count} email trimis acum.",
         "few": "{count} emailuri trimise acum.",
@@ -3903,15 +3903,15 @@
         "other": "Email pus la coadă pentru {count} de participanți."
       },
       "participantMessageDuplicate": "Mesajul fusese trimis deja; nu s-a pus nimic la coadă a doua oară.",
-      "legalDraftCreated": "Ciorna a fost creată.",
-      "legalDraftSaved": "Ciorna a fost salvată.",
+      "legalDraftCreated": "Ciornă nouă.",
+      "legalDraftSaved": "Ciornă salvată.",
       "platformApproved": {
         "one": "{count} text aprobat și în vigoare.",
         "few": "{count} texte aprobate și în vigoare.",
         "other": "{count} de texte aprobate și în vigoare."
       },
       "legalVersionApproved": "Versiunea a fost aprobată și este în vigoare.",
-      "legalVersionDeleted": "Ciorna a fost ștearsă.",
+      "legalVersionDeleted": "Ciornă ștearsă.",
       "legalVersionWithdrawn": "Versiunea a fost retrasă.",
       "legalVersionErased": "Versiunea a fost ștearsă definitiv.",
       "albumCreated": "Albumul a fost creat.",
@@ -3929,12 +3929,12 @@
       "emailCopy": "Textul emailului a fost salvat.",
       "emailCopyReset": "Textul emailului a revenit la cel al platformei.",
       "emailCopySamples": "Valorile de exemplu au fost înlocuite cu câmpuri.",
-      "botCheckOn": "Verificarea anti-bot este pornită.",
-      "botCheckOff": "Verificarea anti-bot este oprită.",
-      "honeypotOn": "Honeypot-ul este pornit.",
-      "honeypotOff": "Honeypot-ul este oprit.",
-      "neonPlan": "Planul Neon a fost salvat.",
-      "jobCadence": "Intervalul a fost salvat.",
+      "botCheckOn": "Anti-bot: pornit.",
+      "botCheckOff": "Anti-bot: oprit.",
+      "honeypotOn": "Honeypot: pornit.",
+      "honeypotOff": "Honeypot: oprit.",
+      "neonPlan": "Plan Neon salvat.",
+      "jobCadence": "Interval salvat.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
     }

@@ -65,7 +65,8 @@ describe("§NNN ToastProvider", () => {
 
   it("is a polite status region with a close button, one Snackbar at a time, that a click elsewhere never dismisses", () => {
     expect(source).toContain('role="status"');
-    expect(source).toContain("closeText={t(\"close\")}");
+    // Its own 44-pixel close button, named for a screen reader; MUI's is 28 px.
+    expect(source).toMatch(/<IconButton aria-label=\{t\("close"\)\}[\s\S]*?sx=\{\{ minWidth: 44, minHeight: 44 \}\}>/);
     expect(source).toMatch(/if \(reason === "clickaway"\) return;/);
     expect(source).toContain("autoHideDuration={TOAST_AUTO_HIDE_MS}");
     expect(source).toMatch(/\{current && \(\s*<Snackbar/);

@@ -3799,7 +3799,7 @@
   "Feedback": {
     "close": "Close",
     "toast": {
-      "saved": "Your changes were saved.",
+      "saved": "Saved.",
       "event": "The event was saved.",
       "eventSeries": {
         "one": "Saved on {count} date of the series.",
@@ -3807,14 +3807,14 @@
         "other": "Saved on {count} dates of the series."
       },
       "created": "The event was created, as a draft.",
-      "createdPublished": "The event was created and published.",
+      "createdPublished": "Created and published: on the site in both languages.",
       "duplicated": "The copy was created, as a draft.",
       "eventsRepeated": {
         "one": "{count} new date was created.",
         "few": "{count} new dates were created.",
         "other": "{count} new dates were created."
       },
-      "repeatStopped": "The series is stopped: no new dates are made.",
+      "repeatStopped": "The recurrence was stopped.",
       "repeatPublishOn": "Automatic publication is on.",
       "repeatPublishOff": "Automatic publication is off.",
       "bibsAssigned": {
@@ -3843,19 +3843,19 @@
       "interestRemoved": "The address was removed from “Notify me”.",
       "interestNotFound": "That address was not on “Notify me”.",
       "eventsArchived": {
-        "one": "{count} event archived.",
-        "few": "{count} events archived.",
-        "other": "{count} events archived."
+        "one": "Archived: {count} event.",
+        "few": "Archived: {count} events.",
+        "other": "Archived: {count} events."
       },
       "eventsPublished": {
-        "one": "{count} event published.",
-        "few": "{count} events published.",
-        "other": "{count} events published."
+        "one": "Published: {count} event.",
+        "few": "Published: {count} events.",
+        "other": "Published: {count} events."
       },
       "eventsDeleted": {
-        "one": "{count} event deleted.",
-        "few": "{count} events deleted.",
-        "other": "{count} events deleted."
+        "one": "Deleted: {count} event.",
+        "few": "Deleted: {count} events.",
+        "other": "Deleted: {count} events."
       },
       "PUBLISHED": "Published. It is on the site in both languages.",
       "IN_REVIEW": "Sent for review.",
@@ -3870,9 +3870,9 @@
       "revoked": "Access was withdrawn.",
       "registrationConfirmed": "The registration is confirmed; the email with the number is queued.",
       "registrationWaitlisted": "No place left: the registration joined the waiting list.",
-      "bibSet": "The number was saved.",
-      "checkedIn": "Checked in.",
-      "checkinUndone": "The check-in was undone.",
+      "bibSet": "Number saved.",
+      "checkedIn": "Present at the desk.",
+      "checkinUndone": "No longer checked in.",
       "registrationCreated": "The person was added; the email is queued.",
       "nameCorrected": "The name was changed.",
       "registrationCancelled": "The registration was cancelled; the email is queued.",
@@ -3889,7 +3889,7 @@
         "few": "{count} registrations erased.",
         "other": "{count} registrations erased."
       },
-      "registrationDeleted": "The registration was erased.",
+      "registrationDeleted": "Registration erased for good.",
       "outboxSent": {
         "one": "{count} email sent now.",
         "few": "{count} emails sent now.",
@@ -3903,15 +3903,15 @@
         "other": "Email queued for {count} participants."
       },
       "participantMessageDuplicate": "The message had already been sent; nothing was queued again.",
-      "legalDraftCreated": "The draft was created.",
-      "legalDraftSaved": "The draft was saved.",
+      "legalDraftCreated": "New draft.",
+      "legalDraftSaved": "Draft saved.",
       "platformApproved": {
         "one": "{count} text approved and in effect.",
         "few": "{count} texts approved and in effect.",
         "other": "{count} texts approved and in effect."
       },
       "legalVersionApproved": "The version is approved and in effect.",
-      "legalVersionDeleted": "The draft was deleted.",
+      "legalVersionDeleted": "Draft deleted.",
       "legalVersionWithdrawn": "The version was withdrawn.",
       "legalVersionErased": "The version was erased.",
       "albumCreated": "The album was created.",
@@ -3929,12 +3929,12 @@
       "emailCopy": "The email's wording was saved.",
       "emailCopyReset": "The email's wording is the platform's again.",
       "emailCopySamples": "The sample values were replaced with fields.",
-      "botCheckOn": "The anti-bot check is on.",
-      "botCheckOff": "The anti-bot check is off.",
-      "honeypotOn": "The honeypot is on.",
-      "honeypotOff": "The honeypot is off.",
-      "neonPlan": "The Neon plan was saved.",
-      "jobCadence": "The interval was saved.",
+      "botCheckOn": "Anti-bot: on.",
+      "botCheckOff": "Anti-bot: off.",
+      "honeypotOn": "Honeypot: on.",
+      "honeypotOff": "Honeypot: off.",
+      "neonPlan": "Neon plan saved.",
+      "jobCadence": "Interval saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed."
     }

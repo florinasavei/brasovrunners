@@ -66,15 +66,20 @@ export default function ConfirmDialog({
           </DialogContentText>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel} autoFocus sx={TAP_TARGET} data-testid="confirm-dialog-cancel">
+      {/*
+        Two verbs that may be long ("Renunță" and "Anulează înscrierea") in a paper 256 px wide at
+        320 px: the row wraps, each button a full line of its own, rather than overflowing the
+        paper — where the second button's middle lands outside it and a tap hits the backdrop.
+      */}
+      <DialogActions sx={{ flexWrap: "wrap", gap: 1, "& > :not(:first-of-type)": { ml: 0 } }}>
+        <Button onClick={onCancel} autoFocus sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }} data-testid="confirm-dialog-cancel">
           {spec.cancelLabel}
         </Button>
         <Button
           variant="contained"
           color={spec.destructive ? "error" : "primary"}
           onClick={onConfirm}
-          sx={TAP_TARGET}
+          sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
           data-testid="confirm-dialog-confirm"
         >
           {spec.confirmLabel}
