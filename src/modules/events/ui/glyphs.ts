@@ -2,6 +2,7 @@ import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
@@ -90,6 +91,11 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * calendar"): an event held with another organization, on the listing card's chip, beside the
  * calendar entry and on the event page's overline — the same glyph the facts' "Împreună cu" row
  * has worn since §168, so the marker and the row it summarises are one picture.
+ *
+ * `headlamp` is a torch that is lit (§NNN; the owner, 2026-09-25: "a headlamp icon for the events
+ * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
+ * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
+ * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -101,6 +107,7 @@ export const GLYPHS = {
   series: EventRepeatIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
+  headlamp: FlashlightOnIcon,
   partner: HandshakeIcon,
 };
 

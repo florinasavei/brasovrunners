@@ -22,7 +22,7 @@ import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import GlyphChip from "./GlyphChip";
-import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
+import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
 import { orderRoutePills, type Pill } from "./route-pills";
 
 /**
@@ -458,7 +458,10 @@ export default async function EventFacts({
     ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
-  let routePills = orderRoutePills({ difficulty: difficultyPill, distance: distancePill, elevation: elevationPill });
+  // Bring a headlamp (§NNN): a lit torch and the word, after the route's numbers and before the
+  // cost — only on an event the organizer marked; an unmarked one says nothing about light.
+  const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;
+  let routePills = orderRoutePills({ difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill });
 
   if (compact) {
     /*
@@ -488,7 +491,13 @@ export default async function EventFacts({
       pay are the page's). No pill for what the club has not stated: a null cost is unstated, not
       free (AGENTS.md §1.2).
     */
-    const cardPills: Pill[] = orderRoutePills({ surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill });
+    const cardPills: Pill[] = orderRoutePills({
+      surface: surfacePill,
+      difficulty: difficultyPill,
+      distance: distancePill,
+      elevation: elevationPill,
+      headlamp: headlampPill,
+    });
     if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
 
     /*
@@ -608,6 +617,8 @@ export default async function EventFacts({
       route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
     }
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
+    // The headlamp (§NNN), with its glyph like the pill it is on the card and the page, before the cost.
+    if (event.headlampRequired) route.push(withGlyph(GLYPHS.headlamp, t("headlamp")));
     // The coin for the cost, below, is the closed set's other glyph (§112).
     /*
       The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its
@@ -767,7 +778,13 @@ export default async function EventFacts({
   // The Facebook event (§144): where the club's people say "going".
   if (links && event.facebookEventUrl) routeLinks.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
   if (event.surface && (routePills.length > 0 || routeLinks.length > 0)) {
-    routePills = orderRoutePills({ surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill });
+    routePills = orderRoutePills({
+      surface: surfacePill,
+      difficulty: difficultyPill,
+      distance: distancePill,
+      elevation: elevationPill,
+      headlamp: headlampPill,
+    });
   }
   if (routePills.length > 0 || routeLinks.length > 0) {
     rows.push({

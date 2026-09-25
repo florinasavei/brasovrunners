@@ -70,7 +70,7 @@ export type SummaryWords = {
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
-  course: { route: string; km: string; elevation: string };
+  course: { route: string; km: string; elevation: string; headlamp: string };
   links: { strava: string; facebook: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
@@ -412,7 +412,7 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
   return visibility === "NAMES" ? words.startList.shown : words.startList.hidden;
 }
 
-type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl">;
+type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl"> & { headlampRequired?: boolean };
 
 /** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */
 function distanceWords(words: SummaryWords, distanceMeters: number | null | undefined): string | null {
@@ -420,7 +420,7 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
   return km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null;
 }
 
-/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · traseu`, or `Nimic completat`. */
+/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu`, or `Nimic completat` (the headlamp, §NNN). */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
@@ -431,6 +431,7 @@ export function courseSummary(
     labels.difficulty,
     distanceWords(words, event?.distanceMeters),
     event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
+    event?.headlampRequired ? words.course.headlamp : null,
     event?.routeUrl ? words.course.route : null,
   ]);
   return line || words.nothing;

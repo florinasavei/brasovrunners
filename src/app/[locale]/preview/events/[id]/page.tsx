@@ -108,6 +108,7 @@ export default async function PreviewEventPage({ params }: Props) {
     featured: event.featured,
     distanceMeters: event.distanceMeters,
     elevationGainMeters: event.elevationGainMeters,
+    headlampRequired: event.headlampRequired,
     registrationMode: event.registrationMode,
     registrationOpensAt: event.registrationOpensAt,
     registrationClosesAt: event.registrationClosesAt,
