@@ -7,6 +7,8 @@ import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
+import { describeStoredImage, type StoredFacts, type StoredFactsLabels } from "@/modules/media/ui/stored-facts";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 // A client island already, so it makes the element itself; the glyph is the registry's (§318).
@@ -18,13 +20,17 @@ const UploadGlyph = ACTION_ICONS.upload;
  * ## Why a client island, and why it resizes
  *
  * A photo from a phone is 3–8 MB; a request to a serverless function may carry 4.5 MB
- * (Vercel's limit); a bucket of originals would be twenty times the size of a bucket of what
- * the site actually shows. All three are solved in one place: the browser decodes each photo
- * (`createImageBitmap` with `imageOrientation: "from-image"`, so a portrait shot stays
- * upright), draws it onto a canvas no larger than 2000px on its long side, and posts that as
- * WebP — ~300–600 kB — one request per photo, so a failed upload is one photo to retry and not a
- * batch. The server re-checks everything and makes its own variants (`modules/media/images.ts`);
- * this is the part that has to happen where the original is.
+ * (Vercel's limit). So the browser decodes each photo (`createImageBitmap` with
+ * `imageOrientation: "from-image"`, so a portrait shot stays upright) and, only when it is too
+ * large for the server or wider than anything the site shows, draws it smaller on a canvas
+ * (`browser-shrink.ts`, §176) — one request per photo, so a failed upload is one photo to retry
+ * and not a batch. The server re-checks everything and makes its own ladder of widths
+ * (`modules/media/images.ts`, §NNN); this is the part that has to happen where the original is.
+ *
+ * Beside the button, the quality (§NNN): "normal" unless the person says otherwise, remembered
+ * for the session, sent with each photo and checked by the route. After the upload, what the
+ * last photo became — its size, the quality, the bytes — so the choice is not a guess the second
+ * time.
  *
  * That is the case §1.5 asks a client island to make: nothing here is decoration, and there is
  * no server-only way to shrink a file before it is sent. With JavaScript off the control shows
@@ -40,11 +46,15 @@ export default function PhotoUploader({
     uploading: string;
     done: string;
     failed: string;
+    quality: ImageQualityLabels;
+    stored: StoredFactsLabels;
   };
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: string[] } | null>(null);
+  const [lastStored, setLastStored] = useState<StoredFacts | null>(null);
+  const [quality, setQuality] = useImageQuality();
 
   const shrink = shrinkImageInBrowser;
 
@@ -52,14 +62,21 @@ export default function PhotoUploader({
     const list = Array.from(files);
     const failed: string[] = [];
     setProgress({ done: 0, total: list.length, failed });
+    setLastStored(null);
     for (const [index, file] of list.entries()) {
       try {
         const body = new FormData();
         // The shrunk photo, named after the original so the server records the name it had.
-        body.append("file", await shrink(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
+        // Shrunk to what the choice keeps (§NNN): 4000 pixels for «Înaltă», 3000 otherwise.
+        body.append("file", await shrink(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
         body.append("originalFilename", file.name);
+        body.append("quality", quality);
         const response = await fetch(uploadUrl, { method: "POST", body });
         if (!response.ok) failed.push(file.name);
+        else {
+          const answer = (await response.json()) as { stored?: StoredFacts };
+          if (answer.stored) setLastStored(answer.stored);
+        }
       } catch {
         failed.push(file.name);
       }
@@ -85,9 +102,12 @@ export default function PhotoUploader({
           if (event.target.files && event.target.files.length > 0) void upload(event.target.files);
         }}
       />
-      <Button component="label" htmlFor="photo-upload" variant="contained" disabled={busy} startIcon={<UploadGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
-        {labels.choose}
-      </Button>
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", columnGap: 3, rowGap: 1 }}>
+        <Button component="label" htmlFor="photo-upload" variant="contained" disabled={busy} startIcon={<UploadGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
+          {labels.choose}
+        </Button>
+        <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={busy} />
+      </Box>
       {progress && (
         <Box sx={{ mt: 1.5, maxWidth: 480 }} aria-live="polite">
           <Typography variant="body2" color="text.secondary">
@@ -96,6 +116,11 @@ export default function PhotoUploader({
               : labels.done.replace("{total}", String(progress.total - progress.failed.length))}
           </Typography>
           <LinearProgress variant="determinate" value={(progress.done / progress.total) * 100} sx={{ mt: 0.5 }} />
+          {!busy && lastStored && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="photo-stored">
+              {describeStoredImage(lastStored, labels.stored, document.documentElement.lang || "ro")}
+            </Typography>
+          )}
           {progress.failed.length > 0 && (
             <Typography variant="body2" color="error" sx={{ mt: 0.5 }}>
               {labels.failed.replace("{names}", progress.failed.join(", "))}

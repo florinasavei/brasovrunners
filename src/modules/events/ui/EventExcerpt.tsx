@@ -105,7 +105,7 @@ export default function EventExcerpt({
   if (!hasRichTextContent(doc)) return null;
   return (
     <Box sx={place === "card" ? CARD_EXCERPT_SX : PAGE_EXCERPT_SX} data-testid={place === "card" ? "card-excerpt" : undefined}>
-      <RichText body={doc} links={place !== "card"} />
+      <RichText body={doc} links={place !== "card"} pictures={place === "card" ? "card" : "page"} />
     </Box>
   );
 }

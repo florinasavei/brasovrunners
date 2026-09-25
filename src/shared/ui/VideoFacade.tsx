@@ -44,6 +44,8 @@ const PLAY_BUTTON_SIZE = 44;
 export default function VideoFacade({
   embedSrc,
   posterUrl,
+  posterSrcSet,
+  posterSizes,
   title,
   labels,
 }: {
@@ -51,6 +53,13 @@ export default function VideoFacade({
   embedSrc: string;
   /** This site's own stored copy of the thumbnail, or `null` for the plain dark facade. */
   posterUrl: string | null;
+  /**
+   * A club poster's stored widths and how wide the facade is drawn (§NNN, `media/ladder.ts`),
+   * so a phone takes a rung rather than the master; absent for YouTube's own thumbnail, which is
+   * one small file. Plain strings, computed by the caller.
+   */
+  posterSrcSet?: string;
+  posterSizes?: string;
   /** The iframe's accessible title, and the poster image's `alt` (found by re-review: an empty
    *  `alt` left the poster with no text alternative at all). */
   title: string;
@@ -93,6 +102,8 @@ export default function VideoFacade({
               <Box
                 component="img"
                 src={posterUrl}
+                srcSet={posterSrcSet}
+                sizes={posterSizes}
                 alt={title}
                 loading="lazy"
                 sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}

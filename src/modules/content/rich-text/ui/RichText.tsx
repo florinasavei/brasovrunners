@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Fragment, type ReactNode } from "react";
+import { type PictureColumn, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import {
   readRichText,
   type RichTextBlock,
@@ -34,7 +35,20 @@ import { tableSx } from "./table-layout";
  * ninety-character address wrapped over two lines of a card was one of the holes the owner pointed
  * at. The event page keeps every link.
  */
-export default function RichText({ body, links = true }: { body: unknown; links?: boolean }) {
+export default function RichText({
+  body,
+  links = true,
+  pictures = "page",
+}: {
+  body: unknown;
+  links?: boolean;
+  /**
+   * The column the body is drawn in (§NNN, `media/ladder.ts`): the event page's wide one by
+   * default, a standing page's measure, or a listing card. It becomes each picture's `sizes`,
+   * which is how the browser picks the smallest stored width that is still sharp there.
+   */
+  pictures?: PictureColumn;
+}) {
   const doc = readRichText(body);
   const blocks = doc.content ?? [];
   /**
@@ -48,7 +62,7 @@ export default function RichText({ body, links = true }: { body: unknown; links?
   return (
     <>
       {blocks.map((block, index) => (
-        <Fragment key={index}>{renderBlock(block, floats, links)}</Fragment>
+        <Fragment key={index}>{renderBlock(block, floats, links, pictures)}</Fragment>
       ))}
       {floats && <Box sx={{ clear: "both" }} />}
     </>
@@ -60,7 +74,7 @@ export default function RichText({ body, links = true }: { body: unknown; links?
  * written before the alignment existed, and a false one emits exactly the styles it emitted
  * before: the clearing rules are not merely no-ops there, they are absent.
  */
-function renderBlock(block: RichTextBlock, floats = false, links = true): ReactNode {
+function renderBlock(block: RichTextBlock, floats = false, links = true, pictures: PictureColumn = "page"): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
@@ -72,6 +86,9 @@ function renderBlock(block: RichTextBlock, floats = false, links = true): ReactN
           videoId={block.attrs.videoId}
           caption={block.attrs.caption}
           poster={block.attrs.poster}
+          posterWidth={block.attrs.posterWidth ?? null}
+          posterHeight={block.attrs.posterHeight ?? null}
+          pictures={pictures}
           widthPercent={block.attrs.widthPercent}
           align={block.attrs.align}
           floats={floats}
@@ -87,18 +104,31 @@ function renderBlock(block: RichTextBlock, floats = false, links = true): ReactN
       // rectangle they drew. The window is emitted only when there is a crop, so every picture
       // written before today renders the markup it rendered yesterday, byte for byte.
       const crop = cropGeometry(block.attrs.crop, block.attrs);
+      /*
+        The ladder (§NNN): a picture stored since then names its smaller siblings, and `sizes`
+        says how wide it is drawn here — the column's share of the screen, magnified by the crop
+        when there is one, because a cropped photograph is drawn `1 / crop.w` times its window.
+        A picture from before has no siblings, gets no `srcset`, and renders the markup it
+        rendered yesterday. A card's picture is always the card's width (`CARD_EXCERPT_SX`).
+      */
+      const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
+      const sizes = srcSet
+        ? pictureSizes(pictures, pictures === "card" ? 100 : block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
+        : undefined;
       return (
         <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
           {crop ? (
             // No `width`/`height` attributes inside: the window reserves the space from the
             // crop's own shape, and the photograph is laid over it at whatever size that takes.
             <Box className="rt-crop" sx={cropWindowSx(crop)}>
-              <Box component="img" src={block.attrs.src} alt={block.attrs.alt} loading="lazy" sx={cropImageSx(crop)} />
+              <Box component="img" src={block.attrs.src} srcSet={srcSet} sizes={sizes} alt={block.attrs.alt} loading="lazy" sx={cropImageSx(crop)} />
             </Box>
           ) : (
             <Box
               component="img"
               src={block.attrs.src}
+              srcSet={srcSet}
+              sizes={sizes}
               alt={block.attrs.alt}
               width={block.attrs.width ?? undefined}
               height={block.attrs.height ?? undefined}
@@ -235,7 +265,7 @@ function renderBlock(block: RichTextBlock, floats = false, links = true): ReactN
                       rowSpan={cell.attrs?.rowspan}
                     >
                       {cell.content.map((inner, innerIndex) => (
-                        <Fragment key={innerIndex}>{renderBlock(inner, false, links)}</Fragment>
+                        <Fragment key={innerIndex}>{renderBlock(inner, false, links, pictures)}</Fragment>
                       ))}
                     </Box>
                   ))}
