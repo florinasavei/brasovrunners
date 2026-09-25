@@ -42,7 +42,8 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
   let staffId: string | undefined;
 
   beforeAll(async () => {
-    for (const key of ["PRIVACY_NOTICE", "EVENT_DECLARATION"] as const) {
+    // The club's terms (§421) with them: a public submission is refused while none is approved.
+    for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
       const translations: LegalDocumentTranslationInput[] = [
         { locale: "ro", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
         { locale: "en", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
@@ -125,6 +126,7 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: false,
     listOptOut: false,
