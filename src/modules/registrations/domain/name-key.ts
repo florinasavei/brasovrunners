@@ -1,7 +1,7 @@
 import { foldName } from "./name-fold";
 
 /**
- * Whose registration a row is, on an address that may carry several runners (§NNN, a family on one
+ * Whose registration a row is, on an address that may carry several runners (§389, a family on one
  * address; BR-REQ-032).
  *
  * The participant is still the address, canonicalized (§74): one inbox, one participant, one

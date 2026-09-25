@@ -10,7 +10,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the family flow switches itself on with the schema (`family-gate.ts`).
+ * §389 — the family flow switches itself on with the schema (`family-gate.ts`).
  *
  * Migration `0072` adds the new key beside the one-registration-per-address constraint; the old
  * constraint is dropped by a contract migration of its own in a later release (AGENTS.md §7.6).
@@ -74,7 +74,7 @@ const submission = (firstName: string, at: Date = NOW) => ({
   renderedAt: new Date(at.getTime() - 30_000).toISOString(),
 });
 
-describe("§NNN before the contract release: one registration per address, as before", () => {
+describe("§389 before the contract release: one registration per address, as before", () => {
   it("says the flow is closed while the old constraint stands", async () => {
     expect(await familyRegistrationOpen(db)).toBe(false);
   });

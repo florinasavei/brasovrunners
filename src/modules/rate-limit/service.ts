@@ -42,7 +42,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   // retrying uses two or three; a script filling a mailbox uses hundreds.
   "registration-submit": { limit: 5, windowMs: 60 * 60_000 },
   /**
-   * The emailed link that registers another person on the same address (§NNN), its own bucket
+   * The emailed link that registers another person on the same address (§389), its own bucket
    * on the same key — the canonical identity, hashed. §19.4's per-address limit holds
    * behind the link too, but sharing "registration-submit" would let a family of four spend seven
    * of its five (one form, three re-sends for a link, three links). Ten an hour is the highest

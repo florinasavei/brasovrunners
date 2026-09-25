@@ -489,7 +489,7 @@ export type TemplateData = {
    */
   myRegistrationsUrl?: string;
   /**
-   * The link for another person on one address (§NNN, `REGISTER_ANOTHER_PERSON`): the club's limit
+   * The link for another person on one address (§389, `REGISTER_ANOTHER_PERSON`): the club's limit
    * of registrations per address as it stood when the form was sent, and whether the address had
    * reached it — then the message says so and carries no link. Both from the row's payload: the
    * email says what the submission decided.
@@ -821,7 +821,7 @@ const T = {
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
     /**
-     * The form sent again with a registered address and another runner's name (§NNN): nothing was
+     * The form sent again with a registered address and another runner's name (§389): nothing was
      * created, and this is the address's answer. Two shapes: the question and the link to the form
      * for the other person; or, when the address already carries the club's limit at the event, the
      * sentence that says so and no link. Addressed to the inbox, not to one runner — a parent reads
@@ -878,7 +878,7 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
-    /** After the body of the link for another person (§NNN): the club's limit, whoever wrote the words. */
+    /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
@@ -1192,7 +1192,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
 };
 
 /**
- * "4 persoane", "o persoană" / "4 people", "one person" (§NNN): how many runners one address may
+ * "4 persoane", "o persoană" / "4 people", "one person" (§389): how many runners one address may
  * register, as the words the two sentences about the limit say it — the number is the club's
  * setting, carried on the row, never a literal here. `countForm`'s Romanian forms (§341); the
  * limit's bounds (1–10) never reach the "de" form, and it is spelled for any number all the same.
@@ -1312,7 +1312,7 @@ export function buildTemplateContent(
   // The organizer's message is written per send (§364): there is no stored wording to apply, and a
   // hand-made entry for it in the setting must not replace what the organizer wrote this time.
   /*
-    The link for another person, at the address's limit (§NNN), is the platform's sentence alone:
+    The link for another person, at the address's limit (§389), is the platform's sentence alone:
     it is a statement about the address's state — like "you were already registered" (§235) — and
     the club's words for this message are the question and the link, which this send carries
     neither of. A club text would otherwise offer a button the message does not have.
@@ -1381,7 +1381,7 @@ export function buildTemplateContent(
       ...(data.bibProvisional && data.bibNumber !== undefined
         ? [copy.bibProvisional(data.bibNumber)]
         : []),
-      // The club's limit under the link for another person (§NNN), whoever wrote the words above:
+      // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
       ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.addressCap !== undefined
         ? [copy.addressCapLine(data.addressCap)]

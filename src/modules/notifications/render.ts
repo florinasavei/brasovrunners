@@ -65,14 +65,14 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
-  // The form for another person on the same address (§NNN) — only while the address has room; at
+  // The form for another person on the same address (§389) — only while the address has room; at
   // the club's limit the message carries no link, and nothing is minted for it.
   REGISTER_ANOTHER_PERSON: "REGISTER_ANOTHER_PERSON",
 };
 
 /**
  * Where each purpose's link opens: a page of its own, the secret in its path — except the form for
- * another person on one address (§NNN), which is the event's own registration form with the secret
+ * another person on one address (§389), which is the event's own registration form with the secret
  * in `?another=` (`ANOTHER_PERSON_PARAM`), built below with the event's slug.
  */
 const ROUTE_BY_PURPOSE: Record<
@@ -188,7 +188,7 @@ async function renderRow(
 
   const data: TemplateData = {
     /*
-      The runner this message is about: the registration's own name when there is one (§NNN). One
+      The runner this message is about: the registration's own name when there is one (§389). One
       address may carry a family, and the participant's `default_name` is only whoever filled the
       form first — the confirmation of a second child must greet that child, and the club's archive
       copy must name who signed. Without a registration (the "my registrations" link), the address's name.
@@ -428,7 +428,7 @@ async function renderRow(
   }
 
   /*
-    The link for another person on one address (§NNN): what the submission decided, from the row —
+    The link for another person on one address (§389): what the submission decided, from the row —
     the club's limit as it stood then, and whether the address had reached it. At the limit the
     message is the sentence that says so, and no token is minted for a link it does not carry.
   */

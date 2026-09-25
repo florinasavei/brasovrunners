@@ -17,7 +17,7 @@ vi.mock("next-intl/server", async () => {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Registration" }),
   };
 });
-// Whether a second runner may be registered on one address yet (§NNN, `family-gate.ts`).
+// Whether a second runner may be registered on one address yet (§389, `family-gate.ts`).
 const gate = { open: false };
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedDeadlines: async () => deadlines,
@@ -61,7 +61,7 @@ describe("§377 the five steps say the club's numbers", () => {
   });
 });
 
-describe("§NNN the five steps say how a family registers on one address", () => {
+describe("§389 the five steps say how a family registers on one address", () => {
   beforeEach(() => {
     gate.open = false;
   });

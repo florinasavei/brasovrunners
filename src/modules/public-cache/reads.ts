@@ -383,7 +383,7 @@ export async function cachedDeadlines(): Promise<Deadlines> {
 }
 
 /**
- * Whether one address may carry a family at an event yet (§NNN, `registrations/family-gate.ts`),
+ * Whether one address may carry a family at an event yet (§389, `registrations/family-gate.ts`),
  * for the one line of the five steps that says how — never promised before the schema allows it.
  * Keyed by the migration this build was compiled against, so the release that drops the old
  * constraint asks afresh rather than reading yesterday's "no"; the day's ceiling bounds the rest.

@@ -186,7 +186,7 @@ export async function updateDeadlinesAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * "Maxim de înscrieri pe o adresă (pe eveniment)" (§NNN), in the "Termene" fold: the same gates and
+ * "Maxim de înscrieri pe o adresă (pe eveniment)" (§389), in the "Termene" fold: the same gates and
  * the same shape as the deadlines' save above — the Administrator at the door and in the service,
  * one whole number the service bounds, a refusal back as the form's state with the box as typed.
  */

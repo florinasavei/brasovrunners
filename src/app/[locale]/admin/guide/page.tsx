@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * `roles`: whose section this is; the signed-in role's come first and open (§103). `key`: the one
- * section this page adds to, "family" (§NNN) — a last line while the flow is not switched on yet.
+ * section this page adds to, "family" (§389) — a last line while the flow is not switched on yet.
  */
 type GuideSection = { title: string; who: string; steps: string[]; roles: StaffRole[]; key?: string };
 
@@ -54,7 +54,7 @@ export default async function GuidePage({ params }: Props) {
   */
   const words = deadlineWords(locale, await deadlinesForThisRequest());
   /*
-    "A family on one address" (§NNN) states the club's limit per address as the setting says it —
+    "A family on one address" (§389) states the club's limit per address as the setting says it —
     never a literal — and says, while the schema still keeps one registration per address
     (`family-gate.ts`), that the flow is not switched on yet.
   */

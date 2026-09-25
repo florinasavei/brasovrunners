@@ -247,7 +247,7 @@ export async function consumeAndSignDeclaration(
 }
 
 /**
- * The form for another person on a registered address (§NNN): what the page behind the emailed
+ * The form for another person on a registered address (§389): what the page behind the emailed
  * link may know before anything is spent — whose address it is (to show, fixed and read-only) and
  * which event the link is for. Charged one attempt like every token read (§39), and a read-only
  * transaction all the way (GET never mutates, §12.8).
@@ -276,7 +276,7 @@ export async function readAnotherPersonLink(
 }
 
 /**
- * Register another person on the address the link was sent to (§NNN): the token spent and the
+ * Register another person on the address the link was sent to (§389): the token spent and the
  * registration created in one transaction, so a refusal — this runner is on the address already,
  * the address is at the club's limit, a field the form must correct — rolls the spend back with
  * everything else and the same link still works. The address is the token's participant's, never

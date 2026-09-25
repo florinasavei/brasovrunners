@@ -768,7 +768,7 @@ export type RegistrationOrigin = {
   honeypotOn?: boolean;
   /**
    * This public submission came through the link emailed to an address that is already registered
-   * at the event (§NNN, `REGISTER_ANOTHER_PERSON`): the form for another person on that address.
+   * at the event (§389, `REGISTER_ANOTHER_PERSON`): the form for another person on that address.
    * The caller has spent the token in the same transaction and names the participant it was issued
    * to; the address is that participant's, never one typed into the form. It changes three things:
    * the per-identity throttle is not spent (the token's own throttle bounds this door, §39); the
@@ -845,7 +845,7 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
   if (!participant) return;
 
   /*
-    Every runner the address holds at the event, each with their own link (§NNN): a family's
+    Every runner the address holds at the event, each with their own link (§389): a family's
     inbox asking "send it again" gets one message per person still owing a step, never only the
     first one's. Asked without an event, the newest active registration, as before.
   */
@@ -1047,7 +1047,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * people at a desk is the case this must not obstruct, and they are already authenticated
    * and authorized.
    */
-  // Behind the emailed link for another person (§NNN) the address is throttled too, in a bucket of
+  // Behind the emailed link for another person (§389) the address is throttled too, in a bucket of
   // its own ("registration-link-submit", ten an hour): sharing this one would let a family of four
   // spend seven of its five — the form, three re-sends for a link, three links.
   if (origin.source === "PUBLIC") {
@@ -1134,7 +1134,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   */
   const settings = await currentDeadlines(db);
   /*
-    The club's limit of registrations per address (§NNN), read the same way and for the same reason
+    The club's limit of registrations per address (§389), read the same way and for the same reason
     as the deadlines: before the transaction, from the instance's memo, never under the event's lock.
     A staff entry never meets it — it refuses a registered address out loud before calling in.
   */
@@ -1142,7 +1142,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
   await db.transaction(async (tx) => {
     /*
-      The event row, locked, before anything is read about the address (§NNN; §214 took the lock
+      The event row, locked, before anything is read about the address (§389; §214 took the lock
       for the insert alone). Which runners the address already holds is now what decides between a
       re-send, the email for another person and a new registration — and two members of one family
       pressing at once must not both find the address empty. Taken before the participant row, the
@@ -1171,7 +1171,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const decision = decideSubmission({ rows, legalName, via, familyOpen, cap });
 
     /*
-      Behind the emailed link only (§NNN): whoever holds it has read the address's inbox, so the
+      Behind the emailed link only (§389): whoever holds it has read the address's inbox, so the
       refusal may say what it is about — and it rolls the transaction back, the token's spend
       included, so the same link still works once the name is corrected or a place on the address
       frees up. Each is a marker the form's summary turns into a sentence, never a value.
@@ -1188,7 +1188,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     if (decision.kind === "offerAnother") {
       /*
-        Another runner, on an address that is registered here (§NNN; the owner: "people must have
+        Another runner, on an address that is registered here (§389; the owner: "people must have
         this in the flow via email, like 'you are already registered, register for another
         person?'").
 
@@ -1336,7 +1336,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     const carriedFields = {
       registeredName: legalName,
-      // The runner's key follows the name (§NNN): one address, several runners, told apart by it.
+      // The runner's key follows the name (§389): one address, several runners, told apart by it.
       nameKey: registrationNameKey(legalName),
       // A restart records what the person answered *now*. Carrying last year's t-shirt size
       // forward because a cancelled row happened to hold one is not a kindness.
@@ -1389,7 +1389,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // The event row first, like every other allocation (rule 1 above, §10.6): a verified
       // participant's restart used to allocate against the capacity the page had read, with
       // no lock — the one door into the allocator that skipped the serialization point
-      // (`DECISIONS.md` §151). Held since the transaction's first statement (§NNN).
+      // (`DECISIONS.md` §151). Held since the transaction's first statement (§389).
       const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings);
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
       // A hold, a place on the waiting list, or an offer made on the way to somebody else when
@@ -1410,7 +1410,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
       It is the same serialization point every other allocation uses (§10.6, §151), so the
       cost is contention this event already has, not a new kind of it. Taken at the top of the
-      transaction since §NNN, where the address's runners are read.
+      transaction since §389, where the address's runners are read.
     */
     const lockedForCreate = locked;
 

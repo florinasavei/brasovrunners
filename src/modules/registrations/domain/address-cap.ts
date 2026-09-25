@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * "Maxim de înscrieri pe o adresă (pe eveniment)" — how many registrations one email address may
- * carry at one event (§NNN; the owner, 2026-09-25: "sometimes people register as a family… there
+ * carry at one event (§389; the owner, 2026-09-25: "sometimes people register as a family… there
  * must be a max number of people with the same email").
  *
  * One club setting (`platform_settings`, key `registrations-per-address`), in the shape of the

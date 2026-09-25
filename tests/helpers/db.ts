@@ -83,7 +83,7 @@ export async function createTestDatabase(): Promise<{
 /** Truncate every table so one test cannot see another's rows. Children before parents. */
 export async function resetTables(db: TestDatabase): Promise<void> {
   // The club's deadlines are memoized per process (§377); a test that set them must not leave
-  // its numbers to the next test's empty database. The same for the limit per address (§NNN).
+  // its numbers to the next test's empty database. The same for the limit per address (§389).
   forgetCachedDeadlines();
   forgetCachedAddressCap();
   await db.delete(auditLogs);

@@ -3,7 +3,7 @@ import type { Database } from "@/db/types";
 
 /**
  * Whether a second runner may be registered on an address that already holds a registration at an
- * event (§NNN) — which is a question about the schema, not a setting.
+ * event (§389) — which is a question about the schema, not a setting.
  *
  * The rule that made one address one registration is a unique constraint,
  * `registrations_event_participant_unique`. Its replacement — one registration per address, per

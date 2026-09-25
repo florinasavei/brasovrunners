@@ -11,11 +11,11 @@ import { decideSubmission, type FamilyRow } from "@/modules/registrations/domain
 import { registrationNameKey, sameRunner } from "@/modules/registrations/domain/name-key";
 
 /**
- * §NNN — a family on one address (BR-REQ-032-03, BR-REQ-034-02, BR-REQ-036-02): the runner's key,
+ * §389 — a family on one address (BR-REQ-032-03, BR-REQ-034-02, BR-REQ-036-02): the runner's key,
  * the club's limit per address and its bounds, and the decision every submission is put through.
  */
 
-describe("§NNN the runner's key on an address", () => {
+describe("§389 the runner's key on an address", () => {
   it("folds what a keyboard does and nothing a person decides (foldName, §179, §314)", () => {
     expect(registrationNameKey("Ștefan  Pop")).toBe("stefan pop");
     expect(sameRunner("Ștefan Pop", "STEFAN POP")).toBe(true);
@@ -36,7 +36,7 @@ describe("§NNN the runner's key on an address", () => {
   });
 });
 
-describe("§NNN the club's limit of registrations per address", () => {
+describe("§389 the club's limit of registrations per address", () => {
   it("is four unless set, between one and ten", () => {
     expect(DEFAULT_ADDRESS_CAP).toEqual({ registrationsPerAddress: 4 });
     expect(ADDRESS_CAP_RULE).toEqual({ min: 1, max: 10, default: 4 });
@@ -72,7 +72,7 @@ describe("§NNN the club's limit of registrations per address", () => {
   });
 });
 
-describe("§NNN what one submission does on an address", () => {
+describe("§389 what one submission does on an address", () => {
   let id = 0;
   const row = (registeredName: string, status: RegistrationStatus = "CONFIRMED"): FamilyRow => ({ id: `r${++id}`, status, registeredName });
   const cap = { registrationsPerAddress: 3 };

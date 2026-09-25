@@ -1,7 +1,7 @@
 ALTER TYPE "public"."email_action_token_purpose" ADD VALUE 'REGISTER_ANOTHER_PERSON';--> statement-breakpoint
 ALTER TYPE "public"."email_message_type" ADD VALUE 'REGISTER_ANOTHER_PERSON';--> statement-breakpoint
 ALTER TABLE "registrations" ADD COLUMN "name_key" text;--> statement-breakpoint
--- The key of every row written before the column (§NNN): an approximation in SQL of `foldName`
+-- The key of every row written before the column (§389): an approximation in SQL of `foldName`
 -- (case, whitespace, Romanian and common Latin diacritics, the apostrophe's shape). The service
 -- never reads this column to decide anything — it folds the names themselves under the event's
 -- lock — so an approximation costs nothing; and `registrations_event_participant_unique` still

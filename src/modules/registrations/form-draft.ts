@@ -38,7 +38,7 @@ const MAX_BYTES = 3_800;
   the render time (it is the clock for the next attempt, not the last one).
 */
 /*
-  …and the secret of the link for another person on one address (§NNN): an action token is never
+  …and the secret of the link for another person on one address (§389): an action token is never
   kept anywhere but the email it was sent in (§14.5), sealed cookie or not — the page reads it from
   its own address again.
 */

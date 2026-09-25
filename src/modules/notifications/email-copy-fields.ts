@@ -182,7 +182,7 @@ function fieldsData(): TemplateData {
     staffRole: field("staffRole"),
     inviterName: field("inviterName"),
     // The email link's window as the club set it (§377): the link for another person on one
-    // address lives exactly that long (§NNN), and its sentence says so through the field.
+    // address lives exactly that long (§389), and its sentence says so through the field.
     confirmationHours: field("confirmationHours"),
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
   };
@@ -242,7 +242,7 @@ export function placeholdersUsedBy(messageType: EmailMessageType, locale: EmailL
 
 /**
  * Messages about an address rather than a person: "registration is open" (§146), and the link for
- * another person on a registered address (§NNN) — it answers whoever filled the form, often a parent,
+ * another person on a registered address (§389) — it answers whoever filled the form, often a parent,
  * so it greets nobody and names no runner.
  */
 const NO_PERSON: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_OPENED", "REGISTER_ANOTHER_PERSON"]);

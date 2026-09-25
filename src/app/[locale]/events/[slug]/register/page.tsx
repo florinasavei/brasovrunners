@@ -152,7 +152,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another } = await searchParams;
   /*
-    The form for another person on a registered address (§NNN), opened from the link emailed to it.
+    The form for another person on a registered address (§389), opened from the link emailed to it.
     Read, never spent — a GET changes nothing (§12.8), and a mail scanner opening the link leaves it
     working; the submission spends it. A link that works puts the form in its family shape: the
     address fixed and shown, the telephone optional. One that does not — spent, lapsed, for another
@@ -223,7 +223,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       ? WAITLIST_FULL
       : null;
   /*
-    The three refusals of the form behind the emailed link (§NNN), each a marker matched against its
+    The three refusals of the form behind the emailed link (§389), each a marker matched against its
     one literal. The first two only ever reach a page that holds the link — whoever reads them has
     read the address's inbox, so they may say what they are about (§39); the third is the link
     itself no longer working, said on the plain form it sends the person back to. The limit is the
@@ -271,7 +271,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     .toISOString()
     .slice(0, 10);
   const t = await getTranslations("Registration");
-  // "4 persoane" / "4 people": the club's limit per address, in words that agree with it (§NNN, §341).
+  // "4 persoane" / "4 people": the club's limit per address, in words that agree with it (§389, §341).
   const people = capCount !== null ? t(`another.people.${countForm(capCount, locale)}`, { count: capCount }) : "";
   // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
@@ -500,11 +500,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 its own, and the catalogue already had the sentence for it.
               */}
               {alreadyOnAddress ? (
-                // Behind the emailed link (§NNN): this runner is on the address already, and the
+                // Behind the emailed link (§389): this runner is on the address already, and the
                 // link still works for somebody else.
                 t("another.alreadyOnAddress")
               ) : addressAtCap ? (
-                // Behind the emailed link (§NNN): the address has the club's limit; nothing was registered.
+                // Behind the emailed link (§389): the address has the club's limit; nothing was registered.
                 t("another.atCap", { people })
               ) : anotherLinkRefused ? (
                 // The link is spent, lapsed or for another event: the plain form, and how to get a new one.
@@ -567,14 +567,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          {/* The form for another person on the address (§NNN): whose address, and what happens next. */}
+          {/* The form for another person on the address (§389): whose address, and what happens next. */}
           {family && (
             <Alert severity="info" sx={{ mb: 2 }} data-testid="another-person-notice">
               <AlertTitle>{t("another.title")}</AlertTitle>
               {t("another.intro", { email: family.email, people })}
             </Alert>
           )}
-          {/* A link that no longer works, opened (§NNN): one sentence, then the ordinary form. */}
+          {/* A link that no longer works, opened (§389): one sentence, then the ordinary form. */}
           {anotherLinkGone && !error && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="another-person-link-gone">
               {t("another.linkGone")}
@@ -666,7 +666,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
               />
               <input type="hidden" name="renderedAt" value={now.toISOString()} />
-              {/* The link's secret, back to the action that spends it (§NNN) — never kept in the draft. */}
+              {/* The link's secret, back to the action that spends it (§389) — never kept in the draft. */}
               {family && <input type="hidden" name={ANOTHER_PERSON_PARAM} value={family.secret} />}
 
               {/*
@@ -811,7 +811,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {family ? (
                 /*
-                  The address the link was sent to, fixed (§NNN): shown so the person knows where
+                  The address the link was sent to, fixed (§389): shown so the person knows where
                   the next message goes, read-only, and never posted — the action takes the address
                   from the token, so nothing typed here could move a registration to another inbox.
                 */
@@ -856,7 +856,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
                 countryNames={phoneNames}
-                // Optional for another person on the address (§NNN): often a child with no phone of
+                // Optional for another person on the address (§389): often a child with no phone of
                 // their own; the emergency contact below is still asked.
                 required={!family}
                 autoComplete="tel-national"

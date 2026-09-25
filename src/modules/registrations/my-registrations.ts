@@ -68,7 +68,7 @@ export async function requestMyRegistrationsLink<T extends Record<string, unknow
 export type MyRegistration = {
   id: string;
   status: RegistrationStatus;
-  /** Whose registration it is (§NNN): an address may carry a family, each person their own row. */
+  /** Whose registration it is (§389): an address may carry a family, each person their own row. */
   registeredName: string;
   eventId: string;
   eventTitle: string | null;

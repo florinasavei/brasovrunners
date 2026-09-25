@@ -30,7 +30,7 @@ type Props = {
   /** Why the fold opens by itself: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
   /**
-   * "Maxim de înscrieri pe o adresă (pe eveniment)" (§NNN): a club setting of its own, in this fold
+   * "Maxim de înscrieri pe o adresă (pe eveniment)" (§389): a club setting of its own, in this fold
    * because it is a limit a participant meets through the same messages — its own form and its own
    * save, so a refused number never costs the deadlines typed beside it.
    */

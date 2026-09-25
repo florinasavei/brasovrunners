@@ -179,7 +179,7 @@ export const registrations = pgTable(
     /**
      * Whose registration this is, as a key: `registered_name` folded the way the signature and the
      * erase confirmation compare a name (`foldName`, §179, §314) — case, whitespace, diacritics and
-     * an apostrophe's shape forgiven (§NNN, a family on one address).
+     * an apostrophe's shape forgiven (§389, a family on one address).
      *
      * The participant is the address (§74, BR-REQ-032); one address may carry several runners at
      * one event — a parent and two children — each a registration of their own, and this is what
@@ -434,13 +434,13 @@ export const registrations = pgTable(
   },
   (t) => [
     /*
-      One registration per address per event — until the contract release drops it (§NNN). While
+      One registration per address per event — until the contract release drops it (§389). While
       it stands, the family flow is switched off by itself (`registrations/family-gate.ts`): the
       public form behaves as it always did, and no "register another person" link is offered.
     */
     unique("registrations_event_participant_unique").on(t.eventId, t.participantId),
     /*
-      The key that replaces it (§NNN): one registration per address, per event, per runner — the
+      The key that replaces it (§389): one registration per address, per event, per runner — the
       runner's own name folded (`name_key`). Added now, beside the old one (expand only, AGENTS.md
       §7.6); the service decides under the event's lock, and this refuses what slips past it.
     */

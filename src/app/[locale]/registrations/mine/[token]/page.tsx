@@ -131,7 +131,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 {item.eventCancelled && <Chip size="small" color="error" label={t("mine.eventCancelledChip")} />}
               </Stack>
               {/*
-                Whose registration this is (§NNN): one address may carry a family, each person a
+                Whose registration this is (§389): one address may carry a family, each person a
                 registration of their own, so every row names its runner. Behind the address's own
                 link, which is the one place the names on it may be read.
               */}

@@ -9,7 +9,7 @@ import { forgetCachedAddressCap, memoizedAddressCap, rememberAddressCap } from "
 import { type AddressCap, addressCapSettingSchema, DEFAULT_ADDRESS_CAP, readAddressCapValue } from "./domain/address-cap";
 
 /**
- * Where the club's registrations-per-address limit is kept and read (§NNN): one `platform_settings`
+ * Where the club's registrations-per-address limit is kept and read (§389): one `platform_settings`
  * row in the shape of the club's deadlines (§377) — a strict schema, the Administrator's role
  * asserted here and not only by the hidden form, an audit row naming who changed it from what to
  * what, and a save that changes nothing writes nothing.

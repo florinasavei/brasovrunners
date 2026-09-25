@@ -144,7 +144,7 @@ export async function mintActionLink(
 }
 
 /**
- * Whether one address may carry a family yet (§NNN, `registrations/family-gate.ts`): the old
+ * Whether one address may carry a family yet (§389, `registrations/family-gate.ts`): the old
  * one-registration-per-address constraint is gone once the contract release has run. A read of the
  * catalogue, never a change to it — a spec that needs the flow skips, and says why, when it is closed.
  */
@@ -157,7 +157,7 @@ export async function familyFlowOpen(): Promise<boolean> {
   });
 }
 
-/** Every registration a public address holds, oldest first (§NNN: a family on one address). */
+/** Every registration a public address holds, oldest first (§389: a family on one address). */
 export async function registrationsByEmail(email: string): Promise<RegistrationRow[]> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<RegistrationRow>(

@@ -55,7 +55,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     that people must be able to register at all costs. It is logged so the club can see how
     often the widget does not run, and the line never carries an address.
   */
-  // Read before the bot check (§NNN): a rejected check from the family form returns to that form, the
+  // Read before the bot check (§389): a rejected check from the family form returns to that form, the
   // link still in the address bar — the token was never spent and still works.
   const another = text(form, ANOTHER_PERSON_PARAM).trim();
   const anotherPath = another ? `${path}?${ANOTHER_PERSON_PARAM}=${encodeURIComponent(another)}` : null;
@@ -74,7 +74,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   }
 
   /*
-    The form for another person on a registered address (§NNN), opened from the link emailed to
+    The form for another person on a registered address (§389), opened from the link emailed to
     that address: the token rides in a hidden field, the address is the token's — never the form's
     — and the token is spent in the same transaction that creates the registration, so a refusal
     leaves the link working. A link that does not work any more comes back as the plain form with

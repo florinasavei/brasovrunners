@@ -67,7 +67,7 @@ export async function findRegistrationById<T extends Record<string, unknown>>(
 
 /**
  * One registration of this address at this event — the active one when there is one, else the
- * newest (§NNN).
+ * newest (§389).
  *
  * Until the contract release there is at most one row to find (`registrations_event_participant_unique`),
  * and this returns it as it always did. Once an address may carry a family, a caller that asks for
@@ -94,7 +94,7 @@ export async function findRegistrationByEventAndParticipant<T extends Record<str
 }
 
 /**
- * Every registration of this address at this event, oldest first (§NNN): the runners a family
+ * Every registration of this address at this event, oldest first (§389): the runners a family
  * entered on one address, each their own row, whatever their state. `submitRegistration` reads it
  * under the event's lock and decides by the runner's name (`domain/name-key.ts`) whether a
  * submission is somebody already there or another person.
@@ -252,7 +252,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       createdByStaffUserId: input.createdByStaffUserId ?? null,
       locale: input.locale,
       registeredName: input.registeredName,
-      // Whose registration this is on the address (§NNN): the name folded, what the unique index keeps.
+      // Whose registration this is on the address (§389): the name folded, what the unique index keeps.
       nameKey: registrationNameKey(input.registeredName),
 
       // BR-REQ-031-04. Every detail may be absent; the display name may not, and is derived

@@ -146,7 +146,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       reader of this page sees it.
     */
     deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
-    // How many registrations one address may carry at an event (§NNN), straight through like the deadlines.
+    // How many registrations one address may carry at an event (§389), straight through like the deadlines.
     readAddressCap(db),
   ]);
   const t = await getTranslations("Admin");
@@ -158,7 +158,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     hold: pageWords.hold,
     offer: pageWords.offer,
     reminder: pageWords.reminder ?? "",
-    // The club's limit per address, for the one message that states it (§NNN).
+    // The club's limit per address, for the one message that states it (§389).
     people: t(`emails.addressCap.people.${countForm(perAddress, locale)}`, { count: perAddress }),
   };
   /*
@@ -200,7 +200,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     const sample = emailSampleFor(messageType, emailLocale);
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
-    // And the club's limit per address, on the message that states it (§NNN): the link's shape.
+    // And the club's limit per address, on the message that states it (§389): the link's shape.
     if (messageType === "REGISTER_ANOTHER_PERSON") sample.addressCap = perAddress;
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is

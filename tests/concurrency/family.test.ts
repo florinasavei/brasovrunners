@@ -16,9 +16,9 @@ import { familyRegistrationOpen, LEGACY_ONE_PER_ADDRESS_CONSTRAINT } from "@/mod
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 
 /**
- * §NNN × BR-REQ-034-02 — a family on one address under real concurrency.
+ * §389 × BR-REQ-034-02 — a family on one address under real concurrency.
  *
- * Which runners an address holds at an event is read under the event's lock since §NNN, so two
+ * Which runners an address holds at an event is read under the event's lock since §389, so two
  * members of one family pressing at once cannot both find the address empty, and the club's limit
  * per address cannot be passed by pressing the emailed links together. PGlite cannot express either
  * race (`tests/helpers/db.ts`); this runs against the real server `yarn test:concurrency` uses.
@@ -33,7 +33,7 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", () => {
+describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date("2026-09-25T10:00:00.000Z");

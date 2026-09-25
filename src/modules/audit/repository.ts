@@ -146,7 +146,7 @@ export type AuditAction =
   | "job_cadence.changed"
   /** The club's deadlines ("Termene", §377): which ones moved, each from and to. */
   | "deadlines.changed"
-  /** How many registrations one address may carry at one event (§NNN), from and to. */
+  /** How many registrations one address may carry at one event (§389), from and to. */
   | "registrationsPerAddress.changed"
   /**
    * The database's brakes changed from `/admin/tasks` (§335): the compute's size ceiling and the

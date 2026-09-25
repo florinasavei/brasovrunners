@@ -15,7 +15,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — "Maxim de înscrieri pe o adresă (pe eveniment)", the club's setting in the shape of the
+ * §389 — "Maxim de înscrieri pe o adresă (pe eveniment)", the club's setting in the shape of the
  * deadlines (§377): four unless set; the Administrator's alone, asserted on the server; every
  * change audited from and to; a save that changes nothing writes nothing; a value this code cannot
  * read is the default; and the submission paths read it through the one memoized function.
@@ -47,7 +47,7 @@ async function refusal(promise: Promise<unknown>) {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN the registrations-per-address limit as a setting", () => {
+describe("§389 the registrations-per-address limit as a setting", () => {
   it("is four when nobody has set it", async () => {
     expect(await readAddressCap(db)).toEqual({ cap: DEFAULT_ADDRESS_CAP, updatedAt: null });
     expect(await currentAddressCap(db)).toEqual({ registrationsPerAddress: 4 });

@@ -618,7 +618,7 @@ export async function correctRegisteredName<T extends Record<string, unknown>>(
   if (current.registeredName === trimmed) return current;
 
   /*
-    The runner's key follows the name (§NNN): it is what tells two people on one address apart, so
+    The runner's key follows the name (§389): it is what tells two people on one address apart, so
     a corrected name that is another registration's on the same address and event would make one
     person of two. Refused with the name box's own field, before the unique index would refuse it
     as a driver error — and read under the event's lock, the one `submitRegistration` takes before

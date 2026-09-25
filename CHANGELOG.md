@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.93-2026-09-25
+
+- **A family on one address**: sending the form again with a registered address and another name emails a single-use link to register the other person on the same address, up to the club's limit per address ("Maxim de înscrieri pe o adresă", default 4). Each person confirms, signs and is erased alone. The flow switches on with the contract release that drops the old one-per-address constraint (migration 0072). §389.
 ## BR-V1.92-2026-09-25
 
 - **«Traseul»: a route / training description per language** — free text with pit stops and a map picture, under `#route` on the event page. When a language has one, the GPX, the map and the Strava route link move into it and the facts row points to it as «Despre traseu». Migration `0071`. §387.

@@ -13,7 +13,7 @@ import { confirmDialog } from "./support/confirm";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN — a family on one address, through the inbox (BR-REQ-032-03, BR-REQ-031-01 criterion 3,
+ * §389 — a family on one address, through the inbox (BR-REQ-032-03, BR-REQ-031-01 criterion 3,
  * BR-REQ-036-02). The owner, 2026-09-25: "people must have this in the flow via email, like 'you are
  * already registered, register for another person?'".
  *
@@ -27,7 +27,7 @@ import { openFold } from "./support/fold";
  * (`family-gate.ts`); before it, the first case below holds as today's behaviour and the second is
  * skipped, saying why.
  */
-test.describe("§NNN a family on one address", () => {
+test.describe("§389 a family on one address", () => {
   test.describe.configure({ timeout: 150_000 });
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
@@ -99,7 +99,7 @@ test.describe("§NNN a family on one address", () => {
   });
 
   test("the emailed link registers the other person on the same address; each confirms and signs alone", async ({ page }) => {
-    test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§NNN)");
+    test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -153,11 +153,11 @@ test.describe("§NNN a family on one address", () => {
 });
 
 /**
- * §NNN — "Maxim de înscrieri pe o adresă (pe eveniment)" in the "Termene" fold, the Administrator's,
+ * §389 — "Maxim de înscrieri pe o adresă (pe eveniment)" in the "Termene" fold, the Administrator's,
  * and the staff guide's section that states it. Desktop only, like the deadlines beside it: one
  * `platform_settings` row, two projects, one database — and the default comes back at the end.
  */
-test.describe("§NNN the limit per address, set and stated", () => {
+test.describe("§389 the limit per address, set and stated", () => {
   // One after the other: the Organizer reads the row the Administrator's test changes and restores.
   test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {

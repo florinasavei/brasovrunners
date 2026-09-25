@@ -114,7 +114,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
         </Box>
       </Box>
       {/*
-        A family on one address (§NNN; the owner: "document this … then that person can receive up
+        A family on one address (§389; the owner: "document this … then that person can receive up
         to 4 QR codes"): the one way to add a second runner is to send the form again, and the next
         step arrives by email. Said only once the schema allows it (`family-gate.ts`) — before that,
         sending the form again only re-sends the first person's message, and this would promise

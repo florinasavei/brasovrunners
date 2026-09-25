@@ -15,7 +15,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — a family on one address, through the inbox (BR-REQ-032-03, BR-REQ-034-02, BR-REQ-036-02).
+ * §389 — a family on one address, through the inbox (BR-REQ-032-03, BR-REQ-034-02, BR-REQ-036-02).
  *
  * The owner, 2026-09-25: "sometimes people register as a family… there must be a max number of
  * people with the same email… 'you are already registered, register for another person?'". The
@@ -48,7 +48,7 @@ type EventInput = Parameters<typeof submitRegistration>[1];
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
-  // The contract release (§NNN): one address may now carry several runners at an event.
+  // The contract release (§389): one address may now carry several runners at an event.
   await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique`);
 });
 afterAll(async () => close());
@@ -151,7 +151,7 @@ async function signFor(event: EventInput, registrationId: string, typedName: str
   return signDeclaration(db, event, registrationId, { accepted: true, typedName, idDocument: "BV 123456", documentId: document!.id, contentSha256: document!.contentSha256 }, now);
 }
 
-describe("§NNN (b) the form sent again with a registered address and another name", () => {
+describe("§389 (b) the form sent again with a registered address and another name", () => {
   it("creates nothing, and queues one email to the address with a single-use link to the form", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
@@ -203,7 +203,7 @@ describe("§NNN (b) the form sent again with a registered address and another na
   });
 });
 
-describe("§NNN the link creates the other person's registration, and everybody signs alone", () => {
+describe("§389 the link creates the other person's registration, and everybody signs alone", () => {
   it("creates the second registration under the same participant, which then confirms and signs on its own", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
@@ -310,7 +310,7 @@ describe("§NNN the link creates the other person's registration, and everybody 
   });
 });
 
-describe("§NNN the club's limit of registrations per address", () => {
+describe("§389 the club's limit of registrations per address", () => {
   it("at the limit, the email says so and carries no link — and nothing is minted", async () => {
     await updateAddressCap(db, await admin(), { registrationsPerAddress: "2" }, NOW);
     const event = await createEvent();
@@ -371,7 +371,7 @@ describe("§NNN the club's limit of registrations per address", () => {
   });
 });
 
-describe("§NNN each person is their own registration afterwards", () => {
+describe("§389 each person is their own registration afterwards", () => {
   it("erasing one leaves the other exactly as it was", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);

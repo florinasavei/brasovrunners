@@ -4,7 +4,7 @@ import { sameRunner } from "./name-key";
 import { isActiveStatus } from "./state-machine";
 
 /**
- * What one submission does on an address that may carry a family (§NNN) — the decision, apart
+ * What one submission does on an address that may carry a family (§389) — the decision, apart
  * from the writing of it, so every branch is a unit test and the service reads as the rule.
  *
  * Three doors reach it:
@@ -22,7 +22,7 @@ import { isActiveStatus } from "./state-machine";
  */
 
 /**
- * The two refusals the form behind the emailed link can give (§NNN), as the markers the page reads
+ * The two refusals the form behind the emailed link can give (§389), as the markers the page reads
  * from `?fields=` and turns into sentences: this runner is registered on the address already, and
  * the address is at the club's limit. Only ever sent to a page behind the token — the public form
  * never answers either (§39).
@@ -33,7 +33,7 @@ export const ADDRESS_AT_CAP = "addressAtCap";
 export const ANOTHER_LINK_INVALID = "anotherLink";
 /**
  * The query parameter of the emailed link that opens the event's registration form for another
- * person on the same address: the token's secret (§NNN). Only the renderer writes it and only the
+ * person on the same address: the token's secret (§389). Only the renderer writes it and only the
  * form reads it; nothing about a person travels in it.
  */
 export const ANOTHER_PERSON_PARAM = "another";
@@ -43,7 +43,7 @@ export type FamilyRow = { id: string; status: RegistrationStatus; registeredName
 export type SubmissionDecision<R extends FamilyRow> =
   /** The same runner again, still registered: re-send what the state offers, create nothing (§199, §235). */
   | { kind: "resend"; registration: R }
-  /** Another runner on a registered address, from the public form: create nothing, email the address (§NNN). */
+  /** Another runner on a registered address, from the public form: create nothing, email the address (§389). */
   | { kind: "offerAnother"; about: R; atCap: boolean }
   /** A registration of this runner that is over (cancelled, lapsed), started again (AGENTS.md §10.5). */
   | { kind: "restart"; registration: R }

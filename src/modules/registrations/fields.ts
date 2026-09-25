@@ -404,7 +404,7 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .superRefine(emergencyContactRule);
 
 /**
- * The public form for another person on an address that is registered already (§NNN), reached
+ * The public form for another person on an address that is registered already (§389), reached
  * only from the link emailed to that address. Everything the public form asks, but the runner's
  * own telephone: the second person is often a child with none, and the address — and the emergency
  * contact, still required — is how the club reaches the family. The address itself is never read

@@ -1,7 +1,7 @@
 import type { AddressCap } from "./domain/address-cap";
 
 /**
- * This server instance's copy of the club's registrations-per-address limit (§NNN), apart from
+ * This server instance's copy of the club's registrations-per-address limit (§389), apart from
  * `address-cap.ts` so the test helpers can drop it between databases without importing the
  * database — the deadlines' memo, for the same reasons and with the same minute (§377): a save is
  * on the page that made it at once and on every other instance within the minute, and what that

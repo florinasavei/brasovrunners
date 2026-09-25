@@ -9,7 +9,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN × §39 — the public form never tells a stranger whether an address is registered, now that a
+ * §389 × §39 — the public form never tells a stranger whether an address is registered, now that a
  * second name on a registered address is answered by email (AGENTS.md §19.4; BR-REQ-031-01
  * criterion 3).
  *
@@ -57,7 +57,7 @@ const { ADDRESS_CAP_SETTING_KEY } = await import("@/modules/registrations/addres
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
-  // The contract release (§NNN): the family flow is open, so every branch below is the new one.
+  // The contract release (§389): the family flow is open, so every branch below is the new one.
   await db.execute(sql`ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique`);
 });
 afterAll(async () => close());
@@ -153,7 +153,7 @@ async function registered(names: string[]) {
   return event;
 }
 
-describe("§NNN §39 the public form answers the same whatever the address holds", () => {
+describe("§389 §39 the public form answers the same whatever the address holds", () => {
   it("is byte for byte the same response for 0, 1 and the limit of registrations on the address", async () => {
     await registered([]);
     const none = await press("Maria");
