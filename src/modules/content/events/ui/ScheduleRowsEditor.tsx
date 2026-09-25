@@ -9,14 +9,16 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
-import { shiftProgrammeDates } from "@/modules/events/domain/schedule";
+import { followStartDate } from "@/modules/events/domain/schedule";
 import DateField from "@/shared/forms/pickers/DateField";
 import TimeField from "@/shared/forms/pickers/TimeField";
 import { useRecall } from "@/shared/forms/recall";
+import { DENSITY } from "@/theme/density";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
 
 const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "", place: "" };
+const BOXES = ["date", "time", "endTime", "ro", "en", "place"] as const;
 
 /** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§315). */
 function recalledRows(names: string[], value: (name: string) => string | undefined): ScheduleRowValue[] {
@@ -54,38 +56,101 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
 }
 
 /**
- * The programme's rows in the editor (`DECISIONS.md` §117): when, what in both languages,
- * where — one line each, in order. A client island for the two things a form cannot do by
+ * One row's layout (§NNN; the owner, 2026-09-25, of this card: "super ugly and inconsistent").
+ * One CSS grid per row, laid out by the width the **list** has, not the window's: from `md` up
+ * the editor's side column is pinned beside the boxes (§350), so the list is narrower on a
+ * 900-pixel window than on a 700-pixel one, and a viewport breakpoint would squeeze "Unde" to
+ * nothing exactly there. Three widths:
+ *
+ * - **Wide** (`WIDE`): Data · Ora · Până la · Unde · the bin on the first line; «Ce (română)» ·
+ *   «Ce (engleză)» side by side on the second — §362's pair, the way "Linkuri și fișiere"
+ *   (`LinkRowsEditor`) puts a row's two labels under its address.
+ * - **Medium** (`MEDIUM`): Data · Ora · Până la · the bin; "Unde" on a line of its own; the pair.
+ * - **Narrow** (a phone): every box stacked in the same order, the bin under them, at the end.
+ *
+ * The gaps are the density scale's (§380): the phone's step on a phone, the sibling lists' own
+ * step (a `Stack` `spacing={1}` in `LinkRowsEditor` and `CoHostRowsEditor`) from `sm`.
+ */
+// Measured on a production build: at 36rem "Unde" was left some 115 pixels beside the times on a
+// 700-pixel window; from 40rem it has 150 or more.
+const WIDE = "@container programme-rows (min-width: 40rem)";
+// The four MEDIUM columns need at least 9.5rem + 6.5rem + 6.5rem + 44px + three 8px gaps =
+// 428px of inner width; the row's own padding and border (12px × 2 + 2px on `sm`) take 26px off
+// the container, so the threshold has to clear 428 + 26 = 454px. 29rem (464px) is the first
+// round number past it (§NNN, the review that found 26rem overflowing from ~416 to ~454px).
+const MEDIUM = "@container programme-rows (min-width: 29rem)";
+
+const ROW_SX = {
+  display: "grid",
+  gap: { xs: DENSITY.gapSm, sm: 1 },
+  alignItems: "start",
+  p: { xs: DENSITY.gapSm, sm: 1.5 },
+  border: 1,
+  borderRadius: 1,
+  gridTemplateColumns: "minmax(0, 1fr)",
+  gridTemplateAreas: `"date" "time" "end" "place" "what" "remove"`,
+  [MEDIUM]: {
+    // The date needs its calendar button (44 pixels) beside `30.09.2027`; the two times need
+    // `10:00` and the browser's own clock beside it.
+    gridTemplateColumns: "minmax(9.5rem, 1.4fr) minmax(6.5rem, 1fr) minmax(6.5rem, 1fr) 44px",
+    gridTemplateAreas: `"date time end remove" "place place place place" "what what what what"`,
+  },
+  [WIDE]: {
+    gridTemplateColumns: "minmax(9.5rem, 10rem) minmax(6.5rem, 7.5rem) minmax(6.5rem, 7.5rem) minmax(0, 1fr) 44px",
+    gridTemplateAreas: `"date time end place remove" "what what what what what"`,
+  },
+} as const;
+
+/** «Ce (română)» · «Ce (engleză)»: side by side once there is room for two (§362), stacked on a phone. */
+const WHAT_SX = {
+  gridArea: "what",
+  display: "grid",
+  gap: { xs: DENSITY.gapSm, sm: 1 },
+  gridTemplateColumns: "minmax(0, 1fr)",
+  [MEDIUM]: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" },
+} as const;
+
+/** A 44-pixel square for the bin (BR-REQ-041-01 criterion 6), at the end of the row on a phone, beside the times from `MEDIUM`. */
+const REMOVE_SX = { gridArea: "remove", minHeight: 44, minWidth: 44, justifySelf: "end", [MEDIUM]: { justifySelf: "center" } } as const;
+
+/**
+ * The programme's rows in the editor (`DECISIONS.md` §117): when, where, and what in both
+ * languages — one card each, in order. A client island for the two things a form cannot do by
  * itself, add a row and remove one; every box posts under a name of its own,
  * `event.schedule[i].<box>`, which `admin/actions.ts#eventFieldsFrom` gathers by index. A row
- * left blank is the spare line and is dropped on save; a half-filled one is refused with its
- * number, so the organizer is told which line, not just that one is wrong.
+ * with nothing typed — a date alone is the default below, not something typed — is the spare
+ * line and is dropped on save; a half-filled one is refused with its number, so the organizer is
+ * told which line, not just that one is wrong.
  *
  * Rows keep a key of their own across removals, so removing the second line does not hand
  * the third line's boxes the second line's values.
  *
- * The rows follow the event's date: the programme is usually on the day of the event, so
- * when "Începutul evenimentului" — `startDateName`, a sibling input of the same form — moves
- * from one day to another, every row that has a date moves by the same number of days
- * (`shiftProgrammeDates`, the pure part), and a new row opens on the event's day. The date
- * box is the one controlled input for that reason; the rest stay uncontrolled. The form still
- * posts whatever is in the boxes — nothing below the form changed.
+ * **The default day is the event's** (§NNN): the spare line opens on the event's start date
+ * (`startDate`, written by the server in the event's zone), a new row on whatever the start box
+ * holds now, and the rows follow the start date: when "Începutul evenimentului" —
+ * `startDateName`, a sibling input of the same form — moves from one day to another, every row
+ * with a date moves by the same number of days and a row with none yet takes the new start
+ * (`followStartDate`, the pure part). The date box is the one controlled input for that reason;
+ * the rest stay uncontrolled. The form still posts whatever is in the boxes.
  */
 function ScheduleRowsEditorIsland({
   initial,
   labels,
   startDateName,
+  startDate,
 }: {
   initial: ScheduleRowValue[];
-  labels: { date: string; time: string; endTime: string; ro: string; en: string; place: string; add: string; remove: string; empty: string };
+  labels: { date: string; time: string; endTime: string; ro: string; en: string; place: string; add: string; remove: string; empty: string; row: string };
   /** The `name` of the event's start-date box in the same form. */
   startDateName: string;
+  /** The event's start date as the start box shows it (`YYYY-MM-DD`), or "" on the create page. */
+  startDate: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
   // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
   const recall = useRecall();
   const [rows, setRows] = useState<Array<{ key: number; value: ScheduleRowValue }>>(() =>
-    (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
+    (initial.length > 0 ? initial : [{ ...EMPTY, date: startDate }]).map((value, index) => ({ key: index, value })),
   );
   const [nextKey, setNextKey] = useState(rows.length);
   // The last complete start date the form held, so a change is measured from it. A date box
@@ -112,14 +177,13 @@ function ScheduleRowsEditorIsland({
       if (!next || next === lastStart.current) return;
       const previous = lastStart.current;
       lastStart.current = next;
-      if (!previous) return;
       setRows((current) => {
-        const shifted = shiftProgrammeDates(
+        const moved = followStartDate(
           current.map((row) => row.value),
           previous,
           next,
         );
-        return current.map((row, index) => ({ key: row.key, value: shifted[index] }));
+        return current.map((row, index) => ({ key: row.key, value: moved[index] }));
       });
     };
     scope.addEventListener("change", onChange);
@@ -127,7 +191,7 @@ function ScheduleRowsEditorIsland({
   }, [startDateName]);
 
   const add = () => {
-    const date = findStartDateInput(root.current, startDateName)?.value || lastStart.current;
+    const date = findStartDateInput(root.current, startDateName)?.value || lastStart.current || startDate;
     setRows((current) => [...current, { key: nextKey, value: { ...EMPTY, date } }]);
     setNextKey((key) => key + 1);
   };
@@ -136,7 +200,7 @@ function ScheduleRowsEditorIsland({
     setRows((current) => current.map((row) => (row.key === key ? { key, value: { ...row.value, date } } : row)));
 
   return (
-    <Stack ref={root} spacing={1.5}>
+    <Stack ref={root} spacing={{ xs: DENSITY.gapSm, sm: 1.5 }} sx={{ containerType: "inline-size", containerName: "programme-rows" }}>
       {rows.length === 0 && (
         <Typography variant="body2" color="text.secondary">
           {labels.empty}
@@ -144,47 +208,58 @@ function ScheduleRowsEditorIsland({
       )}
       {rows.map(({ key, value }, index) => {
         const name = (box: keyof ScheduleRowValue) => `event.schedule[${index}].${box}`;
+        const n = index + 1;
         return (
-          <Stack
+          <Box
             key={key}
-            direction={{ xs: "column", md: "row" }}
-            spacing={1}
-            sx={{ alignItems: { md: "flex-start" }, p: 1.5, border: 1, borderColor: "divider", borderRadius: 1 }}
+            role="group"
+            aria-label={`${labels.row} ${n}`}
+            // A box a refusal named marks its row too, as a link row does (`LinkRowsEditor`).
+            sx={{ ...ROW_SX, borderColor: BOXES.some((box) => recall.named(name(box))) ? "error.main" : "divider" }}
           >
-            {/* Wraps on a phone: the three boxes' own widths (150 + 140 + 140, each holding a
-                44-pixel button) add up to more than a phone's content width, and a `Stack`
-                does not wrap by itself. None of the three has a clear button — the row's own
-                remove button empties it in one press, and a clear button beside a calendar or
-                clock button, both held to 44 pixels (BR-REQ-041-01 criterion 6), collided with
-                the digits in a box this narrow. */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {/* Controlled, unlike the rest of the row: this is the one box the start-date
-                  effect above moves by hand, and a stale posted value under this row's *current*
-                  index (after an earlier row was removed) must never win over that move
-                  (`DateField`'s `value` prop skips its own refusal lookup for exactly this). */}
-              <DateField
-                name={name("date")}
-                label={labels.date}
-                value={value.date}
-                onValueChange={(posted) => setDate(key, posted)}
-                size="small"
-                clearable={false}
-                sx={{ width: 150 }}
-              />
-              {/* The platform's own `<input type="time">`, like the start time (`WallTimeField`),
-                  posting `HH:mm` in either language of the backoffice (§345, amended). */}
-              <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" clearable={false} sx={{ width: 140 }} />
-              <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" clearable={false} sx={{ width: 140 }} />
+            {/* Controlled, unlike the rest of the row: this is the one box the start-date
+                effect above moves by hand, and a stale posted value under this row's *current*
+                index (after an earlier row was removed) must never win over that move
+                (`DateField`'s `value` prop skips its own refusal lookup for exactly this). No
+                clear button on any of the three: the row's own bin empties it in one press, and
+                a clear button beside a calendar button, both held to 44 pixels, crowds the
+                digits in a box this narrow. */}
+            <DateField
+              name={name("date")}
+              label={labels.date}
+              value={value.date}
+              onValueChange={(posted) => setDate(key, posted)}
+              size="small"
+              clearable={false}
+              sx={{ gridArea: "date", minWidth: 0 }}
+            />
+            {/* The platform's own `<input type="time">`, like the start time (`WallTimeField`),
+                posting `HH:mm` in either language of the backoffice (§345, amended). */}
+            <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" clearable={false} sx={{ gridArea: "time", minWidth: 0 }} />
+            <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" clearable={false} sx={{ gridArea: "end", minWidth: 0 }} />
+            <TextField
+              name={name("place")}
+              id={recall.idOf(name("place"))}
+              error={recall.named(name("place"))}
+              label={labels.place}
+              defaultValue={value.place}
+              size="small"
+              sx={{ gridArea: "place", minWidth: 0 }}
+              slotProps={{ htmlInput: { maxLength: 200 } }}
+            />
+            <Box sx={WHAT_SX}>
+              <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+              <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             </Box>
-            <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <TextField name={name("place")} id={recall.idOf(name("place"))} error={recall.named(name("place"))} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <IconButton aria-label={`${labels.remove} ${index + 1}`} onClick={() => remove(key)} sx={{ minHeight: 44, minWidth: 44, alignSelf: { xs: "flex-end", md: "center" } }}>
+            {/* Last in the document, so the keyboard reaches it after every box of the row, wherever
+                the grid draws it. */}
+            <IconButton aria-label={`${labels.remove} ${n}`} onClick={() => remove(key)} sx={REMOVE_SX}>
               <DeleteIcon fontSize="small" />
             </IconButton>
-          </Stack>
+          </Box>
         );
       })}
+      {/* The same add button as every other list card of the editor (`LinkRowsEditor`, `CoHostRowsEditor`). */}
       <Button type="button" variant="text" size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: "flex-start", textTransform: "none", minHeight: 44 }}>
         {labels.add}
       </Button>
