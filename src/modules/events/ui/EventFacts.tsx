@@ -22,23 +22,17 @@ import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
-import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
+import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEvent } from "../repository";
-import { GROUP_GAP, LINE_GAP } from "./card-layout";
+import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
+import CardRegistration, { cardRegistrationLine } from "./CardRegistration";
+import { readRegistrationDoor } from "./registration-door";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
 import { buildRoutePills, orderRoutePills, routePillParts, type Pill } from "./route-pills";
 import RoutePills from "./RoutePills";
 import { DENSITY } from "@/theme/density";
-
-/**
- * The leading glyph of every row on the event page's facts (§356): one size, one colour, one
- * alignment, whichever question the row answers. The owner, 2026-09-24: "address with address
- * icons not consistent". One object, so a row cannot drift from the others; the unit test reads
- * the class Emotion gives it and finds the same one on every row.
- */
-const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
 
 /**
  * The clock in front of the time, inside the "când" line (§366; the owner, 2026-09-24, of a
@@ -167,7 +161,9 @@ const SR_ONLY_SX = {
  * Registration is not a fact of the event but a state of the moment, and the button beneath
  * these lines says it (`RegistrationCta`) — except for an event with no registration at all,
  * which has no button and deserves the one sentence "no registration needed". The compact
- * variant on a listing card has no button either, so there the state is a line of its own.
+ * variant on a listing card says the state as a line of its own — bold, with the free places —
+ * and, where the page has a registration button, carries the same button under it
+ * (`CardRegistration`, §409).
  */
 export default async function EventFacts({
   event,
@@ -586,30 +582,20 @@ export default async function EventFacts({
           ? outLink(event.mapUrl, t("openMap"), undefined, reach)
           : null;
 
-    // The state of registration — and, while the window is ahead, the date it opens rather than
-    // "not yet" (§146), read through the one helper the feed reads it through, never a formula of
-    // this file's own. And while it is open, until when (§308) — the same helper family, so the
-    // card's date is the instant the button goes away.
-    let registration: string | null = null;
-    if (mentionsRegistration) {
-      const opensAt = upcomingRegistrationOpening(event, now);
-      const closesAt = openRegistrationClosing(event, now);
-      // Inside "Înscrierile se deschid pe {date}": the weekday keeps its lower case (§349).
-      const shortDate = (date: Date) =>
-        formatDay(date, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
-      registration = opensAt
-        ? t("cta.opensOnShort", { date: shortDate(opensAt) })
-        : closesAt
-          ? t("cta.openUntilShort", { date: shortDate(closesAt) })
-          : t(`registrationState.${state}`);
-    }
+    // The state of registration and, where the page has one, its door (§409): read through the
+    // page's own `readRegistrationDoor` — one cached entry for an open race, nothing for any
+    // other card — never a formula of this file's own.
+    const registration = mentionsRegistration
+      ? cardRegistrationLine(t, locale, event, now, await readRegistrationDoor(event, now))
+      : null;
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
-    const cardLine = (key: string, Icon: Glyph, value: ReactNode, secondary = false) => (
+    // The registration line draws the same shape in `CardRegistration` (§409).
+    const cardLine = (key: string, Icon: Glyph, value: ReactNode) => (
       <Typography
         component="div"
         variant="body2"
-        color={secondary ? "text.secondary" : "text.primary"}
+        color="text.primary"
         data-fact={key}
         sx={{ display: "flex", alignItems: "flex-start", minWidth: 0 }}
       >
@@ -632,7 +618,10 @@ export default async function EventFacts({
             <RoutePills pills={cardPills} />
           </Box>
         )}
-        {registration && cardLine("registration", HowToRegIcon, registration, true)}
+        {/* The state of registration, last, where BR-REQ-011-01 criterion 18 reads it — and on a
+            card whose page has a registration door, that door too, with the free places in bold
+            (§409; the owner: "trebuie să văd butonul de înscrieri pe card"). */}
+        {registration && <CardRegistration slug={event.slug} line={registration} />}
       </Box>
     );
   }

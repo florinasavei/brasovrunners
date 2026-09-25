@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { confirmedPhrase, fillPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
+import { confirmedPhrase, fillPhrase, freePlacesPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
  * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
@@ -75,6 +75,24 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
     expect(translator("en")("cta.waitlistFull")).toBe("The places and the waiting list are full.");
     expect(translator("ro")("cta.fullNoWaitlist")).not.toMatch(/așteptare/);
     expect(translator("en")("cta.fullNoWaitlist")).not.toMatch(/waiting/);
+  });
+});
+
+describe("§409 freePlacesPhrase — the listing card's free places, out of the event's size", () => {
+  it("reads Romanian's singular, its plural and its 'de' from twenty on, the free number choosing", () => {
+    const say = translator("ro");
+    expect(freePlacesPhrase(say, "ro", 1, 10)).toBe("1 loc liber din 10");
+    expect(freePlacesPhrase(say, "ro", 7, 10)).toBe("7 locuri libere din 10");
+    expect(freePlacesPhrase(say, "ro", 19, 50)).toBe("19 locuri libere din 50");
+    expect(freePlacesPhrase(say, "ro", 20, 50)).toBe("20 de locuri libere din 50");
+    expect(freePlacesPhrase(say, "ro", 101, 150)).toBe("101 locuri libere din 150");
+  });
+
+  it("reads natural English, the noun agreeing with the free number", () => {
+    const say = translator("en");
+    expect(freePlacesPhrase(say, "en", 1, 10)).toBe("1 place left out of 10");
+    expect(freePlacesPhrase(say, "en", 7, 10)).toBe("7 places left out of 10");
+    expect(freePlacesPhrase(say, "en", 20, 50)).toBe("20 places left out of 50");
   });
 });
 

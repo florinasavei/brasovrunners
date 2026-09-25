@@ -5,7 +5,7 @@ import type { DifficultyLevel } from "./domain/difficulty";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
-import { clubNightEvent } from "./night-event";
+import { clubNightEvent, nightLine as nightWords } from "./night-event";
 import { env } from "@/shared/config/env";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { CLUB_NAME } from "@/theme/brand";
@@ -401,12 +401,8 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     programme: event.programme,
   });
   // A group run is «Alergare de noapte», as on its card and in its reminder (§394).
-  const run = event.type === "GROUP_RUN";
-  const nightLine = night.night
-    ? night.sunset
-      ? t(run ? "night.icsRun" : "night.ics", { time: night.sunset })
-      : t(run ? "night.runPill" : "night.pill")
-    : "";
+  // The start, the sunset and — when it is the reason — the end, all named (§404).
+  const nightLine = night.night ? nightWords(night, t, event.type === "GROUP_RUN", "ics") : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);

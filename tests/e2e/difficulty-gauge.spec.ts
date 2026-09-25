@@ -1,6 +1,6 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
-import { openEditorBox } from "./support/fold";
+import { cardOnListing, openEditorBox } from "./support/fold";
 
 /**
  * `DECISIONS.md` §NNN — five difficulty levels and a gauge (the owner, 2026-09-25: "vreau să fie
@@ -50,7 +50,8 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§NNN)", () => {
     test(`the listing card's compact pill keeps the word beside the gauge and fits at ${width}px`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente");
-      const card = page.locator("li", { hasText: "Tură pe Tâmpa" }).first();
+      // The "other events" fold opens by itself only up to four cards (§89): `cardOnListing` opens it (the fix origin/qa gave the old spec).
+      const card = (await cardOnListing(page, "Tură pe Tâmpa")).first();
       const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu" });
       await expect(pill).toBeVisible();
       await expect(pill).toContainText("Mediu — Dificultate");

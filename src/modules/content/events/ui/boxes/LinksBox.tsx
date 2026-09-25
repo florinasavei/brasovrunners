@@ -12,22 +12,23 @@ import LinkRowsEditor from "../LinkRowsEditor";
 import { type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * Card 1.3, "Linkuri și fișiere" (§332, §350, §358), inside "Ce fel de eveniment", directly after
- * the course because that is what most of them are — the GPX on Google Drive, the map on a
- * platform — then the rest: a PDF, the album, the results, and the Strava and Facebook events.
+ * "Linkuri și fișiere" (§332, §350, §358, §406): its own card, at the place the page draws its
+ * section, `#links` — after the share links, before the programme (§406; it was card 1.3 inside
+ * "Ce fel de eveniment", and moved whole). The GPX on Google Drive, the map on a platform, a PDF,
+ * the album, the results, and the Strava and Facebook events, which the page draws in the route's
+ * row; with a route description, the GPX and the map go to `#route` (§387).
  * Links, never an upload (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
- * side in the row, never in tabs: a label belongs to its one row, so nesting the card changes
- * nothing about how a language is written here.
+ * side in the row, never in tabs: a label belongs to its one row.
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
- * open: the first box says once that the settings are not theirs (§358).
+ * open: the type's box says that the settings are not theirs (§358).
  */
-export default async function LinksBox({ event, mayEditSettings, locale }: BoxProps & { locale: string }) {
+export default async function LinksBox({ event, mayEditSettings, locale, heading }: BoxProps & { locale: string }) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const { words } = await summaryWords();
   const kindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
-  const card = { level: 3, id: "box-links", title: t("editor.boxes.links.title"), aside: linksSummary(words, event, kindLabels, locale) } as const;
+  const card = { id: "box-links", title: heading ?? t("editor.boxes.links.title"), aside: linksSummary(words, event, kindLabels, locale) } as const;
   if (!mayEditSettings) return <Panel {...card} />;
 
   const linkRows = readEventLinks(event?.links ?? null).map((link) => ({

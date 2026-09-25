@@ -288,8 +288,8 @@ describe("the calendar file", () => {
       endsAt: new Date("2026-11-18T15:30:00.000Z"),
       nightOverride: null,
     };
-    expect(calendarDescription(november, labelsRo)).toContain("Eveniment de noapte — apusul la 16:44, ia o frontală");
-    expect(calendarDescription(november, labelsEn)).toContain("Night event — sunset at 16:44, bring a headlamp");
+    expect(calendarDescription(november, labelsRo)).toContain("Eveniment de noapte: începe la 16:00, apusul la 16:44, se termină la 17:30 — ia o frontală");
+    expect(calendarDescription(november, labelsEn)).toContain("Night event: starts at 16:00, sunset at 16:44, ends at 17:30 — bring a headlamp");
     // The same start ending at 16:45: in the light throughout, no line.
     expect(calendarDescription({ ...november, endsAt: new Date("2026-11-18T14:45:00.000Z") }, labelsRo)).not.toContain("de noapte");
 
@@ -298,11 +298,11 @@ describe("the calendar file", () => {
       { startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: null, label: "Start", place: null },
       { startsAt: new Date("2026-11-18T15:30:00.000Z"), endsAt: new Date("2026-11-18T15:45:00.000Z"), label: "Premiere", place: null },
     ];
-    expect(calendarDescription({ ...november, endsAt: null, programme }, labelsRo)).toContain("Eveniment de noapte — apusul la 16:44");
+    expect(calendarDescription({ ...november, endsAt: null, programme }, labelsRo)).toContain("Eveniment de noapte: începe la 16:00, apusul la 16:44, ultimul punct din program la 17:45 — ia o frontală");
 
     // A group run is «Alergare de noapte» in the file, as on its card and in its reminder.
-    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).toContain("Alergare de noapte — apusul la 16:44, ia o frontală");
-    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsEn)).toContain("Night run — sunset at 16:44, bring a headlamp");
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).toContain("Alergare de noapte: începe la 16:00, apusul la 16:44, se termină la 17:30 — ia o frontală");
+    expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsEn)).toContain("Night run: starts at 16:00, sunset at 16:44, ends at 17:30 — bring a headlamp");
     expect(calendarDescription({ ...november, type: "GROUP_RUN" }, labelsRo)).not.toContain("Eveniment de noapte");
   });
 

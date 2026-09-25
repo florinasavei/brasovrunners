@@ -10,7 +10,7 @@ import { env } from "@/shared/config/env";
 import { eventInputConstraints } from "../../constraints";
 import { placeSummary } from "../box-summaries";
 import PlaceToBeAnnounced from "../PlaceToBeAnnounced";
-import { type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import { type BoxProps, type LanguageEntry, requiredLine, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
  * Box 5, "Locul" (§350): whether the place is announced at all (§328), then the meeting point once
@@ -34,7 +34,7 @@ import { type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryW
  * The whole box is the Organizer's and up — the place is a setting of the event, in both languages
  * (§207: "Organizatorul organizează"); a reader who may not change it reads it as text.
  */
-export default async function PlaceBox({ event, mayEditSettings, risk, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
+export default async function PlaceBox({ event, mayEditSettings, risk, languages, heading }: BoxProps & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
   const { words } = await summaryWords();
@@ -47,18 +47,25 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
   // pin, else this pair, else the club's place. Said as it was saved; a change shows after a save.
   const typed = event ? typedCoordinates(event) : null;
   const weatherPlace = event ? forecastPlace({ ...event, locationToBeAnnounced: false }, env.CLUB_COORDINATES) : null;
+  // What publication still needs from this box, in each language (§406): the meeting point.
+  const required = await requiredLine("place", event, languages);
 
   return (
     <Panel
       collapsible
       id="box-place"
-      title={t("editor.boxes.place.title")}
-      aside={placeSummary(words, event, translations)}
+      title={heading ?? t("editor.boxes.place.title")}
+      aside={
+        <>
+          {required}
+          {" · "}
+          {placeSummary(words, event, translations)}
+        </>
+      }
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
-      {risk && place && <RiskLine>{t("editor.risk.place", { count: risk.count, place })}</RiskLine>}
+      {risk && place && <RiskLine>{t("editor.risk.place", { place })}</RiskLine>}
       {mayEditSettings ? (
         /* The switch and the two names are the island; their constraints are read here, off the
            schema, and handed to it as data — it only takes `required` away while the switch is on. */

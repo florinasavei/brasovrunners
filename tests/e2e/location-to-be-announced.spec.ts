@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, in a browser.
@@ -66,7 +66,8 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "The place is announced soon.");
-    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
+    await expect(editorBox(page, "Locul").getByTestId("required-place")).toHaveText("complet");
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await confirmDialog(page, "Creezi și publici evenimentul?");

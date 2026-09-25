@@ -322,6 +322,23 @@ export function renderBilingual(
   };
 }
 
+/**
+ * The reminder's night line's facts (§394, §404): empty strings for what is not named. `after`
+ * marks the shape where the sun alone made the call and the start was already past sunset — no
+ * end was ever named, and the line says the start came after that sunset instead of leaving the
+ * sunset looking like the reason on its own. `sunrise` (non-empty) marks the dawn shape: an
+ * early-morning start before that day's sunrise, named instead of the evening's sunset.
+ */
+type NightReminderLine = {
+  sunset: string;
+  sunrise: string;
+  start: string;
+  end: string;
+  endSource: "event" | "programme" | null;
+  isGroupRun: boolean;
+  after: boolean;
+};
+
 /** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
@@ -384,6 +401,30 @@ export type TemplateData = {
    * then — the owner calls a run a run.
    */
   nightEventIsGroupRun?: boolean;
+  /**
+   * Set alongside `nightEventSunset` (§404): the date's start on the event's clock, "19:00" — named
+   * before the sunset, so the sunset is never read as the start. Absent or empty: the line says the
+   * sunset alone.
+   */
+  nightEventStart?: string;
+  /**
+   * Set alongside `nightEventSunset` only when the end is why the date is dark (§394, §404): that
+   * end on the event's clock, and whether «Durata» (`event`) or the day's last programme row
+   * (`programme`) gave it.
+   */
+  nightEventEnd?: string;
+  nightEventEndSource?: "event" | "programme";
+  /**
+   * Set alongside `nightEventSunset` (§404): the sun alone made the call and the start was
+   * already past that sunset, so no end was ever named — the line says the start came *after*
+   * the sunset instead of leaving the sunset looking like the reason on its own.
+   */
+  nightEventAfter?: boolean;
+  /**
+   * Set alongside `nightEventSunset` (§404) for the dawn shape: the start is before that day's
+   * sunrise, "07:52" — the line names the sunrise, never an evening sunset the run is not after.
+   */
+  nightEventSunrise?: string;
   /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
@@ -944,9 +985,15 @@ const T = {
      * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
      * noapte» on every other type.
      */
-    nightEvent: (sunset: string, isGroupRun: boolean) => {
-      const label = isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
-      return sunset ? `${label}: apusul e la ${sunset}. Ia o frontală.` : `${label}: ia o frontală.`;
+    nightEvent: (night: NightReminderLine) => {
+      const label = night.isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
+      if (!night.sunset) return `${label}: ia o frontală.`;
+      // Every time named, the start first (§404): «începe la 19:00, apusul la 19:00» is not «apusul începe» — the same wording as the pill and the calendar (§404 nit).
+      const start = night.start ? `începe la ${night.start}, ` : "";
+      if (night.sunrise) return `${label}: ${start}înainte de răsăritul de la ${night.sunrise}. Ia o frontală.`;
+      if (night.after) return `${label}: ${start}după apusul de la ${night.sunset}. Ia o frontală.`;
+      const end = night.end ? (night.endSource === "programme" ? `, ultimul punct din program la ${night.end}` : `, se termină la ${night.end}`) : "";
+      return `${label}: ${start}apusul la ${night.sunset}${end}. Ia o frontală.`;
     },
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
@@ -1243,9 +1290,14 @@ const T = {
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
     /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
-    nightEvent: (sunset: string, isGroupRun: boolean) => {
-      const label = isGroupRun ? "Night run" : "Night event";
-      return sunset ? `${label}: sunset is at ${sunset}. Bring a headlamp.` : `${label}: bring a headlamp.`;
+    nightEvent: (night: NightReminderLine) => {
+      const label = night.isGroupRun ? "Night run" : "Night event";
+      if (!night.sunset) return `${label}: bring a headlamp.`;
+      const start = night.start ? `starts at ${night.start}, ` : "";
+      if (night.sunrise) return `${label}: ${start}before sunrise at ${night.sunrise}. Bring a headlamp.`;
+      if (night.after) return `${label}: ${start}after the ${night.sunset} sunset. Bring a headlamp.`;
+      const end = night.end ? (night.endSource === "programme" ? `, the programme's last row at ${night.end}` : `, ends at ${night.end}`) : "";
+      return `${label}: ${start}sunset at ${night.sunset}${end}. Bring a headlamp.`;
     },
     addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     footer: "Reply to this email with questions.",
@@ -1494,7 +1546,17 @@ export function buildTemplateContent(
         reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
       */
       ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
-        ? [copy.nightEvent(data.nightEventSunset, data.nightEventIsGroupRun === true)]
+        ? [
+            copy.nightEvent({
+              sunset: data.nightEventSunset,
+              sunrise: data.nightEventSunrise ?? "",
+              start: data.nightEventStart ?? "",
+              end: data.nightEventEnd ?? "",
+              endSource: data.nightEventEndSource ?? null,
+              isGroupRun: data.nightEventIsGroupRun === true,
+              after: data.nightEventAfter === true,
+            }),
+          ]
         : []),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),

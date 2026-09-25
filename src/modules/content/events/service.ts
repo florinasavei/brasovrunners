@@ -230,13 +230,15 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
 
   /**
    * The programme's rows (§117). A row left blank in every box is the editor's spare line and
-   * is dropped; anything else must say when, and what in both languages — the page shows the
-   * rows in either language, so a label in one is a row missing from the other. The end, when
-   * given, is a time on the same day, at or after the start.
+   * is dropped — and so is one whose only box is its date, because the editor writes that date
+   * itself: every row opens on the event's start date (§405), so a date alone is the default the
+   * organizer never touched, not something typed. Anything else must say when, and what in both
+   * languages — the page shows the rows in either language, so a label in one is a row missing
+   * from the other. The end, when given, is a time on the same day, at or after the start.
    */
   const scheduleItems = fields.scheduleRows
     .map((row, index) => {
-      const blank = !row.date && !row.time && !row.endTime && !row.ro && !row.en && !row.place;
+      const blank = !row.time && !row.endTime && !row.ro && !row.en && !row.place;
       if (blank) return null;
       const name = `schedule[${index + 1}]`;
       // The field paths name the row as the form posts it, zero-based (`scheduleRows.<i>.<box>`).

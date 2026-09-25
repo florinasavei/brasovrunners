@@ -113,11 +113,15 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const kind = await openEditorBox(page, "Ce fel de eveniment");
     const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
     await expect(readOnly).toBeVisible();
-    // Once, for the box: its three cards — the status, the course, the links — are then their
-    // headings and their lines, readable without opening anything (§358).
     await expect(readOnly).toHaveCount(1);
-    for (const card of ["Starea evenimentului", "Traseul", "Linkuri și fișiere"]) {
-      await expect(kind.getByRole("heading", { level: 3, name: new RegExp(`^${card}`) })).toBeVisible();
+    // The status, the cost, the links and the public list are boxes of their own since §406, where
+    // the page draws them — or apart, the status — and for this reader each is its heading and its
+    // line, nothing to open, the sentence said once above (§358). The course keeps a fold: its route
+    // description is words, and the words are theirs (§387).
+    for (const card of ["Starea evenimentului", "Cost", "Linkuri și fișiere", "Lista publică a participanților"]) {
+      const heading = page.getByRole("heading", { level: 2, name: new RegExp(`^(?:\\d+ · )?${card}`) });
+      await expect(heading).toBeVisible();
+      await expect(page.locator("section").filter({ has: heading })).toHaveCount(1);
     }
     await expect(kind.getByRole("combobox", { name: /Tip eveniment/ })).toHaveCount(0);
   });
@@ -377,8 +381,23 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Creat și publicat într-o singură apăsare.");
 
-    // The publish button says what publication still needs; the English tab is empty.
-    await expect(page.getByText(/Nu se poate publica încă — lipsește: Titlu și rezumat › English › Titlu/)).toBeVisible();
+    // The button is its full self whatever is missing (§406; it used to dim to 38%, which read as
+    // no button at all). The English tab is empty, and the closed card and its tabs say so.
+    const publish = page.getByRole("button", { name: "Creează și publică" });
+    await expect(publish).toHaveCSS("opacity", "1");
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("lipsesc: Titlu (EN) · Rezumat (EN)");
+    await expect(languageTab(page, "title", "ro")).toHaveText("Română · complet");
+    await expect(languageTab(page, "title", "en")).toHaveText("English · 2 obligatorii lipsă");
+    // Pressed now, it posts nothing: the §47 summary takes the focus and names each gap per
+    // language, and the first card that lacks one is opened on the missing language.
+    await publish.click();
+    const gaps = page.getByTestId("publish-gaps");
+    await expect(gaps).toBeFocused();
+    await expect(gaps.getByRole("link", { name: "Titlu și rezumat › English › Titlu" })).toBeVisible();
+    await expect(gaps.getByRole("link", { name: "Titlu și rezumat › English › Rezumat" })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+    await expect(editorBox(page, "Titlu și rezumat")).toHaveAttribute("open", "");
+    await expect(field("translations.en.title")).toBeVisible();
     // The Publicare box lists every gap by box and tab, from the same check (§350).
     const publication = await openEditorBox(page, "Publicare");
     await expect(publication.getByTestId("missing-for-publish").getByRole("link", { name: "Titlu și rezumat › English › Titlu" })).toBeVisible();
@@ -390,7 +409,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "Created and published in a single press.");
-    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
     await expect(publication.getByText("Nu lipsește nimic: evenimentul poate fi publicat.")).toBeVisible();
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
@@ -537,6 +556,9 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await page.getByRole("option", { name: "Alt eveniment" }).click();
     await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
+    // The spare line took the start date the moment it was typed (§405): its default day is the
+    // event's, never an empty box whose calendar opens on today.
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-10");
     await fillDateField(row, "Data", "2027-05-10");
     await fillTimeField(row, "Ora", "10:00");
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-10");
@@ -563,6 +585,222 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await fillDateField(page, "Începutul evenimentului", "2027-05-13");
     await expect(field("event.startsAtDate")).toHaveValue("2027-05-13");
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-13");
+  });
+});
+
+/*
+  §405 — the programme card made consistent with the rest of the editor (the owner, 2026-09-25,
+  of «Programul zilei și ce să aduci»: "This is super ugly and inconsistent."). Three things a
+  server render cannot see, checked in the browser on both projects:
+
+  - the layout is one grid per row, laid out by the list's own width: on the desktop project the
+    first line is Data · Ora · Până la · Unde · the bin and the second the two «Ce» side by side
+    (§362's pair), and a narrower list (the 960-pixel window, where the side column is pinned
+    beside the boxes) keeps "Unde" readable on a line of its own rather than squeezing it; at
+    320 pixels every box is stacked in reading order with the bin under them, and nothing
+    overflows;
+  - how the rows work is the compact «i» fold (§398), closed until pressed;
+  - every row's default day is the event's start date: the spare line takes it when it is typed,
+    a new row opens on it, and both follow it when it moves.
+
+  Nothing is saved: the create page is left as it is, so no run leaves an event behind.
+*/
+test.describe("BR-REQ-050-02 the programme card: one grid per row, the help in the «i» fold, rows on the event's day (§405)", () => {
+  test("lays the rows out by the list's width, folds the help, and opens every row on the start date", async ({ page }, testInfo) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Alt eveniment" }).click();
+    await openEditorBox(page, "Programul zilei și ce să aduci");
+
+    // The help: one closed line with the «i», the paragraph inside it.
+    const help = page.getByTestId("programme-help");
+    const sentence = page.getByText(/^Ziua pe ore, câte un rând/);
+    await expect(help).not.toHaveAttribute("open", "");
+    await expect(sentence).toBeHidden();
+    await openFold(help);
+    await expect(sentence).toBeVisible();
+
+    // The default day. No start date yet on the create page: the spare line has none either,
+    // and takes the start the moment it is typed; a new row opens on it; both follow it.
+    await expect(field("event.schedule[0].date")).toHaveValue("");
+    await fillDateField(page, "Începutul evenimentului", "2027-06-05");
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-06-05");
+    await page.getByRole("button", { name: "Adaugă un rând" }).click();
+    await expect(field("event.schedule[1].date")).toHaveValue("2027-06-05");
+    await fillDateField(page, "Începutul evenimentului", "2027-06-07");
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-06-07");
+    await expect(field("event.schedule[1].date")).toHaveValue("2027-06-07");
+
+    // The layout, read off where each box is drawn.
+    const row = page.getByRole("group", { name: "Rândul 1", exact: true });
+    const boxes = {
+      date: pickerGroup(row, "Data"),
+      time: row.getByRole("textbox", { name: "Ora", exact: true }),
+      end: row.getByRole("textbox", { name: "Până la", exact: true }),
+      place: row.getByRole("textbox", { name: "Unde", exact: true }),
+      ro: row.getByRole("textbox", { name: "Ce (română)", exact: true }),
+      en: row.getByRole("textbox", { name: "Ce (engleză)", exact: true }),
+      bin: row.getByRole("button", { name: "Șterge rândul 1", exact: true }),
+    };
+    const measure = async () => {
+      const out: Record<string, { x: number; y: number; width: number; height: number; middle: number; right: number }> = {};
+      for (const [key, locator] of Object.entries(boxes)) {
+        const rect = await locator.boundingBox();
+        if (!rect) throw new Error(`${key} is not drawn`);
+        out[key] = { ...rect, middle: rect.y + rect.height / 2, right: rect.x + rect.width };
+      }
+      return out;
+    };
+    const sameLine = (a: { middle: number }, b: { middle: number }) => expect(Math.abs(a.middle - b.middle)).toBeLessThan(6);
+
+    let at = await measure();
+    // The bin is a 44-pixel target at every width (BR-REQ-041-01 criterion 6).
+    expect(at.bin.width).toBeGreaterThanOrEqual(44);
+    expect(at.bin.height).toBeGreaterThanOrEqual(44);
+    const rowRect = await row.boundingBox();
+    if (!rowRect) throw new Error("the row is not drawn");
+    const rowRight = rowRect.x + rowRect.width;
+    // The page never scrolls sideways for a row.
+    expect(rowRight).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
+
+    if (testInfo.project.name === "mobile") {
+      // Stacked in reading order, the bin last.
+      const order = [at.date, at.time, at.end, at.place, at.ro, at.en, at.bin].map((rect) => rect.middle);
+      for (let index = 1; index < order.length; index += 1) expect(order[index]).toBeGreaterThan(order[index - 1] + 20);
+      // No box overflows its row.
+      for (const rect of Object.values(at)) expect(rect.right).toBeLessThanOrEqual(rowRight + 0.5);
+    } else {
+      // Line 1: when and where and the bin; line 2: what, in both languages, side by side.
+      for (const key of ["time", "end", "place", "bin"] as const) sameLine(at.date, at[key]);
+      sameLine(at.ro, at.en);
+      expect(at.ro.middle).toBeGreaterThan(at.date.middle + 30);
+      expect(at.en.x).toBeGreaterThan(at.ro.right);
+      expect(at.place.width).toBeGreaterThanOrEqual(120);
+      expect(at.date.x).toBeLessThan(at.time.x);
+      expect(at.time.x).toBeLessThan(at.end.x);
+      expect(at.end.x).toBeLessThan(at.place.x);
+      expect(at.place.right).toBeLessThanOrEqual(at.bin.x);
+
+      // A narrower list — the side column pinned beside the boxes from `md` — never squeezes
+      // "Unde": the times and the bin keep the first line, the place takes a line of its own.
+      await page.setViewportSize({ width: 960, height: 720 });
+      at = await measure();
+      for (const key of ["time", "end", "bin"] as const) sameLine(at.date, at[key]);
+      expect(at.place.middle).toBeGreaterThan(at.date.middle + 30);
+      expect(at.place.width).toBeGreaterThanOrEqual(200);
+      sameLine(at.ro, at.en);
+      expect(at.ro.middle).toBeGreaterThan(at.place.middle + 30);
+
+      // Re-review finding 1: the band a viewport breakpoint never lands on but a real phone in
+      // landscape or a split screen can — a list width of roughly 416 to 454 pixels, where the
+      // four MEDIUM columns (428px of minimums and gaps) used to be asked to fit inside less
+      // room than the row's own padding left. 500px keeps the side column off (it pins from
+      // `md`, 900px) and puts the list itself inside that band once the page's own gutters are
+      // taken off; nothing should stick out past the row's own border at any width.
+      await page.setViewportSize({ width: 500, height: 720 });
+      at = await measure();
+      const bandRow = await row.boundingBox();
+      if (!bandRow) throw new Error("the row is not drawn");
+      const bandRight = bandRow.x + bandRow.width;
+      for (const rect of Object.values(at)) expect(rect.right).toBeLessThanOrEqual(bandRight + 0.5);
+      expect(bandRight).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
+    }
+
+    // The bin removes its own row.
+    await page.getByRole("button", { name: "Șterge rândul 2", exact: true }).click();
+    await expect(field("event.schedule[1].date")).toHaveCount(0);
+  });
+});
+
+/*
+  Re-review finding 2 on §405's card: the two specs above build and read back the rows in the
+  editor alone. Neither publishes, so nothing proved a saved row actually reaches a reader — the
+  public page's programme list (`#schedule`, `EventProgramme.tsx`) or a VEVENT of its own in the
+  `.ics` feed (`ical.ts`). This one row: add it, fill it in both languages, publish, then read it
+  back from both public surfaces.
+*/
+test.describe("BR-REQ-050-02 a saved programme row reaches the public page and the .ics (§117, §405)", () => {
+  test("the row's label and time are on the event page's programme list and in a VEVENT of its own", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `ziua-cursei-${suffix}`;
+    const englishSlug = `race-day-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+
+    await fillDateField(page, "Începutul evenimentului", "2027-06-20");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Piața Sfatului");
+    await field("event.locationNameEn").fill("Council Square");
+    await field("translations.ro.title").fill(`Ziua cursei ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await summary("ro", "O cursă cu un program pe ore.");
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Race day ${suffix}`);
+    await languageTab(page, "address", "en").click();
+    await field("translations.en.slug").fill(englishSlug);
+    await summary("en", "A race with a timed programme.");
+
+    // "Concurs" has a programme (§111); the create page defaults to a type that does not.
+    await openEditorBox(page, "Ce fel de eveniment");
+    await page.getByRole("combobox", { name: "Tip eveniment" }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+
+    await openEditorBox(page, "Programul zilei și ce să aduci");
+    const row = programmeRow(page, 0);
+    await fillDateField(row, "Data", "2027-06-20");
+    await fillTimeField(row, "Ora", "08:30");
+    await field("event.schedule[0].place").fill("Cortul de start");
+    await field("event.schedule[0].ro").fill("Predarea kitului de concurs");
+    await field("event.schedule[0].en").fill("Race kit pickup");
+
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    const editorUrl = page.url();
+
+    // The Romanian page: the row's time and label under "#schedule".
+    await page.goto(`/ro/evenimente/${slug}`);
+    const scheduleRo = page.locator("#schedule");
+    await expect(scheduleRo.getByText("08:30")).toBeVisible();
+    await expect(scheduleRo).toContainText("Predarea kitului de concurs");
+    await expect(scheduleRo).toContainText("Cortul de start");
+
+    // The Romanian .ics: a VEVENT of its own, its SUMMARY carrying the event's title and the
+    // row's own label (`ical.ts`) — unfolded first, RFC 5545 folds a long line at 75 octets.
+    const icsRoResponse = await page.request.get(`/ro/events/${slug}/calendar.ics`);
+    const icsRo = (await icsRoResponse.text()).replace(/\r\n /g, "");
+    expect(icsRo).toContain(`SUMMARY:Ziua cursei ${suffix} — Predarea kitului de concurs`);
+
+    // The English page and its own .ics read the same row in English.
+    await page.goto(`/en/events/${englishSlug}`);
+    const scheduleEn = page.locator("#schedule");
+    await expect(scheduleEn.getByText("08:30")).toBeVisible();
+    await expect(scheduleEn).toContainText("Race kit pickup");
+    await expect(scheduleEn).toContainText("Cortul de start");
+
+    const icsEnResponse = await page.request.get(`/en/events/${englishSlug}/calendar.ics`);
+    const icsEn = (await icsEnResponse.text()).replace(/\r\n /g, "");
+    expect(icsEn).toContain(`SUMMARY:Race day ${suffix} — Race kit pickup`);
+
+    // Off the site again, so this run leaves no card behind for another spec to count.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });
 
@@ -695,7 +933,8 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await expect(recurrence.getByTestId("repeat-rule-sentence")).toContainText("În fiecare luni și miercuri, la 18:30 — la nesfârșit.");
     await expect(page.getByTestId("create-draft-line")).toContainText("și datele seriei din următoarele 8 săptămâni");
 
-    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
+    await expect(editorBox(page, "Locul").getByTestId("required-place")).toHaveText("complet");
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);

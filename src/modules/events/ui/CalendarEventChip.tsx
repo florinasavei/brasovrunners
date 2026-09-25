@@ -81,7 +81,7 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
-  /** "Eveniment de noapte — apusul la 16:36" / "Night event — sunset at 16:36" (§394), made on the server — or null for a date that is not one. */
+  /** "Eveniment de noapte: începe la 19:00, apusul la 16:36" / "Night event: starts at 19:00, sunset at 16:36" (§394, §404), made on the server — or null for a date that is not one. */
   night?: string | null;
   /** The generic "Colaborare" marker (§367, §379), made on the server — or null for an event with no partner. */
   partner: string | null;

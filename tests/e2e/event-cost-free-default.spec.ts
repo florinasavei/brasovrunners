@@ -5,8 +5,8 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
 
 /**
  * `DECISIONS.md` §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite".
- * The create page's cost select preselects "Gratuit"; a save that never opens "Participare și
- * înscrieri" still writes it, and the public page reads "Gratuit" without anyone having touched
+ * The create page's cost select preselects "Gratuit"; a save that never opens the "Cost" card
+ * (§406) still writes it, and the public page reads "Gratuit" without anyone having touched
  * the cost box at all.
  */
 test.describe("a new event starts free (§398)", () => {
@@ -16,7 +16,7 @@ test.describe("a new event starts free (§398)", () => {
     await hydrated(page);
 
     // The cost select reads "Gratuit" before anyone opens the box or touches it.
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Cost");
     await expect(page.getByRole("combobox", { name: "Cost" })).toHaveText(/Gratuit/);
     // The amount and link boxes stay hidden under Gratuit.
     await expect(page.locator('[name="event.costAmount"]')).toBeHidden();
@@ -63,7 +63,7 @@ test.describe("a new event starts free (§398)", () => {
     await field("translations.en.slug").fill(englishSlug);
     await excerpt("en", "A run with no cost at all.");
 
-    // "Participare și înscrieri" is never opened — the cost box included.
+    // The "Cost" card is never opened.
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
