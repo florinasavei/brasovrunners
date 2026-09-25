@@ -171,6 +171,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     slug: ["address", t("editor.fields.slug")],
     seoTitle: ["address", t("editor.fields.seoTitle")],
     seoDescription: ["address", t("editor.fields.seoDescription")],
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), under the same
+    // box the cost boxes live in.
+    discountNote: ["registration", t("editor.discountNote")],
   };
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);

@@ -1,7 +1,13 @@
 import type { GlyphName } from "./glyphs";
 
-/** A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary (§112), and its words. */
-export type Pill = { glyph: GlyphName; label: string };
+/**
+ * A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary
+ * (§112), and its words. `ariaLabel` overrides what a screen reader announces while the visible
+ * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
+ * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
+ * reader alone is told the fee goes to the organizer (`DECISIONS.md` §NNN).
+ */
+export type Pill = { glyph: GlyphName; label: string; ariaLabel?: string };
 
 /**
  * The route's pills, in one fixed order (§366, amended §375 — the owner, 2026-09-24, of the

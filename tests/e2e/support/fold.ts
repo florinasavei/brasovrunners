@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /** The language strips of the event editor, by the box that holds each (§350, `idPrefix`). */
-export type EditorStrip = "title" | "description" | "programme" | "rules" | "address";
+export type EditorStrip = "title" | "description" | "programme" | "rules" | "address" | "discount-note";
 
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

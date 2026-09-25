@@ -1,6 +1,7 @@
 import CakeIcon from "@mui/icons-material/Cake";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
@@ -15,7 +16,7 @@ import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age"
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
-import { costUrlHost } from "../domain/cost";
+import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -472,7 +473,7 @@ export default async function EventFacts({
   const pillRow = (items: Pill[]) => (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
       {items.map((item) => (
-        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} variant="outlined" sx={PILL_SX} />
+        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} ariaLabel={item.ariaLabel} variant="outlined" sx={PILL_SX} />
       ))}
     </Box>
   );
@@ -539,7 +540,15 @@ export default async function EventFacts({
       elevation: elevationPill,
       headlamp: headlampPill,
     });
-    if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+    if (event.costType) {
+      // The word stays the closed set's own — "Cu taxă" — but on an `EXTERNAL`-registration paid
+      // event a screen reader is told the fee goes to the organizer, never to the club (§NNN).
+      cardPills.push({
+        glyph: `cost:${event.costType}`,
+        label: t(`costValues.${event.costType}`),
+        ariaLabel: costPaidToExternalOrganizer(event) ? t("costPaidExternalAria", { cost: t(`costValues.${event.costType}`) }) : undefined,
+      });
+    }
 
     /*
       Where: the place — the map link when the club pasted one, tight like the page's (§356) so
@@ -859,8 +868,23 @@ export default async function EventFacts({
   const costHost = event.costUrl ? costUrlHost(event.costUrl) : null;
   const costExtras: ReactNode[] = [];
   let costPill: Pill | null = null;
+  // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
+  // form, not the club's (`DECISIONS.md` §NNN): the pill says so plainly ("Cu taxă, la
+  // organizator") rather than reading like a club fee, and the club's own discount, if any,
+  // follows it with the tag glyph (§112).
+  const externalPaid = costPaidToExternalOrganizer(event);
   if (event.costType === "FREE") {
     costPill = { glyph: "cost:FREE", label: t("costValues.FREE") };
+  } else if (event.costType === "PAID" && externalPaid) {
+    costPill = { glyph: "cost:PAID", label: event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal") };
+    if (event.discountNote) {
+      costExtras.push(
+        <Box key="discount" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+          <LocalOfferIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+          {event.discountNote}
+        </Box>,
+      );
+    }
   } else if (event.costType === "PAID") {
     costPill = { glyph: "cost:PAID", label: event.costAmount ? event.costAmount : t("costValues.PAID") };
     if (event.costUrl && costHost) {

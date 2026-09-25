@@ -221,6 +221,47 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(parsed(sportsEventJsonLd(baseEvent({ costUrl: donationUrl } as Partial<PublicEvent>), URL, "Brașov Runners")).potentialAction).toBeUndefined();
   });
 
+  it("offers the organizer's own registration link on an EXTERNAL-registration PAID event, never cost_url (§NNN)", () => {
+    const externalUrl = "https://alt-club.ro/inscriere";
+    const clubCostUrl = "https://revolut.me/brasovrunners";
+    const external = parsed(
+      sportsEventJsonLd(
+        baseEvent({
+          costType: "PAID",
+          costAmount: "75 lei",
+          costUrl: clubCostUrl,
+          registrationMode: "EXTERNAL",
+          externalRegistrationUrl: externalUrl,
+        } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(external.isAccessibleForFree).toBe(false);
+    expect(external.offers).toEqual({ "@type": "Offer", url: externalUrl, availability: "https://schema.org/InStock" });
+    expect(external.offers.url).not.toBe(clubCostUrl);
+
+    // No organizer link at all: no offer, rather than falling back to the club's own cost link.
+    const noLink = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "PAID", costUrl: clubCostUrl, registrationMode: "EXTERNAL", externalRegistrationUrl: null } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(noLink.offers).toBeUndefined();
+
+    // An INTERNAL paid event is unaffected: its own cost link, exactly as before.
+    const internal = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "PAID", costUrl: clubCostUrl, registrationMode: "INTERNAL" } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(internal.offers.url).toBe(clubCostUrl);
+  });
+
   it("references the club @id as organizer", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer["@id"]).toBe(clubId());

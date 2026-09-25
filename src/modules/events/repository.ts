@@ -136,6 +136,10 @@ const PUBLIC_COLUMNS = {
   scheduleJson: eventTranslations.scheduleJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
+  // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): read on every
+  // event, null everywhere but an `EXTERNAL`-registration, `PAID` one — the service clears it
+  // elsewhere, so a null here means "no discount stated" rather than "read the box".
+  discountNote: eventTranslations.discountNote,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
   // their places while the place is to be announced (§328).
   scheduleItems: publicScheduleItems,

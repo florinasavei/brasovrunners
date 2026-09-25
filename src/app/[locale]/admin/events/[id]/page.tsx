@@ -646,6 +646,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     locale={locale}
                     now={now}
                     clubDeadlines={deadlines}
+                    languages={languages}
                     bibPrint={
                       bibCounts ? (
                         <BibPrintCard

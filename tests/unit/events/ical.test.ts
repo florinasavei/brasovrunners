@@ -251,6 +251,31 @@ describe("the calendar file", () => {
     expect(donation).toContain("Donație: pe wingsforlifeworldrun.com · sugerat 50 lei");
   });
 
+  it("carries an EXTERNAL-registration PAID event's cost as «Cost: {amount}, la organizator», with the discount note (§NNN)", () => {
+    const external = calendarDescription(
+      { ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei pentru membri" },
+      labelsRo,
+    );
+    expect(external).toContain("Cost: 75 lei, la organizator · 40 lei pentru membri");
+    expect(external).not.toContain("plata pe");
+
+    const externalEn = calendarDescription(
+      { ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei for members" },
+      labelsEn,
+    );
+    expect(externalEn).toContain("Cost: 75 lei, paid to the organizer · 40 lei for members");
+
+    // No discount stated: the cost line alone, still "la organizator".
+    const noDiscount = calendarDescription({ ...full, costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: null }, labelsRo);
+    expect(noDiscount).toContain("Cost: 75 lei, la organizator");
+    expect(noDiscount).not.toContain("40 lei pentru membri");
+
+    // An INTERNAL paid event is unaffected: the plain amount and payment link, as before.
+    const internal = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners", registrationMode: "INTERNAL" }, labelsRo);
+    expect(internal).toContain("Taxă: 50 lei · plata pe revolut.me");
+    expect(internal).not.toContain("la organizator");
+  });
+
   it("writes one line per partner, the label said once, each keeping its own page (§168)", () => {
     const three = calendarDescription(
       {

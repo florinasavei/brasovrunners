@@ -6,6 +6,7 @@ import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { costPaidToExternalOrganizer } from "@/modules/events/domain/cost";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
@@ -709,6 +710,12 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     acknowledgeLiveEdit?: boolean;
     /** The type the event has after this save — the form's, when the settings are saved too. */
     eventType: EditableEvent["type"];
+    /**
+     * Whether `discountNote` may be written after this save (`DECISIONS.md` §NNN) — the mode and
+     * cost type the event has after it, the same discipline `eventType` follows above.
+     */
+    registrationMode: EditableEvent["registrationMode"];
+    costType: EditableEvent["costType"];
     now: Date;
   },
 ): Promise<EditableTranslation> {
@@ -744,7 +751,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     input.current.id,
     input.expectedVersion,
     {
-      ...translationColumnsFrom(fields, input.eventType),
+      ...translationColumnsFrom(fields, input.eventType, costPaidToExternalOrganizer(input)),
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -767,7 +774,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
  * the caller did not post at all is `undefined` here, which a save leaves as it is and an
  * insert leaves at the column's default.
  */
-function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"]) {
+function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"], discountAllowed: boolean) {
   const { body, rules, schedule, excerptBody, ...columns } = fields;
   const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return {
@@ -779,6 +786,9 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     // A group run has no programme (§111): the editor hides the field, and this is what
     // holds when the type changed in the same save or the hidden field still posted text.
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): kept only while
+    // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
+    ...(discountAllowed ? {} : { discountNote: null }),
   };
 }
 
@@ -790,6 +800,7 @@ type OptionalTextColumns = {
   checklist?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  discountNote?: string | null;
 };
 
 /**
@@ -806,6 +817,9 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     checklist: isWrittenText(row.checklist),
     seoTitle: isWrittenText(row.seoTitle),
     seoDescription: isWrittenText(row.seoDescription),
+    // Nulled by `translationColumnsFrom` outside `EXTERNAL` + `PAID`, so this can never fire
+    // there — the same "a hidden box never blocks the save" rule the others follow.
+    discountNote: isWrittenText(row.discountNote),
   };
 }
 
@@ -855,6 +869,8 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     fields: input.fields,
     acknowledgeLiveEdit: input.acknowledgeLiveEdit,
     eventType: record.event.type,
+    registrationMode: record.event.registrationMode,
+    costType: record.event.costType,
     now,
   });
   // The public pages read events from a cache (§333); every write below says so the same way.
@@ -1449,6 +1465,9 @@ const SERIES_TRANSLATION_COLUMNS = [
   // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
   "seoTitle",
   "seoDescription",
+  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §NNN): a series
+  // edit's discount note carries the way its cost does.
+  "discountNote",
 ] as const;
 
 /** Equal as stored: dates by their instant, JSON by its text, null by null. */
@@ -1807,6 +1826,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
             fields: submitted.fields,
             acknowledgeLiveEdit: input.acknowledgeLiveEdit,
             eventType: parsedEventFields?.type ?? current.type,
+            registrationMode: parsedEventFields?.registrationMode ?? current.registrationMode,
+            costType: parsedEventFields?.costType ?? current.costType,
             now,
           }),
         ),
@@ -1931,8 +1952,8 @@ export async function createEvent<T extends Record<string, unknown>>(
   // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
   // then inserted exactly as checked.
   const translationColumns = {
-    ro: translationColumnsFrom(parsed.translations.ro, parsed.type),
-    en: translationColumnsFrom(parsed.translations.en, parsed.type),
+    ro: translationColumnsFrom(parsed.translations.ro, parsed.type, costPaidToExternalOrganizer(parsed)),
+    en: translationColumnsFrom(parsed.translations.en, parsed.type, costPaidToExternalOrganizer(parsed)),
   };
   assertOptionalTextsInBothLanguages(translationColumns);
   // Each language's name for the place, from the Locul box (§362); a caller that posts no English
@@ -2234,6 +2255,9 @@ function copiedTranslationValues(
     locationName: translation.locationName,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
+    // The discount travels with the mode and cost type it belongs to (`copiedEventValues`, both
+    // carried unchanged): a series held at a discount is held at it every date.
+    discountNote: translation.discountNote,
     authorStaffUserId: actor.id,
     createdAt: now,
     updatedAt: now,

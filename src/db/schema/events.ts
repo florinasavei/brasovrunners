@@ -785,6 +785,16 @@ export const eventTranslations = pgTable(
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 
+    /**
+     * The club's discount on an external event's own fee, per language (`DECISIONS.md` §NNN):
+     * shown only on an `EXTERNAL`-registration, `PAID` event — the organizer sets the price, the
+     * club only knows what its members get off it. Free text, at most 200 characters (checked in
+     * `content/events/fields.ts`, not here — the same discipline `checklist` follows), both
+     * languages or neither. Null on every other event, and the service clears it when the mode or
+     * the cost type no longer needs it, so a row never carries a discount nobody can read.
+     */
+    discountNote: text("discount_note"),
+
     // AGENTS.md §12.4. The author is what turns "an Author edits their own drafts"
     // (BR-REQ-051-01 criterion 1) into a rule the server can check rather than a description.
     authorStaffUserId: uuid("author_staff_user_id").references(() => staffUsers.id, {

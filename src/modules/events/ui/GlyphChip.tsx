@@ -21,6 +21,7 @@ export default function GlyphChip({
   variant = "filled",
   href,
   sx,
+  ariaLabel,
 }: {
   glyph: GlyphName;
   label: string;
@@ -35,11 +36,13 @@ export default function GlyphChip({
   /** Set, the chip is a link — the listing's type filter. */
   href?: string;
   sx?: SxProps<Theme>;
+  /** What a screen reader announces instead of `label`, when the two must differ (`Pill.ariaLabel`). */
+  ariaLabel?: string;
 }) {
   const Icon = GLYPHS[glyph];
   return href ? (
-    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} />
+    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} aria-label={ariaLabel} />
   ) : (
-    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} />
+    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} aria-label={ariaLabel} />
   );
 }

@@ -138,6 +138,7 @@ export default async function PreviewEventPage({ params }: Props) {
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
     checklist: translation.checklist,
+    discountNote: translation.discountNote,
     scheduleItems: placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
     coHostName: event.coHostName,

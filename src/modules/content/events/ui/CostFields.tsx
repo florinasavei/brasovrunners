@@ -2,6 +2,7 @@
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import type { ReactNode } from "react";
 import RecallField from "@/shared/forms/recall";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
 import { useSelectedValue } from "./OnlyForType";
@@ -36,11 +37,15 @@ type BoxProps = ReturnType<typeof textFieldConstraints>;
  */
 export default function CostFields({
   initialCostType,
+  initialMode,
   costAmount,
   costUrl,
   labels,
+  children,
 }: {
   initialCostType: string;
+  /** The registration mode select's initial answer (`event.registrationMode`), for the discount note's own watch. */
+  initialMode: string;
   costAmount: { defaultValue: string; box: BoxProps };
   costUrl: { defaultValue: string; box: BoxProps };
   labels: {
@@ -53,10 +58,22 @@ export default function CostFields({
     donationAmount: string;
     donationAmountHelp: string;
   };
+  /**
+   * The discount note's own strip, per language, rendered by the caller (`RegistrationBox`) so
+   * this file need not know about `LocaleTabPanels` or the editor's translations — only when to
+   * show it (`DECISIONS.md` §NNN). `children`, not a named prop: a Server Component may hand a
+   * client component `children` but no other element-valued prop (§370's own guard).
+   */
+  children: ReactNode;
 }) {
   const current = useSelectedValue("event.costType", initialCostType);
+  const mode = useSelectedValue("event.registrationMode", initialMode);
   const isDonation = current === "DONATION";
   const shown = current === "PAID" || isDonation;
+  // The club's discount only means anything where the fee is settled at another organizer's own
+  // form (`DECISIONS.md` §NNN): hidden, not removed, the same rule the two boxes above follow —
+  // switching back to "La organizator" finds what was typed.
+  const showDiscount = current === "PAID" && mode === "EXTERNAL";
 
   return (
     <Box sx={{ display: shown ? "block" : "none" }}>
@@ -80,6 +97,7 @@ export default function CostFields({
           sx={{ flex: 1 }}
         />
       </Stack>
+      <Box sx={{ display: showDiscount ? "block" : "none", mt: 2 }}>{children}</Box>
     </Box>
   );
 }

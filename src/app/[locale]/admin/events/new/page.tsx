@@ -203,7 +203,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <PlaceBox {...box} languages={languages} />
               <ProgrammeBox {...box} languages={languages} />
               <RulesBox languages={languages} />
-              <RegistrationBox {...box} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
+              <RegistrationBox {...box} declarations={declarations} locale={locale} clubDeadlines={deadlines} languages={languages} />
 
               <EditorGroup label={t("editor.groups.details")} />
               <CoHostsBox {...box} locale={locale} />

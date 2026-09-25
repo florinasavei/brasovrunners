@@ -20,7 +20,7 @@ import {
   normalizeCoHostUrl,
 } from "@/modules/events/domain/co-hosts";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
-import { EVENT_COST_TYPES, type EventCostType, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
+import { EVENT_COST_TYPES, type EventCostType, MAX_DISCOUNT_NOTE, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import {
   DEFAULT_EVENT_LINK_KIND,
   isEventLinkKind,
@@ -139,6 +139,14 @@ export const translationFieldsSchema = z
     // Optional in the input like `excerpt`: the form posts them, an older caller may not.
     seoTitle: optionalText(200).optional(),
     seoDescription: optionalText(320).optional(),
+    /**
+     * The club's discount on an external event's own fee (`DECISIONS.md` §NNN): shown, and
+     * postable, only on an `EXTERNAL`-registration, `PAID` event — the box is hidden otherwise
+     * (`RegistrationBox`), and the service clears the column when the mode or cost type stops
+     * needing it, whatever this caller posted. Optional in the input like `checklist`; both
+     * languages or neither (§352, `assertOptionalTextsInBothLanguages`).
+     */
+    discountNote: optionalText(MAX_DISCOUNT_NOTE).optional(),
   })
   .strict();
 
