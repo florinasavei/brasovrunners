@@ -3072,7 +3072,7 @@
         }
       ],
       "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor.",
-      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri."
+      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la BR-V1.94, actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri."
     },
     "erase": {
       "backToEvent": "Înapoi la eveniment",

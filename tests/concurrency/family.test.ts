@@ -26,7 +26,9 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
  * The first case holds on either schema — with the one-registration-per-address constraint of
  * today, and without it after the contract release. The second needs the contract release (the
  * family flow is closed until then, `family-gate.ts`), so it performs it on this database — drops
- * the old constraint for itself and restores it in teardown — and never skips.
+ * the old constraint for itself and never skips. Teardown reads the catalogue again rather than a
+ * local flag, so a run that crashed after the DROP (its own or an earlier one's) still leaves the
+ * shared concurrency database with the constraint back in place for every later run.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -37,7 +39,6 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
   const NOW = new Date("2026-09-25T10:00:00.000Z");
   const createdEventIds: string[] = [];
   let familyOpen = false;
-  let droppedLegacyConstraint = false;
   let previousCap: unknown = undefined;
 
   beforeAll(async () => {
@@ -76,7 +77,10 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
       await db.delete(participants).where(inArray(participants.id, participantIds));
     }
     // The schema as this suite found it — after this suite's rows are gone, so nothing can collide.
-    if (droppedLegacyConstraint) {
+    // Read the catalogue again rather than trust `droppedLegacyConstraint`: a run that crashed
+    // after the DROP (in the previous test, before this teardown ran) leaves the constraint absent
+    // for every later run on this shared database, with no local flag to say so.
+    if (await familyRegistrationOpen(db)) {
       await db.execute(sql.raw(`ALTER TABLE "registrations" ADD CONSTRAINT "${LEGACY_ONE_PER_ADDRESS_CONSTRAINT}" UNIQUE ("event_id", "participant_id")`));
     }
     // The club's limit as this suite found it.
@@ -132,7 +136,6 @@ describe("§NNN BR-REQ-034-02 a family on one address, under real concurrency", 
     // for a schema that does not exist yet.
     if (!familyOpen) {
       await db.execute(sql.raw(`ALTER TABLE "registrations" DROP CONSTRAINT "${LEGACY_ONE_PER_ADDRESS_CONSTRAINT}"`));
-      droppedLegacyConstraint = true;
     }
     expect(await familyRegistrationOpen(db)).toBe(true);
     await db

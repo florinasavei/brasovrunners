@@ -3072,7 +3072,7 @@
         }
       ],
       "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'.",
-      "familyPending": "Not switched on yet: the database still keeps one registration per address per event, until the update that changes it. Until then, sending the form again for another person only re-sends the first registration's email."
+      "familyPending": "Not switched on yet: the database still keeps one registration per address per event, until BR-V1.94, the update that changes it. Until then, sending the form again for another person only re-sends the first registration's email."
     },
     "erase": {
       "backToEvent": "Back to the event",
