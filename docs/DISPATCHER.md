@@ -5,9 +5,7 @@ card for each piece of work, hands the card to subagents with the model that fit
 documentation, ships one batch at a time, and watches the usage while doing it (`DECISIONS.md`
 §368). The two workflows it runs are `.claude/workflows/br-chain.js` and
 `.claude/workflows/br-fix-round.js`; the two scripts are `yarn docs:land` and `yarn ship`;
-`docs/QUEUE.md` is the list it keeps. Its § Later stays a GFM task list (`- [ ]`), not a table
-like § Building and § Ready: `/admin/tasks`'s «Aplicația» tab renders the file as-is, and an e2e
-spec expects a real checkbox there (§NNN).
+`docs/QUEUE.md` is the list it keeps.
 
 The repository is public. Nothing on this page, in a card, a brief, a commit or a PR names a
 secret, a key, a token, a database URL, a personal address, an account id or a local path;

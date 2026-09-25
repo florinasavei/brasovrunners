@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.94-2026-09-25
+
+- **The family flow is open** — the contract migration `0073` drops `registrations_event_participant_unique`, the last thing holding the family registration flow shut; it switches on by itself wherever the migration runs, with no setting and no deploy of its own. §390.
 ## BR-V1.93-2026-09-25
 
 - **A family on one address**: sending the form again with a registered address and another name emails a single-use link to register the other person on the same address, up to the club's limit per address ("Maxim de înscrieri pe o adresă", default 4). Each person confirms, signs and is erased alone. The flow switches on with the contract release that drops the old one-per-address constraint (migration 0072). §389.

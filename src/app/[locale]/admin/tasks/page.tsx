@@ -234,7 +234,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {doc ? (
           <>
             <Typography variant="body2" color="text.secondary">
-              {t.rich("app.lead", { code: (chunks) => <code>{chunks}</code> })}
+              {t("app.lead")}
             </Typography>
             <RepoDocHtml html={doc.html} />
           </>

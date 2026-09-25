@@ -48,8 +48,8 @@ export function isRepoDocName(value: string): value is RepoDocName {
  * `- [x]` into disabled checkbox inputs). Exported so a unit test can prove the rule against a
  * fixture instead of the live content of a tracked document.
  */
-export function renderRepoDocMarkdown(source: string): Promise<string> {
-  return Promise.resolve(marked.parse(source, { gfm: true, breaks: false })).then((html) => html as string);
+export async function renderRepoDocMarkdown(source: string): Promise<string> {
+  return marked.parse(source, { gfm: true, breaks: false, async: false });
 }
 
 /** The document as HTML, or null when the file is not there (a deployment traced without it). */

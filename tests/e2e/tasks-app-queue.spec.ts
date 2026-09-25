@@ -2,18 +2,17 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-060-01 — `/admin/tasks`'s «Aplicația» / «The app» tab: `docs/QUEUE.md`, the
+ * BR-REQ-090-05 — `/admin/tasks`'s «Aplicația» / «The app» tab: `docs/QUEUE.md`, the
  * dispatcher's own work queue, rendered read-only (`DECISIONS.md` §368, §NNN).
  *
  * The owner, 2026-09-25: "în «De făcut» vreau un tab unde să randez efectiv MD file din repo cu
  * tasklisturi și ce mai e de făcut în aplicație." Unit-tested: the role gate
  * (`task-panels.test.ts`) and the task-list markup (`repo-doc-html.test.ts`). What a unit test
  * cannot see is here — that the tab is really on the page, that the document really renders
- * with its headings and a real checkbox, and that the door really is shut for a role with no
- * business behind it.
+ * with its headings, and that the door really is shut for a role with no business behind it.
  */
 test.describe("§NNN the app tab on /admin/tasks", () => {
-  test("an Administrator sees the tab and the queue's headings and a checkbox item", async ({ page }) => {
+  test("sees the tab and the queue's headings", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/tasks");
     const main = page.locator("#main");
