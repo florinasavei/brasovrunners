@@ -221,8 +221,13 @@ async function ListingLead({
   // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
   const presentTypes = presentEventTypes(events, type);
   // Same rule, for "Colaborare" (§NNN): offered only while a partnered event is among what the
-  // page shows, or the address already narrows by it.
-  const partnerOffered = partnerFilterOffered(events, partner);
+  // page shows, or the address already narrows by it. Read off what the filter can actually
+  // narrow — the list, not the hero, which the filter never touches (§376 fix round finding 7):
+  // offering the chip on the hero's partner alone would empty the grid on a press.
+  const partnerOffered = partnerFilterOffered(
+    featured ? events.filter((event) => event.id !== featured.id) : events,
+    partner,
+  );
   const filterQuery = (extra: Record<string, string>) =>
     getPathname({ locale, href: { pathname: "/events", query: { ...extra, ...(layout === "list" ? { view: "list" } : {}) } } });
 
@@ -243,13 +248,21 @@ async function ListingLead({
           and no partnered event is nothing to filter.
 
           The gap under this row and above the grid (§NNN — the owner: "filters still need to be
-          a bit above the grid") is `DENSITY.sectionGap` on the grid's own top, one density-token
-          step: measured on the built listing at 320/360/390/412 and desktop, 0px before this
-          change at every width (the filter row carried no `mb` and the grid no `mt`), 16px on a
-          phone and 24px from `sm` after it — the same numbers this row's own `mt` above already
-          uses, so the space above and below the row now matches. */}
+          a bit above the grid") is `DENSITY.sectionGap`, one density-token step: measured on the
+          built listing at 320/360/390/412 and desktop, 0px before this change at every width
+          (the filter row carried no `mb` and the grid no `mt`), 16px on a phone and 24px from
+          `sm` after it — the same numbers this row's own `mt` above already uses, so the space
+          above and below the row now matches. It sits on this row's own `mb` (§376 fix round
+          finding 3), not on `ListingBody`'s three shapes: fewer than two kinds and no partnered
+          event, this row does not render, and nothing on the listing may move for that — the
+          grid then sits directly under the intro or the hero, as it always has. */}
       {(presentTypes.length > 1 || partnerOffered) && (
-        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+        <Stack
+          component="nav"
+          aria-label={t("filter.label")}
+          direction="row"
+          sx={{ flexWrap: "wrap", columnGap: 0.5, mt: { xs: DENSITY.sectionGap, sm: 3 }, mb: { xs: DENSITY.sectionGap, sm: 3 } }}
+        >
           {presentTypes.length > 1 &&
             [undefined, ...presentTypes].map((candidate) => {
               const active = candidate === type;
@@ -409,9 +422,6 @@ async function ListingBody({
         open={cards.length <= 4}
         data-testid="other-events"
         sx={{
-          // The gap above the grid, one density-token step under the filter row (§NNN — see
-          // `ListingLead`'s own comment for the measured numbers).
-          mt: { xs: DENSITY.sectionGap, sm: 3 },
           "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
         }}
       >
@@ -458,17 +468,13 @@ async function ListingBody({
     );
   }
 
-  if (listed.length === 0) return <Alert severity="info" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>{t("empty")}</Alert>;
+  if (listed.length === 0) return <Alert severity="info">{t("empty")}</Alert>;
 
   return (
     <Box component="ul" sx={{
             listStyle: "none",
             p: 0,
-            // The gap above the grid, one density-token step under the filter row (§NNN — see
-            // `ListingLead`'s own comment for the measured numbers).
-            mt: { xs: DENSITY.sectionGap, sm: 3 },
-            mx: 0,
-            mb: 0,
+            m: 0,
             display: "grid",
             gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },

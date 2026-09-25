@@ -138,17 +138,24 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
+    // Since §376 the partner card sits in its own `<section id="partners">` after the `<dl>`
+    // closes, behind a `<details>` fold closed by default on a phone (`ListingBody`'s "other
+    // events" device) and forced open from `sm` up. Open it before reaching in on mobile.
+    if (test.info().project.name === "mobile") await page.locator('[data-testid="partners-fold"]').locator("summary").click();
     // The partner's own card — description and a link, not a name alone — stays inside its
-    // `<dd>` at the narrowest viewport the suite runs (§375 amended, finding 5): the name has
-    // no `overflowWrap` of its own (the description and the link labels do), so this is the
+    // `<section>` at the narrowest viewport the suite runs (§375 amended, finding 5): the name
+    // has no `overflowWrap` of its own (the description and the link labels do), so this is the
     // check that would catch it running long.
     const partnerCard = page.getByTestId("partner-card");
     await expect(partnerCard).toContainText("Organizăm împreună");
     await expect(partnerCard.getByRole("link", { name: `Înscriere la ${partner}` })).toBeVisible();
-    const [cardBox, ddBox] = await Promise.all([partnerCard.boundingBox(), partnerCard.locator("xpath=ancestor::dd[1]").boundingBox()]);
+    const [cardBox, sectionBox] = await Promise.all([
+      partnerCard.boundingBox(),
+      partnerCard.locator("xpath=ancestor::section[@id='partners']").boundingBox(),
+    ]);
     expect(cardBox, "the partner card has a box").not.toBeNull();
-    expect(ddBox, "the partner card's <dd> has a box").not.toBeNull();
-    expect(cardBox!.x + cardBox!.width).toBeLessThanOrEqual(ddBox!.x + ddBox!.width + 0.5);
+    expect(sectionBox, "the partner card's section has a box").not.toBeNull();
+    expect(cardBox!.x + cardBox!.width).toBeLessThanOrEqual(sectionBox!.x + sectionBox!.width + 0.5);
 
     await page.goto(`/en/events/${englishSlug}`);
     await expect(page.getByTestId("overline-partner")).toContainText("Partnership");

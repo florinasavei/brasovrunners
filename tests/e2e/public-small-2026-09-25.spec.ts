@@ -135,21 +135,33 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     }
   });
 
-  test("the filter row sits one density-token step above the grid at 320px", async ({ page }) => {
-    test.skip(test.info().project.name !== "mobile", "the owner's ask names 320px; the desktop gap is asserted structurally by the density test");
-    await page.goto("/ro/evenimente");
-    const filterRow = page.getByRole("navigation", { name: "Tipul evenimentului" });
-    await expect(filterRow).toBeVisible();
-    const grid = page.locator('[data-testid="other-events"], #main > ul').first();
-    await expect(grid).toBeVisible();
-    const [filterBox, gridBox] = await Promise.all([filterRow.boundingBox(), grid.boundingBox()]);
-    expect(filterBox, "the filter row has a box").not.toBeNull();
-    expect(gridBox, "the grid has a box").not.toBeNull();
-    const gap = gridBox!.y - (filterBox!.y + filterBox!.height);
-    // `DENSITY.sectionGap` on a phone is 16px (2 spacing units). Before this change the filter
-    // row carried no `mb` and the grid no `mt`, so the gap was 0.
-    expect(gap).toBeGreaterThanOrEqual(15);
-    expect(gap).toBeLessThanOrEqual(17);
+  test("the filter row sits one density-token step above the grid at 320/360/390/412px and on desktop (§376 fix round finding 6)", async ({
+    page,
+  }) => {
+    const isMobile = test.info().project.name === "mobile";
+    const measure = async (expectMin: number, expectMax: number) => {
+      await page.goto("/ro/evenimente");
+      const filterRow = page.getByRole("navigation", { name: "Tipul evenimentului" });
+      await expect(filterRow).toBeVisible();
+      const grid = page.locator('[data-testid="other-events"], #main > ul').first();
+      await expect(grid).toBeVisible();
+      const [filterBox, gridBox] = await Promise.all([filterRow.boundingBox(), grid.boundingBox()]);
+      expect(filterBox, "the filter row has a box").not.toBeNull();
+      expect(gridBox, "the grid has a box").not.toBeNull();
+      const gap = gridBox!.y - (filterBox!.y + filterBox!.height);
+      expect(gap).toBeGreaterThanOrEqual(expectMin);
+      expect(gap).toBeLessThanOrEqual(expectMax);
+    };
+    if (isMobile) {
+      // `DENSITY.sectionGap` on a phone is 16px (2 spacing units), at every width the owner named.
+      for (const width of [320, 360, 390, 412]) {
+        await page.setViewportSize({ width, height: 800 });
+        await measure(15, 17);
+      }
+    } else {
+      // From `sm` up the step is 24px (3 spacing units) — the desktop project's own viewport.
+      await measure(23, 25);
+    }
   });
 
   test("the «Colaborare» chip is offered once a partnered event exists, narrows the listing, and AND-combines with the kind", async ({

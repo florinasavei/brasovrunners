@@ -122,6 +122,17 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
     expect(withoutStyles(html)).toMatch(/<section\b[^>]*\bid="partners"/);
   });
 
+  it("the partners' fold has no `open` attribute, and two names join with «·» (§376 fix round finding 5)", async () => {
+    const html = withoutStyles(
+      await page({ coHosts: [{ name: "Salvamont", links: [] }, { name: "Brașov Marathon", links: [] }] }),
+    );
+    const details = /<details\b[^>]*data-testid="partners-fold"[^>]*>/.exec(html)?.[0];
+    expect(details).toBeDefined();
+    expect(details).not.toMatch(/\bopen\b/);
+    const summary = /<summary\b[^>]*>([\s\S]*?)<\/summary>/.exec(html)?.[1];
+    expect(text(summary ?? "")).toBe("Împreună cu Salvamont · Brașov Marathon");
+  });
+
   it("says «no registration needed» on an event that takes none, before the partners", async () => {
     const html = await page({ registrationMode: "NONE", coHosts: [{ name: "Salvamont", links: [] }] });
     expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Înscriere"]);

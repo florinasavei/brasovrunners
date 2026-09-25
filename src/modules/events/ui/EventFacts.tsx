@@ -911,24 +911,41 @@ export default async function EventFacts({
         partnership. From `sm` up there is room for it beside the rest of the facts, so — the
         same device the listing's "other events" fold already uses (`DECISIONS.md` §89, §167,
         `app/[locale]/events/page.tsx`) — the details-content is forced visible, the marker
-        hides and the summary stops acting as a control (`pointerEvents: "none"`). The summary
-        itself carries the 44-pixel tap target (`DISCLOSURE_SUMMARY_SX`) for the phone it does
-        act as a control on.
+        hides and the summary stops acting as a control (`pointerEvents: "none"`). Unlike the
+        listing's fold, this one carries no `open` attribute, so where a browser has no
+        `::details-content` (older Safari/Firefox) forcing it open would hide the partner
+        entirely; `@supports selector(::details-content)` (§376 fix round) keeps that whole
+        behaviour — the forced-open styling and the summary going inert — behind the same
+        feature test the CSS itself needs, so an unsupporting browser keeps a working,
+        clickable summary instead of a dead line over a hidden card. The summary itself
+        carries the 44-pixel tap target (`DISCLOSURE_SUMMARY_SX`) for the phone it does act
+        as a control on.
       */}
-      <Box component="details" data-testid="partners-fold" sx={{ "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } } }}>
+      <Box
+        component="details"
+        data-testid="partners-fold"
+        sx={{
+          "@supports selector(::details-content)": {
+            "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
+          },
+        }}
+      >
         <Typography
           component="summary"
           variant="body1"
           sx={{
             ...DISCLOSURE_SUMMARY_SX,
             fontWeight: 600,
-            cursor: { xs: "pointer", sm: "default" },
-            "&::before": { display: { xs: "block", sm: "none" } },
-            pointerEvents: { xs: "auto", sm: "none" },
+            cursor: "pointer",
+            "@supports selector(::details-content)": {
+              cursor: { xs: "pointer", sm: "default" },
+              "&::before": { display: { xs: "block", sm: "none" } },
+              pointerEvents: { xs: "auto", sm: "none" },
+            },
           }}
         >
           <GLYPHS.partner aria-hidden="true" sx={ROW_ICON_SX} />
-          {t("coHost")} {format.list(coHosts.map((host) => host.name))}
+          {t("coHost")} {coHosts.map((host) => host.name).join(" · ")}
         </Typography>
         {/*
           Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the
