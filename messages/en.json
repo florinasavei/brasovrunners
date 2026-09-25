@@ -37,7 +37,6 @@
   },
   "Events": {
     "title": "Events",
-    "loading": "Loading…",
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
@@ -72,7 +71,7 @@
       "partner": "Partnership",
       "night": "Night event",
       "registration": "Registration open",
-      "apply": "Show events",
+      "apply": "Apply",
       "clear": "Clear filters",
       "remove": "Remove filter",
       "active": "Active filters",

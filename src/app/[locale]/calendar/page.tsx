@@ -5,21 +5,20 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
-import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import {
   activeFilterCount,
-  listingFilterKey,
   listingFilterQuery,
   matchesListingFilter,
   offeredFilters,
   offersAnything,
   parseListingFilter,
-  type ListingFilter,
+  type FilterFacts,
 } from "@/modules/events/domain/listing-filter";
 import { clubNightEvent } from "@/modules/events/night-event";
+import { readRegistrationDoors } from "@/modules/events/registration-doors";
 import type { PublicEvent } from "@/modules/events/repository";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -65,8 +64,9 @@ const isNight = (event: PublicEvent) => clubNightEvent(event).night;
  *
  * Everything the section does is unchanged (`CalendarSection`): the month or the year the
  * address names, the grid or the list, and the three doors into a reader's own calendar. The
- * query is started here and awaited nowhere in this function, so the wordmark, the heading and
- * every control reach the browser before the database answers (§166).
+ * period's rows are one cached read (§333) the page awaits before it renders (§NNN, amending §166
+ * here): the filter panel and the month itself are in the first HTML the server sends, so a
+ * browser with scripts off can tick, press «Aplică» and read the narrowed month.
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -117,16 +117,22 @@ export default async function CalendarPage({ params, searchParams }: Props) {
     The rows are kept and cached whole, and filtered after the read (§NNN). The filter used to
     run inside the loader, so the last good copy of a month was whichever filter had last read
     it — a copy of "races only" could answer an unfiltered visit while the database was away.
+
+    Awaited here, once (§NNN): the panel, the stale notice and the month all read this one value,
+    and none of them sits behind a streamed boundary — a streamed region is revealed by a script,
+    and the panel is a GET form that must work without one. With a script, a month or a filter is
+    a soft navigation that keeps this page on screen until the next one is ready.
   */
   const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
   // From the public cache (§333): the range is the key, and an event save expires it.
-  const period = readWithLastGood(key, () => cachedPublishedEventsBetween(locale, range.from, range.to), now);
-  const events = period.then((read) => ({
-    ...read,
-    value: read.value.filter((event) => matchesListingFilter(event, filter, isNight, now)),
-  }));
-  // The calendar's own panel (§NNN): what it offers is read off the period on view, the rows the
-  // filter narrows here — the same rule the listing applies to its own rows.
+  const period = await readWithLastGood(key, () => cachedPublishedEventsBetween(locale, range.from, range.to), now);
+  // «Înscrieri deschise» is the page's own door (§NNN): one cached availability read per open
+  // internal event in the period, nothing for any other row.
+  const facts: FilterFacts<PublicEvent> = { night: isNight, door: await readRegistrationDoors(period.value, now) };
+  const events = period.value.filter((event) => matchesListingFilter(event, filter, facts));
+  // The calendar's own panel (§NNN): what it offers is read off the period on view, whole — the
+  // same rule the listing applies to its own rows — and it keeps the month or year and the layout.
+  const offer = offeredFilters(period.value, filter, facts);
   const monthOrYear: Record<string, string> =
     view.kind === "year" ? { year: String(view.year) } : { month: `${view.month.year}-${String(view.month.month).padStart(2, "0")}` };
 
@@ -146,65 +152,25 @@ export default async function CalendarPage({ params, searchParams }: Props) {
         {t("calendar.pageIntro")}
       </Typography>
 
-      <Suspense fallback={null}>
-        <CalendarStaleNotice events={events} />
-      </Suspense>
+      {/* The "last copy" line (§281). */}
+      <LastGoodNotice read={period} />
 
-      {/* A fixed-height placeholder (§NNN) rather than `fallback={null}`: the button pops in
-          after the rows resolve, and an empty fallback let it push the calendar down under it —
-          the same layout shift the listing avoids by rendering the panel inside its lead's
-          skeleton boundary. 44 px is the button's own height (`TAP_TARGET`). */}
-      <Suspense fallback={<Box sx={{ mb: 1, minHeight: 44 }} />}>
-        <CalendarFilters
-          locale={locale}
-          filter={filter}
-          rows={period.then((read) => read.value)}
-          keep={{ ...monthOrYear, ...(layout === "list" ? { view: "list" } : {}) }}
-          now={now}
-        />
-      </Suspense>
+      {/* The listing's filter panel on the calendar (§NNN): the same button, the same boxes, the
+          same address — so "races on a trail" is a month of races on a trail, not only a list of
+          cards. Nothing to narrow and nothing ticked, it does not render. */}
+      {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
+        <Box sx={{ mb: 1 }}>
+          <ListingFilterPanel
+            locale={locale}
+            pathname="/calendar"
+            filter={filter}
+            offer={offer}
+            keep={{ ...monthOrYear, ...(layout === "list" ? { view: "list" } : {}) }}
+          />
+        </Box>
+      )}
 
-      <CalendarSection
-        locale={locale}
-        view={view}
-        layout={layout}
-        filterKey={listingFilterKey(filter)}
-        query={query}
-        now={now}
-        events={events.then((read) => read.value)}
-      />
+      <CalendarSection locale={locale} view={view} layout={layout} query={query} now={now} events={events} />
     </Container>
   );
-}
-
-/**
- * The listing's filter panel on the calendar (§NNN): the same button, the same boxes, the same
- * address — so "races on a trail" is a month of races on a trail, not only a list of cards. It
- * offers what would narrow the period on view, and keeps the month or year and the layout.
- */
-async function CalendarFilters({
-  locale,
-  filter,
-  rows,
-  keep,
-  now,
-}: {
-  locale: "ro" | "en";
-  filter: ListingFilter;
-  rows: Promise<PublicEvent[]>;
-  keep: Record<string, string>;
-  now: Date;
-}) {
-  const offer = offeredFilters(await rows, filter, isNight, now);
-  if (!offersAnything(offer) && activeFilterCount(filter) === 0) return null;
-  return (
-    <Box sx={{ mb: 1 }}>
-      <ListingFilterPanel locale={locale} pathname="/calendar" filter={filter} offer={offer} keep={keep} />
-    </Box>
-  );
-}
-
-/** The "last copy" line for the calendar, once its month has settled (§281). */
-async function CalendarStaleNotice({ events }: { events: Promise<Resilient<unknown>> }) {
-  return <LastGoodNotice read={await events} />;
 }

@@ -37,7 +37,6 @@
   },
   "Events": {
     "title": "Evenimente",
-    "loading": "Se încarcă…",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
@@ -72,7 +71,7 @@
       "partner": "Colaborare",
       "night": "Eveniment de noapte",
       "registration": "Înscrieri deschise",
-      "apply": "Arată evenimentele",
+      "apply": "Aplică",
       "clear": "Șterge filtrele",
       "remove": "Scoate filtrul",
       "active": "Filtre active",

@@ -1,15 +1,13 @@
 import type { CoHostSource } from "./co-hosts";
 
 /**
- * How the listing divides the events it was given — pure, so the page can stream its three
- * regions independently and a test can say the division is the same one it always was
- * (`DECISIONS.md` §166).
+ * How the listing divides the events it was given — pure, so a test can say the division is the
+ * same one it always was (`DECISIONS.md` §166).
  *
- * The page used to compute all of this inline, between three awaits. It cannot any more: the
- * lead event, the filter panel and the list of other events now sit behind `<Suspense>`
- * boundaries and are rendered by three different components off one shared promise, so the
- * rule for "which event is the hero" has to live somewhere all three can read it and nowhere
- * it can drift. What the filters are and which of them the page offers is `listing-filter.ts`.
+ * The lead event, the filter panel and the list of other events are rendered by different
+ * components off the one read the page awaits (§NNN; §166 had them streamed behind `<Suspense>`),
+ * so the rule for "which event is the hero" has to live somewhere all of them can read it and
+ * nowhere it can drift. What the filters are and which of them the page offers is `listing-filter.ts`.
  */
 
 /**
@@ -49,34 +47,4 @@ export function listingSections<T extends ListedEvent>(
   const featured = lead && matches(lead) ? lead : undefined;
   const listed = (lead ? events.filter((event) => event.id !== lead.id) : [...events]).filter(matches);
   return { featured, listed };
-}
-
-/**
- * The identity of the calendar's query, as one string.
- *
- * It is the `key` on the calendar's `<Suspense>` boundary, and it is what decides whether a
- * navigation shows the skeleton. React keeps the content of a boundary that merely *updates*
- * and shows the fallback for one that is *new*, so changing the key is how the skeleton is
- * asked for — and getting the key wrong in either direction is a visible bug: too coarse and
- * a month change leaves last month's grid on screen until the new one lands, too fine and the
- * grid blinks when nothing about it changed.
- *
- * So it names exactly what the rows behind the body depend on and nothing else: the period on
- * view, how it is drawn, **and the filters**. The filters are in the key because the calendar's
- * rows are narrowed by them too (§89, §167: a kind chip once changed the grid's contents while
- * the key stood still, so the previous kind's grid stayed on screen for the whole round-trip).
- * `filterKey` is `listingFilterKey`'s one string for the whole panel (§NNN), where §401 had
- * added the partner chip as a fourth argument. The layout is dropped in the year view, where it
- * has no meaning.
- */
-export function calendarBoundaryKey(
-  view: { kind: "month"; month: { year: number; month: number } } | { kind: "year"; year: number },
-  layout: "grid" | "list",
-  filterKey = "all",
-): string {
-  const period =
-    view.kind === "year"
-      ? String(view.year)
-      : `${view.month.year}-${String(view.month.month).padStart(2, "0")}`;
-  return `${view.kind}:${period}:${view.kind === "month" ? layout : "grid"}:${filterKey}`;
 }

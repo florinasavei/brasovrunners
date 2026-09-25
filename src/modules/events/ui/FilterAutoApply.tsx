@@ -7,7 +7,7 @@ import { useEffect, useRef, useTransition } from "react";
  * The listing's filter panel, applied on each tick (§NNN) — an enhancement, never the mechanism.
  *
  * The panel is a plain GET form a Server Component renders: with no script, ticking boxes and
- * pressing "Arată evenimentele" loads the same address this island would push. With a script this
+ * pressing «Aplică» loads the same address this island would push. With a script this
  * island, mounted inside the form, hides that button (`data-enhanced` on the form) and turns each
  * change into a soft navigation to the address the form would have submitted — `FormData` over the
  * form's own fields, so the two can never build different addresses — keeping the page where it is.

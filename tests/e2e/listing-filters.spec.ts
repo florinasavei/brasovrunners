@@ -147,13 +147,11 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
 
 test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
   /*
-    The panel needs no script: a native `<details>`, a GET form, plain links. What a browser with
-    scripts off cannot do on this page is *reveal* it — the listing streams its regions behind
-    `<Suspense>` (§166), and React reveals a streamed region with an inline script, so such a
-    browser is left with the loading shapes, the cards as much as the panel (measured 2026-09-25;
-    a crawler's user agent is streamed the same way under Next 16). That is the listing's, not the
-    filters'. So the proof is in two halves: the server's HTML carries the whole form, and the
-    form, submitted by the browser itself with the island bypassed, lands where a link would.
+    The panel needs no script: a native `<details>`, a GET form, plain links. Since §NNN nothing on
+    the listing or the calendar sits behind a streamed `<Suspense>` boundary — React reveals a
+    streamed region with an inline script, so a browser with scripts off used to be left with the
+    loading shapes, the panel among them. These are that browser: scripts off, a real press on the
+    fold, a real tick, a real press on «Aplică», and the narrowed page read as a person reads it.
   */
   test.describe("scripts off", () => {
     test.use({ javaScriptEnabled: false });
@@ -168,9 +166,58 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       expect(html).toMatch(/<details[^>]*data-testid="listing-filters"/);
       expect(html).toMatch(/<input type="checkbox" name="type" checked="" value="RACE"/);
       expect(html).toMatch(/<input type="checkbox" name="surface" value="TRAIL"/);
-      expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Arată evenimentele</);
+      expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Aplică</);
       // An active chip is an ordinary link to the address without its tick.
       expect(html).toMatch(/<a[^>]*aria-label="Scoate filtrul: Concurs"[^>]*href="\/ro\/evenimente"/);
+      // Nothing is left waiting for a script to reveal it (§NNN): no loading shape anywhere.
+      await expect(page.locator("#main [role='status']")).toHaveCount(0);
+    });
+
+    test("on the listing: open the fold, tick «Trail», press «Aplică», read the narrowed list", async ({ page }) => {
+      await page.goto("/ro/evenimente");
+      // Everything the page has is shown, not only present in the HTML: the list and the panel.
+      await expect(heading(page, RACE)).toBeVisible();
+      const fold = panel(page);
+      await expect(fold.locator("summary")).toBeVisible();
+      await fold.locator("summary").click();
+      await expect(fold).toHaveAttribute("open", "");
+      await fold.getByRole("checkbox", { name: "Trail", exact: true }).check();
+      await fold.getByRole("button", { name: "Aplică", exact: true }).click();
+
+      await expect(page).toHaveURL(/\/ro\/evenimente\?surface=TRAIL$/);
+      await expect(heading(page, TRAIL_RUN)).toBeVisible();
+      await expect(heading(page, RACE)).toHaveCount(0);
+      await expect(heading(page, INTERVALS)).toHaveCount(0);
+      // The ticks say themselves, closed, as links: one press takes the tick away again.
+      await expect(panel(page).locator("summary")).toHaveText("Filtre (1)");
+      const active = page.locator("#main").getByTestId("active-filters");
+      await active.getByRole("link", { name: "Scoate filtrul: Trail" }).click();
+      await expect(page).toHaveURL(/\/ro\/evenimente$/);
+      await expect(heading(page, RACE)).toBeVisible();
+    });
+
+    test("on the calendar: the same fold, tick «Concurs», press «Aplică», read the narrowed year", async ({ page }) => {
+      // The year the race falls in (it is three weeks out, so this year or the next).
+      let year = new Date().getFullYear();
+      await page.goto(`/ro/calendar?year=${year}`);
+      if ((await page.locator(`[aria-label*="${RACE}"]`).count()) === 0) {
+        year += 1;
+        await page.goto(`/ro/calendar?year=${year}`);
+      }
+      await expect(page.locator(`[aria-label*="${RACE}"]`).first()).toBeVisible();
+      const intervalsUnfiltered = await page.locator(`[aria-label*="${INTERVALS}"]`).count();
+
+      const fold = panel(page);
+      await fold.locator("summary").click();
+      await fold.getByRole("checkbox", { name: "Concurs", exact: true }).check();
+      await fold.getByRole("button", { name: "Aplică", exact: true }).click();
+
+      // The form kept the year it was on, and the year is narrowed to races.
+      await expect(page).toHaveURL(new RegExp(`/ro/calendar\\?year=${year}&type=RACE$`));
+      await expect(page.locator(`[aria-label*="${RACE}"]`).first()).toBeVisible();
+      if (intervalsUnfiltered > 0) await expect(page.locator(`[aria-label*="${INTERVALS}"]`)).toHaveCount(0);
+      await expect(panel(page).locator("summary")).toHaveText("Filtre (1)");
+      await expect(page.locator("#main [role='status']")).toHaveCount(0);
     });
   });
 

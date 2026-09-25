@@ -2,6 +2,7 @@ import { DIFFICULTY_LEVELS, type DifficultyLevel } from "../ui/difficulty-levels
 import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_COST_TYPES, type EventCostType } from "./cost";
 import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "./event-type";
+import { registrationCta, type RegistrationCtaInput } from "./registration-cta";
 import { registrationState, type RegistrationWindowInput } from "./registration-window";
 
 /**
@@ -15,8 +16,10 @@ import { registrationState, type RegistrationWindowInput } from "./registration-
  * **OR within a group, AND across groups.** Ticking "Cursă" and "Tură montană" shows either kind;
  * ticking "Cursă" and "Trail" shows a race on a trail. A group with nothing ticked asks nothing.
  *
- * Pure — no clock, no environment — so the one question that needs both, whether a date is a night
- * event (§394), is the caller's predicate (`clubNightEvent`), and a unit test can hand it anything.
+ * Pure — no clock, no environment, no read — so the two questions that need one of them are the
+ * caller's predicates (`FilterFacts`): whether a date is a night event (§394, `clubNightEvent`, the
+ * club's place and the clock) and whether the page has a registration door (`registrationDoorOpen`
+ * over the cached availability, `registration-doors.ts`). A unit test can hand either anything.
  */
 
 /**
@@ -45,9 +48,10 @@ export type FilterGroup = (typeof FILTER_GROUPS)[number];
 
 /**
  * The three yes-or-no filters, under "Altele" / "More": held with a partner (§401), a night
- * event (§394), and registration open on the site right now (§NNN) — the same answer
- * `registrationState` gives `RegistrationCta` (`registration-cta.ts`), read off the cached rows'
- * own window columns, never a second query for availability.
+ * event (§394), and «Înscrieri deschise» — the event's page has a registration door right now
+ * (§NNN): exactly the events whose page shows a button to register, the one `RegistrationCta`
+ * draws — a place, the waiting list, or the organizer's own form — and never one whose page says
+ * a sentence instead (full with no waiting list, the waiting list full, not open yet, closed).
  */
 export const FILTER_FLAGS = ["partner", "night", "registration"] as const;
 export type FilterFlag = (typeof FILTER_FLAGS)[number];
@@ -83,8 +87,8 @@ export const NO_FILTER: ListingFilter = {
 
 /**
  * What a filter has to know of an event: its closed-set columns, whatever `readCoHosts` reads,
- * and the window columns `registrationState` reads (all on the public row already — `RegistrationCta`
- * reads the same ones for the same event).
+ * and the columns the registration door is decided on (all on the public row already —
+ * `RegistrationCta` reads the same ones for the same event).
  */
 export type FilterableEvent = {
   type: string;
@@ -93,26 +97,99 @@ export type FilterableEvent = {
   distanceMeters: number | null;
   costType: string | null;
 } & CoHostSource &
-  RegistrationWindowInput;
+  RegistrationDoorEvent;
+
+/** The two answers a filter cannot give from the row alone — the caller's, per event (see the file's head). */
+export type FilterFacts<T> = {
+  /** Whether this date is a night event (§394). */
+  night: (event: T) => boolean;
+  /** Whether this event's page has a registration door right now (`registrationDoorOpen`). */
+  door: (event: T) => boolean;
+};
+
+/** An event's own columns the page's registration door reads — everything but the free places. */
+export type RegistrationDoorEvent = RegistrationWindowInput & Pick<RegistrationCtaInput, "externalRegistrationUrl" | "externalProvider">;
+
+/** The free places and the waiting list, as `cachedPublicAvailability` answers them; null for an uncapped event. */
+export type DoorAvailability = { available: number; waitlistRoom: number | null; waitlistCapacity: number | null } | null;
+
+/**
+ * Whether the page's door needs the free places to be decided: an internal event whose window is
+ * open — the one case `RegistrationCta` reads them in, and so the one case a listing pays a
+ * (cached) read for. Every other event's door is decided by its own columns.
+ */
+export function doorNeedsAvailability(event: RegistrationWindowInput, now: Date): boolean {
+  return event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN";
+}
+
+/** The `registrationCta` states that draw a button on the event's page (`RegistrationCta.tsx`). */
+const DOOR_KINDS: ReadonlySet<ReturnType<typeof registrationCta>["kind"]> = new Set(["OPEN", "FULL", "EXTERNAL"]);
+
+/**
+ * «Înscrieri deschise» (§NNN): the event's page offers a way to register right now — the same
+ * `registrationCta` the page renders its door from, over the same availability. A free place or an
+ * uncapped event (`OPEN`), no place but a waiting list that takes people (`FULL`), or the
+ * organizer's own form (`EXTERNAL`) is a door; a full event with no waiting list or a full waiting
+ * list (§348), a window not open yet or closed, a cancelled or finished event, or one that takes no
+ * registration is not. `availability` is only read where `doorNeedsAvailability` says so.
+ */
+export function registrationDoorOpen(event: RegistrationDoorEvent, availability: DoorAvailability, now: Date): boolean {
+  const cta = registrationCta(
+    {
+      ...event,
+      availablePlaces: availability?.available ?? null,
+      waitlistRoom: availability?.waitlistRoom ?? null,
+      waitlistCapacity: availability?.waitlistCapacity ?? null,
+    },
+    now,
+  );
+  return DOOR_KINDS.has(cta.kind);
+}
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 /**
  * Every value a parameter names, whichever shape the address wrote it in: repeated
  * (`?type=RACE&type=HIKE`, what the GET form submits) or comma-separated (`?type=RACE,HIKE`, the
- * shape a hand-written link might use) — both parse to the same tick set.
+ * shape a hand-written link might use) — both parse to the same tick set. Each is trimmed, so a
+ * space a hand-typed link carried (or `+`, which a query string reads as one) is not a value.
  */
 const all = (value: string | string[] | undefined): string[] =>
-  (value === undefined ? [] : Array.isArray(value) ? value : [value]).flatMap((entry) => entry.split(","));
+  (value === undefined ? [] : Array.isArray(value) ? value : [value]).flatMap((entry) => entry.split(",").map((part) => part.trim()));
+
+/**
+ * The short forms a hand-written address may use for a distance band (§NNN): the band's own
+ * kilometres, `?distance=10-21`, rather than the enum's name. `21+` arrives as `21 ` — a query
+ * string reads `+` as a space — and `all` trims it, so `21`, `21+` and `21-` all mean "over 21".
+ */
+const DISTANCE_ALIASES: Record<string, DistanceBand> = {
+  "0-5": "UP_TO_5",
+  "5-10": "FROM_5_TO_10",
+  "10-21": "FROM_10_TO_21",
+  "21": "OVER_21",
+  "21-": "OVER_21",
+};
+
+/**
+ * One asked value in a group's own spelling: the enum's name whatever its case, with `-` for `_`
+ * (`group-run`, `Group_Run` and `GROUP_RUN` are one kind), and a distance's kilometre alias.
+ */
+function canonical(group: FilterGroup, asked: string): string {
+  // `Object.hasOwn`, not `in`: `?distance=constructor` must not find the prototype's.
+  if (group === "distance" && Object.hasOwn(DISTANCE_ALIASES, asked)) return DISTANCE_ALIASES[asked];
+  return asked.toUpperCase().replaceAll("-", "_");
+}
 
 /**
  * The filter the address names. A value outside its closed set is not an error — it is ignored,
  * the way `?type=NOPE` always was — and the values come back in the closed set's own order, once
- * each, so two addresses that tick the same boxes in another order are the same state.
+ * each, so two addresses that tick the same boxes in another order are the same state. Besides the
+ * enum names the form itself submits, the short forms a link might be written in are read the same
+ * way: `?type=race,group-run`, `?distance=10-21` (§NNN).
  */
 export function parseListingFilter(params: SearchParams): ListingFilter {
   const pick = <G extends FilterGroup>(group: G): GroupValues[G][] => {
-    const asked = all(params[group]);
+    const asked = all(params[group]).map((value) => canonical(group, value));
     return GROUP_VALUES[group].filter((value) => asked.includes(value)) as GroupValues[G][];
   };
   return {
@@ -148,13 +225,6 @@ export function listingFilterQuery(filter: ListingFilter): Record<string, string
   return query;
 }
 
-/** One string per state, for a `<Suspense>` key and for the island that keeps the boxes in step. */
-export function listingFilterKey(filter: ListingFilter): string {
-  const parts = FILTER_GROUPS.filter((group) => filter[group].length > 0).map((group) => `${group}=${filter[group].join("+")}`);
-  for (const flag of FILTER_FLAGS) if (filter[flag]) parts.push(flag);
-  return parts.length > 0 ? parts.join("&") : "all";
-}
-
 /** The same filter with one box unticked — the active chip's own link. */
 export function withoutValue(filter: ListingFilter, group: FilterGroup | FilterFlag, value?: string): ListingFilter {
   if (group === "partner" || group === "night" || group === "registration") return { ...filter, [group]: false };
@@ -177,22 +247,17 @@ function valueOf(event: FilterableEvent, group: FilterGroup): string | null {
   }
 }
 
-function flagOf(
-  event: FilterableEvent,
-  flag: FilterFlag,
-  isNight: (event: FilterableEvent) => boolean,
-  now: Date,
-): boolean {
+function flagOf<T extends FilterableEvent>(event: T, flag: FilterFlag, facts: FilterFacts<T>): boolean {
   switch (flag) {
     case "partner":
       return readCoHosts(event).length > 0;
     case "night":
-      return isNight(event);
+      return facts.night(event);
     case "registration":
-      // The same window `RegistrationCta` reads (`registration-cta.ts`), off the columns every
-      // public row already carries — whatever the button would say once `now` is fixed, short of
-      // counting places: a full event still on a waiting list is registration that is open.
-      return registrationState(event, now) === "OPEN";
+      // The page's own door (`registrationDoorOpen`), decided by the caller over the same cached
+      // availability `RegistrationCta` reads — never the window alone: a full event with no
+      // waiting list is inside its window and offers no way in.
+      return facts.door(event);
   }
 }
 
@@ -200,12 +265,7 @@ function flagOf(
  * Whether an event passes the filter: every group with a tick must contain the event's own value
  * (an unanswered question matches no tick), and every flag that is on must hold.
  */
-export function matchesListingFilter<T extends FilterableEvent>(
-  event: T,
-  filter: ListingFilter,
-  isNight: (event: T) => boolean,
-  now: Date,
-): boolean {
+export function matchesListingFilter<T extends FilterableEvent>(event: T, filter: ListingFilter, facts: FilterFacts<T>): boolean {
   for (const group of FILTER_GROUPS) {
     const ticked = filter[group] as string[];
     if (ticked.length === 0) continue;
@@ -213,7 +273,7 @@ export function matchesListingFilter<T extends FilterableEvent>(
     if (value === null || !ticked.includes(value)) return false;
   }
   for (const flag of FILTER_FLAGS) {
-    if (filter[flag] && !flagOf(event, flag, isNight as (event: FilterableEvent) => boolean, now)) return false;
+    if (filter[flag] && !flagOf(event, flag, facts)) return false;
   }
   return true;
 }
@@ -239,12 +299,7 @@ export type FilterOffer = {
  * Read off every event the page shows, the lead event included — the lead follows the filter now
  * (§NNN) — and never off the filtered rows, so ticking one box never takes another away.
  */
-export function offeredFilters<T extends FilterableEvent>(
-  events: readonly T[],
-  filter: ListingFilter,
-  isNight: (event: T) => boolean,
-  now: Date,
-): FilterOffer {
+export function offeredFilters<T extends FilterableEvent>(events: readonly T[], filter: ListingFilter, facts: FilterFacts<T>): FilterOffer {
   const narrows = (count: number) => count > 0 && count < events.length;
   const groups = FILTER_GROUPS.map((group) => {
     const ticked = filter[group] as string[];
@@ -260,7 +315,7 @@ export function offeredFilters<T extends FilterableEvent>(
   const flags = FILTER_FLAGS.filter(
     (flag) =>
       filter[flag] ||
-      narrows(events.filter((event) => flagOf(event, flag, isNight as (event: FilterableEvent) => boolean, now)).length),
+      narrows(events.filter((event) => flagOf(event, flag, facts)).length),
   );
   return { groups, flags };
 }

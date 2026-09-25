@@ -1,20 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { calendarBoundaryKey, listingSections } from "@/modules/events/domain/listing";
-import { listingFilterKey, matchesListingFilter, parseListingFilter } from "@/modules/events/domain/listing-filter";
+import { listingSections } from "@/modules/events/domain/listing";
+import { matchesListingFilter, parseListingFilter } from "@/modules/events/domain/listing-filter";
 
 /**
  * BR-REQ-041-01 criterion 12 — the listing's loading states (`DECISIONS.md` §166).
  *
  * The listing used to compute all of this inline, between three awaits on one page. It is
- * three streamed regions now, rendered by three components off one shared promise, so the
- * rules that decide *what goes where* had to become functions — and a function that decides
- * whether a skeleton appears is worth a test, because getting it wrong is a bug nobody sees
- * in a diff and everybody sees on a phone.
+ * rendered by several components off the one read the page awaits (§NNN), so the rules that
+ * decide *what goes where* had to become functions — worth a test, because getting them wrong is
+ * a bug nobody sees in a diff and everybody sees on a phone.
  *
  * What the filters are and what the panel offers is `listing-filter.test.ts` (§NNN).
  */
-
-const NOW = new Date("2026-01-01T00:00:00Z");
 
 const event = (id: string, type: string, featured = false, hasPartner = false) => ({
   id,
@@ -35,12 +32,14 @@ const event = (id: string, type: string, featured = false, hasPartner = false) =
   registrationOpensAt: null,
   registrationClosesAt: null,
   publishedAt: new Date("2025-01-01T00:00:00Z"),
+  externalRegistrationUrl: null,
+  externalProvider: null,
 });
 
 type Row = ReturnType<typeof event>;
 const matching = (params: Record<string, string | string[]>) => {
   const filter = parseListingFilter(params);
-  return (row: Row) => matchesListingFilter(row, filter, () => false, NOW);
+  return (row: Row) => matchesListingFilter(row, filter, { night: () => false, door: () => true });
 };
 
 describe("listingSections divides the listing the way it always did", () => {
@@ -121,55 +120,5 @@ describe("listingSections: the lead event follows the filters", () => {
     const { featured, listed } = listingSections(rows, matching({}));
     expect(featured?.id).toBe("a");
     expect(listed.map((row) => row.id)).toEqual(["b", "c", "d"]);
-  });
-});
-
-describe("calendarBoundaryKey asks for the skeleton exactly when the query changes", () => {
-  const october = { kind: "month", month: { year: 2026, month: 10 } } as const;
-  const november = { kind: "month", month: { year: 2026, month: 11 } } as const;
-  const key = (params: Record<string, string | string[]>) => listingFilterKey(parseListingFilter(params));
-
-  it("changes with the month, so the grid is replaced rather than left stale", () => {
-    expect(calendarBoundaryKey(october, "grid")).not.toBe(calendarBoundaryKey(november, "grid"));
-  });
-
-  it("changes with the layout, because the grid and the agenda are different shapes", () => {
-    expect(calendarBoundaryKey(october, "grid")).not.toBe(calendarBoundaryKey(october, "list"));
-  });
-
-  it("changes between a month and the year that contains it", () => {
-    expect(calendarBoundaryKey({ kind: "year", year: 2026 }, "grid")).not.toBe(
-      calendarBoundaryKey({ kind: "month", month: { year: 2026, month: 1 } }, "grid"),
-    );
-  });
-
-  // §167. The calendar's rows are narrowed by the filters too, so the filters are an input of
-  // the query the boundary suspends on. §166 said the opposite and was wrong about its own
-  // page: pressing "Cursă" changed the grid's contents while the key stood still, and React kept
-  // the previous kind's grid on screen for the whole round-trip. Since §NNN every box counts.
-  it("changes with every filter, because the grid is narrowed by each of them", () => {
-    expect(calendarBoundaryKey(october, "grid")).not.toBe(calendarBoundaryKey(october, "grid", key({ type: "RACE" })));
-    expect(calendarBoundaryKey(october, "grid", key({ type: "HIKE" }))).not.toBe(calendarBoundaryKey(october, "grid", key({ type: "RACE" })));
-    expect(calendarBoundaryKey(october, "grid", key({ type: "RACE" }))).not.toBe(
-      calendarBoundaryKey(october, "grid", key({ type: "RACE", partner: "1" })),
-    );
-    expect(calendarBoundaryKey(october, "grid", key({ surface: "TRAIL" }))).not.toBe(
-      calendarBoundaryKey(october, "grid", key({ surface: "TRAIL", night: "1" })),
-    );
-  });
-
-  it("does not change when nothing the query depends on did", () => {
-    expect(calendarBoundaryKey(october, "grid")).toBe(calendarBoundaryKey(october, "grid"));
-    expect(calendarBoundaryKey(october, "grid", key({}))).toBe(calendarBoundaryKey(october, "grid"));
-    // The same boxes ticked in another order are the same state.
-    expect(calendarBoundaryKey(october, "grid", key({ type: ["RACE", "HIKE"] }))).toBe(
-      calendarBoundaryKey(october, "grid", key({ type: ["HIKE", "RACE"] })),
-    );
-    // The layout has no meaning in the year view, so it must not split the key there either.
-    expect(calendarBoundaryKey({ kind: "year", year: 2027 }, "list")).toBe(calendarBoundaryKey({ kind: "year", year: 2027 }, "grid"));
-  });
-
-  it("pads the month, so October and the year 2026 cannot collide", () => {
-    expect(calendarBoundaryKey({ kind: "month", month: { year: 2026, month: 1 } }, "grid")).toContain("2026-01");
   });
 });

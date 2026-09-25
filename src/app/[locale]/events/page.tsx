@@ -3,10 +3,9 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
@@ -19,12 +18,13 @@ import {
   offeredFilters,
   offersAnything,
   parseListingFilter,
-  type FilterableEvent,
+  type FilterFacts,
   type ListingFilter,
 } from "@/modules/events/domain/listing-filter";
 import { clubNightEvent } from "@/modules/events/night-event";
+import { readRegistrationDoors } from "@/modules/events/registration-doors";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
-import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
@@ -32,8 +32,7 @@ import { env } from "@/shared/config/env";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
-import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
-import type { listUpcomingEvents } from "@/modules/events/repository";
+import type { listUpcomingEvents, PublicEvent } from "@/modules/events/repository";
 import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
@@ -62,7 +61,7 @@ type Props = {
  * Whether a row is a night event (§394), for the filter's "Eveniment de noapte" box: the same answer
  * the row's own pill gives, at the club's place, per date.
  */
-const isNight = (event: FilterableEvent & Parameters<typeof clubNightEvent>[0]) => clubNightEvent(event).night;
+const isNight = (event: PublicEvent) => clubNightEvent(event).night;
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -102,9 +101,8 @@ type EventLocale = Parameters<typeof listUpcomingEvents>[1];
  * The events the page leads with: everything still to come, or — between seasons, where an
  * empty page reads as a broken site — the last one that happened, dated.
  *
- * One function and therefore one promise, because two regions of the page need the same rows
- * and must not ask twice: the lead (the hero and the filter) and the list below the calendar
- * each `await` this, and the second one gets the settled value.
+ * One function and therefore one read, because the filter panel, the lead and the list all need
+ * the same rows and must not ask twice: the page awaits it once and hands each the value (§NNN).
  */
 async function loadListing(locale: EventLocale, now: Date) {
   const upcoming = await cachedUpcomingEvents(locale, now);
@@ -131,24 +129,30 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
 
-  /**
-   * The query is **started here and awaited nowhere in this function** (§166).
-   *
-   * That is the whole fix for the owner's "there is flickering when changing calendars". The
-   * page body itself touches no database, so Next can send the header, the wordmark and the
-   * heading to the browser the instant the request arrives, and each region below fills in
-   * when the query answers.
-   *
-   * Passing a promise down to a Server Component is the supported shape for this — the child
-   * awaits it inside a `<Suspense>` boundary, and the two children that share `listing` share
-   * one query between them.
-   */
   /*
-    With its last good answer behind it (§281): if Neon cannot be reached, each region below
-    renders the copy this site last served instead of the whole page becoming `error.tsx`. The
-    promise is still started here and awaited nowhere, so the streaming above is unchanged.
+    **One cached read, awaited here, before anything is rendered** (§NNN, amending §166 for this
+    page). The rows come from the data cache (§333) with their last good copy behind them (§281),
+    so a visit that finds them costs no database and answers in the time a cache lookup takes.
+
+    §166 streamed the lead and the list behind `<Suspense>` so the header could leave before the
+    query answered. A streamed region is revealed by an inline script, though, so a browser with
+    scripts off was left with the loading shapes — and the filter panel, a plain GET form meant to
+    work without a script, sat inside one of them where nobody could press it. Now the panel, the
+    hero, the list and the past section are all in the first HTML the server sends: no boundary on
+    this page waits for a script to be shown. With a script nothing is lost — a filter or a month
+    change is a soft navigation that keeps the page on screen until the new one is ready.
+
+    The past section's own read (§267) starts at the same moment and is awaited beside it, so the
+    two cost the longer of the two, not the sum.
   */
-  const listing = readWithLastGood(`events:${locale}`, () => loadListing(locale, now), now);
+  const [read, pastRows] = await Promise.all([
+    readWithLastGood(`events:${locale}`, () => loadListing(locale, now), now),
+    readPastEvents(locale, now),
+  ]);
+  const { events, hasUpcoming } = read.value;
+  // «Înscrieri deschise» is the page's own door (§NNN): one cached availability read per open
+  // internal event among these rows, and nothing for any other (`registration-doors.ts`).
+  const facts: FilterFacts<PublicEvent> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -163,12 +167,8 @@ export default async function EventsPage({ params, searchParams }: Props) {
           also at the head of the calendar and the contact page (`DECISIONS.md` §292). `shared/ui/Wordmark` says where it may appear. */}
       <Wordmark />
 
-      {/* Says so when what follows is the last copy rather than today's (§281). Its own
-          boundary, because knowing the answer means awaiting the query the page deliberately
-          does not wait for. */}
-      <Suspense fallback={null}>
-        <StaleNotice listing={listing} />
-      </Suspense>
+      {/* Says so when what follows is the last copy rather than today's (§281). */}
+      <LastGoodNotice read={read} />
 
       {/* The gradient rule under the heading says where a section starts (§166). */}
       <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
@@ -178,29 +178,22 @@ export default async function EventsPage({ params, searchParams }: Props) {
         {t("intro")}
       </Typography>
 
-      <Suspense fallback={<ListingLeadSkeleton label={t("loading")} />}>
-        <ListingLead listing={listing} filter={filter} layout={layout} locale={locale} now={now} />
-      </Suspense>
+      <ListingLead events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} now={now} />
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
           front page is for "what is on next" and a grid of squares is what somebody planning a
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
-      <Suspense fallback={<EventListSkeleton label={t("loading")} />}>
-        <ListingBody listing={listing} filter={filter} now={now} />
-      </Suspense>
+      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} />
 
-      {/* What the club has already held, at the foot and folded (§267). Its own query and its
-          own boundary, so it costs the page nothing until it answers — and nothing at all
-          above it waits for it. */}
-      <Suspense fallback={null}>
-        <PastEvents
-          locale={locale}
-          now={now}
-          filter={filter}
-          shownAbove={listing.then((read) => (read.value.hasUpcoming ? undefined : read.value.events[0]?.id))}
-        />
-      </Suspense>
+      {/* What the club has already held, at the foot and folded (§267). */}
+      <PastEvents
+        rows={pastRows}
+        now={now}
+        filter={filter}
+        facts={facts}
+        shownAbove={hasUpcoming ? undefined : events[0]?.id}
+      />
     </Container>
   );
 }
@@ -208,40 +201,43 @@ export default async function EventsPage({ params, searchParams }: Props) {
 /**
  * The filter panel and the lead event.
  *
- * Streamed, because it is the first thing that costs a query and the last thing that should
- * hold up the page around it. The boundary is never re-keyed, so a filter pressed with a script
- * keeps the panel — open, as the reader left it — on screen while the new rows arrive.
+ * In the page's first HTML, never behind a streamed boundary (§NNN): the panel is a GET form that
+ * has to work with scripts off, and a streamed region is only revealed by a script. A filter
+ * pressed with a script is a soft navigation that keeps the panel — open, as the reader left it —
+ * on screen while the new rows arrive.
  *
  * The panel sits **above** the hero since §NNN, because the hero follows the filters now: a
  * control under the thing it hides would jump up under the thumb that pressed it.
  */
 async function ListingLead({
-  listing,
+  events,
+  hasUpcoming,
   filter,
+  facts,
   layout,
   locale,
   now,
-}: {
-  listing: Promise<Resilient<Listing>>;
+}: Listing & {
   /** The filters the address names (§NNN): OR within a group, AND across groups. */
   filter: ListingFilter;
+  /** The night and door answers, per row, the page read once (§394, §NNN). */
+  facts: FilterFacts<PublicEvent>;
   layout: CalendarLayout;
   locale: "ro" | "en";
   now: Date;
 }) {
-  const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
   // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
   // The filter decides the hero too (§NNN): a lead event that does not match is not shown.
-  const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight, now), hasUpcoming);
+  const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, facts), hasUpcoming);
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // What the panel offers (§NNN, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the hero's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
-  const offer = offeredFilters(events, filter, isNight, now);
+  const offer = offeredFilters(events, filter, facts);
 
   return (
     <>
@@ -285,11 +281,28 @@ async function ListingLead({
 const PAST_EVENTS_SHOWN = 12;
 
 /**
- * How far back the past section looks while a filter is on (§NNN): about a year of weekly runs, so
- * that "Trail" or "Cursă" finds its twelve in memory from one cached read rather than a query per
- * combination of boxes. Past that, the calendar's months are where the rest lives, as before.
+ * How far back the past section looks (§NNN): the club's latest sixty past events — about a year
+ * of weekly runs — read in **one** cached window per language whatever the address ticks, and
+ * narrowed in memory. Every visit, filtered or not, reads the same data-cache entry
+ * (`events.past`, the language, the listing's clock window, 60), so no combination of boxes can
+ * cost a database read of its own; a filter finds its twelve among those sixty or shows fewer.
+ * Past that, the calendar's months are where the rest lives, as before.
  */
-const PAST_EVENTS_FILTER_WINDOW = 60;
+const PAST_EVENTS_WINDOW = 60;
+
+/**
+ * The past section's rows (§267), or none when they cannot be read: the section is a fold of what
+ * already happened, and an outage in it must not take the page it sits under with it (§281).
+ */
+async function readPastEvents(locale: EventLocale, now: Date): Promise<PublicEvent[]> {
+  try {
+    return await cachedPastEvents(locale, now, PAST_EVENTS_WINDOW);
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[events] could not read the past events", error);
+    return [];
+  }
+}
 
 /**
  * The events that have already happened, at the bottom, in their own category (§267).
@@ -308,31 +321,27 @@ const PAST_EVENTS_FILTER_WINDOW = 60;
  * section skips that one row: it would be the same card twice on one page.
  */
 async function PastEvents({
-  locale,
+  rows,
   now,
   filter,
+  facts,
   shownAbove,
 }: {
-  locale: EventLocale;
+  /** `PAST_EVENTS_WINDOW` rows, newest first, read by the page beside the listing's own. */
+  rows: PublicEvent[];
   now: Date;
-  /** The filters above (§272, §NNN) — the past narrows by them too. */
+  /** The filters above (§272, §NNN) — the past narrows by them too, in memory. */
   filter: ListingFilter;
+  facts: FilterFacts<PublicEvent>;
   /** The past event the lead already shows between seasons (§167), if any. */
-  shownAbove: Promise<string | undefined>;
+  shownAbove: string | undefined;
 }) {
   const filtered = activeFilterCount(filter) > 0;
-  // One kind ticked still narrows at the source, as `?type=` always did (§272); every other filter
-  // narrows in memory over a longer window of the same cached read (§NNN), so ticking "Trail"
-  // does not have to find its twelve among the last thirteen rows of any kind.
+  // The heading names the kind when one kind is all that is ticked, as `?type=` always did (§272).
   const sourceType = filter.type.length === 1 ? filter.type[0] : undefined;
-  const [rows, leadId] = await Promise.all([
-    cachedPastEvents(locale, now, filtered ? PAST_EVENTS_FILTER_WINDOW : PAST_EVENTS_SHOWN + 1, sourceType),
-    shownAbove,
-  ]);
-  // The one the lead is already showing, when there is nothing to come (§167) — by its id, not
-  // as "the first row": with a kind narrowed at the source, the first row is the latest of that
-  // kind, which is not the club's latest event the lead shows.
-  const events = rows.filter((event) => event.id !== leadId && matchesListingFilter(event, filter, isNight, now));
+  // The one the lead is already showing, when there is nothing to come (§167) — by its id, so it
+  // is left out wherever the filter puts it.
+  const events = rows.filter((event) => event.id !== shownAbove && matchesListingFilter(event, filter, facts));
   if (events.length === 0) return null;
 
   const t = await getTranslations("Events");
@@ -397,22 +406,23 @@ async function PastEvents({
  * screen has room, and a reader there cannot tell a heading from a control.
  */
 async function ListingBody({
-  listing,
+  events,
+  hasUpcoming,
   filter,
+  facts,
   now,
-}: {
-  listing: Promise<Resilient<Listing>>;
+}: Listing & {
   /** The filters the address names (§NNN), the same the lead was given. */
   filter: ListingFilter;
+  facts: FilterFacts<PublicEvent>;
   now: Date;
 }) {
-  const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
   const filtered = activeFilterCount(filter) > 0;
   // The same division the lead made, and it has to be given the same arguments or the two
   // disagree: a past event the lead refused to hero must appear in the list (§167), and a lead
   // event the filter hides must not reappear here as a card (§NNN).
-  const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, isNight, now), hasUpcoming);
+  const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, facts), hasUpcoming);
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
@@ -495,9 +505,4 @@ async function ListingBody({
       )}
     </Box>
   );
-}
-
-/** The "this is the last copy" line, once the shared query has settled (§281). */
-async function StaleNotice({ listing }: { listing: Promise<Resilient<Listing>> }) {
-  return <LastGoodNotice read={await listing} />;
 }

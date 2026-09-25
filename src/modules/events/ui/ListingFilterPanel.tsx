@@ -29,7 +29,7 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * checkboxuri pe pill-uri și mai multe filtre").
  *
  * **No script needed.** A native `<details>` holds a GET `<form>` whose boxes are named after the
- * address's own parameters, so ticking and pressing "Arată evenimentele" loads exactly the address a
+ * address's own parameters, so ticking and pressing «Aplică» loads exactly the address a
  * link would carry, and the page renders it on the server like any other. `FilterAutoApply`, the one
  * island, only makes each tick apply at once and hides the button it made redundant.
  *

@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   activeFilterCount,
   distanceBand,
-  listingFilterKey,
+  doorNeedsAvailability,
   listingFilterQuery,
   matchesListingFilter,
   NO_FILTER,
   offeredFilters,
   offersAnything,
   parseListingFilter,
+  registrationDoorOpen,
   withoutValue,
   type FilterableEvent,
+  type FilterFacts,
 } from "@/modules/events/domain/listing-filter";
 
 /**
@@ -25,7 +27,8 @@ const NOW = new Date("2026-01-01T00:00:00Z");
 const PAST = new Date("2025-01-01T00:00:00Z");
 const FUTURE = new Date("2026-06-01T00:00:00Z");
 
-type Row = FilterableEvent & { id: string; night?: boolean };
+/** `night` and `door` stand for the caller's two answers (§394, the page's registration door). */
+type Row = FilterableEvent & { id: string; night?: boolean; door?: boolean };
 const row = (id: string, fields: Partial<Row> = {}): Row => ({
   id,
   type: "GROUP_RUN",
@@ -44,12 +47,14 @@ const row = (id: string, fields: Partial<Row> = {}): Row => ({
   registrationOpensAt: null,
   registrationClosesAt: null,
   publishedAt: PAST,
+  externalRegistrationUrl: null,
+  externalProvider: null,
   ...fields,
 });
-const isNight = (event: Row) => event.night === true;
+const facts: FilterFacts<Row> = { night: (event) => event.night === true, door: (event) => event.door === true };
 const ids = (rows: Row[], params: Record<string, string | string[]>) => {
   const filter = parseListingFilter(params);
-  return rows.filter((event) => matchesListingFilter(event, filter, isNight, NOW)).map((event) => event.id);
+  return rows.filter((event) => matchesListingFilter(event, filter, facts)).map((event) => event.id);
 };
 
 describe("parseListingFilter reads the address", () => {
@@ -80,6 +85,29 @@ describe("parseListingFilter reads the address", () => {
       type: ["GROUP_RUN", "RACE"],
       surface: ["ASPHALT", "TRAIL"],
     });
+  });
+
+  it("reads the short forms a hand-written link may use: kilometre bands, lowercase and hyphenated names (§NNN)", () => {
+    expect(parseListingFilter({ distance: "10-21" })).toEqual({ ...NO_FILTER, distance: ["FROM_10_TO_21"] });
+    expect(parseListingFilter({ distance: "0-5,5-10" })).toEqual({ ...NO_FILTER, distance: ["UP_TO_5", "FROM_5_TO_10"] });
+    // `?distance=21+` reaches the page as "21 " — a query string reads `+` as a space.
+    expect(parseListingFilter({ distance: "21 " })).toEqual({ ...NO_FILTER, distance: ["OVER_21"] });
+    expect(parseListingFilter({ distance: "21-" })).toEqual({ ...NO_FILTER, distance: ["OVER_21"] });
+    expect(parseListingFilter({ distance: new URLSearchParams("distance=21+").getAll("distance") })).toEqual({ ...NO_FILTER, distance: ["OVER_21"] });
+    // The enum names still read, so every address the form ever wrote means what it meant.
+    expect(parseListingFilter({ distance: "FROM_10_TO_21" })).toEqual(parseListingFilter({ distance: "10-21" }));
+    expect(parseListingFilter({ type: "race,group-run" })).toEqual(parseListingFilter({ type: "RACE,GROUP_RUN" }));
+    expect(parseListingFilter({ type: " RACE , GROUP_RUN " })).toEqual({ ...NO_FILTER, type: ["GROUP_RUN", "RACE"] });
+    expect(parseListingFilter({ surface: "trail", difficulty: "hard", cost: "free" })).toEqual({
+      ...NO_FILTER,
+      surface: ["TRAIL"],
+      difficulty: ["HARD"],
+      cost: ["FREE"],
+    });
+  });
+
+  it("finds no alias on the prototype, and no band outside the four", () => {
+    expect(parseListingFilter({ distance: ["constructor", "toString", "21-42", "5"] })).toEqual(NO_FILTER);
   });
 
   it("ignores a value outside its closed set, and a tick given twice", () => {
@@ -119,12 +147,6 @@ describe("the filter goes back into the address in the form's own shape", () => 
     });
     expect(parseListingFilter(listingFilterQuery(filter))).toEqual(filter);
     expect(activeFilterCount(filter)).toBe(9);
-  });
-
-  it("gives one key per state, whatever order the boxes were ticked in", () => {
-    expect(listingFilterKey(parseListingFilter({ type: ["HIKE", "RACE"] }))).toBe(listingFilterKey(parseListingFilter({ type: ["RACE", "HIKE"] })));
-    expect(listingFilterKey(NO_FILTER)).toBe("all");
-    expect(listingFilterKey(parseListingFilter({ type: "RACE" }))).not.toBe(listingFilterKey(parseListingFilter({ type: "RACE", night: "1" })));
   });
 
   it("unticks one box for an active chip's link, and leaves the rest", () => {
@@ -175,26 +197,13 @@ describe("matchesListingFilter: OR within a group, AND across groups", () => {
     expect(distanceBand(0)).toBeNull();
   });
 
-  it("asks the caller whether a date is a night event (§394), never the clock itself", () => {
-    const filter = parseListingFilter({ night: "1" });
-    expect(matchesListingFilter(rows[0], filter, () => true, NOW)).toBe(true);
-    expect(matchesListingFilter(rows[0], filter, () => false, NOW)).toBe(false);
-  });
-
-  it("reads registration-open off the row's own window, the same rule RegistrationCta gives", () => {
-    const open = row("open");
-    const notYetOpen = row("not-yet-open", { registrationOpensAt: FUTURE });
-    const closed = row("closed", { registrationClosesAt: PAST, startsAt: PAST });
-    const cancelled = row("cancelled", { eventStatus: "CANCELLED" });
-    const external = row("external", { registrationMode: "EXTERNAL" });
-    const none = row("none", { registrationMode: "NONE" });
-    const filter = parseListingFilter({ registration: "1" });
-    expect(matchesListingFilter(open, filter, isNight, NOW)).toBe(true);
-    expect(matchesListingFilter(notYetOpen, filter, isNight, NOW)).toBe(false);
-    expect(matchesListingFilter(closed, filter, isNight, NOW)).toBe(false);
-    expect(matchesListingFilter(cancelled, filter, isNight, NOW)).toBe(false);
-    expect(matchesListingFilter(external, filter, isNight, NOW)).toBe(false);
-    expect(matchesListingFilter(none, filter, isNight, NOW)).toBe(false);
+  it("asks the caller whether a date is a night event (§394) and whether the page has a door, never the clock itself", () => {
+    const night = parseListingFilter({ night: "1" });
+    expect(matchesListingFilter(rows[0], night, { night: () => true, door: () => false })).toBe(true);
+    expect(matchesListingFilter(rows[0], night, { night: () => false, door: () => true })).toBe(false);
+    const registration = parseListingFilter({ registration: "1" });
+    expect(matchesListingFilter(rows[0], registration, { night: () => false, door: () => true })).toBe(true);
+    expect(matchesListingFilter(rows[0], registration, { night: () => true, door: () => false })).toBe(false);
   });
 
   it("lets everything through with no filter", () => {
@@ -202,8 +211,52 @@ describe("matchesListingFilter: OR within a group, AND across groups", () => {
   });
 });
 
+describe("«Înscrieri deschise» is the page's own registration door (§NNN), never the window alone", () => {
+  const places = (available: number, waitlistRoom: number | null = null, waitlistCapacity: number | null = null) => ({
+    available,
+    waitlistRoom,
+    waitlistCapacity,
+  });
+
+  it("is a door while there is a place, or no count at all (an uncapped event)", () => {
+    expect(registrationDoorOpen(row("open"), places(3), NOW)).toBe(true);
+    expect(registrationDoorOpen(row("uncapped"), null, NOW)).toBe(true);
+  });
+
+  it("is a door when the places are gone but the waiting list takes people", () => {
+    expect(registrationDoorOpen(row("full"), places(0), NOW)).toBe(true);
+    expect(registrationDoorOpen(row("full-room"), places(0, 2, 10), NOW)).toBe(true);
+  });
+
+  it("is no door when full with no waiting list, or with the waiting list full (§348) — the window is open, the page has no button", () => {
+    expect(registrationDoorOpen(row("no-list"), places(0, null, 0), NOW)).toBe(false);
+    expect(registrationDoorOpen(row("list-full"), places(0, 0, 5), NOW)).toBe(false);
+  });
+
+  it("is the organizer's form for an external event, as the page's button is", () => {
+    expect(registrationDoorOpen(row("external", { registrationMode: "EXTERNAL", externalRegistrationUrl: "https://example.org/form" }), null, NOW)).toBe(true);
+    // No address to send anyone to: the page draws nothing, so neither is it a door.
+    expect(registrationDoorOpen(row("external-bare", { registrationMode: "EXTERNAL" }), null, NOW)).toBe(false);
+  });
+
+  it("is no door before the window opens, after it closes, for a cancelled event or one that takes no registration", () => {
+    expect(registrationDoorOpen(row("not-yet-open", { registrationOpensAt: FUTURE }), null, NOW)).toBe(false);
+    expect(registrationDoorOpen(row("closed", { registrationClosesAt: PAST, startsAt: PAST }), null, NOW)).toBe(false);
+    expect(registrationDoorOpen(row("cancelled", { eventStatus: "CANCELLED" }), null, NOW)).toBe(false);
+    expect(registrationDoorOpen(row("none", { registrationMode: "NONE" }), null, NOW)).toBe(false);
+  });
+
+  it("asks for the free places only for an internal event whose window is open — the one read a listing pays for", () => {
+    expect(doorNeedsAvailability(row("open"), NOW)).toBe(true);
+    expect(doorNeedsAvailability(row("external", { registrationMode: "EXTERNAL" }), NOW)).toBe(false);
+    expect(doorNeedsAvailability(row("none", { registrationMode: "NONE" }), NOW)).toBe(false);
+    expect(doorNeedsAvailability(row("not-yet-open", { registrationOpensAt: FUTURE }), NOW)).toBe(false);
+    expect(doorNeedsAvailability(row("cancelled", { eventStatus: "CANCELLED" }), NOW)).toBe(false);
+  });
+});
+
 describe("offeredFilters offers a box only where ticking it would change the page (§133's rule, generalised)", () => {
-  const offered = (rows: Row[], filter = NO_FILTER) => offeredFilters(rows, filter, isNight, NOW);
+  const offered = (rows: Row[], filter = NO_FILTER) => offeredFilters(rows, filter, facts);
 
   it("offers nothing when every event is the same kind — fewer than two kinds is nothing to choose between", () => {
     const rows = [row("a"), row("b")];
@@ -241,7 +294,7 @@ describe("offeredFilters offers a box only where ticking it would change the pag
     const rows = [
       row("a", { coHosts: [{ name: "Salvamont" }] }),
       row("b", { night: true }),
-      row("c", { registrationMode: "NONE" }),
+      row("c", { door: true }),
     ];
     expect(offered(rows).flags).toEqual(["partner", "night", "registration"]);
     expect(offered([row("a"), row("b")]).flags).toEqual([]);
