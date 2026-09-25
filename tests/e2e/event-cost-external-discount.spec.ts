@@ -75,6 +75,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () 
     await page.getByRole("combobox", { name: "Tip eveniment" }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
 
+    await openEditorBox(page, "Cost");
     await openEditorBox(page, "Participare și înscrieri");
 
     // Cost first: Cu taxă, with an amount — the discount note is not on screen yet, INTERNAL is
@@ -200,6 +201,7 @@ async function runFeaturedHeroCase(page: Page): Promise<void> {
     await expect(page).toHaveURL(/\/admin\/events\//);
     await hydrated(page);
 
+    await openEditorBox(page, "Cost");
     await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Cost" }).click();
     await page.getByRole("option", { name: "Cu taxă", exact: true }).click();
@@ -243,7 +245,7 @@ async function runFeaturedHeroCase(page: Page): Promise<void> {
     await page.getByRole("link", { name: FEATURED.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
     await hydrated(page);
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Cost");
     await page.getByRole("combobox", { name: "Cost" }).click();
     await page.getByRole("option", { name: "Gratuit", exact: true }).click();
     const ack = page.locator('[name="acknowledgeLiveEdit"]');

@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import CostBox from "@/modules/content/events/ui/boxes/CostBox";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
@@ -16,14 +17,21 @@ import PlaceBox from "@/modules/content/events/ui/boxes/PlaceBox";
 import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
+import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
 import StatusBox from "@/modules/content/events/ui/boxes/StatusBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
+import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
 import CreateDraftLine, { TickedLine } from "@/modules/content/events/ui/CreateDraftLine";
-import EventEditorLayout, { EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
+import EventEditorLayout, { AutomaticSection, EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
 import { eventFormFieldLabels, identicalTextLabels } from "@/modules/content/events/ui/field-labels";
 import { MissingForPublishCount, MissingForPublishList } from "@/modules/content/events/ui/MissingForPublish";
+import { pageFlow } from "@/modules/content/events/ui/page-flow";
+import { PublishCheckProvider, PublishGapsSummary } from "@/modules/content/events/ui/PublishCheck";
+import { missingForPublish, type PublishGapLabels, storedPublishReader } from "@/modules/content/events/ui/publish-check";
+import SectionMap from "@/modules/content/events/ui/SectionMap";
+import { BLANK_PAGE_SECTION_DATA } from "@/modules/events/domain/page-sections";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
@@ -53,11 +61,11 @@ export const dynamic = "force-dynamic";
  * **The same page as the editor, minus what needs a saved event** — the owner asked for "a
  * WordPress-like editor" and then for create and edit to stop drifting apart ("this event create
  * page is a bit inconsistent with the event edit"). So it is the editor's layout
- * (`EventEditorLayout`): the side column with Publicare and Recurență, first on a phone, and the
- * main column's boxes in the same three groups, under the same titles, with the same field names
- * and the same Română | English tabs — "Ce fel de eveniment" holding the same three cards, the
- * status, the course and the links (§358). The status card is the one that is read-only here: it
- * says "Programat" and that the status can be changed once the event exists, and a hidden
+ * (`EventEditorLayout`): the side column with Publicare, Recurență and the page's map, first on a
+ * phone, and the main column's cards in the page's own order (§NNN), numbered and headed by
+ * whether the page will show each, under the same titles, with the same field names and the same
+ * Română | English tabs; then the cards that are not on the page. The status card is the one that
+ * is read-only here: it says "Programat" and that the status can be changed once the event exists, and a hidden
  * `SCHEDULED` is what posts, so "Anulat" is never offered for an event that does not exist. What
  * the page leaves out cannot exist before the event does: allocation and printing, the series'
  * details, the registrations, copy and delete. Nothing stands in for what is left out.
@@ -76,9 +84,10 @@ export const dynamic = "force-dynamic";
  * **A refusal keeps every box** (§315): the whole grid is inside one `ActionForm`, and every
  * input reads the recalled values. A named box three folds deep opens itself.
  *
- * **Create and publish in one press**, for a role that may publish (§315): the second button
- * dims and names the first gap by its box and tab, from the same check the Publicare box's list
- * runs (`missingForPublish`).
+ * **Create and publish in one press**, for a role that may publish (§315): the second button is
+ * always its full self (§NNN); pressed while a box publication needs is empty, it posts nothing and
+ * opens the summary at the top of the column, each gap by its box and tab, from the same check the
+ * Publicare box's list and every card's closed line run (`missingForPublish`).
  */
 export default async function NewEventPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -107,7 +116,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
     label: tSite(`languageName.${contentLocale}`),
   }));
   const localeCodes = [...routing.locales];
-  const gapLabels = {
+  const gapLabels: PublishGapLabels = {
     boxes: {
       titleSummary: t("editor.boxes.titleSummary.title"),
       place: t("editor.boxes.place.title"),
@@ -123,6 +132,16 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   };
   // Which group-run declarations the club has approved (§393): the route card's checkbox asks.
   const box = { event: null, mayEditSettings: true, groupRunDeclarations: await groupRunDeclarationsInForce(getDb(), new Date()) } as const;
+  // The page a new event makes, as it opens (§NNN): the same numbers, states and map as the editor.
+  const flow = await pageFlow(BLANK_PAGE_SECTION_DATA);
+  // What publication needs of the blank form: every card's first answer, before anything is typed.
+  const blankGaps = missingForPublish(
+    storedPublishReader(
+      { locationName: null, locationToBeAnnounced: false },
+      languages.map((entry) => entry.translation),
+    ),
+    localeCodes,
+  );
   /*
     "Creează și publică" puts an event on the site in one press (§384): it asks first, as the
     editor's "Publică" does. The plain create makes a draft nobody sees and asks nothing — the
@@ -151,6 +170,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             and this is what posts (§358). */}
         <input type="hidden" name="event.eventStatus" value="SCHEDULED" />
 
+        {/* What publication still needs, read once for every card line and chip as it is typed (§NNN). */}
+        <PublishCheckProvider formId="event-create-form" locales={localeCodes} initial={blankGaps}>
         <EventEditorLayout
           side={
             <>
@@ -195,30 +216,39 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                   </Panel>
                 </Stack>
               </Panel>
+
+              {/* S3 — the page, top to bottom (§NNN): the editor's same map. */}
+              <Panel static id="box-map" title={flow.label}>
+                <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
+              </Panel>
             </>
           }
           main={
             <Stack spacing={2}>
-              <EditorGroup label={t("editor.groups.event")} />
-              {/* 1 — the type, and the editor's same three cards inside it (§358); the status one
-                  read-only, "Programat". */}
-              <KindBox {...box} locale={locale}>
-                <StatusBox {...box} />
-                <CourseBox {...box} languages={languages} />
-                <LinksBox {...box} locale={locale} />
-              </KindBox>
-              <TitleSummaryBox languages={languages} creating />
-              <DescriptionBox languages={languages} />
+              {/* "Creează și publică" pressed while something publication needs is empty (§NNN). */}
+              <PublishGapsSummary id="publish-gaps" title={t("editor.publishGaps.title")} intro={t("editor.publishGaps.intro")} labels={gapLabels} />
+              {/* The page, top to bottom (§NNN): the editor's same cards, in the same order. */}
+              <EditorGroup label={t("editor.groups.page")} />
+              <KindBox {...box} heading={flow.headings.kind} />
+              <TitleSummaryBox languages={languages} creating heading={flow.headings.title} />
+              <DescriptionBox languages={languages} heading={flow.headings.description} />
+              <WhenBox {...box} heading={flow.headings.when} />
+              <PlaceBox {...box} languages={languages} heading={flow.headings.place} />
+              <CourseBox {...box} languages={languages} heading={flow.headings.course} />
+              <CostBox {...box} languages={languages} heading={flow.headings.cost} />
+              <RegistrationBox {...box} heading={flow.headings.registration} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
+              <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
+              <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
+              <LinksBox {...box} locale={locale} heading={flow.headings.links} />
+              <ProgrammeBox {...box} languages={languages} heading={flow.headings.programme} />
+              <RulesBox languages={languages} heading={flow.headings.rules} />
+              <VideoBox {...box} heading={flow.headings.video} />
+              <StartListBox {...box} heading={flow.headings.startList} />
 
-              <EditorGroup label={t("editor.groups.day")} />
-              <WhenBox {...box} />
-              <PlaceBox {...box} languages={languages} />
-              <ProgrammeBox {...box} languages={languages} />
-              <RulesBox languages={languages} />
-              <RegistrationBox {...box} declarations={declarations} locale={locale} clubDeadlines={deadlines} languages={languages} />
-
-              <EditorGroup label={t("editor.groups.details")} />
-              <CoHostsBox {...box} locale={locale} />
+              {/* Not a section of the page: the status — read-only here, "Programat" (§358) —,
+                  the marks, the address. */}
+              <EditorGroup label={t("editor.groups.offPage")} />
+              <StatusBox {...box} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />
 
@@ -241,9 +271,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                       <CreateAndPublishButton
                         label={t("editor.createAndPublish")}
                         pendingLabel={t("editor.publishing")}
-                        notReadyHint={t.raw("editor.notReadyToPublish") as string}
                         locales={localeCodes}
-                        labels={gapLabels}
+                        summaryId="publish-gaps"
                       />
                     )}
                   </Stack>
@@ -252,6 +281,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             </Stack>
           }
         />
+        </PublishCheckProvider>
       </ActionForm>
     </Stack>
   );

@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §398 — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite". A new event's
  * cost select preselects `FREE` (`initialCostTypeOf`, tested on its own in
- * `box-summaries.test.ts`); this checks that `RegistrationBox` actually reads the select's
+ * `box-summaries.test.ts`); this checks that `CostBox` (the cost's own card since §NNN) actually reads the select's
  * `defaultValue`, and `CostFields`' visibility switch, off that one function — so the create
  * page and the closed summary can never drift apart on what "default" means.
  *
@@ -21,7 +21,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * or column change was needed — `content/events/fields.ts#costType` already accepts a real
  * enum value; only the form's own default was missing.
  */
-const SOURCE = readFileSync(path.join(process.cwd(), "src", "modules", "content", "events", "ui", "boxes", "RegistrationBox.tsx"), "utf8");
+const SOURCE = readFileSync(path.join(process.cwd(), "src", "modules", "content", "events", "ui", "boxes", "CostBox.tsx"), "utf8");
 
 describe("§398 a new event starts free", () => {
   it("computes the box's cost value with initialCostTypeOf, not straight off the event", () => {

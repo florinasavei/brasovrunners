@@ -13,7 +13,6 @@ import {
   incompleteLocales,
   BLANK,
   initialCostTypeOf,
-  kindSummary,
   linksSummary,
   placeSummary,
   programmeSummary,
@@ -102,11 +101,13 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(timezoneSummary(words, "Europe/Vienna")).toBe("Europe/Vienna");
   });
 
-  it("Titlu și rezumat: the titles, then what is missing and where", () => {
+  it("Titlu și rezumat: the titles — what is missing is the card's required line's to say (§NNN)", () => {
     const both = [language("ro", { title: "Crosul Tâmpei", excerptJson: doc("Sus pe Tâmpa.") }), language("en", { title: "Tâmpa Cross", excerptJson: doc("Up Tâmpa.") })];
     expect(titleSummarySummary(words, both)).toBe("„Crosul Tâmpei” · „Tâmpa Cross”");
+    // A missing summary is named before this line, once, by `cardGapLine` — not a second time here.
     const englishShort = [both[0], language("en", { title: "Tâmpa Cross", excerptJson: emptyDoc })];
-    expect(titleSummarySummary(words, englishShort)).toBe("„Crosul Tâmpei” · „Tâmpa Cross” · lipsește rezumatul (EN)");
+    expect(titleSummarySummary(words, englishShort)).toBe("„Crosul Tâmpei” · „Tâmpa Cross”");
+    expect(titleSummarySummary(words, [both[0], language("en", { title: "" })])).toBe("„Crosul Tâmpei” · EN: fără titlu");
   });
 
   it("Descrierea and Regulamentul: per language, and the language a one-sided text still owes (§354)", () => {
@@ -194,15 +195,15 @@ describe("§350 each box's summary, empty and filled", () => {
       externalProvider: null,
       costType: "FREE",
     };
-    const options = { takesRegistrations: true, costLabel: "Gratuit", declarationVersion: 3, defaultMinAge: 14, locale: "ro", creating: false };
-    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · de la 14 ani · Gratuit · declarația v3 · lista ascunsă");
+    const options = { takesRegistrations: true, declarationVersion: 3, defaultMinAge: 14, locale: "ro", creating: false };
+    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · de la 14 ani · declarația v3 · lista ascunsă");
     expect(registrationSummary(words, { ...internal, capacity: 1 } as never, options)).toContain("1 loc");
-    expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · de la 14 ani · Gratuit · lipsește declarația");
-    expect(registrationSummary(words, { ...internal, registrationMode: "EXTERNAL", externalProvider: "Asociația X" } as never, { ...options, costLabel: "Cu taxă" })).toBe(
-      "La organizator: Asociația X · Cu taxă",
+    expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · de la 14 ani · lipsește declarația");
+    expect(registrationSummary(words, { ...internal, registrationMode: "EXTERNAL", externalProvider: "Asociația X" } as never, options)).toBe(
+      "La organizator: Asociația X",
     );
-    expect(registrationSummary(words, null, { ...options, costLabel: null, creating: true })).toBe(words.registration.noneInvite);
-    expect(registrationSummary(words, internal as never, { ...options, takesRegistrations: false })).toBe("Alergare de grup — fără înscrieri · Gratuit");
+    expect(registrationSummary(words, null, { ...options, creating: true })).toBe(words.registration.noneInvite);
+    expect(registrationSummary(words, internal as never, { ...options, takesRegistrations: false })).toBe("Alergare de grup — fără înscrieri");
   });
 
   it("the registration box's cards", () => {
@@ -291,30 +292,6 @@ describe("§350 each box's summary, empty and filled", () => {
     );
     expect(promotionSummary(words, null)).toBe("Nimic în evidență");
     expect(promotionSummary(words, { featured: true, isSpecial: true })).toBe("Eveniment principal · Ediție specială");
-  });
-
-  it("Ce fel de eveniment, with its three cards inside it (§358): the type, the status, the course in brief, every link counted", () => {
-    const labels = { type: "Alergare de grup", status: "Programat", surface: null, difficulty: null };
-    // The create page: nothing stored yet, so the type and "Programat" only — no empty words.
-    expect(kindSummary(words, null, labels, "ro")).toBe("Alergare de grup · Programat");
-    const event = {
-      distanceMeters: 10_000,
-      elevationGainMeters: 450,
-      routeUrl: "https://r.test",
-      nightOverride: null,
-      stravaEventUrl: null,
-      facebookEventUrl: "https://f.test",
-      links: [{ kind: "GPX", url: "https://g.test" }],
-    };
-    // The climb and the route stay on the course card's own line; Facebook counts with the rows.
-    expect(kindSummary(words, event, { ...labels, surface: "Asfalt", difficulty: "Ușor" }, "ro")).toBe(
-      "Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri",
-    );
-    expect(kindSummary(words, { ...event, distanceMeters: 21_100, facebookEventUrl: null, links: [] }, { ...labels, type: "Concurs", status: "Anulat" }, "ro")).toBe(
-      "Concurs · Anulat · 21,1 km",
-    );
-    expect(kindSummary(wordsEn, { ...event, stravaEventUrl: "https://s.test" }, { ...labels, type: "Race" }, "en")).toBe("Race · Programat · 10 km · 3 links");
-    expect(kindSummary(words, { ...event, links: [] }, labels, "ro")).toBe("Alergare de grup · Programat · 10 km · 1 link");
   });
 
   it("Adresa paginii: each language's path, and the lock", () => {

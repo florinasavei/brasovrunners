@@ -23,8 +23,12 @@ type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength
 type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
 /**
- * Card 1.1, "Starea evenimentului" (§350, §358) — the first card inside "Ce fel de eveniment", on
- * both pages, so the two look the same.
+ * "Starea evenimentului" (§350, §358, §NNN) — a box of its own among the cards that are not a
+ * section of the page, at the end of both pages (§NNN: the editor is the page, in its order, and a
+ * scheduled event's status is drawn nowhere; a cancelled or finished one is a notice over the
+ * title, which the status box still says on its closed line). It was card 1.1 inside "Ce fel de
+ * eveniment" (§358); it moved whole — its fields, its names, its id — and, as one of the five boxes
+ * whose change reaches people, it wears their count itself.
  *
  * **On the create page it is read-only**: "Programat", and one line saying the status can be
  * changed once the event exists. The page posts a hidden `SCHEDULED` beside it — this card posts
@@ -36,16 +40,15 @@ type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never }
  * select (§331) — they read the select by name. With people registered the card is amber and says
  * what a cancellation does to them.
  *
- * For a role that may only read the settings, the card is its heading and its line — the status,
- * and the amber count when people are registered — and nothing to open: the first box says once
- * that the settings are not theirs (§358).
+ * For a role that may only read the settings, the box is its heading and its line — the status,
+ * and the amber count when people are registered — and nothing to open: the type's box says that
+ * the settings are not theirs (§358).
  */
-export default async function StatusBox({ event, mayEditSettings, risk, notice }: StatusBoxProps) {
+export default async function StatusBox({ event, mayEditSettings, risk, notice, heading }: StatusBoxProps) {
   const t = await getTranslations("Admin");
   const card = {
-    level: 3,
     id: "box-status",
-    title: t("editor.boxes.status.title"),
+    title: heading ?? t("editor.boxes.status.title"),
     aside: EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"],
     tone: risk ? "risk" : "default",
     badge: risk?.chip,

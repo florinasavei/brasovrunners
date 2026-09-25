@@ -9,11 +9,13 @@ import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
  * a summary in every language, the meeting point in every language unless the place is to be
  * announced (§328, §362), and a page address in every language.
  *
- * One function for the two things that ask it on the create page — "Creează și publică", which
- * dims and names the first gap, and the "Ce lipsește pentru publicare" list in the Publicare box,
- * which names them all — so the two never disagree. In the order of the editor's boxes (box 2,
- * box 5, box 14), and each gap says which box holds it, so the words on the screen are the box's
- * title and not a column name.
+ * One function for everything that asks it, on both pages — the "Ce lipsește pentru publicare"
+ * list in the Publicare box, which names them all; since §NNN each card's closed line and its tabs'
+ * counts, the map's chips, and "Creează și publică" and "Publică", which open the summary of gaps
+ * instead of posting while one is left (over what is typed on the create page, over what is saved
+ * on the editor, `storedPublishReader`) — so none of them disagree. In the order of the editor's
+ * boxes (the title, the place, the address), and each gap says which box holds it, so the words on
+ * the screen are the box's title and not a column name.
  *
  * `read` answers a box's posted value by its `name` (`""` for a box that is not there): a
  * `FormData` in the browser, a plain object in a test.
@@ -61,6 +63,105 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
   return [labels.boxes[gap.box], gap.locale ? (labels.languages[gap.locale] ?? gap.locale) : null, labels.fields[gap.field]]
     .filter((part): part is string => Boolean(part))
     .join(" › ");
+}
+
+// --- The same gaps, seen from outside each card (§NNN) --------------------------------------
+
+/**
+ * The card each gap belongs to, by its `#box-…` id: where "Publică" scrolls to and whose closed
+ * line names it (§NNN; the owner, of a closed "Titlu și rezumat" whose tabs said only "incomplet":
+ * "I need to see on the cards as well what info is required").
+ */
+export const PUBLISH_GAP_CARD: Readonly<Record<PublishGapBox, `box-${string}`>> = {
+  titleSummary: "box-title",
+  place: "box-place",
+  address: "box-address",
+};
+
+/** One card's missing fields, each with the languages it is missing in, in the order of the gaps. */
+export type CardGap = { field: PublishGapField; locales: string[] };
+
+/** The gaps of one card, field by field: `[{ field: "title", locales: ["ro", "en"] }, …]`. */
+export function cardGaps(gaps: readonly PublishGap[], box: PublishGapBox): CardGap[] {
+  const byField: CardGap[] = [];
+  for (const gap of gaps) {
+    if (gap.box !== box) continue;
+    const locale = gap.locale ?? "";
+    const entry = byField.find((item) => item.field === gap.field);
+    if (!entry) byField.push({ field: gap.field, locales: [locale] });
+    else if (!entry.locales.includes(locale)) entry.locales.push(locale);
+  }
+  return byField;
+}
+
+/** The words a card's closed line is made of: "lipsesc: {list}", "complet", each field's name. */
+export type CardGapWords = {
+  /** With `{list}`. */
+  missing: string;
+  complete: string;
+  fields: Readonly<Record<PublishGapField, string>>;
+};
+
+/**
+ * A card's required line: «lipsesc: Titlu (RO, EN) · Rezumat (RO)», or «complet» — each field by
+ * the name its box wears, each language by its code, as every closed line on the editor writes a
+ * language (`box-summaries.ts`).
+ */
+export function cardGapLine(gaps: readonly PublishGap[], box: PublishGapBox, words: CardGapWords): string {
+  const missing = cardGaps(gaps, box);
+  if (missing.length === 0) return words.complete;
+  const list = missing
+    .map((entry) => `${words.fields[entry.field]} (${entry.locales.filter(Boolean).map((locale) => locale.toUpperCase()).join(", ")})`)
+    .join(" · ");
+  return words.missing.replace("{list}", list);
+}
+
+/** How many required boxes one language of one card still lacks — what its tab counts. */
+export function missingInLanguage(gaps: readonly PublishGap[], box: PublishGapBox, locale: string): number {
+  return gaps.filter((gap) => gap.box === box && gap.locale === locale).length;
+}
+
+/** What `storedPublishReader` reads of the event row. */
+export type StoredPublishEvent = { locationName: string | null; locationToBeAnnounced: boolean };
+/** What it reads of each language. */
+export type StoredPublishTranslation = { locale: string; title: string; excerpt: string | null; slug: string; locationName: string | null };
+
+/**
+ * The saved event as `missingForPublish` reads a form: the editor's closed lines, its Publicare
+ * list and its "Publică" ask the same function the create page asks of the boxes as typed, so the
+ * two pages cannot name different gaps.
+ *
+ * Read the way the server's guard reads the row (`missingPublicFields`, `missingPublicEventFields`):
+ * the summary by its plain text, the meeting point as the language's page names it (its own name,
+ * else the event's — `placeNameIn`), a language with no row as every box blank.
+ */
+export function storedPublishReader(event: StoredPublishEvent, translations: readonly StoredPublishTranslation[]): (name: string) => string {
+  const inLanguage = (locale: string) => translations.find((row) => row.locale === locale);
+  const place = (locale: string) => inLanguage(locale)?.locationName?.trim() || event.locationName?.trim() || "";
+  return (name) => {
+    if (name === "event.locationToBeAnnounced") return event.locationToBeAnnounced ? "on" : "";
+    for (const [locale, box] of Object.entries(PLACE_NAME_FIELD)) if (name === `event.${box}`) return place(locale);
+    const text = /^translations\.([a-z]+)\.(title|excerptBody|slug)$/.exec(name);
+    const row = text ? inLanguage(text[1]) : undefined;
+    if (!text || !row) return "";
+    if (text[2] === "title") return row.title;
+    if (text[2] === "slug") return row.slug;
+    return row.excerpt ?? "";
+  };
+}
+
+/**
+ * The value of every box `missingForPublish` reads, as a plain record a Server Component can hand
+ * an island (§NNN): the islands read a box the form does not draw from here.
+ */
+export function publishCheckValues(read: (name: string) => string, locales: readonly string[]): Record<string, string> {
+  const names = new Set<string>(["event.locationToBeAnnounced"]);
+  // Every name the check asks for, found by asking it with a reader that records them.
+  missingForPublish((name) => {
+    names.add(name);
+    return "";
+  }, locales);
+  return Object.fromEntries([...names].map((name) => [name, read(name)]));
 }
 
 // --- The same words in both languages (§354, bilingual everywhere) ---------------------------

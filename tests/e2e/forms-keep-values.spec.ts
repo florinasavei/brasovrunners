@@ -177,17 +177,18 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 });
 
 /*
-  §358: the status, the course and the links are cards inside "Ce fel de eveniment", on the create
-  page as on the editor. A link's label in one language only is a refusal only the server makes
-  (§352, both or neither), and it names the empty box — inside "Linkuri și fișiere", inside the first
-  box. Both are shut before the press, so the refusal is what has to open them, and every box keeps
-  what was typed. On the way, the create page's status card: there, read-only, "Programat".
+  §NNN: the status, the course and the links are boxes of their own again (§358 had them inside
+  "Ce fel de eveniment"), each where the page draws it. A link's label in one language only is a
+  refusal only the server makes (§352, both or neither), and it names the empty box — inside
+  "Linkuri și fișiere". The box is shut before the press, so the refusal is what has to open it,
+  and every box keeps what was typed. On the way, the create page's status box: there, read-only,
+  "Programat".
 */
-test.describe("§358 a refusal inside a card of the first box opens the box and the card", () => {
+test.describe("§NNN a refusal inside the links box opens it", () => {
   // Built from parts: no hostname literal (`AGENTS.md` §8).
   const GPX_LINK = ["https:/", "drive.example.test", "file", "d", "e2e-half-label", "view"].join("/");
 
-  test("a link label in Romanian only comes back with «Ce fel de eveniment» and «Linkuri și fișiere» open", async ({ page }) => {
+  test("a link label in Romanian only comes back with «Linkuri și fișiere» open", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
@@ -218,19 +219,15 @@ test.describe("§358 a refusal inside a card of the first box opens the box and 
     await page.getByRole("option", { name: "Traseul (GPX)" }).click();
     await field("event.links[0].url").fill(GPX_LINK);
     await field("event.links[0].labelRo").fill("Traseul oficial");
-    // Folded again, the card and the box, so the refusal is what has to open them.
-    const kind = editorBox(page, "Ce fel de eveniment");
+    // Folded again, so the refusal is what has to open it.
     await links.locator(":scope > summary").press("Enter");
     await expect(links).not.toHaveAttribute("open", "");
-    await kind.locator(":scope > summary").press("Enter");
-    await expect(kind).not.toHaveAttribute("open", "");
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
     await expect(refusal.getByRole("link", { name: /^Linkul 1: eticheta în engleză/ })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
-    await expect(kind).toHaveAttribute("open", "");
     await expect(links).toHaveAttribute("open", "");
     await expect(field("event.links[0].labelEn")).toBeVisible();
     await expect(field("event.links[0].labelRo")).toHaveValue("Traseul oficial");

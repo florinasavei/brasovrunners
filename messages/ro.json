@@ -1198,7 +1198,6 @@
       },
       "repeatOn": "Repetă evenimentul",
       "repeatHelpSummary": "Cum funcționează o serie",
-      "tabMissing": "textul întreg",
       "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
@@ -1266,7 +1265,6 @@
       },
       "createAndPublish": "Creează și publică",
       "publishing": "Se publică…",
-      "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
       "createdPublished": "Evenimentul a fost creat și publicat. Este pe site, în ambele limbi.",
       "createdPublishedWithSeries": "Evenimentul și {dates} au fost create și publicate.",
       "createdNotPublished": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat. Lipsesc: {detail}. Nimic din ce ai scris nu s-a pierdut — completează și apasă „Publică”.",
@@ -1319,9 +1317,8 @@
       "repeatRuleLiveUntil": " — până la {until}.",
       "repeatRuleLiveHorizon": "Se creează acum datele din următoarele {horizon}.",
       "groups": {
-        "event": "Evenimentul",
-        "day": "Ziua evenimentului și participanții",
-        "details": "Parteneri și prezentare"
+        "page": "Pagina evenimentului, de sus în jos",
+        "offPage": "Nu sunt secțiuni ale paginii"
       },
       "publication": {
         "missingTitle": "Ce lipsește pentru publicare",
@@ -1374,6 +1371,9 @@
         "rules": {
           "title": "Regulamentul"
         },
+        "cost": {
+          "title": "Cost"
+        },
         "registration": {
           "title": "Participare și înscrieri"
         },
@@ -1401,7 +1401,9 @@
           "unprinted": "Netipărite încă: {count}."
         },
         "startList": {
-          "title": "Lista publică a participanților"
+          "title": "Lista publică a participanților",
+          "onlyHere": "Lista publică există doar la înscrierile pe site: alege „Pe site” la Participare și înscrieri.",
+          "onlyRegisteringTypes": "O alergare de grup nu are înscrieri, deci nici listă publică: schimbă tipul la „Ce fel de eveniment”."
         },
         "status": {
           "title": "Starea evenimentului",
@@ -1462,8 +1464,6 @@
           "oneLanguage": "de scris și în {language} (ambele limbi sau niciuna)",
           "identical": "{language} identic cu {source}",
           "titleSummary": {
-            "missingTitle": "lipsește titlul ({language})",
-            "missingSummary": "lipsește rezumatul ({language})",
             "untitled": "fără titlu"
           },
           "when": {
@@ -1573,6 +1573,14 @@
             "none": "fără adresă",
             "seoOneLanguage": "SEO într-o singură limbă"
           }
+        },
+        "video": {
+          "title": "Filmul",
+          "stored": "un film, dintr-un link vechi",
+          "none": "niciun film separat",
+          "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
+          "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
+          "toDescription": "Mergi la descriere"
         }
       },
       "identical": {
@@ -1586,6 +1594,47 @@
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
+      },
+      "pageFlow": {
+        "title": "Pagina, de sus în jos",
+        "drawnHeading": "{number} · {name} — apare pe pagină",
+        "emptyHeading": "{number} · {name} — gol, nu apare pe pagină",
+        "drawn": "apare pe pagină",
+        "empty": "gol, nu apare pe pagină",
+        "automatic": "automat, fără card",
+        "missing": "lipsesc câmpuri obligatorii",
+        "shareLine": "Aici pagina pune butoanele de distribuire și calendarul — automat, din adresa paginii; nu au card.",
+        "short": {
+          "kind": "Tipul",
+          "title": "Titlul",
+          "description": "Descrierea",
+          "when": "Când",
+          "place": "Unde",
+          "course": "Traseul",
+          "cost": "Costul",
+          "registration": "Înscrierea",
+          "coHosts": "Împreună cu",
+          "share": "Distribuie",
+          "links": "Linkuri și fișiere",
+          "programme": "Programul",
+          "rules": "Regulamentul",
+          "video": "Filmul",
+          "startList": "Lista participanților"
+        }
+      },
+      "required": {
+        "missing": "lipsesc: {list}",
+        "complete": "complet",
+        "tab": {
+          "one": "{count} obligatoriu lipsă",
+          "few": "{count} obligatorii lipsă",
+          "other": "{count} de obligatorii lipsă"
+        }
+      },
+      "publishGaps": {
+        "title": "Nu se poate publica încă",
+        "intro": "Publicarea cere aceste câmpuri, în fiecare limbă:",
+        "introSaved": "Publicarea cere aceste câmpuri, în fiecare limbă, completate și salvate:"
       }
     },
     "preview": {

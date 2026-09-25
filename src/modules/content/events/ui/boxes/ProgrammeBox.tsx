@@ -24,7 +24,7 @@ import { LanguageTabs } from "./TextBoxes";
  * A group run has no programme (§111): the sentence replaces the rows and the notes, hidden and
  * never removed, and only "Ce să aduci" remains — every type has something to bring.
  */
-export default async function ProgrammeBox({ event, mayEditSettings, risk, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
+export default async function ProgrammeBox({ event, mayEditSettings, risk, languages, heading }: BoxProps & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = languages[0]?.translation.locale ?? "ro";
@@ -46,7 +46,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
     <Panel
       collapsible
       id="box-programme"
-      title={t("editor.boxes.programme.title")}
+      title={heading ?? t("editor.boxes.programme.title")}
       aside={programmeSummary(words, event, hasProgramme(initialType), languages.map((entry) => entry.translation), locale)}
       tone={risk ? "risk" : "default"}
       badge={risk?.chip}

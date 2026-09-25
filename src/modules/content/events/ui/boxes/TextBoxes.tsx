@@ -1,8 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { getPathname } from "@/i18n/navigation";
-import type { Locale } from "@/i18n/routing";
-import LocaleTabPanels, { type TabWatch } from "@/shared/ui/LocaleTabPanels";
+import { type Locale, routing } from "@/i18n/routing";
+import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import {
   addressSummary,
@@ -15,16 +15,19 @@ import {
   type SummaryTranslation,
   titleSummarySummary,
 } from "../box-summaries";
+import { missingForPublish, missingInLanguage, type PublishGapBox, storedPublishReader } from "../publish-check";
 import SlugFromTitle from "../SlugFromTitle";
 import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } from "../TranslationFields";
-import { type LanguageEntry, summaryWords } from "./box-kit";
+import { type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
 
 /**
  * The four boxes of the event editor that are only words (§350): the title and summary, the
  * description, the rules, the page address. Each has its own Română | English tabs — five strips on
- * one page with the programme's, so each carries its box's `idPrefix` — and each tab says "· incomplet" by its own rule:
- * a required text missing here (the title, the summary, the address), or an optional one written
- * in the other language and not in this one (the description, the rules).
+ * one page with the programme's, so each carries its box's `idPrefix` — and each tab says what it
+ * lacks by its own rule: a count of the boxes publication needs still empty here (the title and
+ * the summary, the address — «Română · 2 obligatorii lipsă», «English · complet», §NNN), or
+ * "· incomplet" for an optional text written in the other language and not in this one (the
+ * description, the rules).
  */
 
 const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translation;
@@ -35,6 +38,10 @@ const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translatio
  * `identical` names the long texts of the strip to compare across languages (§354, bilingual
  * everywhere): the same words in both is an amber line over the panels and a mark on the English
  * tab — computed here from what is stored for the first paint, re-read in the browser as typed.
+ *
+ * `required` names the card's publication gaps (§NNN): each tab then counts the boxes publication
+ * needs that its language still lacks, first from `missingForPublish` over what the strip was drawn
+ * with — the check the card's closed line and Publicare read — then as it is typed.
  */
 export async function LanguageTabs({
   idPrefix,
@@ -42,6 +49,7 @@ export async function LanguageTabs({
   watch,
   blank,
   identical,
+  required,
   render,
 }: {
   idPrefix: string;
@@ -49,17 +57,38 @@ export async function LanguageTabs({
   watch: TabWatch;
   blank: BlankTest | readonly BlankTest[];
   identical?: readonly string[];
+  required?: PublishGapBox;
   render: (entry: LanguageEntry) => ReactNode;
 }) {
   const t = await getTranslations("Admin");
   const incomplete = incompleteLocales(languages.map(summaryOf), watch.rule, blank);
   const mayType = languages.some((entry) => entry.mayEdit);
+  const gaps = required
+    ? missingForPublish(
+        storedPublishReader(
+          { locationName: null, locationToBeAnnounced: false },
+          languages.map((entry) => entry.translation),
+        ),
+        routing.locales,
+      )
+    : [];
+  const requiredCount: RequiredCountWords | undefined = required
+    ? {
+        one: t.raw("editor.required.tab.one") as string,
+        few: t.raw("editor.required.tab.few") as string,
+        other: t.raw("editor.required.tab.other") as string,
+        complete: t("editor.required.complete"),
+        locale: await getLocale(),
+        box: required,
+      }
+    : undefined;
   return (
     <LocaleTabPanels
       idPrefix={idPrefix}
       // Only the languages the reader may write are re-read as they type; a read-only one has no box.
       watch={mayType ? watch : undefined}
       live={mayType}
+      requiredCount={requiredCount}
       identical={
         identical
           ? {
@@ -75,28 +104,44 @@ export async function LanguageTabs({
         locale: entry.translation.locale,
         label: entry.label,
         incompleteLabel: incomplete.includes(entry.translation.locale) ? t("editor.tabIncomplete") : undefined,
+        missingCount: required ? missingInLanguage(gaps, required, entry.translation.locale) : undefined,
         content: render(entry),
       }))}
     />
   );
 }
 
+/** A closed line of two parts: what publication needs, then what the box holds. */
+function lineOf(required: ReactNode, summary: string | undefined): ReactNode {
+  return summary ? (
+    <>
+      {required}
+      {" · "}
+      {summary}
+    </>
+  ) : (
+    required
+  );
+}
+
 /**
- * Box 2, "Titlu și rezumat": open on create, where it is the first thing a new event is asked —
+ * "Titlu și rezumat" (§350): open on create, where it is the first thing a new event is asked —
  * the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a language
- * lacks either (`attention`: something inside asks for action).
+ * lacks either (`attention`: something inside asks for action). Its closed line starts with what
+ * publication still needs from it (§NNN).
  */
-export async function TitleSummaryBox({ languages, creating }: { languages: readonly LanguageEntry[]; creating: boolean }) {
+export async function TitleSummaryBox({ languages, creating, heading }: { languages: readonly LanguageEntry[]; creating: boolean; heading?: string }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const translations = languages.map(summaryOf);
   const incomplete = incompleteLocales(translations, "required", BLANK.titleSummary);
+  const required = await requiredLine("titleSummary", null, languages);
   return (
     <Panel
       collapsible
       id="box-title"
-      title={t("editor.boxes.titleSummary.title")}
-      aside={creating ? undefined : titleSummarySummary(words, translations)}
+      title={heading ?? t("editor.boxes.titleSummary.title")}
+      aside={lineOf(required, creating ? undefined : titleSummarySummary(words, translations))}
       openWhen={{ primary: creating, attention: !creating && incomplete.length > 0 }}
     >
       <LanguageTabs
@@ -105,18 +150,19 @@ export async function TitleSummaryBox({ languages, creating }: { languages: read
         watch={{ names: ["title", "excerptBody"], rule: "required" }}
         blank={BLANK.titleSummary}
         identical={["excerptBody"]}
+        required="titleSummary"
         render={(entry) => <TitleSummaryFields translation={entry.translation} mayEdit={entry.mayEdit} />}
       />
     </Panel>
   );
 }
 
-/** Box 3, "Descrierea evenimentului": folded on both pages; the heaviest editor mounts on opening. */
-export async function DescriptionBox({ languages }: { languages: readonly LanguageEntry[] }) {
+/** "Descrierea evenimentului": folded on both pages; the heaviest editor mounts on opening. */
+export async function DescriptionBox({ languages, heading }: { languages: readonly LanguageEntry[]; heading?: string }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   return (
-    <Panel collapsible id="box-description" title={t("editor.boxes.description.title")} aside={descriptionSummary(words, languages.map(summaryOf))}>
+    <Panel collapsible id="box-description" title={heading ?? t("editor.boxes.description.title")} aside={descriptionSummary(words, languages.map(summaryOf))}>
       <LanguageTabs
         idPrefix="description"
         languages={languages}
@@ -129,12 +175,12 @@ export async function DescriptionBox({ languages }: { languages: readonly Langua
   );
 }
 
-/** Box 7, "Regulamentul". */
-export async function RulesBox({ languages }: { languages: readonly LanguageEntry[] }) {
+/** "Regulamentul". */
+export async function RulesBox({ languages, heading }: { languages: readonly LanguageEntry[]; heading?: string }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   return (
-    <Panel collapsible id="box-rules" title={t("editor.boxes.rules.title")} aside={rulesSummary(words, languages.map(summaryOf))}>
+    <Panel collapsible id="box-rules" title={heading ?? t("editor.boxes.rules.title")} aside={rulesSummary(words, languages.map(summaryOf))}>
       <LanguageTabs
         idPrefix="rules"
         languages={languages}
@@ -148,8 +194,9 @@ export async function RulesBox({ languages }: { languages: readonly LanguageEntr
 }
 
 /**
- * Box 14, "Adresa paginii și motoarele de căutare": open while any address is blank — so open on
- * create, where the address also fills itself from the title until it is typed (`SlugFromTitle`).
+ * "Adresa paginii și motoarele de căutare": open while any address is blank — so open on create,
+ * where the address also fills itself from the title until it is typed (`SlugFromTitle`). Not a
+ * section of the page — it is the page's address — so it sits with the cards that are not (§NNN).
  */
 export async function AddressBox({
   languages,
@@ -172,12 +219,13 @@ export async function AddressBox({
       return [locale, path.slice(0, path.lastIndexOf("/"))];
     }),
   );
+  const required = await requiredLine("address", null, languages);
   return (
     <Panel
       collapsible
       id="box-address"
       title={t("editor.boxes.address.title")}
-      aside={addressSummary(words, translations, paths, slugLocked)}
+      aside={lineOf(required, addressSummary(words, translations, paths, slugLocked))}
       openWhen={{ attention: blank.length > 0 }}
     >
       {creating && <SlugFromTitle locales={languages.map((entry) => entry.translation.locale)} />}
@@ -186,6 +234,7 @@ export async function AddressBox({
         languages={languages}
         watch={{ names: ["slug"], rule: "required" }}
         blank={BLANK.address}
+        required="address"
         render={(entry) => <AddressFields translation={entry.translation} mayEdit={entry.mayEdit} slugLocked={slugLocked} />}
       />
     </Panel>
