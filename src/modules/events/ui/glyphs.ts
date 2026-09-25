@@ -86,12 +86,10 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * beside three that have one was exactly the "some with a glyph, some without" the owner
  * pointed at.
  *
- * `partner` marks an event held with another organization, on the listing card's chip, beside
- * the calendar entry and on the event page's overline: the 🤝 emoji (§NNN, replacing the
- * `Handshake` glyph §367 chose and §375 kept to one icon). The facts' "Împreună cu" row (§168)
- * is untouched — it still wears `HandshakeIcon` of its own, imported directly in
- * `EventFacts.tsx` rather than by this name, and is a different feature (the full partner list,
- * not the generic marker).
+ * `partner` marks an event held with another organization, on the listing card's chip, the
+ * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): the 🤝
+ * emoji everywhere (§NNN, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
+ * and the facts row's own copy of it — the owner hates the icon on every surface, not some).
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
