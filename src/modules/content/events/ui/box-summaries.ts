@@ -7,6 +7,7 @@ import { hasOneLanguageCoHostDescription, hasOneLanguageCoHostLabel, readCoHosts
 import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/links";
 import { placeInBox } from "@/modules/events/domain/place";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
+import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
 
@@ -66,7 +67,7 @@ export type SummaryWords = {
   };
   window: { range: string; fromPublication: string; untilStart: string };
   conditions: { noDeclaration: string };
-  confirmation: { sentence: string };
+  confirmation: { sentence: string; atStart: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
@@ -395,9 +396,15 @@ export function conditionsSummary(
   ]);
 }
 
-/** Sub-card 8.3: `Cerută cu 7 zile înainte, termen cu 2 zile înainte`. */
+/**
+ * Sub-card 8.3: `Cerută cu 7 zile înainte, termen cu 2 zile înainte`; `…, termen la start` when the
+ * deadline is zero (§NNN — the one test, `confirmationDueAtStart`); and the sentence for no window
+ * at all — the first number zero, or a deadline at or before the opening (§104's
+ * `confirmationWindow`) — rather than two numbers the allocator ignores.
+ */
 export function confirmationSummary(words: SummaryWords, opens: number, due: number): string {
-  return fillIn(words.confirmation.sentence, { opens, due });
+  if (opens <= 0 || opens <= due) return words.confirmation.off;
+  return fillIn(confirmationDueAtStart({ days: due }) ? words.confirmation.atStart : words.confirmation.sentence, { opens, due });
 }
 
 /** Sub-card 8.4: `De la 100 · verde · 42 alocate, 2 de tipărit`. */

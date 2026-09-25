@@ -77,6 +77,11 @@ export type MyRegistration = {
   eventTimezone: string;
   checkinCode: string | null;
   checkedInAt: Date | null;
+  /**
+   * When an unsigned place lapses — the declaration hold or the waiting-list offer (§104) — so the
+   * page can say by when to confirm, "până la start" when it is the start itself (§NNN).
+   */
+  holdExpiresAt: Date | null;
   /** The race number, once given (§87). */
   bibNumber: number | null;
   /** The number held before the settle (§214); what the runner is shown until then. */
@@ -118,6 +123,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventStatus: events.eventStatus,
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
+      holdExpiresAt: registrations.holdExpiresAt,
       bibNumber: registrations.bibNumber,
       provisionalBibNumber: registrations.provisionalBibNumber,
       listOptOut: registrations.listOptOut,

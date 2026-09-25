@@ -14,7 +14,12 @@ import { identicalInBothLanguages, isWrittenText } from "@/shared/forms/both-lan
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
-import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
+import {
+  confirmationDueAtStart,
+  confirmationWindow,
+  DEFAULT_CONFIRMATION_DEADLINE_DAYS,
+  DEFAULT_CONFIRMATION_OPENS_DAYS,
+} from "@/modules/registrations/domain/hold-deadlines";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -195,6 +200,25 @@ export default async function RegistrationBox({
       : storedReminder === 0
         ? t("editor.reminder.none")
         : capitalizeFirst(before(storedReminder), locale);
+
+  /*
+    The confirmation card's saved numbers as dates (§104), in the one form that is true (§NNN): no
+    window at all — the allocator's own `confirmationWindow` test — a deadline that is the start
+    itself ("termen la start", `confirmationDueAtStart`), or two dates.
+  */
+  const hold = minutesPhrase(locale, clubDeadlines.holdMinutes);
+  const confirmationDates = (() => {
+    if (!event) return null;
+    if (!confirmationWindow(event)) return t("editor.boxes.confirmation.datesOff", { hold });
+    const values = {
+      date: summaryDate(event.startsAt, zone, locale, "inline"),
+      opens: summaryDate(new Date(event.startsAt.getTime() - event.confirmationOpensDaysBefore * 86_400_000), zone, locale, "inline"),
+      due: summaryDate(new Date(event.startsAt.getTime() - event.confirmationDeadlineDaysBefore * 86_400_000), zone, locale, "inline"),
+    };
+    return confirmationDueAtStart({ days: event.confirmationDeadlineDaysBefore })
+      ? t("editor.boxes.confirmation.datesAtStart", values)
+      : t("editor.boxes.confirmation.dates", values);
+  })();
 
   const summary = registrationSummary(words, event, {
     takesRegistrations: takesRegistrations(initialType),
@@ -415,16 +439,12 @@ export default async function RegistrationBox({
                           fullWidth
                         />
                       </Stack>
-                      {event && (
+                      {confirmationDates && (
                         <Typography variant="body2" data-testid="confirmation-dates">
-                          {t("editor.boxes.confirmation.dates", {
-                            date: summaryDate(event.startsAt, zone, locale, "inline"),
-                            opens: summaryDate(new Date(event.startsAt.getTime() - event.confirmationOpensDaysBefore * 86_400_000), zone, locale, "inline"),
-                            due: summaryDate(new Date(event.startsAt.getTime() - event.confirmationDeadlineDaysBefore * 86_400_000), zone, locale, "inline"),
-                          })}
+                          {confirmationDates}
                         </Typography>
                       )}
-                      <BoxNote>{t("editor.confirmationWindowHelp", { hold: minutesPhrase(locale, clubDeadlines.holdMinutes) })}</BoxNote>
+                      <BoxNote>{t("editor.confirmationWindowHelp", { hold })}</BoxNote>
                     </Stack>
                   </Panel>
 

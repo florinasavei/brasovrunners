@@ -1171,8 +1171,8 @@
       "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Un eveniment Facebook cu mai multe date are o singură adresă, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "bodyHelp": "Opțional, în ambele limbi sau în niciuna. Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
-      "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
-      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc ({hold}), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
+      "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră (0 = la start)",
+      "confirmationWindowHelp": "Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul: online, din emailul de înscriere, sau pe hârtie la masa de înscrieri. Cu prima cifră de zile înainte de start îi trimitem emailul care îi cere confirmarea. Până la termen locul e al lui; cu 0 la termen, locul nu expiră înainte de start. Cine se înscrie după ce fereastra s-a deschis, sau când prima cifră e 0 (ca la antrenamentele săptămânale), are {hold} să semneze.",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
       "typeNotes": {
         "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
@@ -1377,7 +1377,9 @@
         },
         "confirmation": {
           "title": "Fereastra de confirmare",
-          "dates": "Pentru {date}: cerută din {opens}, termen {due}."
+          "dates": "Pentru {date}: cerută din {opens}, termen {due}.",
+          "datesAtStart": "Pentru {date}: cerută din {opens}, termen la start — locul nu expiră înainte de start.",
+          "datesOff": "Fără fereastră: semnătura se cere la înscriere ({hold}), ca la antrenamentele săptămânale."
         },
         "bibs": {
           "title": "Numere de concurs (BIB)",
@@ -1506,7 +1508,9 @@
             "noDeclaration": "Lipsește declarația — obligatorie pentru înscrierea pe site"
           },
           "confirmation": {
-            "sentence": "Cerută cu {opens} zile înainte, termen cu {due} zile înainte"
+            "sentence": "Cerută cu {opens} zile înainte, termen cu {due} zile înainte",
+            "atStart": "Cerută cu {opens} zile înainte, termen la start",
+            "off": "Fără fereastră — semnătura se cere la înscriere"
           },
           "bibs": {
             "from": "De la {number}",
@@ -3491,7 +3495,8 @@
       "declaration": {
         "title": "Semnezi declarația",
         "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {hold}; dacă se formează listă de așteptare, după acest termen trece la următorul.",
-        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până cu {deadline} înainte de start; după, trece la următorul."
+        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până {due}; după, trece la următorul.",
+        "bodyLaterAtStart": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna oricând până atunci, din emailul de înscriere: locul nu expiră înainte de start."
       },
       "confirmed": {
         "title": "Ești înscris",
@@ -3622,6 +3627,7 @@
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
       "deadline": "Locul tău este rezervat până la {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
+      "deadlineAtStart": "Locul tău este rezervat până la start, {deadline}: nu expiră înainte. Înscrierea e completă doar cu declarația semnată.",
       "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
@@ -3731,7 +3737,8 @@
       "closedHelp": "Aceste înscrieri nu mai sunt active, dar încă păstrează date pe care ni le-ai dat doar cu acordul tău. Le poți șterge de aici; restul înscrierii îl păstrăm cât scrie în nota de confidențialitate.",
       "eventCancelledChip": "Eveniment anulat",
       "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
-      "runner": "Înscris: {name}"
+      "runner": "Înscris: {name}",
+      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până la {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
     },
     "manage": {
       "title": "Gestionează înscrierea",

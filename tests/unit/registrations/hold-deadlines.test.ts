@@ -4,6 +4,9 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import {
   computeDeclarationHoldExpiry,
   computeWaitlistOfferExpiry,
+  confirmationDueAtStart,
+  confirmationDueMoment,
+  confirmationDueWords,
   confirmationWindow,
   participationWindowOpen,
   DEFAULT_CONFIRMATION_DEADLINE_DAYS,
@@ -128,5 +131,48 @@ describe("§104 the participation window's defaults", () => {
   it("are the column defaults, one number in two places held together", () => {
     expect(events.confirmationOpensDaysBefore.default).toBe(DEFAULT_CONFIRMATION_OPENS_DAYS);
     expect(events.confirmationDeadlineDaysBefore.default).toBe(DEFAULT_CONFIRMATION_DEADLINE_DAYS);
+  });
+});
+
+/**
+ * BR-REQ-033-01 criterion 9 (`DECISIONS.md` §NNN, amending §104; the owner, 2026-09-25:
+ * "fereastra de confirmare trebuie să fie 0 la final, să nu expire") — a deadline of zero is the
+ * start, and every sentence says "la start" beside the date through one helper.
+ */
+describe("§NNN a confirmation deadline of zero days is the start", () => {
+  const DAY = 24 * HOUR;
+  const startsAt = new Date("2026-10-11T06:00:00.000Z");
+
+  it("puts the window's deadline, and the hold given before it opens, at the start itself", () => {
+    const window = confirmationWindow({ startsAt, confirmationOpensDaysBefore: 7, confirmationDeadlineDaysBefore: 0 })!;
+    expect(window).toEqual({ opensAt: new Date(startsAt.getTime() - 7 * DAY), deadline: startsAt });
+    expect(
+      computeDeclarationHoldExpiry({ now: NOW, registrationClosesAt: new Date(startsAt.getTime() - 10 * DAY), eventStartsAt: startsAt, window, deadlines }),
+    ).toEqual(startsAt);
+    // Inside the window the club's minutes still stand (§104): the place is wanted now.
+    const inside = new Date(startsAt.getTime() - 3 * DAY);
+    expect(computeDeclarationHoldExpiry({ now: inside, registrationClosesAt: null, eventStartsAt: startsAt, window, deadlines })).toEqual(
+      new Date(inside.getTime() + 30 * MINUTE),
+    );
+    // Zero and zero is still the weekly run's: no window.
+    expect(confirmationWindow({ startsAt, confirmationOpensDaysBefore: 0, confirmationDeadlineDaysBefore: 0 })).toBeNull();
+  });
+
+  it("is decided by one test, from the days or from the moment", () => {
+    expect(confirmationDueAtStart({ days: 0 })).toBe(true);
+    expect(confirmationDueAtStart({ days: 2 })).toBe(false);
+    expect(confirmationDueAtStart({ at: startsAt, startsAt })).toBe(true);
+    expect(confirmationDueAtStart({ at: new Date(startsAt.getTime() - DAY), startsAt })).toBe(false);
+  });
+
+  it("says «la start» / «the start» beside the counted and the dated form, in both languages", () => {
+    expect(confirmationDueWords("ro", 0)).toBe("la start");
+    expect(confirmationDueWords("en", 0)).toBe("the start");
+    expect(confirmationDueWords("ro", 2)).toBe("cu 2 zile înainte de start");
+    expect(confirmationDueWords("en", 1)).toBe("one day before the start");
+    expect(confirmationDueWords("ro", 7)).toBe("cu o săptămână înainte de start");
+    expect(confirmationDueMoment("ro", { at: startsAt, startsAt }, "duminică, 11 oct. 2026, 09:00")).toBe("start, duminică, 11 oct. 2026, 09:00");
+    expect(confirmationDueMoment("en", { at: startsAt, startsAt }, "Sunday, 11 Oct 2026, 09:00")).toBe("the start, Sunday, 11 Oct 2026, 09:00");
+    expect(confirmationDueMoment("ro", { at: new Date(startsAt.getTime() - 2 * DAY), startsAt }, "vineri")).toBe("vineri");
   });
 });
