@@ -99,8 +99,11 @@ const PUBLIC_COLUMNS = {
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
-  // Bring a headlamp (§382): a pill on the card and the page, a line in the calendar entry.
-  headlampRequired: events.headlampRequired,
+  // The night override (§394): with the start and the zone above, whether this date is a night
+  // event — the pill on the card and the page, a line in the calendar entry and the `.ics`.
+  nightOverride: events.nightOverride,
+  // The group run's optional self-declaration (§393): the button under the route's pills.
+  offersGroupRunDeclaration: events.offersGroupRunDeclaration,
   registrationMode: events.registrationMode,
   registrationOpensAt: events.registrationOpensAt,
   registrationClosesAt: events.registrationClosesAt,
@@ -143,6 +146,10 @@ const PUBLIC_COLUMNS = {
   routeDescriptionJson: eventTranslations.routeDescriptionJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
+  // The club's discount on an external event's own fee (`DECISIONS.md` §394): read on every
+  // event, null everywhere but an `EXTERNAL`-registration, `PAID` one — the service clears it
+  // elsewhere, so a null here means "no discount stated" rather than "read the box".
+  discountNote: eventTranslations.discountNote,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
   // their places while the place is to be announced (§328).
   scheduleItems: publicScheduleItems,
@@ -499,13 +506,35 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       checklist: eventTranslations.checklist,
       locationName: publicLocationName,
       mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
+      // The street under the place's name, in the emails' facts block (§392) — withheld with the
+      // place while it is to be announced (§328), as on the page.
+      locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
       locationToBeAnnounced: events.locationToBeAnnounced,
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,
+      // The route's facts and the cost, as the page's pills say them (§392, `eventFactsBlock`):
+      // the same public columns `PUBLIC_COLUMNS` reads, nothing a public page does not show.
+      surface: events.surface,
+      difficulty: events.difficulty,
+      distanceMeters: events.distanceMeters,
+      elevationGainMeters: events.elevationGainMeters,
+      routeUrl: events.routeUrl,
+      costType: events.costType,
+      costAmount: events.costAmount,
+      costUrl: events.costUrl,
       startsAt: events.startsAt,
+      // The event's own end (§394): the night line's span reads it before the programme's rows,
+      // as the pill does — a run whose «Durata» carries it past dusk is a night run here too.
+      endsAt: events.endsAt,
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
+      // The night override (§394): with the start and the zone, whether the reminder says to bring a light.
+      nightOverride: events.nightOverride,
+      // Whether the reminder's night line calls it a run rather than an event (§394).
+      type: events.type,
+      // The route pills' source (`RouteFactsSource`) carries it, as the page's row does.
+      registrationMode: events.registrationMode,
       // The deadlines the words state (§377): this event's own reminder lead ("este peste 2
       // zile"), and when its participation window opens ("când îți reamintim cu o săptămână").
       reminderHoursBefore: events.reminderHoursBefore,

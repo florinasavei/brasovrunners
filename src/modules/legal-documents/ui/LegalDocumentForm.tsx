@@ -14,6 +14,7 @@ import { bodyToText } from "../domain/body-text";
 import LegalBodyEditor from "./LegalBodyEditor";
 import TokenLegend from "./TokenLegend";
 import type { LegalDocumentBody } from "../domain/content-hash";
+import { LEGAL_DOCUMENT_KEYS } from "../domain/keys";
 
 export type LegalDocumentFormValues = {
   key: LegalDocumentKey;
@@ -89,7 +90,7 @@ export default async function LegalDocumentForm({
           helperText={keyLocked ? t("keyLocked") : undefined}
           sx={{ maxWidth: 420 }}
         >
-          {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key) => (
+          {LEGAL_DOCUMENT_KEYS.map((key) => (
             <MenuItem key={key} value={key}>
               {t(`keys.${key}`)}
             </MenuItem>

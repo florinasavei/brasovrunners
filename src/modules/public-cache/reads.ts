@@ -1,7 +1,7 @@
 import { getDb } from "@/db/client";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { parseLocalizedPath } from "@/i18n/alternate-path";
-import type { Locale } from "@/i18n/routing";
+import { routing, type Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import {
@@ -32,13 +32,16 @@ import {
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { describesListStates } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
   countAnonymousStartListEntries,
   countPublicStartList,
+  countPublicStartListOthers,
   listPlaceCountInstants,
   listPublicStartList,
+  listPublicStartListOthers,
 } from "@/modules/registrations/repository";
 import { readPublicPlaces } from "@/modules/registrations/service";
 import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
@@ -256,6 +259,36 @@ export async function cachedStartListPage(eventId: string, offset: number, limit
   );
 }
 
+/**
+ * How many of the ticked pending and waiting rows the list gains behind the notice's gate
+ * (§396) — `countPublicStartListOthers`, expired by the same "places" tag every change of state
+ * and every change of the tick expires.
+ */
+export async function cachedStartListOthersCounts(eventId: string): Promise<{ pending: number; waitlisted: number }> {
+  return publicRead(["places.start-list-others-counts", eventId], ["places", "events"], () =>
+    countPublicStartListOthers(getDb(), eventId),
+  );
+}
+
+/** One page of `listPublicStartListOthers` — a name, a club and a group, nothing else. */
+export async function cachedStartListOthersPage(eventId: string, offset: number, limit: number) {
+  return publicRead(["places.start-list-others", eventId, offset, limit], ["places", "events"], () =>
+    listPublicStartListOthers(getDb(), eventId, { offset, limit }),
+  );
+}
+
+/**
+ * Whether the public list may show the states, and the pending and waiting groups (§396): the
+ * privacy notice in force describes them (`describesListStates`), in every language. Read
+ * through `cachedCurrentApprovedDocument`, so an approval expires it and a version approved for
+ * a later day takes over on that day — exactly when the notice itself changes on
+ * `/confidentialitate`, never before. `noticeDescribesListStates` is the backoffice's uncached twin.
+ */
+export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
+}
+
 // --- Legal texts ------------------------------------------------------------------------------
 
 /**
@@ -400,7 +433,7 @@ export async function cachedFamilyRegistrationOpen(): Promise<boolean> {
 // --- The language switch ----------------------------------------------------------------------
 
 /** The routes whose other-language address only the database knows: a slug per language. */
-const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/gallery/[slug]", "/pages/[slug]"]);
+const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/events/[slug]/declaration", "/gallery/[slug]", "/pages/[slug]"]);
 
 /**
  * Where the language switcher lands (`resolveLocaleSwitch`), cached per address.

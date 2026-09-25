@@ -2,50 +2,33 @@
 
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
-import type { SvgIconProps } from "@mui/material/SvgIcon";
 import NextLink from "next/link";
 import EditionMark, { EditionGlyph, type EditionNote } from "./EditionMark";
 import { GLYPHS, type GlyphName } from "./glyphs";
 import PartnerMark from "./PartnerMark";
 
 /**
- * The handshake's own filter (`PartnerEmoji`) is tuned to `text.secondary` — invisible against a
- * `filled` (race) entry's `primary.main` fill, where the glyph sits on `primary.contrastText`
- * instead (§379 amended, 2026-09-25 — the owner's gray handshake almost disappeared on a race
- * date). `primary.contrastText` swaps ends between schemes (`theme/theme.ts`): light draws it
- * near-white on the club's dark blue, dark draws it near-black on the lighter dark-scheme blue —
- * so, unlike the emoji's own default, the override does too. `brightness(1.6)` lifts the
- * grayscale glyph close to `COLOR.paper`'s own mean brightness (~249); `brightness(0.1)` drops it
- * close to `COLOR_DARK.paper`'s (~20), by the same multiplier-on-the-desaturated-glyph approach
- * `PartnerEmoji`'s own doc comment measures against `text.secondary`.
- */
-const FILLED_PARTNER_SX: SvgIconProps["sx"] = {
-  filter: "grayscale(1) brightness(1.6)",
-  "[data-dark] &": { filter: "grayscale(1) brightness(0.1)" },
-};
-
-/**
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
- * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Frontală necesară" when
- * the organizer marked the date (§382) — after the place, since both say how the evening will be —
- * then the generic "Colaborare" marker when it is held with one. The grid's tooltip shows them as
- * lines; the link's accessible name reads them as sentences, each ended so a screen reader pauses
- * between them.
+ * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Eveniment de noapte —
+ * apusul la 16:36" when that date starts after dusk (§394, where §382 put the headlamp) — after the
+ * place, since both say how the evening will be — then the generic "Colaborare" marker when it is
+ * held with one. The grid's tooltip shows them as lines; the link's accessible name reads them as
+ * sentences, each ended so a screen reader pauses between them.
  */
 function calendarEntryLines({
   time,
   title,
   note,
-  headlamp = null,
+  night = null,
   partner,
 }: {
   time: string;
   title: string;
   note: EditionNote | null;
-  headlamp?: string | null;
+  night?: string | null;
   partner: string | null;
 }): string[] {
-  return [`${time} ${title}`, ...(note ? [note.text] : []), ...(headlamp ? [headlamp] : []), ...(partner ? [partner] : [])];
+  return [`${time} ${title}`, ...(note ? [note.text] : []), ...(night ? [night] : []), ...(partner ? [partner] : [])];
 }
 
 function calendarEntryName(lines: readonly string[]): string {
@@ -85,7 +68,7 @@ export default function CalendarEventChip({
   filled,
   cancelled,
   note,
-  headlamp = null,
+  night = null,
   partner,
   dense,
 }: {
@@ -98,14 +81,14 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
-  /** "Frontală necesară" / "Headlamp required" (§382), made on the server — or null for a date that needs no light. */
-  headlamp?: string | null;
+  /** "Eveniment de noapte — apusul la 16:36" / "Night event — sunset at 16:36" (§394), made on the server — or null for a date that is not one. */
+  night?: string | null;
   /** The generic "Colaborare" marker (§367, §379), made on the server — or null for an event with no partner. */
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;
 }) {
-  const lines = calendarEntryLines({ time, title, note, headlamp, partner });
+  const lines = calendarEntryLines({ time, title, note, night, partner });
   const name = calendarEntryName(lines);
   const markSize = dense ? 16 : 18;
   const chip = (
@@ -151,12 +134,7 @@ export default function CalendarEventChip({
         {(partner || note) && (
           // The marks at the end, where the ⚠ always was: the partner, then the date's note.
           <Box component="span" data-testid="calendar-entry-marks" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, flexShrink: 0 }}>
-            {partner &&
-              (dense ? (
-                <PartnerGlyph size={markSize} sx={filled ? FILLED_PARTNER_SX : undefined} />
-              ) : (
-                <PartnerMark text={partner} size={markSize} sx={filled ? FILLED_PARTNER_SX : undefined} />
-              ))}
+            {partner && (dense ? <PartnerGlyph size={markSize} /> : <PartnerMark text={partner} size={markSize} />)}
             {note && (dense ? <EditionGlyph note={note} size={markSize} /> : <EditionMark note={note} size={markSize} />)}
           </Box>
         )}
@@ -185,13 +163,12 @@ export default function CalendarEventChip({
   );
 }
 
-/** The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Colaborare" / "Partnership". */
-function PartnerGlyph({ size, sx }: { size: number; sx?: SvgIconProps["sx"] }) {
+/**
+ * The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Colaborare" /
+ * "Partnership". No colour of its own (§391): `currentColor` carries the chip's own ink in,
+ * `primary.contrastText` on a filled (race) entry, `text.primary` otherwise.
+ */
+function PartnerGlyph({ size }: { size: number }) {
   const Icon = GLYPHS.partner;
-  return (
-    <Icon
-      aria-hidden="true"
-      sx={[{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
-    />
-  );
+  return <Icon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />;
 }

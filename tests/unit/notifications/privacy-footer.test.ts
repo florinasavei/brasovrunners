@@ -22,7 +22,7 @@ const DATA: TemplateData = {
   currentStatus: "CONFIRMED",
 };
 
-const CLUB_MAIL: readonly EmailMessageType[] = ["DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION"];
+const CLUB_MAIL: readonly EmailMessageType[] = ["DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION"];
 
 const noticeUrl = (locale: "ro" | "en") => `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;
 

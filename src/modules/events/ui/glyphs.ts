@@ -4,8 +4,10 @@ import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -22,7 +24,6 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
-import PartnerEmoji from "./PartnerEmoji";
 import RoadIcon from "./RoadIcon";
 
 /** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
@@ -88,14 +89,18 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * pointed at.
  *
  * `partner` marks an event held with another organization, on the listing card's chip, the
- * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): the 🤝
- * emoji everywhere (§379, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
- * and the facts row's own copy of it — the owner hates the icon on every surface, not some).
+ * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): Material's
+ * `Handshake` glyph everywhere (§391, reverting §379/§386's 🤝 emoji — the owner, 2026-09-25:
+ * "wow shit handshake icon is super ugly! Use the MUI icon ASAP", of the emoji rendered through
+ * a grayscale filter, which read as a dark smudge rather than a desaturated hand). Drawn with no
+ * colour of its own, so it takes `currentColor` from wherever it sits — the chip's icon ink, the
+ * overline's `text.secondary`, a filled calendar entry's `primary.contrastText` — the way every
+ * other glyph in this registry already does; no filter, no dark-scheme override.
  *
  * `headlamp` is a torch that is lit (§382; the owner, 2026-09-25: "a headlamp icon for the events
  * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
- * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
+ * the kit). Always beside its word, "Eveniment de noapte" / "Night event", like every other pill.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -108,7 +113,9 @@ export const GLYPHS = {
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
   headlamp: FlashlightOnIcon,
-  partner: PartnerEmoji as Glyph,
+  // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
+  discount: LocalOfferIcon,
+  partner: HandshakeIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

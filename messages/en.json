@@ -140,8 +140,17 @@
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
     "elevationShort": "{m} m climb",
-    "headlamp": "Headlamp",
-    "headlampRequired": "Headlamp required",
+    "night": {
+      "pill": "Night event",
+      "runPill": "Night run",
+      "tooltip": "Sunset at {time} — bring a headlamp",
+      "tooltipEnd": "Sunset at {time}, the finish at {end} — bring a headlamp",
+      "tooltipEndProgramme": "Sunset at {time}, the programme's last row at {end} — bring a headlamp",
+      "calendar": "Night event — sunset at {time}",
+      "ics": "Night event — sunset at {time}, bring a headlamp",
+      "calendarRun": "Night run — sunset at {time}",
+      "icsRun": "Night run — sunset at {time}, bring a headlamp"
+    },
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
@@ -186,7 +195,25 @@
       "columnClub": "Club",
       "previous": "← Previous page",
       "next": "Next page →",
-      "pageOf": "Page {page} of {pages}"
+      "pageOf": "Page {page} of {pages}",
+      "states": {
+        "confirmed": "Confirmed",
+        "pending": "Registered, awaiting confirmation",
+        "waitlisted": "On the waiting list"
+      },
+      "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
+      "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participant list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "othersLead": "Also listed by name:",
+      "pendingCount": {
+        "one": "{count} registered, awaiting confirmation",
+        "few": "{count} registered, awaiting confirmation",
+        "other": "{count} registered, awaiting confirmation"
+      },
+      "waitlistedCount": {
+        "one": "{count} on the waiting list",
+        "few": "{count} on the waiting list",
+        "other": "{count} on the waiting list"
+      }
     },
     "cta": {
       "register": "Register for this event",
@@ -242,6 +269,10 @@
     },
     "costPaidAmount": "Fee: {amount}",
     "costPaidWhere": "payment on {host}",
+    "costPaidExternal": "Paid, to the organizer",
+    "costPaidExternalAmount": "Paid, to the organizer: {amount}",
+    "costPaidExternalSrSuffix": "paid to the organizer, not to the club",
+    "costPaidExternalLine": "Cost: {amount}, paid to the organizer",
     "costDonation": "Donation: on {host}",
     "costDonateOn": "Donate on {host}",
     "costDonationSuggested": "suggested {amount}",
@@ -268,6 +299,8 @@
     },
     "route": "Route",
     "routeSection": "The route",
+    "linksLabel": "Links",
+    "pageLabel": "The event's page",
     "age": "Age",
     "openRoute": "View the route",
     "routeJump": "About the route",
@@ -301,6 +334,37 @@
       "rules": "Rules",
       "programme": "Programme",
       "checklist": "What to bring"
+    },
+    "groupRunDeclaration": {
+      "heading": "Self-declaration (optional)",
+      "button": "Sign the self-declaration",
+      "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
+      "page": {
+        "back": "Back to {event}",
+        "title": "Self-declaration",
+        "intro": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
+        "doneTitle": "The declaration is signed",
+        "done": "We have emailed it to you as a PDF. Come to the run as usual.",
+        "closed": "The declaration can no longer be signed for this run.",
+        "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
+        "refusedTitle": "The declaration was not signed",
+        "refusedNothingRecorded": "Nothing was recorded. Fill in the boxes below and sign again:",
+        "fields": {
+          "idDocument": "Identity document (series and number)",
+          "email": "Email address",
+          "accepted": "I am 18 or older, I have read the declaration and I sign it",
+          "typedName": "Signature: your full name",
+          "captcha": "The anti-bot check"
+        },
+        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the club's copy it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
+        "emailHelp": "We send the signed declaration here, as a PDF.",
+        "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
+        "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
+        "accept": "I am 18 or older, I have read the declaration above and sign it on my own responsibility",
+        "typedNameHelp": "Type your full name. It appears as a signature.",
+        "captcha": "The anti-bot check did not pass. Please try again.",
+        "action": "Sign the declaration"
+      }
     }
   },
   "Admin": {
@@ -613,7 +677,8 @@
       "bulkEraseConfirmHelp": "Exactly the number of ticked registrations — anything else erases nothing.",
       "bulkEraseAction": "Erase for good",
       "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased.",
-      "filtersNone": "no filter · every registration"
+      "filtersNone": "no filter · every registration",
+      "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -880,6 +945,9 @@
       "costDonationUrlHelp": "Required. The link where the donation is made, on another site. Must start with https://.",
       "costDonationAmount": "Suggested amount (optional)",
       "costDonationAmountHelp": "For example \"50 lei\".",
+      "discountNote": "The club's discount",
+      "discountNoteHelp": "What discount members get and how they use it — the code, until when",
+      "discountSummary": "with a discount",
       "fields": {
         "title": "Title",
         "slug": "Page address",
@@ -933,8 +1001,21 @@
       "distanceMeters": "Distance",
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
-      "headlampRequired": "Headlamp required",
-      "headlampRequiredHelp": "Shown on the event's card, page and calendar.",
+      "night": {
+        "label": "Night event",
+        "auto": "Automatic (after sunset)",
+        "yes": "Yes",
+        "no": "No",
+        "autoLine": "Automatic: on {day}, sunset is at {time} — {verdict}",
+        "autoLineNoTime": "Automatic: on {day}, sunset is at {time} — pick the start time",
+        "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
+        "verdictNight": "a night event",
+        "verdictDay": "not a night event",
+        "endLine": "The start is before dusk, but the run lasts until {end} and reaches the dark — still a night event.",
+        "endLineProgramme": "The start is before dusk, but the day's programme runs until {end} (its last row) and reaches the dark — still a night event.",
+        "series": "In a series, each date follows its own day's sunset: the winter dates are night events, the summer ones are not.",
+        "help": "Automatic: it is a night event when any part of it, from the start to the end, falls after dusk (the sun 6° below the horizon) or before dawn. The end comes from “Duration” or, without it, the day's last programme row. Shown on the event's card, page and calendar, and in the reminder email."
+      },
       "registrationSection": "Registration",
       "registrationMode": "Registration mode",
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
@@ -951,7 +1032,7 @@
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
-      "participantListHelp": "Publishes the name and club of the confirmed participants who ticked “I want to appear on the participant list”; every other confirmed participant appears as “Participant (name hidden)”, with nothing about them, and the list says how many are confirmed in all. No email addresses, and nothing about unconfirmed registrations. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on, and the save is refused while no privacy notice is approved and in force.",
+      "participantListHelp": "Publishes the name and club of the confirmed participants who ticked “I want to appear on the participant list”; every other confirmed participant appears as “Participant (name hidden)”, with nothing about them, and the list says how many are confirmed in all. No email addresses. Once the privacy notice in force describes the stages, the list shows each registration's stage beside the name and also holds those who ticked and have not confirmed yet, then the waiting list; a cancelled or expired registration never appears. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on, and the save is refused while no privacy notice is approved and in force.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -1450,7 +1531,10 @@
             "route": "route",
             "km": "{km} km",
             "elevation": "+{m} m",
-            "headlamp": "headlamp",
+            "night": "night",
+            "nightAuto": "night (automatic)",
+            "day": "day",
+            "dayAuto": "day (automatic)",
             "described": "with a description",
             "describedOneLanguage": "description in one language only"
           },
@@ -1488,6 +1572,12 @@
         "tab": "same as Romanian",
         "listTitle": "To check: the English text is identical to the Romanian one (does not block publication)",
         "partner": "Partner {p}"
+      },
+      "groupRunDeclaration": {
+        "label": "Optional self-declaration",
+        "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
+        "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
+        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
       }
     },
     "preview": {
@@ -1604,11 +1694,13 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The three texts a participant accepts. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "intro": "The three texts a participant accepts at registration, and the two optional declarations of the group runs. An approved version never changes (people signed exactly that text); a correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
-        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed."
+        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed.",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt: traffic, the group's pace, the dark. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept).",
+        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail: terrain, wild animals and dogs, weather and the dark, one's own equipment with a headlamp. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept)."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",
@@ -1623,7 +1715,9 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Racing TOS",
-        "EVENT_DECLARATION": "Participant declaration"
+        "EVENT_DECLARATION": "Self-declaration (race)",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
+        "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -1722,7 +1816,8 @@
         "confirmationHours": "How long the address confirmation link is valid, from “Deadlines”",
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
-        "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one"
+        "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
+        "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -1769,7 +1864,8 @@
         "imageInvalid": "The address must start with https://",
         "undo": "Undo",
         "redo": "Redo"
-      }
+      },
+      "listStatesMissing": "The privacy notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. For the list to show each person's stage as well — “Registered, awaiting confirmation”, “On the waiting list” — approve a new version of the notice starting from the platform's text, which describes them."
     },
     "tasks": {
       "title": "What is still to do",
@@ -1784,7 +1880,12 @@
         "todo": "To do",
         "botCheck": "Anti-bot",
         "costs": "Costs",
-        "system": "System"
+        "system": "System",
+        "app": "The app"
+      },
+      "app": {
+        "lead": "The platform's work queue, from the repository — what is building, what is ready, what comes next",
+        "missing": "The document is not in this deployment."
       },
       "neonPlan": {
         "title": "The Neon plan (the database)",
@@ -2071,6 +2172,16 @@
             "On the Costs tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon with the key /devs already uses (SETUP.md §33).",
             "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits. If Neon refuses the write, the card says so and names the key that would do.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
+          ]
+        },
+        "listStatesNotice": {
+          "title": "Privacy notice: the stages on the public list",
+          "todo": "The notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. Those registered who have not confirmed yet and those on the waiting list do not appear, and nothing is written beside a name, until the club approves a notice that describes them.",
+          "done": "The notice in force describes the stages: the public list shows beside each name whether the person is confirmed, registered awaiting confirmation, or on the waiting list.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes the stages.",
+            "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
+            "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
           ]
         }
       },
@@ -2633,6 +2744,8 @@
         "EVENT_UPDATE_NOTICE": "Updated details (place, time, programme)",
         "EVENT_CANCELLED": "Event cancelled",
         "ORGANIZER_MESSAGE": "Message from the organizers",
+        "GROUP_RUN_DECLARATION_SIGNED": "The declaration signed on a group run (PDF attached)",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "The club's copy: a group run declaration (PDF attached)",
         "REGISTER_ANOTHER_PERSON": "Registering another person with the same address"
       },
       "when": {
@@ -2657,6 +2770,8 @@
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
         "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link.",
         "ORGANIZER_MESSAGE": "Only when an organizer writes and sends a message from the event's page → “Send a message to participants” — bad weather or a last-minute change, for instance. The subject and the text are written for each send, in Romanian and English; the preview here uses a sample text. To the group chosen — confirmed, on the waiting list, with the declaration unsigned, or all — each in their own language. No token and no attachment: the button leads to the event's page.",
+        "GROUP_RUN_DECLARATION_SIGNED": "Right after somebody signs the optional declaration on a group run's page, to the address they gave. With the declaration as a PDF, whole; no token and no action link — there is no registration to manage.",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "Together with a declaration signed on a group run, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, if none is set here). No action link; in the attached PDF the identity document's series and number are masked.",
         "REGISTER_ANOTHER_PERSON": "When the public form is sent again with an address already registered for the event and another name. No registration is created, and the screen shows the same “check your email” as always. The address gets a single-use link, valid for {confirmation}, to the form with the address fixed — or, if it already has {people}, only the sentence that says so, with no link."
       },
       "whenShort": {
@@ -2681,6 +2796,8 @@
         "EVENT_UPDATE_NOTICE": "only when an organizer announces a change",
         "EVENT_CANCELLED": "when the event is cancelled, if ticked",
         "ORGANIZER_MESSAGE": "only when an organizer writes a message",
+        "GROUP_RUN_DECLARATION_SIGNED": "after a group run declaration is signed",
+        "GROUP_RUN_DECLARATION_ARCHIVE": "with a group run declaration, to the archive",
         "REGISTER_ANOTHER_PERSON": "when the form is sent again for another person"
       },
       "clubNotices": {
@@ -3178,6 +3295,20 @@
       "historyWhen": "Sent {date} by {sender}",
       "historyNoSender": "a removed account",
       "historyTest": "test registrations: {test}"
+    },
+    "groupRunDeclarations": {
+      "title": "Signed declarations (group run)",
+      "count": "Signed: {count}",
+      "help": "Who signed the optional declaration on the run's page, and when. The identity document and the email address are in the PDF. The platform deletes the declarations {days} after the run.",
+      "none": "No declaration signed yet.",
+      "signedAt": "signed {when}",
+      "pdf": "PDF",
+      "reason": "Why it is erased",
+      "reasonHelp": "It stays in the club's log, with your name. Do not write the person's name.",
+      "erase": "Erase the declaration",
+      "eraseTitle": "Erase the declaration?",
+      "eraseBody": "The declaration and the messages about it are deleted for good. The log keeps your name and the reason, never the signer's.",
+      "erased": "The declaration was erased. The log keeps your name and the reason."
     }
   },
   "NotFound": {
@@ -3456,6 +3587,7 @@
     "phoneValid": "Looks right. We will store it as",
     "botCheckWait": "One second while we check you are not a robot — we send the form ourselves as soon as it answers; no need to press again.",
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
+    "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {
       "title": "Registering another person with the same address",
       "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event.",
@@ -3676,7 +3808,8 @@
       "status": "Status",
       "general": "General",
       "email": "Email",
-      "botCheck": "Anti-bot"
+      "botCheck": "Anti-bot",
+      "app": "The app"
     },
     "configuration": "Configuration",
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",
@@ -4150,7 +4283,8 @@
       "deadlines": "Deadlines saved.",
       "addressCap": "Limit per address saved.",
       "neonLimits": "The Neon limits were saved.",
-      "neonLimitsSame": "The limits were already these; nothing changed."
+      "neonLimitsSame": "The limits were already these; nothing changed.",
+      "groupRunDeclarationErased": "The declaration was erased."
     }
   }
 }

@@ -61,6 +61,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
     costType: null,
     costAmount: null,
     costUrl: null,
+    discountNote: null,
     publishedAt: NOW,
     ...overrides,
   } as PublicEvent;
@@ -143,8 +144,61 @@ describe("the cost facts, full page (§343; its own row and pill since §356)", 
   });
 });
 
-describe("the cost facts, featured hero (§343, unchanged by §356)", () => {
-  it("keeps «Taxă: 50 lei» and «plata pe {host}» among the route's pieces", async () => {
+describe("an EXTERNAL-registration PAID event's cost row (§394)", () => {
+  it("says «Cu taxă, la organizator» with the amount, never «plata pe {host}»", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({
+        event: event({ costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", costUrl: "https://revolut.me/other-club" }),
+        now: NOW,
+        stacked: true,
+      }),
+    );
+    expect(pillLabels(html)).toContain("Cu taxă, la organizator: 75 lei");
+    expect(html).not.toContain("plata pe");
+  });
+
+  it("falls back to «Cu taxă, la organizator» with no stated amount", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ costType: "PAID", costAmount: null, registrationMode: "EXTERNAL" }), now: NOW, stacked: true }),
+    );
+    expect(pillLabels(html)).toContain("Cu taxă, la organizator");
+  });
+
+  it("shows the discount note under the cost row, in the reader's language, only when stated", async () => {
+    const withNote = renderToStaticMarkup(
+      await EventFacts({
+        event: event({ costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: "40 lei pentru membri, cu codul BR" }),
+        now: NOW,
+        stacked: true,
+      }),
+    );
+    expect(withNote).toContain("40 lei pentru membri, cu codul BR");
+
+    const withoutNote = renderToStaticMarkup(
+      await EventFacts({
+        event: event({ costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL", discountNote: null }),
+        now: NOW,
+        stacked: true,
+      }),
+    );
+    expect(withoutNote).not.toContain("pentru membri");
+  });
+
+  it("keeps the plain PAID wording for an INTERNAL event — the fee is the club's", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({
+        event: event({ costType: "PAID", costAmount: "50 lei", registrationMode: "INTERNAL" }),
+        now: NOW,
+        stacked: true,
+      }),
+    );
+    expect(pillLabels(html)).toContain("50 lei");
+    expect(html).not.toContain("la organizator");
+  });
+});
+
+describe("the cost facts, featured hero (§343; the EXTERNAL + PAID wording since §394)", () => {
+  it("keeps «Taxă: 50 lei» and «plata pe {host}» for a club-run PAID event, among the route's pieces", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }), now: NOW }),
     );
@@ -160,6 +214,31 @@ describe("the cost facts, featured hero (§343, unchanged by §356)", () => {
     expect(/<a [^>]*>([^<]*)<\/a>/.exec(html)?.[1]).toBe("Donație: pe wingsforlifeworldrun.com");
     expect(html).toContain("sugerat 50 lei");
   });
+
+  it("says the fee goes to the organizer on an EXTERNAL-registration PAID event, never links costUrl, and carries the club's discount note (§394)", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({
+        event: event({
+          costType: "PAID",
+          costAmount: "75 lei",
+          registrationMode: "EXTERNAL",
+          costUrl: "https://revolut.me/other-club",
+          discountNote: "40 lei pentru membri BR",
+        }),
+        now: NOW,
+      }),
+    );
+    expect(html).toContain("Cu taxă, la organizator: 75 lei");
+    expect(html).not.toContain("plata pe");
+    expect(html).toContain("40 lei pentru membri BR");
+  });
+
+  it("falls back to «Cu taxă, la organizator» with no stated amount, on the hero too", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ costType: "PAID", costAmount: null, registrationMode: "EXTERNAL" }), now: NOW }),
+    );
+    expect(html).toContain("Cu taxă, la organizator");
+  });
 });
 
 describe("the cost facts, compact card (§343)", () => {
@@ -174,6 +253,50 @@ describe("the cost facts, compact card (§343)", () => {
       );
       expect(html).not.toContain("<a ");
       expect(html).not.toContain("50 lei");
+    }
+  });
+
+  it("keeps the closed set's word «Cu taxă» on the card, but says the fee goes to the organizer to a screen reader", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({
+        event: event({ costType: "PAID", costAmount: "75 lei", registrationMode: "EXTERNAL" }),
+        now: NOW,
+        variant: "compact",
+      }),
+    );
+    expect(pillLabels(html)).toContain("Cu taxă");
+    // Content, not an `aria-label` override (§394): a non-clickable `Chip` is a plain, roleless
+    // `<div>`, and ARIA 1.2 does not allow naming a generic element — a screen reader in browse
+    // mode reads the chip's own text and ignores the attribute. The extra words are visually
+    // hidden text right after the visible word, inside the same chip label.
+    expect(html).not.toMatch(/aria-label="[^"]*plătit la organizator/);
+    expect(html).toMatch(/Cu taxă(<style[^>]*>.*?<\/style>)?<span[^>]*> — plătit la organizator, nu la club<\/span>/);
+  });
+
+  it("carries no hidden suffix on an INTERNAL paid event's card pill", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", registrationMode: "INTERNAL" }), now: NOW, variant: "compact" }),
+    );
+    expect(html).not.toContain("plătit la organizator");
+  });
+
+  it("builds its cost pill the same way `buildRoutePills` does — the backoffice list's own helper (§388, §394), never a second copy of the organizer suffix rule", async () => {
+    const { buildRoutePills } = await import("@/modules/events/ui/route-pills");
+    const t = createTranslator({ locale: "ro", messages: ro, namespace: "Event" }) as (key: string, values?: Record<string, unknown>) => string;
+    const format = (await import("next-intl")).createFormatter({ locale: "ro", timeZone: "Europe/Bucharest" });
+
+    for (const registrationMode of ["INTERNAL", "EXTERNAL"] as const) {
+      const source = event({ costType: "PAID", costAmount: "75 lei", registrationMode });
+      const html = renderToStaticMarkup(await EventFacts({ event: source, now: NOW, variant: "compact" }));
+      const [costPill] = buildRoutePills(source, t, format).slice(-1);
+
+      expect(costPill.label).toBe("Cu taxă");
+      if (costPill.srSuffix) {
+        expect(html).toContain(`Cu taxă`);
+        expect(html).toMatch(new RegExp(` — ${costPill.srSuffix}<\\/span>`));
+      } else {
+        expect(html).not.toContain("plătit la organizator");
+      }
     }
   });
 });

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.96-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.94-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.96-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -75,7 +75,7 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 | No registration without an approved declaration and privacy notice, and no legal text in effect that the club did not approve. The platform ships complete texts as templates (`legal-documents/templates/`), with the club's four facts as visible `<PLACEHOLDER>`s; everywhere but production the seed wraps them in a not-approved banner, and production is refused a seed — the club approves them in `/admin/legal` ("start from the platform's text"). The refusal has a test. | `AGENTS.md` §10.8, §29; BR-REQ-053-01; `DECISIONS.md` §29, §95 |
 | Publication is one state per event: both languages go live together, and PUBLISHED requires a complete translation in every locale. A locale with no translation is a 404, never the other language's text. | `AGENTS.md` §11.2, BR-REQ-040-02, `DECISIONS.md` §28 |
 | A test registration behaves exactly like a real one in the queue — `kind` appears in no condition in the allocator or the capacity formula — is omitted from every count the club is given, and cannot exist in production. | `AGENTS.md` §12.6, BR-REQ-037-04, `DECISIONS.md` §30 |
-| A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and having ticked "I want to appear" (§143), and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
+| A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, having ticked "I want to appear" (§143), and never switched on before the approved privacy notice describes it. It shows the confirmed. Only while the notice in force names `{{participantListStates}}` (§396) does it also show the ticked pending and waiting list, each name with its state. Never a cancelled, expired, unconfirmed-address or test registration. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
 | Staff may enter, rename, cancel and erase a registration, and — at the race-day desk — confirm one on a paper declaration the *participant* signed, give a waiting-list entry a free place, set a number by hand and check people in. Nothing else: no verified-email edit, no participant merge, no staff-signed declaration (a paper acceptance names the staff member who *recorded* it), and no desk verb that bypasses the allocator or an approved declaration. Every staff role works the desk and sees a name, a state and a number there, never an address. The Organizer reads the whole list, the export and the race numbers and changes nothing on them (§289); cancel, erase, rename, resend and the printing mark stay Administrator-only, and the Tehnic role gets none of it. Erasing releases the place through the allocator and leaves an audit row that names who and why but never who was erased. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-037-07, BR-REQ-037-08, `DECISIONS.md` §67 |
 | Participants never get passwords or accounts. Staff-only auth. | `AGENTS.md` §10.3, §13 |
 | Email action links: token hashed at rest, single use, GET never mutates. | `AGENTS.md` §12.8, BR-REQ-036-02 |
@@ -124,6 +124,12 @@ sections and in `CHANGELOG.md`.
   A place may be **"to be announced"** — withheld in SQL from every public surface and email until
   the switch goes off (§328); **"Linkuri și fișiere"**, up to twelve labelled links per event (a GPX on
   Drive, a PDF, an album) under `#links` (§332).
+- **Night events** (§394): whether a date is a night event is computed, never stored — a start at or after civil dusk (or before civil dawn)
+  at the club's place (`CLUB_COORDINATES`, default Brașov) on that date, through the NOAA solar algorithm in the platform; the pill «Eveniment de
+  noapte» keeps the headlamp glyph and says the sunset; a series answers per date; the editor's «Eveniment de noapte: Automat / Da / Nu» overrides
+  it (the column of §382 became the tri-state override); the reminder says the sunset and «ia o frontală» only on a night date.
+- **An external event paid at the organizer's** (§395): the cost row reads «Cu taxă, la organizator», the club's discount note in the reader's
+  language under it (both languages or neither, only for EXTERNAL + PAID), the ics cost line, JSON-LD `offers.url` at the organizer's form.
 - The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
   dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph; every backoffice button's glyph by name from `shared/ui/action-icons.ts` through the admin-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never on a public page, and the club's runner on the public send buttons (§318).
@@ -151,7 +157,7 @@ sections and in `CHANGELOG.md`.
   (`tests/concurrency/capacity.test.ts`); the 30-minute hold, the waiting list and its
   24-hour offers, self-unregistration, the maintenance job (`AGENTS.md` §10.5–§10.6, §40, §68). Test registrations
   (`kind = TEST`) go through the same queue and are counted nowhere the club looks (§30).
-  A public participant list, built and `HIDDEN` until the privacy notice describes it (§32).
+  A public participant list, built and `HIDDEN` until the privacy notice describes it (§32); since §396 it says each runner's state and lists the pending and the waiting list, once the notice in force names `{{participantListStates}}`.
 - The declaration: the club's text with tokens — `{{participant}}`, `{{declarant}}`,
   `{{guardian}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,
   `{{signedAt}}` — the identity document typed at signing and never scanned, the signature in
@@ -161,6 +167,11 @@ sections and in `CHANGELOG.md`.
 - A **family on one address** (§389): the form sent again with another name creates nothing and emails the address a single-use link
   to register the other person, the address fixed; the club's limit per address is in "Termene" (default 4); each person confirms, signs
   and gets their own QR code. It is on since `BR-V1.94` (migration `0073` dropped `registrations_event_participant_unique`; §390).
+- A **group run may offer an optional self-declaration** by surface, asphalt or trail (§393): a checkbox in «Traseul» (on by itself for
+  trail), a named section with one button on the run's page, the same signing parts as the race declaration (typed identity document, a hand
+  signature, the runner's language), the PDF to the signer and the club's archive with the document masked, seven days' retention, never a
+  registration; refused while no approved text of that surface or no approved privacy notice is in force; Organizer and Administrator read the
+  signatures, an Administrator erases one with an audit row.
 - Race numbers in registration order from the event's own first number (§173, reversing §94),
   never reused; a picture of every bib, a bib
   sheet, and the small print the club composes per event — one or two lines, the same on the paper and the preview (§317); a preferential number typed by hand among the free ones, emailed to the runner
@@ -169,7 +180,7 @@ sections and in `CHANGELOG.md`.
 
 **Email**
 
-- 22 message types (`email_outbox.email_message_type`) — the organizer's **update notice**, sent only when they tick "Anunță participanții", and the **cancellation** with its reason are the newest; a cancelled event goes quiet (§331) — bilingual by default, one branded
+- 24 message types (`email_outbox.email_message_type`) — the organizer's **update notice**, sent only when they tick "Anunță participanții", and the **cancellation** with its reason are the newest; a cancelled event goes quiet (§331) — bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
   more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
@@ -178,6 +189,10 @@ sections and in `CHANGELOG.md`.
   queued it and on the scheduler (§68); a spent Mailgun allowance defers, never discards (§40).
   The club's copy of a participant's message is a separate "[Copie club]" message per address, with no token, QR or attachment, and Mailgun open and click tracking are off on every message (§320). The reminder before the start (the club's lead or the event's own, 48 hours by default, §377), the thank-you after (§81–§83); the participation confirmation
   when the window opens (§104); the number given by hand (§105).
+- **The confirmed email, the reminder and the declaration request carry one facts block** (§392): Când (with the weekday), Unde (the place
+  in that language, the address, the map), Program (the timed rows), Traseu (the page's own route words), Cost (only when not free), Linkuri
+  (the page's anchors by the page's own rules, `#links` only when the section exists) — one function, drawn once per language half, in place
+  of §81's bold line; the club's copy keeps it without the QR.
 - **The Mailgun plan is a setting** on `/admin/emails` — Free, Basic, Foundation, Scale or
   typed ceilings — and every "how much can we still send" figure and the cost table follow it
   (§100). **The club is told when email stops**: `/api/health` answers 503 for anything but
@@ -289,6 +304,14 @@ sections and in `CHANGELOG.md`.
 - **Batch 18 (2026-09-25, `BR-V1.94`):** the family flow is open — the contract migration `0073` drops the old one-registration-per-address
   index; the gate reads the catalogue, so the flow switched itself on with no setting; the privacy-notice template says whose data is entered
   and whose inbox receives the messages; `migrations:check` still misses `DROP CONSTRAINT` as a contract (a chore) (§390).
+- **Batch 19 (2026-09-25, `BR-V1.95`):** the partner marker is Material's `Handshake` glyph again, drawn in each surface's own ink — the
+  grayscale-filtered 🤝 of §379/§386 read as a smudge (§391).
+- **Batch 20 (2026-09-25, `BR-V1.96`):** the confirmed email, the reminder and the declaration request carry one facts block — when, where,
+  programme, route, cost, the page's links — in place of §81's bold line (§392) · an optional self-declaration on a group run, asphalt or
+  trail, signed on the site and emailed to the signer and the club's archive, seven days' retention, two more legal texts to approve (§393,
+  migration `0074`) · «Eveniment de noapte» computed from civil dusk at the club's place per date, the editor's Automat / Da / Nu override,
+  replacing §382's checkbox (§394, migration `0076`) · the club's discount note on an external event paid at the organizer's, «Cu taxă,
+  la organizator», the ics cost line, JSON-LD offers at the organizer (§395, migration `0075`) · the public participant list says each runner's state and lists the ticked pending and waiting list, only while the notice in force names `{{participantListStates}}` (§396) · Panel's help variant («Ce înseamnă fiecare tip?», the email legend with an «i»), a new event free by default, the robot glyph on every automatic line (§398) · `/admin/tasks` → «Aplicația» renders `docs/QUEUE.md` read-only through the `/devs/docs` renderer, for Administrator, Superadministrator and Tehnic (§397).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -352,6 +375,8 @@ it is the authority, this is the summary):
    on production from the platform's templates
    (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
    the same item as 4, with the texts now written. Approving new versions from the templates also makes the terms and the privacy notice read their deadlines from "Termene" (§377); the production texts keep their literal numbers until then.
+   **Since §393 two more texts:** the optional group-run declarations (asfalt, trail) — `/admin/legal` → Versiune nouă → «pornește de la
+   textul platformei» → each of the two, four facts each; until the trail text is approved no run offers the button. **And the notice once more:** since §396 its section 4 describes the public list's states; until a notice from the new template is approved on production, public lists show confirmed names only (`/admin/tasks` shows the row `listStatesNotice`).
 9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
    notifications on production and QA (`SETUP.md` §36). Both answered `ok` on 2026-09-22.
 10. ~~The invitation key~~ — done 2026-09-20, and **only actually working since 2026-09-22**:
@@ -383,6 +408,7 @@ it is the authority, this is the summary):
 14. **The privacy notice, once more** — the template now says a person may register someone else on their own address, entering
     that person's data on their behalf and receiving their messages (§389); the notice in force on production says none of it until
     the club approves a new version from the platform's text (`/admin/legal`, the same click as item 8).
+    Since `BR-V1.96` (§393, §396) the template also describes the optional group-run declaration and the public list's states — one new version covers all of it.
 15. ~~**The family flow's contract release, `BR-V1.94`**~~ — done 2026-09-25 (§390): — one contract-only migration drops `registrations_event_participant_unique`;
     the flow is on wherever migration `0073` ran; production got it with this release. What is left is item 14, the notice.
 

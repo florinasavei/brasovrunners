@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.96-2026-09-25 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.94-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.96-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1371,8 +1371,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - `NAMES` is refused unless `registration_mode = INTERNAL`, in the service and again as a CHECK.
   For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
-  ordered by `confirmed_at` then `id`. The select list is the registered name and nothing else —
-  no address, no status, no identifier, and no count of anything unconfirmed;
+  ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
 - `registrations.list_opt_out` is the participant's own answer, the opposite of the tick "I want
   to appear on the participant list" (`DECISIONS.md` §143): no tick, no listing. Asked on the
   form of an event whose list is switched on (§85); switching a list on later means asking the

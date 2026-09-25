@@ -5,7 +5,6 @@ import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import type { Metadata } from "next";
@@ -25,6 +24,7 @@ import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
 import LegalLink from "@/shared/ui/LegalLink";
@@ -35,6 +35,7 @@ import { declarantValues, identityDocumentValues } from "@/modules/registrations
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
+import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -70,84 +71,6 @@ function nextLines(lines: readonly string[], locale: string, hours: number): str
   The signature boxes' ids are the names they post (`typedName`, and `minorTypedName` on a minor's
   declaration, §330): what the refusal's links point at, so following one focuses its box.
 */
-
-const ID_DOCUMENT_TYPES = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"] as const;
-
-/** A document's series box, by the name it posts: the declarant's, and on a minor's declaration the minor's (§330). */
-type DocumentBox = "idDocument" | "minorIdDocument";
-
-/**
- * One signer's identity document, as the declaration asks for it (§95, §283): the kind, chosen
- * from a closed list, and the series and number, typed — never scanned. An adult has one; a minor's
- * declaration has two, the minor's (`minorIdDocument`) and the parent's (`idDocument`), each the
- * same two boxes under its own words (§330). The action composes each pair into the one line the
- * declaration prints.
- *
- * Rendered on the server with the page: it passes strings to MUI and nothing else
- * (`AGENTS.md` §14.1).
- */
-function IdDocumentFields({
-  name,
-  typeLabel,
-  typeHelp,
-  label,
-  help,
-  placeholder,
-  kinds,
-  defaultKind,
-  defaultValue,
-  refused,
-}: {
-  name: DocumentBox;
-  typeLabel: string;
-  typeHelp: string;
-  label: string;
-  help: string;
-  placeholder: string;
-  kinds: ReadonlyArray<{ kind: string; label: string }>;
-  defaultKind: string;
-  defaultValue: string;
-  /** The server refused the press for this box (`?invalid=document`, §330): shown in its red state. */
-  refused: boolean;
-}) {
-  return (
-    <>
-      {/*
-        Which document, chosen rather than described (§283; Amalia: "we must give some hints on
-        the ID document or select ID doc type"). A native select, like the telephone's country
-        (§198): it works before hydration and it is the control a phone knows how to open.
-      */}
-      <TextField
-        name={`${name}Type`}
-        label={typeLabel}
-        helperText={typeHelp}
-        select
-        required
-        defaultValue={defaultKind}
-        slotProps={{ select: { native: true } }}
-      >
-        {kinds.map((entry) => (
-          <option key={entry.kind} value={entry.kind}>
-            {entry.label}
-          </option>
-        ))}
-      </TextField>
-      {/* The id is the name it posts, like the signature boxes': what the refusal's link points at. */}
-      <TextField
-        id={name}
-        name={name}
-        error={refused}
-        label={label}
-        helperText={help}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        required
-        autoComplete="off"
-        slotProps={{ htmlInput: { maxLength: 30, pattern: "[A-Za-z0-9][A-Za-z0-9 .\\-/]{2,28}[A-Za-z0-9]" } }}
-      />
-    </>
-  );
-}
 
 export const dynamic = "force-dynamic";
 
@@ -452,6 +375,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
               // The club's deadlines, should the declaration name one (§377) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
+              // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
+              ...listStatesMergeValues(locale),
             }}
           />
 

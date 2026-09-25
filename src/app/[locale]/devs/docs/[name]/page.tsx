@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -8,6 +7,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { isRepoDocName, REPO_DOCS, renderRepoDoc } from "@/modules/diagnostics/repo-docs";
+import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
@@ -49,25 +49,7 @@ export default async function RepoDocPage({ params }: Props) {
         <Typography variant="body2" color="text.secondary">
           {t("docs.file", { file: REPO_DOCS.find((doc) => doc.name === name)?.file ?? name, kb: Math.round(rendered.bytes / 1024) })}
         </Typography>
-        <Box
-          // The repository's own Markdown, rendered: written by the people who deploy this and
-          // read by the roles that can read `/devs` — not user input (`repo-docs.ts`).
-          dangerouslySetInnerHTML={{ __html: rendered.html }}
-          sx={{
-            maxWidth: 900,
-            "& h1": { fontSize: "1.75rem", mt: 4 },
-            "& h2": { fontSize: "1.375rem", mt: 4, borderBottom: 1, borderColor: "divider", pb: 0.5 },
-            "& h3": { fontSize: "1.125rem", mt: 3 },
-            "& h4": { fontSize: "1rem", mt: 2 },
-            "& p, & li": { lineHeight: 1.6 },
-            "& pre": { overflowX: "auto", p: 2, bgcolor: "action.hover", borderRadius: 1, fontSize: "0.8125rem" },
-            "& code": { fontFamily: "monospace", fontSize: "0.875em" },
-            "& table": { borderCollapse: "collapse", my: 2, display: "block", overflowX: "auto" },
-            "& th, & td": { border: 1, borderColor: "divider", px: 1, py: 0.5, textAlign: "left", verticalAlign: "top" },
-            "& blockquote": { borderLeft: 3, borderColor: "divider", pl: 2, ml: 0, color: "text.secondary" },
-            "& a": { color: "primary.main" },
-          }}
-        />
+        <RepoDocHtml html={rendered.html} />
     </Stack>
   );
 }

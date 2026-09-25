@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.94-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.96-2026-09-25 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.94-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.96-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -479,6 +479,7 @@ Rules:
   agreed to anything yet, and publishing that they tried is a disclosure they never made;
 - **the registered name and nothing else.** No email address, no status, no place number, no
   count of who is still deciding, and nothing at all about a waiting list;
+- since 2026-09-25 (DECISIONS.md §396), once the privacy notice in force describes it, the list also shows the people who ticked "I want to appear" and hold a place awaiting confirmation or stand on the waiting list, each name with its state and the waiting list in its queue order without positions; a cancelled, expired, unconfirmed-address or test registration still never appears;
 - **a participant is on it only because they asked to be.** The registration form of an event
   with a list offers, in plain words, "I want to appear on the participant list", unticked; no
   tick, no listing (`DECISIONS.md` §143). A list switched on later means asking the people already

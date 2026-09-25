@@ -74,6 +74,7 @@ export default function SignatureField({
   canReply,
   defaultValue,
   refused,
+  help,
 }: {
   id: string;
   /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§330). */
@@ -98,6 +99,12 @@ export default function SignatureField({
   defaultValue?: string;
   /** The server refused this signature (`?invalid=name`). */
   refused?: boolean;
+  /**
+   * The line under a box with no name to compare (`expectedName` null) — a group run's
+   * self-declaration (§393), where nobody registered a name and the signature is the name itself.
+   * Absent: the race's own words.
+   */
+  help?: string;
 }) {
   const t = useTranslations("Registrations");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -161,7 +168,7 @@ export default function SignatureField({
 
   const hint =
     expectedName === null
-      ? t("declare.typedNameHelp")
+      ? (help ?? t("declare.typedNameHelp"))
       : signer === "guardian"
         ? t.rich("declare.typedNameHelpForMinor", { name: expectedName, participant: participantName ?? "", strong })
         : signer === "minor"

@@ -1,0 +1,1 @@
+ALTER TABLE "event_translations" ADD COLUMN "discount_note" text;

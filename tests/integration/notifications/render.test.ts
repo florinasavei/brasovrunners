@@ -205,9 +205,78 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       NOW,
     );
 
-    // Sorted, at the event's wall clock (09:00 EEST), the Romanian half first and the English after.
-    expect(message.text).toContain("Programul: 09:00 — Ridicarea numerelor (Cort); 09:30 — Briefing.");
-    expect(message.text).toContain("The programme: 09:00 — Number pickup (Cort); 09:30 — Briefing.");
+    // Sorted, at the event's wall clock (09:00 EEST), the Romanian half first and the English after —
+    // the facts block's own row now (§392), one line per row, in place of the one sentence.
+    expect(message.text).toContain("Program: 09:00 — Ridicarea numerelor (Cort)\n  09:30 — Briefing");
+    expect(message.text).toContain("Programme: 09:00 — Number pickup (Cort)\n  09:30 — Briefing");
+    expect(message.text).not.toContain("Programul: 09:00");
+  });
+
+  it("says the sunset and to bring a light in the reminder of a night event only (§394)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const row = {
+      id: "row-n",
+      participantId,
+      registrationId,
+      messageType: "EVENT_REMINDER" as const,
+      locale: "ro" as const,
+      recipientEmail: "ana@example.ro",
+      payloadJson: {},
+      idempotencyKey: "test:n",
+      requestedByStaffUserId: null,
+      isManualResend: false,
+      status: "PROCESSING" as const,
+      attemptCount: 1,
+      nextAttemptAt: null,
+      lockedAt: NOW,
+      providerMessageId: null,
+      lastError: null,
+      createdAt: NOW,
+      sentAt: null,
+    };
+    let sent = 0;
+    const render = () => renderOutboxMessage({ ...row, id: `row-n${++sent}`, idempotencyKey: `test:n${sent}` }, db, NOW);
+
+    // The fixture starts at noon on 1 October, automatic: broad daylight, no line.
+    const day = await render();
+    expect(day.text).not.toContain("Alergare de noapte");
+    expect(day.text).not.toContain("Night run");
+
+    // A Wednesday 19:00 in November, automatic: after dusk — the sunset of that day in both
+    // halves. The fixture's type is GROUP_RUN (§394), so the run's own words: «Alergare de noapte».
+    await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
+    const night = await render();
+    expect(night.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(night.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
+
+    // §394 (review round 3): a daylight start whose own end («Durata», no programme rows) is after
+    // dusk — 16:00 to 17:30 on 18 November — carries the line too; ending at 16:45, it does not.
+    await db
+      .update(events)
+      .set({ startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: new Date("2026-11-18T15:30:00.000Z"), scheduleItems: null })
+      .where(eq(events.id, event.id));
+    const late = await render();
+    expect(late.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(late.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
+    await db.update(events).set({ endsAt: new Date("2026-11-18T14:45:00.000Z") }).where(eq(events.id, event.id));
+    expect((await render()).text).not.toContain("Alergare de noapte");
+    await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z"), endsAt: null }).where(eq(events.id, event.id));
+
+    // «Nu» wins over the sun, and «Da» over the daylight.
+    await db.update(events).set({ nightOverride: false }).where(eq(events.id, event.id));
+    expect((await render()).text).not.toContain("Alergare de noapte");
+    await db.update(events).set({ nightOverride: true, startsAt: new Date("2026-10-01T09:00:00.000Z") }).where(eq(events.id, event.id));
+    expect((await render()).text).toMatch(/Alergare de noapte: apusul e la \d\d:\d\d\. Ia o frontală\./);
+
+    // Never on another message about the same night event: the sunset and the light are the
+    // reminder's line alone. The confirmation's facts block draws the page's route pills, so it
+    // names the night pill — the same `nightPill`, never the reminder's sentence.
+    const confirmed = await renderOutboxMessage({ ...row, id: "row-nc", idempotencyKey: "test:nc", messageType: "REGISTRATION_CONFIRMED" }, db, NOW);
+    expect(confirmed.text).not.toMatch(/Alergare de noapte: apusul/);
+    expect(confirmed.text).not.toContain("Ia o frontală");
+    expect(confirmed.text).not.toContain("Bring a headlamp");
+    expect(confirmed.text).toContain("Traseu: Alergare de noapte");
   });
 
   it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {
@@ -243,9 +312,9 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     await db.update(events).set({ links: [{ kind: "GPX", url: drive, labelRo: null, labelEn: null }] }).where(eq(events.id, event.id));
     const withLinks = await renderOutboxMessage({ ...row, id: "row-l2", idempotencyKey: "test:l2" }, db, NOW);
     expect(withLinks.html).toMatch(/\/evenimente\/crosul#links"/);
-    // One line in each half of the bilingual message, naming the page — never the Drive address.
-    expect(withLinks.text).toContain("Linkuri și fișiere: pe pagina evenimentului");
-    expect(withLinks.text).toContain("Links and files: on the event's page");
+    // One link in each half's facts block (§392), to the page's section — never the Drive address.
+    expect(withLinks.text).toMatch(/Linkuri și fișiere: \S+\/evenimente\/crosul#links/);
+    expect(withLinks.text).toMatch(/Links and files: \S+\/evenimente\/crosul#links/);
     expect(withLinks.html).not.toContain(drive);
     expect(withLinks.text).not.toContain(drive);
   });
@@ -329,8 +398,8 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       NOW,
     );
     expect(withDoc.html).toMatch(/crosul-traseu#links"/);
-    expect(withDoc.text).toContain("Linkuri și fișiere: pe pagina evenimentului");
-    expect(withDoc.text).toContain("Links and files: on the event's page");
+    expect(withDoc.text).toMatch(/Linkuri și fișiere: \S+crosul-traseu#links/);
+    expect(withDoc.text).toMatch(/Links and files: \S+crosul-traseu#links/);
     expect(withDoc.html).not.toContain(doc);
     expect(withDoc.text).not.toContain(doc);
   });
