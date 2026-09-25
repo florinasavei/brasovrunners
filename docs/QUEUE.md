@@ -16,13 +16,12 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | Item | Branch | Notes |
 | --- | --- | --- |
 | Toasts after every backoffice action and a confirmation dialog before every irreversible or outward-facing one — an action that emails participants says so, with the count | `feat/toasts-and-confirms` | |
-| "Următoarele emailuri automate": the next 14 days of automatic sends per event, with recipient counts, on `/admin/emails` | `feat/email-forecast` | after `BR-V1.86` |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.89` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.90` |
 
 ## Next, queued
 
@@ -55,6 +54,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.90` | "Următoarele emailuri automate": every automatic email of the next fourteen days on `/admin/emails`, from the jobs' own formula, with recipient counts and the "Copie club" line |
 | `BR-V1.89` | "Necesită frontală": a per-event headlamp mark — a checkbox in the editor's route card (a series carries it by scope), a headlamp pill after elevation on the card, the hero and the event page, a line in the calendar entry and the `.ics`; migration `0070` |
 | `BR-V1.88` | less whitespace on a phone: one density scale on every public page, the listing 118 px shorter at 360 px, desktop untouched · the partner card is an outlined, tinted surface; the listing card's time is bold like its date |
 | `BR-V1.87` | the footer's privacy notice is a question mark after "Despre club" on a phone and the word "GDPR" from `sm`, the phone bar's items 6 px apart · the partner marker is the 🤝 emoji |

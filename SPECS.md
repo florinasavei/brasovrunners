@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.89-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.90-2026-09-25 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.89-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.90-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1665,6 +1665,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 31. The reminder goes at the event's lead, its own or the club's, and not at all when that is zero; the last call to sign goes with it. The email says the event is coming, never a number of days. In the club's own words {reminderHours} is a conditional fact, so a paragraph whose only field is the lead is not sent when there is no reminder (2026-09-25, `DECISIONS.md` §377).
 32. Every page, email, the signed declaration's PDF and the platform's terms and privacy templates state the configured numbers as words that agree with them in both languages ("o oră", "2 ore", "20 de ore"). No catalogue key, email template or legal template states one of the former constants. The `/admin/emails` preview takes the participation window from the named default the column is held to (2026-09-25, `DECISIONS.md` §377).
 33. The declaration email for a place held until the participation window offers "or when we remind you, N before the start" only while the window is still ahead. Once the window is open, the send when it opens and any resend after it say only "sign now", in both languages (2026-09-25, `DECISIONS.md` §104, §377).
+34. The club can read ahead every email the platform sends participants on its own. /admin/emails lists, for the next 14 days and sorted by moment, each automatic send: the reminder, the participation confirmation, the last call to sign, the offer to the next in line after a lapse, the race number at the close, and "registration is open". Each row shows the moment with its weekday in the event's zone, the event (linked to its editor), the message (linked to its preview) and the recipients the job would pick now, with test registrations counted apart. The moment comes from the same function the maintenance job uses to decide the send, and at that moment the job queues exactly the registrations listed, none a minute before (tests/integration/notifications/forecast.test.ts). Staff-triggered messages and replies to a runner's own action are not listed.
+35. Under the list of upcoming automatic emails, one line says whether the club receives a copy of each participant email and to which addresses ("Copiile clubului", §320), with a link to the panel that sets it. With no address set, the line says no copy is sent.
 
 **Verification:** unit `notifications/templates.test.ts`, `notifications/mailgun-adapter.test.ts`; integration `notifications/event-mail.test.ts`, `registrations/signed-declaration.test.ts`, `registrations/interest.test.ts`
 
