@@ -29,9 +29,9 @@ describe("PartnerEmoji — aria-hidden defaults like SvgIcon", () => {
   });
 
   it("is not hidden once the caller gives it an aria-label", () => {
-    const html = renderToStaticMarkup(createElement(PartnerEmoji, { "aria-label": "Eveniment în parteneriat" }));
+    const html = renderToStaticMarkup(createElement(PartnerEmoji, { "aria-label": "Colaborare" }));
     expect(html).not.toContain('aria-hidden="true"');
-    expect(html).toContain('aria-label="Eveniment în parteneriat"');
+    expect(html).toContain('aria-label="Colaborare"');
   });
 
   it("is not hidden once the caller gives it a role", () => {
@@ -48,14 +48,23 @@ describe("PartnerEmoji — aria-hidden defaults like SvgIcon", () => {
   });
 
   it("draws hidden inside GlyphChip, which names no aria-label or role of its own", () => {
-    const html = renderToStaticMarkup(createElement(GlyphChip, { glyph: "partner", label: "Eveniment în parteneriat" }));
+    const html = renderToStaticMarkup(createElement(GlyphChip, { glyph: "partner", label: "Colaborare" }));
     expect(html).toContain('aria-hidden="true"');
   });
 
   it("is exposed by PartnerMark, which sets its own label", () => {
-    const html = renderToStaticMarkup(createElement(PartnerMark, { text: "Eveniment în parteneriat" }));
+    const html = renderToStaticMarkup(createElement(PartnerMark, { text: "Colaborare" }));
     expect(html).toContain('aria-hidden="false"');
-    expect(html).toContain('aria-label="Eveniment în parteneriat"');
+    expect(html).toContain('aria-label="Colaborare"');
     expect(html).toContain('role="img"');
+  });
+});
+
+describe("PartnerEmoji — gray ink (§379)", () => {
+  it("carries a grayscale filter on the emoji span, one value in light and another under [data-dark]", () => {
+    const html = renderToStaticMarkup(createElement(PartnerEmoji));
+    expect(html).toContain('data-testid="PartnerEmoji"');
+    expect(html).toMatch(/filter:grayscale\(1\) brightness\(0\.45\)/);
+    expect(html).toMatch(/\[data-dark\] \.css-\S+\{[^}]*filter:grayscale\(1\) brightness\(0\.92\)/);
   });
 });

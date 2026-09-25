@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { expect, test, type Browser } from "@playwright/test";
 import pg from "pg";
+import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
@@ -37,6 +38,7 @@ async function restoreDefaults(browser: Browser, defaults: Record<string, string
     await openFold(panel);
     for (const [name, value] of Object.entries(defaults)) await panel.locator(`input[name="${name}"]`).fill(value);
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
+    await confirmDialog(page, "Salvezi termenele?");
     await expect(page.locator("#main").getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
   } catch {
     const client = new pg.Client({ connectionString: databaseUrl() });
@@ -90,6 +92,9 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
     changed = true;
     await panel.locator('input[name="reminderHours"]').fill("72");
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
+    // It asks first (§384), naming what changes and what does not.
+    await expect(page.getByRole("dialog", { name: "Salvezi termenele?" })).toContainText("Nimic din ce s-a dat deja nu se schimbă");
+    await confirmDialog(page, "Salvezi termenele?");
     await expect(main.getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
     await expect(panel).toHaveAttribute("open", "");
     await expect(panel.locator(":scope > summary")).toContainText("reminder 3 zile");
@@ -100,6 +105,7 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
     await panel.locator('input[name="holdMinutes"]').fill("5");
     await panel.locator('input[name="holdMinutes"]').evaluate((input: HTMLInputElement) => input.removeAttribute("min"));
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
+    await confirmDialog(page, "Salvezi termenele?");
     await expect(panel.getByTestId("form-refusal")).toContainText("Locul e ținut pentru semnarea declarației (minute)");
     // The box comes back as typed (§315); the saved line still says three days.
     await expect(panel.locator('input[name="holdMinutes"]')).toHaveValue("5");

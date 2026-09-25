@@ -1,6 +1,7 @@
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { expect, type Locator, type Page, type Route, test } from "@playwright/test";
+import { confirmDialog } from "../support/confirm";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, hydrated, signIn } from "../support/featured-event";
 import { languagePanel, languageTab, openEditorBox } from "../support/fold";
 
@@ -379,6 +380,8 @@ test("the event create page: Creează evenimentul, Creează și publică, and a 
   await record("create: Creează și publică (valid)", async () => {
     await fillCreatePage(page, { englishTitle: true });
     const measured = await pressAndMeasure(page, page.getByRole("button", { name: "Creează și publică" }));
+    // The press opens the question (§384); the answer sends, and is held like the rest.
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await hold.abandon();
     return measured;
   });

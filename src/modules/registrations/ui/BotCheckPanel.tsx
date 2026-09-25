@@ -7,6 +7,8 @@ import { updateBotCheckAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { BotCheckState } from "@/modules/registrations/bot-check";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 /**
@@ -33,6 +35,7 @@ export default async function BotCheckPanel({
   keysPresent: boolean;
 }) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const running = keysPresent && state.enabled;
 
   return (
@@ -64,7 +67,15 @@ export default async function BotCheckPanel({
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {t(`botCheck.honeypot.${state.honeypot ? "on" : "off"}`)}
         </Typography>
-        <Box component="form" action={updateBotCheckAction}>
+        <ActionForm
+          action={updateBotCheckAction}
+          confirm={
+            state.honeypot
+              ? { title: t("confirm.honeypotOffTitle"), body: t("confirm.honeypotOffBody"), confirmLabel: t("botCheck.honeypot.turnOff"), cancelLabel: words.cancel, destructive: true }
+              : { title: t("confirm.honeypotOnTitle"), body: t("confirm.honeypotOnBody"), confirmLabel: t("botCheck.honeypot.turnOn"), cancelLabel: words.cancel }
+          }
+          data-testid="honeypot-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="which" value="honeypot" />
           <input type="hidden" name="enabled" value={state.honeypot ? "0" : "1"} />
@@ -75,13 +86,21 @@ export default async function BotCheckPanel({
             color={state.honeypot ? "warning" : "primary"}
             variant={state.honeypot ? "outlined" : "contained"}
           />
-        </Box>
+        </ActionForm>
       </Stack>
 
       {keysPresent && (
         <Stack spacing={1.5} sx={{ mt: 1.5 }}>
           {running && <Alert severity="warning" sx={{ py: 0.5 }}>{t("botCheck.warning")}</Alert>}
-          <Box component="form" action={updateBotCheckAction}>
+          <ActionForm
+            action={updateBotCheckAction}
+            confirm={
+              state.enabled
+                ? { title: t("confirm.botCheckOffTitle"), body: t("confirm.botCheckOffBody"), confirmLabel: t("botCheck.turnOff"), cancelLabel: words.cancel, destructive: true }
+                : { title: t("confirm.botCheckOnTitle"), body: t("confirm.botCheckOnBody"), confirmLabel: t("botCheck.turnOn"), cancelLabel: words.cancel }
+            }
+            data-testid="bot-check-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="enabled" value={state.enabled ? "0" : "1"} />
             <GlyphSubmitButton
@@ -91,7 +110,7 @@ export default async function BotCheckPanel({
               color={state.enabled ? "warning" : "primary"}
               variant={state.enabled ? "outlined" : "contained"}
             />
-          </Box>
+          </ActionForm>
         </Stack>
       )}
     </Box>

@@ -1,17 +1,11 @@
 "use client";
 
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
-import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
@@ -22,16 +16,13 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  * The one client island the list has, and it earns it: "select all" and "N ticked" need to
  * see the row checkboxes, which belong to this form by `form={formId}` and live in the table
  * above. The bar owns the `<form>`; each verb is a submit button with its own Server Action
- * as `formAction`, so the browser posts the same ticks to whichever was pressed. Delete asks
- * first; publish and archive are a click away from being undone and ask nothing. Without
- * JavaScript the buttons still post — only the counter and "select all" go quiet.
+ * as `formAction`, so the browser posts the same ticks to whichever was pressed. Every verb
+ * asks first (§384) — publishing and archiving face the site, deleting cannot be undone — through
+ * the one `ConfirmSubmitButton`, since one selection feeds three actions and a form-level question
+ * could not tell them apart. Without JavaScript the buttons still post — only the counter, "select
+ * all" and the questions go quiet, and the server refuses exactly as before.
  */
 type Action = (form: FormData) => Promise<void>;
-
-/** The three verbs' glyphs, from the shared registry (§170). */
-const PublishGlyph = ACTION_ICONS.publish;
-const ArchiveGlyph = ACTION_ICONS.archive;
-const DeleteGlyph = ACTION_ICONS.delete;
 
 /** The row checkboxes of the table above, which name this form as theirs. */
 function rowBoxes(formId: string): HTMLInputElement[] {
@@ -60,17 +51,18 @@ export default function BulkBar({
     publish: string;
     archive: string;
     remove: string;
-    confirmTitle: string;
-    confirmBody: string;
-    confirm: string;
+    publishTitle: string;
+    publishBody: string;
+    archiveTitle: string;
+    archiveBody: string;
+    deleteTitle: string;
+    deleteBody: string;
     cancel: string;
   };
 }) {
   const [count, setCount] = useState(0);
   const [total, setTotal] = useState(0);
-  const [confirming, setConfirming] = useState(false);
   const form = useRef<HTMLFormElement>(null);
-  const removeButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const read = () => {
@@ -122,76 +114,46 @@ export default function BulkBar({
             JavaScript stays in — there the buttons still post, and the server answers "nothing
             ticked" as it always did. The server-side refusal is untouched either way.
           */}
-          <Button
-            type="submit"
+          <ConfirmSubmitButton
             formAction={publish}
+            label={labels.publish}
+            icon="publish"
+            title={labels.publishTitle}
+            body={labels.publishBody}
+            confirmLabel={labels.publish}
+            cancelLabel={labels.cancel}
             variant="contained"
-            size="small"
             disabled={idle}
-            startIcon={<PublishGlyph fontSize="small" />}
-            sx={{ textTransform: "none", minHeight: 36 }}
-          >
-            {labels.publish}
-          </Button>
-          <Button
-            type="submit"
+          />
+          <ConfirmSubmitButton
             formAction={archive}
-            variant="outlined"
-            size="small"
+            label={labels.archive}
+            icon="archive"
+            title={labels.archiveTitle}
+            body={labels.archiveBody}
+            confirmLabel={labels.archive}
+            cancelLabel={labels.cancel}
+            color="warning"
             disabled={idle}
-            startIcon={<ArchiveGlyph fontSize="small" />}
-            sx={{ textTransform: "none", minHeight: 36 }}
-          >
-            {labels.archive}
-          </Button>
+          />
           {remove && (
-            <Button
-              ref={removeButton}
-              type="submit"
+            <ConfirmSubmitButton
               formAction={remove}
-              variant="outlined"
+              label={labels.remove}
+              icon="delete"
+              title={labels.deleteTitle}
+              body={labels.deleteBody}
+              confirmLabel={labels.remove}
+              cancelLabel={labels.cancel}
               color="error"
-              size="small"
               disabled={idle}
-              startIcon={<DeleteGlyph fontSize="small" />}
-              sx={{ textTransform: "none", minHeight: 36 }}
-              onClick={(event) => {
-                event.preventDefault();
-                setConfirming(true);
-              }}
-            >
-              {labels.remove}
-            </Button>
+            />
           )}
         </form>
       </Stack>
       <Typography variant="caption" color="text.secondary">
         {labels.help}
       </Typography>
-
-      <Dialog open={confirming} onClose={() => setConfirming(false)} aria-labelledby="bulk-delete-title">
-        <DialogTitle id="bulk-delete-title">{labels.confirmTitle}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{labels.confirmBody}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirming(false)} sx={{ minHeight: 44 }}>
-            {labels.cancel}
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            sx={{ minHeight: 44 }}
-            onClick={() => {
-              setConfirming(false);
-              // The delete button as the submitter, so its `formAction` is the one posted to.
-              if (removeButton.current) form.current?.requestSubmit(removeButton.current);
-            }}
-          >
-            {labels.confirm}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Stack>
   );
 }

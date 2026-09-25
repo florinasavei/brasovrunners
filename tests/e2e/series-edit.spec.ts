@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -81,8 +82,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the Recurență box, and a s
     await expect(recurrence.getByRole("checkbox", { name: "Publică datele noi automat" })).toBeChecked();
     await expect(recurrence.getByTestId("repeat-publish-field")).toContainText("Cât timp evenimentul e ciornă");
     await recurrence.getByRole("button", { name: "Creează datele" }).click();
-    const dialog = page.getByRole("dialog", { name: "Creezi datele?" });
-    await dialog.getByRole("button", { name: "Creează datele" }).click();
+    await confirmDialog(page, "Creezi datele?");
     await expect(page.locator("#admin-alert")).toContainText("8 date create acum", { timeout: 15_000 });
     await hydrated(page);
 
@@ -130,7 +130,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the Recurență box, and a s
     await page.getByTestId("recurrence-series").getByRole("button", { name: "Oprește recurența" }).click();
     const stop = page.getByRole("dialog", { name: "Oprește recurența" });
     await expect(stop).toContainText("cele deja create rămân");
-    await stop.getByRole("button", { name: "Oprește recurența" }).click();
+    await confirmDialog(page, "Oprește recurența");
     await expect(page.locator("#admin-alert")).toContainText("Seria e oprită", { timeout: 15_000 });
     await hydrated(page);
     await expect(page.getByTestId("recurrence-series")).toContainText("nu se mai creează date noi");

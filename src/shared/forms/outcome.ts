@@ -1,4 +1,5 @@
 import { type DomainError, isDomainError } from "@/shared/errors/domain-error";
+import type { FormNotice } from "@/shared/feedback/notice";
 
 /**
  * What a backoffice form is handed back when the server refuses it (`DECISIONS.md` §315).
@@ -22,8 +23,17 @@ import { type DomainError, isDomainError } from "@/shared/errors/domain-error";
  * the whole guard (§180, §287, §151), and refilling it would be the guard filling itself in.
  */
 export type FormOutcome = {
-  /** The domain error code, translated by the page as `Admin.errors.<code>`. */
-  error: string;
+  /**
+   * The domain error code, translated by the page as `Admin.errors.<code>`. Absent on the one
+   * other outcome an action may return: a success that stays on the page, carrying `notice`.
+   */
+  error?: string;
+  /**
+   * "It worked", for an action that answers without redirecting (`shared/feedback/notice.ts`,
+   * §384): `ActionForm` hands it to the toast provider. An action that redirects flashes it
+   * instead (`flash.ts`) and never returns.
+   */
+  notice?: FormNotice;
   /**
    * What the sentence for `error` needs filled in, by placeholder name — `{ age: "16 ani" }` for
    * `Admin.errors.UNDER_MINIMUM_AGE` (§329), whose number is the event's. Words the action
@@ -89,6 +99,14 @@ export function refused(
     fields: options.fieldNames ? options.fieldNames(error) : error.fields,
     values: keptValuesOf(form, options.never),
   };
+}
+
+/**
+ * The outcome of a submit that worked and stays on its page: no refusal, nothing to recall, and
+ * the notice the toast provider says (§384). An action that redirects flashes instead.
+ */
+export function succeeded(notice: FormNotice): FormOutcome {
+  return { notice, fields: [], values: {} };
 }
 
 /**

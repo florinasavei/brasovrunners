@@ -161,7 +161,7 @@
     "coHost": "Împreună cu",
     "special": "Ediție specială",
     "partner": {
-      "marker": "Eveniment în parteneriat"
+      "marker": "Colaborare"
     },
     "surface": {
       "ASPHALT": "Asfalt",
@@ -723,10 +723,91 @@
       "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
       "repeatTitle": "Creezi datele?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
+      "repeatPublishOnBody": "De acum, fiecare dată nouă pe care o creează seria apare singură pe site, în ambele limbi. Datele create deja rămân cum sunt.",
       "bibsTitle": "Aloci numerele de concurs?",
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
       "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
-      "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență."
+      "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență.",
+      "email": {
+        "one": "Se va trimite un email către {count} participant.",
+        "few": "Se va trimite un email către {count} participanți.",
+        "other": "Se va trimite un email către {count} de participanți."
+      },
+      "emailMessages": {
+        "one": "Se trimite acum {count} email din coadă.",
+        "few": "Se trimit acum {count} emailuri din coadă.",
+        "other": "Se trimit acum {count} de emailuri din coadă."
+      },
+      "publishTitle": "Publici „{title}”?",
+      "publishBody": "Apare pe site în ambele limbi. Un eveniment cu înscrieri pe site își deschide înscrierile în fereastra lui.",
+      "createPublishTitle": "Creezi și publici evenimentul?",
+      "unpublishTitle": "Scoți „{title}” de pe site?",
+      "unpublishBody": "Dispare de pe site în ambele limbi până îl publici din nou. Ce există deja — înscrieri, fotografii — rămâne.",
+      "archiveContentTitle": "Arhivezi „{title}”?",
+      "archiveContentBody": "Dispare de pe site în ambele limbi. Îl poți readuce mai târziu, trecându-l din nou prin verificare și publicare.",
+      "bulkPublishTitle": "Publici evenimentele bifate?",
+      "bulkPublishBody": "Fiecare eveniment bifat cu ambele limbi complete apare pe site; celelalte rămân cum sunt și sunt numărate.",
+      "bulkArchiveTitle": "Arhivezi evenimentele bifate?",
+      "bulkArchiveBody": "Dispar de pe site în ambele limbi. Le poți readuce mai târziu, una câte una.",
+      "saveNoticeTitle": "Salvezi și anunți participanții?",
+      "saveNoticeBody": "Modificările se salvează, iar participanții primesc „Detalii actualizate”, fiecare în limba lui — dacă s-a schimbat locul, ora sau programul, evenimentul nu mai este anulat, sau ai scris o notă.",
+      "cancelEventTitle": "Anulezi „{title}”?",
+      "cancelEventBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții primesc „Eveniment anulat” cu motivul tău.",
+      "cancelEventQuietBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții nu sunt anunțați.",
+      "givePlaceTitle": "Îi dai un loc?",
+      "givePlaceBody": "{name} primește un loc liber înaintea listei de așteptare și confirmarea, cu numărul de concurs.",
+      "setBibTitle": "Salvezi numărul?",
+      "setBibBody": "Numărul rămâne al acestei persoane și nu se mai dă altcuiva.",
+      "resendTitle": "Retrimiți emailul?",
+      "resendBody": "Emailul stării curente pleacă din nou către {name}, cu un link nou; linkul din emailul vechi nu mai merge.",
+      "reminderTitle": "Trimiți reminderul?",
+      "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
+      "createRegistrationTitle": "Adaugi înscrierea?",
+      "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
+      "renameTitle": "Schimbi numele?",
+      "renameBody": "Numele nou apare pe listă, pe numărul de concurs și în emailuri; cel vechi rămâne în jurnal.",
+      "withdrawConsentTitle": "Ștergi datele bifate?",
+      "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
+      "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
+      "eraseRegistrationBody": "Nu se poate anula. Locul se eliberează prin lista de așteptare, iar datele persoanei dispar din evidență.",
+      "bulkCancelTitle": "Anulezi înscrierile bifate?",
+      "bulkCancelBody": "Fiecare loc se eliberează și este oferit listei de așteptare. Înscrierile rămân înregistrate, cu starea „anulată”.",
+      "sendNowTitle": "Trimiți emailurile acum?",
+      "sendNowBody": "Coada pleacă acum, fără să aștepți monitorul, și se oprește la limita zilei.",
+      "interestWithdrawTitle": "Retragi adresa?",
+      "interestWithdrawBody": "Adresa scrisă este ștearsă de la „Anunță-mă” și nu mai primește anunțul deschiderii înscrierilor.",
+      "inviteStaffTitle": "Adaugi persoana în echipă?",
+      "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra în backoffice de îndată ce își pune parola.",
+      "changeRoleTitle": "Schimbi rolul?",
+      "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
+      "approvePlatformTitle": "Aprobi cele trei texte?",
+      "approvePlatformBody": "Din acest moment sunt în vigoare pe site, ca texte ale clubului; o corectare este o versiune nouă.",
+      "approveVersionTitle": "Aprobi și publici versiunea {version}?",
+      "approveVersionBody": "Textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
+      "emailPlanTitle": "Schimbi planul Mailgun?",
+      "emailPlanBody": "Cotele, „cât mai putem trimite” și tabelul de costuri se calculează de acum după noul plan.",
+      "contactRecipientsTitle": "Schimbi cine primește mesajele de contact?",
+      "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
+      "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
+      "clubNoticesBody": "Declarațiile semnate, confirmările și copiile mesajelor către participanți — cu datele lor personale — ajung de acum la adresele salvate, și numai la ele.",
+      "emailCopyResetTitle": "Revii la textul platformei?",
+      "emailCopyResetBody": "Textul scris de club pentru acest email, în această limbă, se pierde; emailurile trimise de acum folosesc textul platformei.",
+      "botCheckOnTitle": "Pornești verificarea anti-bot?",
+      "botCheckOnBody": "Formularele publice arată caseta Cloudflare „Nu sunt robot”; o verificare picată oprește trimiterea.",
+      "botCheckOffTitle": "Oprești verificarea anti-bot?",
+      "botCheckOffBody": "Formularele publice nu mai cer „Nu sunt robot”. Capcana ascunsă și limita pe adresă rămân.",
+      "honeypotOnTitle": "Pornești honeypot-ul?",
+      "honeypotOnBody": "Un câmp ascuns pe care oamenii nu îl văd; un formular care îl completează este refuzat.",
+      "honeypotOffTitle": "Oprești honeypot-ul?",
+      "honeypotOffBody": "Câmpul rămâne și se notează în jurnal, dar nu mai refuză pe nimeni.",
+      "deadlinesTitle": "Salvezi termenele?",
+      "deadlinesBody": "Fiecare loc ținut, ofertă și link dat de acum înainte primește numerele noi, iar emailurile și paginile le spun. Nimic din ce s-a dat deja nu se schimbă: un link, un loc ținut sau o ofertă își păstrează termenul primit.",
+      "jobCadenceTitle": "Salvezi intervalul?",
+      "jobCadenceBody": "Emailurile din coadă și întreținerea rulează cel mult o dată la intervalul ales; un email poate aștepta atât.",
+      "neonLimitsTitle": "Salvezi limitele Neon?",
+      "neonLimitsBody": "Un proiect care își atinge cota lunară este suspendat până la perioada următoare — site-ul nu răspunde până atunci.",
+      "neonPlanTitle": "Schimbi planul Neon?",
+      "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -2259,7 +2340,7 @@
       "incomplete": "Ambele limbi trebuie completate înainte de publicare. Lipsesc: {detail}.",
       "readOnly": "Rolul tău poate citi paginile, dar nu le poate modifica.",
       "delete": "Șterge pagina",
-      "deleteTitle": "Ștergi pagina?",
+      "deleteTitle": "Ștergi pagina „{title}”?",
       "deleteBody": "Pagina și ambele traduceri dispar definitiv. Dacă pagina a fost publicată și vrei doar să o scoți de pe site, folosește „Arhivează”.",
       "viewPublic": "Vezi pagina publică →",
       "columnTitle": "Titlu",
@@ -2308,6 +2389,7 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Șterge",
       "deleteConfirm": "Ștergi imaginea definitiv?",
+      "deleteBody": "„{name}” se șterge definitiv, din bibliotecă și din spațiul de stocare. Nu se poate anula.",
       "tableCaption": "Imaginile încărcate, cele mai noi primele",
       "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
       "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți."
@@ -3830,5 +3912,175 @@
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou"
+  },
+  "Feedback": {
+    "close": "Închide",
+    "toast": {
+      "saved": "Salvat.",
+      "event": "Evenimentul a fost salvat.",
+      "eventSeries": {
+        "one": "Salvat pe {count} dată a seriei.",
+        "few": "Salvat pe {count} date ale seriei.",
+        "other": "Salvat pe {count} de date ale seriei."
+      },
+      "eventNotified": {
+        "one": "Salvat; „Detalii actualizate” pus la coadă pentru {count} participant.",
+        "few": "Salvat; „Detalii actualizate” pus la coadă pentru {count} participanți.",
+        "other": "Salvat; „Detalii actualizate” pus la coadă pentru {count} de participanți."
+      },
+      "eventSeriesNotified": {
+        "one": "Salvat pe datele alese ({dates}); „Detalii actualizate” pus la coadă pentru {count} participant.",
+        "few": "Salvat pe datele alese ({dates}); „Detalii actualizate” pus la coadă pentru {count} participanți.",
+        "other": "Salvat pe datele alese ({dates}); „Detalii actualizate” pus la coadă pentru {count} de participanți."
+      },
+      "eventCancelled": {
+        "one": "Anulat; „Eveniment anulat” pus la coadă pentru {count} participant.",
+        "few": "Anulat; „Eveniment anulat” pus la coadă pentru {count} participanți.",
+        "other": "Anulat; „Eveniment anulat” pus la coadă pentru {count} de participanți."
+      },
+      "eventSeriesCancelled": {
+        "one": "Anulat pe datele alese ({dates}); „Eveniment anulat” pus la coadă pentru {count} participant.",
+        "few": "Anulat pe datele alese ({dates}); „Eveniment anulat” pus la coadă pentru {count} participanți.",
+        "other": "Anulat pe datele alese ({dates}); „Eveniment anulat” pus la coadă pentru {count} de participanți."
+      },
+      "eventCancelledQuiet": "Anulat; nu s-a trimis niciun email.",
+      "created": "Evenimentul a fost creat, ca ciornă.",
+      "createdPublished": "Creat și publicat: pe site în ambele limbi.",
+      "duplicated": "Copia a fost creată, ca ciornă.",
+      "eventsRepeated": {
+        "one": "S-a creat {count} dată nouă.",
+        "few": "S-au creat {count} date noi.",
+        "other": "S-au creat {count} de date noi."
+      },
+      "repeatStopped": "Recurența a fost oprită.",
+      "repeatPublishOn": "Publicarea automată e pornită.",
+      "repeatPublishOff": "Publicarea automată e oprită.",
+      "bibsAssigned": {
+        "one": "{count} număr de concurs alocat.",
+        "few": "{count} numere de concurs alocate.",
+        "other": "{count} de numere de concurs alocate."
+      },
+      "thanksSent": {
+        "one": "Email pus la coadă pentru {count} participant.",
+        "few": "Email pus la coadă pentru {count} participanți.",
+        "other": "Email pus la coadă pentru {count} de participanți."
+      },
+      "deleted": "A fost șters definitiv.",
+      "eventErased": {
+        "one": "Evenimentul și {count} înscriere au fost șterse definitiv.",
+        "few": "Evenimentul și {count} înscrieri au fost șterse definitiv.",
+        "other": "Evenimentul și {count} de înscrieri au fost șterse definitiv."
+      },
+      "testRegistrationsAdded": "Înscrierile de test au fost adăugate.",
+      "testRegistrationsStopped": {
+        "one": "{count} înscriere de test adăugată; lista de așteptare e plină.",
+        "few": "{count} înscrieri de test adăugate; lista de așteptare e plină.",
+        "other": "{count} de înscrieri de test adăugate; lista de așteptare e plină."
+      },
+      "testRegistrationsRemoved": "Înscrierile de test au fost șterse.",
+      "interestRemoved": "Adresa a fost retrasă de la „Anunță-mă”.",
+      "interestNotFound": "Adresa nu era la „Anunță-mă”.",
+      "eventsArchived": {
+        "one": "Arhivat: {count} eveniment.",
+        "few": "Arhivate: {count} evenimente.",
+        "other": "Arhivate: {count} de evenimente."
+      },
+      "eventsPublished": {
+        "one": "Publicat: {count} eveniment.",
+        "few": "Publicate: {count} evenimente.",
+        "other": "Publicate: {count} de evenimente."
+      },
+      "eventsDeleted": {
+        "one": "Șters: {count} eveniment.",
+        "few": "Șterse: {count} evenimente.",
+        "other": "Șterse: {count} de evenimente."
+      },
+      "PUBLISHED": "Publicat. Este pe site în ambele limbi.",
+      "IN_REVIEW": "Trimis spre verificare.",
+      "DRAFT": "Mutat în ciornă: nu mai apare pe site.",
+      "ARCHIVED": "Arhivat: nu mai apare pe site.",
+      "invited": "Persoana a fost adăugată în echipă.",
+      "reinvited": "Invitația a fost trimisă din nou.",
+      "passwordReset": "Linkul de resetare a parolei a fost trimis.",
+      "accountDeactivated": "Contul a fost dezactivat.",
+      "accountReactivated": "Contul a fost reactivat.",
+      "role": "Rolul a fost schimbat.",
+      "revoked": "Accesul a fost retras.",
+      "registrationConfirmed": "Înscrierea a fost confirmată; emailul cu numărul e pus la coadă.",
+      "registrationWaitlisted": "Nu mai era loc: înscrierea a intrat pe lista de așteptare.",
+      "bibSet": "Număr salvat.",
+      "checkedIn": "Prezent la masă.",
+      "checkinUndone": "Nu mai e marcat prezent.",
+      "registrationCreated": "Persoana a fost adăugată; emailul e pus la coadă.",
+      "nameCorrected": "Numele a fost schimbat.",
+      "registrationCancelled": "Înscrierea a fost anulată; emailul e pus la coadă.",
+      "consentWithdrawn": "Datele bifate au fost șterse.",
+      "bibsPrinted": "Marcat ca printat.",
+      "bibsUnprinted": "Marcat ca neprintat.",
+      "registrationsCancelled": {
+        "one": "{count} înscriere anulată; {count} email pus la coadă.",
+        "few": "{count} înscrieri anulate; {count} emailuri puse la coadă.",
+        "other": "{count} de înscrieri anulate; {count} de emailuri puse la coadă."
+      },
+      "registrationsCancelledTest": {
+        "one": "{count} înscriere anulată; {count} email pus la coadă. Anulate și ele, nenumărate nicăieri: {test} înscrieri de test.",
+        "few": "{count} înscrieri anulate; {count} emailuri puse la coadă. Anulate și ele, nenumărate nicăieri: {test} înscrieri de test.",
+        "other": "{count} de înscrieri anulate; {count} de emailuri puse la coadă. Anulate și ele, nenumărate nicăieri: {test} înscrieri de test."
+      },
+      "registrationsErased": {
+        "one": "{count} înscriere ștearsă definitiv.",
+        "few": "{count} înscrieri șterse definitiv.",
+        "other": "{count} de înscrieri șterse definitiv."
+      },
+      "registrationDeleted": "Înscriere ștearsă definitiv.",
+      "outboxSent": {
+        "one": "{count} email trimis acum.",
+        "few": "{count} emailuri trimise acum.",
+        "other": "{count} de emailuri trimise acum."
+      },
+      "resent": "Emailul a fost pus la coadă din nou.",
+      "reminderSent": "Reminderul a fost pus la coadă.",
+      "participantMessageSent": {
+        "one": "Email pus la coadă pentru {count} participant.",
+        "few": "Email pus la coadă pentru {count} participanți.",
+        "other": "Email pus la coadă pentru {count} de participanți."
+      },
+      "participantMessageDuplicate": "Mesajul fusese trimis deja; nu s-a pus nimic la coadă a doua oară.",
+      "legalDraftCreated": "Ciornă nouă.",
+      "legalDraftSaved": "Ciornă salvată.",
+      "platformApproved": {
+        "one": "{count} text aprobat și în vigoare.",
+        "few": "{count} texte aprobate și în vigoare.",
+        "other": "{count} de texte aprobate și în vigoare."
+      },
+      "legalVersionApproved": "Versiunea a fost aprobată și este în vigoare.",
+      "legalVersionDeleted": "Ciornă ștearsă.",
+      "legalVersionWithdrawn": "Versiunea a fost retrasă.",
+      "legalVersionErased": "Versiunea a fost ștearsă definitiv.",
+      "albumCreated": "Albumul a fost creat.",
+      "album": "Albumul a fost salvat.",
+      "photoRemoved": "Fotografia a fost ștearsă.",
+      "cover": "Coperta a fost aleasă.",
+      "albumDeleted": "Albumul a fost șters definitiv.",
+      "pageCreated": "Pagina a fost creată.",
+      "page": "Pagina a fost salvată.",
+      "moved": "Ordinea a fost schimbată.",
+      "pageDeleted": "Pagina a fost ștearsă definitiv.",
+      "emailPlan": "Planul Mailgun a fost salvat.",
+      "contactRecipients": "Destinatarii mesajelor de contact au fost salvați.",
+      "clubNotices": "Copiile clubului au fost salvate.",
+      "emailCopy": "Textul emailului a fost salvat.",
+      "emailCopyReset": "Textul emailului a revenit la cel al platformei.",
+      "emailCopySamples": "Valorile de exemplu au fost înlocuite cu câmpuri.",
+      "botCheckOn": "Anti-bot: pornit.",
+      "botCheckOff": "Anti-bot: oprit.",
+      "honeypotOn": "Honeypot: pornit.",
+      "honeypotOff": "Honeypot: oprit.",
+      "neonPlan": "Plan Neon salvat.",
+      "jobCadence": "Interval salvat.",
+      "deadlines": "Termene salvate.",
+      "neonLimits": "Limitele Neon au fost salvate.",
+      "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat."
+    }
   }
 }

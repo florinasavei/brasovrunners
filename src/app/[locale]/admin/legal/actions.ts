@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import { env } from "@/shared/config/env";
@@ -49,10 +50,11 @@ function translationsFrom(form: FormData) {
 
 // `phrase` and `approved` alongside the two outcomes: what an alert needs to say *which* thing
 // it is reporting. Never anything about a person — a document code, a number, a count.
-function backTo(
+async function backTo(
   path: string,
   outcome: { error?: string; saved?: string; phrase?: string; approved?: string },
-): never {
+): Promise<never> {
+  await flashOutcome(outcome);
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
@@ -83,7 +85,7 @@ export async function createLegalVersionAction(_previous: FormOutcome | null, fo
 
   // On success, straight to the new draft: the next thing anybody does is read it before
   // approving, and approval is the one action here that cannot be undone.
-  backTo(getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: created } } }), { saved: "legalDraftCreated" });
+  return backTo(getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: created } } }), { saved: "legalDraftCreated" });
 }
 
 export async function updateLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -97,14 +99,14 @@ export async function updateLegalVersionAction(_previous: FormOutcome | null, fo
     return refused(error, form);
   }
 
-  backTo(
+  return backTo(
     getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: versionId } } }),
     { saved: "legalDraftSaved" },
   );
 }
 
 /** The three platform texts, with the club's facts, approved in one press (§132). Superadministrator. */
-export async function approvePlatformTemplatesAction(form: FormData): Promise<void> {
+export async function approvePlatformTemplatesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
   let outcome: { error?: string; saved?: string; approved?: string };
@@ -116,10 +118,10 @@ export async function approvePlatformTemplatesAction(form: FormData): Promise<vo
     outcome = outcomeOf(error);
   }
 
-  backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
+  return backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
 }
 
-export async function approveLegalVersionAction(form: FormData): Promise<void> {
+export async function approveLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const versionId = text(form, "versionId");
 
@@ -132,7 +134,7 @@ export async function approveLegalVersionAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  backTo(
+  return backTo(
     getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: versionId } } }),
     outcome,
   );
@@ -145,7 +147,7 @@ export async function approveLegalVersionAction(form: FormData): Promise<void> {
  * row that no longer exists, and a 404 is a poor way to learn a deletion worked. The same
  * reasoning `registrations/actions.ts` gives for erasing a registration.
  */
-export async function deleteLegalVersionAction(form: FormData): Promise<void> {
+export async function deleteLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin/legal" });
 
@@ -153,10 +155,10 @@ export async function deleteLegalVersionAction(form: FormData): Promise<void> {
     const actor = await requireStaffRole("ADMIN");
     await deleteDraftVersion(getDb(), actor, text(form, "versionId"));
   } catch (error) {
-    backTo(listPath, outcomeOf(error));
+    return backTo(listPath, outcomeOf(error));
   }
 
-  backTo(listPath, { saved: "legalVersionDeleted" });
+  return backTo(listPath, { saved: "legalVersionDeleted" });
 }
 
 /**
@@ -171,7 +173,7 @@ export async function deleteLegalVersionAction(form: FormData): Promise<void> {
  * and still readable, but the thing that changed is which rows the list offers, and that is
  * where somebody wants to be looking.
  */
-export async function withdrawLegalVersionAction(form: FormData): Promise<void> {
+export async function withdrawLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin/legal" });
 
@@ -179,10 +181,10 @@ export async function withdrawLegalVersionAction(form: FormData): Promise<void> 
     const actor = await requireStaffRole("ADMIN");
     await withdrawApprovedVersion(getDb(), actor, text(form, "versionId"), new Date());
   } catch (error) {
-    backTo(listPath, outcomeOf(error));
+    return backTo(listPath, outcomeOf(error));
   }
 
-  backTo(listPath, { saved: "legalVersionWithdrawn" });
+  return backTo(listPath, { saved: "legalVersionWithdrawn" });
 }
 
 /**
@@ -252,7 +254,7 @@ export async function deleteApprovedLegalVersionAction(_previous: FormOutcome | 
     name what went — it is a document code and a number, which is exactly what the audit row
     keeps and contains nothing about any person.
   */
-  backTo(getPathname({ locale, href: "/admin/legal" }), {
+  return backTo(getPathname({ locale, href: "/admin/legal" }), {
     saved: "legalVersionErased",
     phrase: confirmationPhrase(deleted.key, deleted.version),
   });

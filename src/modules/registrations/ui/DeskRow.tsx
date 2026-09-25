@@ -13,6 +13,7 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -82,6 +83,8 @@ export default async function DeskRow({
   minorSigns: Readonly<Record<Locale, boolean>>;
 }) {
   const t = await getTranslations("Admin");
+  // Every desk verb asks first and says who is emailed (§384); the service decides, as before.
+  const words = await confirmWords();
   const canConfirm =
     row.status === "PENDING_EMAIL_CONFIRMATION" ||
     row.status === "PENDING_DECLARATION" ||
@@ -282,12 +285,23 @@ export default async function DeskRow({
 
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
           {!readOnly && canConfirm && (
-            <form action={confirmRegistrationNowAction}>
+            <ActionForm
+              action={confirmRegistrationNowAction}
+              confirm={{
+                title: t("desk.confirmOnPaper"),
+                // A minor's paper carries two signatures, and the press attests both (§330).
+                body: row.guardianName && minorSigns[row.locale] ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName }) : t("registrations.confirmOnPaperBody"),
+                ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                confirmLabel: t("desk.confirmHere"),
+                cancelLabel: words.cancel,
+              }}
+              data-testid="desk-confirm-form"
+            >
               {hidden}
               <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
                 {t("desk.confirmHere")}
               </GlyphButton>
-            </form>
+            </ActionForm>
           )}
           {/*
             A minor's paper is signed by two (§330) where the declaration in effect asks the minor
@@ -314,12 +328,16 @@ export default async function DeskRow({
             </>
           )}
           {!readOnly && row.status === "WAITLISTED" && (
-            <form action={promoteRegistrationAction}>
+            <ActionForm
+              action={promoteRegistrationAction}
+              confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+              data-testid="desk-place-form"
+            >
               {hidden}
               <GlyphButton icon="place" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                 {t("desk.givePlace")}
               </GlyphButton>
-            </form>
+            </ActionForm>
           )}
           {!readOnly && row.status === "CONFIRMED" && (
             <>
@@ -339,7 +357,12 @@ export default async function DeskRow({
                   the number still in its box (§315), not at the head of a page the volunteer has
                   to scroll back from. One form per row, so each carries its own scope. */}
               {number === null && (
-                <ActionForm action={setBibNumberAction} messages={await bibRefusalMessages(t("desk.bibField"))} scope={`bib-${row.id}`}>
+                <ActionForm
+                  action={setBibNumberAction}
+                  messages={await bibRefusalMessages(t("desk.bibField"))}
+                  confirm={{ title: t("confirm.setBibTitle"), body: t("confirm.setBibBody"), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.saveBib"), cancelLabel: words.cancel }}
+                  scope={`bib-${row.id}`}
+                >
                   {hidden}
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                     <RecallField
@@ -356,7 +379,15 @@ export default async function DeskRow({
                   </Stack>
                 </ActionForm>
               )}
-              <form action={checkInAction}>
+              {/*
+                Check-in asks nothing, either way (§384): it emails nobody and is undone from this
+                same row, and a dialog per runner would double the taps at the desk on race morning.
+                The toast says it happened.
+              */}
+              <ActionForm
+                action={checkInAction}
+                data-testid="desk-checkin-form"
+              >
                 {hidden}
                 <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
                 <GlyphButton
@@ -369,7 +400,7 @@ export default async function DeskRow({
                 >
                   {row.checkedInAt ? t("desk.undoCheckIn") : t("desk.checkIn")}
                 </GlyphButton>
-              </form>
+              </ActionForm>
             </>
           )}
         </Stack>

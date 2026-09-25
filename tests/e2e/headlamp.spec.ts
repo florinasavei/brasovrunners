@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -108,6 +109,7 @@ test.describe.serial("BR-REQ-020-01 the headlamp pill", () => {
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
