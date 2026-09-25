@@ -115,15 +115,33 @@ function chips(fragment: string) {
 }
 
 describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)", () => {
-  it("in this order: when, where, the route, the cost, the age, the partners — each once", async () => {
+  it("in this order: when, where, the route, the cost, the age — the partners no longer among them (§NNN)", async () => {
+    // The partners moved out of the `<dl>` into their own collapsible `<section id="partners">`
+    // (the owner, 2026-09-25: "this should be block, and collapsible") — so the row order below
+    // them is unchanged, and "Împreună cu" is no longer one of these rows at all.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
-    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vârstă", "Împreună cu"]);
+    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vârstă"]);
+    expect(withoutStyles(html)).toMatch(/<section\b[^>]*\bid="partners"/);
+  });
+
+  it("the partners' fold has no `open` attribute, and two names join with «·» (§376 fix round finding 5)", async () => {
+    const html = withoutStyles(
+      await page({ coHosts: [{ name: "Salvamont", links: [] }, { name: "Brașov Marathon", links: [] }] }),
+    );
+    const details = /<details\b[^>]*data-testid="partners-fold"[^>]*>/.exec(html)?.[0];
+    expect(details).toBeDefined();
+    expect(details).not.toMatch(/\bopen\b/);
+    const summary = /<summary\b[^>]*>([\s\S]*?)<\/summary>/.exec(html)?.[1];
+    expect(text(summary ?? "")).toBe("Împreună cu Salvamont · Brașov Marathon");
   });
 
   it("says «no registration needed» on an event that takes none, before the partners", async () => {
     const html = await page({ registrationMode: "NONE", coHosts: [{ name: "Salvamont", links: [] }] });
-    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Înscriere", "Împreună cu"]);
+    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Înscriere"]);
     expect(text(row(html, "Înscriere").dd)).toBe("Nu este necesară înscrierea");
+    // "Before the partners": the `<dl>` closes and only then does the partners' own section open.
+    const clean = withoutStyles(html);
+    expect(clean.indexOf("</dl>")).toBeLessThan(/<section\b[^>]*\bid="partners"/.exec(clean)?.index ?? -1);
   });
 
   it("draws no list, no bullet and no empty item anywhere in the block", async () => {
@@ -282,16 +300,18 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
     expect(text(where)).toBe("Locația se anunță în curând");
   });
 
-  it("one glyph per row, all of one size, one colour and one alignment", async () => {
-    // Every row, the partner's included (§391, reverting §379's <span> emoji to the `Handshake`
-    // `<svg>`), draws its glyph the same way — one shared shape, so each row's own rule is
-    // checked rather than one shared class name, but every rule carries the same twenty pixels,
-    // colour and alignment.
+  it("one glyph per row, all of one size, one colour and one alignment — the partners' summary glyph included", async () => {
+    // Every `<dl>` row draws its glyph the same way — one shared shape, so each row's own rule
+    // is checked rather than one shared class name, but every rule carries the same twenty
+    // pixels, colour and alignment. The partners' own glyph sits in its section's `<summary>`
+    // now (§NNN), not in a `<dt>`, but it is `ROW_ICON_SX` too, so it is checked the same way.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
     const glyphs = rows(html).map((r) => /<svg\b[^>]*>/.exec(r.dt)?.[0] ?? "");
-    expect(glyphs).toHaveLength(6);
-    for (const glyph of glyphs) expect(glyph).toContain('aria-hidden="true"');
-    const classes = glyphs.map((glyph) => /class="([^"]*)"/.exec(glyph)?.[1]?.split(" ").at(-1));
+    expect(glyphs).toHaveLength(5);
+    const summary = /<summary\b[^>]*>([\s\S]*?)<\/summary>/.exec(withoutStyles(html))?.[1] ?? "";
+    const summaryGlyph = /<svg\b[^>]*>/.exec(summary)?.[0] ?? "";
+    for (const glyph of [...glyphs, summaryGlyph]) expect(glyph).toContain('aria-hidden="true"');
+    const classes = [...glyphs, summaryGlyph].map((glyph) => /class="([^"]*)"/.exec(glyph)?.[1]?.split(" ").at(-1));
     expect(classes.every(Boolean)).toBe(true);
     for (const cls of classes) {
       const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
