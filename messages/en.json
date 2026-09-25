@@ -140,6 +140,8 @@
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
     "elevationShort": "{m} m climb",
+    "headlamp": "Headlamp",
+    "headlampRequired": "Headlamp required",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
@@ -839,6 +841,8 @@
       "distanceMeters": "Distance",
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
+      "headlampRequired": "Headlamp required",
+      "headlampRequiredHelp": "Shown on the event's card, page and calendar.",
       "registrationSection": "Registration",
       "registrationMode": "Registration mode",
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
@@ -1352,7 +1356,8 @@
           "course": {
             "route": "route",
             "km": "{km} km",
-            "elevation": "+{m} m"
+            "elevation": "+{m} m",
+            "headlamp": "headlamp"
           },
           "links": {
             "strava": "Strava",

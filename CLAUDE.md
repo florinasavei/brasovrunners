@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.88-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.89-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.88-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.89-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -266,6 +266,8 @@ sections and in `CHANGELOG.md`.
   the word "GDPR" from `sm`, the phone bar's items 6 px apart (§378) · the partner marker is the 🤝 emoji everywhere (§379).
 - **Batch 12 (2026-09-25, `BR-V1.88`):** one phone density scale, `src/theme/density.ts` (eight steps used only below `sm`), on every
   public page — the listing 118 px shorter at 360 px, an event page about 50 — with a test that holds every changed site to its desktop value (§380) · the partner card is an outlined, tinted surface in both schemes and the listing card's time is bold like its date, a race's two times included (§381).
+- **Batch 13 (2026-09-25, `BR-V1.89`):** "Necesită frontală" — a per-event headlamp mark: a checkbox in the editor's "Traseul" card (a series carries it by scope), a
+  headlamp pill after elevation on the card, the hero and the event page, a line in the calendar entry's tooltip and the `.ics`; migration `0070` (§382).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

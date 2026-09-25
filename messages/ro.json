@@ -140,6 +140,8 @@
     "elevation": "Diferență de nivel",
     "elevationM": "{m} m diferență de nivel",
     "elevationShort": "{m} m D+",
+    "headlamp": "Frontală",
+    "headlampRequired": "Frontală necesară",
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -839,6 +841,8 @@
       "distanceMeters": "Distanță",
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
+      "headlampRequired": "Necesită frontală",
+      "headlampRequiredHelp": "Se arată pe card, pe pagina evenimentului și în calendar.",
       "registrationSection": "Înscriere",
       "registrationMode": "Modul de înscriere",
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
@@ -1352,7 +1356,8 @@
           "course": {
             "route": "traseu",
             "km": "{km} km",
-            "elevation": "+{m} m"
+            "elevation": "+{m} m",
+            "headlamp": "frontală"
           },
           "links": {
             "strava": "Strava",

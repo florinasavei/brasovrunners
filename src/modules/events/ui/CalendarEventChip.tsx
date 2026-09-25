@@ -9,13 +9,26 @@ import PartnerMark from "./PartnerMark";
 
 /**
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
- * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then the generic
- * "Eveniment în parteneriat" marker when it is held with one. The grid's tooltip shows them as
+ * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Frontală necesară" when
+ * the organizer marked the date (§382) — after the place, since both say how the evening will be —
+ * then the generic "Eveniment în parteneriat" marker when it is held with one. The grid's tooltip shows them as
  * lines; the link's accessible name reads them as sentences, each ended so a screen reader pauses
  * between them.
  */
-function calendarEntryLines({ time, title, note, partner }: { time: string; title: string; note: EditionNote | null; partner: string | null }): string[] {
-  return [`${time} ${title}`, ...(note ? [note.text] : []), ...(partner ? [partner] : [])];
+function calendarEntryLines({
+  time,
+  title,
+  note,
+  headlamp = null,
+  partner,
+}: {
+  time: string;
+  title: string;
+  note: EditionNote | null;
+  headlamp?: string | null;
+  partner: string | null;
+}): string[] {
+  return [`${time} ${title}`, ...(note ? [note.text] : []), ...(headlamp ? [headlamp] : []), ...(partner ? [partner] : [])];
 }
 
 function calendarEntryName(lines: readonly string[]): string {
@@ -55,6 +68,7 @@ export default function CalendarEventChip({
   filled,
   cancelled,
   note,
+  headlamp = null,
   partner,
   dense,
 }: {
@@ -67,12 +81,14 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
+  /** "Frontală necesară" / "Headlamp required" (§382), made on the server — or null for a date that needs no light. */
+  headlamp?: string | null;
   /** The generic "Eveniment în parteneriat" marker (§367), made on the server — or null for an event with no partner. */
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;
 }) {
-  const lines = calendarEntryLines({ time, title, note, partner });
+  const lines = calendarEntryLines({ time, title, note, headlamp, partner });
   const name = calendarEntryName(lines);
   const markSize = dense ? 16 : 18;
   const chip = (

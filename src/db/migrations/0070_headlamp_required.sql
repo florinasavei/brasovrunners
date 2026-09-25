@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "headlamp_required" boolean DEFAULT false NOT NULL;
