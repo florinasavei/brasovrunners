@@ -129,6 +129,33 @@ export default async function RegistrationBox({
   // own rows, never a query of its own.
   const hasDiscountNote = languages.some((entry) => isWrittenText(entry.translation.discountNote));
   const discounted = event ? costPaidToExternalOrganizer(event) && hasDiscountNote : false;
+  // Whether the note may be typed at all right now (`DECISIONS.md` §NNN): the event's stored
+  // mode and cost, not the live select — a reader without `mayEditSettings` cannot change either,
+  // and one with it sees the same strip inside `CostFields`, which does watch the live select.
+  const discountNoteApplies = event !== null && costPaidToExternalOrganizer(event);
+  // The strip itself, one instance, used both inside `CostFields` (settings editors, who can also
+  // change the cost type live) and on its own for a words-only reader (`RegistrationBox:183`):
+  // the club's one role for "the words" (§103) must be able to write this note without settings
+  // rights, so it renders outside the settings gate too, gated on the stored mode/cost instead.
+  const discountNotePanels = (
+    <LocaleTabPanels
+      idPrefix="discount-note"
+      panels={languages.map((entry) => ({
+        locale: entry.translation.locale,
+        label: entry.label,
+        content: <DiscountNoteFields translation={entry.translation} mayEdit={entry.mayEdit} />,
+      }))}
+      identical={{
+        names: ["discountNote"],
+        warning: t("editor.identical.warning"),
+        mark: t("editor.identical.tab"),
+        initial: (() => {
+          const [first, ...rest] = languages;
+          return first ? rest.some((entry) => identicalInBothLanguages(first.translation.discountNote, entry.translation.discountNote)) : false;
+        })(),
+      }}
+    />
+  );
   const costLabel = event?.costType
     ? `${t(`editor.costValues.${event.costType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
     : null;
@@ -180,7 +207,13 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        <SettingsReadOnly />
+        <Stack spacing={2}>
+          <SettingsReadOnly />
+          {/* A words-only reader (Redactor, §103) still owns the club's discount note on an
+              EXTERNAL + PAID event, even without the settings rights the rest of this box needs
+              (`DECISIONS.md` §NNN). */}
+          {discountNoteApplies && discountNotePanels}
+        </Stack>
       ) : (
         <Stack spacing={2}>
           {/* The cost, on every type (moved from "Traseu și detalii"): the empty option is "not
@@ -219,23 +252,7 @@ export default async function RegistrationBox({
               donationAmountHelp: t("editor.costDonationAmountHelp"),
             }}
           >
-            <LocaleTabPanels
-              idPrefix="discount-note"
-              panels={languages.map((entry) => ({
-                locale: entry.translation.locale,
-                label: entry.label,
-                content: <DiscountNoteFields translation={entry.translation} mayEdit={entry.mayEdit} />,
-              }))}
-              identical={{
-                names: ["discountNote"],
-                warning: t("editor.identical.warning"),
-                mark: t("editor.identical.tab"),
-                initial: (() => {
-                  const [first, ...rest] = languages;
-                  return first ? rest.some((entry) => identicalInBothLanguages(first.translation.discountNote, entry.translation.discountNote)) : false;
-                })(),
-              }}
-            />
+            {discountNotePanels}
           </CostFields>
 
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>

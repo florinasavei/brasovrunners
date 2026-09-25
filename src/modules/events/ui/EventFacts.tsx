@@ -1,7 +1,6 @@
 import CakeIcon from "@mui/icons-material/Cake";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
@@ -473,7 +472,7 @@ export default async function EventFacts({
   const pillRow = (items: Pill[]) => (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
       {items.map((item) => (
-        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} ariaLabel={item.ariaLabel} variant="outlined" sx={PILL_SX} />
+        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} srSuffix={item.srSuffix} variant="outlined" sx={PILL_SX} />
       ))}
     </Box>
   );
@@ -546,7 +545,7 @@ export default async function EventFacts({
       cardPills.push({
         glyph: `cost:${event.costType}`,
         label: t(`costValues.${event.costType}`),
-        ariaLabel: costPaidToExternalOrganizer(event) ? t("costPaidExternalAria", { cost: t(`costValues.${event.costType}`) }) : undefined,
+        srSuffix: costPaidToExternalOrganizer(event) ? t("costPaidExternalSrSuffix") : undefined,
       });
     }
 
@@ -678,7 +677,14 @@ export default async function EventFacts({
       club stated one. Never a raw URL, only the host a runner recognises (`costUrlHost`), the same
       rule "Linkuri și fișiere" follows (§332).
     */
-    if (event.costType === "PAID") {
+    if (event.costType === "PAID" && costPaidToExternalOrganizer(event)) {
+      // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
+      // form, not the club's (`DECISIONS.md` §NNN): the hero says so plainly, the same wording
+      // the page's cost row uses, and never links `costUrl` — the club's own address is not where
+      // this fee goes. The club's own discount, if any, follows on its own piece.
+      route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal")));
+      if (event.discountNote) route.push(withGlyph(GLYPHS.discount, event.discountNote));
+    } else if (event.costType === "PAID") {
       route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
       const host = event.costUrl ? costUrlHost(event.costUrl) : null;
       if (event.costUrl && host) {
@@ -880,7 +886,7 @@ export default async function EventFacts({
     if (event.discountNote) {
       costExtras.push(
         <Box key="discount" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-          <LocalOfferIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+          <GLYPHS.discount aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
           {event.discountNote}
         </Box>,
       );

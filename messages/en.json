@@ -244,7 +244,7 @@
     "costPaidWhere": "payment on {host}",
     "costPaidExternal": "Paid, to the organizer",
     "costPaidExternalAmount": "Paid, to the organizer: {amount}",
-    "costPaidExternalAria": "{cost} — paid to the organizer, not to the club",
+    "costPaidExternalSrSuffix": "paid to the organizer, not to the club",
     "costPaidExternalLine": "Cost: {amount}, paid to the organizer",
     "costDonation": "Donation: on {host}",
     "costDonateOn": "Donate on {host}",

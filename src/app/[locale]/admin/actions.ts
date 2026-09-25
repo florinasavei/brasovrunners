@@ -300,8 +300,12 @@ function translationInputFrom(form: FormData, locale: Locale) {
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
     // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), posted from the
-    // cost card's own strip (`RegistrationBox`); cleared server-side outside EXTERNAL + PAID.
-    discountNote: value("discountNote"),
+    // cost card's own strip (`RegistrationBox`), which now renders for a words-only reader too
+    // (no settings rights) as well as inside the settings editor's `CostFields`. Read only when
+    // the box was actually posted, the way `reminderHoursBefore` above is — an absent box (a
+    // future caller, a stale form) must leave the column alone rather than blank it; cleared
+    // server-side outside EXTERNAL + PAID (`service.ts#applyTranslationSave`).
+    discountNote: form.has(`translations.${locale}.discountNote`) ? value("discountNote") : undefined,
   };
 }
 

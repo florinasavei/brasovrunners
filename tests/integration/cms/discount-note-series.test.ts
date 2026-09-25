@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { duplicateEvent, repeatEvent } from "@/modules/content/events/service";
+import { duplicateEvent, repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
 import { createEvent } from "@/modules/content/events/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -63,6 +63,17 @@ beforeEach(async () => {
 });
 
 const translationsOf = (id: string) => db.select().from(eventTranslations).where(eq(eventTranslations.eventId, id));
+const reloadEvent = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
+
+/** One language's posted words, the required fields plus whatever the case changes (`series-edit.test.ts`'s `wordsFor`). */
+const wordsFor = (row: { slug: string; title: string; excerpt: string | null }, changes: Record<string, unknown> = {}) => ({
+  slug: row.slug,
+  title: row.title,
+  excerpt: row.excerpt ?? "",
+  seoTitle: "",
+  seoDescription: "",
+  ...changes,
+});
 
 describe("the discount note, on a series and a duplicate (§NNN)", () => {
   it("is written on create, for an EXTERNAL + PAID event, in both languages", async () => {
@@ -86,5 +97,66 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     const copy = await duplicateEvent(db, { actor: admin, eventId: source.id });
     const copyRows = await translationsOf(copy.id);
     expect(copyRows.find((row) => row.locale === "ro")?.discountNote).toBe("40 lei pentru membri BR");
+  });
+
+  it("a series edit with the 'following' scope carries a new note to the sibling dates, and switching the cost off it the same way clears it there too", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
+    expect(dates.length).toBeGreaterThan(0);
+
+    // The discount changes on the source date, posted for both languages, "following" reaching
+    // every sibling date (`applyToSeries`'s `SERIES_TRANSLATION_COLUMNS`).
+    let row = await reloadEvent(source.id);
+    let translations = await translationsOf(source.id);
+    let ro = translations.find((t) => t.locale === "ro")!;
+    let en = translations.find((t) => t.locale === "en")!;
+    await saveEventAndTranslations(db, {
+      actor: admin,
+      eventId: source.id,
+      fields: { ...FIELDS },
+      expectedVersion: row.version,
+      translations: [
+        { translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro, { discountNote: "60 lei pentru membri BR" }) },
+        { translationId: en.id, expectedVersion: en.version, fields: wordsFor(en, { discountNote: "60 lei for BR members" }) },
+      ],
+      scope: "following",
+      now: NOW,
+    });
+
+    for (const date of dates) {
+      const rows = await translationsOf(date.id);
+      expect(rows.find((r) => r.locale === "ro")?.discountNote).toBe("60 lei pentru membri BR");
+      expect(rows.find((r) => r.locale === "en")?.discountNote).toBe("60 lei for BR members");
+    }
+
+    // The cost switches to FREE on the source date, with the same scope: `applyTranslationSave`
+    // clears `discountNote` outside EXTERNAL + PAID whatever this save still posted for it
+    // (`translationColumnsFrom`), and the series edit carries that cleared column along too.
+    row = await reloadEvent(source.id);
+    translations = await translationsOf(source.id);
+    ro = translations.find((t) => t.locale === "ro")!;
+    en = translations.find((t) => t.locale === "en")!;
+    await saveEventAndTranslations(db, {
+      actor: admin,
+      eventId: source.id,
+      fields: { ...FIELDS, costType: "FREE", costAmount: "" },
+      expectedVersion: row.version,
+      translations: [
+        { translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro, { discountNote: "60 lei pentru membri BR" }) },
+        { translationId: en.id, expectedVersion: en.version, fields: wordsFor(en, { discountNote: "60 lei for BR members" }) },
+      ],
+      scope: "following",
+      now: NOW,
+    });
+
+    const sourceRows = await translationsOf(source.id);
+    expect(sourceRows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+    expect(sourceRows.find((r) => r.locale === "en")?.discountNote).toBeNull();
+    for (const date of dates) {
+      const rows = await translationsOf(date.id);
+      expect(rows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+      expect(rows.find((r) => r.locale === "en")?.discountNote).toBeNull();
+    }
   });
 });

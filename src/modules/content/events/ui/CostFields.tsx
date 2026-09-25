@@ -87,15 +87,23 @@ export default function CostFields({
           required={current === "PAID"}
           sx={{ flex: 1 }}
         />
-        <RecallField
-          name="event.costUrl"
-          label={isDonation ? labels.donationUrl : labels.paidUrl}
-          helperText={isDonation ? labels.donationUrlHelp : labels.paidUrlHelp}
-          defaultValue={costUrl.defaultValue}
-          {...costUrl.box}
-          required={isDonation}
-          sx={{ flex: 1 }}
-        />
+        {/* Hidden, not removed, while the club's discount strip is the one that matters
+            (`showDiscount`): the page, the .ics and the JSON-LD all ignore `costUrl` on an
+            `EXTERNAL` + `PAID` event now (`DECISIONS.md` §NNN — the fee is paid at the
+            organizer's own form) — showing the box here would let an organizer fill it and watch
+            it vanish from the site with no explanation. Whatever was typed stays, the same rule
+            the pair follows switching between `PAID` and `DONATION`. */}
+        <Box sx={{ display: showDiscount ? "none" : "block", flex: 1 }}>
+          <RecallField
+            name="event.costUrl"
+            label={isDonation ? labels.donationUrl : labels.paidUrl}
+            helperText={isDonation ? labels.donationUrlHelp : labels.paidUrlHelp}
+            defaultValue={costUrl.defaultValue}
+            {...costUrl.box}
+            required={isDonation}
+            fullWidth
+          />
+        </Box>
       </Stack>
       <Box sx={{ display: showDiscount ? "block" : "none", mt: 2 }}>{children}</Box>
     </Box>

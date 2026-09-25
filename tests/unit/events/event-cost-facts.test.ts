@@ -197,8 +197,8 @@ describe("an EXTERNAL-registration PAID event's cost row (§NNN)", () => {
   });
 });
 
-describe("the cost facts, featured hero (§343, unchanged by §356)", () => {
-  it("keeps «Taxă: 50 lei» and «plata pe {host}» among the route's pieces", async () => {
+describe("the cost facts, featured hero (§343; the EXTERNAL + PAID wording since §NNN)", () => {
+  it("keeps «Taxă: 50 lei» and «plata pe {host}» for a club-run PAID event, among the route's pieces", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }), now: NOW }),
     );
@@ -213,6 +213,31 @@ describe("the cost facts, featured hero (§343, unchanged by §356)", () => {
     );
     expect(/<a [^>]*>([^<]*)<\/a>/.exec(html)?.[1]).toBe("Donație: pe wingsforlifeworldrun.com");
     expect(html).toContain("sugerat 50 lei");
+  });
+
+  it("says the fee goes to the organizer on an EXTERNAL-registration PAID event, never links costUrl, and carries the club's discount note (§NNN)", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({
+        event: event({
+          costType: "PAID",
+          costAmount: "75 lei",
+          registrationMode: "EXTERNAL",
+          costUrl: "https://revolut.me/other-club",
+          discountNote: "40 lei pentru membri BR",
+        }),
+        now: NOW,
+      }),
+    );
+    expect(html).toContain("Cu taxă, la organizator: 75 lei");
+    expect(html).not.toContain("plata pe");
+    expect(html).toContain("40 lei pentru membri BR");
+  });
+
+  it("falls back to «Cu taxă, la organizator» with no stated amount, on the hero too", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ costType: "PAID", costAmount: null, registrationMode: "EXTERNAL" }), now: NOW }),
+    );
+    expect(html).toContain("Cu taxă, la organizator");
   });
 });
 
@@ -240,10 +265,15 @@ describe("the cost facts, compact card (§343)", () => {
       }),
     );
     expect(pillLabels(html)).toContain("Cu taxă");
-    expect(html).toContain('aria-label="Cu taxă — plătit la organizator, nu la club"');
+    // Content, not an `aria-label` override (§NNN): a non-clickable `Chip` is a plain, roleless
+    // `<div>`, and ARIA 1.2 does not allow naming a generic element — a screen reader in browse
+    // mode reads the chip's own text and ignores the attribute. The extra words are visually
+    // hidden text right after the visible word, inside the same chip label.
+    expect(html).not.toMatch(/aria-label="[^"]*plătit la organizator/);
+    expect(html).toMatch(/Cu taxă(<style[^>]*>.*?<\/style>)?<span[^>]*> — plătit la organizator, nu la club<\/span>/);
   });
 
-  it("carries no aria-label override on an INTERNAL paid event's card pill", async () => {
+  it("carries no hidden suffix on an INTERNAL paid event's card pill", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", registrationMode: "INTERNAL" }), now: NOW, variant: "compact" }),
     );

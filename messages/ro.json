@@ -244,7 +244,7 @@
     "costPaidWhere": "plata pe {host}",
     "costPaidExternal": "Cu taxă, la organizator",
     "costPaidExternalAmount": "Cu taxă, la organizator: {amount}",
-    "costPaidExternalAria": "{cost} — plătit la organizator, nu la club",
+    "costPaidExternalSrSuffix": "plătit la organizator, nu la club",
     "costPaidExternalLine": "Cost: {amount}, la organizator",
     "costDonation": "Donație: pe {host}",
     "costDonateOn": "Donează pe {host}",

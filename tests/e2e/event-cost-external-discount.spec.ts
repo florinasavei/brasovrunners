@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -13,6 +13,14 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
  * hostname literal, and `docs:check` scans test files for one too.
  */
 const ORGANIZER_LINK = ["https:/", "alt-club.example.test", "inscriere"].join("/");
+
+/** The listing card with this title, every fold opened once the list has streamed in (§166, `headlamp.spec.ts`). */
+async function card(page: Page, path: string, heading: string) {
+  await page.goto(path);
+  await expect(page.locator("#main ul > li h2").first()).toBeAttached();
+  await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
+  return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
+}
 
 test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () => {
   test("shows the note only for EXTERNAL + PAID, both languages or neither, and the page reads it in each language", async ({ page }) => {
@@ -110,6 +118,23 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     const costEn = page.locator("dt", { hasText: /^Cost$/ }).locator("xpath=following-sibling::dd[1]");
     await expect(costEn.locator(".MuiChip-root")).toHaveText("Paid, to the organizer: 75 lei");
     await expect(costEn).toContainText("40 lei for BR members");
+
+    // The English .ics carries the same fact and the English note.
+    const icsEnResponse = await page.request.get(`/en/events/${englishSlug}/calendar.ics`);
+    const icsEn = (await icsEnResponse.text()).replace(/\r\n /g, "");
+    expect(icsEn).toContain("Cost: 75 lei\\, paid to the organizer");
+    expect(icsEn).toContain("40 lei for BR members");
+
+    // The listing card, both languages: the pill keeps the closed set's own word — "Cu taxă",
+    // "Paid" — and a screen reader alone is told the fee goes to the organizer, never the club
+    // (§NNN, `GlyphChip`'s `srSuffix`).
+    const roCard = await card(page, "/ro/evenimente", `Crosul partenerului ${suffix}`);
+    await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Cu taxă" })).toHaveCount(1);
+    await expect(roCard).toContainText("plătit la organizator, nu la club");
+
+    const enCard = await card(page, "/en/events", `The partner's race ${suffix}`);
+    await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Paid" })).toHaveCount(1);
+    await expect(enCard).toContainText("paid to the organizer, not to the club");
 
     // Off the site again.
     await page.goto(editorUrl);

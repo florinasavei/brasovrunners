@@ -1,8 +1,28 @@
 "use client";
 
+import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { GLYPHS, type GlyphName } from "./glyphs";
+
+/**
+ * Clipped to a single pixel and kept out of the flow, the standard technique for text a screen
+ * reader must read and a sighted visitor never sees — unlike an `aria-label`, this works on any
+ * element, including the plain, roleless `<div>` MUI's `Chip` renders when it is not `clickable`
+ * (ARIA 1.2 does not allow naming a generic element, and browse-mode screen readers read such a
+ * chip's own text and ignore the attribute).
+ */
+const srOnlySx: SxProps<Theme> = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
 
 /**
  * A chip with a glyph in front of its word (§112), for a Server Component to render.
@@ -21,7 +41,7 @@ export default function GlyphChip({
   variant = "filled",
   href,
   sx,
-  ariaLabel,
+  srSuffix,
 }: {
   glyph: GlyphName;
   label: string;
@@ -36,13 +56,25 @@ export default function GlyphChip({
   /** Set, the chip is a link — the listing's type filter. */
   href?: string;
   sx?: SxProps<Theme>;
-  /** What a screen reader announces instead of `label`, when the two must differ (`Pill.ariaLabel`). */
-  ariaLabel?: string;
+  /**
+   * Extra words a screen reader reads right after `label`, never shown (`Pill.srSuffix`) — for
+   * example the fee going to the organizer rather than the club, on a chip whose visible word
+   * stays the closed set's own ("Cu taxă").
+   */
+  srSuffix?: string;
 }) {
   const Icon = GLYPHS[glyph];
-  return href ? (
-    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} aria-label={ariaLabel} />
+  const content = srSuffix ? (
+    <>
+      {label}
+      <Box component="span" sx={srOnlySx}>{` — ${srSuffix}`}</Box>
+    </>
   ) : (
-    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} sx={sx} aria-label={ariaLabel} />
+    label
+  );
+  return href ? (
+    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} />
+  ) : (
+    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} />
   );
 }
