@@ -68,6 +68,8 @@ export async function requestMyRegistrationsLink<T extends Record<string, unknow
 export type MyRegistration = {
   id: string;
   status: RegistrationStatus;
+  /** Whose registration it is (§389): an address may carry a family, each person their own row. */
+  registeredName: string;
   eventId: string;
   eventTitle: string | null;
   eventSlug: string | null;
@@ -107,6 +109,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
     .select({
       id: registrations.id,
       status: registrations.status,
+      registeredName: registrations.registeredName,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       eventSlug: eventTranslations.slug,

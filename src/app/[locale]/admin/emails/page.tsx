@@ -40,6 +40,8 @@ import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifi
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
+import { readAddressCap } from "@/modules/registrations/address-cap";
+import { countForm } from "@/i18n/count-form";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -122,7 +124,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, volume, recipients, queue, notices, written, deadlines, forecast] = await Promise.all([
+  const [plan, volume, recipients, queue, notices, written, deadlines, forecast, addressCap] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -144,15 +146,20 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       reader of this page sees it.
     */
     deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
+    // How many registrations one address may carry at an event (§389), straight through like the deadlines.
+    readAddressCap(db),
   ]);
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
   const pageWords = deadlineWords(locale, deadlines.deadlines);
+  const perAddress = addressCap.cap.registrationsPerAddress;
   const whenValues = {
     confirmation: pageWords.confirmation,
     hold: pageWords.hold,
     offer: pageWords.offer,
     reminder: pageWords.reminder ?? "",
+    // The club's limit per address, for the one message that states it (§389).
+    people: t(`emails.addressCap.people.${countForm(perAddress, locale)}`, { count: perAddress }),
   };
   /*
     When each message goes, in the club's numbers (§377). The reminder's lines say "off by default"
@@ -193,6 +200,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     const sample = emailSampleFor(messageType, emailLocale);
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
+    // And the club's limit per address, on the message that states it (§389): the link's shape.
+    if (messageType === "REGISTER_ANOTHER_PERSON") sample.addressCap = perAddress;
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is
     // what a participant will actually receive rather than what the platform ships.
@@ -231,6 +240,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
         {saved === "deadlines" && <Alert severity="success">{t("emails.deadlines.saved")}</Alert>}
+        {saved === "addressCap" && <Alert severity="success">{t("emails.addressCap.saved")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
       </Box>
 
@@ -274,7 +284,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       />
 
       {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
-      <DeadlinesPanel locale={locale} state={deadlines} mayEdit={mayEditEmail} openWhen={{ saved: saved === "deadlines" }} />
+      <DeadlinesPanel
+        locale={locale}
+        state={deadlines}
+        mayEdit={mayEditEmail}
+        openWhen={{ saved: saved === "deadlines" || saved === "addressCap" }}
+        addressCap={addressCap}
+      />
 
       {/*
         What goes out on its own next (§383), directly above the cards each row links to. The

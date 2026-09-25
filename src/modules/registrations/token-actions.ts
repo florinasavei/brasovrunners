@@ -21,9 +21,20 @@ import {
   type SpentLinkStep,
   stepForSpentLink,
 } from "./domain/link-status";
-import { checkIn, confirmEmail, type EventForRegistration, signDeclaration, unregister } from "./service";
+import {
+  checkIn,
+  confirmEmail,
+  type EventForRegistration,
+  type RegistrationOrigin,
+  signDeclaration,
+  submitRegistration,
+  unregister,
+} from "./service";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { findRegistrationById } from "./repository";
+import { findParticipantById } from "@/modules/participants/repository";
+import { ANOTHER_LINK_INVALID } from "./domain/family";
+import { familyRegistrationOpen } from "./family-gate";
 
 /**
  * Wiring the email-token boundary (§13.2) to the registration lifecycle (§15).
@@ -232,6 +243,77 @@ export async function consumeAndSignDeclaration(
 
     const updated = await signDeclaration(tx, event, registration.id, input, now);
     return { ok: true as const, token: consumed.token, registration: updated };
+  });
+}
+
+/**
+ * The form for another person on a registered address (§389): what the page behind the emailed
+ * link may know before anything is spent — whose address it is (to show, fixed and read-only) and
+ * which event the link is for. Charged one attempt like every token read (§39), and a read-only
+ * transaction all the way (GET never mutates, §12.8).
+ *
+ * A link for another event than the page's, or while the schema still holds one registration per
+ * address (`family-gate.ts`), is answered as a link that does not work — the same one generic
+ * refusal as a wrong or spent one (§13.2).
+ */
+export async function readAnotherPersonLink(
+  secret: string,
+  eventId: string,
+  now: Date,
+): Promise<{ ok: true; email: string; participantId: string } | { ok: false }> {
+  const db = getDb();
+  if (!(await tokenAttemptAllowed(db, secret, now))) return { ok: false };
+  const context = await readActionTokenContext(db, { secret, purpose: "REGISTER_ANOTHER_PERSON", now });
+  if (!context.ok) return { ok: false };
+  return inReadOnlyTransaction(db, async (tx) => {
+    const registration = await findRegistrationById(tx, context.token.registrationId ?? "");
+    if (!registration || registration.eventId !== eventId) return { ok: false as const };
+    if (!(await familyRegistrationOpen(tx))) return { ok: false as const };
+    const participant = await findParticipantById(tx, registration.participantId);
+    if (!participant) return { ok: false as const };
+    return { ok: true as const, email: participant.deliveryEmail, participantId: participant.id };
+  });
+}
+
+/**
+ * Register another person on the address the link was sent to (§389): the token spent and the
+ * registration created in one transaction, so a refusal — this runner is on the address already,
+ * the address is at the club's limit, a field the form must correct — rolls the spend back with
+ * everything else and the same link still works. The address is the token's participant's, never
+ * one posted by the form. `submitRegistration` does the rest exactly as for anybody: the new
+ * registration waits for its own email link, then its own declaration.
+ */
+export async function consumeAndRegisterAnotherPerson(
+  secret: string,
+  event: EventForRegistration,
+  rawInput: Record<string, unknown>,
+  origin: Omit<RegistrationOrigin, "source" | "anotherPerson" | "createdByStaffUserId" | "atTheDesk">,
+  now: Date,
+): Promise<{ ok: true; email: string } | { ok: false }> {
+  const db = getDb();
+  if (!(await tokenAttemptAllowed(db, secret, now))) return { ok: false };
+
+  return db.transaction(async (tx) => {
+    const consumed = await consumeActionToken(tx, { secret, purpose: "REGISTER_ANOTHER_PERSON", now });
+    if (!consumed.ok) return { ok: false as const };
+    const registration = await findRegistrationById(tx, consumed.token.registrationId ?? "");
+    if (!registration || registration.eventId !== event.id) {
+      // A link for another event is a link that does not work here; nothing of it is spent.
+      throw new DomainError("VALIDATION_ERROR", "this link is for another event", [ANOTHER_LINK_INVALID]);
+    }
+    const participant = await findParticipantById(tx, registration.participantId);
+    if (!participant) throw new DomainError("VALIDATION_ERROR", "no such participant", [ANOTHER_LINK_INVALID]);
+
+    await submitRegistration(
+      tx,
+      event,
+      { ...rawInput, email: participant.deliveryEmail },
+      now,
+      "REAL",
+      { ...origin, source: "PUBLIC", createdByStaffUserId: null, anotherPerson: { participantId: participant.id } },
+    );
+    // The inbox to name on "check your email" (§224) — the address the link was sent to.
+    return { ok: true as const, email: participant.deliveryEmail };
   });
 }
 

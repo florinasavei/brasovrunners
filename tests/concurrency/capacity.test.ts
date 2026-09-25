@@ -223,7 +223,9 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       );
       await db
         .update(registrations)
-        .set({ status: "CANCELLED", cancelledAt: NOW, cancellationSource: "PARTICIPANT" })
+        // Each the same runner coming back (§389): a restart is of this runner's own row, found by
+        // the name, once an address may carry several runners — the name the submission below types.
+        .set({ status: "CANCELLED", cancelledAt: NOW, cancellationSource: "PARTICIPANT", registeredName: "Ana Pop", nameKey: "ana pop" })
         .where(
           inArray(
             registrations.id,
