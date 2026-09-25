@@ -10,7 +10,15 @@ import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { readClubNotices } from "./club-notices";
-import { clubCopyPayload, clubCopyRecipients, isClubCopy, isParticipantMessage, participantMessageBcc } from "./domain/club-notices";
+import {
+  BULK_COPY_RECIPIENTS,
+  type BulkClubCopyMessage,
+  clubCopyPayload,
+  clubCopyRecipients,
+  isClubCopy,
+  isCopiedPerMessage,
+  participantMessageBcc,
+} from "./domain/club-notices";
 import { drainOutboxAfterResponse } from "./drain";
 import {
   MAX_SEND_ATTEMPTS,
@@ -178,7 +186,9 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   params: EnqueueEmailParams,
 ): Promise<void> {
-  if (!params.registrationId || !isParticipantMessage(params.messageType) || isClubCopy(params.payload)) return;
+  // Never a message to an address nobody has confirmed, nor one of a bulk send — that gets one copy
+  // per send (`enqueueBulkClubCopies`) — however the club's list reads (§NNN).
+  if (!params.registrationId || !isCopiedPerMessage(params.messageType) || isClubCopy(params.payload)) return;
   const recipients = clubCopyRecipients(params.recipientEmail, participantMessageBcc(await readClubNotices(tx)));
   if (recipients.length === 0) return;
   const [registration] = await tx
@@ -208,6 +218,67 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
       })
       .onConflictDoNothing({ target: emailOutbox.idempotencyKey });
   }
+}
+
+/**
+ * The club's **one** copy of a bulk send (§NNN; the counsel's review of 2026-09-25, GDPR art.
+ * 5(1)(c)): the organizer's message (§364) or the update notice (§331) went to everybody
+ * registered, one row each, and until now each of those rows was copied to every club address —
+ * a hundred runners, a hundred copies of the same words, each greeting a runner by name.
+ *
+ * Now one row per club address per send: the same message type and payload, the `clubCopy` flag,
+ * the event's id (there is no registration behind it — the renderer reads the event from the
+ * payload) and how many real participants the send reached, and nothing about any of them: no
+ * registration, no participant, no name. `render.ts` greets the club and says the count.
+ *
+ * Only when at least one **real** registration was written to: a send that reached test rows alone
+ * copies nothing, as a test row's message never was (§12.6). Inside the caller's transaction, like
+ * every enqueue, and keyed on the send (`<send key>:club-copy:<address>`), so a retried request
+ * queues nothing twice. Returns how many copies were queued.
+ */
+export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  params: {
+    messageType: BulkClubCopyMessage;
+    eventId: string;
+    /** The payload every recipient's row carries — the words, the changes. */
+    payload: Record<string, unknown>;
+    /** The send's own key, without the registration: `organizer-message:<send id>`. */
+    sendKey: string;
+    /** Real registrations this send queued a message for. */
+    realRecipients: number;
+    requestedByStaffUserId?: string | null;
+    now: Date;
+  },
+): Promise<number> {
+  if (params.realRecipients <= 0) return 0;
+  // No participant's address to leave out: the copy is about nobody.
+  const recipients = clubCopyRecipients("", participantMessageBcc(await readClubNotices(tx)));
+  let queued = 0;
+  for (const recipient of recipients) {
+    const [row] = await tx
+      .insert(emailOutbox)
+      .values({
+        participantId: null,
+        registrationId: null,
+        messageType: params.messageType,
+        // The club's own language; the message is bilingual either way (§96).
+        locale: "ro",
+        recipientEmail: recipient,
+        payloadJson: { ...clubCopyPayload(params.payload), eventId: params.eventId, [BULK_COPY_RECIPIENTS]: params.realRecipients },
+        idempotencyKey: `${params.sendKey}:club-copy:${recipient.toLowerCase()}`,
+        requestedByStaffUserId: params.requestedByStaffUserId ?? null,
+        isManualResend: false,
+        status: "PENDING",
+        attemptCount: 0,
+        createdAt: params.now,
+      })
+      .onConflictDoNothing({ target: emailOutbox.idempotencyKey })
+      .returning({ id: emailOutbox.id });
+    if (row) queued += 1;
+  }
+  if (queued > 0) drainOutboxAfterResponse();
+  return queued;
 }
 
 /**

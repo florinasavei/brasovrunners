@@ -220,6 +220,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               subjectHelp: t("participantMessages.subjectHelp", { max: String(ORGANIZER_SUBJECT_MAX), list: placeholderList }),
               body: t("participantMessages.body"),
               bodyHelp: t("participantMessages.bodyHelp", { max: String(ORGANIZER_BODY_MAX), list: placeholderList }),
+              bodyScope: t("participantMessages.bodyScope"),
               identical: t("editor.identical.warning"),
               preview: t("participantMessages.preview"),
               // Named from the constant the preview is rendered with, so the line cannot name somebody else.

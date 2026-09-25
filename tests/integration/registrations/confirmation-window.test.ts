@@ -120,7 +120,10 @@ describe("the participation window (§104)", () => {
     expect(message.subject).toBe(
       "Ești înscris — confirmă participarea până la vineri, 9 oct. 2026, 09:00 / You are registered — confirm your participation by Friday, 9 Oct 2026, 09:00",
     );
-    expect(message.text).toContain("Cursa e gratuită");
+    // Never "the race is free" (§NNN): said of any event more than a day away, paid or not a race.
+    expect(message.text).not.toContain("Cursa e gratuită");
+    expect(message.text).toContain("Înscrierea este completă doar după ce semnezi declarația pe proprie răspundere.");
+    expect(message.text).toContain("Your registration is complete only once you sign the declaration of own responsibility.");
     expect(message.text).toContain("pe hârtie la masa de înscrieri");
     expect(message.text).toContain("Dacă se formează lista de așteptare, locul îți este ținut până la vineri, 9 oct. 2026, 09:00");
     expect(message.text).toContain("If a waiting list forms, the place is held for you until Friday, 9 Oct 2026, 09:00");

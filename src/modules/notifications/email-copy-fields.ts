@@ -110,6 +110,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventFacts: emailSampleEventFacts(locale),
     eventFactsOther: emailSampleEventFacts(OTHER[locale]),
     manageUrl: `${base}/${locale}/EXAMPLE`,
+    // "Înscrierile mele" by address, which the update notice points at (§NNN) and the organizer's message too.
+    myRegistrationsUrl: `${base}/${locale}/EXAMPLE-mine`,
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
     listConsentUrl: `${base}/${locale}/EXAMPLE-list`,
     listed: true,
@@ -214,6 +216,8 @@ function fieldsData(): TemplateData {
     // The email link's window as the club set it (§377): the link for another person on one
     // address lives exactly that long (§389), and its sentence says so through the field.
     confirmationHours: field("confirmationHours"),
+    // The waiting-list offer's length (§377), which the freed place's message states (§NNN).
+    offerHours: field("offerHours"),
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
   };
 }
@@ -291,7 +295,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
 const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>> = {
   bibNumber: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "CLUB_CONFIRMATION_NOTICE"],
   checkinCode: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"],
-  holdExpiresAtFormatted: ["COMPLETE_DECLARATION"],
+  // The offer's own deadline on the freed place too (§NNN): the same column, the offer's hold.
+  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"],
   signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"],
   staffRole: ["STAFF_INVITATION"],
   inviterName: ["STAFF_INVITATION"],
@@ -311,7 +316,7 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
  * - the number: the confirmation, the reminder, the number given by hand, the club's notice (§245);
  * - the desk code: the confirmation, the reminder and the number given by hand — never on a club
  *   copy (§320);
- * - the hold's deadline: the declaration request (§104);
+ * - the hold's deadline: the declaration request (§104) and the freed place's offer (§NNN);
  * - the time of signing: the confirmation, the signed declaration and its archive copy (§95);
  * - the role and the inviter: the staff invitation (§141).
  *

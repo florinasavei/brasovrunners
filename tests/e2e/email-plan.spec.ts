@@ -305,7 +305,8 @@ test.describe("§336 the emails participants receive, as a card of cards", () =>
  * (2026-09-22; the owner: "să putem seta și unde mai merg în BCC mailurile de înregistrare"):
  * the club's hidden copy of the emails to participants is set on the same page, named back in
  * force above the boxes, and priced in the plan's forecast — one address is one more message on
- * each of the runner's five, so the cost of a registration moves by five and the forecast says
+ * four of the runner's five — the address-confirmation link is never copied (§NNN) — so the cost
+ * of a registration moves by four and the forecast says
  * which part of it the copies are. Desktop only, for the same one-row reason as the blocks above.
  */
 test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails to participants", () => {
@@ -342,10 +343,11 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await expect(main.getByText("Am salvat cine primește copiile clubului.")).toBeVisible();
     await expect(panel.getByText("Copie ascunsă la emailurile către participanți: arhiva@example.org.")).toBeVisible();
     await expect(box).toHaveValue("arhiva@example.org");
-    // One address on each of the runner's five messages: the cost moved by five, and the
-    // forecast says so next to the plan's figures, where the club decides what it can afford.
-    await expect(forecast).toContainText(`costă circa ${before + 5} mesaje`);
-    await expect(forecast).toContainText("Din ele, 5 sunt copiile ascunse");
+    // One address on four of the runner's five messages (never the address-confirmation link,
+    // §NNN): the cost moved by four, and the forecast says so next to the plan's figures, where
+    // the club decides what it can afford.
+    await expect(forecast).toContainText(`costă circa ${before + 4} mesaje`);
+    await expect(forecast).toContainText("Din ele, 4 sunt copiile ascunse");
 
     // And back to none: the sentence in force says so, and the forecast is what it was.
     await box.fill("");

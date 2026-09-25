@@ -173,7 +173,7 @@ describe("§393 signing a group run's self-declaration", () => {
     }
   });
 
-  it("sends the signer the whole document and the club a masked one, both with the PDF attached, under a text that asks for it", async () => {
+  it("sends the signer and the club the document masked, both with the PDF attached, under a text that asks for it (§NNN)", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL", { idDocument: true });
     const event = await trailRun();
     await updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
@@ -188,7 +188,12 @@ describe("§393 signing a group run's self-declaration", () => {
     expect(toSigner.subject).toContain("Tura pe munte");
     // The English half reads the English title (§373).
     expect(toSigner.subject).toContain("The mountain loop");
-    expect(drawnFrom(watched.pdfInputs.at(-1))).toContain("BV 123456");
+    // Masked on the signer's copy too (§NNN): the address was never confirmed before sending.
+    const signerPdf = drawnFrom(watched.pdfInputs.at(-1));
+    expect(signerPdf).not.toContain("123456");
+    expect(signerPdf).toContain("••••56");
+    expect(toSigner.text).toContain("În copia ta, seria și numărul actului de identitate apar mascate");
+    expect(toSigner.text).toContain("Dacă nu tu ai semnat această declarație, scrie-ne din pagina de contact (");
 
     const toClub = await renderOutboxMessage(claimed(archive), db, NOW);
     expect(toClub.to).toBe(ARCHIVE);

@@ -158,6 +158,10 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await page.getByRole("radio", { name: /Toți cei înscriși/ }).check();
     await expect(recipients).toContainText("2 destinatari");
 
+    // The counsel's scope line under the body (§NNN, review finding): what the organizer may
+    // write about, and why — visible before anything is typed, not only on a refusal.
+    await expect(page.getByTestId("participant-message-scope")).toContainText("Scrie doar despre acest eveniment");
+
     // Romanian only: the English body holds nothing but spaces, which the browser lets through
     // and the server refuses — on that box, with everything else kept (§315).
     await field("subjectRo").fill("Vreme rea la {eventTitle}");
