@@ -1783,7 +1783,7 @@
         "app": "The app"
       },
       "app": {
-        "lead": "The work queue of the team building the platform, read straight from <code>docs/QUEUE.md</code> in the repository — written and kept current in English, as below.",
+        "lead": "The work queue of the team building the platform, read straight from <code>docs/QUEUE.md</code> in the repository — what is building now, what is ready to release and what comes next, as below.",
         "missing": "The document is not in this deployment."
       },
       "neonPlan": {

@@ -2,21 +2,22 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
-import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
+import { renderRepoDocMarkdown } from "@/modules/diagnostics/repo-docs";
 
 /**
  * GitHub task lists (`- [ ]` / `- [x]`), rendered by `marked` — the one renderer `/devs/docs`
- * and `/admin/tasks`'s «Aplicația» / «The app» panel share (`repo-docs.ts`,
- * `RepoDocHtml.tsx`, `DECISIONS.md` §88, §NNN). `docs/QUEUE.md`'s "Building"/"Ready" tables
- * carry no task lists today, but § Later is a real GFM task list on purpose (`docs/DISPATCHER.md`
- * §NNN) — this is what proves the repository's own renderer, `renderRepoDoc`, turns it into a
- * real disabled checkbox rather than testing `marked` on its own.
+ * and `/admin/tasks`'s «Aplicația» / «The app» panel share (`repo-docs.ts`, `RepoDocHtml.tsx`,
+ * `DECISIONS.md` §88, §376). This runs the fixture below through `renderRepoDocMarkdown` — the
+ * exact function `renderRepoDoc` calls — rather than depending on a tracked document's own
+ * content: a live doc's task list can empty out (the dispatcher clears § Later) without turning
+ * this test unrelated-red.
  */
-describe("§NNN task lists in a rendered repository document", () => {
-  it("renderRepoDoc turns docs/QUEUE.md's § Later checkboxes into disabled checkbox inputs", async () => {
-    const doc = await renderRepoDoc("QUEUE");
-    expect(doc).not.toBeNull();
-    expect(doc?.html).toContain('<input disabled="" type="checkbox">');
+describe("task lists in a rendered repository document", () => {
+  it("renderRepoDocMarkdown turns a GFM task list into disabled checkbox inputs", async () => {
+    const html = await renderRepoDocMarkdown("## Later\n\n- [ ] Ship the queue tab\n- [x] Write the review\n");
+    expect(html).toContain('<input disabled="" type="checkbox">');
+    expect(html).toContain('<input checked="" disabled="" type="checkbox">');
+    expect(html).toContain("Ship the queue tab");
   });
 
   it("RepoDocHtml renders that markup as-is, styled by the one shared rule", () => {

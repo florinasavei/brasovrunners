@@ -26,15 +26,13 @@ test.describe("§NNN the app tab on /admin/tasks", () => {
     await expect(page).toHaveURL(/panel=app/);
     await expect(nav.getByRole("link", { name: "Aplicația" })).toHaveAttribute("aria-current", "page");
 
-    // The document's own headings, rendered — English, as `docs/QUEUE.md` is written.
+    // The document's own headings, rendered — English, as `docs/QUEUE.md` is written. The
+    // task-list-into-checkbox rendering rule itself is proven against a fixture in
+    // `repo-doc-html.test.ts`, not here: `docs/QUEUE.md`'s § Later empties out once the
+    // dispatcher picks every line up, and this spec must not fail for that unrelated reason.
     await expect(main.getByRole("heading", { name: "The work queue" })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Building" })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Later" })).toBeVisible();
-
-    // A real GFM task-list checkbox from the document, disabled — a reader, not an editor.
-    const checkbox = main.locator("input[type=checkbox]").first();
-    await expect(checkbox).toBeVisible();
-    await expect(checkbox).toBeDisabled();
 
     // The lead line above the document: one sentence, in the page's own language — never the
     // other one beside it (§NNN).

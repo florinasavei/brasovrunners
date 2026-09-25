@@ -31,7 +31,7 @@ import {
   type TaskState,
 } from "@/modules/diagnostics/owner-tasks";
 import { opsTaskPanels, resolveTaskPanel, type TaskPanel } from "@/modules/diagnostics/domain/task-panels";
-import { isRepoDocName, renderRepoDoc } from "@/modules/diagnostics/repo-docs";
+import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -222,7 +222,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * so, in the reader's language, and never prints the other one beside it.
    */
   if (panel === "app") {
-    const doc = isRepoDocName("QUEUE") ? await renderRepoDoc("QUEUE") : null;
+    const doc = await renderRepoDoc("QUEUE");
     return (
       <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
         <Box>

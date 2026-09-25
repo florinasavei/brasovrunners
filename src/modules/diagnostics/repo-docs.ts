@@ -43,13 +43,22 @@ export function isRepoDocName(value: string): value is RepoDocName {
   return REPO_DOCS.some((doc) => doc.name === value);
 }
 
+/**
+ * The one rendering step `renderRepoDoc` uses — GFM on, including task lists (`- [ ]` /
+ * `- [x]` into disabled checkbox inputs). Exported so a unit test can prove the rule against a
+ * fixture instead of the live content of a tracked document.
+ */
+export function renderRepoDocMarkdown(source: string): Promise<string> {
+  return Promise.resolve(marked.parse(source, { gfm: true, breaks: false })).then((html) => html as string);
+}
+
 /** The document as HTML, or null when the file is not there (a deployment traced without it). */
 export async function renderRepoDoc(name: RepoDocName): Promise<{ html: string; bytes: number } | null> {
   const doc = REPO_DOCS.find((entry) => entry.name === name);
   if (!doc) return null;
   try {
     const source = await doc.read();
-    const html = await marked.parse(source, { gfm: true, breaks: false });
+    const html = await renderRepoDocMarkdown(source);
     return { html, bytes: Buffer.byteLength(source) };
   } catch {
     return null;
