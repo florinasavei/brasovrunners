@@ -109,15 +109,21 @@ type Props<Row> = {
 };
 
 /**
- * A visible line between two rows (§NNN): MUI's own cell border is the divider lightened
+ * A visible line between two rows (§431): MUI's own cell border is the divider lightened
  * almost to nothing, and a list of events with pills and a series' dates read as one block.
  * The theme's `divider` token, so the dark scheme (§93) gets its own; none under the last row,
- * where the frame's border already is.
+ * where the frame's border already is. Each body row says which it wears in
+ * `data-row-separator` ("line" or "none"), the handle the render test reads. A step more
+ * vertical padding makes each row one block, and the header's rule is 2px of `text.secondary`
+ * so the headings stand apart from the first row in both schemes.
  */
 const ROW_SEPARATOR = {
-  "& > td": { borderBottom: 1, borderColor: "divider" },
-  "&:last-child > td": { borderBottom: 0 },
+  "& > td": { borderBottom: 1, borderColor: "divider", py: 1.25 },
 } as const;
+const LAST_ROW = {
+  "& > td": { borderBottom: 0, py: 1.25 },
+} as const;
+const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary" } as const;
 
 const HIDE = {
   sm: { display: { xs: "none", sm: "table-cell" } },
@@ -204,6 +210,7 @@ export default function AdminTable<Row>({
                   sx={{
                     fontWeight: 700,
                     whiteSpace: "nowrap",
+                    ...HEAD_RULE,
                     ...(column.hideBelow ? HIDE[column.hideBelow] : {}),
                   }}
                 >
@@ -249,15 +256,20 @@ export default function AdminTable<Row>({
                 </TableCell>
               ))}
               {rowActions && (
-                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                <TableCell align="right" sx={{ fontWeight: 700, ...HEAD_RULE }}>
                   {labels.actions}
                 </TableCell>
               )}
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => (
-              <TableRow key={rowKey(row)} hover sx={ROW_SEPARATOR}>
+            {rows.map((row, index) => (
+              <TableRow
+                key={rowKey(row)}
+                hover
+                data-row-separator={index === rows.length - 1 ? "none" : "line"}
+                sx={index === rows.length - 1 ? LAST_ROW : ROW_SEPARATOR}
+              >
                 {columns.map((column) => (
                   <TableCell
                     key={column.key}
