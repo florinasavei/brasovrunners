@@ -40,6 +40,8 @@ type Props = {
   appEnv: AppEnvironment;
   /** The Administrator's form; `updateNeonLimits` refuses anybody else whatever this says (§291). */
   mayEdit: boolean;
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§NNN). */
+  level?: 2 | 3;
 };
 
 /**
@@ -58,7 +60,7 @@ type Props = {
  * confirmation as a `CheckboxField` whose label is a string (the element made on the client side
  * of the boundary). The warning about the limit is not folded: it is the point of the form.
  */
-export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit }: Props) {
+export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit, level = 2 }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const format = await getFormatter();
@@ -75,7 +77,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   if (!reading.ok) {
     const { failure } = reading;
     return (
-      <Panel title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+      <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
         {failure.kind === "unconfigured" ? (
           <Typography variant="body2" data-testid="neon-limits-unconfigured">
             {t("tasks.neonLimits.unconfigured", { missing: failure.missing.join(", ") })}
@@ -99,7 +101,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   const periodEnd = day(model.periodEnd);
 
   return (
-    <Panel title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+    <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
       {/* What Neon holds now, in words: the ceiling and its memory, and the limit. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-readout">
         {t("tasks.neonLimits.readout", {

@@ -50,10 +50,18 @@ export function startOfClubDay(now: Date): Date {
 
 /** The characters sent for translation since the club's midnight, by everybody. */
 export async function charactersTranslatedToday<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
+  return charactersTranslatedSince(db, startOfClubDay(now));
+}
+
+/**
+ * The characters sent for translation since an instant, by everybody — the day's allowance above,
+ * and the month's line on Costuri → «Luna aceasta» (§NNN) against DeepL Free's monthly ceiling.
+ */
+export async function charactersTranslatedSince<T extends Record<string, unknown>>(db: Database<T>, since: Date): Promise<number> {
   const [row] = await db
     .select({ total: sql<string | null>`coalesce(sum((${auditLogs.metadataJson}->>'characters')::integer), 0)` })
     .from(auditLogs)
-    .where(and(eq(auditLogs.action, "content.translated"), gte(auditLogs.createdAt, startOfClubDay(now))));
+    .where(and(eq(auditLogs.action, "content.translated"), gte(auditLogs.createdAt, since)));
   return Number(row?.total ?? 0);
 }
 

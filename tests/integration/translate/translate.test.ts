@@ -5,7 +5,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
 import { type TranslateRequest, type Translator, TranslatorError } from "@/infrastructure/translate/adapter";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
-import { charactersTranslatedToday, readTranslationBudget, startOfClubDay, updateTranslationBudget } from "@/modules/translate/budget";
+import { charactersTranslatedSince, charactersTranslatedToday, readTranslationBudget, startOfClubDay, updateTranslationBudget } from "@/modules/translate/budget";
 import { translateClubTexts } from "@/modules/translate/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -151,6 +151,9 @@ describe("§464 «Tradu din română»", () => {
     // Yesterday's spend does not count today.
     const tomorrow = new Date(startOfClubDay(NOW).getTime() + 25 * 60 * 60_000);
     expect(await charactersTranslatedToday(db, tomorrow)).toBe(0);
+    // The month's line on Costuri (§NNN) sums the same rows since the month's start — yesterday's included.
+    expect(await charactersTranslatedSince(db, new Date("2026-09-01T00:00:00.000Z"))).toBe(20);
+    expect(await charactersTranslatedSince(db, tomorrow)).toBe(0);
   });
 
   it("stops a person after the hour's presses, whatever the budget", async () => {

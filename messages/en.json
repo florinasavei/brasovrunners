@@ -2608,6 +2608,72 @@
         "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters.",
         "save": "Save the budget",
         "saving": "Saving…"
+      },
+      "month": {
+        "title": "This month",
+        "intro": "What each provider has cost since the start of the month, and what it will cost by the end of it if the pace so far holds. Beside each amount, the usage behind it and the limit it meets.",
+        "aside": "~{amount} USD by month end",
+        "total": "So far this month: {soFar}. Estimated by the end of the month: {projected}.",
+        "estimated": "The database is billed by usage, so its amount is an estimate at the catalogue's price and the pace so far, not an invoice.",
+        "incomplete": "A provider that costs money could not be read just now, so the total is lower than the real one — see the row marked “we don't know”.",
+        "listLabel": "This month's costs, by provider",
+        "notMeasured": "not measured",
+        "name": {
+          "domain": "The .com domain",
+          "mailgun": "Email — Mailgun",
+          "vercel": "Hosting — Vercel",
+          "neon": "Database — Neon",
+          "deepl": "Translation — DeepL"
+        },
+        "field": {
+          "plan": "Plan",
+          "soFar": "So far",
+          "projected": "By month end",
+          "usage": "Usage"
+        },
+        "planLine": "{plan} · {billing}",
+        "billing": {
+          "usage": "by usage",
+          "monthly": "monthly subscription",
+          "yearly": "paid yearly",
+          "free": "free"
+        },
+        "estimateWord": "(estimate)",
+        "usage": {
+          "cuHours": "{used} CU-hours so far, ~{projected} by the end.",
+          "messages": "{used} emails sent so far, ~{projected} by the end.",
+          "buildMinutes": "{used} build minutes so far, ~{projected} by the end.",
+          "characters": "{used} characters translated so far, ~{projected} by the end."
+        },
+        "ceiling": {
+          "plan": "The plan's limit: {ceiling}.",
+          "quota": "The limit the club set at Neon: {ceiling}.",
+          "daily": "Free plan: at most {daily} a day, counted per day."
+        },
+        "over": {
+          "neon": "At this pace the limit is reached before the period ends, and Neon stops the database until the next period — see «This month's budget» below.",
+          "mailgun": "At this pace the monthly limit is reached before the month ends; the remaining messages wait for next month.",
+          "vercel": "At this pace the build minutes run out before the month ends, and new deployments stop until next month.",
+          "deepl": "At this pace DeepL refuses translations before the month ends."
+        },
+        "domain": {
+          "renews": "Paid once a year; it expires on {date}.",
+          "thisMonth": "It expires this month, on {date}: the renewal is in this month's amount.",
+          "unknown": "The expiry date is not set (DOMAIN_REGISTERED_ON), so we don't know which month the renewal falls in."
+        },
+        "unmeasured": {
+          "neon": "Not measured without NEON_API_KEY and NEON_PROJECT_ID on this environment.",
+          "vercel": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
+        },
+        "unread": "The provider did not answer just now ({reason}).",
+        "deeplOff": "The DeepL key is not set on this server, so the translation buttons do not appear.",
+        "period": "Calendar month: {span}.",
+        "periodNeon": "Neon's billing period: {span}.",
+        "others": "No cost and no usage tracked here: Zitadel (the team's sign-in), cron-job.org and GitHub (the automatic jobs), Open-Meteo (the weather) and Cloudflare R2 (the pictures), within the free allowance."
+      },
+      "database": {
+        "title": "The database — Neon",
+        "intro": "Everything about the database in one place: the plan the account is on, the month's budget and what the platform does about it, Neon's brakes, and how often the platform wakes it."
       }
     },
     "clubTodo": {

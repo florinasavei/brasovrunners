@@ -2608,6 +2608,72 @@
         "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
         "save": "Salvează bugetul",
         "saving": "Se salvează…"
+      },
+      "month": {
+        "title": "Luna aceasta",
+        "intro": "Ce a costat fiecare furnizor de la începutul lunii și cât va costa până la sfârșitul ei, dacă ritmul de până acum se păstrează. Lângă fiecare sumă, consumul care o face și limita pe care o întâlnește.",
+        "aside": "~{amount} USD la final de lună",
+        "total": "Până acum, luna aceasta: {soFar}. Estimat până la sfârșitul lunii: {projected}.",
+        "estimated": "Baza de date se plătește la consum, așa că suma ei e o estimare la prețul din catalog și la ritmul de până acum, nu o factură.",
+        "incomplete": "Un furnizor care costă bani nu a putut fi citit acum, așa că totalul e mai mic decât cel real — vezi rândul marcat „nu știm”.",
+        "listLabel": "Costurile lunii, pe furnizori",
+        "notMeasured": "nemăsurat",
+        "name": {
+          "domain": "Domeniul .com",
+          "mailgun": "E-mailurile — Mailgun",
+          "vercel": "Găzduirea — Vercel",
+          "neon": "Baza de date — Neon",
+          "deepl": "Traducerea — DeepL"
+        },
+        "field": {
+          "plan": "Plan",
+          "soFar": "Până acum",
+          "projected": "La final de lună",
+          "usage": "Consum"
+        },
+        "planLine": "{plan} · {billing}",
+        "billing": {
+          "usage": "la consum",
+          "monthly": "abonament lunar",
+          "yearly": "plătit pe an",
+          "free": "gratuit"
+        },
+        "estimateWord": "(estimare)",
+        "usage": {
+          "cuHours": "{used} ore-CU până acum, ~{projected} la final.",
+          "messages": "{used} e-mailuri trimise până acum, ~{projected} la final.",
+          "buildMinutes": "{used} minute de build până acum, ~{projected} la final.",
+          "characters": "{used} caractere traduse până acum, ~{projected} la final."
+        },
+        "ceiling": {
+          "plan": "Limita planului: {ceiling}.",
+          "quota": "Limita pusă de club la Neon: {ceiling}.",
+          "daily": "Planul Free: cel mult {daily} pe zi, numărate pe zi."
+        },
+        "over": {
+          "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare — vezi «Bugetul lunii» mai jos.",
+          "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii; mesajele rămase așteaptă luna următoare.",
+          "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
+          "deepl": "La ritmul ăsta DeepL refuză traducerile înainte de sfârșitul lunii."
+        },
+        "domain": {
+          "renews": "Se plătește o dată pe an; expiră {date}.",
+          "thisMonth": "Expiră luna aceasta, {date}: reînnoirea intră în suma lunii.",
+          "unknown": "Data expirării nu e setată (DOMAIN_REGISTERED_ON), deci nu știm în ce lună vine reînnoirea."
+        },
+        "unmeasured": {
+          "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
+          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
+        },
+        "unread": "Furnizorul nu a răspuns acum ({reason}).",
+        "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butoanele de traducere nu apar.",
+        "period": "Luna calendaristică: {span}.",
+        "periodNeon": "Perioada de facturare Neon: {span}.",
+        "others": "Fără cost și fără consum urmărit aici: Zitadel (contul echipei), cron-job.org și GitHub (sarcinile automate), Open-Meteo (vremea) și Cloudflare R2 (pozele), în limita gratuită."
+      },
+      "database": {
+        "title": "Baza de date — Neon",
+        "intro": "Tot ce ține de baza de date, într-un singur loc: planul pe care e contul, bugetul lunii și ce face platforma cu el, frânele de la Neon și cât de des o trezește platforma."
       }
     },
     "clubTodo": {
