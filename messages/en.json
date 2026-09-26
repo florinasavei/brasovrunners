@@ -5356,6 +5356,7 @@
       "bodyTo": "We will answer at {email}.",
       "body": "We will answer at your email address."
     },
+    "direct": "Or write to us directly at",
     "off": {
       "writeTo": "Write to us at",
       "none": "The contact form is not available at the moment.",
