@@ -160,20 +160,21 @@ describe("no film box", () => {
   });
 });
 
-describe("the time is the platform's own native input, always on the 24-hour clock", () => {
+describe("the time is a typed box, shown and posted on the 24-hour clock", () => {
   const TIME_FIELD = read("src/shared/forms/pickers/TimeField.tsx");
 
-  it("makes every time box a native <input type=\"time\">, which reads HH:MM and never AM/PM (§345, amended)", () => {
-    // §345's own MUI wheel picker was replaced 2026-09-25 — the owner: "I simply hate this time
-    // picker" — by `type="time"`, which every browser already renders as a 24-hour or 12-hour
-    // control that always *posts* `HH:mm`; §345's date half is untouched, still MUI's picker.
+  it("makes every time box a 24-hour text box, never the browser's AM/PM time control (§400, §NNN)", () => {
+    // §345's MUI wheel picker went on 2026-09-25 — "I simply hate this time picker" — for the
+    // browser's `type="time"`, which an English-language browser draws as "07:00 PM"; the owner,
+    // 2026-09-26: "am zis că vreau 24H format!". The box is now text showing what it posts.
     expect(WALL_TIME).toContain("<DateField");
     expect(WALL_TIME).toContain("<TimeField");
     expect(WALL_TIME).not.toContain("TimePicker");
     expect(ROWS).toContain("<DateField");
     expect(ROWS.match(/<TimeField/g)).toHaveLength(2);
-    expect(TIME_FIELD).toContain('type="time"');
-    expect(TIME_FIELD).toContain("step: 60");
+    expect(TIME_FIELD).toContain('type="text"');
+    expect(TIME_FIELD).not.toContain('type="time"');
+    expect(TIME_FIELD).toContain("normalizeTypedTime");
     expect(TIME_FIELD).not.toContain("@mui/x-date-pickers");
     const pkg = JSON.parse(read("package.json"));
     // The date half still needs the library; the time half no longer does.

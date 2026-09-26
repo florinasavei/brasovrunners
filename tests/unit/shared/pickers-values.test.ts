@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pickerDate, postedDate } from "@/shared/forms/pickers/picker-values";
-import { DATE_PATTERN, DATE_VALUE, isDateValue, isTimeValue, TIME_PATTERN, TIME_VALUE } from "@/shared/forms/pickers/wall-values";
+import { DATE_PATTERN, DATE_VALUE, isDateValue, isTimeValue, normalizeTypedTime, TIME_PATTERN, TIME_VALUE } from "@/shared/forms/pickers/wall-values";
 
 /**
  * The pickers' own value conversion (`shared/forms/pickers`, `DECISIONS.md` §345): what is
@@ -87,5 +87,38 @@ describe("wall-values — the scriptless box's pattern says what the value rule 
 
   it("isTimeValue is exactly TIME_VALUE — no calendar to check", () => {
     for (const value of times) expect(isTimeValue(value)).toBe(TIME_VALUE.test(value));
+  });
+});
+
+describe("BR-REQ-050-02 normalizeTypedTime — what the typed time box reads, 24-hour only (§NNN)", () => {
+  it("reads the usual typed shapes as HH:mm", () => {
+    const cases: Array<[string, string]> = [
+      ["19:00", "19:00"],
+      ["1900", "19:00"],
+      ["19.00", "19:00"],
+      ["19,30", "19:30"],
+      ["19h30", "19:30"],
+      ["19 30", "19:30"],
+      ["930", "09:30"],
+      ["9:30", "09:30"],
+      ["7", "07:00"],
+      ["19", "19:00"],
+      ["0", "00:00"],
+      ["23:59", "23:59"],
+      [" 06:05 ", "06:05"],
+    ];
+    for (const [typed, read] of cases) {
+      expect(normalizeTypedTime(typed), typed).toBe(read);
+      expect(isTimeValue(normalizeTypedTime(typed)), typed).toBe(true);
+    }
+  });
+
+  it("leaves what is no time of day as typed, for the pattern and the server to refuse", () => {
+    for (const typed of ["24:00", "19:60", "2500", "7pm", "7 PM", "07:00 AM", "abc", "19:", "1:2"]) {
+      expect(normalizeTypedTime(typed), typed).toBe(typed.trim());
+      expect(isTimeValue(normalizeTypedTime(typed)), typed).toBe(false);
+    }
+    expect(normalizeTypedTime("")).toBe("");
+    expect(normalizeTypedTime("   ")).toBe("");
   });
 });

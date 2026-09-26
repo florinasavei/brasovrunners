@@ -4,8 +4,8 @@ import type { SxProps, Theme } from "@mui/material/styles";
 /*
   What `DateField` needs from a picker (`DECISIONS.md` §345): when it takes over from the
   scriptless box, and how it behaves like the native input it replaced in front of the rest of
-  the form. `TimeField` no longer shares this — since §345's 2026-09-25 amendment it is the
-  platform's own `<input type="time">`, with no island to swap in.
+  the form. `TimeField` no longer shares this — since §400 and §NNN it is a typed 24-hour text
+  box, with no island to swap in.
 */
 
 const NOTHING_TO_WATCH = () => () => undefined;

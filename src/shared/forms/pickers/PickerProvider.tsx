@@ -15,8 +15,8 @@ const ROMANIAN = roRO.components.MuiLocalizationProvider.defaultProps.localeText
  * The date picker's one provider, mounted once, by the backoffice's layout (`DECISIONS.md`
  * §345) — and nowhere a visitor goes: no public page asks for a date the club types, and
  * `tests/unit/shared/pickers-backoffice-only.test.ts` fails if one ever reaches this.
- * `TimeField` no longer needs it: since §345's 2026-09-25 amendment it is the platform's own
- * `<input type="time">`, but stays under `shared/forms/pickers` beside `DateField`, the box it
+ * `TimeField` no longer needs it: since §400 and §NNN it is a typed 24-hour text box, but stays
+ * under `shared/forms/pickers` beside `DateField`, the box it
  * still pairs with (`WallTimeField`).
  *
  * **Romanian** is Day.js's `ro` (months, weekdays, the week starting on Monday) with MUI's own
