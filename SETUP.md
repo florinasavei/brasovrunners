@@ -1403,6 +1403,23 @@ There is nothing to change on our side: the block is decided before a request re
 so it is invisible to the monitors and to `/api/health`, and it affects one network rather than
 the internet.
 
+**When the pages open but a save does not** (the same laptop, 2026-09-26): the proxy lets pages
+through and stops the scripted save — a POST with the `Next-Action` header, answered as
+`text/x-component`. Since `DECISIONS.md` §NNN the backoffice sends such a save again as a plain
+form post, which the proxy lets through, and the page it lands on says «Rețeaua de la birou a
+blocat cererea de salvare; am trimis-o pe calea simplă.» Nothing to do when that line appears; the
+save is in. When the red «Salvarea nu a ajuns la site» appears instead, nothing was saved:
+
+1. Open **`/admin/network`** («Verificarea rețelei», linked from the guide and from that notice)
+   on the same laptop. It tries four things from the browser — the saves, the plain form post,
+   a stored picture, the anti-robot check — and prints, under each red row, the exact line for IT,
+   with the host taken from the site's configuration.
+2. **Copiază raportul** and send it to IT (or to the club). It holds the results, the site's
+   address and the browser's description, nothing about the person.
+3. The hosts IT is asked to allow are the ones the page prints: this site's (POST with
+   `Next-Action`, and plain `multipart/form-data` posts), the picture store's public address
+   (`R2_PUBLIC_BASE_URL`), and Cloudflare Turnstile's script host. Meanwhile: the phone.
+
 ### What to have ready before sitting down
 
 The capacity and the two window numbers (the club's own call), the rules text, the programme,

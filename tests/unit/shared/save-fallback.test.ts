@@ -24,7 +24,8 @@ import {
  * fallback) and which are not — a refusal, a redirect, a server error, a missing action; which
  * presses already hold the no-JavaScript fields and which need the page's HTML; how the server's
  * fields and the typed values are put together; and the key the server stamps on a form. The
- * browser half — the plain POST landing, the notice after it — is `tests/e2e/save-fallback.spec.ts`.
+ * browser half — the plain POST landing, the notice after it — has no spec: the owner cut the
+ * browser run on 2026-09-26 (§NNN), so it is proved on QA by hand from a blocked network.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");

@@ -10,7 +10,7 @@ import { NETWORK_PROBE_MARKER, NETWORK_PROBES, networkReport } from "@/modules/d
  * probe's route answer staff only, each asserting it on the server. Then the report a person
  * copies — the results and the browser, nothing about them — and the rule that every host the
  * page names comes from configuration (AGENTS.md §8). The rows turning green and red in a browser
- * are `tests/e2e/save-fallback.spec.ts`.
+ * have no spec: the owner cut the browser run on 2026-09-26 (§NNN).
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
