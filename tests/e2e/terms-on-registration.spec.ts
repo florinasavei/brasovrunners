@@ -21,7 +21,14 @@ function databaseUrl(): string {
 
 const ACCEPTED_AT = "2026-09-25T10:00:00.000Z";
 
-type Seeded = { eventId: string; publicId: string; staffId: string; tag: string };
+type Seeded = {
+  eventId: string;
+  publicId: string;
+  staffId: string;
+  publicParticipantId: string;
+  staffParticipantId: string;
+  tag: string;
+};
 
 async function seed(tag: string): Promise<Seeded> {
   const client = new pg.Client({ connectionString: databaseUrl() });
@@ -40,19 +47,47 @@ async function seed(tag: string): Promise<Seeded> {
          VALUES ($1, $1, $1, 1, $2) RETURNING id`,
         [email, name],
       );
+      const participantId = participantRows[0].id;
       const { rows } = await client.query<{ id: string }>(
         `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name, source,
            privacy_notice_version, privacy_acknowledged_at, terms_version, terms_accepted_at,
            results_name_consent, results_consent_version, list_opt_out, confirmed_at)
          VALUES ($1, $2, 'CONFIRMED', 'ro', $3, $3, $4, 1, $5, $6, $7, false, 1, true, now())
          RETURNING id`,
-        [eventId, participantRows[0].id, name, source, ACCEPTED_AT, termsVersion, termsAcceptedAt],
+        [eventId, participantId, name, source, ACCEPTED_AT, termsVersion, termsAcceptedAt],
       );
-      return rows[0].id;
+      return { registrationId: rows[0].id as string, participantId: participantId as string };
     };
-    const publicId = await insert("public", "PUBLIC", 1, ACCEPTED_AT);
-    const staffId = await insert("staff", "STAFF", null, null);
-    return { eventId, publicId, staffId, tag };
+    const publicRow = await insert("public", "PUBLIC", 1, ACCEPTED_AT);
+    const staffRow = await insert("staff", "STAFF", null, null);
+    return {
+      eventId,
+      publicId: publicRow.registrationId,
+      staffId: staffRow.registrationId,
+      publicParticipantId: publicRow.participantId,
+      staffParticipantId: staffRow.participantId,
+      tag,
+    };
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Removes this test's two rows from the featured event so `registration-entry.spec.ts`'s
+ * `taken + placesOnListing === 50` (BR-REQ-034-01) keeps counting only what an organizer's
+ * journey put there — the review's finding: a leftover CONFIRMED row is indistinguishable
+ * from a real one to that count.
+ */
+async function cleanup(seeded: Seeded): Promise<void> {
+  const client = new pg.Client({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    await client.query("DELETE FROM registrations WHERE id IN ($1, $2)", [seeded.publicId, seeded.staffId]);
+    await client.query("DELETE FROM participants WHERE id IN ($1, $2)", [
+      seeded.publicParticipantId,
+      seeded.staffParticipantId,
+    ]);
   } finally {
     await client.end();
   }
@@ -62,24 +97,27 @@ test.describe("§NNN the accepted terms on the registration's page and in the ex
   test("the page names the notice's and the terms' versions; the CSV carries the terms in its last two columns", async ({ page }) => {
     test.setTimeout(90_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);
+    try {
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/admin/registrations/${seeded.publicId}`);
+      await expect(page.getByTestId("timeline-privacy-notice")).toContainText("Nota de informare luată la cunoștință");
+      await expect(page.getByTestId("timeline-privacy-notice")).toContainText("(v1)");
+      await expect(page.getByTestId("timeline-terms")).toContainText("Termenii acceptați");
+      await expect(page.getByTestId("timeline-terms")).toContainText("(v1)");
 
-    await signIn(page, "Dev Administrator");
-    await page.goto(`/ro/admin/registrations/${seeded.publicId}`);
-    await expect(page.getByTestId("timeline-privacy-notice")).toContainText("Nota de informare luată la cunoștință:");
-    await expect(page.getByTestId("timeline-privacy-notice")).toContainText("(v1)");
-    await expect(page.getByTestId("timeline-terms")).toContainText("Termenii și condițiile acceptați expres:");
-    await expect(page.getByTestId("timeline-terms")).toContainText("(v1)");
+      await page.goto(`/ro/admin/registrations/${seeded.staffId}`);
+      await expect(page.getByTestId("timeline-terms")).toHaveText("Termenii și condițiile: pe hârtie — înscriere adăugată de echipă");
 
-    await page.goto(`/ro/admin/registrations/${seeded.staffId}`);
-    await expect(page.getByTestId("timeline-terms")).toHaveText("Termenii și condițiile: pe hârtie — înscriere adăugată de echipă");
-
-    const response = await page.request.get(`/api/admin/registrations/export?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
-    expect(response.status()).toBe(200);
-    const [header, ...lines] = (await response.text()).split("\r\n");
-    expect(header.split(",").slice(-2)).toEqual(["Terms version", "Terms accepted"]);
-    const publicLine = lines.find((line) => line.includes("Termeni public"));
-    const staffLine = lines.find((line) => line.includes("Termeni staff"));
-    expect(publicLine?.split(",").slice(-2)).toEqual(["1", ACCEPTED_AT]);
-    expect(staffLine?.split(",").slice(-2)).toEqual(["", ""]);
+      const response = await page.request.get(`/api/admin/registrations/export?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
+      expect(response.status()).toBe(200);
+      const [header, ...lines] = (await response.text()).split("\r\n");
+      expect(header.split(",").slice(-2)).toEqual(["Terms version", "Terms accepted"]);
+      const publicLine = lines.find((line) => line.includes("Termeni public"));
+      const staffLine = lines.find((line) => line.includes("Termeni staff"));
+      expect(publicLine?.split(",").slice(-2)).toEqual(["1", ACCEPTED_AT]);
+      expect(staffLine?.split(",").slice(-2)).toEqual(["", ""]);
+    } finally {
+      await cleanup(seeded);
+    }
   });
 });

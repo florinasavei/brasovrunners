@@ -1079,6 +1079,28 @@ export async function listEventsForDesk<T extends Record<string, unknown>>(
  * holds first, then the waiting list in exactly the order `lockOldestWaitlisted` serves it —
  * oldest `waitlisted_at` first, `id` breaking a tie — so the panel's numbering is a promise.
  */
+/**
+ * Which of the three terms lines the registration's page shows (§NNN): the version accepted
+ * expressly on the form, the paper note for a staff or desk entry, or "no version recorded" for
+ * a row sent before the column existed. Pulled out of the page's JSX so a unit test can pick
+ * each branch without a browser.
+ */
+export type TermsLineKind =
+  | { readonly kind: "accepted"; readonly version: number; readonly acceptedAt: Date | null }
+  | { readonly kind: "onPaper" }
+  | { readonly kind: "notRecorded" };
+
+export function termsLineKindFor(registration: {
+  termsVersion: number | null;
+  termsAcceptedAt: Date | null;
+  source: RegistrationSource;
+}): TermsLineKind {
+  if (registration.termsVersion !== null) {
+    return { kind: "accepted", version: registration.termsVersion, acceptedAt: registration.termsAcceptedAt };
+  }
+  return registration.source === "STAFF" ? { kind: "onPaper" } : { kind: "notRecorded" };
+}
+
 export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
   return db
     .select({

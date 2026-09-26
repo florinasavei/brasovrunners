@@ -24,6 +24,7 @@ import {
   findRegistrationDetailForAdmin,
   listDeclarationAcceptances,
   listOutboxHistory,
+  termsLineKindFor,
 } from "@/modules/registrations/admin-repository";
 import { readEmergencyDetails } from "@/modules/registrations/admin-service";
 import { sealPersonLookup } from "@/modules/registrations/person-data";
@@ -788,11 +789,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.privacyNoticeLine", { date: dt(registration.cycleStartedAt) ?? "", version: registration.privacyNoticeVersion })}
         </Typography>
         <Typography variant="body2" data-testid="timeline-terms">
-          {registration.termsVersion !== null
-            ? tr("registrations.termsLine", { date: dt(registration.termsAcceptedAt) ?? "—", version: registration.termsVersion })
-            : registration.source === "STAFF"
-              ? tr("registrations.termsOnPaper")
-              : tr("registrations.termsNotRecorded")}
+          {(() => {
+            const termsLine = termsLineKindFor(registration);
+            switch (termsLine.kind) {
+              case "accepted":
+                return tr("registrations.termsLine", { date: dt(termsLine.acceptedAt) ?? "—", version: termsLine.version });
+              case "onPaper":
+                return tr("registrations.termsOnPaper");
+              case "notRecorded":
+                return tr("registrations.termsNotRecorded");
+            }
+          })()}
         </Typography>
         {/* Each time the form came back with the same address, right under the first (§312). */}
         {resubmissions.map((line, index) => (
