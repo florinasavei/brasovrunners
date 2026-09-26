@@ -39,6 +39,7 @@ import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { countOlderPictures } from "@/modules/media/older-pictures";
+import { storedMediaBytes } from "@/modules/media/references";
 import { isStorageConfigured } from "@/modules/media/storage";
 import OlderPicturesPanel from "@/modules/media/ui/OlderPicturesPanel";
 import { readBotCheck } from "@/modules/registrations/bot-check";
@@ -61,17 +62,17 @@ import {
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
-import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon";
+import { readNeonConsumption, readNeonLimits, readNeonPreviousPeriod } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
-import { monthCosts, monthTotals, utcMonth } from "@/modules/diagnostics/domain/month-costs";
+import { readMonthCosts } from "@/modules/diagnostics/month-costs-read";
 import MonthCostsPanel from "@/modules/diagnostics/ui/MonthCostsPanel";
 import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
-import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 import Panel from "@/shared/ui/Panel";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
@@ -84,7 +85,7 @@ import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/dia
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
-import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { mailgunMessagesSentBetween, readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { canManageClubSettings, canManagePlatform, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -571,38 +572,38 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   /*
     «Luna aceasta» (§NNN): each provider's month so far and projected to its end, from the readings
     this page already holds — Neon's meter (§447), the outbox's month (§100), the domain's expiry
-    (§435) — plus the two only this card needs: Vercel's deployments (§101, the same read `/devs`
-    makes) and the month's translated characters (§464). Only for the panel that shows it.
+    (§435) — plus the readers only this card needs: Vercel's month (§101, cached an hour here;
+    `/devs` keeps its live read), the month's translated characters (§464), last month's outbox,
+    Neon's previous period and the pictures' bytes on R2. `readMonthCosts` does the mapping, and
+    is tested with a fake for every reader. Only for the panel that shows it.
   */
   const month =
     panel === "costs"
-      ? await Promise.all([readVercelMonth(env, now), charactersTranslatedSince(db, utcMonth(now).start)]).then(([vercel, characters]) => {
-          const lines = monthCosts({
+      ? await readMonthCosts(
+          {
             now,
-            neon: {
-              plan: neonInForce.plan,
-              meter: neon.ok ? neon.consumption.meter : null,
-              databaseBytes,
-            },
+            neonPlan: neonInForce.plan,
+            neon: neon.ok ? { ok: true, meter: neon.consumption.meter } : { ok: false, reason: neon.reason },
+            databaseBytes,
             mailgun: {
               planName: volume.planName,
-              // A typed plan's price is not recorded (§100), and a zero would read as free.
-              usdPerMonth: emailPlan.plan === "CUSTOM" ? null : emailPlanCeilings.usdPerMonth,
+              planId: emailPlan.plan,
+              usdPerMonth: emailPlanCeilings.usdPerMonth,
               sentThisMonth: volume.sentThisMonth,
               monthlyAllowance: emailPlanCeilings.monthlyAllowance,
               dailyAllowance: emailPlanCeilings.dailyAllowance,
             },
-            vercel: vercel.ok ? { buildMinutes: vercel.month.buildMinutes } : null,
             vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
             domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: domain.status === "unknown" ? null : domain.expiresOn },
-            deepl: { charactersThisMonth: characters },
-          });
-          return {
-            lines,
-            totals: monthTotals(lines),
-            unread: { neon: neon.ok ? null : neon.reason, vercel: vercel.ok ? null : vercel.reason },
-          };
-        })
+          },
+          {
+            vercelMonth: () => readVercelMonthForCosts(env, now),
+            charactersSince: (since) => charactersTranslatedSince(db, since),
+            mailgunSentBetween: (start, end) => mailgunMessagesSentBetween(db, start, end),
+            neonPreviousPeriod: (periodStart) => readNeonPreviousPeriod(env, periodStart),
+            mediaBytes: () => storedMediaBytes(db),
+          },
+        )
       : null;
   const facts = {
     databaseBytes,
@@ -875,7 +876,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             locale={locale}
             lines={month.lines}
             totals={month.totals}
-            unread={month.unread}
+            reasons={month.reasons}
             deeplConfigured={isTranslationConfigured(env)}
           />
         )}

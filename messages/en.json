@@ -2107,7 +2107,7 @@
         "quotaActive": "Limit in force: {hours} CU-hours, of which {used} spent. When it is reached, Neon stops the database until {end}.",
         "readOnly": "The Superadministrator changes the limits: a wrong one can stop the site. The figures above are current for you too.",
         "maxCu": "The database's maximum size",
-        "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load. The minimum stays {min} CU. Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
+        "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load. The minimum size is the choice below (the smallest: {min} CU). Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
         "choose": "— choose a size —",
         "option": "{cu} CU (≈ {ram} GB RAM) — at most {perHour} $/hour, {perMonth} $/month",
         "planCeiling": "The account's plan allows at most {max} CU, so the larger sizes are not offered.",
@@ -2127,7 +2127,27 @@
         "save": "Save the limits",
         "saving": "Sending to Neon…",
         "saved": "The limits were sent to Neon; below is what Neon says now.",
-        "savedSame": "Nothing to change: Neon already had these values."
+        "savedSame": "Nothing to change: Neon already had these values.",
+        "computeReadout": "Minimum size: {min} CU · Suspend when idle: {suspend}",
+        "suspend": {
+          "auto": "after 5 minutes without requests (Neon's default)",
+          "never": "never — the database is always on"
+        },
+        "minCu": "The database's minimum size",
+        "minCuHelp": "The database starts at this size on the first request and does not go below it while awake. {min} CU is the smallest and enough for the site; a larger one costs more for every hour awake.",
+        "minOption": "{cu} CU — at least {perHour} $ per hour awake",
+        "suspendMode": "Suspending the database when idle",
+        "suspendHelp": "By default Neon suspends the database after 5 minutes without requests and wakes it on the next one. “Never” keeps it on all the time: every hour of the month is billed at the minimum size ({rate} $ per CU-hour), even with no visitor at all.",
+        "suspendHelpFree": "On the Free plan, Neon suspends the database after 5 minutes without requests, and that cannot be changed.",
+        "money": {
+          "ceilingUp": "{cu} CU more at the maximum size ≈ {usd} USD more a month at 100 % utilisation.",
+          "ceilingDown": "{cu} CU less at the maximum size ≈ {usd} USD less a month at 100 % utilisation.",
+          "floorUp": "{cu} CU more at the minimum size ≈ {usd} USD more a month at 100 % utilisation.",
+          "floorDown": "{cu} CU less at the minimum size ≈ {usd} USD less a month at 100 % utilisation.",
+          "alwaysOn": "Without suspending, the database never sleeps: at least {usd} USD a month at the minimum size of {min} CU, even with no visitor at all.",
+          "sleepsAgain": "With suspending back on, a month with no visitors no longer costs the {usd} USD of an always-on database.",
+          "same": "The month's cost does not change."
+        }
       },
       "filter": {
         "who": "Who",
@@ -2615,7 +2635,7 @@
         "aside": "~{amount} USD by month end",
         "total": "So far this month: {soFar}. Estimated by the end of the month: {projected}.",
         "estimated": "The database is billed by usage, so its amount is an estimate at the catalogue's price and the pace so far, not an invoice.",
-        "incomplete": "A provider that costs money could not be read just now, so the total is lower than the real one — see the row marked “we don't know”.",
+        "incomplete": "A provider's amount is unknown — it could not be read just now, or it is a typed Mailgun plan without a price — so the total is lower than the real one; see the row marked “we don't know”.",
         "listLabel": "This month's costs, by provider",
         "notMeasured": "not measured",
         "name": {
@@ -2623,13 +2643,15 @@
           "mailgun": "Email — Mailgun",
           "vercel": "Hosting — Vercel",
           "neon": "Database — Neon",
-          "deepl": "Translation — DeepL"
+          "deepl": "Translation — DeepL",
+          "r2": "Pictures — Cloudflare R2"
         },
         "field": {
           "plan": "Plan",
           "soFar": "So far",
           "projected": "By month end",
-          "usage": "Usage"
+          "usage": "Usage",
+          "lastMonth": "Last month"
         },
         "planLine": "{plan} · {billing}",
         "billing": {
@@ -2643,18 +2665,21 @@
           "cuHours": "{used} CU-hours so far, ~{projected} by the end.",
           "messages": "{used} emails sent so far, ~{projected} by the end.",
           "buildMinutes": "{used} build minutes so far, ~{projected} by the end.",
-          "characters": "{used} characters translated so far, ~{projected} by the end."
+          "characters": "{used} characters translated so far, ~{projected} by the end.",
+          "gigabytes": "{used} GB of pictures stored (at least: one variant of each picture is counted)."
         },
         "ceiling": {
           "plan": "The plan's limit: {ceiling}.",
           "quota": "The limit the club set at Neon: {ceiling}.",
-          "daily": "Free plan: at most {daily} a day, counted per day."
+          "daily": "Free plan: at most {daily} a day, counted per day.",
+          "freeGb": "Free up to {ceiling} GB."
         },
         "over": {
           "neon": "At this pace the limit is reached before the period ends, and Neon stops the database until the next period — see «This month's budget» below.",
           "mailgun": "At this pace the monthly limit is reached before the month ends; the remaining messages wait for next month.",
           "vercel": "At this pace the build minutes run out before the month ends, and new deployments stop until next month.",
-          "deepl": "At this pace DeepL refuses translations before the month ends."
+          "deepl": "At this pace DeepL refuses translations before the month ends.",
+          "r2": "The pictures are past the free allowance: the excess is billed monthly."
         },
         "domain": {
           "renews": "Paid once a year; it expires on {date}.",
@@ -2669,7 +2694,31 @@
         "deeplOff": "The DeepL key is not set on this server, so the translation buttons do not appear.",
         "period": "Calendar month: {span}.",
         "periodNeon": "Neon's billing period: {span}.",
-        "others": "No cost and no usage tracked here: Zitadel (the team's sign-in), cron-job.org and GitHub (the automatic jobs), Open-Meteo (the weather) and Cloudflare R2 (the pictures), within the free allowance."
+        "others": "No cost and no usage tracked here: Zitadel (the team's sign-in), cron-job.org and GitHub (the automatic jobs) and Open-Meteo (the weather).",
+        "detail": {
+          "deployments": "{count} deployments this month.",
+          "storageGb": "The database takes {gb} GB."
+        },
+        "typedPlan": "The plan is typed by hand with no recorded price, so the month's amount is unknown.",
+        "unreadHere": "Could not be read just now from the site's database.",
+        "lastMonth": {
+          "neonKey": "— Neon keeps the history for an organization's key only; the project key is refused ({reason}).",
+          "typedPlan": "— the typed plan has no recorded price.",
+          "unknown": "— could not be read ({reason}).",
+          "here": "the site's database",
+          "messages": "· {count} emails",
+          "cuHours": "· {hours} CU-hours"
+        },
+        "lastTotal": "Last month: {amount}{estimate}.",
+        "lastTotalUnknown": "Last month: — (cannot be added up: {lines} without a figure).",
+        "trigger": {
+          "domain": "Paid at renewal, once a year.",
+          "mailgun": "It would cost money only on a paid plan ({plan}, {price} USD a month) — your choice under «Emails», never the platform's.",
+          "vercel": "It would cost money only on the Pro plan; Hobby sends no invoice — at the limit, new deployments stop until next month.",
+          "neon": "Free sends no invoice: at {hours} CU-hours the database stops until the next period. It would cost money only on Launch.",
+          "deepl": "It would cost money only with DeepL API Pro; on Free, after {free} characters in a month translations stop until next month, with no invoice.",
+          "r2": "It would cost money only above {free} GB stored: {price} USD per GB a month, for the excess."
+        }
       },
       "database": {
         "title": "The database — Neon",

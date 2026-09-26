@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-  DEEPL_FREE_CHARACTERS_PER_MONTH,
   MONTH_COST_IDS,
   type MonthCostFacts,
   type MonthCostLine,
   monthCosts,
   monthTotals,
+  previousMonth,
   projectToPeriodEnd,
   utcMonth,
 } from "@/modules/diagnostics/domain/month-costs";
+import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
+import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "@/modules/diagnostics/platform-plans";
 import { neonBudget } from "@/modules/diagnostics/domain/neon-budget";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
@@ -29,10 +31,12 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     now: NOW,
     neon: { plan: "LAUNCH", meter: { usedCuHours: 10, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, quotaCuHours: null }, databaseBytes: GB },
     mailgun: { planName: "Free", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
-    vercel: { buildMinutes: 100 },
+    vercel: { buildMinutes: 100, deployments: 12 },
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" },
     deepl: { charactersThisMonth: 50_000 },
+    r2: { storedBytes: 2 * GB },
+    lastMonth: { neonCuHours: 20, mailgunSent: 500 },
     ...patch,
   };
 }
@@ -78,7 +82,7 @@ describe("the pace a month is projected at", () => {
 
 describe("one line per provider that bills or meters something", () => {
   it("lists the five providers, in the cost table's order", () => {
-    expect(monthCosts(facts()).map((row) => row.id)).toEqual(["domain", "mailgun", "vercel", "neon", "deepl"]);
+    expect(monthCosts(facts()).map((row) => row.id)).toEqual(["domain", "mailgun", "vercel", "neon", "deepl", "r2"]);
     expect([...MONTH_COST_IDS].sort()).toEqual(monthCosts(facts()).map((row) => row.id).sort());
   });
 
@@ -135,7 +139,7 @@ describe("one line per provider that bills or meters something", () => {
   });
 
   it("Vercel: free, the build minutes against Hobby's month, grey without a token", () => {
-    const busy = line(facts({ vercel: { buildMinutes: 1_600 } }), "vercel");
+    const busy = line(facts({ vercel: { buildMinutes: 1_600, deployments: 40 } }), "vercel");
     // 1,600 in ten days is about 4,960 by the end: past 80% of 6,000.
     expect(busy).toMatchObject({ plan: "Hobby", soFarUsd: 0, projectedUsd: 0, severity: "watch" });
     expect(busy.usage).toMatchObject({ unit: "buildMinutes", ceiling: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, state: "close" });
@@ -167,18 +171,102 @@ describe("the month's total", () => {
       }),
     );
     // Mailgun's month is VAT-exclusive already; the domain's renewal is only in the projection.
-    expect(monthTotals(lines)).toEqual({ soFarUsd: 16.18, projectedUsd: 29.62, estimated: true, soFarPlusVat: true, projectedPlusVat: true, incomplete: false });
+    expect(monthTotals(lines)).toMatchObject({ soFarUsd: 16.18, projectedUsd: 29.62, estimated: true, soFarPlusVat: true, projectedPlusVat: true, incomplete: false });
     const renewalOnly = monthCosts(facts({ domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-10-20" } }));
     expect(monthTotals(renewalOnly)).toMatchObject({ soFarUsd: 1.18, soFarPlusVat: false, projectedUsd: 14.62, projectedPlusVat: true });
   });
 
   it("on the free plans is zero, with no estimate and no VAT", () => {
     const lines = monthCosts(facts({ neon: { plan: "FREE", meter: null, databaseBytes: null } }));
-    expect(monthTotals(lines)).toEqual({ soFarUsd: 0, projectedUsd: 0, estimated: false, soFarPlusVat: false, projectedPlusVat: false, incomplete: false });
+    expect(monthTotals(lines)).toMatchObject({ soFarUsd: 0, projectedUsd: 0, estimated: false, soFarPlusVat: false, projectedPlusVat: false, incomplete: false });
   });
 
   it("is marked incomplete when a provider that bills could not be read", () => {
     const lines = monthCosts(facts({ neon: { plan: "LAUNCH", meter: null, databaseBytes: GB } }));
     expect(monthTotals(lines)).toMatchObject({ incomplete: true, soFarUsd: 0, projectedUsd: 0 });
+  });
+});
+
+describe("the usage facts beside the money (§NNN)", () => {
+  it("Vercel: the month's deployments beside its build minutes", () => {
+    expect(line(facts(), "vercel").detail).toEqual({ kind: "deployments", count: 12 });
+    expect(line(facts({ vercel: null }), "vercel").detail).toBeNull();
+  });
+
+  it("Neon: the database's stored gigabytes as a usage fact, not only inside the money", () => {
+    expect(line(facts(), "neon").detail).toEqual({ kind: "storageGb", gb: 1 });
+    expect(line(facts({ neon: { plan: "LAUNCH", meter: null, databaseBytes: null } }), "neon").detail).toBeNull();
+  });
+
+  it("R2: the pictures' bytes against the free ten GB — free under it, the excess priced over it, grey when unread", () => {
+    const under = line(facts(), "r2");
+    expect(under).toMatchObject({ plan: "Free", billing: "free", soFarUsd: 0, projectedUsd: 0, severity: "ok" });
+    expect(under.usage).toMatchObject({ unit: "gigabytes", used: 2, projected: 2, ceiling: R2_FREE_STORAGE_GB, state: "ok" });
+
+    const close = line(facts({ r2: { storedBytes: 9 * GB } }), "r2");
+    expect(close).toMatchObject({ billing: "free", severity: "watch" });
+
+    const over = line(facts({ r2: { storedBytes: 14 * GB } }), "r2");
+    // 4 GB over at the catalogue's rate, a month; 240 of 744 hours of it so far.
+    expect(over).toMatchObject({ billing: "usage", estimated: true, severity: "act", projectedUsd: Math.round(4 * R2_USD_PER_GB_MONTH * 100) / 100 });
+    expect(over.soFarUsd).toBe(Math.round(((4 * R2_USD_PER_GB_MONTH * 240) / 744) * 100) / 100);
+
+    const unread = line(facts({ r2: null }), "r2");
+    expect(unread).toMatchObject({ soFarUsd: null, projectedUsd: null, usage: null, severity: "unknown" });
+  });
+
+  it("DeepL unread: no usage, grey — never a month of zero characters", () => {
+    expect(line(facts({ deepl: null }), "deepl")).toMatchObject({ usage: null, severity: "unknown", soFarUsd: 0 });
+  });
+});
+
+describe("last month (§NNN)", () => {
+  const SEPTEMBER = previousMonth(OCTOBER);
+
+  it("is the calendar month before, in the provider's own count", () => {
+    expect(SEPTEMBER.start.toISOString()).toBe("2026-09-01T00:00:00.000Z");
+    expect(SEPTEMBER.end.toISOString()).toBe("2026-10-01T00:00:00.000Z");
+    expect(previousMonth(utcMonth(new Date("2027-01-15T00:00:00.000Z"))).start.toISOString()).toBe("2026-12-01T00:00:00.000Z");
+  });
+
+  it("Neon on Launch: the history's CU-hours at the catalogue's rate plus today's storage over the month, an estimate", () => {
+    const neon = line(facts(), "neon");
+    const expected = Math.round((20 * NEON_PLANS.LAUNCH.usdPerCuHour + NEON_PLANS.LAUNCH.usdPerGbMonth) * 100) / 100;
+    expect(neon.lastMonth).toEqual({ period: SEPTEMBER, usd: expected, usage: 20, estimated: true, plusVat: false });
+    // Nothing kept it: unknown, never zero.
+    expect(line(facts({ lastMonth: { neonCuHours: null, mailgunSent: 500 } }), "neon").lastMonth.usd).toBeNull();
+    // Free bills nothing, kept or not.
+    expect(line(facts({ neon: { plan: "FREE", meter: null, databaseBytes: null }, lastMonth: { neonCuHours: null, mailgunSent: null } }), "neon").lastMonth.usd).toBe(0);
+  });
+
+  it("Mailgun: the plan's price with the outbox's count; unknown on a typed plan", () => {
+    expect(line(facts(), "mailgun").lastMonth).toMatchObject({ usd: 0, usage: 500 });
+    const basic = facts({ mailgun: { planName: "Basic", usdPerMonth: 15, sentThisMonth: 10, monthlyAllowance: 10_000, dailyAllowance: null } });
+    expect(line(basic, "mailgun").lastMonth).toMatchObject({ usd: 15, usage: 500, plusVat: true });
+    const custom = facts({ mailgun: { planName: "Custom", usdPerMonth: null, sentThisMonth: 10, monthlyAllowance: null, dailyAllowance: null } });
+    expect(line(custom, "mailgun").lastMonth.usd).toBeNull();
+  });
+
+  it("the domain: the renewal when the expiry's anniversary fell last month", () => {
+    expect(line(facts({ domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" } }), "domain").lastMonth).toMatchObject({
+      usd: DOMAIN_PRICE_USD_PER_YEAR,
+      plusVat: true,
+    });
+    expect(line(facts({ domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-03-16" } }), "domain").lastMonth.usd).toBe(0);
+    // An expiry in September of this very year is this year's, not last month's renewal.
+    expect(line(facts({ domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-09-30" } }), "domain").lastMonth.usd).toBe(0);
+  });
+
+  it("totals: summed when every line kept it, a dash naming the lines when one did not", () => {
+    const kept = monthTotals(monthCosts(facts({ domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" } })));
+    const neonLast = Math.round((20 * NEON_PLANS.LAUNCH.usdPerCuHour + NEON_PLANS.LAUNCH.usdPerGbMonth) * 100) / 100;
+    expect(kept).toMatchObject({
+      lastMonthUsd: Math.round((neonLast + DOMAIN_PRICE_USD_PER_YEAR) * 100) / 100,
+      lastMonthMissing: [],
+      lastMonthEstimated: true,
+      lastMonthPlusVat: true,
+    });
+    const missing = monthTotals(monthCosts(facts({ lastMonth: { neonCuHours: null, mailgunSent: null } })));
+    expect(missing).toMatchObject({ lastMonthUsd: null, lastMonthMissing: ["neon"] });
   });
 });

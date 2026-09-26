@@ -209,6 +209,9 @@ export async function updateNeonLimitsAction(_previous: FormOutcome | null, form
       actor,
       {
         maxCu: typeof form.get("maxCu") === "string" ? form.get("maxCu") : "",
+        // The floor and scale to zero (§NNN); absent from an older page's form, which keeps both.
+        minCu: typeof form.get("minCu") === "string" ? form.get("minCu") : null,
+        suspendMode: form.get("suspendMode") === "never" ? "never" : form.get("suspendMode") === "auto" ? "auto" : null,
         quotaMode: form.get("quotaMode") === "limit" ? "limit" : "none",
         quotaCuHours: typeof form.get("quotaCuHours") === "string" ? form.get("quotaCuHours") : null,
         confirmSuspension: form.get("confirmSuspension") === "on",

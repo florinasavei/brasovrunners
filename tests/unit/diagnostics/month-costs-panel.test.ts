@@ -1,15 +1,17 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { monthCosts, monthTotals, utcMonth, type MonthCostFacts } from "@/modules/diagnostics/domain/month-costs";
+import { type MonthCostFacts, monthCosts, monthTotals, utcMonth } from "@/modules/diagnostics/domain/month-costs";
+import type { MonthCostReasons } from "@/modules/diagnostics/month-costs-read";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 
 /**
  * BR-REQ-090-07 criterion 19 (§NNN) — «Luna aceasta», rendered to HTML on the server the way the
  * page sends it, through next-intl's own translator over the real catalogues, in both languages:
- * the total first, one line per provider with its money and its usage, a line nothing could read
- * saying why instead of printing a zero, and the free providers named in one sentence.
+ * the total first, last month's beside it, one line per provider with its money, its last month
+ * and its usage, a line nothing could read saying why instead of printing a zero, every free line
+ * saying what would cost money, and the free providers named in one sentence.
  */
 const state = { locale: "ro" as "ro" | "en" };
 vi.mock("next-intl/server", async () => {
@@ -30,30 +32,38 @@ const { default: MonthCostsPanel } = await import("@/modules/diagnostics/ui/Mont
 
 const NOW = new Date("2026-10-11T00:00:00.000Z");
 const OCTOBER = utcMonth(NOW);
+const GB = 1024 * 1024 * 1024;
 
 function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
   return {
     now: NOW,
-    neon: { plan: "LAUNCH", meter: { usedCuHours: 10, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, quotaCuHours: 30 }, databaseBytes: 1024 * 1024 * 1024 },
+    neon: { plan: "LAUNCH", meter: { usedCuHours: 10, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, quotaCuHours: 30 }, databaseBytes: GB },
     mailgun: { planName: "Free", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
     vercel: null,
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-10-20" },
     deepl: { charactersThisMonth: 1_234 },
+    r2: { storedBytes: 2 * GB },
+    lastMonth: { neonCuHours: 20, mailgunSent: 500 },
     ...patch,
   };
 }
 
-async function render(locale: "ro" | "en", input: MonthCostFacts, unread = { neon: null as string | null, vercel: "unconfigured" as string | null }) {
+function reasons(patch: { current?: Partial<MonthCostReasons["current"]>; lastMonth?: Partial<MonthCostReasons["lastMonth"]> } = {}): MonthCostReasons {
+  const none = { neon: null, mailgun: null, vercel: null, domain: null, deepl: null, r2: null };
+  return { current: { ...none, vercel: "unconfigured", ...patch.current }, lastMonth: { ...none, ...patch.lastMonth } };
+}
+
+async function render(locale: "ro" | "en", input: MonthCostFacts, why: MonthCostReasons = reasons()) {
   state.locale = locale;
   const lines = monthCosts(input);
-  const element = await MonthCostsPanel({ locale, lines, totals: monthTotals(lines), unread, deeplConfigured: false });
+  const element = await MonthCostsPanel({ locale, lines, totals: monthTotals(lines), reasons: why, deeplConfigured: false });
   return renderToStaticMarkup(element as ReactElement);
 }
 
 /** The visible words, without the markup and the spacing MUI puts between them. */
 function text(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
+  return html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 }
 
 describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
@@ -63,11 +73,12 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     // Neon 1,18 so far, 3,65 at the end; the domain's renewal falls in October: 10,97 + TVA.
     expect(words).toContain("Până acum, luna aceasta: 1,18 USD. Estimat până la sfârșitul lunii: 14,62 USD + TVA.");
     expect(words).toContain("Baza de date se plătește la consum");
-    for (const id of ["domain", "mailgun", "vercel", "neon", "deepl"]) expect(html).toContain(`data-testid="month-cost-${id}"`);
+    for (const id of ["domain", "mailgun", "vercel", "neon", "deepl", "r2"]) expect(html).toContain(`data-testid="month-cost-${id}"`);
     // Neon: the quota the club set is the ceiling, and ~31 hours by the end goes past it.
     expect(words).toContain("10 ore-CU până acum, ~31 la final.");
     expect(words).toContain("Limita pusă de club la Neon: 30.");
     expect(words).toContain("Neon oprește baza de date până la perioada următoare");
+    expect(words).toContain("Baza ocupă 1 GB.");
     expect(html).toMatch(/data-testid="month-cost-neon" data-severity="act"/);
     expect(words).toContain("Launch · la consum");
     expect(words).toContain("(estimare)");
@@ -81,24 +92,70 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(words).toContain("DeepL nu e pusă pe acest server");
     expect(words).toContain("Perioada de facturare Neon:");
     expect(words).toContain("Zitadel");
+    // R2 is its own line now, measured against its free ten GB.
+    expect(words).toContain("2 GB de poze stocate");
+    expect(words).toContain("Gratuit până la 10 GB.");
+  });
+
+  it("says last month beside it: the total, and each line's amount with what was counted", async () => {
+    const words = text(await render("ro", facts()));
+    // Neon: 20 × 0,106 + 0,35 (a GB for the month) = 2,47, an estimate; the rest free.
+    expect(words).toContain("Luna trecută: 2,47 USD (estimare).");
+    expect(words).toContain("2,47 USD (estimare) · 20 ore-CU");
+    expect(words).toContain("0,00 USD · 500 e-mailuri");
+  });
+
+  it("prints a dash for last month when a line that bills kept nothing, naming the line and why", async () => {
+    const html = await render("ro", facts({ lastMonth: { neonCuHours: null, mailgunSent: 500 } }), reasons({ lastMonth: { neon: "HTTP 403" } }));
+    const words = text(html);
+    expect(words).toContain("Luna trecută: — (nu se poate aduna: Baza de date — Neon fără cifră).");
+    expect(words).toContain("— Neon păstrează istoricul doar pentru o cheie de organizație; cheia pe proiect e refuzată (HTTP 403).");
+  });
+
+  it("says, on every free line, what would start costing money — each figure from its catalogue", async () => {
+    const html = await render("ro", facts({ vercel: { buildMinutes: 30, deployments: 7 } }), reasons({ current: { vercel: null } }));
+    const words = text(html);
+    for (const id of ["mailgun", "vercel", "deepl", "r2"]) expect(html).toContain(`data-testid="month-cost-${id}-trigger"`);
+    // Launch bills, so the Neon line names no trigger; the domain is yearly.
+    expect(html).not.toContain('data-testid="month-cost-neon-trigger"');
+    expect(html).not.toContain('data-testid="month-cost-domain-trigger"');
+    expect(words).toContain("Ar costa doar trecând la un plan plătit (Basic, 15,00 USD pe lună)");
+    expect(words).toContain("după 500.000 de caractere");
+    expect(words).toContain("Ar costa doar peste 10 GB stocați: 0,015 USD pe GB pe lună");
+    // Vercel's deployments beside its build minutes.
+    expect(words).toContain("7 publicări luna aceasta.");
   });
 
   it("reads the same in English, with the same figures", async () => {
     const words = text(await render("en", facts()));
     expect(words).toContain("So far this month: 1.18 USD. Estimated by the end of the month: 14.62 USD + VAT.");
+    expect(words).toContain("Last month: 2.47 USD (estimate).");
     expect(words).toContain("10 CU-hours so far, ~31 by the end.");
     expect(words).toContain("The limit the club set at Neon: 30.");
-    // The apostrophe is an entity in the markup; the words around it are what the reader sees.
     expect(words).toContain("billing period:");
   });
 
   it("says when a provider that bills could not be read, and that the total is short by it", async () => {
-    const html = await render("ro", facts({ neon: { plan: "LAUNCH", meter: null, databaseBytes: null } }), { neon: "HTTP 401", vercel: "unconfigured" });
+    const html = await render("ro", facts({ neon: { plan: "LAUNCH", meter: null, databaseBytes: null } }), reasons({ current: { neon: "HTTP 401" } }));
     const words = text(html);
     expect(html).toContain('data-testid="month-costs-incomplete"');
     expect(words).toContain("Furnizorul nu a răspuns acum (HTTP 401).");
     expect(words).toContain("nemăsurat");
     expect(html).toMatch(/data-testid="month-cost-neon" data-severity="unknown"/);
+  });
+
+  it("says a typed Mailgun plan's month is unknown for that reason, not because nothing answered", async () => {
+    const custom = facts({ mailgun: { planName: "Custom", usdPerMonth: null, sentThisMonth: 10, monthlyAllowance: null, dailyAllowance: null } });
+    const words = text(await render("ro", custom, reasons({ current: { mailgun: "typed plan" }, lastMonth: { mailgun: "typed plan" } })));
+    expect(words).toContain("Suma unui furnizor nu e cunoscută — nu a putut fi citit acum, sau e un plan Mailgun scris de mână, fără preț");
+    expect(words).toContain("Planul e scris de mână, fără preț înregistrat");
+    expect(words).toContain("— planul scris de mână nu are preț înregistrat.");
+  });
+
+  it("says a query that failed here as the site's own database, not the provider", async () => {
+    const words = text(await render("ro", facts({ deepl: null, r2: null }), reasons({ current: { deepl: "error", r2: "error" }, lastMonth: { r2: "error" } })));
+    expect(words).toContain("Nu s-a putut citi acum din baza de date a site-ului.");
+    expect(words).toContain("— nu s-a putut citi (baza de date a site-ului).");
   });
 
   it("is a card of words only: no form, nothing to press", async () => {

@@ -1,3 +1,5 @@
+import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
+import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "../platform-plans";
 import { NEON_BUDGET_MIN_PACE_HOURS } from "./neon-budget";
 import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
 
@@ -9,8 +11,9 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * The cost table below it on Costuri answers "what does today's setup cost a year"; this answers
  * the treasurer's other question, the one asked in the middle of a month: **how much this month,
  * and how much by the end of it**. One line per provider that bills or meters something —
- * Neon, Mailgun, Vercel, the domain, DeepL — each with its money (so far, and projected) and its
- * usage (so far, projected, and the ceiling that usage meets).
+ * Neon, Mailgun, Vercel, the domain, DeepL, R2 — each with its money (so far, projected, and last
+ * month's where anything kept it) and its usage (so far, projected, and the ceiling that usage
+ * meets).
  *
  * Pure, over the facts the page already reads (Neon's meter §447, the outbox's month §100,
  * Vercel's deployments §101, the audit trail's translated characters §464, the domain's expiry
@@ -26,24 +29,27 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * characters are counted per UTC calendar month, the month `notifications/volume.ts` and
  * `diagnostics/vercel.ts` already count, so each line names its period.
  *
- * **Every price comes from its catalogue** (`neon-plan.ts`, `email-plan.ts`, the domain constant
- * in `platform-plans.ts`), never from here: this file multiplies and adds, and says "estimate"
- * wherever it projects — `AGENTS.md` §1.2's rule that a vendor's price is quoted, never invented.
+ * **Every price comes from its catalogue** (`neon-plan.ts`, `email-plan.ts`, the domain and R2
+ * constants in `platform-plans.ts`, DeepL's allowance in `translate/domain/budget.ts`), never from
+ * here: this file multiplies and adds, and says "estimate" wherever it projects — `AGENTS.md`
+ * §1.2's rule that a vendor's price is quoted, never invented. Every amount is in USD, the
+ * currency every one of those vendors bills in and the cost table below already prints.
+ *
+ * **Last month** (`lastMonth` on each line) is what the previous period cost where something kept
+ * it: the outbox's rows for Mailgun, Neon's consumption history (an organisation's key only), the
+ * domain's anniversary; the free lines are zero. A line nothing kept is null, and the total is
+ * then null too — the card prints «—» and says which line is missing, never a smaller sum.
  */
-
-/** DeepL API Free's monthly allowance, from deepl.com/pro-api on 2026-09-26 (§464): 500,000 characters a month. */
-export const DEEPL_FREE_CHARACTERS_PER_MONTH = 500_000;
-export const DEEPL_FREE_CHECKED_ON = "2026-09-26";
 
 /** Share of a ceiling past which a projected usage is worth watching (the eighty percent every other card warns at). */
 export const MONTH_USAGE_WATCH_SHARE = 0.8;
 
-export const MONTH_COST_IDS = ["neon", "mailgun", "vercel", "domain", "deepl"] as const;
+export const MONTH_COST_IDS = ["neon", "mailgun", "vercel", "domain", "deepl", "r2"] as const;
 export type MonthCostId = (typeof MONTH_COST_IDS)[number];
 
 export type MonthPeriod = { start: Date; end: Date };
 
-export type MonthUsageUnit = "cuHours" | "messages" | "buildMinutes" | "characters";
+export type MonthUsageUnit = "cuHours" | "messages" | "buildMinutes" | "characters" | "gigabytes";
 
 export type MonthUsage = {
   unit: MonthUsageUnit;
@@ -81,6 +87,10 @@ export type MonthCostLine = {
   renewsOn: string | null;
   /** The domain only: whether the renewal falls inside this period and is in the projection. */
   renewsThisPeriod: boolean;
+  /** A usage fact beside the money that is not the metered one: Vercel's deployments, Neon's stored gigabytes. */
+  detail: { kind: "deployments"; count: number } | { kind: "storageGb"; gb: number } | null;
+  /** The period before this one: its money (null when nothing kept it) and its usage where one was counted. */
+  lastMonth: { period: MonthPeriod; usd: number | null; usage: number | null; estimated: boolean; plusVat: boolean };
   /** How the row should read at a glance — `ServiceSeverity`'s four words (§1.2: unmeasured is not green). */
   severity: "ok" | "unknown" | "watch" | "act";
 };
@@ -103,11 +113,20 @@ export type MonthCostFacts = {
     monthlyAllowance: number | null;
     dailyAllowance: number | null;
   };
-  /** This month's build minutes from Vercel, or null without a token or an answer. */
-  vercel: { buildMinutes: number } | null;
+  /** This month's build minutes and deployments from Vercel, or null without a token or an answer. */
+  vercel: { buildMinutes: number; deployments: number } | null;
   vercelBuildMinutesPerMonth: number;
   domain: { planName: string; usdPerYear: number; expiresOn: string | null };
-  deepl: { charactersThisMonth: number };
+  /** The month's translated characters (§464), or null when the audit trail could not be read. */
+  deepl: { charactersThisMonth: number } | null;
+  /** The pictures' recorded bytes (`media_assets.byte_size`), or null when they could not be read. */
+  r2: { storedBytes: number } | null;
+  lastMonth: {
+    /** Neon's previous period in CU-hours (its consumption history), or null when it could not be read. */
+    neonCuHours: number | null;
+    /** The messages Mailgun carried in the previous UTC month (the outbox), or null when unread. */
+    mailgunSent: number | null;
+  };
 };
 
 const HOUR = 3_600_000;
@@ -121,6 +140,15 @@ export function utcMonth(now: Date): MonthPeriod {
     start: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
     end: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)),
   };
+}
+
+/** The UTC calendar month before the one `period` starts in. */
+export function previousMonth(period: MonthPeriod): MonthPeriod {
+  return utcMonth(new Date(period.start.getTime() - 1));
+}
+
+function nothingLastMonth(period: MonthPeriod): MonthCostLine["lastMonth"] {
+  return { period: previousMonth(period), usd: 0, usage: null, estimated: false, plusVat: false };
 }
 
 /** Hours in the period, and hours of it gone by `now` (clamped to the period). */
@@ -187,12 +215,26 @@ function neonLine(facts: MonthCostFacts): MonthCostLine {
 
   let soFarUsd: number | null = plan === "FREE" ? 0 : null;
   let projectedUsd: number | null = plan === "FREE" ? 0 : null;
+  const storageUsdPerHour = databaseBytes === null ? 0 : ((databaseBytes / GB) * entry.usdPerGbMonth) / MONTH_HOURS;
   if (plan !== "FREE" && use) {
     const { total, elapsed } = periodHours(period, facts.now);
-    const storageUsdPerHour = databaseBytes === null ? 0 : ((databaseBytes / GB) * entry.usdPerGbMonth) / MONTH_HOURS;
     soFarUsd = roundUsd(use.used * entry.usdPerCuHour + storageUsdPerHour * elapsed);
     projectedUsd = roundUsd(use.projected * entry.usdPerCuHour + storageUsdPerHour * total);
   }
+  // The period before, at today's catalogue rate and today's database size — Neon keeps the hours
+  // (its consumption history), not what the storage was, so the figure is an estimate.
+  const before = previousMonth(period);
+  const lastCuHours = facts.lastMonth.neonCuHours;
+  const lastMonth: MonthCostLine["lastMonth"] =
+    plan === "FREE"
+      ? { period: before, usd: 0, usage: lastCuHours, estimated: false, plusVat: false }
+      : {
+          period: before,
+          usd: lastCuHours === null ? null : roundUsd(lastCuHours * entry.usdPerCuHour + storageUsdPerHour * periodHours(before, before.end).total),
+          usage: lastCuHours,
+          estimated: true,
+          plusVat: false,
+        };
   const line = {
     id: "neon" as const,
     plan: entry.name,
@@ -205,6 +247,8 @@ function neonLine(facts: MonthCostFacts): MonthCostLine {
     usage: use,
     renewsOn: null,
     renewsThisPeriod: false,
+    detail: databaseBytes === null ? null : { kind: "storageGb" as const, gb: databaseBytes / GB },
+    lastMonth,
   };
   return { ...line, severity: severityOf(line, meter !== null) };
 }
@@ -232,6 +276,10 @@ function mailgunLine(facts: MonthCostFacts): MonthCostLine {
     usage: use,
     renewsOn: null,
     renewsThisPeriod: false,
+    detail: null,
+    // A subscription month is billed whole whatever was sent: the plan's price, the count beside it.
+    // The plan is today's — a month switched back from Basic reads at Free's price (§100).
+    lastMonth: { period: previousMonth(period), usd: m.usdPerMonth, usage: facts.lastMonth.mailgunSent, estimated: false, plusVat: paid },
   };
   return { ...line, severity: severityOf(line, true) };
 }
@@ -242,6 +290,7 @@ function vercelLine(facts: MonthCostFacts): MonthCostLine {
   const use = facts.vercel
     ? usage("buildMinutes", facts.vercel.buildMinutes, period, facts.now, facts.vercelBuildMinutesPerMonth, "plan")
     : null;
+  const detail = facts.vercel ? { kind: "deployments" as const, count: facts.vercel.deployments } : null;
   const line = {
     id: "vercel" as const,
     plan: "Hobby",
@@ -254,6 +303,8 @@ function vercelLine(facts: MonthCostFacts): MonthCostLine {
     usage: use,
     renewsOn: null,
     renewsThisPeriod: false,
+    detail,
+    lastMonth: nothingLastMonth(period),
   };
   return { ...line, severity: severityOf(line, facts.vercel !== null) };
 }
@@ -270,6 +321,13 @@ function domainLine(facts: MonthCostFacts): MonthCostLine {
   const inPeriod = !Number.isNaN(expiry) && expiry >= period.start.getTime() && expiry < period.end.getTime();
   const passed = inPeriod && expiry <= facts.now.getTime();
   const price = facts.domain.usdPerYear;
+  // Last month paid a renewal if the expiry's anniversary fell in it: the same calendar month, a
+  // year (or more) before the expiry now in force.
+  const before = previousMonth(period);
+  const renewedLastMonth =
+    !Number.isNaN(expiry) &&
+    new Date(expiry).getUTCMonth() === before.start.getUTCMonth() &&
+    new Date(expiry).getUTCFullYear() > before.start.getUTCFullYear();
   const line = {
     id: "domain" as const,
     plan: facts.domain.planName,
@@ -282,6 +340,8 @@ function domainLine(facts: MonthCostFacts): MonthCostLine {
     usage: null,
     renewsOn: expiresOn,
     renewsThisPeriod: inPeriod,
+    detail: null,
+    lastMonth: { period: before, usd: renewedLastMonth ? price : 0, usage: null, estimated: false, plusVat: renewedLastMonth },
   };
   return { ...line, severity: inPeriod ? "watch" : "ok" };
 }
@@ -289,7 +349,9 @@ function domainLine(facts: MonthCostFacts): MonthCostLine {
 /** DeepL API Free: free; the characters this month against its 500,000 (§464). */
 function deeplLine(facts: MonthCostFacts): MonthCostLine {
   const period = utcMonth(facts.now);
-  const use = usage("characters", facts.deepl.charactersThisMonth, period, facts.now, DEEPL_FREE_CHARACTERS_PER_MONTH, "plan");
+  const use = facts.deepl
+    ? usage("characters", facts.deepl.charactersThisMonth, period, facts.now, DEEPL_FREE_CHARACTERS_PER_MONTH, "plan")
+    : null;
   const line = {
     id: "deepl" as const,
     plan: "API Free",
@@ -302,13 +364,74 @@ function deeplLine(facts: MonthCostFacts): MonthCostLine {
     usage: use,
     renewsOn: null,
     renewsThisPeriod: false,
+    detail: null,
+    lastMonth: nothingLastMonth(period),
+  };
+  return { ...line, severity: severityOf(line, facts.deepl !== null) };
+}
+
+/**
+ * Cloudflare R2: free up to its ten GB-month, then priced per GB-month over it. The stored size is
+ * a level, not a pace — the month's end is today's size — and the recorded bytes are one variant
+ * per picture, so the figure is a lower bound (`storedMediaBytes`). Over the allowance, the month
+ * is the excess at the catalogue's rate, spread over the month like Neon's storage; an estimate.
+ */
+function r2Line(facts: MonthCostFacts): MonthCostLine {
+  const period = utcMonth(facts.now);
+  const before = previousMonth(period);
+  if (!facts.r2) {
+    const unread = {
+      id: "r2" as const,
+      plan: "Free",
+      billing: "free" as const,
+      period,
+      soFarUsd: null,
+      projectedUsd: null,
+      estimated: false,
+      plusVat: false,
+      usage: null,
+      renewsOn: null,
+      renewsThisPeriod: false,
+      detail: null,
+      lastMonth: { period: before, usd: null, usage: null, estimated: false, plusVat: false },
+    };
+    return { ...unread, severity: severityOf(unread, false) };
+  }
+  const gb = facts.r2.storedBytes / GB;
+  const monthUsd = Math.max(gb - R2_FREE_STORAGE_GB, 0) * R2_USD_PER_GB_MONTH;
+  const { total, elapsed } = periodHours(period, facts.now);
+  const billed = monthUsd > 0;
+  const use: MonthUsage = {
+    unit: "gigabytes",
+    used: gb,
+    projected: gb,
+    ceiling: R2_FREE_STORAGE_GB,
+    ceilingKind: "plan",
+    dailyCeiling: null,
+    state: usageState(gb, R2_FREE_STORAGE_GB),
+  };
+  const line = {
+    id: "r2" as const,
+    plan: "Free",
+    billing: billed ? ("usage" as const) : ("free" as const),
+    period,
+    soFarUsd: roundUsd(total > 0 ? (monthUsd * elapsed) / total : 0),
+    projectedUsd: roundUsd(monthUsd),
+    estimated: billed,
+    plusVat: false,
+    usage: use,
+    renewsOn: null,
+    renewsThisPeriod: false,
+    detail: null,
+    // Nothing keeps last month's size: today's, which only grows, bounds it from above.
+    lastMonth: { period: before, usd: roundUsd(monthUsd), usage: null, estimated: billed, plusVat: false },
   };
   return { ...line, severity: severityOf(line, true) };
 }
 
 /** One line per provider that bills or meters something, in the cost table's order. */
 export function monthCosts(facts: MonthCostFacts): MonthCostLine[] {
-  return [domainLine(facts), mailgunLine(facts), vercelLine(facts), neonLine(facts), deeplLine(facts)];
+  return [domainLine(facts), mailgunLine(facts), vercelLine(facts), neonLine(facts), deeplLine(facts), r2Line(facts)];
 }
 
 export type MonthTotals = {
@@ -324,8 +447,17 @@ export type MonthTotals = {
    */
   soFarPlusVat: boolean;
   projectedPlusVat: boolean;
-  /** Some line that bills could not be read, so the total is short by it. */
+  /**
+   * Some line's amount is unknown — its provider could not be read, or a typed Mailgun plan has no
+   * recorded price (§100) — so the total is short by it.
+   */
   incomplete: boolean;
+  /** The previous period, summed, or null when any line's is unknown (the card prints «—»). */
+  lastMonthUsd: number | null;
+  /** The lines whose last month nothing kept, in order — what the «—» names. */
+  lastMonthMissing: MonthCostId[];
+  lastMonthEstimated: boolean;
+  lastMonthPlusVat: boolean;
 };
 
 export function monthTotals(lines: readonly MonthCostLine[]): MonthTotals {
@@ -335,7 +467,17 @@ export function monthTotals(lines: readonly MonthCostLine[]): MonthTotals {
   let soFarPlusVat = false;
   let projectedPlusVat = false;
   let incomplete = false;
+  let lastMonth = 0;
+  let lastMonthEstimated = false;
+  let lastMonthPlusVat = false;
+  const lastMonthMissing: MonthCostId[] = [];
   for (const line of lines) {
+    if (line.lastMonth.usd === null) lastMonthMissing.push(line.id);
+    else {
+      lastMonth += line.lastMonth.usd;
+      if (line.lastMonth.estimated && line.lastMonth.usd > 0) lastMonthEstimated = true;
+      if (line.lastMonth.plusVat && line.lastMonth.usd > 0) lastMonthPlusVat = true;
+    }
     if (line.soFarUsd === null || line.projectedUsd === null) {
       incomplete = true;
       continue;
@@ -346,5 +488,16 @@ export function monthTotals(lines: readonly MonthCostLine[]): MonthTotals {
     if (line.plusVat && line.soFarUsd > 0) soFarPlusVat = true;
     if (line.plusVat && line.projectedUsd > 0) projectedPlusVat = true;
   }
-  return { soFarUsd: roundUsd(soFar), projectedUsd: roundUsd(projected), estimated, soFarPlusVat, projectedPlusVat, incomplete };
+  return {
+    soFarUsd: roundUsd(soFar),
+    projectedUsd: roundUsd(projected),
+    estimated,
+    soFarPlusVat,
+    projectedPlusVat,
+    incomplete,
+    lastMonthUsd: lastMonthMissing.length > 0 ? null : roundUsd(lastMonth),
+    lastMonthMissing,
+    lastMonthEstimated,
+    lastMonthPlusVat,
+  };
 }
