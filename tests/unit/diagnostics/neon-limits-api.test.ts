@@ -43,7 +43,7 @@ describe("BR-REQ-090-07 readNeonLimits — the brakes as Neon holds them", () =>
     const { limits } = result.snapshot;
     // The read-write compute only: a read replica is not a brake on the bill this card controls.
     expect(limits.computes).toEqual([{ id: "ep-rw-main", minCu: 0.25, maxCu: 1 }]);
-    expect(limits.defaults).toEqual({ minCu: 0.25, maxCu: 1 });
+    expect(limits.defaults).toEqual({ minCu: 0.25, maxCu: 1, suspendTimeoutSeconds: 0 });
     expect(limits.quotaCuHours).toBe(50);
     expect(limits.usedCuHours).toBeCloseTo(12.34, 2);
     expect(limits.activeHours).toBe(40);
@@ -140,6 +140,25 @@ describe("BR-REQ-090-07 writeNeonLimits — the brakes set", () => {
     const again = await snapshotOf(neon);
     expect(await writeNeonLimits(NEON_ENV, again, { maxCu: 1, quotaCuHours: null }, { fetchImpl: neon.fetch })).toEqual({ ok: true, wrote: [] });
     expect(neon.calls).toHaveLength(0);
+  });
+
+  it("§479 sets the floor and switches scale to zero off on the project's defaults and the compute, and back", async () => {
+    const neon = fakeNeon(productionLikeState());
+    const snapshot = await snapshotOf(neon);
+
+    const result = await writeNeonLimits(NEON_ENV, snapshot, { maxCu: 1, minCu: 0.5, quotaCuHours: null, suspendTimeoutSeconds: -1 }, { fetchImpl: neon.fetch });
+    expect(result).toEqual({ ok: true, wrote: ["project", "endpoint:ep-rw-main"] });
+    const [project, endpoint] = neon.calls;
+    expect(project.body).toMatchObject({
+      project: { default_endpoint_settings: { autoscaling_limit_min_cu: 0.5, autoscaling_limit_max_cu: 1, suspend_timeout_seconds: -1 } },
+    });
+    expect(endpoint.body).toEqual({ endpoint: { autoscaling_limit_min_cu: 0.5, autoscaling_limit_max_cu: 1, suspend_timeout_seconds: -1 } });
+
+    // Scale to zero left alone (null) sends no suspend key, and Neon's five minutes asked as 0 where
+    // the compute already suspends is no change at all.
+    const again = fakeNeon(productionLikeState());
+    const fresh = await snapshotOf(again);
+    expect(await writeNeonLimits(NEON_ENV, fresh, { maxCu: 1, quotaCuHours: null, suspendTimeoutSeconds: 0 }, { fetchImpl: again.fetch })).toEqual({ ok: true, wrote: [] });
   });
 
   it("asks again after 423 Locked, and gives up as busy after the last wait", async () => {

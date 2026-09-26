@@ -21,6 +21,8 @@ type Props = {
   reading: BudgetReading;
   /** The Administrator's, like the interval beside it; `updateBudgetThresholds` refuses anybody else. `/devs` shows it read-only. */
   mayEdit?: boolean;
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
+  level?: 2 | 3;
 };
 
 /** The alert's colour per level. */
@@ -40,7 +42,7 @@ const SEVERITY: Record<NeonBudgetLevel, "success" | "info" | "warning" | "error"
  * the pro-rated line, the pace), what the platform does about it now (the governor's effects, in
  * words), and where the figure came from (which of Neon's readings, the other two beside it).
  */
-export default async function NeonBudgetPanel({ locale, reading, mayEdit = false }: Props) {
+export default async function NeonBudgetPanel({ locale, reading, mayEdit = false, level: headingLevel = 2 }: Props) {
   const t = await getTranslations("Budget");
   const format = await getFormatter();
   const hours = (value: number) => format.number(value, { maximumFractionDigits: 1 });
@@ -49,7 +51,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
   const words = mayEdit ? await confirmWords() : null;
 
   return (
-    <Panel title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
+    <Panel level={headingLevel} title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
       <Alert severity={SEVERITY[level]} sx={{ mb: 1.5 }} data-testid="neon-budget-level" data-level={level}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t(`level.${level}`)}

@@ -30,6 +30,8 @@ type Props = {
    * refuses anybody else — so a role that may not press is not shown the button.
    */
   mayEdit: boolean;
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
+  level?: 2 | 3;
 };
 
 /**
@@ -50,7 +52,7 @@ type Props = {
  * Like its twin on `/admin/emails`, a refusal comes back as the form's state with the plan and
  * the note as they were chosen (`DECISIONS.md` §315), rather than a redirect that dropped the note.
  */
-export default async function NeonPlanPanel({ locale, plan, source, block, mayEdit }: Props) {
+export default async function NeonPlanPanel({ locale, plan, source, block, mayEdit, level = 2 }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const format = await getFormatter();
@@ -58,7 +60,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
   return (
-    <Panel title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} data-testid="neon-plan">
+    <Panel level={level} title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} data-testid="neon-plan">
       {/* The plan in force, and what this month looks like on it — the figures a wrong answer would expose. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-plan-in-force">
         {block.plan === "LAUNCH"

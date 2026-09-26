@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.07-2026-09-27
+
+- **The film's volume is a quiet corner glyph**: the dark bar under a YouTube film is gone. A small volume glyph at the film's corner mutes it, and the slider unfolds beside it only on hover or focus. The film also asks YouTube for HD from the start. §478.
+- **Costuri is the club's money page** — «Luna aceasta» comes first: each provider's month so far and projected to its end (the .com domain, Mailgun, Vercel, Neon, DeepL), with the usage behind the money against its ceiling and the totals first. The database's plan, budget, limits and wake interval now sit together in one «Baza de date — Neon» card. §479.
 ## BR-V2.06-2026-09-27
 
 - **A discreet «?» after the event page's weather line**: its tooltip says the forecast may vary and that the data comes from Open-Meteo, in both languages. §473.

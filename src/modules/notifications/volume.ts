@@ -1,4 +1,4 @@
-import { and, count, gte, sql } from "drizzle-orm";
+import { and, count, gte, lt, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -172,6 +172,18 @@ const carriedByMailgun = sql`(${emailOutbox.transport} IS NULL OR ${emailOutbox.
 /** The first of the month, UTC, matching the day boundary below. */
 function startOfUtcMonth(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+/**
+ * The messages Mailgun carried in `[start, end)` — Costuri's «Luna trecută» (§479) counts the
+ * previous UTC month with it, the month `readEmailVolumeToday` counts this one over.
+ */
+export async function mailgunMessagesSentBetween<T extends Record<string, unknown>>(db: Database<T>, start: Date, end: Date): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(emailOutbox)
+    .where(and(gte(emailOutbox.sentAt, start), lt(emailOutbox.sentAt, end), carriedByMailgun));
+  return row?.value ?? 0;
 }
 
 /** Midnight UTC, matching `nextAllowanceResetAt` in `domain/retry.ts`. */

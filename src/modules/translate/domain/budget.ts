@@ -11,9 +11,16 @@ import { z } from "zod";
  * without touching a variable. The count is the characters *sent*, tags included — stricter
  * than DeepL's own, so the club's figure runs out first.
  */
+/**
+ * DeepL API Free's monthly allowance, from deepl.com/pro-api on 2026-09-26 (§464): the one figure
+ * the daily allowance's ceiling and Costuri's «Luna aceasta» line (§479) both read.
+ */
+export const DEEPL_FREE_CHARACTERS_PER_MONTH = 500_000;
+export const DEEPL_FREE_CHECKED_ON = "2026-09-26";
+
 export const TRANSLATION_BUDGET_RULE = {
   min: 0,
-  max: 500_000,
+  max: DEEPL_FREE_CHARACTERS_PER_MONTH,
   default: 50_000,
 } as const;
 

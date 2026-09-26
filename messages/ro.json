@@ -2107,7 +2107,7 @@
         "quotaActive": "Limită activă: {hours} ore-CU, din care {used} consumate. Când e atinsă, Neon oprește baza de date până {end}.",
         "readOnly": "Limitele le schimbă Superadministratorul: una greșită poate opri site-ul. Cifrele de mai sus sunt la zi și pentru tine.",
         "maxCu": "Mărimea maximă a bazei de date",
-        "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare. Minimul rămâne {min} CU. Lângă fiecare mărime, cel mai rău caz la tariful Launch: o oră trează la acea mărime și o lună întreagă trează.",
+        "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare. Mărimea minimă e alegerea de mai jos (cea mai mică: {min} CU). Lângă fiecare mărime, cel mai rău caz la prețul Launch: o oră trează la acea mărime și o lună întreagă trează.",
         "choose": "— alege o mărime —",
         "option": "{cu} CU (≈ {ram} GB RAM) — cel mult {perHour} $/oră, {perMonth} $/lună",
         "planCeiling": "Planul contului permite cel mult {max} CU, așa că mărimile mai mari nu apar.",
@@ -2127,7 +2127,28 @@
         "save": "Salvează limitele",
         "saving": "Se trimite la Neon…",
         "saved": "Limitele au fost trimise la Neon; mai jos e ce spune Neon acum.",
-        "savedSame": "Nimic de schimbat: Neon avea deja aceste valori."
+        "savedSame": "Nimic de schimbat: Neon avea deja aceste valori.",
+        "computeReadout": "Mărimea minimă: {min} CU · Oprirea când nu e folosită: {suspend}",
+        "suspend": {
+          "auto": "după 5 minute fără cereri (implicit la Neon)",
+          "never": "niciodată — baza e mereu pornită"
+        },
+        "minCu": "Mărimea minimă a bazei de date",
+        "minCuHelp": "De la ea pornește baza la prima cerere și sub ea nu coboară cât e trează. {min} CU e cea mai mică și de ajuns pentru site; una mai mare costă la fiecare oră trează.",
+        "minOption": "{cu} CU — cel puțin {perHour} $ pe oră trează",
+        "suspendMode": "Oprirea bazei când nu e folosită",
+        "suspendHelp": "Implicit Neon oprește baza după 5 minute fără cereri și o trezește la următoarea. „Niciodată” o ține pornită tot timpul: fiecare oră a lunii se plătește la mărimea minimă ({rate} $ pe oră-CU), chiar fără niciun vizitator.",
+        "suspendHelpFree": "Pe planul Free, Neon oprește baza după 5 minute fără cereri și nu se poate schimba.",
+        "money": {
+          "ceilingUp": "{cu} CU în plus la mărimea maximă ≈ {usd} USD în plus pe lună la 100 % utilizare.",
+          "ceilingDown": "{cu} CU mai puțin la mărimea maximă ≈ {usd} USD mai puțin pe lună la 100 % utilizare.",
+          "floorUp": "{cu} CU în plus la mărimea minimă ≈ {usd} USD în plus pe lună la 100 % utilizare.",
+          "floorDown": "{cu} CU mai puțin la mărimea minimă ≈ {usd} USD mai puțin pe lună la 100 % utilizare.",
+          "alwaysOn": "Fără oprire, baza nu mai doarme: cel puțin {usd} USD pe lună la mărimea minimă de {min} CU, chiar fără niciun vizitator.",
+          "sleepsAgain": "Cu oprirea înapoi, o lună fără vizitatori nu mai costă cei {usd} USD ai bazei mereu pornite.",
+          "same": "Costul lunii nu se schimbă.",
+          "free": "Pe planul Free schimbarea nu costă nimic până se consumă cele {hours} ore-CU incluse în lună; o mărime mai mare le consumă mai repede, iar când se termină, Neon oprește baza până la perioada următoare."
+        }
       },
       "filter": {
         "who": "Cine",
@@ -2608,6 +2629,101 @@
         "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
         "save": "Salvează bugetul",
         "saving": "Se salvează…"
+      },
+      "month": {
+        "title": "Luna aceasta",
+        "intro": "Ce a costat fiecare furnizor de la începutul lunii și cât va costa până la sfârșitul ei, dacă ritmul de până acum se păstrează. Lângă fiecare sumă, consumul care o face și limita pe care o întâlnește.",
+        "aside": "~{amount} USD la final de lună",
+        "total": "Până acum, luna aceasta: {soFar}. Estimat până la sfârșitul lunii: {projected}.",
+        "estimated": "Baza de date se plătește la consum, așa că suma ei e o estimare la prețul din catalog și la ritmul de până acum, nu o factură.",
+        "incomplete": "Suma unui furnizor nu e cunoscută — nu a putut fi citit acum, sau e un plan Mailgun scris de mână, fără preț — așa că totalul e mai mic decât cel real; vezi rândul marcat „nu știm”.",
+        "listLabel": "Costurile lunii, pe furnizori",
+        "notMeasured": "nemăsurat",
+        "name": {
+          "domain": "Domeniul .com",
+          "mailgun": "E-mailurile — Mailgun",
+          "vercel": "Găzduirea — Vercel",
+          "neon": "Baza de date — Neon",
+          "deepl": "Traducerea — DeepL",
+          "r2": "Pozele — Cloudflare R2"
+        },
+        "field": {
+          "plan": "Plan",
+          "soFar": "Până acum",
+          "projected": "La final de lună",
+          "usage": "Consum",
+          "lastMonth": "Luna trecută"
+        },
+        "planLine": "{plan} · {billing}",
+        "billing": {
+          "usage": "la consum",
+          "monthly": "abonament lunar",
+          "yearly": "plătit pe an",
+          "free": "gratuit"
+        },
+        "estimateWord": "(estimare)",
+        "usage": {
+          "cuHours": "{used} ore-CU până acum, ~{projected} la final.",
+          "messages": "{used} e-mailuri trimise până acum, ~{projected} la final.",
+          "buildMinutes": "{used} minute de build până acum, ~{projected} la final.",
+          "characters": "{used} caractere traduse până acum, ~{projected} la final.",
+          "gigabytes": "{used} GB de poze stocate (cel puțin: se numără o singură variantă a fiecărei poze)."
+        },
+        "ceiling": {
+          "plan": "Limita planului: {ceiling}.",
+          "quota": "Limita pusă de club la Neon: {ceiling}.",
+          "daily": "Planul Free: cel mult {daily} pe zi, numărate pe zi.",
+          "freeGb": "Gratuit până la {ceiling} GB."
+        },
+        "over": {
+          "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare — vezi «Bugetul lunii» mai jos.",
+          "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii; mesajele rămase așteaptă luna următoare.",
+          "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
+          "deepl": "La ritmul ăsta DeepL refuză traducerile înainte de sfârșitul lunii.",
+          "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
+        },
+        "domain": {
+          "renews": "Se plătește o dată pe an; expiră {date}.",
+          "thisMonth": "Expiră luna aceasta, {date}: reînnoirea intră în suma lunii.",
+          "unknown": "Data expirării nu e setată (DOMAIN_REGISTERED_ON), deci nu știm în ce lună vine reînnoirea."
+        },
+        "unmeasured": {
+          "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
+          "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
+        },
+        "unread": "Furnizorul nu a răspuns acum ({reason}).",
+        "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butoanele de traducere nu apar.",
+        "period": "Luna calendaristică: {span}.",
+        "periodNeon": "Perioada de facturare Neon: {span}.",
+        "others": "Fără cost și fără consum urmărit aici: Zitadel (contul echipei), cron-job.org și GitHub (sarcinile automate) și Open-Meteo (vremea).",
+        "detail": {
+          "deployments": "{count} publicări luna aceasta.",
+          "storageGb": "Baza ocupă {gb} GB."
+        },
+        "typedPlan": "Planul e scris de mână, fără preț înregistrat, deci suma lunii nu e cunoscută.",
+        "unreadHere": "Nu s-a putut citi acum din baza de date a site-ului.",
+        "lastMonth": {
+          "neonKey": "— Neon păstrează istoricul doar pentru o cheie de organizație; cheia pe proiect e refuzată ({reason}).",
+          "typedPlan": "— planul scris de mână nu are preț înregistrat.",
+          "unknown": "— nu s-a putut citi ({reason}).",
+          "here": "baza de date a site-ului",
+          "messages": "· {count} e-mailuri",
+          "cuHours": "· {hours} ore-CU"
+        },
+        "lastTotal": "Luna trecută: {amount}{estimate}.",
+        "lastTotalUnknown": "Luna trecută: — (nu se poate aduna: {lines} fără cifră).",
+        "trigger": {
+          "domain": "Se plătește la reînnoire, o dată pe an.",
+          "mailgun": "Ar costa doar trecând la un plan plătit ({plan}, {price} USD pe lună) — o alegere a voastră în «E-mailuri», niciodată a platformei.",
+          "vercel": "Ar costa doar trecând la planul Pro; pe Hobby nu vine factură — la limită publicările noi se opresc până luna viitoare.",
+          "neon": "Pe Free nu vine factură: la {hours} ore-CU baza se oprește până la perioada următoare. Ar costa doar trecând pe Launch.",
+          "deepl": "Ar costa doar cu DeepL API Pro; pe Free, după {free} de caractere într-o lună traducerile se opresc până luna viitoare, fără factură.",
+          "r2": "Ar costa doar peste {free} GB stocați: {price} USD pe GB pe lună, pentru surplus."
+        }
+      },
+      "database": {
+        "title": "Baza de date — Neon",
+        "intro": "Tot ce ține de baza de date, într-un singur loc: planul pe care e contul, bugetul lunii și ce face platforma cu el, frânele de la Neon și cât de des o trezește platforma."
       }
     },
     "clubTodo": {

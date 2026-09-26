@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.06-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.07-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.06-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.07-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1644,6 +1644,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 33. A card's photo counts as a media reference for the orphan sweep and the delete guard.
 34. The platform's privacy-notice template describes the page through {{teamPage}}; /admin/tasks shows an open row until a notice naming it is in force.
 35. Criterion 22 is checked end-to-end on both the mobile and the desktop project.
+36. Amending §403's criteria: the mute control is a corner glyph with aria-pressed; the volume slider, with an accessible name, is revealed on demand (hover, focus, tap) and folds after about 2.5 s idle, is never shown on a phone, and does not animate under prefers-reduced-motion; the embed asks for hd1080, and setPlaybackQuality is sent before playVideo.
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 
@@ -2286,6 +2287,8 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 16. 11 (amended). Given a monthly compute-time quota on this environment's Neon project, the month's budget is read from Neon's metered `compute_unit_seconds` (`consumption_history/v2`, else the operations log; the project row's legacy `compute_time_seconds` only as a labelled fallback) and graded green (on or under the pro-rated line, or within 25% of it), amber (more than 25% past the line, or at least the amber share, 60% by default) or red (at least the red share, 85% by default). `/api/health` carries `neon { status, percent }` and `budget { level, meteredPercent, linePercent, note }`, whole percents only, never CU-hours. Red is `near-limit` and answers `degraded` with a 503; amber answers `ok` with the note. A missing key, a refusal or no answer within 2.5 s reads `unknown` with no figures and fails nothing. Verification: unit `diagnostics/neon-budget.test.ts`, `diagnostics/neon.test.ts`, `api/health-route.test.ts`, `api/health-budget.test.ts` (2026-09-26, `DECISIONS.md` §447).
 17. Given `platform_settings.neonBudgetThresholds`, when it is absent or unreadable, then amber is 60 and red 85. An Administrator sets two whole percents on `/admin/tasks` → Costuri → «Bugetul lunii» (amber 10–95, red 20–99 and above amber), after a confirmation. Any other role is refused on the server. The change is audited as `neon_budget_thresholds.changed` with the old and new values. The governor reads the thresholds from the data cache (once per deployment and after a save), and the defaults on any failure. Verification: integration `diagnostics/budget-thresholds.test.ts`; unit `diagnostics/neon-budget.test.ts`, `shared/confirmed-actions.test.ts` (2026-09-26, `DECISIONS.md` §447).
 18. Given Costuri or `/devs`, then «Bugetul lunii» shows the level in words, the spend against the quota and the month's line, the pace and the date the quota would run out at that pace, what the platform is doing now (the jobs' interval, the cache ceiling, the reused health answer), and which of Neon's readings the figure came from, with the other two beside it. Without a reading it shows `unknown` and no figures. Verification: e2e `neon-budget.spec.ts` (2026-09-26, `DECISIONS.md` §447).
+19. Given Costuri's «Luna aceasta», when it renders, then each provider that bills or meters something (Neon, Mailgun, Vercel, the domain, DeepL, R2) shows its cost so far, its cost projected to the end of that provider's own period at §447's hourly pace (at least a day of pace, the same projection «Bugetul lunii» prints), and last month's cost where something kept it. The period's day and hours left are counted in the provider's clock, never the club's, so at 01:30 on 1 October in Brașov September is on day 30 of 30 with 1.5 hours left. Neon's previous period starts at the `period_start` Neon's answer gives, and at the first of the month before only when the answer gives none. A provider nothing could read is never counted as free (2026-09-27, `DECISIONS.md` §479).
+20. Given the database card's compute settings (floor, maximum size, always-on on Launch only), when the Superadministrator saves a change, then the confirmation names what that combination does to the month's bill at the plan Neon reports. On Launch it gives USD per month at 100 % utilisation and, for always-on, the floor every hour. On Free it says the change costs nothing until the month's included CU-hours are spent. A plan the page does not know is priced at Launch (2026-09-27, `DECISIONS.md` §479).
 
 **Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`; unit `diagnostics/neon-plan.test.ts`, `diagnostics/platform-plans.test.ts` (1, 2, 5); integration `diagnostics/neon-plan.test.ts` (5); e2e `neon-plan.spec.ts` (5)
 

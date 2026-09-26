@@ -4,7 +4,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import type { Env } from "@/shared/config/env";
 import { DomainError, type DomainErrorCode } from "@/shared/errors/domain-error";
-import { checkNeonLimits, describeNeonLimits, type NeonLimitsReading, parseNeonLimitsRequest } from "./domain/neon-limits";
+import { checkNeonLimits, describeNeonLimits, type NeonLimitsReading, parseNeonLimitsRequest, suspendSecondsOf } from "./domain/neon-limits";
 import { type NeonDeps, type NeonFailure, readNeonLimits, writeNeonLimits } from "./neon";
 
 /**
@@ -79,9 +79,10 @@ function failed(failure: NeonFailure, when: "read" | "write"): NeonLimitsRefusal
   );
 }
 
-/** What the audit row keeps of a reading: the two brakes, as Neon states them. */
-function brakes(reading: NeonLimitsReading): { maxCu: number | null; quotaCuHours: number | null } {
-  return { maxCu: describeNeonLimits(reading).maxCu, quotaCuHours: reading.quotaCuHours };
+/** What the audit row keeps of a reading: the brakes and the compute's floor and scale to zero (§479), as Neon states them. */
+function brakes(reading: NeonLimitsReading): { maxCu: number | null; minCu: number | null; suspendMode: string; quotaCuHours: number | null } {
+  const model = describeNeonLimits(reading);
+  return { maxCu: model.maxCu, minCu: model.minCu, suspendMode: model.suspendMode, quotaCuHours: reading.quotaCuHours };
 }
 
 export type NeonLimitsOutcome = {
@@ -119,11 +120,21 @@ export async function updateNeonLimits<T extends Record<string, unknown>>(
   });
   if (rule) {
     throw rule.code === "VALIDATION_ERROR"
-      ? new DomainError("VALIDATION_ERROR", `neon limits: ${rule.field} above the plan's ceiling`, [rule.field])
+      ? new DomainError("VALIDATION_ERROR", `neon limits: ${rule.field} beyond what the plan allows`, [rule.field])
       : new NeonLimitsRefusal("VALIDATION_ERROR", rule.code, `neon limits: ${rule.code}`, [rule.field]);
   }
 
-  const written = await writeNeonLimits(deps.env, read.snapshot, { maxCu: request.maxCu, quotaCuHours: request.quotaCuHours }, deps);
+  const written = await writeNeonLimits(
+    deps.env,
+    read.snapshot,
+    {
+      maxCu: request.maxCu,
+      minCu: request.minCu,
+      quotaCuHours: request.quotaCuHours,
+      suspendTimeoutSeconds: request.suspendMode === null ? null : suspendSecondsOf(request.suspendMode),
+    },
+    deps,
+  );
   if (written.wrote.length === 0) {
     if (!written.ok) throw failed(written.failure, "write");
     return { changed: false, before, after: before };
@@ -141,7 +152,7 @@ export async function updateNeonLimits<T extends Record<string, unknown>>(
     metadata: {
       from: brakes(before),
       to: after ? brakes(after) : null,
-      requested: { maxCu: request.maxCu, quotaCuHours: request.quotaCuHours },
+      requested: { maxCu: request.maxCu, minCu: request.minCu, suspendMode: request.suspendMode, quotaCuHours: request.quotaCuHours },
       environment: deps.env.APP_ENV,
       complete: written.ok,
     },

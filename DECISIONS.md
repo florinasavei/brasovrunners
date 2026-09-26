@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.06-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.07-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.06-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.07-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -18533,3 +18533,80 @@ Baseline `BR-V2.06-2026-09-27`.
 The §414/§437 image-quality spec uses the smallest fixtures that still prove the 2400 rung and the poster's ladder: a 2700-px picture and a 1280-px poster. It is also split in two, each part with its own budget: the first creates the page with its picture, and the second adds the film's poster, publishes and reads what the page offers. This lets it fit the budget on the mobile shard, and the desktop-only skip of hotfix #209 is gone. The «Originală» unit case draws a 4200-px source, which is still above «Mare»'s 4000, in place of 4800.
 
 Baseline `BR-V2.06-2026-09-27`.
+
+## 478. The YouTube film's volume: a subtle corner glyph, and HD asked for from the start
+
+The owner, 2026-09-26 22:36: «urăsc controller-ul de volum pentru YouTube player, fă-l mai subtil», and 22:38: «calitatea default la video trebuie să fie HD».
+
+**The control.** §403's volume bar becomes a small glyph at the film's bottom-right corner. It sits in normal flow under the 16∶9 box, never over YouTube's own controls. It is the mute toggle itself (aria-pressed), in the page's secondary ink on a translucent disc, the small glyph inside the full 44-px tap target. The volume slider, with its accessible name, unfolds leftwards beside it only on demand: the pointer resting on the control, focus reaching it, or a tap. It folds again after 2.5 seconds with nothing touching it, and each change restarts the countdown. It is folded by width, not hidden, so Tab still reaches it. A phone gets the mute toggle alone: the slider wrapper is not displayed below `sm`. The unfold transition is dropped for a visitor who asked for reduced motion.
+
+**HD.** The embed carries `vq=hd1080`, and on opening the bar sends `setPlaybackQuality('hd1080')` before `playVideo`, queued behind the IFrame API handshake. YouTube has documented `setPlaybackQuality` as a no-op since 2019 and chooses the stream from the viewing conditions, so HD is a request, not a guarantee.
+
+The poster, the server-rendered facade and "no request before the click" (§403) are unchanged. There are no new strings, no dependency and no migration.
+
+Baseline `BR-V2.07-2026-09-27`.
+
+## 479. Costuri becomes the club's money page: «Luna aceasta», last month, and the database's settings with their price
+
+**Asked.** The owner wants Costuri to answer a treasurer's mid-month questions: what each provider has cost this month so far, what it will have cost by the end of the month, and what last month cost. He also wants the database's settings in one card that says what a change would cost before it is saved, and /api/health to carry the projection.
+
+**Decided.**
+
+- **«Luna aceasta», the first card on Costuri.** There is one line per provider that bills or meters something: the domain, Mailgun, Vercel, Neon, DeepL and Cloudflare R2. Each line shows:
+  - the money so far, projected to the period's end, and last month;
+  - the usage behind that money;
+  - the ceiling the usage meets;
+  - on a free line, what would start costing money.
+
+The totals come first as sentences. The providers that bill nothing and meter nothing (Zitadel, cron-job.org, GitHub, Open-Meteo) are named in one closing sentence. The pure module is `domain/month-costs.ts`. `month-costs-read.ts` puts it together from injected readers, so each provider's answer and failure is tested with fakes.
+
+- **One pace.** A projection is the spend so far plus the hourly pace times the hours left, with the pace measured over at least a day. That is `neonBudget`'s formula (§447), so «Bugetul lunii» and «Luna aceasta» never print two projections for one month, and a test holds them equal.
+
+- **Each provider's own period.** Neon uses its billing period. The outbox, Vercel's list and the translated characters use the UTC calendar month. Each line names its period.
+
+- **Unmeasured is never zero (§1.2).** A provider nothing could read gets no amount and a grey chip, with the reason in the provider's own words. A typed Mailgun plan (`CUSTOM`) has no recorded price, so its amount is unknown rather than free. The total then says it is short, and why.
+
+- **Last month.**
+  - Neon: its consumption history for the previous calendar month, at today's catalogue rate plus today's storage. This is an estimate. The history answers an organisation's key only; a project-scoped key is refused, and the refusal is shown and remembered for six hours, as the meter already does.
+  - Mailgun: the plan's price, with the outbox's count for the previous UTC month.
+  - Domain: the renewal when the expiry's anniversary fell in that month.
+  - Vercel, DeepL and R2 under its allowance: zero.
+  - If any line is unknown, the total is «—» and names that line. It is never a smaller sum.
+
+- **R2** is measured from `media_assets.byte_size` against the free 10 GB. That is one variant per picture, so the figure is a lower bound, and the card says so. Over 10 GB, the excess is priced per GB-month and marked as an estimate.
+
+- **Usage facts beside the money.** Vercel's deployments this month appear beside its build minutes. Neon's stored GB is a usage fact, not only part of the money.
+
+- **Vercel is cached for an hour on Costuri**, like the weather (§402). The key is the project, team and month, never the token. A failure is not cached. /devs keeps its live read, because that page is where somebody goes to see a deployment that just finished.
+
+- **«Baza de date — Neon».** The plan, the month's budget, the brakes and the jobs' interval are now one section, and each card keeps its own `mayEdit`. The brakes card gains two settings, both the Superadministrator's (`canManagePlatform`, asserted in `updateNeonLimits`) and both recorded in the audit row:
+  - The compute's floor (`minCu`), from the ceiling's steps and never above the ceiling. Before this it was fixed at 0.25.
+  - Scale to zero: Neon's five idle minutes, or never. Neon's pricing, checked 2026-09-27, allows only these two on Free and Launch. Only Scale can set a number of seconds, so the choice is not a free number. «Never» is Launch-only and is refused on Free.
+
+- **The confirmation names the money.** The dialog asks one question per combination of ceiling, floor and scale to zero the form can post. Each question names what that combination does to the month against what Neon holds now, at Launch's rate over 720 hours:
+  - the ceiling's change at 100 % utilisation, for example «0,5 CU în plus la mărimea maximă ≈ 38,16 USD în plus pe lună la 100 % utilizare»;
+  - the floor's change, the same way;
+  - with scale to zero off, the least a month with no visitors costs.
+
+- **/api/health** gains `budget.projectedPercent`: the period's end at the pace so far, as a share of the quota. It is a share rather than CU-hours or dollars, because §335 keeps the club's billing figures off a public URL. It degrades nothing on its own; the governor's `red` still does. Before the release it was taken out again: the public answer keeps §447's rule — the level, never a figure — and the projection stayed on Costuri alone.
+
+- **Currency.** Every amount is in USD, the currency each of these vendors bills in and the cost table already prints. A converted figure would be a second estimate on top of the first.
+
+**Price sources.**
+- Neon: `NEON_PLANS` in `neon-plan.ts`.
+- Mailgun: `EMAIL_PLANS` in `email-plan.ts` (§100).
+- Vercel Hobby: 6,000 build minutes a month, checked 2026-09-19 (§101).
+- Domain: `DOMAIN_PRICE_USD_PER_YEAR` (§55).
+- DeepL API Free: 500,000 characters a month, checked 2026-09-26 (§464). It is now one constant, `DEEPL_FREE_CHARACTERS_PER_MONTH` in `translate/domain/budget.ts`, which the daily allowance's ceiling also reads.
+- Cloudflare R2: 10 GB-month free, then $0.015 per GB-month, checked 2026-09-27, in `platform-plans.ts`.
+- Neon scale to zero: Free fixed at five minutes; Launch five minutes or off. Checked 2026-09-27.
+
+**Not done.** Mailgun's last month is priced at today's plan: a month spent on Basic and then switched back reads at Free's price. Nothing records the plan per month.
+
+The confirmation's money sentence is priced at the plan Neon reports (`reportedPlan`). On Launch it gives the dollars per month at 100 % utilisation. On Free it says the change costs nothing until the month's included CU-hours are spent, and then Neon suspends the database until the next period. A plan the page does not know is priced at Launch, the only plan that bills, so the dialog never calls a change free when it may cost money.
+
+The projection keeps §447's hourly pace (the spend so far divided by the hours elapsed, with a floor of one day, multiplied by the hours left) and does not count days elapsed in the club's zone. Each provider's period runs on the provider's own clock: Neon's billing period, and the UTC calendar month for the outbox and Vercel. At 01:30 on 1 October in Brașov the month being projected is still September, on its last day with an hour and a half left. A day count in the club's zone would put three hours at each month edge into the wrong month, jump at the club's midnight, and disagree with «Bugetul lunii». A unit test at the month edge pins this through `periodProgress`, which gives the period's day, its number of days and the hours left.
+
+«Luna trecută» for Neon is the period Neon's consumption answer names before the current one, using that period's own `period_start`, so a period that turns on the 16th reads as the 16th. The query asks from the first of the calendar month before, which reaches back past that start whatever the day. The first of the month is used as the start only when the answer names no period start.
+
+Baseline `BR-V2.07-2026-09-27`.
