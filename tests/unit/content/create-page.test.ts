@@ -28,7 +28,7 @@ const ROWS = read("src/modules/content/events/ui/ScheduleRowsEditor.tsx");
 const ACTIONS = read("src/app/[locale]/admin/actions.ts");
 const SERVICE = read("src/modules/content/events/service.ts");
 const TABS = read("src/shared/ui/LocaleTabPanels.tsx");
-const FORM = read("src/shared/forms/ActionForm.tsx");
+const FORM = read("src/shared/forms/ActionFormIsland.tsx");
 const MESSAGES = ["messages/ro.json", "messages/en.json"].map((file) => [file, JSON.parse(read(file))] as const);
 
 const at = (source: string, needle: string) => {

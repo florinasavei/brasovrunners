@@ -3374,7 +3374,9 @@
         }
       ],
       "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'.",
-      "familyPending": "Not switched on yet: the database still keeps one registration per address per event, until BR-V1.94, the update that changes it. Until then, sending the form again for another person only re-sends the first registration's email."
+      "familyPending": "Not switched on yet: the database still keeps one registration per address per event, until BR-V1.94, the update that changes it. Until then, sending the form again for another person only re-sends the first registration's email.",
+      "network": "A save fails on an office laptop?",
+      "networkLink": "Check the network"
     },
     "erase": {
       "backToEvent": "Back to the event",
@@ -4541,6 +4543,65 @@
         "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
       },
       "groupRunDeclarationErased": "The declaration was erased."
+    }
+  },
+  "Network": {
+    "fallback": "The office network blocked the save request, so we tried the simple path. The save went through only if you also see the confirmation message; if it does not appear, check the page and try from your phone or another network.",
+    "check": "Check the network",
+    "close": "Close",
+    "retry": "Try again",
+    "blocked": {
+      "title": "The network blocked the save",
+      "kept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. What you typed is still in the form. The form can also go the simple way — as an ordinary form, which office networks let through.",
+      "notKept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. The form can go again the simple way — as an ordinary form, which office networks let through — with what it held when you pressed.",
+      "already": "If you already got the message that it saved, do not press — check the page.",
+      "send": "Send the simple way",
+      "sending": "Sending…",
+      "failed": "The simple path could not be used either; nothing was sent. Try from your phone or another network."
+    },
+    "page": {
+      "title": "Network check",
+      "intro": "Some company networks let the pages open but stop the saves, the pictures or the bot check. This page tries each of them from your browser and, for whatever is blocked, says what the IT team has to allow. If everything is green, the network is not the problem.",
+      "saves": {
+        "title": "Saves",
+        "meaning": "The backoffice's save buttons send a POST request to the site with the Next-Action header; the answer's type is text/x-component.",
+        "allow": "Allow: POST requests to {host} with the Next-Action header, and their text/x-component answers."
+      },
+      "post": {
+        "title": "The simple path",
+        "meaning": "An ordinary form sent to the site — the way a save goes when the network blocks the first one. If only this one is green, saves still get through.",
+        "allow": "Allow: forms sent by POST (multipart/form-data) to {host}."
+      },
+      "pictures": {
+        "title": "Pictures",
+        "meaning": "The pictures in the gallery and in the texts load from the storage's address, not from the site.",
+        "allow": "Allow: images from {host}.",
+        "none": "No picture is stored yet to check with.",
+        "unconfigured": "Picture storage is not configured here; there is nothing to check."
+      },
+      "botCheck": {
+        "title": "The bot check",
+        "meaning": "The registration and contact forms load Cloudflare Turnstile's check.",
+        "allow": "Allow: scripts and requests to {host}.",
+        "unconfigured": "The bot check is not switched on for this site; there is nothing to allow."
+      },
+      "state": {
+        "checking": "Checking…",
+        "ok": "Works",
+        "blocked": "Blocked",
+        "skipped": "Not checked"
+      },
+      "again": "Check again",
+      "report": {
+        "title": "The report for the club",
+        "intro": "Copy the report and send it to the club or to the IT team. It holds only the results, the site's address and the browser's description — nothing about you.",
+        "copy": "Copy the report",
+        "copied": "The report is copied; paste it into a message.",
+        "copyFailed": "It could not be copied; select the text below and copy it.",
+        "heading": "{club} — network check",
+        "site": "Site",
+        "browser": "Browser"
+      }
     }
   }
 }

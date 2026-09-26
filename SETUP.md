@@ -1403,6 +1403,29 @@ There is nothing to change on our side: the block is decided before a request re
 so it is invisible to the monitors and to `/api/health`, and it affects one network rather than
 the internet.
 
+**When the pages open but a save does not** (the same laptop, 2026-09-26): the proxy lets pages
+through and stops the scripted save — a POST with the `Next-Action` header, answered as
+`text/x-component`. Since `DECISIONS.md` §NNN the backoffice says so where the save was pressed,
+in the order to act on it:
+
+1. The warning «Rețeaua a blocat salvarea» appears above the form; what was typed stays in it.
+   **If the green confirmation already appeared, do not press anything** — the save is in; check
+   the page. The platform never sends a save twice on its own, because a cancel, an erase or a
+   message sent twice happens twice.
+2. Otherwise press **«Trimite pe calea simplă»**: the same form goes as a plain form post, which
+   the proxy lets through. The page it lands on says «…am încercat calea simplă.» — the save is in
+   only if the green confirmation shows as well. No confirmation, or «Nici calea simplă nu a putut
+   fi folosită», means nothing was saved: the phone, and the check below.
+3. Open **`/admin/network`** («Verificarea rețelei», linked from the guide and from that notice)
+   on the same laptop. It tries four things from the browser — the saves, the plain form post,
+   a stored picture, the anti-robot check — and prints, under each red row, the exact line for IT,
+   with the host taken from the site's configuration.
+4. **Copiază raportul** and send it to IT (or to the club). It holds the results, the site's
+   address and the browser's description, nothing about the person.
+5. The hosts IT is asked to allow are the ones the page prints: this site's (POST with
+   `Next-Action`, and plain `multipart/form-data` posts), the picture store's public address
+   (`R2_PUBLIC_BASE_URL`), and Cloudflare Turnstile's script host. Meanwhile: the phone.
+
 ### What to have ready before sitting down
 
 The capacity and the two window numbers (the club's own call), the rules text, the programme,

@@ -146,6 +146,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",
+  probeSaveAction: "the network check's probe (§NNN): answers ok, changes nothing",
 };
 
 type Site = { file: string; line: number; expression: string; verdict: "asks" | "bare"; why: string };

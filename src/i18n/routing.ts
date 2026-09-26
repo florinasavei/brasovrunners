@@ -161,6 +161,8 @@ export const routing = defineRouting({
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
+    /** What a staff member's network lets through, and what to ask IT to allow (§NNN). */
+    "/admin/network": "/admin/network",
     /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91). */
     "/admin/emails": "/admin/emails",
     "/admin/checkin": "/admin/checkin",

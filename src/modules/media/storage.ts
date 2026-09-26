@@ -239,6 +239,14 @@ export function bodyImageSrc(key: string): string {
   return url.startsWith("https://") ? url : new URL(url).pathname;
 }
 
+/**
+ * The host a browser reads pictures from (§NNN, the network check): the bucket's public address on
+ * R2 — Cloudflare serves them, never a function (§66) — and this site in every other mode.
+ */
+export function publicPictureHost(): string {
+  return new URL(env.STORAGE_MODE === "r2" && env.R2_PUBLIC_BASE_URL ? env.R2_PUBLIC_BASE_URL : env.APP_BASE_URL).host;
+}
+
 /** For the task board and the uploader's empty state: can this environment take a photo? */
 export function isStorageConfigured(): boolean {
   return env.STORAGE_MODE !== "unconfigured";

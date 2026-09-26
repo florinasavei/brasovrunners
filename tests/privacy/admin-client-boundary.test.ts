@@ -40,6 +40,14 @@ async function filesUnder(directory: string, extensions = [".ts", ".tsx"]): Prom
 /** The columns `RegistrationListRow` carries that describe a person rather than a registration. */
 const PARTICIPANT_FIELDS = ["participantEmail", "registeredName", "deliveryEmail", "typedName"];
 
+/*
+  The one Client Component the tree may hold, because Next requires it to be one: the backoffice's
+  error boundary (§NNN), which handles a save a network refused and throws every other error on to
+  `[locale]/error.tsx`. It is handed an error and nothing else — no row, no participant — and the
+  last test below holds it to importing no data at all.
+*/
+const NEXT_REQUIRED_CLIENT_FILES = new Set(["src/app/[locale]/admin/error.tsx"]);
+
 describe("AGENTS.md §14.5 the backoffice renders participant rows on the server", () => {
   it("has no Client Component anywhere in the admin route tree", async () => {
     const offenders: string[] = [];
@@ -48,8 +56,9 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
       const source = await readFile(file, "utf8");
       // The directive is only a directive on the first line of the module.
       const firstLine = source.split("\n").find((line) => line.trim() !== "") ?? "";
-      if (/^["']use client["']/.test(firstLine.trim())) {
-        offenders.push(relative(ROOT, file).split(sep).join("/"));
+      const name = relative(ROOT, file).split(sep).join("/");
+      if (/^["']use client["']/.test(firstLine.trim()) && !NEXT_REQUIRED_CLIENT_FILES.has(name)) {
+        offenders.push(name);
       }
     }
 
@@ -79,6 +88,15 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  it("lets the backoffice's error boundary be a Client Component only while it reads no data", async () => {
+    for (const name of NEXT_REQUIRED_CLIENT_FILES) {
+      const source = await readFile(join(ROOT, ...name.split("/")), "utf8");
+      const imports = [...source.matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1]);
+      expect(imports.filter((specifier) => /^@\/(db|modules)\//.test(specifier)), name).toEqual([]);
+      for (const field of PARTICIPANT_FIELDS) expect(source, name).not.toContain(field);
+    }
   });
 
   it("checks a source tree it actually found, so a wrong path cannot pass silently", async () => {

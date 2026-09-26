@@ -81,6 +81,13 @@ export default async function GuidePage({ params }: Props) {
       <Typography variant="body2">
         <Link href={{ pathname: "/admin/emails", hash: "participant-emails" }}>{t("emails.link")}</Link>
       </Typography>
+      {/*
+        Troubleshooting (§NNN): a save that fails only on an office laptop is the office network,
+        and the check names what to ask IT to allow.
+      */}
+      <Typography variant="body2" data-testid="guide-network">
+        {t("guide.network")} <Link href="/admin/network">{t("guide.networkLink")}</Link>
+      </Typography>
       {sections.map((section, index) => (
         <Box key={index} component="details" open={index < Math.max(1, mine.length)} sx={BOXED_DISCLOSURE_SX}>
           <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>

@@ -202,6 +202,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.registrations.clubMemberLabel",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",
+          // The network check's report heading (§NNN).
+          "Network.page.report.heading",
           "Registration.clubMemberDeclared",
           "Registration.disclosure.race",
         ].sort(),
@@ -214,6 +216,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "disclosure.race": 1,
       "registrations.clubMemberLabel": 1,
       "pages.intro": 1,
+      "page.report.heading": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {
