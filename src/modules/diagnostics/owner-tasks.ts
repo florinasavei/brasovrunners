@@ -108,6 +108,11 @@ export type OwnerTask = {
   text?: string;
   /** The steps array under `items.<id>` to show instead of `how`: fixing a thing is not setting it up. */
   steps?: string;
+  /**
+   * The chip's word under `stateLabel.<label>` in place of `state.<state>`, when the state's colour
+   * is right and its word is not: a domain thirty days from expiry is red, and still works (§NNN).
+   */
+  label?: "due";
 };
 
 /**
@@ -399,6 +404,8 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
           ? "done"
           : "broken",
     text: renewal.status === "unknown" ? "unknown" : renewal.status === "expired" ? "expired" : undefined,
+    // Red borrows `broken`'s colour and rank, not its word: the site still resolves until the day.
+    label: renewal.status === "urgent" ? "due" : undefined,
   });
 
   /**

@@ -120,6 +120,9 @@ describe("owner tasks", () => {
     expect(row({ status: "soon", expiresOn: "2027-09-16", daysLeft: 90 })).toMatchObject({ state: "open" });
     expect(row({ status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 })).toMatchObject({ state: "broken" });
     expect(row({ status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 })?.text).toBeUndefined();
+    // Red, but never «Nu funcționează»: the domain still works until the day.
+    expect(row({ status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 })?.label).toBe("due");
+    expect(row({ status: "expired", expiresOn: "2027-09-16", daysLeft: -1 })?.label).toBeUndefined();
     expect(row({ status: "expired", expiresOn: "2027-09-16", daysLeft: -1 })).toMatchObject({ state: "broken", text: "expired" });
     // Unset dates remind nobody: open, with the sentence that says what is missing.
     expect(row({ status: "unknown" })).toMatchObject({ state: "open", text: "unknown" });

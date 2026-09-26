@@ -18,7 +18,7 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 
 /** Amber from here: time enough to renew at leisure, not enough to forget it again. */
 export const DOMAIN_RENEWAL_AMBER_DAYS = 90;
-/** Red on the board and a 503 on `/api/health` from here: renew this week. */
+/** Red on the board and a 503 on `/api/health` from here: thirty days left to renew. */
 export const DOMAIN_RENEWAL_RED_DAYS = 30;
 
 export type DomainRenewal =

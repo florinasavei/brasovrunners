@@ -141,7 +141,7 @@ export async function GET(): Promise<Response> {
 
   /*
     The domain's renewal (§NNN): thirty days or fewer before the expiry — or past it — is
-    `degraded`, so the monitor's 503 reaches the owner while there is still a week to renew.
+    `degraded`, so the monitor's 503 reaches the owner while there is still a month to renew.
     Configuration and the clock only, never a query or a registrar's WHOIS; unset dates are
     `unknown` and change nothing.
   */

@@ -2095,6 +2095,9 @@
         "open": "De făcut",
         "done": "Gata"
       },
+      "stateLabel": {
+        "due": "De reînnoit acum"
+      },
       "owner": {
         "club": "Clubul",
         "developer": "Dezvoltatorul"
@@ -2258,7 +2261,7 @@
           "todo": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}). Galben cu 90 de zile înainte, roșu cu 30 — și atunci /api/health anunță monitorul. Un domeniu expirat oprește site-ul, linkurile din emailuri și trimiterea emailurilor, toate odată.",
           "done": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}) — e timp destul.",
           "expired": "Domeniul a expirat pe {domainExpiresOn}. Reînnoiește-l azi la registrar: până atunci site-ul și emailurile pot să nu mai meargă.",
-          "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire. .ro nu se mai cumpără (o singură adresă, pentru motoarele de căutare); rămâne doar .com.",
+          "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire.",
           "how": [
             "Reînnoiește pe mai mulți ani la registrar; apoi actualizează DOMAIN_RENEWAL_YEARS.",
             "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4. În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
@@ -2354,7 +2357,7 @@
           "name": "Adresa site-ului (domeniul .com)",
           "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește. Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA.",
           "ceiling": "Nu are o limită: o factură pe an, în lei.",
-          "whenCrossed": "Pasul următor este domeniul .ro, la un an după .com, amândouă active — 12 EUR + TVA pe an la ROTLD.",
+          "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani; .ro nu se mai cumpără (o singură adresă pentru motoarele de căutare).",
           "closeYes": "Acest mediu răspunde pe domeniul clubului.",
           "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie."
         },

@@ -683,7 +683,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
             >
               <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                <Chip size="small" color={STATE_COLOR[task.state]} label={t(`state.${task.state}`)} />
+                <Chip size="small" color={STATE_COLOR[task.state]} label={task.label ? t(`stateLabel.${task.label}`) : t(`state.${task.state}`)}
+                />
                 {/* Who it is waiting on, because that is the difference between a list somebody
                     acts on and a list they scroll past. */}
                 <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />
