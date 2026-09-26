@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.01-2026-09-26
+
+- **The race's conditions box is inside the read button**: visible and required; pressing it opens the text, and reading to the end ticks it. The tick survives a refused submission. A live list above «Trimite înscrierea» names every required field still empty, each a link to the field. The second address box shows one asterisk, not two. §422.
 ## BR-V2.00-2026-09-25
 
 - **The legal texts are production-ready**: the terms, the privacy notice, the race declaration and the two group-run declarations use the counsel review's wording.

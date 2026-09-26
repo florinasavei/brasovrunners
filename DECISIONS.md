@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.00-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V2.01-2026-09-26 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.00-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.01-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -17170,3 +17170,51 @@ The terms columns are migration `0081_terms_acceptance`, after the five-level ga
 Merged with BR-V1.99 and with fix/emails-legal-ready. The album's upload help keeps V1.99's sentence on how photos are sent ("sent as they are; only one that is too large is shrunk on the device first") and ends with the photographs amendment's upload rule, word for word, in both languages. A group-run signer's own copy is masked like the club's (the emails branch). Under the platform's own group-run text, which asks for no identity document, there is nothing to mask and the email says nothing about it. A club text that still names one is masked in both copies. On the form, a refusal that names the terms tick treats an empty or unreadable posted version as no version. `Number("")` is 0, so without this the page said the terms had changed when nothing had moved. The tick still comes back unticked.
 
 Baseline `BR-V2.00-2026-09-25`.
+
+## 422. Fixed — the race's conditions box sits inside the read button, what is missing is listed above the send button, and a label wears one asterisk
+
+**2026-09-26. Amends §195 and §315; extends §286.** The owner, looking at the registration form's conditions button: "that button should have a checkbox within it".
+
+### Proved first
+
+An end-to-end case, run on a production build of `qa` before any change, found two defects on both projects:
+
+- **The box was nowhere near the button.** §195 hid the required input (`opacity: 0`, 1×1, `position: absolute` with no positioned ancestor). The browser put it at its static position, about 630 px above the read button (mobile 2677 vs 3307, desktop 1389 vs 1640). A press on "send" with the conditions unread made the browser's bubble say "tick this box" where no box was. The send button's "Completează câmpurile marcate cu *" named nothing anybody could find, because every field with an asterisk was already filled.
+- **Two asterisks.** The second address box is `required`, so MUI draws " *". The catalogue's label carried one of its own: "Scrie adresa încă o dată * *".
+
+A third defect came from reading the code: `ReadAndAgree` ignored the draft. After a refusal about another field (§286: "vreau să persist inclusiv bifele"), the runner had to read the conditions again.
+
+### Decision
+
+**The box inside the read button, one row.** The real required checkbox, visible, is drawn on the button's own surface: the button's colour, the button's corners, the box first. It is two controls on one surface, because an input inside a `<button>` is invalid HTML.
+- A press on the box, or on the words, opens the text. The box does not tick.
+- The text read to its end and "Am citit și sunt de acord" pressed, the box ticks and the row turns to say so.
+- Once read, the box behaves like any other box.
+- §195's "a button first" stands: the button is still what a person sees. The box is what the browser's refusal and the new list point at.
+
+**The gate made robust.**
+- Having read to the end stays true across openings.
+- The text is measured again when its box or content changes size (a `ResizeObserver`, plus pictures' `load`). A text that stops needing a scroll could otherwise never be scrolled to its end.
+- The text is a focusable region, so the keyboard scrolls it.
+- A refused submission brings the tick back from the draft (`defaultAgreed`).
+- A tick given from the panel dispatches a native `change`. React writing a property fires no event, and the form's watcher went on listing the conditions after they were ticked (the e2e caught it).
+
+**A live list of what is missing, above the send button.** `SubmitButton` takes `missingTitle` and `missingNames`. With them, the scan that dims the button also lists every control the browser would refuse:
+- one entry per posted name;
+- named by the refusal summary's own `fieldNames`, then the control's label or `aria-label`;
+- each a 44 px link that opens any `<details>` around its field, scrolls it into view and focuses it (the `#id` is the fallback without JavaScript);
+- it shrinks as the form is filled.
+
+It is one mechanism, not a second watcher. On the registration form it replaces the sentence beneath the button. It is not a live region, because a list re-read at every keystroke would talk over the typing: it is the button's description. Forms without a list keep stopping at the first refused control (§371). Controls with `willValidate === false`, such as a disabled `ShownForMinor` fieldset, are no longer counted as missing anywhere.
+
+**One asterisk.** The literal "*" is removed from `Registration.emailConfirm` and `Contact.emailConfirm`. `fieldNames.rulesAcknowledged` and `fieldNames.emailConfirm` are capitalised, because they now stand as list items.
+
+**Unchanged.** The no-JavaScript path (§195's "fă safe"): an ordinary required checkbox with a link, posted under the same name. The server's `z.literal(true)`. What `rules_acknowledged_at` claims.
+
+*Rejected:*
+- **A checkbox glyph inside the button, with the real input still hidden.** The browser's bubble and the focus would still land on an invisible box.
+- **A live region for the list.** Every keystroke would be announced.
+
+Tests: e2e `registration-form.spec.ts`, «what is still missing is listed above the send button» and «the race's conditions: the box is inside the read button». The second test creates its own race with rules in both languages and walks the whole gate: the row geometry, the 44 px targets, the box opening the text, agree disabled until the scroll, the tick, the list, the tick kept after a too-fast refusal, and the entry going through.
+
+Baseline `BR-V2.01-2026-09-26`.
