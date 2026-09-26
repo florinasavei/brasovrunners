@@ -168,7 +168,7 @@ export const RO_DOMAIN_PRICE_EUR_PER_YEAR = 12;
  * Cloudflare R2, where the pictures live (§66, §414): 10 GB-month of storage free, then
  * $0.015 per GB-month — cloudflare.com/r2/pricing (developers.cloudflare.com/r2/pricing),
  * checked 2026-09-27. The operations it also counts (a million writes and ten million reads a
- * month free) are far beyond a club's gallery and are named, not measured, on Costuri (§NNN).
+ * month free) are far beyond a club's gallery and are named, not measured, on Costuri (§479).
  */
 export const R2_FREE_STORAGE_GB = 10;
 export const R2_USD_PER_GB_MONTH = 0.015;

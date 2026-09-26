@@ -46,12 +46,12 @@ type Props = {
   appEnv: AppEnvironment;
   /** The Administrator's form; `updateNeonLimits` refuses anybody else whatever this says (§291). */
   mayEdit: boolean;
-  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§NNN). */
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
 };
 
 /**
- * The sentence the confirmation adds for one choice of the compute's settings (§NNN): what the
+ * The sentence the confirmation adds for one choice of the compute's settings (§479): what the
  * change does to the month's bill at the plan Neon reports (Launch's rate in USD; on Free, that it
  * costs nothing until the plan's included hours are spent), or that it changes nothing. A plan the
  * page does not know is priced at Launch, the one that bills. Exported for the test that holds the
@@ -101,7 +101,7 @@ export function moneySentence(
 /**
  * "Limitele bazei de date" — the two brakes on the Neon bill, beside the Neon plan (§335; the
  * owner, 2026-09-23: "I want toggles in my admin area, so I can throttle myself when needed").
- * Since §NNN also the compute's floor and scale to zero, with the confirmation naming what the
+ * Since §479 also the compute's floor and scale to zero, with the confirmation naming what the
  * chosen settings do to the month's bill before anything is sent.
  *
  * Three states, and only the last has a form: no key (what is missing, and where it goes), a read
@@ -161,7 +161,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   const periodEnd = day(model.periodEnd);
 
   /*
-    The confirmation (§384) with the money in it (§NNN): one dialog per combination of the three
+    The confirmation (§384) with the money in it (§479): one dialog per combination of the three
     selects the form can post, each naming what that combination does to the month's bill against
     what Neon holds now — the dialog reads the form as it stands at the press, so the sentence is
     the one for what is being sent. A combination the form cannot post (a ceiling not offered, a
@@ -285,7 +285,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 </Typography>
               )}
 
-              {/* The floor (§NNN): the compute's size from the first query after a wake, paid every hour awake. */}
+              {/* The floor (§479): the compute's size from the first query after a wake, paid every hour awake. */}
               <RecallField
                 select
                 name="minCu"
@@ -302,7 +302,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 ))}
               </RecallField>
 
-              {/* Scale to zero (§NNN): Neon's five idle minutes, or never — Launch only, and it bills the floor every hour. */}
+              {/* Scale to zero (§479): Neon's five idle minutes, or never — Launch only, and it bills the floor every hour. */}
               <RecallField
                 select
                 name="suspendMode"

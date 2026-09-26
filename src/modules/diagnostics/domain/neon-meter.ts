@@ -133,7 +133,7 @@ export function meteredCuSeconds(body: unknown, projectId: string, periodStart: 
 
 /**
  * The billing period before the one starting at `periodStart`, from a consumption answer asked
- * from the first of the calendar month before (§NNN): the latest period whose own `period_start`
+ * from the first of the calendar month before (§479): the latest period whose own `period_start`
  * is before this one's (less the minute Neon rounds), its `compute_unit_seconds` summed, and that
  * `period_start` as the period's start — so a period that begins on the 16th reads as the 16th,
  * and the tail of the one before it in the same answer is not counted. When the answer names no

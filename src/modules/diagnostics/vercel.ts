@@ -124,7 +124,7 @@ export async function readVercelMonth(
   };
 }
 
-/** What Costuri's «Luna aceasta» needs of the month (§NNN): two numbers, which survive a cache's JSON. */
+/** What Costuri's «Luna aceasta» needs of the month (§479): two numbers, which survive a cache's JSON. */
 export type VercelMonthFigures = { deployments: number; buildMinutes: number };
 
 /** An hour, like the weather's (§402): the figures move with a deploy, and nobody decides on the minute. */
@@ -137,7 +137,7 @@ class VercelNotRead extends Error {
 }
 
 /**
- * The month's deployments and build minutes for Costuri, from Next's data cache for an hour (§NNN).
+ * The month's deployments and build minutes for Costuri, from Next's data cache for an hour (§479).
  *
  * `readVercelMonth` walks up to ten pages of a hundred, five seconds each, and a render of Costuri
  * must not wait on that every time it opens; `/devs` keeps the live read, because that page is

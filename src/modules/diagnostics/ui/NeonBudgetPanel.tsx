@@ -21,7 +21,7 @@ type Props = {
   reading: BudgetReading;
   /** The Administrator's, like the interval beside it; `updateBudgetThresholds` refuses anybody else. `/devs` shows it read-only. */
   mayEdit?: boolean;
-  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§NNN). */
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
 };
 

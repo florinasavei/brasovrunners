@@ -27,7 +27,7 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  */
 
 /**
- * The smallest compute Neon has, and the floor a form that does not name one keeps. Since §NNN the
+ * The smallest compute Neon has, and the floor a form that does not name one keeps. Since §479 the
  * Superadministrator may raise the floor (`minCu`) — a larger compute from the first query after a
  * wake, paid for every hour awake — from the same steps as the ceiling.
  */
@@ -178,7 +178,7 @@ export type NeonLimitsModel = {
   maxCu: number | null;
   /** The floor in force: the largest among the read-write computes, or null with none. */
   minCu: number | null;
-  /** Whether any read-write compute is always on (§NNN). */
+  /** Whether any read-write compute is always on (§479). */
   suspendMode: NeonSuspendMode;
   price: NeonCeilingPrice | null;
   computeCount: number;
@@ -231,7 +231,7 @@ function smallestQuota(usedCuHours: number): number {
 export const neonLimitsFormSchema = z
   .object({
     maxCu: z.union([z.string(), z.number()]),
-    /** Absent keeps the platform's floor, as every form did before §NNN. */
+    /** Absent keeps the platform's floor, as every form did before §479. */
     minCu: z.union([z.string(), z.number()]).nullish(),
     /** Absent leaves Neon's scale-to-zero setting as it is. */
     suspendMode: z.enum(NEON_SUSPEND_MODES).nullish(),
@@ -325,7 +325,7 @@ export function checkNeonLimits(
   context: { usedCuHours: number; quotaCuHours: number | null; plan: NeonPlanId | null; appEnv: AppEnvironment },
 ): NeonLimitsRuleRefusal | null {
   if (context.plan && request.maxCu > NEON_AUTOSCALING_CEILING_CU[context.plan]) return { code: "VALIDATION_ERROR", field: "maxCu" };
-  // Always on is a paid plan's switch: Free keeps Neon's five minutes whatever is sent (§NNN).
+  // Always on is a paid plan's switch: Free keeps Neon's five minutes whatever is sent (§479).
   if (request.suspendMode === "never" && context.plan && !NEON_ALWAYS_ON_ALLOWED[context.plan]) return { code: "VALIDATION_ERROR", field: "suspendMode" };
   const quotaChanges = cuHoursToSeconds(request.quotaCuHours) !== cuHoursToSeconds(context.quotaCuHours);
   if (request.quotaCuHours !== null && quotaChanges) {
@@ -363,7 +363,7 @@ export function quotaBoxValue(quotaCuHours: number | null): string {
 }
 
 /**
- * What a change of the compute's settings does to the month's bill (§NNN), at the rate of the plan
+ * What a change of the compute's settings does to the month's bill (§479), at the rate of the plan
  * Neon reports from the one catalogue (Launch when it reports none) over the thirty-day month the cost row prices (`NEON_MONTH_HOURS`) — the
  * figures the confirmation names before the save, in the owner's words: «0,5 CU în plus ≈ X pe lună
  * la 100 % utilizare».

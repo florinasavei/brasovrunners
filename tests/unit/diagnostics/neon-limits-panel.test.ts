@@ -142,7 +142,7 @@ describe("BR-REQ-090-07 the database's limits card", () => {
   });
 });
 
-describe("§NNN the compute's floor and scale to zero, and the money the confirmation names", () => {
+describe("§479 the compute's floor and scale to zero, and the money the confirmation names", () => {
   it("offers the floor and scale to zero beside the ceiling, with what Neon holds now", async () => {
     const html = await render({ locale: "ro", reading: { ok: true, limits: LIMITS }, appEnv: "qa", mayEdit: true });
     expect(html).toContain('name="minCu"');

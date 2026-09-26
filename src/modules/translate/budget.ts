@@ -55,7 +55,7 @@ export async function charactersTranslatedToday<T extends Record<string, unknown
 
 /**
  * The characters sent for translation since an instant, by everybody — the day's allowance above,
- * and the month's line on Costuri → «Luna aceasta» (§NNN) against DeepL Free's monthly ceiling.
+ * and the month's line on Costuri → «Luna aceasta» (§479) against DeepL Free's monthly ceiling.
  */
 export async function charactersTranslatedSince<T extends Record<string, unknown>>(db: Database<T>, since: Date): Promise<number> {
   const [row] = await db

@@ -29,7 +29,7 @@ type Props = {
    * about email is picked by it rather than stated once and false half the time.
    */
   emailTiming: DeliveryTiming;
-  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§NNN). */
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
 };
 

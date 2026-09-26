@@ -142,7 +142,7 @@ describe("BR-REQ-090-07 writeNeonLimits — the brakes set", () => {
     expect(neon.calls).toHaveLength(0);
   });
 
-  it("§NNN sets the floor and switches scale to zero off on the project's defaults and the compute, and back", async () => {
+  it("§479 sets the floor and switches scale to zero off on the project's defaults and the compute, and back", async () => {
     const neon = fakeNeon(productionLikeState());
     const snapshot = await snapshotOf(neon);
 

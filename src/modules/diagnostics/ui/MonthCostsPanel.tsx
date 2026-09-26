@@ -54,7 +54,7 @@ function Fact({ label, wide = false, testId, children }: { label: string; wide?:
 }
 
 /**
- * «Luna aceasta» — the first card on Costuri (§NNN): what each provider has cost this month so
+ * «Luna aceasta» — the first card on Costuri (§479): what each provider has cost this month so
  * far, what it will have cost by the end of it and what last month cost where anything kept it,
  * with the usage behind each figure and the ceiling that usage meets. The totals first, as
  * sentences, because that is the question; one line per provider under it; every free line says

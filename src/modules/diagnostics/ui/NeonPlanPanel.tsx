@@ -30,7 +30,7 @@ type Props = {
    * refuses anybody else — so a role that may not press is not shown the button.
    */
   mayEdit: boolean;
-  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§NNN). */
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
   level?: 2 | 3;
 };
 

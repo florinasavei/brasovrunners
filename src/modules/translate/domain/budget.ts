@@ -13,7 +13,7 @@ import { z } from "zod";
  */
 /**
  * DeepL API Free's monthly allowance, from deepl.com/pro-api on 2026-09-26 (§464): the one figure
- * the daily allowance's ceiling and Costuri's «Luna aceasta» line (§NNN) both read.
+ * the daily allowance's ceiling and Costuri's «Luna aceasta» line (§479) both read.
  */
 export const DEEPL_FREE_CHARACTERS_PER_MONTH = 500_000;
 export const DEEPL_FREE_CHECKED_ON = "2026-09-26";

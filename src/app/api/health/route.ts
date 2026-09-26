@@ -299,7 +299,7 @@ export async function GET(): Promise<Response> {
       // `red` degrades the status (it is `neon.status: near-limit`); `amber` stays `ok` with the
       // note, because the platform slowing itself down is its own business.
       //
-      // `projectedPercent` (§NNN): where the period ends at the pace so far — the projection
+      // `projectedPercent` (§479): where the period ends at the pace so far — the projection
       // Costuri's «Luna aceasta» prints in CU-hours and dollars — as a share of the quota, for the
       // same reason as the rest of this block: the club's bill is not published on a public URL.
       // Above 100 is the month that will suspend the site before it ends; it degrades nothing on

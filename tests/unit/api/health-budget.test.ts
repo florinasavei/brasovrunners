@@ -66,7 +66,7 @@ describe("§447 /api/health reads the month's budget", () => {
     expect(response.status).toBe(200);
     expect(body.neon).toEqual({ status: "ok", percent: 50 });
     expect(body.budget).toMatchObject({ level: "amber", meteredPercent: 50, linePercent: 30 });
-    // §NNN: the period's end at the pace so far, a share of the quota — never CU-hours or dollars.
+    // §479: the period's end at the pace so far, a share of the quota — never CU-hours or dollars.
     expect(body.budget.projectedPercent).toBe(120);
     expect(JSON.stringify(body)).not.toMatch(/usd|cuHours/i);
     expect(body.budget.note).toMatch(/hourly/);

@@ -175,7 +175,7 @@ function startOfUtcMonth(now: Date): Date {
 }
 
 /**
- * The messages Mailgun carried in `[start, end)` — Costuri's «Luna trecută» (§NNN) counts the
+ * The messages Mailgun carried in `[start, end)` — Costuri's «Luna trecută» (§479) counts the
  * previous UTC month with it, the month `readEmailVolumeToday` counts this one over.
  */
 export async function mailgunMessagesSentBetween<T extends Record<string, unknown>>(db: Database<T>, start: Date, end: Date): Promise<number> {

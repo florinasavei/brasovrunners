@@ -200,7 +200,7 @@ export function totalMediaBytes(rows: readonly Pick<MediaAssetRow, "byteSize">[]
 
 /**
  * The same sum, asked of the database in one aggregate, for a page that does not list the rows —
- * Costuri's R2 line (§NNN). A lower bound for the same reason as above: the recorded size is one
+ * Costuri's R2 line (§479). A lower bound for the same reason as above: the recorded size is one
  * variant per picture, not every object the bucket holds for it.
  */
 export async function storedMediaBytes<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {

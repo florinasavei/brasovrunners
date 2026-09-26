@@ -215,7 +215,7 @@ describe("BR-REQ-090-07 the card's words, in both languages", () => {
   });
 });
 
-describe("§NNN the floor and scale to zero", () => {
+describe("§479 the floor and scale to zero", () => {
   it("parses the floor from the same steps, never above the ceiling, and keeps 0.25 when none is posted", () => {
     expect(parseNeonLimitsRequest({ maxCu: "2", minCu: "0,5", suspendMode: "never", quotaMode: "none" })).toEqual({
       ok: true,

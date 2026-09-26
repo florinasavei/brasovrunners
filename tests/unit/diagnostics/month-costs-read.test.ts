@@ -5,7 +5,7 @@ import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans"
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 
 /**
- * BR-REQ-090-07 criterion 19 (§NNN) — how Costuri puts «Luna aceasta» together from what each
+ * BR-REQ-090-07 criterion 19 (§479) — how Costuri puts «Luna aceasta» together from what each
  * provider answered: a fake for every reader, and each one failing in turn, so the mapping the page
  * relies on (the typed plan's unknown price, Neon's reason carried through, a Vercel refusal, an
  * outbox or audit query that throws) is held here rather than trusted to a page no test renders.

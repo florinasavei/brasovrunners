@@ -151,7 +151,7 @@ describe("§464 «Tradu din română»", () => {
     // Yesterday's spend does not count today.
     const tomorrow = new Date(startOfClubDay(NOW).getTime() + 25 * 60 * 60_000);
     expect(await charactersTranslatedToday(db, tomorrow)).toBe(0);
-    // The month's line on Costuri (§NNN) sums the same rows since the month's start — yesterday's included.
+    // The month's line on Costuri (§479) sums the same rows since the month's start — yesterday's included.
     expect(await charactersTranslatedSince(db, new Date("2026-09-01T00:00:00.000Z"))).toBe(20);
     expect(await charactersTranslatedSince(db, tomorrow)).toBe(0);
   });

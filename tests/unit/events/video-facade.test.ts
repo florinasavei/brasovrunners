@@ -123,7 +123,7 @@ describe("§403 the embed address after the click", () => {
     expect(src).toContain("rel=0");
   });
 
-  it("asks for HD from the start (§NNN): the embed's vq hint", () => {
+  it("asks for HD from the start (§478): the embed's vq hint", () => {
     const src = youtubeEmbedUrl("dQw4w9WgXcQ", "https://app.example.test");
     expect(new URL(src).searchParams.get("vq")).toBe("hd1080");
   });
@@ -145,7 +145,7 @@ describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: 
     expect(html).toContain('aria-pressed');
   });
 
-  it("is a corner glyph, not a bar (§NNN): the glyph at its small size, the slider folded beside it and still in the markup for Tab to reach", () => {
+  it("is a corner glyph, not a bar (§478): the glyph at its small size, the slider folded beside it and still in the markup for Tab to reach", () => {
     const html = renderToStaticMarkup(
       createElement(VideoVolumeBar, { frameId: "video-frame-3", labels: { mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" } }),
     );
@@ -157,7 +157,7 @@ describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: 
   });
 });
 
-describe("§NNN VideoVolumeBar — the slider on demand, HD before play", () => {
+describe("§478 VideoVolumeBar — the slider on demand, HD before play", () => {
   const mod = () => import("@/shared/ui/VideoVolumeBar");
 
   it("is folded by default in the markup", () => {

@@ -129,7 +129,7 @@ export const maxDuration = 60;
  *   `modules/club-todo`), for every role from the Redactor up.
  * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
  *   club must be able to switch it off on the day it refuses real people.
- * - `costs` — the club's money page (§NNN): this month per provider and projected to its end,
+ * - `costs` — the club's money page (§479): this month per provider and projected to its end,
  *   the database's configuration in one card, then what the club pays a year and what the next
  *   thing to cost anything would cost.
  * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §397).
@@ -570,7 +570,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       ? await Promise.all([readTranslationBudget(db), charactersTranslatedToday(db, now)]).then(([state, usedToday]) => ({ state, usedToday }))
       : null;
   /*
-    «Luna aceasta» (§NNN): each provider's month so far and projected to its end, from the readings
+    «Luna aceasta» (§479): each provider's month so far and projected to its end, from the readings
     this page already holds — Neon's meter (§447), the outbox's month (§100), the domain's expiry
     (§435) — plus the readers only this card needs: Vercel's month (§101, cached an hour here;
     `/devs` keeps its live read), the month's translated characters (§464), last month's outbox,
@@ -868,7 +868,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         <Divider />
 
         {/*
-          The club's money page (§NNN): the month first — each provider so far and projected to the
+          The club's money page (§479): the month first — each provider so far and projected to the
           month's end, the total above them — because that is what a treasurer opens Costuri for.
         */}
         {month && (
@@ -882,7 +882,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         )}
 
         {/*
-          The database's configuration in one card (§NNN): the plan, the month's budget, the brakes
+          The database's configuration in one card (§479): the plan, the month's budget, the brakes
           and the jobs' interval were four cards among the rest of Costuri, each explaining the
           other three. One card now, the four inside it in the order a change is reasoned about —
           which plan, where the month stands, what Neon will allow, how often the platform wakes

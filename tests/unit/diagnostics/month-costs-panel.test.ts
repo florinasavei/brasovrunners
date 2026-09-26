@@ -7,7 +7,7 @@ import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans"
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 
 /**
- * BR-REQ-090-07 criterion 19 (§NNN) — «Luna aceasta», rendered to HTML on the server the way the
+ * BR-REQ-090-07 criterion 19 (§479) — «Luna aceasta», rendered to HTML on the server the way the
  * page sends it, through next-intl's own translator over the real catalogues, in both languages:
  * the total first, last month's beside it, one line per provider with its money, its last month
  * and its usage, a line nothing could read saying why instead of printing a zero, every free line

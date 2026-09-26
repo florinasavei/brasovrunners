@@ -79,7 +79,7 @@ function failed(failure: NeonFailure, when: "read" | "write"): NeonLimitsRefusal
   );
 }
 
-/** What the audit row keeps of a reading: the brakes and the compute's floor and scale to zero (§NNN), as Neon states them. */
+/** What the audit row keeps of a reading: the brakes and the compute's floor and scale to zero (§479), as Neon states them. */
 function brakes(reading: NeonLimitsReading): { maxCu: number | null; minCu: number | null; suspendMode: string; quotaCuHours: number | null } {
   const model = describeNeonLimits(reading);
   return { maxCu: model.maxCu, minCu: model.minCu, suspendMode: model.suspendMode, quotaCuHours: reading.quotaCuHours };

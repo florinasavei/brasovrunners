@@ -18,7 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * an element or a ref crossing the server/client boundary) and its `<details>` ancestor to know
  * when the film is showing, and renders nothing until then.
  *
- * Since §NNN it is no bar at all: a subtle volume glyph at the film's bottom-right corner, the
+ * Since §478 it is no bar at all: a subtle volume glyph at the film's bottom-right corner, the
  * mute toggle itself, with the slider unfolding beside it only on demand — the pointer resting
  * on it, or the keyboard or a tap reaching it.
  */
@@ -28,7 +28,7 @@ const CONTROL_SIZE = 44;
 /** The slider's width once unfolded — enough for a thumb to drag, small beside the film. */
 const SLIDER_WIDTH = 96;
 /**
- * The quality the film asks for first (§NNN): HD. Since 2019 YouTube chooses the stream from
+ * The quality the film asks for first (§478): HD. Since 2019 YouTube chooses the stream from
  * the viewing conditions and documents `setPlaybackQuality` as unsupported, so this is a
  * request, not a guarantee — sent alongside the embed's own `vq` hint (`youtubeEmbedUrl`),
  * harmless where the player ignores it.
@@ -48,10 +48,10 @@ const READY_EVENTS = new Set(["onReady", "initialDelivery", "infoDelivery"]);
 
 type Command = { func: string; args?: (number | string)[] };
 
-/** How long the unfolded slider stays with nothing touching it before it folds again (§NNN). */
+/** How long the unfolded slider stays with nothing touching it before it folds again (§478). */
 export const REVEAL_IDLE_MS = 2500;
 
-/** What the film is told on opening, in order: HD first, then play (§NNN). */
+/** What the film is told on opening, in order: HD first, then play (§478). */
 export function openingCommands(): Command[] {
   return [{ func: "setPlaybackQuality", args: [PREFERRED_QUALITY] }, { func: "playVideo" }];
 }
@@ -85,7 +85,7 @@ export function createRevealTimer(set: (revealed: boolean) => void, idleMs = REV
 
 /**
  * The slider wrapper's style: folded by width, not `display` or `visibility`, so Tab still
- * reaches it on a desktop; never shown on a phone, which gets the mute toggle alone (§NNN);
+ * reaches it on a desktop; never shown on a phone, which gets the mute toggle alone (§478);
  * no transition for a visitor who asked for reduced motion.
  */
 export function sliderWrapperSx(revealed: boolean) {
@@ -196,7 +196,7 @@ export default function VideoVolumeBar({
     // The click that opened the disclosure is the same gesture that should start the film
     // (the owner's call: a click means sound); the player answers `onReady` before this does
     // anything, exactly like every other command here. HD is asked for first, before the film
-    // starts, so its first frames are not a low-resolution guess (§NNN).
+    // starts, so its first frames are not a low-resolution guess (§478).
     for (const { func, args } of openingCommands()) post(func, args);
     // The handshake again, until the player answers — as YouTube's own script does.
     sendListening();
@@ -284,11 +284,11 @@ export default function VideoVolumeBar({
         // A subtle glyph at the film's bottom-right corner, in normal flow under the 16∶9 box —
         // never over it, where YouTube's own controls are (§403) — with no bar of its own: the
         // page's own background, the page's secondary ink, the glyph at its small size inside
-        // the full 44-px tap target (§NNN).
+        // the full 44-px tap target (§478).
         justifyContent: "flex-end",
         alignItems: "center",
         color: "text.secondary",
-        // The slider only on demand (§NNN): the pointer resting on the control, focus reaching
+        // The slider only on demand (§478): the pointer resting on the control, focus reaching
         // it, or a tap — each unfolds it, and it folds again after REVEAL_IDLE_MS untouched.
       }}
       onPointerEnter={reveal}
@@ -316,7 +316,7 @@ export default function VideoVolumeBar({
           height: CONTROL_SIZE,
           flexShrink: 0,
           opacity: 0.7,
-          // A translucent disc behind the glyph, so it reads on any background (§NNN).
+          // A translucent disc behind the glyph, so it reads on any background (§478).
           bgcolor: (theme: Theme) => alpha(theme.palette.background.paper, 0.6),
           "&:hover, &:focus-visible": { opacity: 1 },
         }}

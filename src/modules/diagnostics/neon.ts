@@ -438,7 +438,7 @@ export async function readNeonConsumption(
 
 /**
  * The billing period before the current one, as Neon metered it — Costuri's «Luna trecută»
- * (§NNN). The consumption endpoint is the only place Neon keeps a finished period's figure, and
+ * (§479). The consumption endpoint is the only place Neon keeps a finished period's figure, and
  * it answers an organisation's key only: a key scoped to one project is refused (403/404), which
  * this returns as the reason rather than a zero. Shared, like every other reading of the meter
  * (`NEON_SHARED_READ_SECONDS`), so an open of Costuri asks Neon at most once a quarter of an hour;
@@ -514,7 +514,7 @@ export type NeonQuotaHealth = {
   lineCuHours: number | null;
   /**
    * The period's CU-hours at its end if the pace so far holds (`neonBudget`'s projection, the one
-   * Costuri's «Luna aceasta» prints, §NNN), or null with no quota or no reading.
+   * Costuri's «Luna aceasta» prints, §479), or null with no quota or no reading.
    */
   projectedCuHours: number | null;
   /** The month's budget as the governor reads it (`domain/neon-budget.ts`). */
@@ -638,7 +638,7 @@ export async function readNeonLimits(
  * read-write compute that is not already where it is asked to be. Nothing is sent that would not
  * change anything, so a save that changes only the limit starts no compute operation at all.
  *
- * Since §NNN the floor (`minCu`, the platform's 0.25 when absent) and scale to zero
+ * Since §479 the floor (`minCu`, the platform's 0.25 when absent) and scale to zero
  * (`suspendTimeoutSeconds`, left alone when absent or null) travel the same way.
  *
  * Stops at the first refusal. `wrote` says what had already been applied by then, so the service

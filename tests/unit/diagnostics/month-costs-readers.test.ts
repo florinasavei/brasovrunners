@@ -3,7 +3,7 @@ import { previousPeriodCuSeconds } from "@/modules/diagnostics/domain/neon-meter
 import { FAKE_PROJECT_ID, fakeNeon, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
- * BR-REQ-090-07 criterion 19 (§NNN) — the two provider readers only «Luna aceasta» uses: Vercel's
+ * BR-REQ-090-07 criterion 19 (§479) — the two provider readers only «Luna aceasta» uses: Vercel's
  * month for Costuri, from Next's data cache for an hour and never a failure kept; and Neon's
  * previous billing period, from its consumption history, which a project-scoped key is refused.
  */

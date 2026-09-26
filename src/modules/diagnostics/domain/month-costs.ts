@@ -5,7 +5,7 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
 
 /**
  * «Luna aceasta» — what each provider has cost the club so far this month, and what it will
- * have cost by the month's end at the pace so far (§NNN; the owner: «Costuri» becomes the club's
+ * have cost by the month's end at the pace so far (§479; the owner: «Costuri» becomes the club's
  * money page).
  *
  * The cost table below it on Costuri answers "what does today's setup cost a year"; this answers

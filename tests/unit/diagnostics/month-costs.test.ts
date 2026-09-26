@@ -19,7 +19,7 @@ import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans"
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 
 /**
- * BR-REQ-090-07 criterion 19 (§NNN) — Costuri's «Luna aceasta»: each provider's month so far and
+ * BR-REQ-090-07 criterion 19 (§479) — Costuri's «Luna aceasta»: each provider's month so far and
  * projected to its end, at the pace the budget card uses, every price from its catalogue, and a
  * provider nothing could read never counted as free.
  */
@@ -216,7 +216,7 @@ describe("the month's total", () => {
   });
 });
 
-describe("the usage facts beside the money (§NNN)", () => {
+describe("the usage facts beside the money (§479)", () => {
   it("Vercel: the month's deployments beside its build minutes", () => {
     expect(line(facts(), "vercel").detail).toEqual({ kind: "deployments", count: 12 });
     expect(line(facts({ vercel: null }), "vercel").detail).toBeNull();
@@ -249,7 +249,7 @@ describe("the usage facts beside the money (§NNN)", () => {
   });
 });
 
-describe("last month (§NNN)", () => {
+describe("last month (§479)", () => {
   const SEPTEMBER = previousMonth(OCTOBER);
 
   it("is the calendar month before, in the provider's own count", () => {

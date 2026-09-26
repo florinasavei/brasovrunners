@@ -3,7 +3,7 @@ import { type MonthCostFacts, type MonthCostId, type MonthCostLine, monthCosts, 
 
 /**
  * «Luna aceasta»'s facts, put together from what the page has already read and the readers only
- * this card needs (§NNN) — one function with its readers as arguments, so the mapping from each
+ * this card needs (§479) — one function with its readers as arguments, so the mapping from each
  * provider's answer to `MonthCostFacts` is tested with fakes, every reader failing in turn, rather
  * than trusted to a page nobody renders in a test.
  *
