@@ -16,6 +16,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
+import { handsSpareAtConfirm, type SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
@@ -65,6 +66,7 @@ export default async function DeskRow({
   showEvent = false,
   readOnly = false,
   minorSigns,
+  spare = { kind: "none" },
 }: {
   row: DeskRegistration;
   locale: Locale;
@@ -81,8 +83,17 @@ export default async function DeskRow({
    * row's own language — the translation "Confirmă pe hârtie" binds to.
    */
   minorSigns: Readonly<Record<Locale, boolean>>;
+  /**
+   * Where the event's desk spares stand (§444), read once by the page: the next free one is
+   * suggested in the number box of a runner who has no settled number — beside "Confirmă aici" and
+   * in the number given by hand — so the volunteer hands the pre-printed bib and the screen agrees.
+   * `out` leaves the box empty and says so; `none` (no spares reserved) is the row as it always was.
+   */
+  spare?: SpareState;
 }) {
   const t = await getTranslations("Admin");
+  const spareSuggestion = spare.kind === "free" ? spare.next : null;
+  const sparesOut = spare.kind === "out";
   // Every desk verb asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
   const canConfirm =
@@ -298,10 +309,38 @@ export default async function DeskRow({
               data-testid="desk-confirm-form"
             >
               {hidden}
-              <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
-                {t("desk.confirmHere")}
-              </GlyphButton>
+              <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                {/*
+                  The bib handed with the paper (§444): the next desk spare, suggested, for a walk-in —
+                  a staff entry with no settled number and no printed bib (`handsSpareAtConfirm`) —
+                  so they get a pre-printed spare, never a number nobody printed. An online runner's
+                  provisional number, shown at the head of the row, stays theirs: no box, and the
+                  confirmation adopts it (§220); the server refuses a handed number there too.
+                  Emptied, the platform draws one as before. Only where the club set spares.
+                */}
+                {spare.kind !== "none" && handsSpareAtConfirm(row) && (
+                  <RecallField
+                    name="bibNumber"
+                    type="number"
+                    size="small"
+                    label={t("desk.handedBib")}
+                    defaultValue={spareSuggestion ?? ""}
+                    title={sparesOut ? t("desk.sparesOut") : undefined}
+                    slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
+                    sx={{ width: 140, "& .MuiInputBase-root": { minHeight: 44 } }}
+                  />
+                )}
+                <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
+                  {t("desk.confirmHere")}
+                </GlyphButton>
+              </Stack>
             </ActionForm>
+          )}
+          {/* Every spare given (§444): the box above suggests nothing, and this says why. */}
+          {!readOnly && sparesOut && handsSpareAtConfirm(row) && (canConfirm || row.status === "CONFIRMED") && (
+            <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }} data-testid="desk-spares-out">
+              {t("desk.sparesOut")}
+            </Typography>
           )}
           {/*
             A minor's paper is signed by two (§330) where the declaration in effect asks the minor
@@ -365,11 +404,14 @@ export default async function DeskRow({
                 >
                   {hidden}
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                    {/* The next desk spare, suggested (§444): the bib the volunteer is about to hand. */}
                     <RecallField
                       name="bibNumber"
                       type="number"
                       size="small"
                       label={t("desk.bibField")}
+                      defaultValue={spareSuggestion ?? undefined}
+                      title={spareSuggestion !== null ? t("desk.nextSpare", { number: spareSuggestion }) : sparesOut ? t("desk.sparesOut") : undefined}
                       slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
                       sx={{ width: 120 }}
                     />

@@ -6,6 +6,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
+import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { jobRuns } from "@/db/schema/job-runs";
 import {
   legalDocumentNumbering,
@@ -19,6 +20,7 @@ import { participants } from "@/db/schema/participants";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrationInterests } from "@/db/schema/registration-interests";
+import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
@@ -92,6 +94,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(declarationAcceptances);
   // A group run's self-declarations (§393) reference the event and the legal version: before both.
   await db.delete(groupRunDeclarations);
+  // Another person waiting for the address's confirmation (§446): it points at a token and a registration.
+  await db.delete(pendingFamilyEntries);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
   // The gallery: items, then albums (which the cover references), then the assets.
@@ -107,6 +111,11 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // The "tell me when registration opens" addresses (§146) cascade from their event; deleted
   // first for the same reason as the translations above.
   await db.delete(registrationInterests);
+  // The newsletter (§445): its sends reference events and staff (both ON DELETE SET NULL), its links
+  // cascade from the subscriber — all three emptied before the rows they name.
+  await db.delete(newsletterSends);
+  await db.delete(newsletterTokens);
+  await db.delete(newsletterSubscribers);
   await db.delete(events);
   await db.delete(legalDocumentTranslations);
   await db.delete(legalDocuments);

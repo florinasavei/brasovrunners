@@ -48,6 +48,10 @@ export default defineConfig({
    *
    * It costs less than it used to: since §209 a pull request runs one viewport rather than two,
    * so serial-desktop is roughly what parallel-both-projects cost before.
+   *
+   * The wall clock is bought back across machines instead (§431): CI splits the suite with
+   * `--shard=i/n` over several runners, each with its own PostgreSQL seeded from nothing, and
+   * this one worker is per shard — the isolation this comment is about holds inside each.
    */
   workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,
@@ -121,6 +125,14 @@ export default defineConfig({
        * the site stored one before §414 (`env.ts`, `E2E_FAKE_MEDIA_FROM_DISK`, §430).
        */
       E2E_FAKE_MEDIA_FROM_DISK: "true",
+      /**
+       * Under CI's `APP_ENV=test` the request that queues a message does not drain the outbox
+       * (`notifications/drain.ts`); this makes the suite's server drain it as every deployed
+       * environment and a laptop's `local` do, so a spec can read a sent message on `/devs` →
+       * «Emailuri» (`family-registration.spec.ts`) and a link minted by a spec is not later
+       * superseded by a send nobody expected (`env.ts`, `E2E_DRAIN_OUTBOX`).
+       */
+      E2E_DRAIN_OUTBOX: "true",
     },
   },
 });

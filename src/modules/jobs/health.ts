@@ -5,7 +5,7 @@ import { readJobCadence } from "./cadence";
 import { jobStalenessThresholdMs } from "./quiet-hours";
 import { RETENTION_ERROR_PREFIX } from "./retention";
 import { isJobName, NEXT_DUE_CAP_MINUTES, SLOT_MINUTES } from "./schedule";
-import { readLastPing } from "./schedule-cache";
+import { plannedCadenceMinutes, readLastPing } from "./schedule-cache";
 
 /**
  * Job liveness (AGENTS.md §12.12, §16.2): "the health check reports degraded when the last
@@ -76,10 +76,19 @@ function retentionFailed(run: { errorCount: number; lastError: string | null }):
   return run.errorCount > 0 && (run.lastError ?? "").startsWith(RETENTION_ERROR_PREFIX);
 }
 
+/**
+ * `governorFloorMinutes` is the budget governor's minimum interval in force now (§447,
+ * `diagnostics/domain/neon-budget.ts`), which the caller read once for every check it makes. A
+ * real run is allowed that long too, exactly like the Administrator's own interval — and so is the
+ * interval the last run actually planned under, which its cached slot remembers: a level that
+ * dropped since (a new billing period, a slower pace) shortens the next plan, not the one the
+ * pings are still honouring, and the check must not call that quiet stale.
+ */
 export async function checkJobHealth<T extends Record<string, unknown>>(
   db: Database<T>,
   jobName: string,
   now: Date,
+  governorFloorMinutes = 0,
 ): Promise<JobHealth> {
   const recent = await db
     .select({
@@ -105,7 +114,8 @@ export async function checkJobHealth<T extends Record<string, unknown>>(
   const lastRun = latest.finishedAt.getTime();
   const lastSeen = Math.max(lastRun, ping ? Date.parse(ping.at) : 0);
   const { minutes: cadenceMinutes } = await readJobCadence(db);
-  const realRunThresholdMs = Math.max(NEXT_DUE_CAP_MINUTES, cadenceMinutes) * 60_000 + pingThresholdMs;
+  const planned = isJobName(jobName) ? await plannedCadenceMinutes(jobName, now) : 0;
+  const realRunThresholdMs = Math.max(NEXT_DUE_CAP_MINUTES, cadenceMinutes, governorFloorMinutes, planned) * 60_000 + pingThresholdMs;
 
   const stale = now.getTime() - lastSeen > pingThresholdMs || now.getTime() - lastRun > realRunThresholdMs;
   const failing = recent.length === 2 && recent.every((run) => run.finishedAt !== null && retentionFailed(run));

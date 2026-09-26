@@ -7,7 +7,7 @@ import {
   DEFAULT_ADDRESS_CAP,
   readAddressCapValue,
 } from "@/modules/registrations/domain/address-cap";
-import { decideSubmission, type FamilyRow } from "@/modules/registrations/domain/family";
+import { comparePerson, decideSubmission, type FamilyRow, isDifferentPerson } from "@/modules/registrations/domain/family";
 import { registrationNameKey, sameRunner } from "@/modules/registrations/domain/name-key";
 
 /**
@@ -72,28 +72,82 @@ describe("§389 the club's limit of registrations per address", () => {
   });
 });
 
-describe("§389 what one submission does on an address", () => {
+describe("§446 the different-person rule: the name and the birth date, both", () => {
+  const ana = { registeredName: "Ana Pop", birthDate: "1985-03-02" };
+  const ion = { registeredName: "Ion Pop", birthDate: "2012-06-01" };
+
+  it("a different name and a different birth date is another person", () => {
+    expect(comparePerson(ana, { legalName: "Maria Pop", birthDate: "1990-07-11" })).toBe("different");
+    expect(isDifferentPerson({ legalName: "Maria Pop", birthDate: "1990-07-11" }, [ana, ion])).toBe(true);
+  });
+
+  it("folds whitespace, case and diacritics out of the name before comparing it", () => {
+    for (const legalName of ["  ana   pop ", "ANA POP", "Ána Póp", "Ana Pop"]) {
+      expect(comparePerson(ana, { legalName, birthDate: "1985-03-02" })).toBe("same");
+    }
+    expect(comparePerson({ registeredName: "Ștefan Pop", birthDate: "1985-03-02" }, { legalName: "Stefan  POP", birthDate: "1985-03-02" })).toBe("same");
+  });
+
+  it("only one of the two differing is a slip, never another person", () => {
+    expect(comparePerson(ana, { legalName: "Ana Pop", birthDate: "1990-07-11" })).toBe("partial");
+    expect(comparePerson(ana, { legalName: "Maria Pop", birthDate: "1985-03-02" })).toBe("partial");
+    expect(isDifferentPerson({ legalName: "Maria Pop", birthDate: "1985-03-02" }, [ana, ion])).toBe(false);
+    expect(isDifferentPerson({ legalName: "Ion Pop", birthDate: "1990-07-11" }, [ana, ion])).toBe(false);
+  });
+
+  it("must differ from every registration on the address, not only from the first", () => {
+    expect(isDifferentPerson({ legalName: "Maria Pop", birthDate: "2012-06-01" }, [ana, ion])).toBe(false);
+    expect(isDifferentPerson({ legalName: "Maria Pop", birthDate: "2014-01-01" }, [ana, ion])).toBe(true);
+    expect(isDifferentPerson({ legalName: "Maria Pop", birthDate: "2014-01-01" }, [])).toBe(true);
+  });
+
+  it("a registration without a birth date differs from every posted one; a submission without one differs from nobody's", () => {
+    const staffEntry = { registeredName: "Dan Pop", birthDate: null };
+    expect(comparePerson(staffEntry, { legalName: "Maria Pop", birthDate: "1990-07-11" })).toBe("different");
+    expect(comparePerson(staffEntry, { legalName: "Dan Pop", birthDate: "1990-07-11" })).toBe("partial");
+    expect(comparePerson(ana, { legalName: "Maria Pop", birthDate: null })).toBe("partial");
+    expect(comparePerson(ana, { legalName: "Ana Pop" })).toBe("same");
+  });
+});
+
+describe("§389 §446 what one submission does on an address", () => {
   let id = 0;
-  const row = (registeredName: string, status: RegistrationStatus = "CONFIRMED"): FamilyRow => ({ id: `r${++id}`, status, registeredName });
+  const row = (registeredName: string, status: RegistrationStatus = "CONFIRMED", birthDate: string | null = null): FamilyRow => {
+    id += 1;
+    // A birth date of its own per row unless given: a different day for every runner.
+    return { id: `r${id}`, status, registeredName, birthDate: birthDate ?? `19${String(50 + id).padStart(2, "0")}-01-01` };
+  };
   const cap = { registrationsPerAddress: 3 };
-  const decide = (rows: FamilyRow[], legalName: string, via: "form" | "link" | "staff", familyOpen = true) =>
-    decideSubmission({ rows, legalName, via, familyOpen, cap });
+  const decide = (rows: FamilyRow[], legalName: string, via: "form" | "link" | "staff", familyOpen = true, birthDate: string | null = "2001-09-09") =>
+    decideSubmission({ rows, legalName, birthDate, via, familyOpen, cap });
 
   it("a first registration on the address is created, whichever door", () => {
     for (const via of ["form", "link", "staff"] as const) expect(decide([], "Ana Pop", via).kind).toBe("insert");
   });
 
-  it("(a) the same runner again from the form is today's re-send, whatever the spelling", () => {
-    const ana = row("Ana Pop", "PENDING_DECLARATION");
-    expect(decide([ana], "ANA  POP", "form")).toEqual({ kind: "resend", registration: ana });
+  it("(a) the same person again — the name and the birth date — is today's re-send, whatever the spelling", () => {
+    const ana = row("Ana Pop", "PENDING_DECLARATION", "1985-03-02");
+    expect(decide([ana], "ANA  POP", "form", true, "1985-03-02")).toEqual({ kind: "resend", registration: ana });
   });
 
-  it("(b) another runner on a registered address, from the form, creates nothing and asks the address", () => {
+  it("the same name with another birth date is a slip: re-sent, with the sentence on registering somebody else", () => {
+    const ana = row("Ana Pop", "PENDING_DECLARATION", "1985-03-02");
+    expect(decide([ana], "Ana Pop", "form", true, "1999-12-31")).toEqual({ kind: "resend", registration: ana, notAnotherPerson: true });
+  });
+
+  it("another name with a registered birth date is a slip too — the name is looked for first", () => {
+    const ana = row("Ana Pop", "CONFIRMED", "1985-03-02");
+    const ion = row("Ion Pop", "CONFIRMED", "2012-06-01");
+    expect(decide([ana, ion], "Maria Pop", "form", true, "2012-06-01")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true });
+    expect(decide([ana, ion], "Ion Pop", "form", true, "1985-03-02")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true });
+  });
+
+  it("(b) a different person on a registered address, from the form, registers nobody and asks the address", () => {
     const ana = row("Ana Pop");
     expect(decide([ana], "Maria Pop", "form")).toEqual({ kind: "offerAnother", about: ana, atCap: false });
   });
 
-  it("(b) at the limit, the email says so instead of offering the link", () => {
+  it("(b) at the limit, the email says so instead of offering the confirmation", () => {
     const rows = [row("Ana Pop"), row("Ion Pop", "WAITLISTED"), row("Dan Pop", "PENDING_EMAIL_CONFIRMATION")];
     const decision = decide(rows, "Maria Pop", "form");
     expect(decision).toMatchObject({ kind: "offerAnother", atCap: true });
@@ -106,7 +160,7 @@ describe("§389 what one submission does on an address", () => {
   });
 
   it("the same runner's cancelled registration, beside an active one, is another person for the form", () => {
-    // Bringing it back adds a registration to the address as surely as a new one — the link decides.
+    // Bringing it back adds a registration to the address as surely as a new one — the confirmation decides.
     const ion = row("Ion Pop", "CANCELLED");
     const rows = [row("Ana Pop"), ion];
     expect(decide(rows, "Ion Pop", "form")).toMatchObject({ kind: "offerAnother" });
@@ -119,18 +173,20 @@ describe("§389 what one submission does on an address", () => {
     expect(decide([ana], "Maria Pop", "form")).toEqual({ kind: "insert" });
   });
 
-  it("from the link: this runner registered already, or the address at the limit, is refused out loud", () => {
-    const rows = [row("Ana Pop"), row("Ion Pop"), row("Dan Pop")];
+  it("from the confirmation: somebody not different from everybody registered, or the address at the limit, is refused out loud", () => {
+    const rows = [row("Ana Pop", "CONFIRMED", "1985-03-02"), row("Ion Pop"), row("Dan Pop")];
     expect(decide(rows.slice(0, 1), "ana pop", "link")).toEqual({ kind: "refuseAlreadyRegistered" });
+    // The same birth date as a registered person, under another name: refused as well (§446).
+    expect(decide(rows.slice(0, 1), "Maria Pop", "link", true, "1985-03-02")).toEqual({ kind: "refuseAlreadyRegistered" });
     expect(decide(rows, "Maria Pop", "link")).toEqual({ kind: "refuseAtCap" });
   });
 
   it("a staff entry racing past its own check re-sends to the one there, as before", () => {
     const ana = row("Ana Pop");
-    expect(decide([ana], "Maria Pop", "staff")).toEqual({ kind: "resend", registration: ana });
+    expect(decide([ana], "Maria Pop", "staff", true, null)).toEqual({ kind: "resend", registration: ana });
   });
 
-  it("while the schema holds one registration per address, everything is as it was, and the link cannot be honoured", () => {
+  it("while the schema holds one registration per address, everything is as it was, and the confirmation cannot be honoured", () => {
     const ana = row("Ana Pop");
     expect(decide([ana], "Maria Pop", "form", false)).toEqual({ kind: "resend", registration: ana });
     const cancelled = row("Ana Pop", "CANCELLED");

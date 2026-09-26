@@ -22,6 +22,7 @@ import {
   transitionEvent,
 } from "@/modules/content/events/service";
 import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
+import { joinDuration } from "@/modules/content/events/duration";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { nightOverrideFromChoice } from "@/modules/events/domain/night";
@@ -54,7 +55,7 @@ import {
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
-import { assignBibNumbers } from "@/modules/registrations/bibs";
+import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { eraseGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -206,7 +207,8 @@ function eventFieldsFrom(form: FormData) {
     timezone: value("timezone"),
     startsAtWallTime: wallTime("startsAt"),
     endsAtWallTime: wallTime("endsAt"),
-    durationMinutes: value("durationMinutes"),
+    // «Durata» as hours and minutes (§433), joined into the minutes the service has read since §71.
+    durationMinutes: joinDuration(value("durationHours"), value("durationMinutesPart")),
     raceStartsAtWallTime: wallTime("raceStartsAt"),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
@@ -273,8 +275,10 @@ function eventFieldsFrom(form: FormData) {
         : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
-    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`).
-    minAge: value("minAge"),
+    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). A group
+    // run's is its own box in "Traseul", beside the declaration that states it (§440): the race box
+    // is hidden for a group run but still posts, so the type decides which one answers.
+    minAge: value("type") === "GROUP_RUN" && form.has("event.groupRunMinAge") ? value("groupRunMinAge") : value("minAge"),
     // The event's own reminder lead (§377), only when the form carried its select: the empty
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,
@@ -638,6 +642,12 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
           en: translationInputFrom(form, "en"),
         },
       },
+      // An event created already cancelled says why, in both languages (§448, §331): the service
+      // requires it for `CANCELLED` and ignores it otherwise; nobody is told — nobody is registered.
+      cancellation:
+        form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
+          ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: false }
+          : undefined,
       // The second button's marker: "create and publish". The service asks the role itself.
       publish: text(form, THEN_FIELD) === THEN_PUBLISH,
       repeat: repeats
@@ -794,6 +804,35 @@ export async function assignBibNumbersAction(_previous: FormOutcome | null, form
       notConfirmed: String(result.notConfirmed),
       test: String(result.test),
     };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  return backTo(editorPath(locale, eventId), outcome);
+}
+
+/**
+ * «Tipărește» on the spares' section (§444): reserve that many numbers for the desk, under the
+ * event's lock, and come back to the editor with the range — the page's banner carries the link
+ * to the sheet of exactly those numbers. Behind the confirmation that names the first number;
+ * `expectFrom` is that number, and a registration that moved it since is refused (CONFLICT) and
+ * the card, drawn again, names the new start.
+ */
+export async function reserveSpareBibsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const expected = Number(text(form, "expectFrom"));
+
+  let outcome: { error?: string; saved?: string; count?: string; from?: string; to?: string };
+  try {
+    const actor = await requireStaff();
+    const result = await reserveSpareBibs(getDb(), {
+      actor,
+      eventId,
+      // `Number("")` is 0, which the service refuses as a count, naming the box.
+      count: Number(text(form, "count")),
+      expectFrom: Number.isInteger(expected) && expected > 0 ? expected : undefined,
+    });
+    outcome = { saved: "sparesReserved", count: String(result.count), from: String(result.from), to: String(result.to) };
   } catch (error) {
     outcome = outcomeOf(error);
   }

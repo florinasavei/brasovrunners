@@ -6,7 +6,7 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
-import { revealField } from "@/shared/forms/ActionForm";
+import { revealField } from "@/shared/forms/ActionFormIsland";
 import { fieldId } from "@/shared/forms/outcome";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { usePublishGaps } from "./MissingForPublish";

@@ -27,7 +27,7 @@
  *
  * manifest.json (it lives outside the repository, beside the saved results; it names local paths):
  *   {
- *     "baseline": { "from": "BR-V1.81-2026-09-24", "to": "BR-V2.02-2026-09-26" },
+ *     "baseline": { "from": "BR-V1.81-2026-09-24", "to": "BR-V2.03-2026-09-26" },
  *     "date": "2026-09-24",                      // the date in the SPECS criteria
  *     "base": "origin/qa",                       // optional; where the branches forked
  *     "items": [

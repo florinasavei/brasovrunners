@@ -838,7 +838,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
     if (blanks.length > 0) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS and EMAIL_REPLY_TO`,
+        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS, and a contact address — EMAIL_REPLY_TO or the club's Gmail under «Adresa de contact afișată» on /admin/emails`,
       );
     }
     const versionId = await createDraftVersion(db, actor, { key, translations }, now);

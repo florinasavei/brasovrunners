@@ -96,7 +96,7 @@ describe("§408 the count is said nowhere else in the editor", () => {
   });
 
   it("keeps the outline on the same five boxes, from the same predicate", () => {
-    for (const box of ["WhenBox", "PlaceBox", "RegistrationBox", "ProgrammeBox", "StatusBox"]) {
+    for (const box of ["WhenBox", "PlaceBox", "RegistrationBox", "ProgrammeBox", "StatusBox", "KindBox"]) {
       expect(read(`src/modules/content/events/ui/boxes/${box}.tsx`), box).toMatch(/tone[=:] ?\{? ?risk \? "risk" : "default"/);
     }
   });

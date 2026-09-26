@@ -318,4 +318,12 @@ describe("§373 each half of a bilingual message reads its own language's event 
     const failed = await db.select().from(emailOutbox).where(eq(emailOutbox.status, "FAILED"));
     expect(failed).toHaveLength(1);
   });
+
+  it("says «or reply to this email» from the Reply-To it is given — «Adresa de contact afișată» (§442)", async () => {
+    const event = await bilingual();
+    const row = await queue(event.id, "ro", "REGISTRATION_STATE_NOTICE", {}, "CONFIRMED");
+    const rendered = await createOutboxRenderer({ replyTo: "club@gmail.example.test, contact@mail.example.test" })(row, db, NOW);
+    expect(rendered.text).toContain("Răspunde la acest email pentru întrebări.");
+    expect(rendered.text).toContain("Reply to this email with questions.");
+  });
 });

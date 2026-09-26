@@ -94,17 +94,23 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
   });
 
   /**
-   * §322 — nationality and city are optional: nothing the club does with a registration reads
-   * either, so the form asks and does not insist. Blank is absent, never an empty string.
+   * §432 — citizenship is required on the public form (reversing §322's optional), optional for
+   * a staff entry; the city stays optional. Blank is absent, never an empty string.
    */
-  it("accepts the public form with no nationality and no city, and reads blanks as absent", () => {
-    const form = filledForm({ nationality: "", city: "  " });
-    const values = readRegistrationForm(form, "ro");
+  it("refuses the public form without a citizenship, and a staff entry does not need one", () => {
+    const values = readRegistrationForm(filledForm({ nationality: "", city: "  " }), "ro");
     expect(values.nationality).toBeUndefined();
     expect(values.city).toBeUndefined();
-    expect(registrationSubmissionSchema.safeParse(values).success).toBe(true);
+    const parsed = registrationSubmissionSchema.safeParse(values);
+    expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["nationality"]);
+    expect(staffRegistrationSubmissionSchema.safeParse(values).success).toBe(true);
     // A country that is not a two-letter code is still refused when one is given.
     expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ nationality: "Romania" }), "ro")).success).toBe(false);
+  });
+
+  it("keeps the city optional when the citizenship is given", () => {
+    const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ city: "" }), "ro"));
+    expect(parsed.success && parsed.data.nationality).toBe("RO");
   });
 
   /**

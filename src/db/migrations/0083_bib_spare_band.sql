@@ -1,0 +1,3 @@
+ALTER TABLE "events" ADD COLUMN "walk_in_bib_start" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD COLUMN "walk_in_bib_count" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_walk_in_bibs" CHECK (("events"."walk_in_bib_start" IS NULL AND "events"."walk_in_bib_count" IS NULL) OR ("events"."walk_in_bib_start" IS NOT NULL AND "events"."walk_in_bib_count" IS NOT NULL AND "events"."walk_in_bib_start" >= 1 AND "events"."walk_in_bib_count" >= 1 AND "events"."walk_in_bib_count" <= 500 AND "events"."walk_in_bib_start" + "events"."walk_in_bib_count" - 1 <= 99999));

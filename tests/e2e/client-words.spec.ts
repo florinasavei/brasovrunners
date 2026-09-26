@@ -66,6 +66,7 @@ test.describe("§353 every island finds its words, and a public page carries onl
       "/ro/admin/registrations/new",
       "/ro/admin/checkin",
       "/ro/admin/emails",
+      "/ro/admin/newsletter",
       "/ro/admin/tasks",
       "/ro/admin/staff",
       "/ro/admin/legal",

@@ -12,6 +12,13 @@ on:
 permissions:
   contents: read
 
+# A pull request's new push makes its previous run moot: that run is cancelled rather than
+# holding four e2e runners for twenty minutes of a verdict on code nobody will merge (§431).
+# A push to `qa` or `main` is never cancelled — `yarn ship` waits on exactly that run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # The job name is the required status check in branch protection. Do not rename it.
   docs-check:
@@ -70,8 +77,25 @@ jobs:
 
   # Separate job because it needs a real PostgreSQL and a browser, which `docs-check` must
   # not require — that one gates every commit and has to run on a bare machine.
-  e2e:
+  #
+  # **Sharded (§431).** One serial runner took twenty-two minutes for the desktop project on a
+  # pull request and forty-four for both on a push — and `yarn ship` waits on the push to `qa`
+  # before it releases. The suite is now split with Playwright's own `--shard`: four runners on a
+  # pull request (desktop, as §209 decided), eight on a push (both projects, twice the specs), so
+  # every runner carries about the same five minutes of Playwright.
+  #
+  # §212 and §276 refused parallel specs because they share ONE database and ONE seeded event.
+  # A shard is not a second worker on that database: each is its own machine with its own
+  # PostgreSQL service, migrated and seeded from nothing, and inside it the specs still run one
+  # at a time (`workers: 1` in CI). What two specs could interleave on before, they still cannot.
+  e2e-shard:
+    name: e2e ${{ matrix.shard }}/${{ github.event_name == 'pull_request' && 4 || 8 }}
     runs-on: ubuntu-latest
+    strategy:
+      # Every shard reports: one red shard should not hide what the others would have found.
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(github.event_name == 'pull_request' && '[1,2,3,4]' || '[1,2,3,4,5,6,7,8]') }}
     services:
       postgres:
         image: postgres:17.6-alpine
@@ -88,6 +112,7 @@ jobs:
     env:
       APP_ENV: test
       DATABASE_URL: postgres://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners
+      SHARD_TOTAL: ${{ github.event_name == 'pull_request' && 4 || 8 }}
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -117,8 +142,10 @@ jobs:
       - run: yarn db:migrate
 
       # The one suite that cannot run in the `docs-check` job: it needs two real connections,
-      # and PGlite has one (BR-REQ-051-01 criterion 5).
+      # and PGlite has one (BR-REQ-051-01 criterion 5). Once per run, not once per shard: the
+      # first shard carries it, seconds long.
       - run: yarn test:concurrency
+        if: matrix.shard == 1
 
       # The same build cache as above: the suite's `webServer` runs `yarn build` before the
       # first spec, and it is the slowest minute of this job.
@@ -142,20 +169,39 @@ jobs:
       #
       # Nothing is skipped for ever and nothing is deleted: every spec still runs on every
       # release, and `yarn test:e2e` with no argument is still the whole suite locally.
-      - name: End-to-end (desktop only on a pull request)
+      #
+      # `--shard=i/n` takes the i-th of n equal slices of the tests (`fullyParallel` makes the
+      # slice per test, not per file; a `describe.serial` group stays in one slice). The union
+      # of the shards is exactly the suite the single job ran.
+      - name: End-to-end, shard ${{ matrix.shard }} (desktop only on a pull request)
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            yarn test:e2e --project=desktop
+            yarn test:e2e --project=desktop --shard=${{ matrix.shard }}/$SHARD_TOTAL
           else
-            yarn test:e2e
+            yarn test:e2e --shard=${{ matrix.shard }}/$SHARD_TOTAL
           fi
 
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          # One artifact per shard: the names must differ, or the second upload is refused.
+          name: playwright-report-${{ matrix.shard }}
           # The report, and the traces of the retried tests (`trace: on-first-retry`).
           path: |
             playwright-report/
             test-results/
           retention-days: 7
+
+  # The shards' verdict as one check named `e2e`, as it was before sharding — what a reader of
+  # the pull request, `yarn ship` and any branch-protection rule see does not depend on the
+  # number of shards. `always()` so a red shard makes this red rather than skipped: a skipped
+  # check reads as passed.
+  e2e:
+    needs: e2e-shard
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every shard passed
+        run: |
+          echo "shards: ${{ needs.e2e-shard.result }}"
+          test "${{ needs.e2e-shard.result }}" = "success"

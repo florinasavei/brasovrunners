@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { ageOn, isMinorOn } from "./domain/age";
+import { isMinorOn, isUnderMinimumAge } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -55,12 +55,12 @@ const submissionFields = z.object({
   /**
    * ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists.
    *
-   * Optional since §322, with the city beside it. Nothing the club does with a registration
-   * needs either — no place, no category, no message — and the notice had to say why they were
-   * compulsory and could not: "ne arată de unde vin participanții" is a reason to *ask*, not to
-   * insist. The form offers them in the optional column, and blank is absent.
+   * Required on the public form again since §432 (the owner, 2026-09-26: "cetățenia ar trebui să
+   * fie obligatorie; by default pune Român"), reversing §322's optional: the form asks it beside
+   * the birth date, pre-chosen on `RO`, so a Romanian runner leaves it. Optional for a staff entry
+   * (paper), relaxed below; older rows without it stay blank. The city stays optional (§322).
    */
-  nationality: z.string().trim().length(2).toUpperCase().optional(),
+  nationality: z.string().trim().length(2).toUpperCase(),
   city: z.string().trim().min(1).max(120).optional(),
 
   /**
@@ -291,16 +291,15 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * (BR-REQ-031-04 criterion 5), and then there is nothing to count — the organizer saw or heard
  * the person, and refusing the row for a detail nobody was told would lose the registration,
  * which is the rule that criterion keeps. A malformed date is left to the schema's own message
- * (`ageOn` answers null), so the summary never gives a second, untrue reason.
+ * (`ageOn` answers null), so the summary never gives a second, untrue reason. The comparison is
+ * `isUnderMinimumAge`, the one a group run's self-declaration asks too (§440).
  *
  * Counted against the day of the event, where the guardian rule above counts against today:
  * the minimum is about the day somebody runs; eighteen is about who fills the form in.
  */
 export function minimumAgeRule(eventDay: string, minAge: number) {
   return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
-    if (minAge <= 0 || !value.birthDate) return;
-    const age = ageOn(value.birthDate, eventDay);
-    if (age === null || age >= minAge) return;
+    if (!value.birthDate || !isUnderMinimumAge(value.birthDate, eventDay, minAge)) return;
     ctx.addIssue({
       code: "custom",
       path: ["birthDate"],
@@ -419,6 +418,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .partial({
     birthDate: true,
     sex: true,
+    // Citizenship is required on the public form only (§432): a paper entry may not have it.
+    nationality: true,
     phone: true,
     emergencyContactName: true,
     emergencyContactPhone: true,
@@ -436,11 +437,11 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .superRefine(emergencyContactRule);
 
 /**
- * The public form for another person on an address that is registered already (§389), reached
- * only from the link emailed to that address. Everything the public form asks, but the runner's
- * own telephone: the second person is often a child with none, and the address — and the emergency
- * contact, still required — is how the club reaches the family. The address itself is never read
- * from this form: the caller fixes it from the token.
+ * Another person on an address that is registered already (§389), as the press on the emailed
+ * confirmation reads the kept form again (§446, `family-confirm.ts`). Everything the public form
+ * asks, but the runner's own telephone — kept optional from §389's family form, where the second
+ * person was often a child with none; the emergency contact is still required. The address itself
+ * is never read from the kept form: the caller fixes it from the token.
  */
 export const anotherPersonSubmissionSchema = submissionFields
   .partial({ phone: true })
@@ -455,9 +456,10 @@ export const anotherPersonSubmissionSchema = submissionFields
 /**
  * Whether the runner on the family form is an adult (§421): eighteen or over today, by the same
  * calendar rule as the guardian check. False for a date that cannot be read — the schema refuses
- * that on its own, and nothing is taken away from a form it is about to refuse.
+ * that on its own, and nothing is taken away from a form it is about to refuse. The confirmation
+ * page of §446 asks the adult's acknowledgement by the same rule (`family-entries.ts`).
  */
-function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
+export function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
   if (typeof birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return false;
   if (Number.isNaN(Date.parse(`${birthDate}T00:00:00Z`))) return false;
   return !isMinorOn(birthDate, now);

@@ -2196,6 +2196,12 @@ export type CreateEventInput = {
   now?: Date;
   /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
   fetchImpl?: typeof fetch;
+  /**
+   * Why an event created already cancelled is cancelled (§448): required, in both languages,
+   * when the status posted is `CANCELLED`, and ignored otherwise. Its "tell them" is ignored — a
+   * new event has nobody registered to tell.
+   */
+  cancellation?: EventCancellationRequest;
 };
 
 type PreparedEventCreate = {
@@ -2204,7 +2210,36 @@ type PreparedEventCreate = {
   posterColumns: Awaited<ReturnType<typeof resolveEventVideoPoster>>;
   translationColumns: { ro: ReturnType<typeof translationColumnsFrom>; en: ReturnType<typeof translationColumnsFrom> };
   names: PlaceNames;
+  /** The reason of an event created cancelled (§448), for its audit row; null for any other status. */
+  cancelledBecause: BilingualText | null;
 };
+
+/**
+ * The status a new event is created with (§448; the owner, 2026-09-26: "ar trebui să pot crea un
+ * eveniment deja anulat din start" — one copied from Facebook for the record, say).
+ *
+ * - `SCHEDULED` — as every new event was.
+ * - `CANCELLED` — asks why, in both languages, exactly as cancelling in the editor does (§331,
+ *   §354), and refused on the empty box otherwise. Only a role that may save the event row may
+ *   cancel one (BR-REQ-060-01). Nobody is told: a new event has no registrations.
+ * - `COMPLETED` — only for an event whose start has passed: an event cannot be over before it
+ *   begins. Refused on the status select otherwise.
+ */
+function readCreateStatus(actor: Actor, status: EditableEvent["eventStatus"], startsAt: Date, cancellation: EventCancellationRequest | undefined, now: Date): BilingualText | null {
+  if (status === "COMPLETED" && startsAt.getTime() > now.getTime()) {
+    throw new DomainError("VALIDATION_ERROR", "eventStatus: an event can only be created as completed once its start has passed", ["eventStatus"]);
+  }
+  if (status !== "CANCELLED") return null;
+  if (!canEditEventFields(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not cancel an event`);
+  }
+  const texts = readNoticeTexts("cancel.reason", cancellation?.reason);
+  const empty = (["ro", "en"] as const).filter((language) => !isWrittenText(texts[language])).map((language) => noticeBox("cancel.reason", language));
+  if (empty.length > 0) {
+    throw new DomainError("VALIDATION_ERROR", `${empty.join(", ")}: say why the event is cancelled, in both languages`, empty);
+  }
+  return { ro: texts.ro, en: texts.en };
+}
 
 /**
  * Everything a create needs from outside the database — parsing, the two rules-based checks, and
@@ -2229,6 +2264,8 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
+  // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
+  const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);
   // A film pasted straight into any of a new event's five rich texts, in either language, gets
   // the club's own poster too (`DECISIONS.md` §403), before any transaction opens.
   const posterOptions = { now, fetchImpl: input.fetchImpl };
@@ -2258,7 +2295,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);
 
-  return { parsed, times, posterColumns, translationColumns, names };
+  return { parsed, times, posterColumns, translationColumns, names, cancelledBecause };
 }
 
 /** The insert half of a create: no network fetch, safe to run inside any transaction or savepoint. */
@@ -2268,7 +2305,7 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
   prepared: PreparedEventCreate,
   now: Date,
 ): Promise<EditableEvent> {
-  const { parsed, times, posterColumns, translationColumns, names } = prepared;
+  const { parsed, times, posterColumns, translationColumns, names, cancelledBecause } = prepared;
   if (parsed.featured) await clearFeaturedExcept(tx, null, now);
 
   const [event] = await tx
@@ -2297,6 +2334,22 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
       updatedAt: now,
     })),
   );
+
+  /*
+    Created already cancelled (§448): the audit row a cancellation in the editor writes (§331) —
+    who and why — marked as told to nobody, since nobody can have registered for an event that did
+    not exist a moment ago. No `EVENT_CANCELLED` email is queued, ever, from a create.
+  */
+  if (cancelledBecause) {
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.cancelled",
+      entityType: "event",
+      entityId: event.id,
+      metadata: { reason: cancelledBecause, notified: false, recipients: 0, version: event.version, createdCancelled: true },
+      now,
+    });
+  }
 
   return event;
 }
@@ -2373,7 +2426,7 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
   // re-review): this used to run inside `createEvent(tx, …)`, itself called from inside this
   // function's own transaction, so the fetches ran with the transaction — and, once
   // `publishNewEvent` moves the row through its transitions, that row's own lock — already open.
-  const prepared = await prepareEventCreate(db, { actor: input.actor, fields: input.fields, now, fetchImpl: input.fetchImpl }, now);
+  const prepared = await prepareEventCreate(db, { actor: input.actor, fields: input.fields, now, fetchImpl: input.fetchImpl, cancellation: input.cancellation }, now);
 
   const result = await db.transaction(async (tx) => {
     const created = await insertPreparedEvent(tx, input.actor, prepared, now);

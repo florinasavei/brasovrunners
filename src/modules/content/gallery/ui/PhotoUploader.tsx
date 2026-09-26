@@ -6,9 +6,17 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import { prepareImageUpload } from "@/modules/media/browser-shrink";
 import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
-import { describeStoredImage, type StoredFacts, type StoredFactsLabels } from "@/modules/media/ui/stored-facts";
+import {
+  type ChosenFacts,
+  type ChosenFactsLabels,
+  chosenFactsOf,
+  describeChosenImage,
+  describeStoredImage,
+  type StoredFacts,
+  type StoredFactsLabels,
+} from "@/modules/media/ui/stored-facts";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 // A client island already, so it makes the element itself; the glyph is the registry's (§318).
@@ -47,6 +55,7 @@ export default function PhotoUploader({
     done: string;
     failed: string;
     quality: ImageQualityLabels;
+    chosen: ChosenFactsLabels;
     stored: StoredFactsLabels;
   };
 }) {
@@ -54,21 +63,25 @@ export default function PhotoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: string[] } | null>(null);
   const [lastStored, setLastStored] = useState<StoredFacts | null>(null);
+  /** The photo going up now, or the last one (§437): its own pixels and weight, and what was sent. */
+  const [lastChosen, setLastChosen] = useState<ChosenFacts | null>(null);
   const [quality, setQuality] = useImageQuality();
-
-  const shrink = shrinkImageInBrowser;
 
   async function upload(files: FileList) {
     const list = Array.from(files);
     const failed: string[] = [];
     setProgress({ done: 0, total: list.length, failed });
     setLastStored(null);
+    setLastChosen(null);
     for (const [index, file] of list.entries()) {
       try {
         const body = new FormData();
         // The shrunk photo, named after the original so the server records the name it had.
-        // Shrunk to what the choice keeps (§414): 4000 pixels for «Înaltă», 3000 otherwise.
-        body.append("file", await shrink(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
+        // Shrunk to what the choice keeps (§414, §437), and the file's own facts said as soon as
+        // it is decoded, before it is sent.
+        const prepared = await prepareImageUpload(file, quality, (chosen) => setLastChosen({ name: file.name, chosen }));
+        setLastChosen(chosenFactsOf(file.name, prepared));
+        body.append("file", prepared.blob, file.name.replace(/\.[^.]+$/, "") + ".webp");
         body.append("originalFilename", file.name);
         body.append("quality", quality);
         const response = await fetch(uploadUrl, { method: "POST", body });
@@ -116,6 +129,11 @@ export default function PhotoUploader({
               : labels.done.replace("{total}", String(progress.total - progress.failed.length))}
           </Typography>
           <LinearProgress variant="determinate" value={(progress.done / progress.total) * 100} sx={{ mt: 0.5 }} />
+          {lastChosen && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="photo-chosen">
+              {describeChosenImage(lastChosen, labels.chosen, document.documentElement.lang || "ro")}
+            </Typography>
+          )}
           {!busy && lastStored && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="photo-stored">
               {describeStoredImage(lastStored, labels.stored, document.documentElement.lang || "ro")}
