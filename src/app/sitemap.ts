@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
-import { cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedVisibleTeam } from "@/modules/public-cache/reads";
+import { cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
+import { teamPageOnSite } from "@/modules/content/team/repository";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 
@@ -103,11 +104,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   /*
-    «Echipa» (§NNN), once per locale — only while a card is on the site. With none, the page still
-    answers (a sentence, never a 404) but tells crawlers not to index it (`team/page.tsx`), so
-    the sitemap and the page agree: an address with nothing on it is not advertised.
+    «Echipa» (§NNN), once per locale — only while the page is published and a card is on it. A
+    DRAFT page is a 404; a published one with nobody shown answers a sentence and tells crawlers
+    not to index it (`team/page.tsx`), so the sitemap and the page agree.
   */
-  if ((await cachedVisibleTeam(routing.defaultLocale)).length > 0) {
+  if (teamPageOnSite(await cachedTeamPage(routing.defaultLocale))) {
     for (const locale of routing.locales) {
       entries.push({
         url: staticRouteUrl(env.APP_BASE_URL, "/team", locale),

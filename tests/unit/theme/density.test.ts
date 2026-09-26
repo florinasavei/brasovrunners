@@ -114,6 +114,10 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/[slug]/register/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // «Echipa» (§NNN): born on the scale, the gallery's container.
   { file: "src/app/[locale]/team/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // Its grid: two cards to a row from 320px, so the gap and the card's own padding are the tight steps.
+  { file: "src/app/[locale]/team/page.tsx", prop: "gap", step: "cardGridGap", sm: 2, xsBefore: 2 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "pb", step: "cardPadTop", sm: 3, xsBefore: 3 },
   // A group run's self-declaration (§393): born on the scale, the declare page's three containers.
   { file: "src/app/[locale]/events/[slug]/declaration/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
   { file: "src/app/[locale]/calendar/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

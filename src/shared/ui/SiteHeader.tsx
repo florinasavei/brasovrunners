@@ -3,11 +3,12 @@ import Container from "@mui/material/Container";
 import { getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
+import { teamPageOnSite } from "@/modules/content/team/repository";
 import {
   cachedContactFormReaches,
   cachedPublishedAlbums,
   cachedPublishedPages,
-  cachedVisibleTeam,
+  cachedTeamPage,
 } from "@/modules/public-cache/reads";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
@@ -68,10 +69,10 @@ async function hasPublishedAlbum(locale: Locale) {
   }
 }
 
-/** Whether «Echipa» is offered (§NNN): a card on the site, or nothing — the gallery's rule. */
+/** Whether «Echipa» is offered (§NNN): the page published with a card on it, or nothing — the gallery's rule. */
 async function hasVisibleTeam(locale: Locale) {
   try {
-    return (await cachedVisibleTeam(locale)).length > 0;
+    return teamPageOnSite(await cachedTeamPage(locale));
   } catch {
     return false;
   }

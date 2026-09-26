@@ -54,6 +54,7 @@ export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "
 export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
+  | "teamPageNotice"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -76,6 +77,7 @@ export type TaskId =
 export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
+  teamPageNotice: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -136,6 +138,11 @@ export type OwnerTaskInputs = {
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
    */
   listStatesDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe «Echipa» (§NNN, `noticeDescribesTeamPage`)?
+   * The page shows staff and volunteers' names and photographs; the notice has to say so.
+   */
+  teamPageDescribed: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -266,6 +273,19 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listStatesNotice", {
       owner: "club",
       state: input.listStatesDescribed ? "done" : "open",
+    });
+  }
+
+  /*
+    «Echipa» (§NNN): the team page publishes names and photographs, so the notice in force should
+    describe it before the page goes up. Open, never blocking — the page is the club's to publish
+    and nobody's registration waits on it; it closes by itself once a notice naming `{{teamPage}}`
+    takes effect.
+  */
+  if (input.hasApprovedPrivacyNotice) {
+    push("teamPageNotice", {
+      owner: "club",
+      state: input.teamPageDescribed ? "done" : "open",
     });
   }
 

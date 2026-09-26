@@ -4,6 +4,7 @@ import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { getStorage, objectKey } from "@/modules/media/storage";
+import { readTeamPageSettings, teamIntroFor } from "./page-settings";
 
 /**
  * Reads for «Echipa» (§NNN), public and backoffice.
@@ -27,7 +28,17 @@ export type PublicTeamMember = {
   name: string;
   role: string | null;
   bio: string | null;
+  /** The one `https://` link the person shares, or null. */
+  link: string | null;
   photo: TeamPhoto | null;
+};
+
+/** What the public page, the header and the sitemap need: the page's state, its words, its cards. */
+export type PublicTeamPage = {
+  published: boolean;
+  /** The club's introduction in this language, or null for the platform's sentence. */
+  intro: string | null;
+  members: PublicTeamMember[];
 };
 
 export type AdminTeamMember = {
@@ -37,6 +48,7 @@ export type AdminTeamMember = {
   roleEn: string | null;
   bioRo: string | null;
   bioEn: string | null;
+  link: string | null;
   photoAssetId: string | null;
   photo: TeamPhoto | null;
   position: number;
@@ -52,6 +64,7 @@ const COLUMNS = {
   roleEn: teamMembers.roleEn,
   bioRo: teamMembers.bioRo,
   bioEn: teamMembers.bioEn,
+  link: teamMembers.link,
   photoAssetId: teamMembers.photoMediaAssetId,
   photoKeyPrefix: mediaAssets.keyPrefix,
   photoWidth: mediaAssets.width,
@@ -97,8 +110,24 @@ export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
     name: row.name,
     role: pairFor(locale, row.roleRo, row.roleEn),
     bio: pairFor(locale, row.bioRo, row.bioEn),
+    link: row.link,
     photo: photoOf(row),
   }));
+}
+
+/**
+ * The page as a visitor may see it: a DRAFT page shows nobody, whatever the cards say — the page's
+ * switch is the first gate, each card's own the second (`page-settings.ts`).
+ */
+export async function readPublicTeamPage<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<PublicTeamPage> {
+  const settings = await readTeamPageSettings(db);
+  if (settings.status !== "PUBLISHED") return { published: false, intro: null, members: [] };
+  return { published: true, intro: teamIntroFor(locale, settings), members: await listVisibleTeamMembers(db, locale) };
+}
+
+/** Whether the page is on the site with somebody on it — the header's entry and the sitemap's. */
+export function teamPageOnSite(page: PublicTeamPage): boolean {
+  return page.published && page.members.length > 0;
 }
 
 /** Every card, shown or not, in the club's order — the backoffice screen. */

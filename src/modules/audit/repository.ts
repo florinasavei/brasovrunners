@@ -197,7 +197,21 @@ export type AuditAction =
    * version's number again; `versionNumberRetired` says so on the row rather than leaving it to
    * be inferred from another table.
    */
-  | "legal_document.deleted";
+  | "legal_document.deleted"
+  /**
+   * «Echipa» (§NNN): a card added, written, shown or taken off, moved, or deleted, and the page
+   * published, taken off or its introduction saved. The card's id, never its words or the
+   * person's name (§12.12): the row says who put a person's photograph on the site, and when.
+   */
+  | "team_member.created"
+  | "team_member.saved"
+  | "team_member.shown"
+  | "team_member.hidden"
+  | "team_member.moved"
+  | "team_member.deleted"
+  | "team_page.published"
+  | "team_page.unpublished"
+  | "team_page.intro_saved";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
@@ -207,7 +221,7 @@ export type RecordAuditInput = {
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
   // that is about a version of the club's own text; `participant` for the one about a person
   // across all their registrations (§322).
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant";
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant" | "team_member";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

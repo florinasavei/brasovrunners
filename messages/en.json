@@ -1925,7 +1925,8 @@
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
-        "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself"
+        "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
+        "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2297,6 +2298,16 @@
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
             "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
           ]
+        },
+        "teamPageNotice": {
+          "title": "Privacy notice: the team page",
+          "todo": "The notice in force does not yet describe the team page, which shows the names and photographs of the club's team and volunteers. Approve a new notice before publishing the page.",
+          "done": "The notice in force describes the team page: what it shows, on what basis, and how a card is taken down.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 4 describes the team page.",
+            "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
+            "Only then publish the page, from /admin/pages/team → “Publish the page”."
+          ]
         }
       },
       "freeVerdict": {
@@ -2621,9 +2632,9 @@
     },
     "team": {
       "title": "The «Team» page",
-      "intro": "The club's people, one card each: a photo, the name, what they do for the club and a few words. The page belongs to the platform, like the contact page: here you only write the cards. A new card stays hidden until an Administrator puts it on the site. Ask the person before you put their name and photo on the site.",
+      "intro": "The club's people, one card each: a photograph, a name, what they do for the club, a few words and, if they want, a link. The page is the platform's, like the contact page: here you publish it and write its introduction and cards. A new card stays hidden until an Administrator puts it on the site. Ask the person's consent before putting their name and photograph on the site.",
       "shownCount": "On the site: {count} of {total} cards.",
-      "noneShown": "No card is on the site, so the page is not in the site's menu.",
+      "noneShown": "No card is on the site, so the page does not appear in the site's menu.",
       "viewPublic": "View the page",
       "readOnly": "You can read the cards; the Copywriter or the Administrator writes them.",
       "showIsAdmin": "You write and prepare the cards; the Administrator puts them on the site.",
@@ -2641,7 +2652,7 @@
       "show": "Put on the site",
       "hide": "Take off the site",
       "showTitle": "Put “{name}” on the site?",
-      "showBody": "The card appears on the team page, and the page appears in the site's menu if this is the first card on the site. Do you have the person's consent for the name and the photo?",
+      "showBody": "The card appears on the team page while the page is published. Do you have the person's consent for the name and photograph?",
       "hideTitle": "Take “{name}” off the site?",
       "hideBody": "The card stays here, hidden; you can put it back at any time.",
       "delete": "Delete the card",
@@ -2664,7 +2675,25 @@
       "photoUploading": "Uploading…",
       "photoFailed": "The photo did not upload. Try again or choose another file (JPEG, PNG or WebP).",
       "photoNone": "No photo",
-      "photoHelp": "A square or portrait photo looks best: the site crops it square, keeping the face near the top. It is kept when you save the card."
+      "photoHelp": "A square or portrait photo looks best: the site crops it square, keeping the face near the top. It is kept when you save the card.",
+      "pageHeading": "The page",
+      "pagePublished": "Published",
+      "pageDraft": "Draft",
+      "pagePublishedHelp": "The page is on the site in both languages: {ro} and {en}. It appears in the menu while it has at least one card on the site.",
+      "pageDraftHelp": "The page is not on the site: its address answers \"not found\" and the menu does not show it. Prepare the cards, then publish the page.",
+      "noticeMissing": "The privacy notice in force does not yet describe the team page, which shows names and photographs. First approve a new notice in /admin/legal (\"start from the platform's text\"), then publish the page.",
+      "publish": "Publish the page",
+      "unpublish": "Take the page down",
+      "publishTitle": "Publish the team page?",
+      "publishBody": "The page goes on the site in both languages at once, at {ro} and {en}, with every card that is on the site. Do you have the consent of every person on the cards?",
+      "unpublishTitle": "Take the team page down?",
+      "unpublishBody": "The page leaves the site in both languages and disappears from the menu. The cards stay here; you can publish it again at any time.",
+      "introFold": "The page's introduction",
+      "introRo": "Introduction (Română)",
+      "introEn": "Introduction (English)",
+      "introHelp": "Optional, at most {max} characters. Empty, the page uses the platform's text.",
+      "link": "Link (optional)",
+      "linkHelp": "One https:// address, for example a Strava or Instagram profile. The same in both languages."
     },
     "pictures": {
       "title": "Pictures",
@@ -4544,7 +4573,10 @@
       "teamMemberShown": "The card is on the site.",
       "teamMemberHidden": "The card was taken off the site.",
       "teamMemberMoved": "The order of the cards was changed.",
-      "teamMemberDeleted": "The card was deleted."
+      "teamMemberDeleted": "The card was deleted.",
+      "teamPageIntroSaved": "The team page's introduction was saved.",
+      "teamPagePublished": "The team page is on the site, in both languages.",
+      "teamPageUnpublished": "The team page was taken off the site."
     }
   }
 }

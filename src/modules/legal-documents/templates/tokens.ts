@@ -1,7 +1,8 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
-import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD } from "../domain/merge-fields";
+import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD, TEAM_PAGE_MERGE_FIELD } from "../domain/merge-fields";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -91,6 +92,12 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_STATES_MERGE_FIELD}}}`,
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
+  },
+  // The privacy notice's marker for «Echipa» (§NNN): the page's name, and what `/admin/tasks` reads.
+  {
+    token: `{{${TEAM_PAGE_MERGE_FIELD}}}`,
+    messageKey: TEAM_PAGE_MERGE_FIELD,
+    example: inBoth((locale) => teamPageClause(locale)),
   },
 ];
 

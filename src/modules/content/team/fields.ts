@@ -14,6 +14,21 @@ import { isUuid } from "@/shared/ids";
 export const TEAM_NAME_MAX = 80;
 export const TEAM_ROLE_MAX = 80;
 export const TEAM_BIO_MAX = 800;
+export const TEAM_LINK_MAX = 300;
+
+/**
+ * The one link a card may carry (a Strava profile, an Instagram page): an `https://` address with
+ * a host, or nothing. Anything else — `http:`, `javascript:`, a bare word — is refused on the box,
+ * so the public card never renders an address the browser would run or downgrade.
+ */
+export function isHttpsLink(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
 
 /**
  * A box's text as the card keeps it: trimmed, Windows line breaks made one, and never more than
@@ -45,6 +60,16 @@ export const teamMemberFieldsSchema = z
     roleEn: optionalText(TEAM_ROLE_MAX),
     bioRo: optionalText(TEAM_BIO_MAX),
     bioEn: optionalText(TEAM_BIO_MAX),
+    /** One optional `https://` link — Strava, Instagram — the same in both languages. */
+    link: z
+      .string()
+      // Absent reads as empty: a form that predates the box, or a test, posts no link at all.
+      .default("")
+      .transform((value) => value.trim())
+      .pipe(z.string()
+      .max(TEAM_LINK_MAX)
+      .refine((value) => value === "" || isHttpsLink(value), "not an https link"))
+      .transform((value) => (value === "" ? null : value)),
     /** The stored picture's id, or empty for a card without a photo. */
     photoAssetId: z
       .string()
@@ -60,4 +85,4 @@ export const teamMemberFieldsSchema = z
 export type TeamMemberFields = z.infer<typeof teamMemberFieldsSchema>;
 
 /** The field names the form posts, in the order the refusal summary lists them. */
-export const TEAM_MEMBER_FIELDS = ["name", "roleRo", "roleEn", "bioRo", "bioEn", "photoAssetId"] as const;
+export const TEAM_MEMBER_FIELDS = ["name", "roleRo", "roleEn", "bioRo", "bioEn", "link", "photoAssetId"] as const;

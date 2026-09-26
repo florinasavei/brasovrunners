@@ -5,6 +5,7 @@ CREATE TABLE "team_members" (
 	"role_en" text,
 	"bio_ro" text,
 	"bio_en" text,
+	"link" text,
 	"photo_media_asset_id" uuid,
 	"position" integer NOT NULL,
 	"visible" boolean DEFAULT false NOT NULL,

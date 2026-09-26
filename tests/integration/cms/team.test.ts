@@ -1,10 +1,17 @@
 import sharp from "sharp";
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { mediaAssets } from "@/db/schema/gallery";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
-import { listTeamMembersForAdmin, listVisibleTeamMembers } from "@/modules/content/team/repository";
+import {
+  readTeamPageSettings,
+  saveTeamPageIntro,
+  setTeamPagePublished,
+  TEAM_PAGE_SETTING_ENTITY_ID,
+} from "@/modules/content/team/page-settings";
+import { listTeamMembersForAdmin, listVisibleTeamMembers, readPublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
 import {
   createTeamMember,
   deleteTeamMember,
@@ -19,7 +26,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Echipa»: the team page's cards. Who may write one and who may put it on the site, both
+ * §NNN — «Echipa»: the team page's cards and the page itself. Who may write one and who may put it on the site, both
  * languages or neither, the page's own language only, the order, the version guard, and the photo
  * counted as a reference by the orphan sweep.
  */
@@ -178,5 +185,114 @@ describe("§NNN the team page's cards", () => {
     await sweepOrphanAssets(db, later);
     expect(await sweepOrphanAssets(db, daysLater(ORPHAN_ASSET_DAYS * 5))).toBe(1);
     expect(await db.select().from(mediaAssets).where(eq(mediaAssets.id, uploaded.assetId))).toEqual([]);
+  });
+  const trail = async (entityId: string) =>
+    db
+      .select({ action: auditLogs.action, actor: auditLogs.actorStaffUserId, entityType: auditLogs.entityType, metadata: auditLogs.metadataJson })
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, entityId))
+      .orderBy(asc(auditLogs.createdAt), asc(auditLogs.action));
+
+  it("leaves an audit row for every write to a card, naming who acted and never the person", async () => {
+    const card = await createTeamMember(db, { actor: actor("COPYWRITER"), fields: fields(), now: T0 });
+    const saved = await saveTeamMember(db, {
+      actor: actor("COPYWRITER"),
+      memberId: card.id,
+      expectedVersion: card.version,
+      fields: fields({ link: "https://www.strava.com/athletes/1" }),
+      now: daysLater(1),
+    });
+    const shown = await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: saved.version, visible: true, now: daysLater(2) });
+    await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: shown.version, visible: false, now: daysLater(3) });
+    await deleteTeamMember(db, { actor: actor("ADMIN"), memberId: card.id, now: daysLater(4) });
+
+    const rows = await trail(card.id);
+    expect(rows.map((row) => [row.action, row.actor])).toEqual([
+      ["team_member.created", actor("COPYWRITER").id],
+      ["team_member.saved", actor("COPYWRITER").id],
+      ["team_member.shown", actor("ADMIN").id],
+      ["team_member.hidden", actor("ADMIN").id],
+      ["team_member.deleted", actor("ADMIN").id],
+    ]);
+    expect(rows.every((row) => row.entityType === "team_member")).toBe(true);
+    // The shape of the change, never the name or the words (§12.12).
+    expect(JSON.stringify(rows.map((row) => row.metadata))).not.toContain("Amalia");
+  });
+
+  it("writes no audit row for a refused show, so the trail never claims what did not happen", async () => {
+    const card = await createTeamMember(db, { actor: actor("COPYWRITER"), fields: fields() });
+    await refusal(setTeamMemberVisible(db, { actor: actor("COPYWRITER"), memberId: card.id, expectedVersion: card.version, visible: true }));
+    const shown = await db.select().from(auditLogs).where(and(eq(auditLogs.entityId, card.id), eq(auditLogs.action, "team_member.shown")));
+    expect(shown).toEqual([]);
+  });
+
+  it("keeps a one-link card: an https address only, shown on the public card", async () => {
+    expect(await refusal(createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ link: "http://strava.com/x" }) }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["link"],
+    });
+    expect(await refusal(createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ link: "javascript:alert(1)" }) }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["link"],
+    });
+    const card = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ link: " https://instagram.com/amalia " }) });
+    expect(card.link).toBe("https://instagram.com/amalia");
+    await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
+    expect((await listVisibleTeamMembers(db, "en"))[0]?.link).toBe("https://instagram.com/amalia");
+  });
+
+  it("shows nobody while the page is a draft, and the page once an Administrator publishes it", async () => {
+    const card = await createTeamMember(db, { actor: actor("COPYWRITER"), fields: fields() });
+    await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
+
+    const draft = await readPublicTeamPage(db, "ro");
+    expect(draft).toEqual({ published: false, intro: null, members: [] });
+    expect(teamPageOnSite(draft)).toBe(false);
+
+    expect(await refusal(setTeamPagePublished(db, { actor: actor("COPYWRITER"), published: true }))).toMatchObject({ code: "FORBIDDEN" });
+    expect(await refusal(setTeamPagePublished(db, { actor: actor("MODERATOR"), published: true }))).toMatchObject({ code: "FORBIDDEN" });
+
+    await setTeamPagePublished(db, { actor: actor("ADMIN"), published: true, now: T0 });
+    const live = await readPublicTeamPage(db, "en");
+    expect(live.published).toBe(true);
+    expect(live.members.map((member) => member.role)).toEqual(["Coach"]);
+    expect(teamPageOnSite(live)).toBe(true);
+
+    await setTeamPagePublished(db, { actor: actor("ADMIN"), published: false, now: daysLater(1) });
+    expect((await readTeamPageSettings(db)).status).toBe("DRAFT");
+
+    const rows = await trail(TEAM_PAGE_SETTING_ENTITY_ID);
+    expect(rows.map((row) => [row.action, row.actor, row.entityType])).toEqual([
+      ["team_page.published", actor("ADMIN").id, "platform_setting"],
+      ["team_page.unpublished", actor("ADMIN").id, "platform_setting"],
+    ]);
+  });
+
+  it("keeps a published page with no card shown off the menu and the sitemap", async () => {
+    await createTeamMember(db, { actor: actor("COPYWRITER"), fields: fields() });
+    await setTeamPagePublished(db, { actor: actor("ADMIN"), published: true });
+    const page = await readPublicTeamPage(db, "ro");
+    expect(page).toMatchObject({ published: true, members: [] });
+    expect(teamPageOnSite(page)).toBe(false);
+  });
+
+  it("takes the club's introduction in both languages or neither, and reads it in the page's language", async () => {
+    expect(await refusal(saveTeamPageIntro(db, { actor: actor("COPYWRITER"), fields: { introRo: "Cine suntem.", introEn: "" } }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["introEn"],
+    });
+    expect(await refusal(saveTeamPageIntro(db, { actor: actor("MODERATOR"), fields: { introRo: "a", introEn: "b" } }))).toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await saveTeamPageIntro(db, { actor: actor("COPYWRITER"), fields: { introRo: "Cine suntem.", introEn: "Who we are." } });
+    // Writing the introduction publishes nothing.
+    expect((await readPublicTeamPage(db, "ro")).published).toBe(false);
+    await setTeamPagePublished(db, { actor: actor("ADMIN"), published: true });
+    expect((await readPublicTeamPage(db, "ro")).intro).toBe("Cine suntem.");
+    expect((await readPublicTeamPage(db, "en")).intro).toBe("Who we are.");
+    // Publishing keeps the words; emptying both returns the page to the platform's sentence.
+    await saveTeamPageIntro(db, { actor: actor("ADMIN"), fields: { introRo: "", introEn: "" } });
+    expect(await readTeamPageSettings(db)).toEqual({ status: "PUBLISHED", introRo: null, introEn: null });
+    expect((await readPublicTeamPage(db, "en")).intro).toBeNull();
   });
 });

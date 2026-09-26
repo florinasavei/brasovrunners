@@ -16,7 +16,7 @@ import {
   findPublishedPageTranslationsForPages,
   listPublishedPages,
 } from "@/modules/content/pages/repository";
-import { listVisibleTeamMembers } from "@/modules/content/team/repository";
+import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
   findEventForRegistrationById,
@@ -337,12 +337,13 @@ export async function cachedPublishedPageTranslations(pageId: string) {
 }
 
 /**
- * `listVisibleTeamMembers`: «Echipa» (§NNN) — the page, the "Echipa" entry in the navigation and
- * the sitemap. Filed under `pages`: it is a standing page and sits in the navigation, and every
- * write to a card expires that kind (`content/team/service.ts`).
+ * `readPublicTeamPage`: «Echipa» (§NNN) — the page's state, its introduction and its shown cards,
+ * for the page, the "Echipa" entry in the navigation and the sitemap. Filed under `pages`: it is a
+ * standing page and sits in the navigation, and every write to a card or to the page's setting
+ * expires that kind (`content/team/service.ts`, `page-settings.ts`).
  */
-export async function cachedVisibleTeam(locale: Locale) {
-  return publicRead(["team.visible", locale], ["pages"], () => listVisibleTeamMembers(getDb(), locale));
+export async function cachedTeamPage(locale: Locale) {
+  return publicRead(["team.page", locale], ["pages"], () => readPublicTeamPage(getDb(), locale));
 }
 
 /** The sitemap's standing pages: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */

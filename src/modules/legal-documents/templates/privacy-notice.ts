@@ -40,6 +40,9 @@
  * its archive copy is named; the processors' locations are no longer overstated; §7 is brought in
  * line with all of it, with an incident hold; §8 has the art. 12(3) extension and restriction.
  *
+ * `{{teamPage}}` in section 4 (§NNN) is the team page's name in the reader's language and the
+ * marker `/admin/tasks` reads: a notice that names it describes the page's cards and photographs.
+ *
  * `{{publicListPeriod}}` (§4, §7) is the public list's ceiling after the event, filled like the
  * deadlines from the "Termene" setting `publicListDays` (`deadlineMergeValues`). The promises below
  * are kept by the code: the list closes by itself after `{{publicListPeriod}}` (checked at request
@@ -96,6 +99,7 @@ export const privacyNoticeRo: LegalDocumentBody = {
         "Lângă fiecare nume apare stadiul înscrierii: {{participantListStates}}. Pe listă sunt cei confirmați, cei cu adresa confirmată și declarația încă nesemnată și cei de pe lista de așteptare, în ordine, fără loc numerotat. O înscriere cu adresa neconfirmată, anulată, expirată sau ștearsă nu apare; confirmații fără bifă sunt doar numărați. Dacă te-ai înscris sub o versiune mai veche a acestei note, care nu descria stadiile, apari pe listă, ca până acum, doar după ce îți confirmi locul.",
         "Rezultate cu nume nu publicăm încă; când o vom face, te vom întreba separat, pentru fiecare eveniment.",
         "Fotografiile și filmările de la evenimente, publicate în galerie și pe canalele clubului: interes legitim (art. 6(1)(f) GDPR) — a arăta evenimentele clubului; spațiu public, fără nume, fără EXIF. Un portret îl publicăm doar cu acordul tău (Codul civil, art. 73–75). Spune-ne care și o scoatem în cel mult o lună, fără motiv.",
+        "Pagina {{teamPage}} de pe site îi prezintă pe oamenii din echipa clubului și pe voluntarii care au fost de acord să apară: numele, ce fac în club, câteva cuvinte despre ei, o fotografie și, dacă vor, o legătură către un profil public al lor. Temei: acordul fiecăruia (art. 6(1)(a) GDPR; Codul civil, art. 73–75), pe care îl poate retrage oricând, scriindu-ne: cardul lui este scos de pe site fără întârziere și fără să ceară un motiv, iar fotografia se șterge.",
       ],
     },
     {
@@ -196,6 +200,7 @@ export const privacyNoticeEn: LegalDocumentBody = {
         "Beside each name the list shows where the registration stands — {{participantListStates}}. It holds the confirmed participants, those who confirmed their address and have not yet signed the declaration, and those on the waiting list, in its order, without a numbered place. A registration with an unconfirmed address, or cancelled, expired or erased, does not appear; confirmed participants without the tick are only counted. If you registered under an older version of this notice, which did not describe the states, you appear on the list, as before, only once your place is confirmed.",
         "We do not publish results with names yet; when we do, we will ask you separately, for each event.",
         "Photographs and video from events, published in the gallery and on the club's channels: legitimate interest (art. 6(1)(f) GDPR) — showing the club's events; public place, no names, no EXIF. A portrait is published only with your agreement (Romanian Civil Code, art. 73–75). Tell us which and we take it down within a month, no reason needed.",
+        "The site's {{teamPage}} page introduces the people in the club's team and the volunteers who agreed to appear: their name, what they do for the club, a few words about them, a photograph and, if they wish, a link to a public profile of theirs. Basis: each person's consent (art. 6(1)(a) GDPR; Romanian Civil Code, art. 73–75), which they may withdraw at any time by writing to us: their card is taken off the site without delay and without asking for a reason, and the photograph is deleted.",
       ],
     },
     {

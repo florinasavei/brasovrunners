@@ -2,6 +2,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { type TeamMember, teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
+import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canEditTeamPage, canShowTeamMember } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -19,6 +20,10 @@ import { mediaAssetExists } from "./repository";
  *   the Redactor's and the Administrator's, because a card is words and a photograph;
  * - showing a card, taking it off, and deleting one that is on the site — `canShowTeamMember`,
  *   the Administrator's, because that is what crossing public view is since §201.
+ *
+ * Every write leaves an `audit_logs` row in its own transaction, naming the card by id and the
+ * staff member who acted — never the person's name or words (§12.12): whoever put a photograph on
+ * the site, or deleted a card, can be told months later.
  *
  * The cards are read from the public cache under `pages` (§333): «Echipa» is a standing page and
  * sits in the navigation, and every write here expires that kind, as a page's save does.
@@ -73,6 +78,7 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         roleEn: fields.roleEn,
         bioRo: fields.bioRo,
         bioEn: fields.bioEn,
+        link: fields.link,
         photoMediaAssetId: fields.photoAssetId,
         position: (last?.position ?? 0) + 1,
         visible: false,
@@ -82,6 +88,14 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         updatedAt: now,
       })
       .returning();
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: "team_member.created",
+      entityType: "team_member",
+      entityId: row.id,
+      metadata: { photo: fields.photoAssetId !== null, link: fields.link !== null },
+      now,
+    });
     return row;
   });
   // Hidden, so nothing public changed — but the count the header reads is cheap to expire, and a
@@ -105,22 +119,35 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
   const now = input.now ?? new Date();
   await assertPhotoExists(db, fields);
 
-  const [row] = await db
-    .update(teamMembers)
-    .set({
-      name: fields.name,
-      roleRo: fields.roleRo,
-      roleEn: fields.roleEn,
-      bioRo: fields.bioRo,
-      bioEn: fields.bioEn,
-      photoMediaAssetId: fields.photoAssetId,
-      updatedByStaffUserId: input.actor.id,
-      version: input.expectedVersion + 1,
-      updatedAt: now,
-    })
-    .where(and(eq(teamMembers.id, input.memberId), eq(teamMembers.version, input.expectedVersion)))
-    .returning();
-  if (!row) await refuseStale(db, input.memberId, input.expectedVersion);
+  const row = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(teamMembers)
+      .set({
+        name: fields.name,
+        roleRo: fields.roleRo,
+        roleEn: fields.roleEn,
+        bioRo: fields.bioRo,
+        bioEn: fields.bioEn,
+        link: fields.link,
+        photoMediaAssetId: fields.photoAssetId,
+        updatedByStaffUserId: input.actor.id,
+        version: input.expectedVersion + 1,
+        updatedAt: now,
+      })
+      .where(and(eq(teamMembers.id, input.memberId), eq(teamMembers.version, input.expectedVersion)))
+      .returning();
+    if (!updated) return undefined;
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: "team_member.saved",
+      entityType: "team_member",
+      entityId: updated.id,
+      metadata: { version: updated.version, photo: fields.photoAssetId !== null, link: fields.link !== null },
+      now,
+    });
+    return updated;
+  });
+  if (!row) return refuseStale(db, input.memberId, input.expectedVersion);
   revalidatePublicContent("pages");
   return row;
 }
@@ -143,12 +170,24 @@ export async function setTeamMemberVisible<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not show or hide a team member`);
   }
   const now = input.now ?? new Date();
-  const [row] = await db
-    .update(teamMembers)
-    .set({ visible: input.visible, updatedByStaffUserId: input.actor.id, version: input.expectedVersion + 1, updatedAt: now })
-    .where(and(eq(teamMembers.id, input.memberId), eq(teamMembers.version, input.expectedVersion)))
-    .returning();
-  if (!row) await refuseStale(db, input.memberId, input.expectedVersion);
+  const row = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(teamMembers)
+      .set({ visible: input.visible, updatedByStaffUserId: input.actor.id, version: input.expectedVersion + 1, updatedAt: now })
+      .where(and(eq(teamMembers.id, input.memberId), eq(teamMembers.version, input.expectedVersion)))
+      .returning();
+    if (!updated) return undefined;
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: input.visible ? "team_member.shown" : "team_member.hidden",
+      entityType: "team_member",
+      entityId: updated.id,
+      metadata: { visible: input.visible },
+      now,
+    });
+    return updated;
+  });
+  if (!row) return refuseStale(db, input.memberId, input.expectedVersion);
   revalidatePublicContent("pages");
   return row;
 }
@@ -160,9 +199,10 @@ export async function setTeamMemberVisible<T extends Record<string, unknown>>(
  */
 export async function moveTeamMember<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { actor: Actor; memberId: string; direction: "up" | "down" },
+  input: { actor: Actor; memberId: string; direction: "up" | "down"; now?: Date },
 ): Promise<void> {
   assertMayEdit(input.actor);
+  const now = input.now ?? new Date();
   await db.transaction(async (tx) => {
     const ordered = await tx
       .select({ id: teamMembers.id })
@@ -177,6 +217,14 @@ export async function moveTeamMember<T extends Record<string, unknown>>(
     for (const [position, row] of moved.entries()) {
       await tx.update(teamMembers).set({ position: position + 1 }).where(eq(teamMembers.id, row.id));
     }
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: "team_member.moved",
+      entityType: "team_member",
+      entityId: input.memberId,
+      metadata: { direction: input.direction, position: target + 1 },
+      now,
+    });
   });
   revalidatePublicContent("pages");
 }
@@ -188,9 +236,10 @@ export async function moveTeamMember<T extends Record<string, unknown>>(
  */
 export async function deleteTeamMember<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { actor: Actor; memberId: string },
+  input: { actor: Actor; memberId: string; now?: Date },
 ): Promise<void> {
   assertMayEdit(input.actor);
+  const now = input.now ?? new Date();
   const [current] = await db
     .select({ visible: teamMembers.visible })
     .from(teamMembers)
@@ -203,10 +252,24 @@ export async function deleteTeamMember<T extends Record<string, unknown>>(
   // The visibility is asked again in the delete itself, so a card shown a moment ago by a
   // colleague is not taken off the site by somebody who may not.
   const mayRemoveShown = canShowTeamMember(input.actor.role);
-  const deleted = await db
-    .delete(teamMembers)
-    .where(and(eq(teamMembers.id, input.memberId), mayRemoveShown ? undefined : eq(teamMembers.visible, false)))
-    .returning({ id: teamMembers.id });
+  const deleted = await db.transaction(async (tx) => {
+    const gone = await tx
+      .delete(teamMembers)
+      .where(and(eq(teamMembers.id, input.memberId), mayRemoveShown ? undefined : eq(teamMembers.visible, false)))
+      .returning({ id: teamMembers.id, visible: teamMembers.visible });
+    if (gone.length > 0) {
+      // The row outlives the card: the id and whether it was on the site, never the name (§12.12).
+      await recordAuditEvent(tx, {
+        actorStaffUserId: input.actor.id,
+        action: "team_member.deleted",
+        entityType: "team_member",
+        entityId: input.memberId,
+        metadata: { wasVisible: gone[0]!.visible },
+        now,
+      });
+    }
+    return gone;
+  });
   if (deleted.length === 0) throw new DomainError("FORBIDDEN", "the card went on the site before it could be deleted");
   revalidatePublicContent("pages");
 }

@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
-import { DEFAULT_IMAGE_QUALITY } from "@/modules/media/ladder";
+import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
 
 export type TeamPhotoLabels = {
   /** "Fotografia" — the group's name. */
@@ -19,6 +19,8 @@ export type TeamPhotoLabels = {
   failed: string;
   none: string;
   help: string;
+  /** «Calitate: Normală / Înaltă» beside the upload (§414), the gallery's words. */
+  quality: ImageQualityLabels;
 };
 
 type Props = {
@@ -53,6 +55,8 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
     preview: recall.value("photoPreview") ?? previewUrl ?? "",
   }));
   const [state, setState] = useState<"idle" | "uploading" | "failed">("idle");
+  // The session's choice, shared with every other uploader on the page (§414).
+  const [quality, setQuality] = useImageQuality();
   const named = recall.named("photoAssetId");
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -63,9 +67,9 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
     setState("uploading");
     try {
       const body = new FormData();
-      body.append("file", await shrinkImageInBrowser(file, DEFAULT_IMAGE_QUALITY), file.name.replace(/\.[^.]+$/, "") + ".webp");
+      body.append("file", await shrinkImageInBrowser(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
       body.append("originalFilename", file.name);
-      body.append("quality", DEFAULT_IMAGE_QUALITY);
+      body.append("quality", quality);
       const response = await fetch("/api/admin/media", { method: "POST", body });
       if (!response.ok) throw new Error(String(response.status));
       const uploaded = (await response.json()) as { assetId: string; src: string };
@@ -115,6 +119,9 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           </Button>
         )}
       </Stack>
+      <Box sx={{ mt: 1 }}>
+        <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={state === "uploading"} />
+      </Box>
       <Typography
         variant="caption"
         color={state === "failed" || named ? "error" : "text.secondary"}

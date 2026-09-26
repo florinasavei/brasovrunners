@@ -4005,6 +4005,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "photo_media_asset_id": {
           "name": "photo_media_asset_id",
           "type": "uuid",

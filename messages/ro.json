@@ -1925,7 +1925,8 @@
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
-        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
+        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
+        "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2297,6 +2298,16 @@
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
           ]
+        },
+        "teamPageNotice": {
+          "title": "Nota de confidențialitate: pagina Echipa",
+          "todo": "Nota în vigoare nu descrie încă pagina Echipa, care arată numele și fotografiile oamenilor din echipă și ale voluntarilor. Aprobă o notă nouă înainte să publici pagina.",
+          "done": "Nota în vigoare descrie pagina Echipa: ce arată, pe ce temei și cum se scoate un card.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea 4 descrie pagina Echipa.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
+            "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”."
+          ]
         }
       },
       "freeVerdict": {
@@ -2621,7 +2632,7 @@
     },
     "team": {
       "title": "Pagina «Echipa»",
-      "intro": "Oamenii clubului, câte un card: fotografie, nume, ce face în club și câteva cuvinte. Pagina este a platformei, ca pagina de contact: aici scrii doar cardurile. Un card nou stă ascuns până îl pune pe site un Administrator. Cere acordul persoanei înainte să-i pui numele și fotografia pe site.",
+      "intro": "Oamenii clubului, câte un card: fotografie, nume, ce face în club, câteva cuvinte și, dacă vrea, o legătură. Pagina este a platformei, ca pagina de contact: aici o publici, îi scrii introducerea și cardurile. Un card nou stă ascuns până îl pune pe site un Administrator. Cere acordul persoanei înainte să-i pui numele și fotografia pe site.",
       "shownCount": "Pe site: {count} din {total} carduri.",
       "noneShown": "Niciun card nu este pe site, așa că pagina nu apare în meniul site-ului.",
       "viewPublic": "Vezi pagina",
@@ -2641,7 +2652,7 @@
       "show": "Pune pe site",
       "hide": "Scoate de pe site",
       "showTitle": "Pui pe site cardul „{name}”?",
-      "showBody": "Cardul apare pe pagina Echipa, iar pagina apare în meniul site-ului dacă este primul card de pe site. Ai acordul persoanei pentru nume și fotografie?",
+      "showBody": "Cardul apare pe pagina Echipa cât timp pagina este publicată. Ai acordul persoanei pentru nume și fotografie?",
       "hideTitle": "Scoți de pe site cardul „{name}”?",
       "hideBody": "Cardul rămâne aici, ascuns; îl poți pune la loc oricând.",
       "delete": "Șterge cardul",
@@ -2664,7 +2675,25 @@
       "photoUploading": "Se încarcă…",
       "photoFailed": "Fotografia nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
       "photoNone": "Fără fotografie",
-      "photoHelp": "Arată cel mai bine o fotografie pătrată sau de portret: pe site se decupează pătrat, cu fața în partea de sus. Se păstrează când salvezi cardul."
+      "photoHelp": "Arată cel mai bine o fotografie pătrată sau de portret: pe site se decupează pătrat, cu fața în partea de sus. Se păstrează când salvezi cardul.",
+      "pageHeading": "Pagina",
+      "pagePublished": "Publicată",
+      "pageDraft": "Ciornă",
+      "pagePublishedHelp": "Pagina este pe site, în ambele limbi: {ro} și {en}. Apare în meniu cât timp are cel puțin un card pe site.",
+      "pageDraftHelp": "Pagina nu este pe site: adresa ei răspunde „nu există”, iar meniul nu o arată. Pregătește cardurile, apoi publică pagina.",
+      "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă pagina Echipa, care arată nume și fotografii. Aprobă întâi o notă nouă din /admin/legal („pornește de la textul platformei”), apoi publică pagina.",
+      "publish": "Publică pagina",
+      "unpublish": "Retrage pagina",
+      "publishTitle": "Publici pagina Echipa?",
+      "publishBody": "Pagina intră pe site în ambele limbi deodată, la {ro} și {en}, cu toate cardurile puse pe site. Ai acordul fiecărei persoane de pe carduri?",
+      "unpublishTitle": "Retragi pagina Echipa?",
+      "unpublishBody": "Pagina iese de pe site în ambele limbi și dispare din meniu. Cardurile rămân aici; o poți publica din nou oricând.",
+      "introFold": "Introducerea paginii",
+      "introRo": "Introducerea (Română)",
+      "introEn": "Introducerea (English)",
+      "introHelp": "Opțional, cel mult {max} de caractere. Goală, pagina folosește textul platformei.",
+      "link": "Legătura (opțional)",
+      "linkHelp": "O singură adresă https://, de exemplu profilul de Strava sau de Instagram. Aceeași în ambele limbi."
     },
     "pictures": {
       "title": "Imagini",
@@ -4544,7 +4573,10 @@
       "teamMemberShown": "Cardul este pe site.",
       "teamMemberHidden": "Cardul a fost scos de pe site.",
       "teamMemberMoved": "Ordinea cardurilor a fost schimbată.",
-      "teamMemberDeleted": "Cardul a fost șters."
+      "teamMemberDeleted": "Cardul a fost șters.",
+      "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
+      "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
+      "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site."
     }
   }
 }

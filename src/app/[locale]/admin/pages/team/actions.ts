@@ -11,6 +11,7 @@ import {
   saveTeamMember,
   setTeamMemberVisible,
 } from "@/modules/content/team/service";
+import { saveTeamPageIntro, setTeamPagePublished } from "@/modules/content/team/page-settings";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -38,6 +39,7 @@ function fieldsOf(form: FormData) {
     roleEn: text(form, "roleEn"),
     bioRo: text(form, "bioRo"),
     bioEn: text(form, "bioEn"),
+    link: text(form, "link"),
     photoAssetId: text(form, "photoAssetId"),
   };
 }
@@ -128,4 +130,29 @@ export async function deleteTeamMemberAction(_previous: FormOutcome | null, form
     outcome = outcomeOf(error);
   }
   return backTo(screen(form), outcome);
+}
+
+/** The club's introduction, both languages or neither (§352); a refusal returns every box as typed. */
+export async function saveTeamPageIntroAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    const actor = await requireStaff();
+    await saveTeamPageIntro(getDb(), { actor, fields: { introRo: text(form, "introRo"), introEn: text(form, "introEn") } });
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(screen(form), { saved: "teamPageIntroSaved" }, "team-page");
+}
+
+/** Put the page on the site in both languages, or take it off — asks first on the screen (§384). */
+export async function setTeamPagePublishedAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const wanted = text(form, "published") === "true";
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await setTeamPagePublished(getDb(), { actor, published: wanted });
+    outcome = { saved: wanted ? "teamPagePublished" : "teamPageUnpublished" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  return backTo(screen(form), outcome, outcome.error ? "admin-alert" : "team-page");
 }

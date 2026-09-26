@@ -29,6 +29,12 @@ export const teamMembers = pgTable(
     /** A short paragraph about them, plain text — both languages or neither. */
     bioRo: text("bio_ro"),
     bioEn: text("bio_en"),
+    /**
+     * One link the person chose to share — a Strava profile, an Instagram page — or none. An
+     * `https://` address, checked at the save (`content/team/fields.ts`); not a language pair,
+     * because an address is the same in both.
+     */
+    link: text("link"),
 
     /**
      * The photograph, stored like every other picture (`media_assets`, §66, §414): the WebP
