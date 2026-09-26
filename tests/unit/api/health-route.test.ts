@@ -21,12 +21,14 @@ const checkJobHealth = vi.fn();
 const checkEmailHealth = vi.fn();
 const checkNeonQuotaHealth = vi.fn();
 const execute = vi.fn();
+const domainRenewal = vi.fn();
 
 vi.mock("@/db/client", () => ({ getDb: () => ({ execute }) }));
 vi.mock("@/db/schema-version", () => ({ checkSchemaVersion: (...args: unknown[]) => checkSchemaVersion(...args) }));
 vi.mock("@/modules/jobs/health", () => ({ checkJobHealth: (...args: unknown[]) => checkJobHealth(...args) }));
 vi.mock("@/modules/notifications/health", () => ({ checkEmailHealth: (...args: unknown[]) => checkEmailHealth(...args) }));
 vi.mock("@/modules/diagnostics/neon", () => ({ checkNeonQuotaHealth: (...args: unknown[]) => checkNeonQuotaHealth(...args) }));
+vi.mock("@/modules/diagnostics/domain/domain-renewal", () => ({ domainRenewal: (...args: unknown[]) => domainRenewal(...args) }));
 vi.mock("@/shared/config/build-info", () => ({
   buildInfo: { baseline: "BR-V1.43-2026-09-21", commit: "7c6ca38", committedAt: "2026-09-22T10:00:00.000Z" },
 }));
@@ -48,6 +50,7 @@ function healthy(): void {
   }));
   checkEmailHealth.mockResolvedValue({ status: "ok" });
   checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+  domainRenewal.mockReturnValue({ status: "unknown" });
 }
 
 beforeEach(() => {
@@ -273,5 +276,41 @@ describe("DECISIONS.md §98, §340 /api/health asks the database on every call",
     const response = await GET();
     expect(response.status).toBe(503);
     expect((await response.json()).database).toBe("down");
+  });
+});
+
+/**
+ * §NNN — the domain's renewal. Thirty days or fewer before the expiry, or past it, the answer is
+ * `degraded` and a 503, so the monitor that watches this endpoint tells the owner in time. The
+ * arithmetic is `diagnostics/domain-renewal.test.ts`; these assert what the route does with it.
+ */
+describe("§NNN /api/health warns 30 days before the domain expires", () => {
+  it("stays ok and 200 with more than 30 days left, and publishes the day", async () => {
+    domainRenewal.mockReturnValue({ status: "soon", expiresOn: "2027-09-16", daysLeft: 45 });
+    const response = await GET();
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
+    expect(body.domain).toEqual({ status: "soon", expiresOn: "2027-09-16", daysLeft: 45 });
+  });
+
+  it("degrades to a 503 at 30 days and past the day", async () => {
+    for (const renewal of [
+      { status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 },
+      { status: "expired", expiresOn: "2027-09-16", daysLeft: -2 },
+    ]) {
+      domainRenewal.mockReturnValue(renewal);
+      const response = await GET();
+      const body = await response.json();
+      expect(response.status).toBe(503);
+      expect(body.status).toBe("degraded");
+      expect(body.domain.status).toBe(renewal.status);
+    }
+  });
+
+  it("says unknown and changes nothing while the dates are unset", async () => {
+    const response = await GET();
+    expect(response.status).toBe(200);
+    expect((await response.json()).domain).toEqual({ status: "unknown" });
   });
 });

@@ -59,6 +59,7 @@ import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
+import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
 import { readJobCadence } from "@/modules/jobs/cadence";
@@ -334,12 +335,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * "Not a provider hostname" was the obvious test and it was wrong on the machine every
    * developer runs this on: `localhost` is not `*.vercel.app`, so the domain read as bound on
    * every laptop. A development hostname is not a bound domain, and saying so is one condition
-   * rather than two. The `.ro` test is the same hostname's suffix (`DECISIONS.md` §55).
+   * rather than two.
    */
   const hostname = new URL(env.APP_BASE_URL).hostname;
   const clubDomainBound =
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
-  const roDomainBound = clubDomainBound && /\.ro$/i.test(hostname);
+  // When the domain expires (§NNN): the two dates from the environment, the arithmetic pure.
+  const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
 
   /**
    * The values the step-by-step instructions under each task need, read from this deployment
@@ -359,6 +361,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     maintenanceUrl: `${env.APP_BASE_URL}/api/internal/jobs/registration-maintenance`,
     webhookUrl: `${env.APP_BASE_URL}/api/webhooks/mailgun`,
     baseUrl: env.APP_BASE_URL,
+    // The renewal row's sentence (§NNN): the expiry as a day a person reads, and the years paid.
+    domainExpiresOn:
+      domain.status === "unknown" ? "" : formatCalendarDay(domain.expiresOn, { locale, style: "long", position: "inline" }),
+    renewalYears: String(env.DOMAIN_RENEWAL_YEARS),
   };
   /** `t.raw` returns the catalogue's array untouched, so the values are filled in here. */
   const fill = (step: string) =>
@@ -396,7 +402,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,
       raceDaySheetsDue,
-      roDomainBound,
+      domainRenewal: domain,
       storageConfigured: isStorageConfigured(),
       // Configured *and* switched on (§254): a row that said "done" while the check was off
       // would be the task board lying about a defence.
@@ -702,7 +708,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
             >
               <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                <Chip size="small" color={STATE_COLOR[task.state]} label={t(`state.${task.state}`)} />
+                <Chip size="small" color={STATE_COLOR[task.state]} label={task.label ? t(`stateLabel.${task.label}`) : t(`state.${task.state}`)}
+                />
                 {/* Who it is waiting on, because that is the difference between a list somebody
                     acts on and a list they scroll past. */}
                 <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />

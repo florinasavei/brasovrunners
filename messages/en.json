@@ -2104,6 +2104,9 @@
         "open": "To do",
         "done": "Done"
       },
+      "stateLabel": {
+        "due": "Renew now"
+      },
       "owner": {
         "club": "The club",
         "developer": "The developer"
@@ -2262,14 +2265,16 @@
             "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy. The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
           ]
         },
-        "roDomain": {
-          "title": "The .ro domain, in a year",
-          "todo": "Decided on 16 September 2026: the .com now, the .ro a year later, both alive at once (12 EUR + VAT a year at ROTLD). Blocks nothing; ticks itself when the site answers on .ro.",
-          "done": "The site also answers on the .ro domain.",
+        "domainRenewal": {
+          "title": "Renewing the .com domain",
+          "todo": "The domain expires on {domainExpiresOn} (years paid since registration: {renewalYears}). Amber 90 days before, red at 30 — and then /api/health tells the monitor. An expired domain stops the site, the links in the emails and the sending of email, all at once.",
+          "done": "The domain expires on {domainExpiresOn} (years paid since registration: {renewalYears}) — plenty of time.",
+          "expired": "The domain expired on {domainExpiresOn}. Renew it today at the registrar: until then the site and the emails may not work.",
+          "unknown": "The expiry date is not known: DOMAIN_REGISTERED_ON is not set on this environment, so nothing reminds anyone to renew.",
           "how": [
-            "In a year (September 2027), buy the .ro domain with the same name, at ROTLD or at the .com registrar.",
-            "Run `yarn domain:bind production <name>.ro --alias-of {apex}`: it binds the domain to the Vercel project as a permanent redirect to the .com and prints the DNS records to create.",
-            "Create the records at the registrar. This row turns green when the site answers on .ro."
+            "Renew for several years at the registrar; then update DOMAIN_RENEWAL_YEARS.",
+            "DOMAIN_RENEWAL_YEARS is the total number of years paid since registration: the first year plus a 3-year renewal is 4. In Vercel → the production project (and QA) → Settings → Environment Variables; beside it DOMAIN_REGISTERED_ON = the day {apex} was registered, YYYY-MM-DD. Redeploy.",
+            "Check: this row shows the new expiry date and turns green when more than 90 days are left. Switching domains is in SETUP.md §26."
           ]
         },
         "contactForm": {
@@ -2361,7 +2366,7 @@
           "name": "The site's address (the .com domain)",
           "freeGives": "There is no free version — this is the one thing on the page that is paid for. Bought on 16 September 2026 from ROMARG, for a year. The registry price for a .com is 10.97 USD a year from 1 November 2026; ROMARG invoices in lei, with its margin and VAT.",
           "ceiling": "No ceiling: one invoice a year, in lei.",
-          "whenCrossed": "The next step is the .ro domain, a year after the .com, both alive at once — 12 EUR + VAT a year at ROTLD.",
+          "whenCrossed": "The next step is renewing the .com for several years; the .ro is no longer bought (one address for search engines).",
           "closeYes": "This deployment answers on the club's domain.",
           "closeNo": "This deployment answers on the provider's address — for QA or a laptop, that is as it should be."
         },
