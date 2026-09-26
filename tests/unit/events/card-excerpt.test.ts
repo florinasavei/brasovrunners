@@ -39,22 +39,15 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_SX["& figcaption"].textAlign).toBe("center");
   });
 
-  it("gives the picture its own shape — no crop the organizer did not draw (§260, §275)", () => {
+  it("puts no rule on the picture itself: its shape is the card's 16∶9 frame, drawn by RichText (§NNN)", () => {
     /*
-      `height: auto` is the explicit form of "whatever this picture's proportions say", written
-      down so nothing above it can re-impose a band.
-
-      §275 adds a ceiling, and the difference from the 180-pixel band §260 removed is the whole
-      point: a band *cut* every picture to one shape, and this *scales* a tall one down whole.
-      `width: auto` beside it is what keeps the proportions while the height is capped, and
-      nothing here crops — which is what the assertions below still check.
+      §275's 420-pixel ceiling scaled a tall photograph down whole, and a row of cards was still
+      as uneven as its photographs — the owner, 2026-09-26: "this card looks different than the
+      others". Every card's picture is now the same 16∶9 frame (`CARD_FRAME_SX`), over the crop and
+      around the club's focal point (`card-picture-frame.test.ts`), so nothing here may size the
+      picture against it.
     */
-    const img = CARD_EXCERPT_SX["& figure > img"];
-    expect(img.height).toBe("auto");
-    expect(img.width).toBe("auto");
-    expect(img.maxWidth).toBe("100%");
-    expect(img.maxHeight).toBe(420);
-    expect(img).not.toHaveProperty("objectFit");
+    expect(Object.keys(CARD_EXCERPT_SX).filter((key) => key.includes("img"))).toEqual([]);
   });
 
   it("leaves a cropped picture's window alone, so the rectangle drawn is the rectangle shown", () => {
@@ -73,8 +66,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
       picture cannot be wider than the card it is in, and `vw` — which on a page with a
       scrollbar is wider than the page — appears nowhere.
 
-      The one measurement is the height ceiling §275 added, and it is the safe direction: a
-      number that makes a picture *shorter* cannot make a phone scroll sideways.
+      §275's height ceiling went with the 16∶9 frame (§NNN), which is a ratio, not a measurement.
     */
     const values = JSON.stringify([CARD_EXCERPT_SX, CARD_EXCERPT_WORDS_SX]);
     expect(values).not.toMatch(/vw"/);
