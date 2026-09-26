@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
 
 /**
  * BR-REQ-041-01 (`DECISIONS.md` §356) — the event page's facts, grouped by the question they
@@ -374,6 +375,22 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§NNN), it
       expect(heroLabels.length).toBeGreaterThan(0);
       expect(heroLabels).toEqual(chips(cardPills).map((pill) => pill.label));
     }
+  });
+
+  it("with a forecast: the card's weather is its last pill; the hero keeps the same route pills and says the weather in its own «Vremea» row, never as a pill (§NNN, §416, §429)", async () => {
+    const reading = {
+      hourAt: NOW.getTime(), code: 3, kind: "overcast", glyph: "cloud", temperatureC: 12.4, precipitationProbability: 70, windKmh: 14,
+      feelsLikeC: null, precipitationMm: null, gustKmh: null, humidity: null, uvIndex: null,
+    } as unknown as WeatherReading;
+    const overrides: Partial<PublicEvent> = { surface: "TRAIL", distanceMeters: 10000, costType: "FREE" };
+    const hero = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, weather: { start: reading, hours: [reading], place: "club" } }));
+    const card = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", cardWeather: reading }));
+    const cardRow = /data-fact="pills"[\s\S]*/.exec(withoutStyles(card))?.[0] ?? "";
+    expect(text(cardRow)).toContain("12");
+    const heroLabels = chips(row(hero, "Traseu").dd).map((pill) => pill.label);
+    expect(heroLabels).toEqual(chips(cardRow).map((pill) => pill.label));
+    expect(text(row(hero, "Traseu").dd)).not.toContain("12");
+    expect(hero).toContain('data-testid="hero-weather"');
   });
 
   it("says the surface once on the hero, as the first pill, never also a chip beside the type — as the cards (§366)", () => {

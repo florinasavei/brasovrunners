@@ -796,6 +796,12 @@ export default async function EventFacts({
       first line says — the word, the degrees, the chance of rain, the wind — and the credit
       Open-Meteo's licence asks for as the last piece, a link like the others here. The start
       hour's details and the hours after it stay the page's: the hero is a summary with a button.
+      Deliberately not the cards' weather pill (§NNN): the hero's pills are the card's route and
+      cost pills and nothing else, and the weather keeps this «Vremea» row, because the owner asked
+      for its details — the chance of rain and the wind — on the main card (§416), which a pill
+      (§429: the glyph and the degrees) cannot hold. One forecast, said once, in its fuller shape.
+      Likewise the «Cu taxă» pill and the «Cu taxă, la organizator: …» words under it repeat two
+      words on purpose: the words say who is paid, which the pill's closed-set word cannot.
     */
     if (weather) {
       const words = weatherWords(weather.start, locale);
