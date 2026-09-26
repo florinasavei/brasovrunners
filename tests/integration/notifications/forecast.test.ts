@@ -332,6 +332,10 @@ describe("§383 the forecast of automatic emails", () => {
         const { queued: count } = await queueRegistrationOpenedMessages(db, when);
         return { ids: [], count };
       }
+      // The subscribers' sends are already in the outbox (§445): no job decides them, and this fixture queues none.
+      case "newsletter":
+      case "newEventAlert":
+        throw new Error(`the fixture queues no ${row.send}`);
     }
   }
 

@@ -287,12 +287,16 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // "emails" joins them in §253: the messages and the words in them are the Redactor's work
     // (§247), and the panels behind that page ask their own questions — the queue and the
     // club's copies are read only for a role that may see a participant's address (§243, §244).
+    // "tasks" joins them in §438: «Sarcini» → «De făcut», the club's own checklist, is read by
+    // every role from the copywriter up — only the Organizer and the Administrators write it,
+    // and the panels read from the system stay the Administrator's (`task-panels.test.ts`).
     expect(visibleAdminSections("COPYWRITER")).toEqual([
       "events",
       "checkin",
       "guide",
       "pages",
       "gallery",
+      "tasks",
       "legal",
       "emails",
     ]);
@@ -300,6 +304,8 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // sa vad cine s-a inscris!" — and gained no verb on them. What that section offers this role
     // is the list, the export and the race numbers; `rowVerbsFor` and the panels on the page are
     // where the absence of cancel, erase and resend is asserted.
+    // «Newsletter» (§445): the Organizer writes to the subscribers as they write to an event's
+    // participants (§364) — the page's own entry since the owner's 2026-09-26 "un meniu suplimentar".
     expect(visibleAdminSections("MODERATOR")).toEqual([
       "events",
       "checkin",
@@ -307,8 +313,10 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "pages",
       "gallery",
       "registrations",
+      "tasks",
       "legal",
       "emails",
+      "newsletter",
     ]);
   });
 
@@ -316,19 +324,22 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     const sections = visibleAdminSections("DEV");
 
     expect(sections).toContain("devs");
-    // Since §397, DEV (Tehnic) is also offered `tasks` — but only for the «Aplicația» panel
-    // of it; the page itself refuses the club's ops panels to this role (`task-panels.test.ts`).
+    // Since §397, DEV (Tehnic) is also offered `tasks` — the «Aplicația» panel of it, and since
+    // §438 «De făcut» read-only; the page itself refuses the club's ops panels to this role
+    // (`task-panels.test.ts`).
     expect(sections).toContain("tasks");
     // The line that carries the weight (§38): DEV helps with the platform and never sees the
     // people who registered.
     expect(sections).not.toContain("registrations");
     expect(sections).not.toContain("staff");
+    // Nor writes to anybody: the newsletter is the club speaking, never the platform's helper (§445).
+    expect(sections).not.toContain("newsletter");
   });
 
   it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
     const sections = visibleAdminSections("ADMIN");
 
-    expect(sections).toEqual(["events", "checkin", "guide", "pages", "gallery", "registrations", "tasks", "legal", "emails", "devs"]);
+    expect(sections).toEqual(["events", "checkin", "guide", "pages", "gallery", "registrations", "tasks", "legal", "emails", "newsletter", "devs"]);
     // An Administrator reads every registration and still cannot promote themselves.
     expect(sections).not.toContain("staff");
   });
@@ -344,26 +355,29 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "tasks",
       "legal",
       "emails",
+      "newsletter",
       "staff",
       "devs",
     ]);
   });
 
   /*
-    **The one cell where the table is deliberately not monotone (§289).**
+    **The one row where the table is deliberately not monotone (§289, §445).**
 
     DEV outranks MODERATOR, and since the Organizer was given the registrations it is offered one
     section DEV is not. That is the point of DEV rather than an oversight — it is the role the
     club hands somebody helping with the platform, and §38 and the test above both promise such a
-    person never receives the participant list.
+    person never receives the participant list. «Newsletter» (§445) is the second cell of the same
+    row: the Organizer writes to the subscribers as they write to an event's participants (§364,
+    `canSendNewsletter` is `canMessageParticipants`), and the platform's helper writes to nobody.
 
     Written as an exception the property test skips, and then asserted on its own below, so that
-    it stays exactly one cell. A weakened invariant with nothing guarding the weakening is how
+    it stays exactly these cells. A weakened invariant with nothing guarding the weakening is how
     the defect this whole block exists for got in.
   */
-  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations"]);
+  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations", "newsletter"]);
 
-  it("never offers a higher role less than a lower one, apart from DEV and the participant list", () => {
+  it("never offers a higher role less than a lower one, apart from DEV, the participant list and the newsletter", () => {
     // The property, across every pair in the hierarchy. An equality test against a role name
     // fails this immediately, which is the whole point of asserting it rather than the lists.
     for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {
@@ -382,7 +396,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     }
   });
 
-  it("keeps the exception to exactly one section, and only for DEV", () => {
+  it("keeps the exception to exactly those two sections, and only for DEV", () => {
     // What the skip above is allowed to hide. Any second hole in the ladder fails here rather
     // than passing quietly inside the loop.
     for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {

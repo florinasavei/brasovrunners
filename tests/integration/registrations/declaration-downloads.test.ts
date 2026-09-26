@@ -88,6 +88,7 @@ async function signedRegistration(event: EventForRegistration): Promise<string> 
       phone: "+40711111111",
       emergencyContactName: "Ion Popescu",
       emergencyContactPhone: "+40722222222",
+      nationality: "RO",
       email: "ana@example.ro",
       locale: "ro",
       privacyAcknowledged: true,

@@ -1,11 +1,18 @@
-import { unstable_rethrow } from "next/navigation";
+import { headers } from "next/headers";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { DatabaseRestingError, isColdMiss } from "./breaker";
+import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
+import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
 import {
   type Envelope,
   isSnapshotTooOld,
   readEnvelope,
+  SNAPSHOT_MAX_AGE_HOURS,
+  SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS,
   writeEnvelope,
 } from "./domain/envelope";
 
@@ -42,7 +49,17 @@ import {
  */
 
 type Freshness = "live" | "stale";
-export type Resilient<T> = { value: T; freshness: Freshness; takenAt: Date };
+export type Resilient<T> = {
+  value: T;
+  freshness: Freshness;
+  takenAt: Date;
+  /**
+   * When the copy is served because Neon has suspended the project for the rest of its billing
+   * period (§447): the period's end, when the database is back. Null otherwise — live, or away for
+   * any other reason, when nobody knows for how long.
+   */
+  restingUntil: Date | null;
+};
 
 /** Long enough that a busy page writes rarely, short enough that a copy is never much behind. */
 const WRITE_EVERY_MS = 10 * 60_000;
@@ -118,11 +135,15 @@ export async function readWithLastGood<T>(
   load: () => Promise<T>,
   now: Date = new Date(),
 ): Promise<Resilient<T>> {
+  // `next build` prerendering the few static routes (the locale roots render the header): no
+  // copy is kept or looked for — the build has no business writing to the store, and no outage
+  // to survive (the public cache's `prerenderingAtBuild` says the same of the data cache).
+  if (process.env.NEXT_PHASE === "phase-production-build") return { value: await load(), freshness: "live", takenAt: now, restingUntil: null };
   try {
     const value = await load();
     const envelope = { takenAt: now, value };
     remember(key, envelope);
-    return { value, freshness: "live", takenAt: now };
+    return { value, freshness: "live", takenAt: now, restingUntil: null };
   } catch (error) {
     /*
       `notFound()` and `redirect()` work by throwing, and so does Next's own signal that a
@@ -132,16 +153,87 @@ export async function readWithLastGood<T>(
     */
     unstable_rethrow(error);
 
-    const envelope = await recall<T>(key);
-    if (!envelope || isSnapshotTooOld(envelope, now)) {
+    const [envelope, restingUntil] = await Promise.all([recall<T>(key), restingSince(error, now)]);
+    const maxAgeHours = restingUntil ? SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS : SNAPSHOT_MAX_AGE_HOURS;
+    if (!envelope || isSnapshotTooOld(envelope, now, maxAgeHours)) {
+      /*
+        A red month's cache miss with nothing to show (§447): the database was not asked on
+        purpose, so this is not trouble — the reader goes to the short resting page (200,
+        `Retry-After`), which comes back here by itself once the background refresh has run.
+      */
+      if (isColdMiss(error)) await sendToRestingPage();
       // Nothing to show, or nothing recent enough to be honest about: the error page says the
       // site is having trouble, which is true, instead of showing last week's events as this
       // week's.
       throw error;
     }
-    console.error("[resilience] serving the last good copy of", key, error);
-    return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt };
+    // Once per outage and instance is enough for the log: the breaker makes every read after the
+    // first one fail the same way, and a line per page view would bury the first.
+    if (!(error instanceof DatabaseRestingError)) console.error("[resilience] serving the last good copy of", key, error);
+    return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt, restingUntil };
   }
+}
+
+/**
+ * Whether the database is away because Neon suspended the project for the month (§447) — asked
+ * only on this failure path, only for an error that says the database is away, and of Neon's API
+ * through the governor's shared reading, never of the database. The period's end when it is, so
+ * the page can say when the site is whole again; null for every other outage, whose length nobody
+ * knows.
+ *
+ * While the project is suspended nothing can change the rows behind a copy — no write reaches a
+ * database that is not running — so a copy taken before the suspension is still the newest truth
+ * there is, and the twelve-hour limit (`SNAPSHOT_MAX_AGE_HOURS`), which exists because a newer
+ * truth may have been written since, gives way to the billing period
+ * (`SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS`).
+ */
+async function restingSince(error: unknown, now: Date): Promise<Date | null> {
+  if (!isDatabaseAwayError(error)) return null;
+  const quotaRefused = isQuotaRefusalError(error);
+  try {
+    const budget = await readNeonBudget(now);
+    /*
+      Neon's own refusal ("exceeded the compute time quota") is resting on its own, whatever the
+      level reads: with a project-scoped key the level comes from the operations log, which counts
+      only the floor and stops growing once the project is suspended, so the platform may still
+      read under 100% while Neon has already cut it off. The meter's period end when there is a
+      meter, the bounded default otherwise.
+    */
+    if (quotaRefused) return budget.meter ? budget.meter.periodEnd : defaultRestingUntil(now);
+    return budget.budget?.spent && budget.meter ? budget.meter.periodEnd : null;
+  } catch {
+    return quotaRefused ? defaultRestingUntil(now) : null;
+  }
+}
+
+/**
+ * Keep `value` as the last good copy under `key` — this instance's memory, and the object store at
+ * most once every ten minutes per key. The public cache keeps one of every read it loads (§447), so a
+ * red month's miss can be answered without the database.
+ */
+export function keepCopy<T>(key: string, value: T, now: Date = new Date()): void {
+  remember(key, { takenAt: now, value });
+}
+
+/** The last good copy under `key`, when there is one no older than `maxAgeHours`; null otherwise. */
+export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours: number = SNAPSHOT_MAX_AGE_HOURS): Promise<Envelope<T> | null> {
+  const envelope = await recall<T>(key);
+  return envelope && !isSnapshotTooOld(envelope, now, maxAgeHours) ? envelope : null;
+}
+
+/**
+ * Send the reader to the short resting page (§447), naming the address they were on — which the
+ * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
+ * a request (a test, a script) there is no header, and the way back is the site's root.
+ */
+async function sendToRestingPage(): Promise<never> {
+  let back: string | null = null;
+  try {
+    back = (await headers()).get(REQUEST_PATH_HEADER);
+  } catch {
+    back = null;
+  }
+  redirect(restingPageHref(back));
 }
 
 /** For the tests, which must not see one case's snapshot in the next. */

@@ -203,6 +203,10 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // written here by hand.
       "/admin/legal/[id]/delete",
       "/admin/legal/new",
+      // The network check (§436): what a staff member's network lets through, written by hand.
+      "/admin/network",
+      // The newsletter's own backoffice entry (§445): the subscribers and the composer, by hand.
+      "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
       "/admin/pages/new",
@@ -228,10 +232,15 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/gallery/[slug]",
       "/legal/privacy",
       "/legal/terms",
+      // The newsletter's two link pages (§445): the confirmation and the subscriber's own page.
+      "/newsletter/confirm/[token]",
+      "/newsletter/manage/[token]",
       "/pages/[slug]",
       "/preview/events/[id]",
       "/registrations/confirm/[token]",
       "/registrations/declare/[token]",
+      // Another person on a registered address, confirmed from the inbox (§446): read, then one press.
+      "/registrations/family/[token]",
       // The public list's own switch (BR-REQ-039-01, §143): written here by hand like the rest.
       "/registrations/list/[token]",
       "/registrations/manage/[token]",

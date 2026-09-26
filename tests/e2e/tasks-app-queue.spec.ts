@@ -53,8 +53,8 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     // A page a Tehnic may already open (§397, `canWorkTheDesk`), not a typed `/admin/tasks`
     // address: the backoffice tab bar itself has to offer the way in.
     await page.goto("/ro/admin/checkin");
-    await expect(page.getByRole("tab", { name: "De făcut" })).toBeVisible();
-    await page.getByRole("tab", { name: "De făcut" }).click();
+    await expect(page.getByRole("tab", { name: "Sarcini" })).toBeVisible();
+    await page.getByRole("tab", { name: "Sarcini" }).click();
     // `waitForURL` first, then the pathname on its own — `toHaveURL`'s regex matched a
     // transient URL mid-navigation on a shared machine (the query settling a beat after the
     // path), and a `$`-anchored regex is exact about a trailing query string that arrives on
@@ -69,12 +69,15 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     await page.goto("/ro/admin/tasks");
     const main = page.locator("#main");
 
-    // No query at all, and Tehnic already lands on «Aplicația» — there is nothing else here.
+    // No query at all, and Tehnic still lands on «Aplicația» — its own panel.
     await expect(page).toHaveURL(/\/admin\/tasks$/);
     await expect(main.getByRole("heading", { name: "The work queue" })).toBeVisible();
 
+    // Since §438 a Tehnic also reads the club's checklist «De făcut» (never writes it); the
+    // club's worklist read from the system — «Club» — and its money stay out of reach.
     const nav = main.getByRole("navigation", { name: "Ce mai este de făcut" });
-    await expect(nav.getByRole("link", { name: "De făcut" })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: /^De făcut/ })).toHaveCount(1);
+    await expect(nav.getByRole("link", { name: "Club", exact: true })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "Costuri" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "Anti-robot" })).toHaveCount(0);
 

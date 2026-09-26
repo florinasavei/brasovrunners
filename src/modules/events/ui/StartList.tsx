@@ -20,6 +20,7 @@ import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
 import { confirmedPhrase, othersPhrases } from "./counted-phrases";
 import ListStateLabel from "./ListStateLabel";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 
 /**
  * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §346): every
@@ -72,15 +73,24 @@ import ListStateLabel from "./ListStateLabel";
  * and a cancelled or expired registration appears nowhere. Without that notice the list is
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
+ *
+ * ## While the database is away
+ *
+ * Nothing, rather than the event page's error (§447): the list is never served from a copy — a
+ * stale list would show a name its owner withdrew — so an outage, or a red month's cache miss
+ * (`ColdMissError`), leaves the section out and the page stands.
  */
-export default async function StartList({
-  event,
-  page: requestedPage,
-}: {
+export default async function StartList(props: StartListProps) {
+  return readOrWhileAway(() => startListOrThrow(props), null);
+}
+
+type StartListProps = {
   event: PublicEvent;
   /** `?lista=` from the query string, unchecked: `startListPage` clamps it. */
   page?: string;
-}) {
+};
+
+async function startListOrThrow({ event, page: requestedPage }: StartListProps) {
   if (event.participantListVisibility !== "NAMES") return null;
   /*
     The list closes by itself (§421): the club's number of days after the event ("Termene"), asked

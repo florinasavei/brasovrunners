@@ -293,6 +293,10 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
         expect(result).toEqual({
           outcome: "sent",
           providerMessageId: "20260903.1@mail.example.test",
+          // Which road carried it (§443): no Gmail road was configured, so Mailgun's.
+          transport: "mailgun",
+          // The address alone: what the send reached (§443).
+          recipients: 1,
         });
         expect(calls).toHaveLength(1);
         expect(calls[0].url).toBe("https://api.example.test/v3/mail.example.test/messages");

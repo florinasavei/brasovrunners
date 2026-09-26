@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
+import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { env } from "@/shared/config/env";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { getPathname } from "@/i18n/navigation";
@@ -112,7 +113,9 @@ export async function approvePlatformTemplatesAction(_previous: FormOutcome | nu
   let outcome: { error?: string; saved?: string; approved?: string };
   try {
     const actor = await requireStaffRole("SUPERADMIN");
-    const result = await approvePlatformTemplates(getDb(), actor, clubFactsFromEnv(env), new Date());
+    const db = getDb();
+    // The contact address as the club chose to show it (§442).
+    const result = await approvePlatformTemplates(db, actor, clubFactsFromEnv(env, await shownContactAddresses(db)), new Date());
     outcome = { saved: "platformApproved", approved: String(result.approved.length) };
   } catch (error) {
     outcome = outcomeOf(error);

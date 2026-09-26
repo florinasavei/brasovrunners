@@ -34,7 +34,8 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("20");
-    await openEditorBox(page, "Condiții de participare și declarația");
+    // The declaration is chosen under «Regulamentul» since §448.
+    await openEditorBox(page, "Declarația pe propria răspundere");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();
 

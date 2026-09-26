@@ -35,6 +35,21 @@ export const THUMB_MAX = 640;
 export const HIGH_WEB_MAX = 4000;
 
 /**
+ * The master's long side at «Minimă» (§437): a picture that only has to be seen — a map sketch,
+ * a portrait beside a paragraph, a card's illustration — kept at 1280, which is still a phone's
+ * full column at 3× and a laptop's half column at 2×, for about a third of «Medie»'s bytes.
+ */
+export const LOW_WEB_MAX = 1280;
+
+/**
+ * The master's long side at «Originală» (§437): the file's own pixels, up to 6000 — a 24-megapixel
+ * camera's frame, beyond anything a screen draws. Not `MAX_DIMENSION`: 12 000 × 12 000 decoded is
+ * 432 MB of raw pixels on a function with a gigabyte, and the browser's 4 MB send limit
+ * (`BROWSER_SEND_BYTES`) keeps what arrives from a phone well under 6000 anyway.
+ */
+export const ORIGINAL_WEB_MAX = 6000;
+
+/**
  * The most the browser sends in one upload (§414): under the platform's 4.5 MB request body
  * (§66), with room for the multipart envelope and the other fields. `MAX_UPLOAD_BYTES` is the
  * server's own refusal and stays 6 MB for a caller that is not a function behind that limit; a

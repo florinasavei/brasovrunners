@@ -67,7 +67,8 @@ export const BIB_IMAGE_FOOTER = { width: FOOTER_LINE, size: FOOTER_LINE / BIB_FO
 
 type BibImageInput = {
   bibNumber: number;
-  registeredName: string;
+  /** Null draws a desk spare (§444): the empty line the name is written on, as the sheet prints it. */
+  registeredName: string | null;
   eventTitle: string;
   eventDate: string;
   bandColour?: string | null;
@@ -77,6 +78,8 @@ type BibImageInput = {
   siteUrl?: string | null;
   /** What the club decided this bib shows (§249); absent is the platform's own design. */
   design?: BibDesign;
+  /** The small words under a desk spare's empty line (§444), as the sheet prints them. */
+  blankMark?: string;
 };
 
 /**
@@ -144,7 +147,36 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         justifyContent: "center",
       }}
     >
-      <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
+      {input.registeredName === null ? (
+        // A desk spare (§444): the sheet's rule, at the sheet's point in the strip — `nameTop` is
+        // the strip's padding here, so the rule sits `blankLineTop − nameTop` below it — and the
+        // small mark under it, its top `blankMarkTop` into the strip as on the paper.
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              marginTop: px(L.blankLineTop - L.nameTop) - px(L.blankLineWeight) / 2,
+              width: px(L.blankLineWidth),
+              height: px(L.blankLineWeight),
+              background: COLOR.ink,
+            }}
+          />
+          {input.blankMark ? (
+            <div
+              style={{
+                ...ONE_LINE,
+                marginTop: px(L.blankMarkTop - L.blankLineTop) - px(L.blankLineWeight) / 2,
+                fontSize: px(L.blankMarkSize),
+                color: COLOR.inkMuted,
+              }}
+            >
+              {input.blankMark}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
+      )}
     </div>
   ) : null;
   return new ImageResponse(

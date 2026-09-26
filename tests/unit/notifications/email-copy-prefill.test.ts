@@ -44,8 +44,11 @@ import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modu
  * per send, on the event's page — the page draws no editor for it, the save refuses an entry for it
  * and the send ignores one — so its card is pinned below, on its own.
  */
-type EditedType = Exclude<EmailMessageType, "ORGANIZER_MESSAGE">;
-const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter((type): type is EditedType => type !== "ORGANIZER_MESSAGE");
+// The newsletter (§445) is written per send too, in its own composer.
+type EditedType = Exclude<EmailMessageType, "ORGANIZER_MESSAGE" | "NEWSLETTER">;
+const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter(
+  (type): type is EditedType => type !== "ORGANIZER_MESSAGE" && type !== "NEWSLETTER",
+);
 const LOCALES = ["ro", "en"] as const;
 
 /** What each message's platform text is made of, field by field, in both languages. */
@@ -77,6 +80,10 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   GROUP_RUN_DECLARATION_ARCHIVE: ["participantName", "eventTitle", "signedAtFormatted"],
   // The link's shape (§389): the event and the link's lifetime, which is the club's email-link window.
   REGISTER_ANOTHER_PERSON: ["eventTitle", "confirmationHours"],
+  // The newsletter (§445): the confirmation names nothing — the topics and the link's lifetime are
+  // the platform's own lines after the words — and the new-event alert names its event.
+  NEWSLETTER_CONFIRM: [],
+  NEW_EVENT_ALERT: ["eventTitle"],
 };
 
 /**
@@ -306,7 +313,8 @@ describe("§359 what goes out is what went out before", () => {
     // Per message since the email follow-up (§373): the sample minus the fields the message never carries.
     expect(page).toContain("const sample = emailSampleFor(messageType, emailLocale);");
     expect(page).toContain("renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy)");
-    expect(page).toContain("shipped={emailCopyPrefill(messageType, emailLocale)}");
+    // The Reply-To in force (§442), so the prefill's reply line matches the send.
+    expect(page).toContain("shipped={emailCopyPrefill(messageType, emailLocale, replyTo)}");
     expect(page).not.toMatch(/buildTemplateContent\(messageType, emailLocale, sample/);
   });
 });
@@ -628,7 +636,8 @@ describe("§364 the organizer's message on the page of every email", () => {
 
   it("draws no editor and no sample-value marker for it, and says where it is written", () => {
     const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
-    expect(page).toContain('return messageType === "ORGANIZER_MESSAGE";');
+    // The newsletter is the other message written per send (§445).
+    expect(page).toContain('return messageType === "ORGANIZER_MESSAGE" || messageType === "NEWSLETTER";');
     expect(page).toContain("const own = perSend(messageType) ? null : copyFor(written.copy, messageType, emailLocale);");
     expect(page).toContain("mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : []");
     expect(page).toMatch(/editor: perSend\(messageType\) \? \(\s*<Alert severity="info"[^>]*data-testid="email-per-send"/);

@@ -4,6 +4,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { latestBirthDateFor, MIN_PARTICIPANT_AGE } from "../domain/age";
+import { BIB_NUMBER_MAX, type SpareState } from "../domain/spare-bibs";
 import GuardianForMinor from "./GuardianForMinor";
 
 /**
@@ -117,6 +118,47 @@ export function StaffBirthDateField({ label, helperText }: { label: string; help
       label={label}
       helperText={helperText}
       slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: earliest, max } }}
+    />
+  );
+}
+
+/**
+ * The number handed to a walk-in with the paper (§444), inside the fast track's box: the chosen
+ * event's next free desk spare, suggested, which the volunteer changes when the bib in their hand
+ * is another one, or empties for the platform's own draw. It follows the event select — re-mounted
+ * with the event, so a new choice brings its own suggestion — and after a refusal it holds what was
+ * posted (§315). Plain data crosses the boundary: each event's suggestion by id, and the words.
+ */
+export function StaffHandedBibField({
+  label,
+  spareHelp,
+  noSpareHelp,
+  outHelp,
+  suggestions,
+}: {
+  label: string;
+  /** What the box says when the chosen event has a spare to suggest. */
+  spareHelp: string;
+  /** And when it has none reserved. */
+  noSpareHelp: string;
+  /** And when every reserved spare is given: the box suggests nothing and says so. */
+  outHelp: string;
+  /** Where each event's spares stand, by id; an event missing here has none reserved. */
+  suggestions: Readonly<Record<string, SpareState>>;
+}) {
+  const { selected } = useContext(ChoiceContext);
+  const state: SpareState = (selected ? suggestions[selected] : undefined) ?? { kind: "none" };
+  const suggestion = state.kind === "free" ? state.next : null;
+  return (
+    <RecallField
+      key={selected ?? ""}
+      name="bibNumber"
+      type="number"
+      label={label}
+      defaultValue={suggestion ?? ""}
+      helperText={state.kind === "free" ? spareHelp : state.kind === "out" ? outHelp : noSpareHelp}
+      slotProps={{ htmlInput: { min: 1, max: BIB_NUMBER_MAX, step: 1, inputMode: "numeric" }, inputLabel: { shrink: true } }}
+      sx={{ width: { sm: 320 } }}
     />
   );
 }

@@ -385,6 +385,7 @@
         "done": "Ți-am trimis-o pe email, în PDF. La alergare vii ca de obicei.",
         "closed": "Declarația nu se mai poate semna pentru această alergare.",
         "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
+        "away": "Nu am putut ajunge la evidențele noastre chiar acum, așa că nu s-a semnat și nu s-a înregistrat nimic. Ce ai completat e mai jos — mai încearcă peste câteva minute.",
         "refusedTitle": "Declarația nu a fost semnată",
         "refusedNothingRecorded": "Nu s-a înregistrat nimic. Completează căsuțele de mai jos și semnează din nou:",
         "fields": {
@@ -392,6 +393,7 @@
           "email": "Adresa de email",
           "accepted": "Am împlinit 18 ani, am citit declarația și o semnez",
           "typedName": "Semnătura: numele tău complet",
+          "birthDate": "Data nașterii",
           "captcha": "Verificarea anti-bot"
         },
         "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copiile trimise pe e-mail — a ta și a clubului — apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
@@ -400,6 +402,8 @@
         "adultsOnly": "Declarația este pentru adulți: o semnezi doar dacă ai împlinit 18 ani, și nu o semnezi în numele unui minor.",
         "accept": "Am împlinit 18 ani, am citit declarația de mai sus și o semnez pe propria răspundere",
         "typedNameHelp": "Scrie numele tău complet. Apare ca o semnătură.",
+        "birthDateHelp": "Pentru vârsta minimă a alergării: {age}, împliniți în ziua alergării. Nu o păstrăm și nu apare în declarație.",
+        "tooYoung": "Vârsta minimă pentru această alergare este {age}, împliniți în ziua alergării. Declarația nu se poate semna.",
         "captcha": "Verificarea anti-bot nu a trecut. Încearcă din nou.",
         "action": "Semnează declarația"
       }
@@ -456,6 +460,7 @@
       "datePlaceholder": "AAAA-LL-ZZ",
       "dateTyped": "Data, ca 2026-11-21: anul, luna, ziua.",
       "dateIncomplete": "Completează data întreagă: ziua, luna și anul.",
+      "timePlaceholder": "OO:MM",
       "timeTyped": "Ora pe 24 de ore, ca 09:30 sau 19:00.",
       "clearTime": "Șterge ora"
     },
@@ -465,13 +470,14 @@
       "staff": "Echipa",
       "legal": "Documente legale",
       "devs": "Configurație",
-      "tasks": "De făcut",
+      "tasks": "Sarcini",
       "pages": "Pagini",
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
       "emails": "Emailuri",
       "guide": "Ghid",
-      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează"
+      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează",
+      "newsletter": "Newsletter"
     },
     "outbox": {
       "status": {
@@ -835,6 +841,8 @@
       "repeatPublishOnBody": "De acum, fiecare dată nouă pe care o creează seria apare singură pe site, în ambele limbi. Datele create deja rămân cum sunt.",
       "bibsTitle": "Aloci numerele de concurs?",
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
+      "sparesTitle": "Rezervi numere pentru masă?",
+      "sparesBody": "Numerele încep de la {from}, după cel mai mare număr dat sau rezervat, și rămân ale mesei: nimeni înscris online nu le mai primește. O rezervare nu se anulează; numerele nefolosite rămân nefolosite.",
       "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
       "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență.",
       "email": {
@@ -895,6 +903,8 @@
       "approveVersionBody": "Textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
       "emailPlanTitle": "Schimbi planul Mailgun?",
       "emailPlanBody": "Cotele, „cât mai putem trimite” și tabelul de costuri se calculează de acum după noul plan.",
+      "emailTransportTitle": "Schimbi pe unde pleacă emailurile?",
+      "emailTransportBody": "De acum, grupurile alese pleacă prin Gmail, în limita și cu pauza de aici; restul prin Mailgun. Emailurile deja trimise rămân cum au fost.",
       "contactRecipientsTitle": "Schimbi cine primește mesajele de contact?",
       "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
       "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
@@ -920,7 +930,9 @@
       "neonPlanTitle": "Schimbi planul Neon?",
       "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
-      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva."
+      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva.",
+      "shownAddressTitle": "Schimbi adresa de contact afișată?",
+      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -949,7 +961,9 @@
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
-      "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor."
+      "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
+      "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment (dat, rezervat sau al unei înscrieri șterse). Alege alt număr din cutie și încearcă din nou.",
+      "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1176,8 +1190,10 @@
         "7": "Du"
       },
       "createdWithSeries": "Evenimentul și {dates} au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
-      "durationMinutes": "Durata (minute)",
-      "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
+      "duration": "Durata",
+      "durationHours": "Ore",
+      "durationMinutesPart": "Minute",
+      "durationHelp": "Cât durează — de exemplu 1 oră și 45 de minute. Sfârșitul se calculează singur. Lasă ambele goale dacă nu s-a anunțat.",
       "coHostRows": {
         "add": "Adaugă un partener",
         "remove": "Șterge partenerul",
@@ -1325,6 +1341,9 @@
         "note": "Ce s-a schimbat (opțional)",
         "noteHelp": "Opțional, în ambele limbi sau în niciuna · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris, sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
         "cancelTitle": "Anulezi evenimentul",
+        "cancelTitleCreate": "Creezi evenimentul anulat",
+        "cancelIntroCreate": "Evenimentul se creează cu starea Anulat și apare așa pe site dacă îl publici. Nu pleacă niciun email: nimeni nu e înscris la un eveniment nou.",
+        "cancelReasonHelpCreate": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Rămâne în jurnalul de audit, cu numele tău.",
         "cancelIntro": "Înscrierile rămân așa cum sunt, ca evidență: nimeni nu e retras și nu i se schimbă starea. Nu se mai oferă locuri, nu se mai dau numere și nu mai pleacă emailuri automate pentru acest eveniment.",
         "cancelReason": "Motivul anulării",
         "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
@@ -1434,8 +1453,9 @@
           "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
         },
         "conditions": {
-          "title": "Condiții de participare și declarația",
-          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
+          "title": "Condiții de participare",
+          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
+          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Regulamentul» → «Declarația pe propria răspundere»."
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -1461,7 +1481,8 @@
         },
         "status": {
           "title": "Starea evenimentului",
-          "createNote": "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
+          "createNote": "De obicei Programat. Alege Anulat pentru un eveniment deja anulat (trecut în evidență, de exemplu de pe Facebook) sau Încheiat pentru unul care a avut loc deja. Niciuna nu trimite emailuri: nimeni nu e încă înscris.",
+          "completedRefused": "Starea: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
         },
         "course": {
           "title": "Traseul"
@@ -1523,7 +1544,7 @@
           "when": {
             "none": "Data nu e aleasă încă",
             "raceStart": "startul cursei {time}",
-            "duration": "{minutes} min"
+            "duration": "{duration}"
           },
           "timezone": {
             "home": "{zone} — ora României"
@@ -1581,7 +1602,8 @@
             "from": "De la {number}",
             "clubColour": "culoarea clubului",
             "allocated": "alocate: {count}",
-            "toPrint": "de tipărit: {count}"
+            "toPrint": "de tipărit: {count}",
+            "spares": "rezervă {from}–{to}"
           },
           "bibDesign": {
             "parts": "{parts}",
@@ -1628,6 +1650,11 @@
             "locked": "blocată după publicare",
             "none": "fără adresă",
             "seoOneLanguage": "SEO într-o singură limbă"
+          },
+          "declaration": {
+            "offered": "declarație pentru {surface}",
+            "notOffered": "fără declarație",
+            "notAsked": "nu se cere"
           }
         },
         "video": {
@@ -1637,6 +1664,11 @@
           "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
           "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
           "toDescription": "Mergi la descriere"
+        },
+        "declaration": {
+          "title": "Declarația pe propria răspundere",
+          "newest": "Cea mai nouă versiune aprobată: v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
+          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația."
         }
       },
       "identical": {
@@ -1648,8 +1680,11 @@
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
-        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
-        "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
+        "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
+        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic.",
+        "surface": "Suprafața, din cardul «Traseul»: {surface}",
+        "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
       "pageFlow": {
         "title": "Pagina, de sus în jos",
@@ -1711,7 +1746,7 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare nu se creează singur — pune cheia Zitadel (To do → „Invită echipa”, SETUP.md §37) și îl creăm noi, cu link pentru parolă; până atunci creează-l din consola Zitadel. Accesul începe la prima autentificare.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare nu se creează singur — pune cheia Zitadel (Sarcini → Club → „Invită echipa”, SETUP.md §37) și îl creăm noi, cu link pentru parolă; până atunci creează-l din consola Zitadel. Accesul începe la prima autentificare.",
       "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația — cine l-a adăugat, cu ce rol, linkul de autentificare — și linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
       "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
       "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
@@ -1758,11 +1793,11 @@
       "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
       "accountReactivated": "Contul de autentificare a fost reactivat.",
       "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
-      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
+      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (Sarcini → Club → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
       "noAccount": "Fără cont de autentificare",
       "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
-      "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
+      "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; Sarcini → Club → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
       "inviting": "Se adaugă…",
@@ -1888,8 +1923,9 @@
           "legalName": "Denumirea juridică",
           "registrationNumber": "CIF",
           "registeredAddress": "Sediul",
-          "contactEmail": "Email de contact"
+          "contactEmail": "Email de contact (adresa de contact afișată, din /admin/emails)"
         },
+        "contactFactMissing": "EMAIL_REPLY_TO (sau Gmail-ul clubului în «Adresa de contact afișată», pe /admin/emails)",
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
@@ -1930,8 +1966,10 @@
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
+        "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”). La un eveniment fără vârstă minimă — la o alergare de grup, una de cel mult 18 ani — propoziția care o conține lipsește din declarație",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
-        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
+        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
+        "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă."
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -1991,7 +2029,9 @@
       "noneMatch": "Niciun rând pentru acest filtru.",
       "listLabel": "Lista de sarcini",
       "panel": {
+        "club": "Club",
         "todo": "De făcut",
+        "todoCount": "De făcut ({count})",
         "botCheck": "Anti-robot",
         "costs": "Costuri",
         "system": "Sistem",
@@ -2101,6 +2141,9 @@
         "broken": "Nu funcționează",
         "open": "De făcut",
         "done": "Gata"
+      },
+      "stateLabel": {
+        "due": "De reînnoit acum"
       },
       "owner": {
         "club": "Clubul",
@@ -2260,14 +2303,16 @@
             "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
           ]
         },
-        "roDomain": {
-          "title": "Domeniul .ro, peste un an",
-          "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",
-          "done": "Site-ul răspunde și pe domeniul .ro.",
+        "domainRenewal": {
+          "title": "Reînnoirea domeniului .com",
+          "todo": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}). Galben cu 90 de zile înainte, roșu cu 30 — și atunci /api/health anunță monitorul. Un domeniu expirat oprește site-ul, linkurile din emailuri și trimiterea emailurilor, toate odată.",
+          "done": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}) — e timp destul.",
+          "expired": "Domeniul a expirat pe {domainExpiresOn}. Reînnoiește-l azi la registrar: până atunci site-ul și emailurile pot să nu mai meargă.",
+          "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire.",
           "how": [
-            "Peste un an (septembrie 2027), cumpără domeniul .ro cu același nume, la ROTLD sau la registrarul .com.",
-            "Rulează `yarn domain:bind production <numele>.ro --alias-of {apex}`: leagă domeniul de proiectul Vercel ca redirect permanent către .com și tipărește înregistrările DNS de creat.",
-            "Creează înregistrările la registrar. Rândul acesta devine verde când site-ul răspunde pe .ro."
+            "Reînnoiește pe mai mulți ani la registrar; apoi actualizează DOMAIN_RENEWAL_YEARS.",
+            "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4. În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
+            "Verifică: rândul acesta arată noua dată de expirare și devine verde când mai sunt peste 90 de zile. Schimbarea domeniului e în SETUP.md §26."
           ]
         },
         "contactForm": {
@@ -2302,6 +2347,16 @@
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea despre lista publică descrie stadiile.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
+          ]
+        },
+        "newsletterNotice": {
+          "title": "Nota de confidențialitate: newsletterul",
+          "todo": "Nota în vigoare nu descrie încă newsletterul, așa că pagina de contact nu arată abonarea la noutăți și platforma nu păstrează nicio adresă pentru el, până când clubul aprobă o notă care îl descrie.",
+          "done": "Nota în vigoare descrie newsletterul: pagina de contact arată abonarea, cu temele alese și confirmarea pe email.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
+            "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
         }
       },
@@ -2359,7 +2414,7 @@
           "name": "Adresa site-ului (domeniul .com)",
           "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește. Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA.",
           "ceiling": "Nu are o limită: o factură pe an, în lei.",
-          "whenCrossed": "Pasul următor este domeniul .ro, la un an după .com, amândouă active — 12 EUR + TVA pe an la ROTLD.",
+          "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani; .ro nu se mai cumpără (o singură adresă pentru motoarele de căutare).",
           "closeYes": "Acest mediu răspunde pe domeniul clubului.",
           "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie."
         },
@@ -2500,7 +2555,50 @@
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
           "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii (setarea clubului pentru trimitere e pe „programat”), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
         }
+      },
+      "budgetThresholds": {
+        "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
       }
+    },
+    "clubTodo": {
+      "title": "De făcut",
+      "intro": "Lista clubului: ce avem de făcut, scrisă și bifată de mână — spre deosebire de „Club”, care se citește din sistem. O vede toată echipa; o scriu Organizatorul, Administratorul și Superadministratorul.",
+      "readOnly": "Poți citi lista; o scriu Organizatorul, Administratorul și Superadministratorul. Ce vrei schimbat le spui lor.",
+      "counts": "Deschise: {open} · Terminate: {done}",
+      "listLabel": "Lista clubului",
+      "filterLabel": "Pentru cine",
+      "filterAll": "Toți",
+      "empty": "Nimic deschis pe listă.",
+      "emptyFor": "Nimic deschis pentru {owner}.",
+      "owner": "Pentru {owner}",
+      "due": "Termen: {day}",
+      "overdue": "Termen depășit: {day}",
+      "doneBy": "Bifat de {by}, {when}",
+      "tick": "Bifează: {text}",
+      "untick": "Debifează: {text}",
+      "moveUp": "Mută mai sus: {text}",
+      "moveDown": "Mută mai jos: {text}",
+      "edit": "Modifică",
+      "doneTitle": "Arată terminate ({count})",
+      "add": {
+        "title": "Adaugă un rând",
+        "save": "Adaugă",
+        "saving": "Se adaugă…"
+      },
+      "field": {
+        "text": "Ce e de făcut",
+        "textHelp": "O propoziție sau câteva: ce, unde în backoffice, până când. Fără adrese de email sau parole — lista o vede toată echipa.",
+        "owner": "Pentru cine",
+        "ownerHelp": "Un prenume — Amalia, Dani, Florin — sau gol dacă e al oricui.",
+        "due": "Termen",
+        "dueHelp": "Opțional: ziua până la care trebuie făcut."
+      },
+      "save": "Salvează",
+      "saving": "Se salvează…",
+      "delete": "Șterge",
+      "deleting": "Se șterge…",
+      "deleteTitle": "Ștergi rândul?",
+      "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi."
     },
     "richText": {
       "bold": "Îngroșat",
@@ -2527,14 +2625,23 @@
       "imageUploading": "Se încarcă imaginea…",
       "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum.",
       "imageQualityLegend": "Calitate",
-      "imageQualityNormal": "Normală (recomandat)",
-      "imageQualityHigh": "Înaltă (fișier mai mare)",
-      "imageQualityHelp": "Normală e potrivită pentru fotografii și păstrează până la {normalMax} px pe latura lungă. Alege Înaltă pentru afișe, grafice și poze cu text: păstrează până la {highMax} px, literele rămân clare, fișierul e mai mare. Se ține minte până închizi fila; o imagine lipită sau trasă în text și posterul unui film folosesc aceeași alegere.",
+      "imageQualityLow": "Minimă (fișier mic)",
+      "imageQualityNormal": "Medie (recomandat)",
+      "imageQualityHigh": "Mare",
+      "imageQualityOriginal": "Originală (fișier mare)",
+      "imageQualityHelp": "Medie e potrivită pentru fotografii: păstrează până la {normalMax} px pe latura lungă. Minimă păstrează {lowMax} px, pentru o imagine care trebuie doar văzută (o schiță, un portret lângă text), cu cel mai mic fișier. Mare păstrează {highMax} px, pentru afișe, grafice și poze cu text: literele rămân clare. Originală păstrează pixelii fișierului, până la {originalMax} px, cu cea mai mică pierdere; fișierul e cel mai mare. Se ține minte până închizi fila; o imagine lipită sau trasă în text și posterul unui film folosesc aceeași alegere.",
       "imageChoose": "Alege imaginea",
+      "imageChosen": "Fișierul ales: {name}, {width} × {height} px, {size}.",
+      "imageSent": "Se trimite micșorat: {width} × {height} px, {size}.",
+      "imageLighter": "Se trimite mai ușor, la aceiași pixeli: {size}.",
+      "imageStoredTopRung": "Cea mai mare copie micșorată: {width} px lățime, {size}.",
+      "imagePixels": "Imaginea stocată: {width} × {height} px.",
       "imageStored": "Imaginea e stocată la {width} × {height} px, {quality}: {size} pe un ecran lat, {files} fișiere de mărimi diferite ({total} în total), ca telefonul să o încarce pe cea potrivită.",
-      "imageStoredNormal": "calitate normală",
-      "imageStoredHigh": "calitate înaltă",
-      "imageStoredNearLossless": "calitate înaltă, aproape fără pierderi (grafică sau text)",
+      "imageStoredLow": "calitate minimă",
+      "imageStoredNormal": "calitate medie",
+      "imageStoredHigh": "calitate mare",
+      "imageStoredOriginal": "calitate originală",
+      "imageStoredNearLossless": "{quality}, aproape fără pierderi (grafică sau text)",
       "imageAlt": "Ce arată imaginea (text alternativ)",
       "imageAltHelp": "O propoziție pe care un cititor de ecran o rostește în locul imaginii. Lasă gol doar dacă imaginea este decorativă.",
       "imageCaption": "Legendă (opțional, sub imagine)",
@@ -2660,6 +2767,7 @@
       "usedInEvent": "Eveniment: {title}",
       "untitled": "(fără titlu)",
       "size": "{width}×{height} px, {kb} KB",
+      "topRung": "Cea mai mare copie micșorată: {width} px lățime",
       "delete": "Șterge",
       "deleteConfirm": "Ștergi imaginea definitiv?",
       "deleteBody": "„{name}” se șterge definitiv, din bibliotecă și din spațiul de stocare. Nu se poate anula.",
@@ -2694,13 +2802,21 @@
       "uploaded": "{total} fotografii încărcate.",
       "uploadFailed": "Nu s-au putut încărca: {names}",
       "qualityLegend": "Calitate",
-      "qualityNormal": "Normală (recomandat)",
-      "qualityHigh": "Înaltă (fișier mai mare)",
-      "qualityHelp": "Normală e potrivită pentru fotografii și păstrează până la {normalMax} px pe latura lungă. Alege Înaltă pentru afișe, grafice și poze cu text: păstrează până la {highMax} px, literele rămân clare, fișierul e mai mare. Se ține minte până închizi fila.",
+      "qualityLow": "Minimă (fișier mic)",
+      "qualityNormal": "Medie (recomandat)",
+      "qualityHigh": "Mare",
+      "qualityOriginal": "Originală (fișier mare)",
+      "qualityHelp": "Medie e potrivită pentru fotografii: păstrează până la {normalMax} px pe latura lungă. Minimă păstrează {lowMax} px, pentru o imagine care trebuie doar văzută (o schiță, un portret lângă text), cu cel mai mic fișier. Mare păstrează {highMax} px, pentru afișe, grafice și poze cu text: literele rămân clare. Originală păstrează pixelii fișierului, până la {originalMax} px, cu cea mai mică pierdere; fișierul e cel mai mare. Se ține minte până închizi fila.",
+      "chosen": "Fotografia aleasă: {name}, {width} × {height} px, {size}.",
+      "sent": "Se trimite micșorată: {width} × {height} px, {size}.",
+      "lighter": "Se trimite mai ușoară, la aceiași pixeli: {size}.",
+      "storedTopRung": "Cea mai mare copie micșorată: {width} px lățime, {size}.",
       "stored": "Ultima fotografie e stocată la {width} × {height} px, {quality}: {size} pe un ecran lat, {files} fișiere de mărimi diferite ({total} în total), ca telefonul să o încarce pe cea potrivită.",
-      "storedNormal": "calitate normală",
-      "storedHigh": "calitate înaltă",
-      "storedNearLossless": "calitate înaltă, aproape fără pierderi (grafică sau text)",
+      "storedLow": "calitate minimă",
+      "storedNormal": "calitate medie",
+      "storedHigh": "calitate mare",
+      "storedOriginal": "calitate originală",
+      "storedNearLossless": "{quality}, aproape fără pierderi (grafică sau text)",
       "setCover": "Copertă",
       "removePhoto": "Șterge",
       "removePhotoTitle": "Ștergi fotografia?",
@@ -2714,11 +2830,11 @@
       "columnTakenOn": "Data",
       "columnStatus": "Stare",
       "columnPhotos": "Fotografii",
+      "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt în „Sarcini” → „Club”, la „Stocarea fotografiilor”.",
       "tableCaption": "Albumele galeriei",
-      "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt pe pagina „De făcut”, la „Stocarea fotografiilor”.",
       "takenOnHelp": "Ziua în care au fost făcute fotografiile. După ea se ordonează albumele.",
-      "eventHelp": "Opțional. Pagina albumului va trimite către eveniment.",
-      "noEvent": "Fără eveniment",
+      "eventHelp": "Opțional. Alege evenimentul și pagina albumului va trimite către el. Lasă „Niciunul” pentru un album liber — poze de grup, fără eveniment.",
+      "noEvent": "Niciunul — album liber",
       "slugHelp": "Litere mici, cifre și cratime. Devine adresa albumului.",
       "slugLocked": "Adresa este fixă după publicare, ca să nu se strice linkurile distribuite.",
       "language": {
@@ -2727,7 +2843,7 @@
       },
       "fields": {
         "takenOn": "Data fotografiilor",
-        "event": "Evenimentul",
+        "event": "Legat de un eveniment",
         "title": "Titlu",
         "slug": "Adresă (slug)",
         "description": "Descriere"
@@ -2735,7 +2851,16 @@
       "tabAlbums": "Albume",
       "tabPictures": "Imagini",
       "descriptionHelp": "Opțional — în ambele limbi sau în niciuna.",
-      "bothOrNeither": "scrie-o în ambele limbi sau în niciuna"
+      "bothOrNeither": "scrie-o în ambele limbi sau în niciuna",
+      "columnEvent": "Evenimentul",
+      "group": {
+        "event": "Albume de la evenimente",
+        "free": "Albume libere"
+      },
+      "groupEmpty": {
+        "event": "Niciun album legat de un eveniment.",
+        "free": "Niciun album liber. Un album liber are poze de grup care nu țin de un eveniment: la „Album nou”, lasă „Legat de un eveniment” pe „Niciunul”."
+      }
     },
     "thanks": {
       "title": "După cursă",
@@ -2763,7 +2888,19 @@
       "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere de format A5 pe pagină A4, unul deasupra celuilalt cu o linie de tăiere între ele, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere de format A5 pe pagină A4, unul deasupra celuilalt cu o linie de tăiere între ele, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
-      "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere."
+      "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere.",
+      "downloadSpares": "Retipărește rezervele libere (PDF)",
+      "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
+      "sparesNone": "Rezervate pentru masă: {from}–{to}, date toate. Tipărește altele dacă mai e nevoie.",
+      "sparesTitle": "Numere de rezervă pentru înscrierile de la fața locului",
+      "sparesHelp": "Pentru cei care se înscriu la masă: numere tipărite dinainte, cu rândul pentru nume gol — numele se scrie cu markerul. Numerele se rezervă la tipărire: nimeni înscris online nu le primește, iar la masă formularul propune următorul liber. Între 1 și {max} odată.",
+      "sparesCount": "Câte",
+      "sparesPrint": "Tipărește",
+      "sparesNext": "Următoarea tipărire începe de la {from}.",
+      "sparesReadOnly": "Doar un administrator rezervă numere noi.",
+      "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
+      "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
+      "spareMark": "înscris la fața locului"
     },
     "emergency": {
       "title": "Fișă de urgență — confidențial. Se distruge după eveniment.",
@@ -2803,12 +2940,12 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Înainte de cursă (organizator): pe pagina evenimentului, la „Numere de concurs”, apasă „Alocă numerele”, apoi „Descarcă foaia (PDF)” și tipărește-o. Tipărește și declarația aprobată (Documente legale → PDF), câteva exemplare, pentru cine o semnează pe loc.",
-        "Voluntarii: invită-i din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
-        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide pagina persoanei. Sau caută după nume ori după numărul de concurs.",
-        "Apasă „Prezent” și dă-i numărul din foaie. Nu are număr? Scrie-l în căsuță și apasă „Salvează”.",
-        "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă apare „în așteptare”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă aici”, apoi „Prezent”.",
-        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email, bifa „este la masă” e deja pusă. Semnează declarația pe hârtie, apoi „Prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
+        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc.",
+        "Voluntarii: un Superadministrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
+        "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
+        "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
+        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
@@ -2840,7 +2977,7 @@
       "idDocumentGuardian": "Act de identitate (părinte/tutore)",
       "confirmMinorNote": "Minor: pe hârtie semnează amândoi — minorul și părintele sau tutorele ({guardian}), fiecare cu actul lui. Confirmi doar cu ambele semnături.",
       "minorForm": "Formular pentru minor (PDF)",
-      "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
+      "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu are unul) → „Salvează nr.”; când persoana a ajuns → „Marchează prezent”. Cine nu a semnat declarația o semnează pe hârtie → „Confirmă pe hârtie”.",
       "givePlace": "Dă-i un loc",
       "bibField": "Număr de concurs (BIB)",
       "bibProvisional": "Număr provizoriu: se stabilește definitiv la închiderea înscrierilor.",
@@ -2868,7 +3005,13 @@
       "bibAlt": "Numărul de concurs (BID) {number}",
       "voidCancelled": "Înscriere anulată pe {date}",
       "voidExpired": "Înscriere expirată pe {date}",
-      "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc."
+      "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc.",
+      "handedBib": "Numărul dat acum",
+      "handedBibHelp": "Propus: următorul număr de rezervă liber. Schimbă-l dacă dai alt număr din cutie; lasă-l gol și platforma alege singură unul.",
+      "handedBibNoSpares": "Scrie numărul pe care i-l dai, sau lasă gol și platforma alege singură unul.",
+      "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
+      "nextSpare": "Rezerva următoare: {number}",
+      "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și platforma alege singură unul."
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -2905,7 +3048,10 @@
         "ORGANIZER_MESSAGE": "Mesaj de la organizatori",
         "GROUP_RUN_DECLARATION_SIGNED": "Declarația semnată la o alergare de grup (PDF atașat)",
         "GROUP_RUN_DECLARATION_ARCHIVE": "Copia clubului: declarație la o alergare de grup (PDF atașat)",
-        "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă"
+        "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă",
+        "NEWSLETTER_CONFIRM": "Confirmarea abonării la noutăți",
+        "NEWSLETTER": "Newsletter",
+        "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil {confirmation}.",
@@ -2931,7 +3077,10 @@
         "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului.",
         "GROUP_RUN_DECLARATION_SIGNED": "Imediat după ce cineva semnează declarația opțională pe pagina unei alergări de grup, către adresa pe care a dat-o. Cu declarația în PDF, întreagă; fără token și fără link de acțiune — nu există o înscriere de gestionat.",
         "GROUP_RUN_DECLARATION_ARCHIVE": "Odată cu declarația semnată la o alergare de grup, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici). Fără link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
-        "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link."
+        "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link.",
+        "NEWSLETTER_CONFIRM": "Imediat ce cineva se abonează din pop-up-ul de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}. Unei adrese deja abonate îi trimite, în loc, linkul spre abonamentul ei, fără să schimbe nimic. Altceva nu primește o adresă neconfirmată.",
+        "NEWSLETTER": "Doar când un organizator scrie și trimite un newsletter din pagina „Newsletter” a backoffice-ului. Către abonații temei alese și cei care primesc tot, fiecare în limba lui întâi, cu linkul de dezabonare. Pleacă după celelalte emailuri și doar din partea limitei care rămâne după rezerva pentru înscrieri.",
+        "NEW_EVENT_ALERT": "Automat, o singură dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), la prima rulare a jobului după publicare: către abonații la evenimente noi și la temele evenimentului (concurs, eveniment special, testare de echipament) și cei care primesc tot, cu linkul de dezabonare."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -2957,7 +3106,10 @@
         "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj",
         "GROUP_RUN_DECLARATION_SIGNED": "după semnarea declarației la o alergare de grup",
         "GROUP_RUN_DECLARATION_ARCHIVE": "odată cu declarația de la o alergare de grup, către arhivă",
-        "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană"
+        "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană",
+        "NEWSLETTER_CONFIRM": "imediat ce cineva se abonează",
+        "NEWSLETTER": "doar când un organizator trimite un newsletter",
+        "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -3100,7 +3252,76 @@
         "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
         "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
-        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant."
+        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant.",
+        "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun.",
+        "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația."
+      },
+      "transport": {
+        "title": "Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului",
+        "intro": "Mailgun costă după plan. Gmail-ul clubului e gratuit, dar Google blochează un cont personal care trimite mult, în rafale sau automat. Aici alegi, pe grupuri, ce pleacă prin Gmail; restul pleacă prin Mailgun. Pentru Gmail pui mai jos o limită pe zi, o pauză între mesaje și ce se întâmplă la limită.",
+        "aside": {
+          "on": "Gmail: {sent} din {cap} destinatari în ultima zi · {groups} din {total} grupuri prin Gmail",
+          "off": "Gmail nu e configurat aici: totul pleacă prin Mailgun"
+        },
+        "status": {
+          "defer": "Gmail-ul clubului a ajuns la {sent} din {cap} destinatari în ultima zi (socotită de acum înapoi). La limită, mesajele grupurilor Gmail așteaptă până se eliberează loc.",
+          "mailgun": "Gmail-ul clubului a ajuns la {sent} din {cap} destinatari în ultima zi (socotită de acum înapoi). La limită, restul pleacă prin Mailgun."
+        },
+        "unconfigured": "Gmail-ul clubului nu e configurat pe acest mediu (lipsesc contul și parola de aplicație, aceleași ca la formularul de contact), deci toate emailurile pleacă prin Mailgun, orice ai alege mai jos. Alegerea rămâne salvată și se aplică din clipa în care contul e configurat.",
+        "groups": {
+          "links": {
+            "label": "Linkuri de acțiune",
+            "help": "Confirmarea adresei, semnarea declarației, locul oferit de pe lista de așteptare, linkurile de gestionare. Dacă întârzie sau ajung în spam, omul pierde locul. Recomandat: Mailgun."
+          },
+          "confirmations": {
+            "label": "Confirmări și schimbări de stare",
+            "help": "Înscriere confirmată, pe lista de așteptare, anulată, oferta expirată, numărul de concurs, copia semnată a declarației. Recomandat: Mailgun."
+          },
+          "reminders": {
+            "label": "Reamintiri și mulțumiri",
+            "help": "Reamintirea dinainte de start și mulțumirile de după: câte una pentru fiecare alergător, toate la aceeași oră — exact rafala pe care Google o blochează la un cont personal. Recomandat: Mailgun."
+          },
+          "announcements": {
+            "label": "Anunțurile organizatorilor",
+            "help": "Actualizarea sau anularea evenimentului, mesajul organizatorului, „S-au deschis înscrierile”. Rare și trimise cu pauză. Pot pleca prin Gmail după ce nota de confidențialitate aprobată spune că Gmail trimite și mesaje către participanți."
+          },
+          "club": {
+            "label": "Mesajele către club",
+            "help": "Copiile clubului, arhiva declarațiilor, anunțul „Cineva a confirmat”, invitațiile colegilor. Ajung în căsuțele clubului. Recomandat: Gmail."
+          },
+          "newsletter": {
+            "label": "Newsletter",
+            "help": "Confirmarea abonării, newsletterul scris în meniul „Newsletter” și anunțul de eveniment nou, către cei abonați de pe pagina de contact. Newsletterul și anunțul pleacă ultimele și, prin Mailgun, doar din ce rămâne după rezerva pentru înscrieri. Recomandat: Gmail."
+          }
+        },
+        "messages": "Mesajele din grup: {names}",
+        "options": {
+          "mailgun": "Mailgun",
+          "gmail": "Gmail-ul clubului"
+        },
+        "dailyCap": "Limita Gmail pe zi (destinatari)",
+        "dailyCapHelp": "Cel mult {max}: atât permite Google pe zi unui cont personal, socotind fiecare destinatar, și copiile. Același cont e folosit de QA și de producție, de formularul de contact și de oameni, deci suma limitelor de pe cele două medii trebuie să rămână mult sub {max}.",
+        "pace": "Pauza între două mesaje Gmail (secunde)",
+        "paceHelp": "Între 0 și {max}. Un cont care trimite în rafale arată a robot. Ce nu încape în pauze pleacă la următoarea rulare a cozii.",
+        "atCap": "La limita Gmail",
+        "atCapHelp": "Pentru grupurile care pleacă prin Gmail. „Amână” nu cheltuie nimic din Mailgun: mesajul pleacă singur când cel mai vechi mesaj Gmail iese din ziua socotită.",
+        "atCapOptions": {
+          "defer": "Amână până se eliberează loc (de obicei până mâine)",
+          "mailgun": "Trimite prin Mailgun"
+        },
+        "overflow": "Când Mailgun a terminat mesajele de azi",
+        "overflowOptions": {
+          "yes": "Trimite prin Gmail, în limita lui",
+          "no": "Așteaptă până mâine"
+        },
+        "lastFailure": "Ultima eroare Gmail: {when}, „{error}”. Mesajele de atunci au plecat prin Mailgun sau așteaptă o nouă încercare. Dacă eroarea e „smtp EAUTH”, parola de aplicație a contului trebuie refăcută.",
+        "privacy": "Nota de confidențialitate aprobată spune că mesajele către participanți pleacă prin Mailgun, iar Gmail este doar căsuța clubului. Grupurile cu participanți pot trece pe Gmail după ce clubul aprobă o notă care spune asta.",
+        "caveat": "Prin Gmail nu aflăm dacă un mesaj a ricoșat: răspunsul vine ca email în căsuța Gmail și nu apare în coada de emailuri. Expeditorul este adresa Gmail a clubului, cu numele clubului.",
+        "save": "Salvează drumurile",
+        "saving": "Se salvează…",
+        "saved": "Setarea a fost salvată. Următoarele emailuri pleacă pe drumurile alese.",
+        "readOnly": "Setarea o schimbă Administratorul.",
+        "updatedAt": "Setat {when}."
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
@@ -3167,7 +3388,7 @@
       },
       "forecast": {
         "title": "Următoarele emailuri automate",
-        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc.",
+        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc. La sfârșit, newsletterele și anunțurile de eveniment nou deja puse în coadă pentru abonați, cu momentul în care pleacă.",
         "aside": {
           "one": "1 trimitere în următoarele {days} zile",
           "few": "{count} trimiteri în următoarele {days} zile",
@@ -3191,7 +3412,9 @@
           "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
           "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
           "bibs": "se închid înscrierile; numerele de concurs devin finale",
-          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului"
+          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
+          "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
+          "newsletter": "newsletterul, către abonații temei"
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
@@ -3200,12 +3423,18 @@
           "none": "Copie club: niciuna. Clubul nu primește copii ale emailurilor către participanți.",
           "some": "Copie club: fiecare email de mai sus pleacă și, separat, cu „[Copie club]” în subiect, la {addresses}. Nu și pentru înscrierile de test și nici pentru „Înscrierile s-au deschis”, care nu ține de o înscriere.",
           "link": "Schimbă în „Copiile clubului”"
-        }
+        },
+        "road": {
+          "mailgun": "prin Mailgun",
+          "gmail": "prin Gmail"
+        },
+        "held": "ținut pentru rezerva înscrierilor, pleacă atunci",
+        "newsletterUntitled": "(newsletter fără subiect)"
       },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
-        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
+        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar confirmând din emailul trimis adresei; la limită, emailul spune asta și nu mai are buton. Fiecare persoană își semnează singură declarația. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
         "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
         "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
         "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
@@ -3216,42 +3445,39 @@
           "few": "{count} persoane",
           "other": "{count} de persoane"
         }
-      }
+      },
+      "shownAddress": {
+        "title": "Adresa de contact afișată",
+        "intro": "Ce adresă văd oamenii pe site — subsolul, pagina de contact, numerele de concurs, textele legale pornite din textul platformei — și unde ajunge un răspuns la orice email trimis de platformă. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "aside": "Pe site: {shown}",
+        "preview": "Pe site: {shown} · Răspunde la: {replyTo}",
+        "legend": "Ce adresă arătăm",
+        "modes": {
+          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit",
+          "gmail": "Gmail-ul clubului",
+          "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
+        },
+        "noMailbox": "nesetată pe server",
+        "gmail": "Gmail-ul clubului",
+        "gmailHelp": "Obligatoriu pentru „Gmail-ul clubului” și „Amândouă”. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "updatedAt": "Setat {when}.",
+        "readOnly": "Adresa afișată o stabilește Administratorul; tu vezi alegerea în vigoare.",
+        "save": "Salvează adresa",
+        "saving": "Se salvează…",
+        "saved": "Adresa de contact afișată a fost salvată.",
+        "sender": "Emailurile pleacă în continuare de pe domeniul Mailgun: un expeditor Gmail trimis prin Mailgun nu trece verificarea DMARC și ajunge în spam sau e refuzat. Se schimbă doar adresa la care se răspunde (Reply-To). Formularul de contact nu se schimbă."
+      },
+      "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
+      "newsletterLink": "Newsletter →",
+      "newsletterLinkHelp": "Abonații și mesajele către ei au pagina lor în meniu."
     },
     "guide": {
       "title": "Ghid de utilizare",
-      "intro": "Cine face ce, pas cu pas. Fiecare secțiune spune ce rol îți trebuie; rolul tău este scris sus, lângă numele tău. Dacă un buton lipsește, nu ai rolul pentru el — cere-l unui superadministrator.",
+      "intro": "Fiecare treabă are pașii ei, numerotați. Ce e scris «așa», îngroșat, este exact ce scrie pe buton sau pe ecran — caută acele cuvinte. Secțiunile rolului tău sunt primele și deschise; apasă pe o treabă ca să-i vezi pașii. Dacă un buton lipsește, nu ai rolul pentru el: cere-l unui Superadministrator sau roagă pe cineva cu rolul acela.",
       "sections": [
         {
-          "title": "Voluntar la masa de ridicare a numerelor",
-          "who": "Rol: Voluntar (sau orice rol). Pe telefon.",
-          "steps": [
-            "Intră pe site și apasă „Intră în cont” (jos sau la /admin). Te autentifici cu contul primit de la organizator.",
-            "Apasă „Ziua cursei” în bara de sus. Alege evenimentul de azi din listă.",
-            "Participantul îți arată codul QR din email. Apasă „Scanează” (Android) sau deschide aplicația Cameră a telefonului, îndreapt-o spre cod și atinge linkul care apare — se deschide pagina persoanei.",
-            "Verifică numele, apasă „Prezent” și dă-i numărul de concurs din foaie (numărul apare mare, în stânga numelui).",
-            "Nu are QR sau nu găsește emailul: scrie o parte din nume în căsuța de căutare și apasă „Caută”. Aceeași pagină, aceleași butoane.",
-            "Apare „în așteptare” sau „neconfirmat”: dă-i declarația pe hârtie, o semnează, apeși „Confirmă aici”, apoi „Prezent”.",
-            "Nu are număr: scrie-l în căsuță și apasă „Salvează”. Un număr dat deja altcuiva este refuzat.",
-            "Nu s-a înscris deloc: apasă „Adaugă pe cineva”, completezi numele și emailul, „Adaugă înscrierea”. Semnează declarația pe hârtie, apoi „Prezent”. Dacă evenimentul e plin, intră pe lista de așteptare — „Dă-i un loc” merge doar dacă cineva s-a retras.",
-            "Ai apăsat greșit: „Anulează prezența”. Tot ce apeși rămâne în istoric, cu numele tău — nu se pierde nimic.",
-            "Ce nu poți face de aici (și e în regulă): anula sau șterge înscrieri, vedea adrese de email, exporta liste. Pentru astea, cheamă un administrator."
-          ],
-          "roles": [
-            "CONTRIBUTOR"
-          ]
-        },
-        {
-          "title": "Participant — cum arată din partea lui",
-          "who": "Fără cont. Totul prin email.",
-          "steps": [
-            "Se înscrie de pe pagina evenimentului. Primește un email de verificare; apasă linkul și locul e rezervat ({hold}, sau până la termenul de confirmare pentru un eveniment mai departe de fereastra lui). Termenul se aplică doar dacă între timp așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
-            "Citește și semnează declarația online, cu numele tastat — sau pe hârtie, la masă, în ziua cursei, înainte să-și ridice numărul. Înscrierea devine „confirmată” și primește emailul de confirmare cu codul QR.",
-            "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, începând cu {checkin} înainte de start, poate apăsa „Am ajuns”.",
-            "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are {offer} să semneze declarația.",
-            "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc.",
-            "În calendarul lui: pe fiecare eveniment sunt „Google Calendar” și „Adaugă în calendar (.ics)”; pe pagina de evenimente, „Abonează-te” pune tot calendarul clubului în telefon și se actualizează singur când publicați ceva nou."
-          ],
+          "title": "Primii pași",
+          "who": "Pentru toată lumea: intri în cont, te orientezi, confirmi ce apeși.",
           "roles": [
             "CONTRIBUTOR",
             "COPYWRITER",
@@ -3259,20 +3485,66 @@
             "DEV",
             "ADMIN",
             "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Intră în backoffice",
+              "steps": [
+                "Prima dată: deschide emailul de invitație primit de la club și alege-ți parola din el.",
+                "Deschide site-ul clubului și scrie la sfârșitul adresei /ro/admin.",
+                "Pe pagina «Autentificare echipă» apasă «Autentificare» și intră cu adresa de email la care ai primit invitația și parola ta.",
+                "Sus scrie «Autentificat ca» cu numele și rolul tău. Dacă rolul nu e cel așteptat, spune-i unui Superadministrator.",
+                "Pe un calculator care nu e al tău, la final apasă «Ieși din cont»."
+              ]
+            },
+            {
+              "title": "Bara de sus: ce găsești în fiecare tab",
+              "steps": [
+                "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
+                "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici.",
+                "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
+                "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
+                "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
+                "«Emailuri»: ce primesc participanții, planul Mailgun și «Termene».",
+                "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
+                "«Pagini», «Galerie», «Echipa», «Configurație» și «Ghid» (pagina aceasta)."
+              ]
+            },
+            {
+              "title": "Întrebarea dinaintea unei apăsări importante",
+              "steps": [
+                "Ce publică, anulează, șterge sau trimite emailuri te întreabă întâi, într-o fereastră. Citește-o: spune ce se întâmplă și câți participanți primesc email.",
+                "Ca să mergi mai departe, apasă în fereastră butonul cu același nume. Ca să te oprești, «Renunță».",
+                "După ce a mers, jos apare pentru câteva secunde un mesaj care spune ce s-a făcut.",
+                "Dacă lipsește ceva, sus apare un chenar roșu cu fiecare lipsă ca link: atinge-l, completează, apasă din nou. Ce ai scris rămâne."
+              ]
+            },
+            {
+              "title": "Ce poate fiecare rol",
+              "steps": [
+                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
+                "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
+                "Organizatorul: vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților. Nu scrie textele, nu publică, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
+                "Rolul Tehnic: pagina de configurație a platformei, ca să depaneze; poate corecta setările unui eveniment. Nu vede înscrierile.",
+                "Administratorul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene» și planul Mailgun. Citește documentele legale, dar nu le scrie și nu le aprobă, și nu vede «Echipa».",
+                "Superadministratorul: tot ce face Administratorul, plus documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul). O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă sau să ți-l dea."
+              ]
+            },
+            {
+              "title": "Ce NU se poate face",
+              "steps": [
+                "Nimeni nu schimbă adresa de email confirmată a unui participant, nici un Administrator.",
+                "Nimeni nu unește două înscrieri într-una.",
+                "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
+                "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
+                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber."
+              ]
+            }
           ]
         },
         {
-          "key": "family",
-          "title": "O familie pe o singură adresă",
-          "who": "Pentru toate rolurile. Cum se înscriu mai multe persoane cu același email.",
-          "steps": [
-            "O persoană se înscrie ca de obicei. Dacă formularul e trimis din nou cu aceeași adresă și alt nume, nu se creează nicio înscriere: pe ecran apare același „verifică-ți emailul” ca oricând (așa nimeni nu poate afla din formular cine e înscris), iar adresa primește emailul „Ești deja înscris(ă) — vrei să înscrii pe altcineva cu aceeași adresă?”.",
-            "Emailul are un buton către formular, cu adresa deja completată și blocată. Se completează datele celeilalte persoane: numele, data nașterii (la un minor, și părintele), telefonul e opțional, acordurile ca de obicei. Linkul e valabil {confirmation} și merge o singură dată.",
-            "Pe o adresă se pot înscrie cel mult {people} la un eveniment. Numărul îl schimbă un administrator, în „Emailuri” → „Termene”. La limită, emailul spune asta și nu mai are buton.",
-            "Fiecare persoană își confirmă singură înscrierea (propriul link de confirmare) și își semnează singură declarația — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei. Fiecare are propriul loc, propriul număr de concurs și, dacă e cazul, propriul loc pe lista de așteptare.",
-            "Adresa primește câte un cod QR pentru fiecare persoană confirmată, în emailuri separate — până la {people}. La masă scanezi fiecare cod pe rând: fiecare deschide pagina persoanei lui.",
-            "În lista de înscrieri, la masă și în export fiecare persoană e un rând separat, cu aceeași adresă. „Înscrierile mele” arată toate înscrierile adresei, cu numele fiecăruia. Anularea sau ștergerea uneia nu le atinge pe celelalte. Mementourile și mulțumirile vin câte unul pentru fiecare persoană."
-          ],
+          "title": "Ziua cursei — masa de ridicare a numerelor",
+          "who": "Voluntar, Organizator și orice alt rol. Pe telefon.",
           "roles": [
             "CONTRIBUTOR",
             "COPYWRITER",
@@ -3280,6 +3552,84 @@
             "DEV",
             "ADMIN",
             "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Deschide masa",
+              "steps": [
+                "Intră în backoffice (vezi „Primii pași”). Un Voluntar ajunge direct la masă; ceilalți apasă «Ziua cursei» în bara de sus.",
+                "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
+                "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei."
+              ]
+            },
+            {
+              "title": "Participant cu codul QR",
+              "steps": [
+                "Participantul îți arată codul QR din emailul de confirmare.",
+                "Apasă «Scanează» și ține codul în cadru (merge pe Android). Pe iPhone: deschide aplicația Cameră, îndreapt-o spre cod și atinge linkul care apare.",
+                "Se deschide rândul persoanei: verifică numele cu ea.",
+                "Apasă «Marchează prezent». Nu te întreabă nimic; jos apare un mesaj.",
+                "Dă-i numărul de concurs din teanc — numărul e scris mare pe rând. Ca să vezi numărul desenat: «Vezi numărul de concurs (BID)».",
+                "Pentru următorul: «Înapoi la masă»."
+              ]
+            },
+            {
+              "title": "Fără QR: caută după nume",
+              "steps": [
+                "În căsuța «Nume, număr sau cod» scrie o parte din nume, numărul de concurs sau codul din email.",
+                "Apasă «Caută».",
+                "Pe rândul potrivit: «Marchează prezent», apoi îi dai numărul."
+              ]
+            },
+            {
+              "title": "Nu și-a semnat declarația",
+              "steps": [
+                "Pe rând scrie «Așteaptă semnarea declarației» sau «Așteaptă confirmarea emailului».",
+                "Dă-i formularul de declarație tipărit. Îl citește și îl semnează el. Un minor: semnează și părintele sau tutorele, fiecare cu actul lui.",
+                "Apasă «Confirmă pe hârtie», apoi în fereastră din nou «Confirmă pe hârtie».",
+                "Apoi «Marchează prezent» și numărul. Foaia semnată o păstrezi pentru organizator."
+              ]
+            },
+            {
+              "title": "Nu are număr de concurs",
+              "steps": [
+                "În căsuța «Număr de concurs (BIB)» de pe rândul lui scrie un număr liber.",
+                "Apasă «Salvează nr.» și confirmă în fereastră. Un număr pe care îl are deja altcineva e refuzat — alege altul."
+              ]
+            },
+            {
+              "title": "Nu s-a înscris deloc",
+              "steps": [
+                "Apasă «Adaugă pe cineva».",
+                "Completează numele, prenumele, data nașterii, telefonul și «Adresa de e-mail a participantului».",
+                "Bifa «Persoana este la masă…» e deja pusă — las-o așa.",
+                "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
+                "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
+                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și numărul.",
+                "Evenimentul e plin? Intră pe lista de așteptare, ca oricine. «Dă-i un loc» merge doar dacă s-a eliberat unul."
+              ]
+            },
+            {
+              "title": "Ai apăsat greșit",
+              "steps": [
+                "Pe același rând apasă «Anulează prezența».",
+                "Tot ce apeși rămâne în istoricul înscrierii, cu numele tău. Nu se pierde nimic."
+              ]
+            },
+            {
+              "title": "Un chenar roșu: înscriere anulată sau expirată",
+              "steps": [
+                "Persoana nu mai are loc, chiar dacă are emailul în mână: nu-i da număr și nu o marca prezentă.",
+                "Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc.",
+                "Cheamă un organizator. Dacă mai sunt locuri, o înscrieți din nou cu «Adaugă pe cineva»."
+              ]
+            },
+            {
+              "title": "Ce nu faci de la masă (și e în regulă)",
+              "steps": [
+                "Nu vezi adrese de email, nu anulezi, nu ștergi și nu exporți liste. Pentru astea, cheamă un Administrator."
+              ]
+            }
           ]
         },
         {
@@ -3288,78 +3638,568 @@
           "roles": [
             "COPYWRITER"
           ],
-          "steps": [
-            "„Evenimente” → alege evenimentul → tab-ul Română și tab-ul English: titlul, descrierea scurtă, descrierea, regulamentul, programul și câmpurile SEO. O singură salvare scrie ambele limbi.",
-            "Un eveniment publicat: ce salvezi apare imediat pe site — bifează „Știu că modific o pagină publicată”. Adresa paginii nu se mai schimbă după publicare.",
-            "Un film de pe YouTube: în editor, butonul „YouTube” → lipești adresa filmului → „Adaugă filmul”. Apasă pe film ca să-i pui o legendă. Pe pagină apare închis, „Vezi filmul”; se încarcă doar când cititorul apasă.",
-            "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; Administratorul o publică.",
-            "Nu ai și nu îți trebuie: setările evenimentului (data, locurile, înscrierile), publicarea, galeria, înscrierile. Dacă un text depinde de o setare greșită, spune Organizatorului.",
-            "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea. Un text opțional — descrierea, regulamentul, notele programului, ce să aduci, câmpurile SEO, la evenimente și la pagini — se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța care a rămas goală, cu tot ce ai scris păstrat. Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — un avertisment, nu blochează nimic."
+          "tasks": [
+            {
+              "title": "Corectează textul unui eveniment",
+              "steps": [
+                "«Evenimente» → «Editează» pe rândul evenimentului.",
+                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului», «Programul zilei și ce să aduci» sau «Regulamentul».",
+                "Scrie în tabul «Română» și în tabul «English».",
+                "Jos, la un eveniment publicat, bifează «Am înțeles că modific conținut publicat.».",
+                "Apasă «Salvează». Apare imediat pe site, în ambele limbi."
+              ]
+            },
+            {
+              "title": "Pune o poză în text",
+              "steps": [
+                "În editorul de text pune cursorul unde vrei poza.",
+                "Apasă «Imagine» în bara editorului.",
+                "La «Calitate» lasă «Medie (recomandat)».",
+                "Apasă «Alege imaginea» și alege fișierul. O poză deja încărcată o iei din «Din galerie».",
+                "Scrie «Ce arată imaginea (text alternativ)», apoi «Gata».",
+                "Apasă «Salvează»."
+              ]
+            },
+            {
+              "title": "Pune un film de pe YouTube",
+              "steps": [
+                "În editor apasă «YouTube».",
+                "Lipește adresa în «Adresa filmului (YouTube)» și apasă «Adaugă filmul».",
+                "Apasă pe film ca să-i scrii «Legendă (sub film)».",
+                "Apasă «Salvează». Pe pagină filmul se încarcă doar când cititorul apasă pe el."
+              ]
+            },
+            {
+              "title": "Scrie o pagină a site-ului",
+              "steps": [
+                "«Pagini» → «Pagină nouă».",
+                "Scrie titlul și textul în română și în engleză, apoi apasă «Pagină nouă».",
+                "Pe pagina ei, după fiecare schimbare, «Salvează».",
+                "Când e gata, «Trimite spre verificare». Administratorul o publică."
+              ]
+            },
+            {
+              "title": "Regula celor două limbi",
+              "steps": [
+                "Un eveniment nu se publică fără titlu și rezumat în română și în engleză.",
+                "Un text opțional (descrierea, regulamentul, notele programului, câmpurile SEO) se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța goală, cu tot ce ai scris păstrat.",
+                "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment."
+              ]
+            },
+            {
+              "title": "Ce nu e al tău",
+              "steps": [
+                "Setările evenimentului (data, locul, locurile, înscrierile), publicarea, galeria și înscrierile. Dacă un text depinde de o setare greșită, spune-i Organizatorului sau Administratorului."
+              ]
+            }
           ]
         },
         {
-          "title": "Organizator — evenimente și numere",
-          "who": "Rol: Organizator sau mai sus.",
-          "steps": [
-            "Evenimentul îl creează Administratorul („Eveniment nou”, „Duplică”, „Repetă”). Tu îl deschizi din „Evenimente” și te ocupi de Setări: tipul, data, ora startului, durata, locul de întâlnire, adresa, linkul de hartă, distanța, traseul, dificultatea, costul. Când anulezi evenimentul sau anunți participanții despre o schimbare, scrii motivul sau mesajul în română și în engleză: fiecare participant îl primește în limba în care s-a înscris.",
-            "Înscrieri: în Setări alege „Înscriere locală”, pune capacitatea și perioada de înscriere, fereastra de confirmare (cu câte zile înainte se cere și când expiră), banda de numere și declarația aprobată.",
-            "Textele — titlul, rezumatul, descrierea, regulamentul, programul — le scrie Redactorul sau Administratorul. Tu le vezi și nu le poți salva; dacă un text e greșit, spune-i Administratorului.",
-            "Publicare: tu apeși „Trimite spre verificare”. „Publică” este al Administratorului, ca și retragerea de pe site și arhivarea unui eveniment deja publicat. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",
-            "Înscrieri (Organizator, nu și Tehnic): vezi lista întreagă, fiecare înscriere cu istoricul ei, exportul (Excel sau CSV), numerele de concurs și declarațiile semnate. Nu poți anula, șterge, redenumi sau retrimite un email — alea sunt ale Administratorului.",
-            "Un mesaj către participanți (Organizator, nu și Tehnic): pagina evenimentului → „Înscrierile primite” → „Trimite un mesaj participanților” — vreme rea, o schimbare de ultim moment, o anulare. Alegi cui îi trimiți (toți cei înscriși, doar confirmații, lista de așteptare sau cei care nu au semnat declarația) și vezi câți sunt; scrii subiectul și mesajul în română și în engleză; vezi emailul exact cum pleacă, pentru cine s-a înscris în română și pentru cine s-a înscris în engleză; confirmi. Pleacă prin coada de emailuri, fiecăruia în limba lui; sub formular rămân „Mesaje trimise”, cu data, subiectul, grupul, câți și cine l-a trimis.",
-            "Numere de concurs: „Alocă numerele”, pe pagina evenimentului, este al Administratorului. Foaia o descarci tu: „Descarcă foaia (PDF)” — două numere pe A4, cu logo — de pe pagina evenimentului sau din „Înscrieri”. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
-            "În ziua cursei: „Masa de ridicare a numerelor” de pe pagina evenimentului sau „Ziua cursei” din bară. Cifrele „Confirmați / Prezenți” sunt cifrele cursei.",
-            "Numere de concurs: la confirmare fiecare primește unul la întâmplare. Un număr preferențial: pagina înscrierii → „Număr de concurs” — vezi lângă câmp numerele libere, scrii unul, salvezi; participantul primește numărul pe email, cu codul QR. Un număr purtat deja de altcineva este refuzat.",
-            "După: arhivarea unui eveniment publicat o face Administratorul. Pozele le pui tu: „Galerie” — album nou, încarci pozele din telefon, le publici."
-          ],
+          "title": "Organizator — înscrieri, numere, mesaje",
+          "who": "Rol: Organizator. Vezi tot și schimbi setările evenimentului; nu publici, nu anulezi și nu ștergi înscrieri.",
           "roles": [
-            "MODERATOR",
-            "DEV"
+            "MODERATOR"
+          ],
+          "tasks": [
+            {
+              "title": "Vezi cine s-a înscris",
+              "steps": [
+                "Apasă «Înscrieri» în bara de sus.",
+                "La «Evenimente» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
+                "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
+                "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
+                "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc."
+              ]
+            },
+            {
+              "title": "Descarcă lista (Excel sau CSV)",
+              "steps": [
+                "«Înscrieri» → alege evenimentul → «Filtrează».",
+                "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
+                "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
+              ]
+            },
+            {
+              "title": "Adaugă o înscriere pentru cineva care a cerut",
+              "steps": [
+                "«Înscrieri» → «Adaugă o înscriere».",
+                "La «Evenimentul» alege evenimentul.",
+                "Completează datele persoanei, «Adresa de e-mail a participantului» și «Limba în care îi scriem».",
+                "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
+                "Persoana nu e în fața ta? Lasă nebifat «Persoana este la masă…»: primește emailul și își semnează singură declarația.",
+                "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
+                "Refuzat pentru că adresa are deja o înscriere: a doua persoană din familie se înscrie din formularul public (vezi „O familie pe o singură adresă”)."
+              ]
+            },
+            {
+              "title": "Descarcă și tipărește numerele de concurs",
+              "steps": [
+                "«Evenimente» → «Editează» pe cursă.",
+                "Deschide cardul «Participare și înscrieri», apoi «Alocare și tipărire».",
+                "«Vezi numerele» ca să le verifici pe ecran.",
+                "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
+                "Tipărește la mărimea reală (100%) și taie pe linie.",
+                "Numerele se dau în ordinea înscrierii, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului."
+              ]
+            },
+            {
+              "title": "Un număr ales pentru cineva",
+              "steps": [
+                "«Înscrieri» → deschide înscrierea persoanei.",
+                "Apasă «Schimbă numărul»; sub căsuță vezi numerele libere. Nu vezi butonul? Numărul e deja definitiv și nu se mai schimbă de aici.",
+                "Scrie numărul, apasă «Salvează nr.» și confirmă. Persoana primește numărul pe email. Un număr purtat deja de altcineva e refuzat."
+              ]
+            },
+            {
+              "title": "Trimite un mesaj participanților",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
+                "La «Cui îi trimiți» alege grupul (toți, «Doar confirmații», lista de așteptare sau cei fără declarație) și vezi câți sunt.",
+                "Scrie «Subiect» și «Mesajul», în română și în engleză.",
+                "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
+                "Apasă «Trimite mesajul», apoi în fereastră «Trimite». Mesajul rămâne în «Mesaje trimise».",
+                "Doar despre acest eveniment: fără reclame, oferte de la sponsori sau alte evenimente."
+              ]
+            },
+            {
+              "title": "Scrie abonaților newsletterului",
+              "steps": [
+                "Apasă «Newsletter» în bara de sus. Vezi câți abonați confirmați sunt, pe fiecare temă, și ce s-a trimis; adresele nu apar, doar numărul.",
+                "La «Scrie abonaților» alege tema la «Despre ce» și vezi câți îl primesc.",
+                "Scrie «Subiect (română)», «Subiect (engleză)», «Textul (română)» și «Textul (engleză)».",
+                "La «Cum arată» citește emailul în ambele limbi.",
+                "Apasă «Trimite newsletterul» și confirmă. Mesajul rămâne la «Trimise». Anunțurile de evenimente noi pleacă singure."
+              ]
+            },
+            {
+              "title": "Pregătește ziua cursei",
+              "steps": [
+                "Tipărește numerele (vezi mai sus).",
+                "«Evenimente» → «Editează» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
+                "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
+                "Voluntarii: roagă un Superadministrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
+                "În ziua cursei: «Ziua cursei» în bara de sus."
+              ]
+            },
+            {
+              "title": "Schimbă o setare a evenimentului",
+              "steps": [
+                "«Evenimente» → «Editează».",
+                "Deschide cardul: «Data și ora», «Locul», «Traseul», «Cost» sau «Participare și înscrieri». Schimbă ce trebuie.",
+                "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
+                "Participanții trebuie să afle? Bifează «Anunță participanții despre schimbare» și scrie nota în ambele limbi.",
+                "Apasă «Salvează». Textele (titlul, descrierea) nu le poți salva: spune-i Administratorului ce e greșit."
+              ]
+            },
+            {
+              "title": "Declarațiile semnate",
+              "steps": [
+                "Toate ale unui eveniment: «Evenimente» → «Editează» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
+                "A unei singure persoane: deschide înscrierea → «Declarația semnată (PDF)».",
+                "Conțin acte de identitate: păstrează-le doar în arhiva clubului."
+              ]
+            },
+            {
+              "title": "Ce face Administratorul, nu tu",
+              "steps": [
+                "Creează și publică evenimente, anulează sau șterge înscrieri, retrimite emailuri, «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
+              ]
+            }
           ]
         },
         {
-          "title": "Administrator — înscrieri, texte legale, echipă",
+          "title": "Administrator — evenimente, înscrieri, emailuri",
           "who": "Rol: Administrator sau Superadministrator.",
-          "steps": [
-            "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
-            "Căutarea după nume, fără un eveniment ales, caută în toate evenimentele. „Reînscriere ×2” pe un rând înseamnă că persoana a mai trimis formularul de două ori cu aceeași adresă; în cronologia înscrierii vezi când, în ce stare era și ce email i-am retrimis. Ea află din email că era deja înscrisă — pe ecranul formularului nu scrie nimic, ca să nu poată afla oricine cine e înscris.",
-            "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
-            "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
-            "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
-            "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
-            "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
-            "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
-            "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
-            "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
-          ],
           "roles": [
             "ADMIN",
             "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Creează un eveniment",
+              "steps": [
+                "«Evenimente» → «Eveniment nou».",
+                "Fiecare card e o parte a paginii publice, în ordinea de pe site. Harta de sus, «Pagina, de sus în jos», te duce la fiecare card.",
+                "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
+                "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
+                "«Data și ora», apoi «Locul»: punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
+                "Restul cardurilor după nevoie: «Descrierea evenimentului», «Traseul», «Cost», «Participare și înscrieri», «Programul zilei și ce să aduci», «Regulamentul».",
+                "«Creează evenimentul» îl salvează ca ciornă (nu apare pe site). «Creează și publică» îl pune direct pe site.",
+                "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou.",
+                "Greșeala obișnuită: tabul «English» necompletat lasă evenimentul fără engleză; sau apeși «Creează evenimentul» crezând că a intrat pe site — rămâne ciornă, nu «Creează și publică»."
+              ]
+            },
+            {
+              "title": "Editează un eveniment",
+              "steps": [
+                "«Evenimente» → «Editează» pe rândul lui.",
+                "Un card închis spune pe linia lui ce lipsește, pe limbi. Deschide cardul și schimbă ce trebuie.",
+                "Scrie în «Română» și în «English»: un text opțional se scrie în ambele limbi sau în niciuna.",
+                "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
+                "O dată dintr-o serie: la «Salvează pentru:» alege «Doar această dată», «Această dată și următoarele» sau «Toate datele seriei».",
+                "Apasă «Salvează». Apare imediat pe site, în ambele limbi.",
+                "Greșeala obișnuită: alegi «Doar această dată» când vrei să schimbi toată seria (sau invers) — verifică mesajul de sub «Salvează pentru:» înainte de a apăsa «Salvează»."
+              ]
+            },
+            {
+              "title": "Pune o poză în rezumat sau în descriere",
+              "steps": [
+                "Deschide cardul («Titlu și rezumat» sau «Descrierea evenimentului») și pune cursorul unde vrei poza.",
+                "Apasă «Imagine» în bara editorului.",
+                "La «Calitate» lasă «Medie (recomandat)».",
+                "Apasă «Alege imaginea» și alege fișierul. O poză deja încărcată o iei din «Din galerie».",
+                "Scrie «Ce arată imaginea (text alternativ)», apoi «Gata».",
+                "Apasă «Salvează». Ca să înlocuiești o poză: apasă pe ea, «Șterge imaginea», apoi pune-o pe cea nouă."
+              ]
+            },
+            {
+              "title": "Publică un eveniment sau scoate-l de pe site",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Publicare».",
+                "O ciornă: apasă «Trimite spre verificare», apoi «Publică».",
+                "În fereastră apasă din nou «Publică». Ambele limbi apar împreună.",
+                "Lipsește ceva? Apare «Nu se poate publica încă», cu lista: completează, «Salvează», apoi «Publică».",
+                "Mai multe deodată: pe lista «Evenimente» bifează-le și apasă «Publică cele bifate».",
+                "Ca să-l scoți de pe site: «Mută în ciornă». După ce a avut loc: «Arhivează»."
+              ]
+            },
+            {
+              "title": "Repetă un eveniment (o serie săptămânală)",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Recurență».",
+                "Bifează «Repetă evenimentul», alege zilele și până când.",
+                "Apasă «Creează datele» și confirmă.",
+                "Platforma creează singură datele noi, cu {horizon} înainte. Cele create ca ciornă apar pe lista «Evenimente» cu «Publică» pe rând; «Publică automat de acum» le publică singure de acum încolo.",
+                "O copie, nu o serie: pe listă, «Alte acțiuni» (⋮) → «Duplică». Copia e o ciornă."
+              ]
+            },
+            {
+              "title": "Deschide înscrierile la o cursă",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
+                "«Modul de înscriere» → «Înscrieri pe site».",
+                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
+                "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
+                "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
+                "«Condiții de participare»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
+                "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
+                "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
+              ]
+            },
+            {
+              "title": "Anunță participanții despre o schimbare",
+              "steps": [
+                "Schimbă locul, ora sau programul în cardul lor.",
+                "În cardul «Salvare» bifează «Anunță participanții despre schimbare».",
+                "Scrie «Ce s-a schimbat (opțional)» în română și în engleză.",
+                "Apasă «Salvează». Fereastra spune câți primesc email; apasă din nou «Salvează».",
+                "Emailul pleacă doar dacă s-a schimbat locul, startul sau programul, sau dacă ai scris o notă."
+              ]
+            },
+            {
+              "title": "Anulează un eveniment",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Starea evenimentului» (jos, între cardurile care nu apar pe pagină).",
+                "La «Starea evenimentului» alege «Anulat».",
+                "În cardul «Salvare» apare «Anulezi evenimentul»: scrie «Motivul anulării» în română și în engleză.",
+                "Bifează «Anunță participanții că evenimentul a fost anulat». Fără bifă nu pleacă niciun email.",
+                "Apasă «Salvează». Fereastra roșie spune câți primesc email; apasă din nou «Salvează»."
+              ]
+            },
+            {
+              "title": "Corectează, anulează sau șterge o înscriere",
+              "steps": [
+                "«Înscrieri» → caută persoana → apasă pe numele ei.",
+                "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
+                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la lista de așteptare.",
+                "Nu a primit emailul: «Retrimite emailul».",
+                "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
+                "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
+              ]
+            },
+            {
+              "title": "Alocă numerele și marchează-le tipărite",
+              "steps": [
+                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire».",
+                "Apasă «Alocă numerele» și confirmă: fiecare înscriere confirmată fără număr primește următorul număr liber; numerele date rămân.",
+                "«Înscrieri» → alege cursa → «Filtrează». Pe aceeași pagină descarci numerele netipărite, le tipărești, apoi apeși butonul care le marchează ca printate.",
+                "Numerele pentru tipar sunt câte două A5 pe o foaie A4 (vezi „Descarcă și tipărește numerele de concurs” la Organizator)."
+              ]
+            },
+            {
+              "title": "Planul Mailgun, înainte și după cursă",
+              "steps": [
+                "Întâi plătești planul în contul Mailgun.",
+                "«Emailuri» → «Planul Mailgun și cât mai putem trimite».",
+                "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
+                "Apasă «Salvează planul» și confirmă. Cifrele din «Sarcini» și butonul «Trimite acum» se iau după el.",
+                "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul»."
+              ]
+            },
+            {
+              "title": "Scoate o adresă din newsletter",
+              "steps": [
+                "Când cineva cere în scris să nu mai primească noutățile: «Newsletter» → «Scoate o adresă la cererea cuiva».",
+                "Scrie adresa la «Adresa de email», apasă «Scoate din newsletter» și confirmă. Adresa se șterge, cu temele ei."
+              ]
+            },
+            {
+              "title": "Termenele clubului",
+              "steps": [
+                "«Emailuri» → «Termene».",
+                "Schimbă numerele (linkul de email, locul ținut, oferta de pe lista de așteptare, reminderul, prezența, seria).",
+                "Apasă «Salvează termenele» și confirmă. Doar ce se dă de acum încolo ia termenele noi."
+              ]
+            },
+            {
+              "title": "Mulțumiri după cursă",
+              "steps": [
+                "«Evenimente» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
+                "La «Link (opțional)» pune adresa pozelor sau a rezultatelor.",
+                "Apasă «Trimite mulțumirile» și confirmă. Pleacă o singură dată, la toți cei marcați prezenți."
+              ]
+            },
+            {
+              "title": "Pagini și galerie",
+              "steps": [
+                "O pagină: «Pagini» → «Pagină nouă» (sau pe una existentă) → scrie în ambele limbi → «Salvează». Pe lista paginilor, meniul ⋮ de pe rândul ei → «Publică».",
+                "Un album: «Galerie» → «Album nou» → data, evenimentul, titlul în ambele limbi → «Album nou».",
+                "Pe pagina albumului: «Încarcă fotografii», cu «Calitate» «Medie (recomandat)»; alege o «Copertă».",
+                "Pe lista albumelor, meniul ⋮ de pe rândul lui → «Publică albumul». Un album fără fotografii nu se publică."
+              ]
+            },
+            {
+              "title": "Ce mai are clubul de făcut",
+              "steps": [
+                "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
+                "«Costuri»: ce plătește clubul și limitele bazei de date."
+              ]
+            },
+            {
+              "title": "Conturi pentru voluntari și colegi (Superadministrator)",
+              "steps": [
+                "Rol necesar: Superadministrator. «Echipa» apare doar pentru el; un Administrator nu o vede și îi cere lui.",
+                "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
+                "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
+                "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
+                "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
+              ]
+            }
           ]
         },
         {
-          "title": "Declarațiile pe proprie răspundere și datele personale (GDPR)",
-          "who": "Rol: Administrator. De citit o dată, înainte de primul eveniment cu înscrieri.",
-          "steps": [
-            "Textul declarației este un document legal din „Documente legale”. Pornește de la textul platformei (linkul „Declarație” de sub „Versiune nouă”): e declarația clubului, cu blancurile ca tokeni — {{participant}} și {{participantIdDocument}} (participantul și actul lui), {{guardian}} și {{guardianIdDocument}} (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — completate automat pentru fiecare persoană și eveniment. Un text aprobat mai demult, cu {{idDocument}} (actul celui care declară), merge în continuare. Un singur text aprobat servește toate evenimentele. Minorul semnează și el, cu actul lui, doar când declarația aprobată conține {{participantIdDocument}}; cu un text fără el semnează numai părintele sau tutorele, cu actul lui, ca înainte. De aceea declarația nouă se aprobă odată cu nota de confidențialitate și termenii noi, care descriu actul minorului.",
-            "La semnare, participantul citește textul completat cu numele lui și evenimentul, tastează seria și numărul actului de identitate (nu încărcăm nicio poză/scan de buletin) și își scrie numele ca semnătură; pentru un minor semnează părintele sau tutorele, iar sub o declarație cu {{participantIdDocument}} semnează amândoi, la aceeași apăsare, minorul și părintele sau tutorele, fiecare cu actul și numele lui. Se înregistrează: numele, actele, versiunea textului, amprenta lui (SHA-256), momentul și metoda. Asta e semnătură electronică simplă (eIDAS și Legea 214/2024).",
-            "Imediat după semnare, participantul primește pe email declarația semnată ca PDF atașat („Declarația ta semnată”), plus linkul către ea din pagina înscrierii. La masă, kitul se dă pe baza actului de identitate scris în declarație — apare pe rândul din „Ziua cursei” și în CSV.",
-            "Cine nu poate semna din email semnează pe hârtie: pe pagina evenimentului, „Formular declarație pe hârtie (PDF)” tipărește formularul cu evenimentul completat. Sub o declarație cu {{participantIdDocument}}, pentru un minor e „Formular declarație pentru un minor (PDF)”: semnează amândoi, minorul și părintele sau tutorele, fiecare cu actul lui. La masă, „Confirmă pe hârtie” înregistrează semnătura — la un minor, sub o astfel de declarație, ambele — sub numele voluntarului; hârtia originală se păstrează de club.",
-            "Unde stau declarațiile: în baza de date (Neon, Frankfurt), ca înregistrări — nu ca fișiere. PDF-ul se generează la cerere din ele, oricând, identic. După eveniment, de pe pagina evenimentului: „Declarațiile semnate (PDF)” — toate într-un singur fișier, câte una pe pagină (200 de declarații ≈ 2 MB, câteva secunde) — și exportul CSV. Păstrează-le în arhiva clubului, cu acces restrâns (conțin nume și acte de identitate).",
-            "Cât se păstrează: înscrierile și declarațiile 3 ani de la eveniment (termenul general de prescripție), apoi se șterg automat; la cerere, mai devreme, din „Ștergere” pe pagina înscrierii. Emailurile trimise 90 de zile, linkurile consumate 30 de zile. Exact așa scrie și în nota de confidențialitate.",
-            "Nota de confidențialitate și termenii: pornește tot de la textul platformei — sunt complete (GDPR art. 13, Legea 190/2018, procesatorii, perioadele, drepturile, ANSPDCP); completezi doar denumirea juridică, sediul, CUI-ul și emailul de contact, citești, salvezi ciorna și aprobi. Fără text aprobat nu se poate face nicio înscriere.",
-            "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate.",
-            "Minori: un participant sub 18 ani este înscris de părinte/tutore, care își scrie numele în secțiunea „Înscriu un minor” a formularului (obligatorie sub 18 ani), semnează declarația cu actul lui de identitate și ridică kitul; la masă și în export apare „Minor — părinte/tutore: <nume>”.",
-            "Vârsta minimă: fiecare eveniment o are pe a lui, în panoul „Înscrieri” al evenimentului — „Vârsta minimă (ani)”, 14 dacă nu o schimbi, 0 pentru fără. Se socotește în ziua evenimentului, la orice ușă (formularul, masa, o înscriere introdusă de tine, datele de test); formularul, pagina evenimentului și calendarul datei nașterii spun numărul evenimentului, iar formularul echipei îl arată lângă numele fiecărui eveniment („16+”)."
-          ],
+          "title": "Documente legale și date personale (GDPR)",
+          "who": "Rol: Administrator citește; scrierea, aprobarea, retragerea și ștergerea textelor cer Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Aprobă o versiune nouă a unui text legal",
+              "steps": [
+                "Rol necesar: Superadministrator. Doar el vede «Versiune nouă» și aprobă; un Administrator citește textele și PDF-urile, dar nu scrie, nu aprobă și nu retrage o versiune.",
+                "«Documente legale» → «Versiune nouă».",
+                "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
+                "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
+                "Citește tot și apasă «Salvează ciorna».",
+                "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",
+                "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
+                "Un text aprobat nu se mai schimbă. Corectura e versiunea următoare: «Pornește versiunea următoare din aceasta»."
+              ]
+            },
+            {
+              "title": "Cele cinci texte, înainte de publicarea cursei",
+              "steps": [
+                "Rol necesar: Superadministrator. Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
+                "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
+                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
+              ]
+            },
+            {
+              "title": "Cum se semnează declarația",
+              "steps": [
+                "Participantul citește textul completat cu numele lui și evenimentul, tastează seria și numărul actului (nu încărcăm poze de buletin) și semnează cu degetul sau cu mouse-ul.",
+                "Un minor de la 14 ani semnează cu acordul părintelui; sub 14 ani semnează doar părintele sau tutorele — cum spune declarația aprobată.",
+                "Se păstrează numele, actele, versiunea textului, amprenta lui, momentul și metoda. E semnătură electronică simplă.",
+                "Imediat după, primește pe email declarația semnată, ca PDF. La masă, kitul se dă pe baza actului scris în declarație.",
+                "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul."
+              ]
+            },
+            {
+              "title": "Minori și vârsta minimă",
+              "steps": [
+                "Un participant sub 18 ani e înscris de părinte sau tutore, care își scrie numele în secțiunea pentru minori a formularului; la masă și în export apare „Minor — părinte/tutore”.",
+                "Vârsta minimă e a fiecărui eveniment: «Vârsta minimă (ani)», în «Participare și înscrieri». Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă."
+              ]
+            },
+            {
+              "title": "Unde stau datele și cât se păstrează",
+              "steps": [
+                "Declarațiile sunt înregistrări în baza de date, nu fișiere; PDF-ul se face la cerere, identic.",
+                "Înscrierile și declarațiile se păstrează 3 ani de la eveniment, apoi se șterg singure. Contactul de urgență și nota medicală se șterg la 7 zile după eveniment.",
+                "Exporturile și PDF-urile descărcate care au acte de identitate le ștergi tu, în cel mult 7 zile de la eveniment.",
+                "Exact așa scrie și în nota de confidențialitate."
+              ]
+            },
+            {
+              "title": "O cerere GDPR: acces, retragere, ștergere",
+              "steps": [
+                "«Înscrieri» → caută persoana → deschide înscrierea.",
+                "Ce știm despre ea: «Toate datele acestei persoane».",
+                "Retrage un acord (nota medicală, rețelele, rezultatele publice): «Retrage consimțământul» → bifează ce retrage → «Motivul» → «Retrage».",
+                "Ștergere: «Șterge definitiv» (vezi „Corectează, anulează sau șterge o înscriere”). În istoric rămâne cine a șters și de ce, nu și datele persoanei."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Participantul — pașii lui, și cum îi testezi",
+          "who": "Fără cont. Totul prin email. Parcurge-i o dată pe site-ul de test (QA), cu adresa ta.",
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Înscrierea, de la formular la codul QR",
+              "steps": [
+                "Pe pagina evenimentului apasă «Înscrie-te la eveniment».",
+                "Completează formularul. La o cursă: «Citește condițiile concursului», derulează până la capăt, apoi «Am citit și sunt de acord». Bifează și termenii.",
+                "Apasă «Trimite înscrierea». Dacă lipsește ceva, deasupra butonului apare «Mai lipsesc:» cu fiecare lucru — atinge-l și te duce la el.",
+                "În email apasă «Confirmă adresa de email». Linkul e valabil {confirmation}.",
+                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează și confirmă».",
+                "Primește confirmarea cu codul QR și numărul de concurs, plus declarația semnată ca PDF.",
+                "Verifică în backoffice: «Înscrieri» → caută numele → starea «Confirmată»."
+              ]
+            },
+            {
+              "title": "Locul și termenele lui",
+              "steps": [
+                "După confirmarea adresei, locul e ținut {hold} (sau până la termenul de confirmare, la un eveniment mai departe de fereastra lui). Termenul contează doar dacă așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
+                "Evenimentul e plin: intră pe lista de așteptare. Când se eliberează un loc primește un email și are {offer} să semneze declarația.",
+                "Cu {checkin} înainte de start, din «Gestionează înscrierea» poate apăsa «Am ajuns — marchează-mă prezent». Numărul îl ridică tot de la masă."
+              ]
+            },
+            {
+              "title": "Se retrage sau nu mai poate veni",
+              "steps": [
+                "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea».",
+                "Din reminder: «Nu pot veni — anulez înscrierea».",
+                "Oricând: «Înscrierile mele», pe site, cu adresa lui. Locul trece imediat la lista de așteptare."
+              ]
+            },
+            {
+              "title": "Nu a primit emailul",
+              "steps": [
+                "Pe site, «Retrimite linkul de înregistrare» → adresa → «Trimite linkul».",
+                "Sau vine la masă și un voluntar îl confirmă pe loc, pe hârtie."
+              ]
+            },
+            {
+              "title": "Evenimentele în calendarul lui",
+              "steps": [
+                "Pe fiecare eveniment are Google Calendar și fișierul de calendar (.ics).",
+                "Pe pagina de evenimente se poate abona la tot calendarul clubului; se actualizează singur când publicați ceva nou."
+              ]
+            }
+          ]
+        },
+        {
+          "key": "family",
+          "title": "O familie pe o singură adresă",
+          "who": "Pentru toate rolurile. Cum se înscriu mai multe persoane cu același email.",
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Înscrie a doua persoană pe aceeași adresă",
+              "steps": [
+                "Prima persoană se înscrie ca de obicei.",
+                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise. Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
+                "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
+                "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
+                "Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
+                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. La limită, emailul spune asta și nu mai are buton."
+              ]
+            },
+            {
+              "title": "Ce urmează pentru fiecare persoană",
+              "steps": [
+                "Fiecare persoană își semnează singură declarația (propriul email cu declarația) — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei. Fiecare are propriul loc, propriul număr de concurs și, dacă e cazul, propriul loc pe lista de așteptare.",
+                "Adresa primește câte un cod QR pentru fiecare persoană confirmată, în emailuri separate.",
+                "La masă scanezi fiecare cod pe rând: fiecare deschide rândul persoanei lui."
+              ]
+            },
+            {
+              "title": "Ce vezi în backoffice",
+              "steps": [
+                "În «Înscrieri», la masă și în export, fiecare persoană e un rând separat, cu aceeași adresă.",
+                "«Înscrierile mele» arată toate înscrierile adresei, fiecare cu numele ei. Anularea sau ștergerea uneia nu le atinge pe celelalte.",
+                "Mementourile și mulțumirile vin câte unul pentru fiecare persoană."
+              ]
+            },
+            {
+              "title": "Schimbă limita pe adresă (Administrator)",
+              "steps": [
+                "«Emailuri» → «Termene» → «Maxim de înscrieri pe o adresă (pe eveniment)».",
+                "Scrie numărul, apasă «Salvează maximul» și confirmă."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Când ceva nu merge",
+          "who": "Pentru toate rolurile. Ce verifici și cui scrii.",
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Verifică dacă platforma funcționează",
+              "steps": [
+                "Deschide /api/health într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că platforma funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
+                "Nu ești sigur ce vezi? Trimite textul proprietarului clubului."
+              ]
+            },
+            {
+              "title": "Scrie cuiva când ceva nu merge",
+              "steps": [
+                "O pagină arată o eroare, un buton nu răspunde sau o apăsare nu se termină? Fă o poză ecranului cu ce scrie.",
+                "Scrie proprietarului clubului sau unui Superadministrator: ce ai apăsat, pe ce pagină și poza.",
+                "Nu aștepta să se repare singur: un email netrimis sau o înscriere blocată contează pentru cineva care așteaptă."
+              ]
+            },
+            {
+              "title": "O salvare eșuează pe laptopul de birou",
+              "steps": [
+                "Internetul de birou blochează uneori cererea către server, mai ales pe o rețea de firmă.",
+                "Încearcă din nou după ce pornești hotspot-ul de pe telefon și te conectezi la el de pe laptop.",
+                "Merge de pe hotspot dar nu de pe rețeaua de birou? Spune-i cuiva de la birou — e o problemă a rețelei, nu a platformei."
+              ]
+            }
           ]
         }
       ],
       "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor.",
-      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la BR-V1.94, actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri."
+      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la BR-V1.94, actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri.",
+      "network": "Salvarea nu merge de pe laptopul de la birou?",
+      "networkLink": "Verifică rețeaua"
     },
     "erase": {
       "backToEvent": "Înapoi la eveniment",
@@ -3471,6 +4311,72 @@
       "eraseTitle": "Ștergi declarația?",
       "eraseBody": "Declarația și mesajele despre ea se șterg definitiv. În jurnal rămân numele tău și motivul, nu și al celui care a semnat.",
       "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul."
+    },
+    "newsletter": {
+      "title": "Abonați",
+      "intro": "Cine s-a abonat de pe pagina de contact și pe ce teme, ce s-a trimis și când. Adresele nu apar aici, doar numărul.",
+      "aside": {
+        "one": "{count} abonat",
+        "few": "{count} abonați",
+        "other": "{count} de abonați"
+      },
+      "off": "Pagina de contact nu arată încă abonarea: nota de confidențialitate în vigoare nu descrie newsletterul. Aprobă în /admin/legal o notă nouă pornită de la textul platformei — abonarea apare singură din ziua în care intră în vigoare.",
+      "counts": "Abonați confirmați: {confirmed} · adrese care nu au confirmat încă: {unconfirmed}",
+      "topicCount": "{topic}: {count}",
+      "allowanceNone": "Planul de email nu are o limită: newsletterul pleacă tot acum.",
+      "allowanceDay": "Azi mai pot pleca cel mult {count} emailuri de newsletter: jumătate din limita zilnică rămâne pentru înscrieri. Ce nu încape pleacă în zilele următoare, singur.",
+      "allowanceMonth": "Luna aceasta mai pot pleca cel mult {count} emailuri de newsletter: o cincime din limita lunară rămâne pentru înscrieri. Ce nu încape pleacă după resetare, singur.",
+      "compose": "Scrie abonaților",
+      "composeIntro": "Un mesaj către abonații unei teme, în română și în engleză: fiecare îl primește în limba lui întâi, cu linkul de dezabonare.",
+      "topic": "Despre ce",
+      "topicHelp": "Îl primesc abonații temei alese și cei care primesc tot ce trimite clubul.",
+      "recipients": {
+        "one": "{count} abonat",
+        "few": "{count} abonați",
+        "other": "{count} de abonați"
+      },
+      "deferred": "{count} pleacă în zilele următoare",
+      "subjectRo": "Subiect (română)",
+      "subjectEn": "Subiect (engleză)",
+      "bodyRo": "Textul (română)",
+      "bodyEn": "Textul (engleză)",
+      "bodyHelp": "Text simplu, cel mult {max} de caractere: un rând gol începe un paragraf. Fără câmpuri între acolade — newsletterul nu are un nume sau un eveniment de pus în ele.",
+      "send": "Trimite newsletterul",
+      "sending": "Se trimite…",
+      "confirmTitle": {
+        "one": "Trimiți newsletterul la {count} abonat?",
+        "few": "Trimiți newsletterul la {count} abonați?",
+        "other": "Trimiți newsletterul la {count} de abonați?"
+      },
+      "confirmBody": "Tema: {topic}. Fiecare îl primește în limba lui întâi, cu linkul de dezabonare. După trimitere nu mai poate fi oprit.",
+      "history": "Trimise",
+      "historyEmpty": "Nimic trimis încă.",
+      "historyMessage": "{when} · „{subject}” · {topics} · {count} destinatari · {sender}",
+      "historyAlert": "{when} · anunț automat de eveniment nou · {topics} · {count} destinatari",
+      "historyNoSender": "cont șters",
+      "withdrawTitle": "Scoate o adresă la cererea cuiva",
+      "withdrawHelp": "Când cineva ne scrie că nu mai vrea noutățile: scrie adresa lui aici. O găsim și o ștergem, cu tot ce așteaptă să-i plece.",
+      "withdrawEmail": "Adresa de email",
+      "withdraw": "Scoate din newsletter",
+      "withdrawing": "Se scoate…",
+      "withdrawConfirmTitle": "Scoți adresa din newsletter?",
+      "withdrawConfirmBody": "Adresa se șterge din lista de noutăți, cu temele alese. Persoana se poate abona din nou de pe pagina de contact.",
+      "sent": {
+        "one": "Newsletterul a fost pus la coadă pentru {count} abonat.",
+        "few": "Newsletterul a fost pus la coadă pentru {count} abonați.",
+        "other": "Newsletterul a fost pus la coadă pentru {count} de abonați."
+      },
+      "duplicate": "Acest newsletter fusese deja trimis: nu am mai pus nimic la coadă.",
+      "withdrawn": "Adresa a fost scoasă din newsletter.",
+      "notFound": "Adresa nu era în newsletter.",
+      "lastSend": "Ultima trimitere: {when}.",
+      "lastSendNone": "Nimic trimis încă abonaților.",
+      "previewTitle": "Cum arată",
+      "previewHelp": "Mesajul exact cum îl primește un abonat, din ce e scris acum în căsuțe — cu linkul lui de dezabonare înlocuit cu un exemplu.",
+      "previewRo": "Previzualizează în română",
+      "previewEn": "Previzualizează în engleză",
+      "previewLoading": "Se pregătește previzualizarea…",
+      "previewUnavailable": "Previzualizarea nu e disponibilă acum. Mesajul se poate trimite oricum."
     }
   },
   "NotFound": {
@@ -3486,7 +4392,8 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
-      "contact": "Scrie-ne:"
+      "contact": "Scrie-ne:",
+      "or": "sau"
     },
     "contactPage": "Scrie-ne"
   },
@@ -3553,6 +4460,8 @@
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
       "tooFastTitle": "Mai încearcă o dată",
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
+      "databaseAwayTitle": "Nu am putut ajunge la evidențele noastre chiar acum",
+      "databaseAway": "Nu s-a înregistrat nimic și nu pleacă niciun email. Tot ce ai completat e mai jos — mai încearcă peste câteva minute. Dacă se repetă, site-ul poate fi în pauză o vreme; pagina evenimentului spune până când.",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
@@ -3587,7 +4496,6 @@
     "nationality": "Cetățenie",
     "city": "Oraș",
     "originHelp": "Opțional. Ne arată de unde vin participanții evenimentelor clubului.",
-    "nationalityNone": "Nu spun",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
@@ -3683,7 +4591,7 @@
       },
       "family": {
         "title": "Înscrii pe altcineva cu aceeași adresă?",
-        "body": "Trimite din nou formularul — primești un email cu pasul următor."
+        "body": "Trimite din nou formularul cu numele complet și data nașterii persoanei — primești un email în care confirmi cu un buton."
       }
     },
     "journey": {
@@ -3701,7 +4609,7 @@
     },
     "disclosure": {
       "race": "Membru {club}, club și tricou — opțional",
-      "origin": "De unde ești — opțional",
+      "origin": "Orașul tău — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"
@@ -3759,25 +4667,14 @@
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
-      "title": "Înscrii o altă persoană cu aceeași adresă",
-      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment. Pentru un adult nu completezi informațiile medicale, lista publică sau Strava și Instagram: acestea țin de acordul persoanei însăși.",
-      "emailFixed": "Adresa la care a venit linkul. Nu se poate schimba aici: pentru altă adresă, completează formularul obișnuit.",
-      "phoneOptional": "Opțional pentru această persoană — de exemplu un copil fără telefon. Contactul de urgență de mai jos rămâne obligatoriu.",
-      "alreadyOnAddress": "Persoana aceasta este deja înscrisă cu această adresă. Nu s-a creat nimic. Pentru altcineva, schimbă numele și trimite din nou — linkul rămâne valabil.",
-      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email.",
-      "linkGone": "Linkul pentru încă o persoană nu mai este valabil — a fost folosit, a expirat sau este pentru alt eveniment. Trimite din nou formularul de mai jos cu adresa ta și numele persoanei: primești un email nou cu pasul următor.",
-      "people": {
-        "one": "o persoană",
-        "few": "{count} persoane",
-        "other": "{count} de persoane"
-      },
-      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul."
+      "linkGone": "Linkul acesta pentru încă o persoană nu mai este folosit. Trimite din nou formularul de mai jos cu adresa ta, numele complet și data nașterii persoanei: primești un email în care confirmi înscrierea ei cu un singur buton."
     },
     "terms": {
       "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
       "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând.",
       "changed": "Termenii și condițiile s-au schimbat cât completai formularul. Citește versiunea numită mai jos și bifează din nou."
-    }
+    },
+    "restingForm": "Formularul este oprit cât timp nu ne putem verifica evidențele — nu se poate trimite acum. Ce ai completat deja rămâne aici; revino peste câteva minute."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -3969,6 +4866,34 @@
         "title": "Înscrierea nu mai este activă",
         "body": "Linkul acesta s-a folosit deja, iar între timp înscrierea a expirat — fie a trecut termenul, fie evenimentul a început."
       }
+    },
+    "family": {
+      "title": "Înscrii încă o persoană",
+      "intro": "Formularul de înscriere la {event} a fost trimis din nou de pe adresa {email}, pentru o altă persoană. Nu am înscris-o încă: verifică datele de mai jos și confirmă.",
+      "registered": "Înscriși deja cu această adresă",
+      "nobody": "Nimeni în acest moment.",
+      "person": "Persoana pe care o înscrii",
+      "birthDate": "Data nașterii: {date}",
+      "next": "După confirmare, persoana are propriul loc și primește la {email} propriul email cu declarația de semnat, apoi propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "consent": "Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim: vezi nota de confidențialitate. Mesajele despre înscrierea lui vin la această adresă.",
+      "privacy": "Nota de confidențialitate",
+      "adultNote": "Pentru un adult nu păstrăm informațiile medicale, alegerea pentru lista publică sau Strava și Instagram din formular: acestea țin de acordul persoanei însăși.",
+      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul.",
+      "action": "Confirm că înscriu altă persoană",
+      "actionPending": "Se înscrie…",
+      "wrongData": "Datele nu sunt bune? Nu confirma: trimite din nou formularul, cu numele complet și data nașterii corecte. Linkul acesta expiră singur, iar datele trimise se șterg.",
+      "doneTitle": "Persoana este înscrisă",
+      "done": "Gata. Emailul cu declarația de semnat pentru această persoană vine pe adresa ta: fiecare persoană își semnează singură declarația și primește propriul cod QR.",
+      "doneWaitlist": "Persoana este pe lista de așteptare. Când se eliberează un loc, primești un email pe adresa ta.",
+      "alreadyOnAddress": "Nu am înscris-o: o persoană cu același nume sau cu aceeași dată a nașterii este deja înscrisă cu această adresă. Pentru altcineva, trimite din nou formularul cu numele complet și data nașterii acelei persoane.",
+      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email. Linkul rămâne valabil dacă se eliberează un loc pe adresă.",
+      "fitnessMissing": "Bifează mai întâi că persoana își declară singură, la semnare, starea de sănătate.",
+      "refused": "Nu am putut înscrie persoana cu datele trimise (de exemplu, termenii s-au schimbat între timp sau vârsta nu este permisă). Trimite din nou formularul de înscriere; linkul acesta nu s-a folosit.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
     }
   },
   "Devs": {
@@ -3976,7 +4901,8 @@
       "title": "Emailuri capturate pe această mașină",
       "intro": "Local nu pleacă nimic: fiecare mesaj pe care platforma l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
       "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino.",
-      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:"
+      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:",
+      "text": "Textul mesajului"
     },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
@@ -4238,7 +5164,10 @@
     "body": "Pagina nu a putut fi afișată. De cele mai multe ori este ceva trecător — încearcă din nou peste câteva momente.",
     "retry": "Încearcă din nou",
     "home": "Înapoi la prima pagină",
-    "reference": "Dacă se repetă, spune-ne acest cod:"
+    "reference": "Dacă se repetă, spune-ne acest cod:",
+    "staffTitle": "Backoffice-ul nu a putut încărca pagina",
+    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; bugetul lunii e pe pagina de sarcini, la Costuri.",
+    "staffTasks": "Deschide pagina de sarcini"
   },
   "Gallery": {
     "title": "Galerie",
@@ -4272,7 +5201,8 @@
     },
     "off": {
       "writeTo": "Scrie-ne la",
-      "none": "Formularul de contact nu este disponibil momentan."
+      "none": "Formularul de contact nu este disponibil momentan.",
+      "or": "sau"
     },
     "fieldNames": {
       "name": "Numele",
@@ -4298,10 +5228,62 @@
     "emailConfirm": "Scrie adresa încă o dată",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
+  "Budget": {
+    "title": "Bugetul lunii",
+    "intro": "Cât a folosit baza de date din limita lunară, în ce ritm, și cum se frânează platforma singură când luna o ia înainte.",
+    "level": {
+      "unknown": "Necunoscut",
+      "green": "Verde — în ritm",
+      "amber": "Galben — luna o ia înainte",
+      "red": "Roșu — aproape de limită"
+    },
+    "meaning": {
+      "unknown": "Neon nu a putut fi citit acum, așa că platforma merge ca de obicei, fără nicio frână în plus.",
+      "green": "Consumul e pe sau sub linia lunii (limita împărțită pe zilele trecute), așa că platforma merge ca de obicei.",
+      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că platforma se frânează singură; /api/health rămâne „ok”, cu o notă.",
+      "red": "S-au folosit peste {red}% din limită: platforma se frânează cât poate, iar /api/health dă alarma ca limita să poată fi mărită la timp."
+    },
+    "spent": "{used} din {quota} ore-CU folosite ({percent}%); linia lunii e acum la {line}; perioada se încheie {end}.",
+    "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
+    "pace": "Ritmul: {perDay} ore-CU pe zi; așa, perioada ajunge la {projected} ore-CU.",
+    "paceNoLimit": "Ritmul: {perDay} ore-CU pe zi.",
+    "runsOut": "Limita s-ar atinge pe {date}.",
+    "effectLead": "Ce face platforma acum:",
+    "effect": {
+      "none": "nimic în plus — lucrările programate rulează când au ceva de făcut.",
+      "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
+      "cache": "Paginile publice își păstrează datele de {factor} ori mai mult; o modificare făcută de club apare tot imediat.",
+      "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
+      "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal.",
+      "cacheOnly": "Vizitatorii nu mai trezesc baza de date: o pagină care nu e în memorie se arată din ultima copie salvată și se reîmprospătează în fundal cel mult o dată la {minutes} minute."
+    },
+    "source": {
+      "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
+      "operations": "Cifra e calculată din jurnalul de operații Neon: timpul treaz înmulțit cu mărimea minimă a bazei de date.",
+      "legacy": "Cifra e contorul vechi al proiectului, folosit doar pentru că niciuna dintre sursele vii nu a răspuns; nu se mai actualizează și poate fi mult sub cea reală."
+    },
+    "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
+    "notRead": "necitit",
+    "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
+    "spentAll": "Limita e consumată: Neon oprește baza de date până la sfârșitul perioadei, iar site-ul arată copiile salvate.",
+    "thresholds": {
+      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
+      "amber": "Galben de la (%)",
+      "red": "Roșu de la (%)",
+      "save": "Salvează pragurile",
+      "saving": "Se salvează…",
+      "confirmTitle": "Salvezi pragurile?",
+      "confirmBody": "Platforma se frânează după noile praguri de la următoarea citire a bugetului, în cel mult un minut."
+    }
+  },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
+    "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până pe {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
-    "capacityRetry": "Încearcă din nou"
+    "capacityRetry": "Încearcă din nou",
+    "reloadingTitle": "Pagina se reîncarcă în câteva minute",
+    "reloadingBody": "Site-ul își ia acum datele doar din copiile salvate, iar pagina aceasta nu avea încă una. O pregătim chiar acum; pagina se reîncarcă singură în câteva minute.",
+    "reloadingLink": "Încearcă din nou acum"
   },
   "Weather": {
     "label": "Vremea",
@@ -4389,6 +5371,11 @@
       "repeatStopped": "Recurența a fost oprită.",
       "repeatPublishOn": "Publicarea automată e pornită.",
       "repeatPublishOff": "Publicarea automată e oprită.",
+      "sparesReserved": {
+        "one": "{count} număr rezervat pentru masă: {from}–{to}.",
+        "few": "{count} numere rezervate pentru masă: {from}–{to}.",
+        "other": "{count} de numere rezervate pentru masă: {from}–{to}."
+      },
       "bibsAssigned": {
         "one": "{count} număr de concurs alocat.",
         "few": "{count} numere de concurs alocate.",
@@ -4501,6 +5488,7 @@
       "moved": "Ordinea a fost schimbată.",
       "pageDeleted": "Pagina a fost ștearsă definitiv.",
       "emailPlan": "Planul Mailgun a fost salvat.",
+      "emailTransport": "Drumurile emailurilor au fost salvate.",
       "contactRecipients": "Destinatarii mesajelor de contact au fost salvați.",
       "clubNotices": "Copiile clubului au fost salvate.",
       "emailCopy": "Textul emailului a fost salvat.",
@@ -4512,6 +5500,7 @@
       "honeypotOff": "Honeypot: oprit.",
       "neonPlan": "Plan Neon salvat.",
       "jobCadence": "Interval salvat.",
+      "budgetThresholds": "Pragurile bugetului salvate.",
       "deadlines": "Termene salvate.",
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
@@ -4526,7 +5515,159 @@
         "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
         "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
       },
-      "groupRunDeclarationErased": "Declarația a fost ștearsă."
+      "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "shownContactAddress": "Adresa de contact afișată a fost salvată.",
+      "clubTodoAdded": "Adăugat pe listă.",
+      "clubTodoSaved": "Rând salvat.",
+      "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
+      "clubTodoDone": "Bifat. Rândul e la „terminate”.",
+      "clubTodoReopened": "Debifat: rândul e din nou de făcut.",
+      "clubTodoMoved": "Rând mutat.",
+      "clubTodoDeleted": "Rând șters de pe listă.",
+      "newsletterSent": {
+        "one": "Newsletter pus la coadă pentru {count} abonat.",
+        "few": "Newsletter pus la coadă pentru {count} abonați.",
+        "other": "Newsletter pus la coadă pentru {count} de abonați."
+      },
+      "newsletterDuplicate": "Acest newsletter fusese deja trimis.",
+      "newsletterWithdrawn": "Adresa a fost scoasă din newsletter.",
+      "newsletterNotFound": "Adresa nu era în newsletter."
+    }
+  },
+  "Network": {
+    "fallback": "Rețeaua de la birou a blocat cererea de salvare, așa că am încercat calea simplă. Salvarea a ajuns doar dacă vezi și mesajul de confirmare; dacă nu apare, verifică pagina și încearcă de pe telefon sau de pe altă rețea.",
+    "check": "Verifică rețeaua",
+    "close": "Închide",
+    "retry": "Încearcă din nou",
+    "blocked": {
+      "title": "Rețeaua a blocat salvarea",
+      "kept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Ce ai completat a rămas în formular. Formularul poate pleca și pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă.",
+      "notKept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Formularul poate pleca din nou pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă — cu ce era completat când ai apăsat.",
+      "already": "Dacă ai primit deja mesajul că s-a salvat, nu apăsa — verifică pagina.",
+      "send": "Trimite pe calea simplă",
+      "sending": "Se trimite…",
+      "failed": "Nici calea simplă nu a putut fi folosită; nu s-a trimis nimic. Încearcă de pe telefon sau de pe altă rețea."
+    },
+    "page": {
+      "title": "Verificarea rețelei",
+      "intro": "Unele rețele de firmă lasă paginile să se deschidă, dar opresc salvările, pozele sau verificarea anti-robot. Pagina aceasta încearcă fiecare lucru din browserul tău și, pentru ce e blocat, spune ce trebuie să permită echipa IT. Dacă totul e verde, rețeaua nu e problema.",
+      "saves": {
+        "title": "Salvările",
+        "meaning": "Butoanele de salvare din panoul de administrare trimit o cerere POST către site, cu antetul Next-Action; răspunsul are tipul text/x-component.",
+        "allow": "Permite: cererile POST către {host} cu antetul Next-Action și răspunsurile lor de tip text/x-component."
+      },
+      "post": {
+        "title": "Calea simplă",
+        "meaning": "Un formular obișnuit trimis către site — calea pe care merge o salvare când rețeaua o blochează pe prima. Dacă doar aceasta e verde, salvările tot ajung.",
+        "allow": "Permite: formularele trimise prin POST (multipart/form-data) către {host}."
+      },
+      "pictures": {
+        "title": "Pozele",
+        "meaning": "Pozele din galerie și din texte se încarcă de la adresa spațiului de stocare, nu de la site.",
+        "allow": "Permite: imaginile de la {host}.",
+        "none": "Nu e încă nicio poză stocată cu care să verificăm.",
+        "unconfigured": "Stocarea pozelor nu e configurată aici; nu e nimic de verificat."
+      },
+      "botCheck": {
+        "title": "Verificarea anti-robot",
+        "meaning": "Formularele de înscriere și de contact încarcă verificarea Cloudflare Turnstile.",
+        "allow": "Permite: scripturile și cererile către {host}.",
+        "unconfigured": "Verificarea anti-robot nu e pornită pe acest site; nu e nimic de permis."
+      },
+      "state": {
+        "checking": "Se verifică…",
+        "ok": "Merge",
+        "blocked": "Blocat",
+        "skipped": "Nu se verifică"
+      },
+      "again": "Verifică din nou",
+      "report": {
+        "title": "Raportul pentru club",
+        "intro": "Copiază raportul și trimite-l clubului sau echipei IT. Conține doar rezultatele, adresa site-ului și descrierea browserului — nimic despre tine.",
+        "copy": "Copiază raportul",
+        "copied": "Raportul e copiat; lipește-l într-un mesaj.",
+        "copyFailed": "Nu am putut copia; selectează textul de mai jos și copiază-l.",
+        "heading": "{club} — verificarea rețelei",
+        "site": "Site",
+        "browser": "Browser"
+      }
+    }
+  },
+  "Newsletter": {
+    "topics": {
+      "ALL": "Toate noutățile",
+      "BIG_EVENTS": "Evenimente mari",
+      "DISCOUNTS": "Coduri de reducere",
+      "GEAR_TESTING": "Testări de încălțăminte",
+      "SPECIAL_EVENTS": "Evenimente speciale",
+      "WEEKLY_RUNS": "Alergările săptămânale",
+      "VOLUNTEERING": "Voluntariat",
+      "RESULTS_PHOTOS": "Rezultate și poze"
+    },
+    "topicHints": {
+      "ALL": "Toate temele de mai jos și cele pe care le vom adăuga.",
+      "BIG_EVENTS": "Marile zile ale clubului, de exemplu crosul aniversar: un anunț când apare în calendar, apoi înscrierile și ce se schimbă.",
+      "DISCOUNTS": "Reduceri de la partenerii clubului, doar pentru abonați.",
+      "GEAR_TESTING": "Când un magazin sau un producător aduce încălțăminte și echipament de încercat.",
+      "SPECIAL_EVENTS": "Ediții speciale, alergări tematice, evenimente făcute împreună cu alți organizatori și evenimentele altor organizatori.",
+      "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
+      "VOLUNTEERING": "Când avem nevoie de ajutor la concursuri: masa de ridicare a kitului, traseu, fotografii.",
+      "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente."
+    },
+    "heading": "Noutățile clubului pe email",
+    "intro": "Alege ce vrei să afli de la noi — evenimentele mari, reduceri, testări de încălțăminte, alergările săptămânale — și îți scriem doar despre asta.",
+    "open": "Abonează-te la noutăți",
+    "dialogTitle": "Abonează-te la noutățile clubului",
+    "dialogIntro": "Bifează ce te interesează. Îți trimitem un email cu un link de confirmare; până nu îl apeși, nu primești nimic altceva.",
+    "close": "Închide",
+    "email": "Adresa de email",
+    "emailHelp": "Aici îți trimitem linkul de confirmare și, după aceea, noutățile.",
+    "topicsLegend": "Ce vrei să primești",
+    "topicsHelp": "Alege cel puțin o temă. Le poți schimba oricând din linkul din fiecare email.",
+    "privacy": "Păstrăm adresa și temele alese doar ca să îți trimitem aceste emailuri; te dezabonezi oricând din linkul din fiecare mesaj. Detalii în",
+    "privacyLinkLabel": "nota de confidențialitate",
+    "consent": "Am citit nota de confidențialitate și sunt de acord să primesc pe email noutățile clubului despre temele bifate.",
+    "submit": "Abonează-mă",
+    "submitting": "Se trimite…",
+    "sent": {
+      "title": "Verifică-ți căsuța de email",
+      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
+    },
+    "errors": {
+      "title": "Abonarea nu a pornit încă",
+      "email": "Scrie o adresă de email validă.",
+      "topics": "Alege cel puțin o temă.",
+      "consent": "Bifează acordul: fără el nu îți putem trimite noutățile.",
+      "captcha": "Verificarea anti-robot nu a trecut. Bifeaz-o din nou și trimite.",
+      "limited": "Ai cerut deja de câteva ori în ultima oră. Verifică-ți căsuța (și dosarul Spam) sau încearcă din nou mai târziu.",
+      "unavailable": "Abonarea la noutăți nu este disponibilă acum. Încearcă mai târziu."
+    },
+    "linkInvalid": "Linkul nu mai este valabil",
+    "contactLink": "Mergi la pagina de contact",
+    "confirm": {
+      "title": "Confirmă abonarea",
+      "intro": "Apasă butonul ca să începi să primești noutățile clubului la {email}.",
+      "topics": "Temele alese: {topics}.",
+      "button": "Confirmă abonarea",
+      "pending": "Se confirmă…",
+      "done": "Gata, abonarea e activă",
+      "doneBody": "Îți scriem doar despre temele alese. Din linkul din fiecare email îți schimbi temele sau te dezabonezi.",
+      "invalidBody": "Poate a fost deja folosit, a expirat sau ai cerut între timp altul. Ca să primești unul nou, abonează-te din nou de pe pagina de contact."
+    },
+    "manage": {
+      "title": "Abonamentul tău la noutăți",
+      "intro": "Primești noutățile clubului la {email}.",
+      "saved": "Am salvat ce vrei să primești.",
+      "save": "Salvează temele",
+      "saving": "Se salvează…",
+      "topicsRefused": "Alege cel puțin o temă — sau, dacă nu mai vrei nimic, dezabonează-te mai jos.",
+      "unsubscribeTitle": "Nu mai vrei nimic de la noi?",
+      "unsubscribeBody": "Te scoatem de pe listă și îți ștergem adresa. Nu mai primești niciun email cu noutăți; înscrierile la evenimente nu sunt atinse.",
+      "unsubscribe": "Dezabonează-mă de la tot",
+      "unsubscribing": "Se dezabonează…",
+      "gone": "Te-ai dezabonat",
+      "goneBody": "Ți-am șters adresa din lista de noutăți. Poți reveni oricând de pe pagina de contact.",
+      "invalidBody": "A expirat sau abonamentul nu mai există. Fiecare email nou de la noi are un link nou; te poți și abona din nou de pe pagina de contact."
     }
   }
 }

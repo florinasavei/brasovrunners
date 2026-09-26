@@ -15,6 +15,7 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import GroupIcon from "@mui/icons-material/Group";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import NewspaperIcon from "@mui/icons-material/Newspaper";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import SettingsIcon from "@mui/icons-material/Settings";
 
@@ -30,7 +31,7 @@ export type AdminTab = {
 
 /**
  * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
- * MUI ships — imported one file each, so the bundle carries eleven glyphs and not the set.
+ * MUI ships — imported one file each, so the bundle carries twelve glyphs and not the set.
  *
  * Every section in `AdminSection` needs a row here, and `emails` had none: a missing key is
  * not a type error, because the record is keyed by `string`, so the tab simply rendered as the
@@ -49,6 +50,8 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   tasks: ChecklistIcon,
   legal: GavelIcon,
   emails: ForwardToInboxIcon,
+  // The club's news to the people who asked for it (§445): a paper, not an envelope — «Emailuri» is the envelope.
+  newsletter: NewspaperIcon,
   staff: GroupIcon,
   devs: SettingsIcon,
 };

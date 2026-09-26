@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { notFound, redirect, unstable_rethrow } from "next/navigation";
 import type { ReactNode } from "react";
 import { BACKOFFICE_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
+import AdminRestingNotice from "@/modules/resilience/ui/AdminRestingNotice";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
 import { readFlash } from "@/shared/feedback/flash";
 import ToastProvider from "@/shared/feedback/ToastProvider";
 import PickerProvider from "@/shared/forms/pickers/PickerProvider";
+import { SAVE_FALLBACK_COOKIE } from "@/shared/forms/save-fallback";
+import SaveFallbackGuard from "@/shared/forms/SaveFallbackGuard";
+import SaveFallbackNotice from "@/shared/forms/SaveFallbackNotice";
 import { signOutAction } from "./actions";
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
@@ -44,7 +50,22 @@ export default async function AdminLayout({ children, params }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const staffUser = await getCurrentStaffUser();
+  /*
+    The staff row is read from the database on every page. While the database is away (§447) that
+    read throws here, in the layout — and a segment's `error.tsx` catches its pages, never its own
+    layout — so it is caught here: the backoffice's own resting notice, with the sign-out button,
+    instead of the framework's error page. Any other error is a bug and still throws; Next's own
+    throws pass straight through.
+  */
+  let staffUser: Awaited<ReturnType<typeof getCurrentStaffUser>>;
+  try {
+    staffUser = await getCurrentStaffUser();
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    console.error("[admin] the database is away; the backoffice rests", error);
+    return <AdminRestingNotice locale={locale} signOut={signOutAction} />;
+  }
   if (!staffUser) {
     if (env.STAFF_AUTH_MODE === "disabled") notFound();
     redirect(getPathname({ locale, href: "/sign-in" }));
@@ -54,6 +75,10 @@ export default async function AdminLayout({ children, params }: Props) {
   // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §384): shown once by
   // the provider below, which also clears the cookie, so a refresh shows nothing.
   const flash = await readFlash();
+  // The simple way was tried for the last save, because the network blocked the scripted one
+  // (§436): «Trimite pe calea simplă» set this cookie as the plain POST left, and the notice below
+  // clears it. It says the path was tried, never that the save landed — the §384 toast says that.
+  const savedTheSimpleWay = (await cookies()).get(SAVE_FALLBACK_COOKIE)?.value === "1";
 
   return (
     /*
@@ -67,6 +92,9 @@ export default async function AdminLayout({ children, params }: Props) {
             `DECISIONS.md` §345) — never on a public route, which never imports this shell. The
             toasts the same: one provider, every backoffice form's "it worked" (§384). */}
         <ToastProvider flash={flash}>
+          {/* A save a network refused is offered the simple way, and the page it lands on says so (§436). */}
+          <SaveFallbackGuard />
+          <SaveFallbackNotice shown={savedTheSimpleWay} />
           <PickerProvider>{children}</PickerProvider>
         </ToastProvider>
       </BackofficeShell>

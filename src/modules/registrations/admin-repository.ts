@@ -794,6 +794,11 @@ export type DeskRegistration = {
    * address (`AGENTS.md` §15.11).
    */
   bibPrintedAt: Date | null;
+  /**
+   * Who entered the row (§444): a staff entry is a walk-in the desk may hand a spare bib with the
+   * paper (`handsSpareAtConfirm`). Where it came from, never who or how to reach them.
+   */
+  source: "PUBLIC" | "STAFF";
   cancelledAt: Date | null;
   expiredAt: Date | null;
   /** Null until confirmed. */
@@ -821,6 +826,7 @@ const DESK_COLUMNS = {
   bibNumber: registrations.bibNumber,
   provisionalBibNumber: registrations.provisionalBibNumber,
   bibPrintedAt: registrations.bibPrintedAt,
+  source: registrations.source,
   cancelledAt: registrations.cancelledAt,
   expiredAt: registrations.expiredAt,
   checkinCode: registrations.checkinCode,

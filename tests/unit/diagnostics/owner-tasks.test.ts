@@ -24,6 +24,7 @@ import {
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
+  newsletterDescribed: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
@@ -33,7 +34,7 @@ const LAUNCHED: OwnerTaskInputs = {
   inviteKey: { kind: "ok" },
   publishedEventCount: 4,
   raceDaySheetsDue: [],
-  roDomainBound: true,
+  domainRenewal: { status: "ok", expiresOn: "2029-09-16", daysLeft: 1086 },
   storageConfigured: true,
   botCheckConfigured: true,
   botCheckHealth: "ok",
@@ -113,11 +114,31 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, staffCount: 2 }, "inviteStaff")).toBe("done");
   });
 
-  it("keeps the .ro domain open for a year without blocking anything", () => {
-    // `DECISIONS.md` §55: the .com now, the .ro a year later. The only fact the software can
-    // read is the hostname it serves on, so the task closes itself and is never ticked.
-    expect(stateOf({ ...LAUNCHED, roDomainBound: false }, "roDomain")).toBe("open");
-    expect(stateOf(LAUNCHED, "roDomain")).toBe("done");
+  it("§435 the domain's renewal: green, amber at 90 days, red at 30 and past, never blocking", () => {
+    const row = (domainRenewal: OwnerTaskInputs["domainRenewal"]) =>
+      ownerTasks({ ...LAUNCHED, domainRenewal }).find((task) => task.id === "domainRenewal");
+    expect(row({ status: "ok", expiresOn: "2027-09-16", daysLeft: 91 })).toMatchObject({ state: "done", owner: "club" });
+    expect(row({ status: "soon", expiresOn: "2027-09-16", daysLeft: 90 })).toMatchObject({ state: "open" });
+    expect(row({ status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 })).toMatchObject({ state: "broken" });
+    expect(row({ status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 })?.text).toBeUndefined();
+    // Red, but never «Nu funcționează»: the domain still works until the day.
+    expect(row({ status: "urgent", expiresOn: "2027-09-16", daysLeft: 30 })?.label).toBe("due");
+    expect(row({ status: "expired", expiresOn: "2027-09-16", daysLeft: -1 })?.label).toBeUndefined();
+    expect(row({ status: "expired", expiresOn: "2027-09-16", daysLeft: -1 })).toMatchObject({ state: "broken", text: "expired" });
+    // Unset dates remind nobody: open, with the sentence that says what is missing.
+    expect(row({ status: "unknown" })).toMatchObject({ state: "open", text: "unknown" });
+    // The .ro row is gone (the owner, 2026-09-26: one address for search engines).
+    expect(ownerTasks(LAUNCHED).map((task) => task.id)).not.toContain("roDomain");
+  });
+
+  it("§435 the renewal row's sentences exist in both catalogues and fill the expiry", () => {
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.domainRenewal;
+      for (const key of ["todo", "done", "expired"] as const) expect(item[key]).toContain("{domainExpiresOn}");
+      expect(typeof item.unknown).toBe("string");
+      expect(item.how.join(" ")).toContain("DOMAIN_RENEWAL_YEARS");
+      expect(catalogue.Admin.tasks.items).not.toHaveProperty("roDomain");
+    }
   });
 
   it("keeps the photo bucket open, never blocking, until the R2 variables exist", () => {
@@ -204,6 +225,7 @@ describe("owner tasks", () => {
     expect(clubOwned.map((task) => task.id)).toEqual([
       "approveLegalText",
       "listStatesNotice",
+      "newsletterNotice",
       "liveEmail",
       "inviteStaff",
       "inviteKey",
@@ -213,7 +235,7 @@ describe("owner tasks", () => {
       "declarationArchiveMail",
       "vercelUsage",
       "contactForm",
-      "roDomain",
+      "domainRenewal",
       "neonLimits",
     ]);
   });
@@ -223,7 +245,7 @@ describe("owner tasks", () => {
       ownerTasks({
         ...LAUNCHED,
         legalTextIsSample: true,
-        roDomainBound: false,
+        domainRenewal: { status: "soon", expiresOn: "2026-12-01", daysLeft: 66 },
         inviteKey: { kind: "blind" },
       }),
     );
@@ -389,7 +411,7 @@ describe("the counter and the filters", () => {
     legalTextIsSample: true, // approveLegalText: blocking (club, text)
     staleJobNames: ["email-outbox"], // scheduler: blocking (developer, check)
     staffCount: 1, // inviteStaff: open (club, account)
-    roDomainBound: false, // roDomain: open (club, decision)
+    domainRenewal: { status: "soon", expiresOn: "2026-12-01", daysLeft: 66 }, // domainRenewal: open (club, decision)
     contactFormConfigured: false, // contactForm: open (club, account)
   };
 

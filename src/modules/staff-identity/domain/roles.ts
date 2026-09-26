@@ -368,6 +368,18 @@ export function canMessageParticipants(role: StaffRole): boolean {
 }
 
 /**
+ * **Sending the newsletter (§445)** — a message the club writes to every subscriber of one topic.
+ * The same people who may write to an event's participants (§364): the Organizer, the
+ * Administrator and the Superadministrator — it is the club speaking to people who asked to hear
+ * from it, the organizer's own kind of act. Nobody reads an address on the way: the page shows
+ * counts. Removing an address by hand (the notice's "or by writing to us") is the Administrator's,
+ * as the "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
+ */
+export function canSendNewsletter(role: StaffRole): boolean {
+  return canMessageParticipants(role);
+}
+
+/**
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.
@@ -452,10 +464,15 @@ export function canManageStaff(role: StaffRole): boolean {
  *     registrations  canReadRegistrations     `admin/registrations/page.tsx` — the verbs on it
  *                                             ask `canManageRegistrations` one by one (§289)
  *     pages          isEditorial              `admin/pages/page.tsx`
- *     tasks          canManageRegistrations   `admin/tasks/page.tsx` — or `canSeeDiagnostics`,
- *                    or canSeeDiagnostics      for the «Aplicația» panel alone (§397)
+ *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
+ *                                             «Club», «Anti-robot», «Costuri» canManageRegistrations,
+ *                                             «Aplicația» canSeeDiagnostics (§397), «De făcut»
+ *                                             canReadClubTodo (§438)
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
+ *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
+ *                                             composer (§445); withdrawing an address asks
+ *                                             `canManageRegistrations` for itself
  *     staff          canManageStaff           `admin/staff/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
  *
@@ -473,6 +490,7 @@ export const ADMIN_SECTIONS = [
   "tasks",
   "legal",
   "emails",
+  "newsletter",
   "staff",
   "devs",
 ] as const;
@@ -491,8 +509,10 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * pages, the gallery and the legal texts, and they ask the Administrator for every change. A
  * person who cannot see what the club publishes cannot tell her which line is wrong.
  *
- * It stops at the club's **content**. What the club still owes — `/admin/tasks` — stays behind
- * `canManageRegistrations`, because it is the Administrator's own worklist.
+ * It stops at the club's **content**. What the club still owes as the system reads it —
+ * `/admin/tasks`'s «Club» — stays behind `canManageRegistrations`, because it is the
+ * Administrator's own worklist; the club's typed checklist «De făcut» beside it is read by every
+ * role from the copywriter up and written by the Organizer and the Administrators (§438).
  *
  * **The participant list is no longer on this side of the line (§289).** It was, on the reasoning
  * that "vede cam tot" is not an instruction to hand somebody four hundred addresses — and the
@@ -520,12 +540,13 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // Who signed up, for the roles that may read it (§289). Every verb on that screen asks
     // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
     ...(canReadRegistrations(role) ? (["registrations"] as const) : []),
-    // What the *club* still owes, for the role that answers for it (BR-REQ-060-01) — and, since
-    // 2026-09-25, the «Aplicația» panel of the same screen for a Tehnic, who reads none of the
-    // rest of it (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`, `DECISIONS.md`
-    // §397). Written out rather than imported, because that module reads `canManageRegistrations`
-    // and `canSeeDiagnostics` from this one.
-    ...(canManageRegistrations(role) || canSeeDiagnostics(role) ? (["tasks"] as const) : []),
+    // «Sarcini»: what the *club* still owes, read from the system, for the role that answers for
+    // it (BR-REQ-060-01); the «Aplicația» panel for a Tehnic (§397); and since §438 the club's own
+    // checklist «De făcut», which every role that reads the club's content opens — so the whole
+    // section is offered from the copywriter up, and each panel asserts its own gate
+    // (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`). Written as the threshold
+    // rather than imported, because that module reads its predicates from this one.
+    ...(canReadContent(role) ? (["tasks"] as const) : []),
     // The legal texts are readable by the roles that must know what the club published; only
     // the Administrator writes one (§46, §181, §203).
     ...(canReadContent(role) ? (["legal"] as const) : []),
@@ -541,6 +562,13 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
       from nowhere else (the owner: "I am missing the email templates config … in this navbar").
     */
     ...(canReadContent(role) ? (["emails"] as const) : []),
+    /*
+      «Newsletter» (§445; the owner, 2026-09-26: "pentru newsletter o să fie un meniu suplimentar
+      în backoffice cu «Newsletter»"): the subscribers as numbers and the composer, for whoever may
+      write to them — the Organizer, the Administrator and the Superadministrator. Not the Tehnic,
+      who writes to nobody (§38), which is the ladder's second deliberate hole beside the list.
+    */
+    ...(canSendNewsletter(role) ? (["newsletter"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
   ];

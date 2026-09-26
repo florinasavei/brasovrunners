@@ -14,6 +14,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";
 import type { EmailPlanState } from "@/modules/notifications/email-plan";
+import { forecastCopiesNote } from "@/modules/notifications/domain/email-transport";
 import { COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION, type EmailVolumeToday } from "@/modules/notifications/volume";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
@@ -49,6 +50,13 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
     hidden copies the club asked for on every participant message, which is why it is said here,
     next to the list that sets them, and not only on the task board.
   */
+  // The copies sentence agrees with the figure: counted in Mailgun's cost, or carried by Gmail (§443).
+  const copiesNote = forecastCopiesNote({
+    participantBccCount: volume.participantBccCount,
+    copiedMessagesPerRegistration: COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
+    allMessagesPerRegistration: volume.allMessagesPerRegistration,
+    messagesPerRegistration: volume.messagesPerRegistration,
+  });
   const registrationsLeft = registrationsLeftToday({
     emailAllowance: volume.allowance,
     emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
@@ -87,6 +95,12 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           waiting: volume.waitingMessages,
         })}
       </Typography>
+      {/* The subscribers' mail in that queue (§445): last in line, in what the reserve leaves. */}
+      {volume.bulkWaitingMessages > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-bulk-waiting">
+          {t("emails.plan.bulkWaiting", { count: volume.bulkWaitingMessages })}
+        </Typography>
+      )}
       {/*
         One account, two deployments (§100, §163): the club's Mailgun allowance is shared by
         QA and production, and the count above is this environment's own outbox rows — so
@@ -101,11 +115,8 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
         {registrationsLeft === null
           ? t("emails.plan.forecastUnlimited", { count: volume.messagesPerRegistration })
           : t("emails.plan.forecast", { count: volume.messagesPerRegistration, left: registrationsLeft })}
-        {volume.participantBccCount > 0 &&
-          ` ${t("emails.plan.forecastBcc", {
-            bcc: volume.participantBccCount,
-            extra: volume.participantBccCount * COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
-          })}`}
+        {copiesNote?.kind === "bcc" && ` ${t("emails.plan.forecastBcc", { bcc: copiesNote.bcc, extra: copiesNote.extra })}`}
+        {copiesNote?.kind === "gmail" && ` ${t("emails.plan.forecastGmail", { count: copiesNote.count })}`}
       </Typography>
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>

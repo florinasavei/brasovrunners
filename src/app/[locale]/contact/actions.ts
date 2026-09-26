@@ -9,12 +9,81 @@ import { contactDelivery } from "@/modules/contact/delivery";
 import { CONTACT_ERROR_SUMMARY_ID } from "@/modules/contact/fields";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { submitContactMessage } from "@/modules/contact/service";
-import { stashFormDraft } from "@/modules/registrations/form-draft";
+import { stashDraftValues, stashFormDraft } from "@/modules/registrations/form-draft";
+import { subscribeToNewsletter } from "@/modules/newsletter/service";
+import { NEWSLETTER_DIALOG_ID, NEWSLETTER_SECTION_ID } from "@/modules/newsletter/ui/newsletter-box";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
+import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
+
+/**
+ * The newsletter's pop-up (§445), on the same page: the contact form's defences — Turnstile first,
+ * then the honeypot and the timing check in the service — and one answer whatever the address
+ * turned out to be, so the pop-up cannot say whether somebody is subscribed (BR-REQ-031-01 c3).
+ *
+ * Always a redirect back to the contact page: `?newsletter=sent` for "check your inbox";
+ * `invalid` (with the boxes, and the typed address and topics in the sealed draft, never in the
+ * URL, §14.5), `captcha` or `limited` with the pop-up open again to fix; `unavailable` when the
+ * pop-up should not have been there — the notice no longer describes the newsletter.
+ */
+export async function submitNewsletterAction(form: FormData): Promise<void> {
+  const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
+  const path = getPathname({ locale, href: "/contact" });
+  const topics = form.getAll("topics").filter((value): value is string => typeof value === "string");
+  const renderedAt = text(form, "renderedAt");
+  // What was typed comes back sealed, so a refusal never costs the address or the ticks (§142).
+  // The consent tick is the person's own act: posted as "on" only when ticked (§445).
+  const consent = form.get("consent") === "on";
+  const keepTyped = () =>
+    stashDraftValues(
+      { newsletterEmail: text(form, "newsletterEmail").trim(), newsletterTopics: topics.join(","), newsletterConsent: consent ? "on" : "" },
+      path,
+    );
+  // The corrected form is timed from the render it corrects (§146's `since`), or a quick fix reads as a bot.
+  const since = renderedAt ? `&since=${encodeURIComponent(renderedAt)}` : "";
+
+  const requestHeaders = await headers();
+  const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const token = String(form.get(TURNSTILE_FIELD) ?? "");
+  const verdict = (await botCheckIsOn(getDb(), new Date())) ? await verifyTurnstile(token, remoteIp) : "not_configured";
+  if (verdict === "failed") {
+    await keepTyped();
+    redirect(`${path}?newsletter=captcha${since}#${NEWSLETTER_DIALOG_ID}`);
+  }
+
+  let outcome: Awaited<ReturnType<typeof subscribeToNewsletter>>;
+  try {
+    outcome = await subscribeToNewsletter(
+      getDb(),
+      {
+        email: text(form, "newsletterEmail"),
+        locale,
+        topics,
+        consent,
+        honeypot: text(form, "honeypot") || undefined,
+        renderedAt: renderedAt || undefined,
+      },
+      new Date(),
+    );
+  } catch (error) {
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
+      await keepTyped();
+      // Its own parameter: `fields` is the contact form's, and would mark that form's boxes.
+      const fields = error.fields.length > 0 ? `&nfields=${error.fields.join(",")}` : "";
+      redirect(`${path}?newsletter=invalid${fields}${since}#${NEWSLETTER_DIALOG_ID}`);
+    }
+    if (isDomainError(error)) redirect(`${path}?newsletter=unavailable#${NEWSLETTER_SECTION_ID}`);
+    throw error;
+  }
+  if (outcome === "limited") {
+    await keepTyped();
+    redirect(`${path}?newsletter=limited${since}#${NEWSLETTER_DIALOG_ID}`);
+  }
+  redirect(`${path}?newsletter=sent#${NEWSLETTER_SECTION_ID}`);
+}
 
 function text(form: FormData, name: string): string {
   const value = form.get(name);
@@ -32,6 +101,22 @@ function text(form: FormData, name: string): string {
 export async function submitContactAction(form: FormData): Promise<void> {
   const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/contact" });
+  try {
+    await sendOrRefuse(form, locale, path);
+  } catch (error) {
+    /*
+      The database is away (§447): the bot-check switch, the throttle and the stored message all
+      need it. The page's own `UNAVAILABLE` sentence says the message did not leave, and the draft
+      cookie keeps what was typed. `redirect()` throws too, and is not an away-error.
+    */
+    if (!isDatabaseAwayError(error)) throw error;
+    console.error("[contact] the database is away; the message goes back with the form", error);
+    await stashFormDraft(form, path);
+    redirect(`${path}?error=UNAVAILABLE#${CONTACT_ERROR_SUMMARY_ID}`);
+  }
+}
+
+async function sendOrRefuse(form: FormData, locale: Locale, path: string): Promise<void> {
 
   // The bot check, when configured (§97, §216): only a token Cloudflare looked at and
   // rejected is a field error. A widget that never ran, or a Cloudflare that did not answer,

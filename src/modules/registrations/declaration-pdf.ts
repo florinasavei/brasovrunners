@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { mergeTextSegments, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { dropsParagraph, mergeTextSegments, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { plainInline } from "@/modules/legal-documents/domain/inline";
 import path from "node:path";
 import PDFDocument from "pdfkit";
@@ -238,6 +238,8 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
       doc.moveDown(0.3);
     }
     for (const paragraph of section.paragraphs) {
+      // "Declar că am cel puțin {{minimumAge}}." on a run with no minimum is no sentence (§440).
+      if (dropsParagraph(paragraph, entry.values ?? {})) continue;
       const bullet = /^[•\-–]\s/.test(paragraph);
       const width = bullet ? TEXT_WIDTH - 14 : TEXT_WIDTH;
       const left = bullet ? MARGIN.left + 14 : MARGIN.left;

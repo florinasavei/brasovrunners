@@ -9,6 +9,8 @@ import { registrationHasClosed } from "@/modules/events/domain/registration-wind
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { settleBibNumbers, type SettledBib } from "./bibs";
+import { queueNewEventAlerts } from "@/modules/newsletter/service";
+import { purgeLapsedFamilyEntries } from "./family-entries";
 import { queueRegistrationOpenedMessages } from "./interest";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
@@ -47,6 +49,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   interestsNotified: number;
   /** Race numbers settled by a registration window closing in this run (§214). */
   bibsSettled: number;
+  /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
+  familyEntriesPurged: number;
   /**
    * The failures the very next run could repair — an event's queue work, a reminder, a
    * confirmation, an announcement, a retention step — as opposed to the tidying ones (pictures,
@@ -68,9 +72,23 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 
   const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now, settings);
 
+  /*
+    Another person's form, kept for the address to confirm from its inbox (§446), deleted with the
+    personal data it holds once the club's email-link window has passed unconfirmed. Event-blind,
+    like the lapse above; a failure here is a row that lives until the next run, and it is counted
+    as retryable so that run is the next ping, not the next hour (§334).
+  */
+  let familyEntriesPurged = 0;
+  let familyPurgeFailed = false;
+  try {
+    familyEntriesPurged = await purgeLapsedFamilyEntries(db, now);
+  } catch {
+    familyPurgeFailed = true;
+  }
+
   const eventIds = await repo.findEventsNeedingMaintenance(db, now);
-  let errorCount = 0;
-  let retryableErrorCount = 0;
+  let errorCount = familyPurgeFailed ? 1 : 0;
+  let retryableErrorCount = familyPurgeFailed ? 1 : 0;
   /**
    * Everyone numbered by a close in this run, collected across the per-event transactions and
    * written to afterwards (§214).
@@ -215,6 +233,16 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     errorCount += 1;
     retryableErrorCount += 1;
   }
+  // "A new event is on the calendar" (§445): once per event first published within the window, to
+  // the newsletter's subscribers of its topics. A publication wakes this job (§334), so the alert
+  // goes minutes after the press; a failure is a late alert, not a failed run.
+  let eventAlertsQueued = 0;
+  try {
+    eventAlertsQueued = await queueNewEventAlerts(db, now);
+  } catch {
+    errorCount += 1;
+    retryableErrorCount += 1;
+  }
 
   /**
    * The retention sweep, last and in its own try/catch.
@@ -285,7 +313,16 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     jobRunId,
     {
       itemsProcessed:
-        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued + interestsNotified + occurrencesCreated,
+        eventIds.length +
+        lapsedEmailConfirmations +
+        familyEntriesPurged +
+        prunedRows +
+        orphanPicturesDeleted +
+        remindersQueued +
+        confirmationsQueued +
+        interestsNotified +
+        eventAlertsQueued +
+        occurrencesCreated,
       errorCount,
       // The retention steps that failed, by name (§322) — the one error this run writes down,
       // because it is the one `/api/health` is asked to turn into an alarm.
@@ -303,6 +340,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     confirmationsQueued,
     interestsNotified,
     bibsSettled,
+    familyEntriesPurged,
     retryableErrorCount,
   };
 }

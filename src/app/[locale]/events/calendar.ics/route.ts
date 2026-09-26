@@ -3,6 +3,7 @@ import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { buildCalendar, calendarFeedFileName } from "@/modules/events/ical";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import { env } from "@/shared/config/env";
 
 /**
@@ -35,7 +36,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   */
   const from = now.getTime() - 30 * DAY;
   const to = now.getTime() + 365 * DAY;
-  const days = await cachedPublishedEventsBetween(known, new Date(startOfUtcDay(from)), new Date(startOfUtcDay(to) + DAY));
+  // With its last good copy behind it (§447): a subscribed calendar that refreshes during an
+  // outage keeps the club's events rather than being told the feed is gone. One copy per
+  // language — the key names the feed, not the day, so the store holds one object, not one a day.
+  const days = (
+    await readWithLastGood(`ics-feed:${known}`, () => cachedPublishedEventsBetween(known, new Date(startOfUtcDay(from)), new Date(startOfUtcDay(to) + DAY)), now)
+  ).value;
   const events = days.filter((event) => event.startsAt.getTime() >= from && event.startsAt.getTime() < to);
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({

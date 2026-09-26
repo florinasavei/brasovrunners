@@ -68,6 +68,7 @@ import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registratio
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import { CLUB_NAME } from "@/theme/brand";
+import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -825,7 +826,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* The downloads above are reads and belong to the Organizer too (§289); saying a
               sheet came out of the printer is a write, so it stays the Administrator's. */}
           {mayManage && bibs.unprinted > 0 && (
-            <Box component="form" action={markBibsPrintedAction}>
+            <Box component="form" action={markBibsPrintedAction} data-action-key={actionKeyOf(markBibsPrintedAction)}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={filters.eventId} />
               <input type="hidden" name="only" value="unprinted" />
@@ -840,7 +841,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           )}
           {mayManage && bibs.unprinted < bibs.total && (
-            <Box component="form" action={markBibsPrintedAction}>
+            <Box component="form" action={markBibsPrintedAction} data-action-key={actionKeyOf(markBibsPrintedAction)}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={filters.eventId} />
               <input type="hidden" name="printed" value="0" />

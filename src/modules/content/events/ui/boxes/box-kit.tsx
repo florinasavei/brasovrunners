@@ -22,10 +22,11 @@ export type BoxProps = {
   /** The people a change here reaches, when the box is one that reaches them (§350). */
   risk?: RiskMark | null;
   /**
-   * Whether the club has an approved group-run declaration in force for each surface (§393): the
-   * route card's "Declarație opțională" is disabled for a surface without one. Absent: none.
+   * The approved group-run declaration in force for each surface, or null (§393): the rules card's
+   * "Declarație opțională" is disabled for a surface without one, and names the version of one that
+   * has it (§448). Absent: none.
    */
-  groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", boolean>;
+  groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", { version: number } | null>;
   /**
    * The card's heading as the page's section it writes (§406): "4 · Data și ora — apare pe
    * pagină", from `pageFlow`. Absent: the card's own name alone.

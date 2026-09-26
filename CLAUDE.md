@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.02-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.03-2026-09-26 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.02-2026-09-26`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.03-2026-09-26`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -183,7 +183,7 @@ sections and in `CHANGELOG.md`.
 
 **Email**
 
-- 24 message types (`email_outbox.email_message_type`) — the organizer's **update notice**, sent only when they tick "Anunță participanții", and the **cancellation** with its reason are the newest; a cancelled event goes quiet (§331) — bilingual by default, one branded
+- 27 message types (`email_outbox.email_message_type`; the newsletter, its confirmation and the new-event alert since §445) — the organizer's **update notice**, sent only when they tick "Anunță participanții", and the **cancellation** with its reason are the newest; a cancelled event goes quiet (§331) — bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
   more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
@@ -222,7 +222,7 @@ sections and in `CHANGELOG.md`.
   first, which cancelling never does (§33, §44, §67, §88); "Trimite acum" within the allowance (§80). The race-day desk on a phone: scan or
   type, confirm on paper, give a place, a number, check in, walk-ins (§67); the desk row names
   a minor's parent (§108).
-- **What wakes the database, and the brakes on it** (the bill is time awake, §327): anonymous public
+- **What wakes the database, and the brakes on it** (the metered figure, the budget governor and the suspended mode: §447) (the bill is time awake, §327): anonymous public
   traffic reads rows from Next's data cache, expired by every write that changes them (§333); a job
   ping with nothing due answers without the database, and the Administrator may set a minimum
   interval between real runs on `/admin/tasks` → Costuri (§334); the "Limitele bazei de date" card
@@ -322,6 +322,7 @@ sections and in `CHANGELOG.md`.
 - **Batch 24 (2026-09-25, `BR-V2.00`):** the five legal templates, the paper form and the signing page rewritten per the counsel review — informed acceptance of risk within the law (Codul civil art. 1355), the family flow allowed, minors split at 14, no identity number on a group-run declaration, accurate processors and retention, «un părinte sau tutore» (§418) · the emails per the review — the data's source and the link's life on a family registration, the offer's deadline, masked identity numbers, a guardian's greeting, a way to withdraw in the update notice, two club copies fewer (§419) · the registration audit's fixes — offers never past their deadline after the close, provisional numbers swept and drawn where the rules say, no settled number for an unverified address, the verification link's true life, a closed registration's declaration link never crashes, the restart keeps the participation window, a misconfigured Turnstile fails open with a health warning, the family link stays live for its window, the desk's counts real only (§420) — migration `0080` (every family link stays live; stale provisional numbers cleared) · an express terms tick that records the accepted version (migration `0081`), an adult on a family link keeps their own consents, the public list's states only under the notice that names them and for a club-set period, emergency contacts purged at seven days (§421).
 - **Hotfix (2026-09-26, `BR-V2.01`):** the registration form's race-rules box sits inside the read button and is required, a live «Mai lipsesc:» list above the send button names every missing thing with a link to it, the read-to-the-end gate re-measures itself, one asterisk on the repeat-email label — the owner's QA morning, 2026-09-26 (§422).
 - **Batch 25 (2026-09-26, `BR-V2.02`):** «Publică» on a draft's own editor in one press, as «Creează și publică» does (§423) · the «Filtre» button and its boxes are small 24-px chips inside their 44-px tap targets (§424) · the registration's page and the export say which terms version was accepted and when; a staff entry says «pe hârtie» (§425) · `yarn ship` judges settled checks, `docs:land` refuses blanks and a fixer's housekeeping, dropped indexes and constraints are contracts, the `next dev` walk runs nightly on qa (§426) · the contact form, self-unregistration and the signed declaration say their outcome in a toast through §384's flash, mounted only where a flow lands (§427) · the night pill says «Noapte» with a crescent, the sunset proven to the minute against reference times (§428) · the card's weather pill sits last among the route pills, with an umbrella when rain is likely (§429) · an Administrator button gives the pictures uploaded before §414 their ladder, in batches, idempotent (§430) · the register form’s round-two follow-ups over the hotfix — the «open and read» words only for an event with rules, the no-JavaScript render test.
+- **Batch 26 (2026-09-26, `BR-V2.03`):** chore/ci-e2e-sharded (§431) · citizenship is required on the form, «Română» by default (§432) · the backoffice asks a duration as hours and minutes (§433) · albums outside events and a public gallery page (§434) · a `.com` renewal row on `/admin/tasks` (§435) · a backoffice save blocked by a corporate proxy falls back to a plain form post and says so; `/admin/network` names what IT must allow (§436) · the picture upload offers Minimă / Medie / Mare / Originală and shows the picture's dimensions and weight (§437) · `/admin/tasks` lands on «Club» and gains «De făcut», the club's shared checklist pre-filled with Amalia's and Dani's lists (§438) · every time reads 24-hour in both languages through the one date helper (§439) · the group-run self-declaration has a minimum age (§440) · the backoffice guide rewritten per role as numbered steps with the exact button words (§441) · the contact page shows the club's address(es) by a setting (§442) · every email picks Mailgun or the club's Gmail by a setting per message group, Gmail's daily cap and pace as settings; migration `0088` (§443) · spare bibs for on-the-spot entries: pre-printed numbers from a range reserved for the desk, an empty name line, the desk suggests the next spare (§444) · the newsletter with opt-in topics and new-event alerts: a pop-up on the contact page, double opt-in, a manage/unsubscribe link on every message, a composer on `/admin/emails`, a notice paragraph, migration `0082` (§445) · registering another person on the same address is one confirmation from the inbox — the second form with a different name AND birth date is kept as a pending entry and the email lists the address's registrations with «Confirm că înscriu altă persoană»; migration `0084` (§446) · the compute figures read what Neon meters; a budget governor throttles jobs and public reads as the month runs ahead; a suspended database is served from the saved copy with a banner (§447) · the event's status lives in the editor's first card and the declaration selector under «Regulament» (§448).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -415,7 +416,7 @@ it is the authority, this is the summary):
     minute 45 on "prod maintenance day", and QA's „Cât de des verifică platforma" → 2 ore. The
     Neon limits themselves are set (production 100 CU-hours a month, QA 30).
 
-14. **The privacy notice, once more** — the template now says a person may register someone else on their own address, entering
+14. **The privacy notice, once more** — the template now says a person may register someone else on their own address, entering Since `BR-V2.03` (§445) the template also describes the newsletter and its topics — approve the notice after this release, once, to cover everything.
     that person's data on their behalf and receiving their messages (§389); the notice in force on production says none of it until
     the club approves a new version from the platform's text (`/admin/legal`, the same click as item 8).
     Since `BR-V1.96` (§393, §396) the template also describes the optional group-run declaration and the public list's states — one new version covers all of it.

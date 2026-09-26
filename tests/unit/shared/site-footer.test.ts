@@ -58,6 +58,13 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
   };
 });
 
+// «Adresa de contact afișată» (§442): the list the footer reads, the environment's mailbox by
+// default; one test switches it to "both" to see the Gmail first and «sau» between them.
+let shownAddresses: string[] = ["contact@example.org"];
+vi.mock("@/modules/public-cache/reads", () => ({
+  cachedShownContactAddresses: async () => shownAddresses,
+}));
+
 const { NextIntlClientProvider } = await import("next-intl");
 const messages = (await import("../../../messages/ro.json")).default;
 const { default: SiteFooter } = await import("@/shared/ui/SiteFooter");
@@ -377,6 +384,23 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(contact).toMatch(/<a href="\/ro\/contact"[^>]*>Scrie-ne:<\/a>/);
     expect(contact).toMatch(/<a[^>]*href="mailto:contact@example.org"[^>]*>contact@example.org<\/a>/);
     expect(markup.split("contact@example.org").length - 1, "the address once in the footer, as the mail link").toBe(2);
+  });
+
+  it("shows the club's Gmail and the mailbox, «… sau …», when the club chose both (§442)", async () => {
+    shownAddresses = ["club@gmail.example.test", "contact@example.org"];
+    try {
+      const markup = markupOnly(await renderFooter());
+      const contact = markup.slice(markup.indexOf('data-testid="footer-contact"'), markup.indexOf('data-testid="footer-build-badge-panel"'));
+      expect(contact).toMatch(
+        /href="mailto:club@gmail\.example\.test"[^>]*>club@gmail\.example\.test<\/a>[\s\S]*<span>sau<\/span>[\s\S]*href="mailto:contact@example\.org"/,
+      );
+      shownAddresses = [];
+      const none = markupOnly(await renderFooter());
+      expect(none).not.toContain("mailto:");
+      expect(none).toMatch(/<a href="\/ro\/contact"[^>]*>Scrie-ne<\/a>/);
+    } finally {
+      shownAddresses = ["contact@example.org"];
+    }
   });
 
   it("draws the build stamp as a small outlined chip in both places, the name and the title on its 44px box", async () => {

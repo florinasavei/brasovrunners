@@ -157,6 +157,20 @@ export const envSchema = z
     VERCEL_TEAM_ID: z.string().min(1).optional(),
 
     /**
+     * The club's domain's renewal reminder (§435): the day it was registered, `YYYY-MM-DD`, and
+     * how many years have been paid from that day **in total** — renewing for three more years
+     * after the first is `4`. Their sum is the expiry `/admin/tasks` counts down to (amber at 90
+     * days, red at 30) and `/api/health` warns about at 30. Not secrets and not the domain's
+     * name: the name is `APP_BASE_URL`'s, so a change of domain changes these two and nothing
+     * else. Unset, the row says the date is not known.
+     */
+    DOMAIN_REGISTERED_ON: z.preprocess((value) => (value === "" ? undefined : value), z.iso.date().optional()),
+    DOMAIN_RENEWAL_YEARS: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.coerce.number().int().min(1).max(10).default(1),
+    ),
+
+    /**
      * The club's real site, for the "this is not the real site" banner to link to (§7.5).
      *
      * Deliberately not derived from `APP_BASE_URL`: that is *this* environment's host, and the

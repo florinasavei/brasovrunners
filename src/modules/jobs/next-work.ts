@@ -10,6 +10,7 @@ import { declarationLastCallDueAt, eventReminderDueAt } from "@/modules/notifica
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
 import { emailLinkLapseSql } from "@/modules/registrations/repository";
+import { nextFamilyEntryLapse } from "@/modules/registrations/family-entries";
 import type { JobName } from "./schedule";
 
 /**
@@ -218,7 +219,10 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     return [opensAt && opensAt > now ? opensAt : null, closesAt && closesAt > now ? closesAt : null];
   });
 
-  return earliest([emailLapses, toDate(holds?.next), ...eventInstants, ...lateReminders, ...interestInstants]);
+  // `purgeLapsedFamilyEntries` (§446): another person's kept form, deleted once its window passes.
+  const familyLapse = await nextFamilyEntryLapse(db, now);
+
+  return earliest([emailLapses, toDate(holds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse]);
 }
 
 /**

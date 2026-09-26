@@ -15,6 +15,7 @@ import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
 import { fillIn } from "@/shared/forms/fill-in";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
+import { orderGuideSections } from "@/modules/staff-identity/domain/guide-order";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
@@ -25,15 +26,35 @@ export const dynamic = "force-dynamic";
 /**
  * `roles`: whose section this is; the signed-in role's come first and open (§103). `key`: the one
  * section this page adds to, "family" (§389) — a last line while the flow is not switched on yet.
+ * `tasks`: one job each, as numbered steps (§441) — "every task as numbered steps with the exact
+ * button words", for the colleagues who run the backoffice while the owner is away.
  */
-type GuideSection = { title: string; who: string; steps: string[]; roles: StaffRole[]; key?: string };
+type GuideTask = { title: string; steps: string[] };
+type GuideSection = { title: string; who: string; tasks: GuideTask[]; roles: StaffRole[]; key?: string };
 
 /**
- * The platform, explained to the people who use it (BR-REQ-060-01 criterion 6): the volunteer
- * with a phone first, then the participant's side of the same process, then organizers and
- * administrators. Every staff session may read it — a guide that only the people who already
- * know the platform can open is not one — and it is text from the catalogue, so a wording
- * correction is a catalogue edit and never a deploy of code.
+ * «Words like these» are the screen's own — a button, a tab, a card, a field — and are drawn
+ * bold, so a reader looking at the screen finds them at a glance. `guide-words.test.ts` holds
+ * every one of them to a string the backoffice actually shows, in each language.
+ */
+function withScreenWords(text: string) {
+  return text.split(/(«[^»]+»)/).map((part, index) =>
+    part.startsWith("«") && part.endsWith("»") ? (
+      <Box component="strong" key={index} sx={{ fontWeight: 700 }}>
+        {part}
+      </Box>
+    ) : (
+      part
+    ),
+  );
+}
+
+/**
+ * The platform, explained to the people who use it (BR-REQ-060-01 criteria 8 and 34): the first
+ * steps, the desk, each role's jobs, then the participant's side of the same process. Every staff
+ * session may read it — a guide that only the people who already know the platform can open is
+ * not one — and it is text from the catalogue, so a wording correction is a catalogue edit and
+ * never a deploy of code.
  */
 export default async function GuidePage({ params }: Props) {
   const { locale } = await params;
@@ -44,10 +65,10 @@ export default async function GuidePage({ params }: Props) {
   const t = await getTranslations("Admin");
   const all = t.raw("guide.sections") as GuideSection[];
   // The reader's own section first — the owner: "a how-to page depending on each role" — then
-  // the colleagues' in the catalogue's order, folded. A stable partition, not a sort.
-  const mine = all.filter((section) => section.roles.includes(staffUser.role));
-  const others = all.filter((section) => !section.roles.includes(staffUser.role));
-  const sections = [...mine, ...others];
+  // the colleagues' in the catalogue's order, folded. A stable partition, not a sort
+  // (`orderGuideSections`, unit-tested per role).
+  const sections = orderGuideSections(all, staffUser.role);
+  const mine = sections.filter((section) => section.roles.includes(staffUser.role));
   /*
     The deadlines the steps name — "{hold}", "{offer}", "{checkin}" — are the club's (§377), filled
     into the catalogue's raw lines here, since `t.raw` hands the sentences over unformatted.
@@ -62,8 +83,6 @@ export default async function GuidePage({ params }: Props) {
   const [{ cap }, familyOpen] = await Promise.all([readAddressCap(db), familyRegistrationOpen(db)]);
   const people = t(`emails.addressCap.people.${countForm(cap.registrationsPerAddress, locale)}`, { count: cap.registrationsPerAddress });
   const values = { confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon, people };
-  const stepsOf = (section: GuideSection) =>
-    section.key === "family" && !familyOpen ? [...section.steps, t("guide.familyPending")] : section.steps;
 
   return (
     <Stack spacing={3}>
@@ -81,6 +100,13 @@ export default async function GuidePage({ params }: Props) {
       <Typography variant="body2">
         <Link href={{ pathname: "/admin/emails", hash: "participant-emails" }}>{t("emails.link")}</Link>
       </Typography>
+      {/*
+        Troubleshooting (§436): a save that fails only on an office laptop is the office network,
+        and the check names what to ask IT to allow.
+      */}
+      <Typography variant="body2" data-testid="guide-network">
+        {t("guide.network")} <Link href="/admin/network">{t("guide.networkLink")}</Link>
+      </Typography>
       {sections.map((section, index) => (
         <Box key={index} component="details" open={index < Math.max(1, mine.length)} sx={BOXED_DISCLOSURE_SX}>
           <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -89,13 +115,31 @@ export default async function GuidePage({ params }: Props) {
               {section.who}
             </Typography>
           </Typography>
-          <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-            {stepsOf(section).map((step, stepIndex) => (
-              <Typography component="li" variant="body1" key={stepIndex}>
-                {fillIn(step, values)}
-              </Typography>
+          {/*
+            The section's jobs, each folded to its title: an open section reads as the list of
+            what it covers, and one press shows that job's numbered steps.
+          */}
+          <Stack spacing={1}>
+            {section.tasks.map((task, taskIndex) => (
+              <Box key={taskIndex} component="details" sx={BOXED_DISCLOSURE_SX} data-testid="guide-task">
+                <Typography component="summary" variant="body1" sx={{ fontWeight: 500 }}>
+                  {task.title}
+                </Typography>
+                <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
+                  {task.steps.map((step, stepIndex) => (
+                    <Typography component="li" variant="body1" key={stepIndex}>
+                      {withScreenWords(fillIn(step, values))}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
             ))}
-          </Box>
+            {section.key === "family" && !familyOpen && (
+              <Typography variant="body2" color="text.secondary">
+                {t("guide.familyPending")}
+              </Typography>
+            )}
+          </Stack>
         </Box>
       ))}
     </Stack>

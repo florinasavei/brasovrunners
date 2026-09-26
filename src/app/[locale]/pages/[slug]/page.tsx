@@ -14,6 +14,7 @@ import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH, PROSE_MEASURE } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -27,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
 
-  const page = await cachedPublishedPageBySlug(locale, slug);
+  // The head says nothing rather than failing the page while the database is away (§447): the
+  // body's own read decides between its last good copy and the resting page.
+  const page = await readOrWhileAway(() => cachedPublishedPageBySlug(locale, slug), undefined);
   if (!page) return {};
 
   return {
@@ -41,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     */
     alternates: pageAlternates(
       locale,
-      slugRouteUrls(env.APP_BASE_URL, "/pages/[slug]", await cachedPublishedPageTranslations(page.id)),
+      slugRouteUrls(env.APP_BASE_URL, "/pages/[slug]", await readOrWhileAway(() => cachedPublishedPageTranslations(page.id), [])),
     ),
     // Shared as an article, with the site's card (`[locale]/opengraph-image.tsx`, §90).
     openGraph: { title: page.seoTitle ?? page.title, description: page.seoDescription ?? undefined, type: "article" },

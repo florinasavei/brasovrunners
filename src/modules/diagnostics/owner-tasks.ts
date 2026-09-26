@@ -15,9 +15,10 @@
  * acts on and a list they scroll past.
  *
  * Rewritten on 2026-09-17 to today's list (`DECISIONS.md` §61): the domain is bought and bound,
- * so "register the domain" is gone, and the `.ro` that follows it in a year is here instead.
+ * so "register the domain" is gone; its renewal is here instead (§435).
  */
 
+import type { DomainRenewal } from "./domain/domain-renewal";
 import { isNeonQuotaNearLimit } from "./domain/neon-limits";
 
 export type TaskOwner = "club" | "developer";
@@ -54,6 +55,7 @@ export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "
 export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
+  | "newsletterNotice"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -66,7 +68,7 @@ export type TaskId =
   | "declarationArchiveMail"
   | "vercelUsage"
   | "contactForm"
-  | "roDomain"
+  | "domainRenewal"
   | "neonLimits";
 
 /**
@@ -76,6 +78,7 @@ export type TaskId =
 export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
+  newsletterNotice: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -88,7 +91,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   declarationArchiveMail: "decision",
   vercelUsage: "account",
   contactForm: "account",
-  roDomain: "decision",
+  domainRenewal: "decision",
   neonLimits: "decision",
 };
 
@@ -107,6 +110,11 @@ export type OwnerTask = {
   text?: string;
   /** The steps array under `items.<id>` to show instead of `how`: fixing a thing is not setting it up. */
   steps?: string;
+  /**
+   * The chip's word under `stateLabel.<label>` in place of `state.<state>`, when the state's colour
+   * is right and its word is not: a domain thirty days from expiry is red, and still works (§435).
+   */
+  label?: "due";
 };
 
 /**
@@ -136,6 +144,11 @@ export type OwnerTaskInputs = {
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
    */
   listStatesDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the newsletter (§445,
+   * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
+   */
+  newsletterDescribed: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -215,14 +228,11 @@ export type OwnerTaskInputs = {
    */
   contactFormConfigured: boolean;
   /**
-   * Does this deployment answer on a `.ro` hostname?
-   *
-   * The owner bought the `.com` on 2026-09-16 and decided a `.ro` follows a year later, both
-   * alive at once (`DECISIONS.md` §55). The only fact the software can read about that is the
-   * hostname it is serving on, so the task is open until `APP_BASE_URL` ends in `.ro` — which
-   * on QA is never, and that is honest: QA is not the club's address.
+   * When the club's domain expires (§435, `domain/domain-renewal.ts`), from `DOMAIN_REGISTERED_ON`
+   * and `DOMAIN_RENEWAL_YEARS`. It replaced §55's `.ro` row: the owner dropped the `.ro` on
+   * 2026-09-26 (one address for search engines) and asked to be reminded to renew the `.com`.
    */
-  roDomainBound: boolean;
+  domainRenewal: DomainRenewal;
   /**
    * This environment's monthly compute-time quota and this period's spend against it, both read
    * from the same Neon project row the consumption panel already fetches (§335) — never a
@@ -266,6 +276,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listStatesNotice", {
       owner: "club",
       state: input.listStatesDescribed ? "done" : "open",
+    });
+    /*
+      The newsletter (§445), the same shape: open, never blocking — nothing is refused, the contact
+      page simply offers no subscription — and done by itself the day a notice naming
+      `{{newsletterTopics}}` takes effect.
+    */
+    push("newsletterNotice", {
+      owner: "club",
+      state: input.newsletterDescribed ? "done" : "open",
     });
   }
 
@@ -384,10 +403,25 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.contactFormConfigured ? "done" : "open",
   });
 
-  // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
-  push("roDomain", {
+  /*
+    The domain's renewal (§435). Never blocking — nobody is refused a registration today — but red
+    (`broken`) from thirty days out and past the day, because a lapsed domain takes the site, every
+    email link and the sending domain down at once; amber (`open`) from ninety; green before that.
+    Unset dates are `open` with their own sentence: a reminder nobody configured reminds nobody.
+    The expiry and the days left reach the sentence through the page's values, never as `detail`.
+  */
+  const renewal = input.domainRenewal;
+  push("domainRenewal", {
     owner: "club",
-    state: input.roDomainBound ? "done" : "open",
+    state:
+      renewal.status === "unknown" || renewal.status === "soon"
+        ? "open"
+        : renewal.status === "ok"
+          ? "done"
+          : "broken",
+    text: renewal.status === "unknown" ? "unknown" : renewal.status === "expired" ? "expired" : undefined,
+    // Red borrows `broken`'s colour and rank, not its word: the site still resolves until the day.
+    label: renewal.status === "urgent" ? "due" : undefined,
   });
 
   /**

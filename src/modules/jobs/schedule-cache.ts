@@ -166,6 +166,17 @@ export async function readPingVerdict(job: JobName, now: Date): Promise<PingVerd
   return decidePing(now, null, floor);
 }
 
+/**
+ * The interval the last real run planned under, from the slots `now` falls in — zero when neither
+ * is there. The health checks add it to what they allow (§447): the budget governor's floor may
+ * have dropped since that run (a new billing period), and the pings are still honouring the plan
+ * it wrote, which is not a stalled scheduler.
+ */
+export async function plannedCadenceMinutes(job: JobName, now: Date): Promise<number> {
+  const [due, floor] = await Promise.all([slot<DueSlot>("due", job, now, dueTags(job)), slot<FloorSlot>("floor", job, now, floorTags)]);
+  return Math.max(due?.cadenceMinutes ?? 0, floor?.cadenceMinutes ?? 0);
+}
+
 /** That a ping arrived, and whether it ran — the first ping of each five minutes, for `/api/health`. */
 export async function recordPing(job: JobName, now: Date, ran: boolean): Promise<void> {
   await slot<PingSlot>("ping", job, now, pingTags, { at: now.toISOString(), ran });

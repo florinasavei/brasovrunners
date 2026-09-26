@@ -156,7 +156,7 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
     it(`${name}: the cards that are not on the page come after, in a group of their own`, () => {
       const offPage = source.indexOf('t("editor.groups.offPage")');
       expect(offPage).toBeGreaterThan(source.indexOf("<StartListBox "));
-      for (const card of ["<StatusBox ", "<PromotionBox ", "<AddressBox "]) {
+      for (const card of ["<PromotionBox ", "<AddressBox "]) {
         expect(source.indexOf(card), `${name}: ${card}`).toBeGreaterThan(offPage);
       }
       expect(source.indexOf('t("editor.groups.page")')).toBeLessThan(source.indexOf("<KindBox "));

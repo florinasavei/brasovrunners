@@ -87,9 +87,21 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
     const answer = (await response.json()) as {
       src: string;
       width: number;
-      stored: { quality: string; encoding: string; width: number; height: number; files: number; bytes: number; totalBytes: number };
+      stored: {
+        quality: string;
+        encoding: string;
+        width: number;
+        height: number;
+        files: number;
+        bytes: number;
+        totalBytes: number;
+        topRung: { width: number; bytes: number } | null;
+      };
     };
     expect(answer.stored).toMatchObject({ quality: "high", encoding: "nearLossless", width: 1080, height: 1350, files: 5 });
+    // The widest smaller copy is told too (§437): 960 under a 1080-pixel master, with its weight.
+    expect(answer.stored.topRung?.width).toBe(960);
+    expect(answer.stored.topRung?.bytes).toBeGreaterThan(0);
     expect(answer.stored.totalBytes).toBeGreaterThan(answer.stored.bytes);
 
     // The address a body carries is the master, as it always was, under a prefix marked as laddered.
@@ -99,6 +111,17 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
     const rung = await readLocalObject(objectKey(prefix, 960));
     expect(rung?.contentType).toBe("image/webp");
     expect((await sharp(rung!.body).metadata()).width).toBe(960);
+  });
+
+  it("takes «Minimă» and «Originală» as the two new words, and says which was stored (§437)", async () => {
+    for (const quality of ["low", "original"] as const) {
+      const response = await uploadBodyPicture(form(await photo(), "start.jpg", quality));
+      expect(response.status, quality).toBe(201);
+      const { stored } = (await response.json()) as { stored: { quality: string; files: number; width: number } };
+      expect(stored.quality).toBe(quality);
+      expect(stored.files).toBe(2 + ladderWidths(stored.width).length);
+    }
+    expect(await db.select().from(mediaAssets)).toHaveLength(2);
   });
 
   it("reads no choice as «Normală», and refuses a value that is neither, writing nothing", async () => {

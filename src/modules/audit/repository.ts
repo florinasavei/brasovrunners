@@ -37,6 +37,8 @@ export type AuditAction =
   | "registration.resend_rate_limited"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"
+  // The desk's spare numbers reserved by a print (§444): the range, never a name.
+  | "registration.bib_spares_reserved"
   /** One number typed by hand, or cleared (BR-REQ-038-01 criterion 7). */
   | "registration.bib_set"
   /**
@@ -135,6 +137,13 @@ export type AuditAction =
    */
   | "event.participant_message_sent"
   /**
+   * A newsletter queued from `/admin/newsletter` (§445): who (the actor), the topic, how many
+   * subscribers and the subject in both languages — never an address, never the body (§12.12).
+   */
+  | "newsletter.sent"
+  /** A subscription removed by an Administrator at the person's written request (§445) — never the address. */
+  | "newsletter.address_withdrawn"
+  /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
    * thing and never the people: the event's title and date, how many registrations went with
@@ -151,10 +160,14 @@ export type AuditAction =
   | "event.repeat_publish_changed"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
+  /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§443): from and to. */
+  | "email_transport.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
   /** The minimum minutes between two real runs of each scheduled job, from and to (§334). */
   | "job_cadence.changed"
+  /** The shares of the Neon quota that turn the month's budget amber and red, from and to (§447). */
+  | "neon_budget_thresholds.changed"
   /** The club's deadlines ("Termene", §377): which ones moved, each from and to. */
   | "deadlines.changed"
   /** How many registrations one address may carry at one event (§389), from and to. */
@@ -173,8 +186,21 @@ export type AuditAction =
   | "neon_limits.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
+  /** «Adresa de contact afișată»: the mailbox, the club's Gmail, or both (§442). */
+  | "shown_contact_address.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
   | "bot_check.changed"
+  /**
+   * The club's checklist «De făcut» on `/admin/tasks` (§438): a line added, reworded, ticked,
+   * unticked, moved or deleted. Entity `platform_setting` `…e00b`; the metadata is the line's id,
+   * its words and its owner (an edit: from and to) — the club's own work, never a participant.
+   */
+  | "club_todo.added"
+  | "club_todo.edited"
+  | "club_todo.done"
+  | "club_todo.reopened"
+  | "club_todo.moved"
+  | "club_todo.deleted"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
@@ -213,7 +239,16 @@ export type RecordAuditInput = {
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
   // that is about a version of the club's own text; `participant` for the one about a person
   // across all their registrations (§322).
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant" | "media_asset";
+  // `newsletter` for a send (its id) or a subscription removed by hand (no id: the row is gone).
+  entityType:
+    | "registration"
+    | "event"
+    | "email_outbox"
+    | "platform_setting"
+    | "legal_document"
+    | "participant"
+    | "media_asset"
+    | "newsletter";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

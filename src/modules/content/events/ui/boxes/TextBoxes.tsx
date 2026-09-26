@@ -18,7 +18,9 @@ import {
 import { missingForPublish, missingInLanguage, type PublishGapBox, storedPublishReader } from "../publish-check";
 import SlugFromTitle from "../SlugFromTitle";
 import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } from "../TranslationFields";
-import { type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
+import { type BoxProps, type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
+import DeclarationCard, { declarationLine } from "./DeclarationCard";
+import type { DeclarationOption } from "./RegistrationBox";
 
 /**
  * The four boxes of the event editor that are only words (§350): the title and summary, the
@@ -175,12 +177,38 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
   );
 }
 
-/** "Regulamentul". */
-export async function RulesBox({ languages, heading }: { languages: readonly LanguageEntry[]; heading?: string }) {
+/**
+ * "Regulamentul", and under its tabs the named card «Declarația pe propria răspundere» (§448): one
+ * place for what a runner signs — a group run's optional self-declaration (§393) or a race's
+ * declaration (§39) — because a declaration is read with the rules. The closed line says both:
+ * «RO: completat · EN: completat · declarația v3». Opens itself while a saved event that registers
+ * on the site has no declaration chosen.
+ */
+export async function RulesBox({
+  languages,
+  heading,
+  event,
+  mayEditSettings,
+  groupRunDeclarations,
+  declarations,
+}: Pick<BoxProps, "event" | "mayEditSettings" | "groupRunDeclarations"> & {
+  languages: readonly LanguageEntry[];
+  heading?: string;
+  declarations: readonly DeclarationOption[];
+}) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
+  const line = await declarationLine(event, declarations, words);
+  // Awaited, not nested: the element is ready when the box is (`requiredLine` does the same).
+  const declaration = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
   return (
-    <Panel collapsible id="box-rules" title={heading ?? t("editor.boxes.rules.title")} aside={rulesSummary(words, languages.map(summaryOf))}>
+    <Panel
+      collapsible
+      id="box-rules"
+      title={heading ?? t("editor.boxes.rules.title")}
+      aside={[rulesSummary(words, languages.map(summaryOf)), line.text].filter(Boolean).join(words.separator)}
+      openWhen={{ attention: line.missing }}
+    >
       <LanguageTabs
         idPrefix="rules"
         languages={languages}
@@ -189,6 +217,7 @@ export async function RulesBox({ languages, heading }: { languages: readonly Lan
         identical={["rules"]}
         render={(entry) => <RulesFields translation={entry.translation} mayEdit={entry.mayEdit} />}
       />
+      {declaration}
     </Panel>
   );
 }

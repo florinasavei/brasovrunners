@@ -23,11 +23,14 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
   const inBox = (box: string, label: string) => `${t(`editor.boxes.${box}.title`)} › ${label}`;
+  // The status is a card inside the first box since §448: its fields are named by both.
+  const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
 
   const labels: Record<string, string> = {
     "event.type": inBox("kind", t("editor.type")),
     "event.surface": inBox("course", t("editor.surface")),
-    "event.eventStatus": inBox("status", t("editor.eventStatus")),
+    // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§448).
+    "event.eventStatus": inStatus(t("editor.boxes.status.completedRefused")),
     "event.timezone": inBox("when", t("editor.timezone")),
     "event.startsAtDate": inBox("when", t("editor.startsAt")),
     "event.startsAtTime": inBox("when", t("editor.startsAt")),
@@ -35,7 +38,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.endsAtTime": inBox("when", t("editor.endsAt")),
     "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
     "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
-    "event.durationMinutes": inBox("when", t("editor.durationMinutes")),
+    // «Durata» as hours and minutes (§433); a refusal of the total names the hours box.
+    "event.durationHours": inBox("when", `${t("editor.duration")} › ${t("editor.durationHours")}`),
+    "event.durationMinutesPart": inBox("when", `${t("editor.duration")} › ${t("editor.durationMinutesPart")}`),
     // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.
     "event.locationName": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
     "event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
@@ -57,7 +62,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.bibStartNumber": inBox("bibs", t("editor.bibStartNumber")),
     "event.bibColour": inBox("bibs", t("editor.bibColour")),
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
-    "event.declarationDocumentId": inBox("conditions", t("editor.declarationDocument")),
+    "event.declarationDocumentId": inBox("rules", `${t("editor.boxes.declaration.title")} › ${t("editor.declarationDocument")}`),
     "event.participantListVisibility": inBox("startList", t("editor.participantList")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
@@ -72,7 +77,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
     "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
     "event.nightOverride": inBox("course", t("editor.night.label")),
-    "event.offersGroupRunDeclaration": inBox("course", t("editor.groupRunDeclaration.label")),
+    "event.offersGroupRunDeclaration": inBox("rules", `${t("editor.boxes.declaration.title")} › ${t("editor.groupRunDeclaration.label")}`),
     "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
     "event.featured": inBox("promotion", t("editor.featured")),
@@ -90,8 +95,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     */
     "notice.noteRo": inBox("save", t("editor.notice.noteRoError", { max: EVENT_NOTICE_TEXT_MAX })),
     "notice.noteEn": inBox("save", t("editor.notice.noteEnError", { max: EVENT_NOTICE_TEXT_MAX })),
-    "cancel.reasonRo": inBox("status", t("editor.notice.cancelReasonRoError", { max: EVENT_NOTICE_TEXT_MAX })),
-    "cancel.reasonEn": inBox("status", t("editor.notice.cancelReasonEnError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "cancel.reasonRo": inStatus(t("editor.notice.cancelReasonRoError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "cancel.reasonEn": inStatus(t("editor.notice.cancelReasonEnError", { max: EVENT_NOTICE_TEXT_MAX })),
     "repeat.cadence": inBox("recurrence", t("editor.repeatCadence")),
     "repeat.until": inBox("recurrence", t("editor.repeatUntil")),
     weekday: inBox("recurrence", t("editor.repeatWeekdays")),

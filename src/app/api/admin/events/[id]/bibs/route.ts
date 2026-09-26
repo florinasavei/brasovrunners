@@ -1,10 +1,12 @@
 import { hasLocale } from "next-intl";
 import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
-import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
+import { shownContactAddresses } from "@/modules/contact/shown-address";
+import { type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
+import { findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { bibPictureUrl } from "@/modules/registrations/bib-design";
@@ -24,7 +26,8 @@ import { isDomainError } from "@/shared/errors/domain-error";
  * a bib carries a participant's name, which is personal data the club holds for the event and
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
- * went to the printer (§264). Omitted, every assigned number.
+ * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
+ * spares instead, blank (§444).
  *
  * **A GET that mutates nothing**, which is why marking a batch printed is a separate press on the
  * registrations list and not something this route does: the sheet has to be openable in a tab,
@@ -69,13 +72,25 @@ export async function GET(
   const layout = url.searchParams.get("layout") === "one" ? ("one" as const) : ("two" as const);
   // The only scope besides a range: the bibs nobody has printed yet (§264).
   const only = url.searchParams.get("only") === "unprinted" ? ("unprinted" as const) : undefined;
+  /*
+    The desk's spares instead of the runners (§444): every number the event reserved for the desk
+    that nobody wears, holds or wore, each with an empty line where the name goes and «înscris la
+    fața locului» under it — the walk-in's name is written on at the desk. Within `from`–`to` when
+    those are given: that is the link the print's banner carries, the range it just reserved. A GET
+    that reserves nothing — the reservation is the print's POST (`reserveSpareBibs`).
+  */
+  const spares = url.searchParams.get("spares") === "1";
 
   const db = getDb();
   const event = await findEventForBibs(db, id, locale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  const rows = await listBibs(db, id, { from, to, only });
+  const rows: BibSheetRow[] = spares
+    ? (await freeSpareBibNumbers(db, id)).free
+        .filter((number) => (from === undefined || number >= from) && (to === undefined || number <= to))
+        .map((bibNumber) => ({ bibNumber, registeredName: null }))
+    : await listBibs(db, id, { from, to, only });
 
   /*
     The club's own pictures, fetched here rather than inside the renderer (§249).
@@ -110,15 +125,18 @@ export async function GET(
     // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
     bandColour: event.bibColour,
     partners: event.coHosts.map((host) => host.name),
-    replyTo: env.EMAIL_REPLY_TO,
+    // The first address the club shows (§442): one line of small print has room for one.
+    replyTo: (await shownContactAddresses(db))[0] ?? null,
     siteUrl: env.APP_BASE_URL,
     generatedAt: now,
     layout,
     design: event.design,
     pictures: { header, sponsors },
+    // Under a spare's empty line (§444), in the sheet's language.
+    ...(spares ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
   });
 
-  const suffix = `${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only ? "-unprinted" : ""}${layout === "one" ? "-one-per-page" : ""}`;
+  const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${layout === "one" ? "-one-per-page" : ""}`;
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {

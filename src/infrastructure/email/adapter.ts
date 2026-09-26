@@ -39,7 +39,16 @@ export type OutgoingEmail = {
   idempotencyKey: string;
   /** Files carried with the message — the signed declaration (§95). Rendered at send time, never stored in the outbox. */
   attachments?: EmailAttachment[];
+  /**
+   * The road the club chose for this message's group (§443). A wish, not an order: the sender
+   * takes Mailgun's road whenever Gmail is not configured, is at its daily cap, or failed. Absent
+   * means Mailgun.
+   */
+  transport?: EmailTransportName;
 };
+
+/** The two roads out (§443): the provider's HTTP API, or the club's own Gmail over SMTP. */
+export type EmailTransportName = "mailgun" | "gmail";
 
 export type EmailAttachment = { filename: string; contentType: string; data: Buffer };
 
@@ -66,11 +75,40 @@ export type EmailAttachment = { filename: string; contentType: string; data: Buf
  * is stored — never a body, an address, or an action token (§14.5).
  */
 export type SendResult =
-  | { outcome: "sent"; providerMessageId: string }
-  | { outcome: "transient_failure"; error: string }
+  | {
+      outcome: "sent";
+      providerMessageId: string;
+      /** Which road carried it (§443), set by the sender; the outbox stores it. Absent is Mailgun. */
+      transport?: EmailTransportName;
+      /**
+       * How many recipients the send reached (§443): the address plus every copy transmitted, 0 when
+       * captured. Set by the sender; Gmail's cap is counted in recipients, as Google counts them.
+       */
+      recipients?: number;
+      /**
+       * When the server took the message (§443 review), set by the sender for Gmail: the row's
+       * `sent_at`, which every other sender paces from. Absent is the batch's own time.
+       */
+      acceptedAt?: Date;
+    }
+  | {
+      outcome: "transient_failure";
+      error: string;
+      /**
+       * The connection broke where the server may already have taken the message (a socket error or
+       * a timeout, §443): sending it again by another road could reach the runner twice with the
+       * same link, so the sender does not; the outbox retries it on its own backoff.
+       */
+      mayHaveBeenAccepted?: true;
+    }
   | {
       outcome: "throttled";
       error: string;
+      /**
+       * Held back by Gmail's pace, not refused by anybody (§443): nothing was tried, so the
+       * outbox gives the attempt back rather than spending one of six on a few seconds' wait.
+       */
+      paced?: true;
       /**
        * When the provider's allowance is expected back. The outbox schedules the next attempt
        * for then rather than applying its own backoff. Absent means "the adapter does not

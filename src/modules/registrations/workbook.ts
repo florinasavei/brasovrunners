@@ -1,4 +1,6 @@
 import writeExcelFile from "write-excel-file/node";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import type { RegistrationCsvRow } from "./csv";
 import { raceNumberOf } from "./domain/race-number";
 
@@ -55,6 +57,18 @@ export type RegistrationSheetRow = Omit<
 const bold = (value: string) => ({ value, fontWeight: "bold" as const });
 
 /**
+ * A timestamp as the club's clock reads it (§439). An Excel date cell has no zone: the writer
+ * turns a `Date` into a serial from its UTC fields, so 19:00 in Brașov opened as 16:00. The cell
+ * is handed the club's own wall clock instead, and the format `dd.mm.yyyy hh:mm` shows it on the
+ * 24-hour clock — Excel's `hh` is 24-hour whenever the format has no `AM/PM`.
+ */
+function onClubClock(at: Date | null): Date | null {
+  return at ? new Date(`${toWallTimeInput(at, CLUB_TIME_ZONE)}:00.000Z`) : null;
+}
+
+const STAMP_FORMAT = "dd.mm.yyyy hh:mm";
+
+/**
  * The columns, in the order a start list is read: who, then what they entered as, then the
  * facts race morning needs, then the timestamps nobody sorts by but everybody eventually asks
  * about. `id` is first and narrow: it is the handle a re-import matches on, and it is the one
@@ -92,15 +106,15 @@ const COLUMNS: Array<{
   { header: "Email", width: 30, cell: (row) => ({ value: row.email, type: String }) },
   { header: "Identity document", width: 18, cell: (row) => ({ value: row.idDocument, type: String }) },
   { header: "Club member (declared)", width: 12, cell: (row) => ({ value: row.clubMemberDeclared, type: Boolean }) },
-  { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: row.fitnessDeclaredAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },
+  { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: onClubClock(row.fitnessDeclaredAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Guardian", width: 24, cell: (row) => ({ value: row.guardianName, type: String }) },
   // Beside the guardian's name (§330): a minor's declaration carries both documents.
   { header: "Guardian identity document", width: 18, cell: (row) => ({ value: row.guardianIdDocument, type: String }) },
   { header: "Strava", width: 30, cell: (row) => ({ value: row.stravaUrl, type: String }) },
   { header: "Instagram", width: 18, cell: (row) => ({ value: row.instagramHandle, type: String }) },
-  { header: "Submitted", width: 18, cell: (row) => ({ value: row.submittedAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },
-  { header: "Confirmed", width: 18, cell: (row) => ({ value: row.confirmedAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },
-  { header: "Checked in", width: 18, cell: (row) => ({ value: row.checkedInAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },
+  { header: "Submitted", width: 18, cell: (row) => ({ value: onClubClock(row.submittedAt), type: Date, format: STAMP_FORMAT }) },
+  { header: "Confirmed", width: 18, cell: (row) => ({ value: onClubClock(row.confirmedAt), type: Date, format: STAMP_FORMAT }) },
+  { header: "Checked in", width: 18, cell: (row) => ({ value: onClubClock(row.checkedInAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Email bounced", width: 12, cell: (row) => ({ value: row.emailBounced, type: Boolean }) },
   /*
     The terms the form accepted expressly (§421), the same two columns as the CSV (§425), last so

@@ -8,6 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
+import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { updateDeadlines } from "@/modules/deadlines/deadlines";
@@ -16,6 +17,7 @@ import { DEADLINE_KEYS } from "@/modules/deadlines/domain/deadlines";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
+import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -71,6 +73,50 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
 }
 
 /**
+ * "Prin ce pleacă emailurile" (§443): the road per group, Gmail's cap, pace and choice at the cap, the overflow. The
+ * plan's gate and shape: Administrator at the door, the service asserting the role again and
+ * validating every field, a refusal returned with the boxes as typed (§315).
+ */
+export async function updateEmailTransportAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/emails" });
+  const choice = (name: string): unknown => form.get(name);
+  const whole = (name: string): number => {
+    const value = form.get(name);
+    if (typeof value !== "string" || value.trim() === "") return Number.NaN;
+    return Number(value);
+  };
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateEmailTransport(
+      getDb(),
+      actor,
+      {
+        groups: {
+          links: choice("links"),
+          confirmations: choice("confirmations"),
+          reminders: choice("reminders"),
+          announcements: choice("announcements"),
+          club: choice("club"),
+          newsletter: choice("newsletter"),
+        },
+        gmailDailyCap: whole("gmailDailyCap"),
+        gmailPaceSeconds: whole("gmailPaceSeconds"),
+        atGmailCap: choice("atGmailCap"),
+        overflowToGmail: form.get("overflowToGmail") === "yes",
+      },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "emailTransport" });
+  redirect(`${path}?saved=emailTransport#admin-alert`);
+}
+
+/**
  * "Who receives the contact form's messages" (`DECISIONS.md` §164). The same gate and the same
  * shape as the plan above: Administrator at the door, the service asserting the role again,
  * each address validated there, and the outcome in the query. Two typed lines come in; the
@@ -93,6 +139,31 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
   revalidatePath(path);
   await flashOutcome({ saved: "contactRecipients" });
   redirect(`${path}?saved=contactRecipients#admin-alert`);
+}
+
+/**
+ * «Adresa de contact afișată» (§442): the mailbox, the club's Gmail, or both — shown on the site
+ * and set as every email's Reply-To. Administrator at the door, the service asserting it again.
+ */
+export async function updateShownContactAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/emails" });
+  const gmail = form.get("gmail");
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateShownContactAddress(
+      getDb(),
+      actor,
+      { mode: form.get("mode"), gmail: typeof gmail === "string" ? gmail : null },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "shownContactAddress" });
+  redirect(`${path}?saved=shownContactAddress#admin-alert`);
 }
 
 /**

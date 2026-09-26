@@ -14,6 +14,7 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
 import { isLegalDocumentKey, LEGAL_TEMPLATES, templatePrefill } from "@/modules/legal-documents/templates/catalogue";
 import { clubFactsFromEnv, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
+import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { env } from "@/shared/config/env";
 import LegalDocumentForm, {
   type LegalDocumentFormValues,
@@ -77,7 +78,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   const fromTemplate = template && isLegalDocumentKey(template) ? LEGAL_TEMPLATES[template] : undefined;
   // The facts the deployment knows are written in before the club reads (§132): the legal
   // name, the CIF and the seat from the environment, the contact address every email names.
-  const facts = clubFactsFromEnv(env);
+  // The contact address as the club chose to show it (§442), «a sau b» when both.
+  const facts = clubFactsFromEnv(env, await shownContactAddresses(getDb()));
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
     : fromTemplate && template && isLegalDocumentKey(template)

@@ -1,11 +1,13 @@
 import { and, asc, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
+import { newsletterSends } from "@/db/schema/newsletter";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { readNewsletterWords } from "@/modules/newsletter/domain/message";
 import { awaitingSettledNumber } from "@/modules/registrations/bibs";
 import {
   AUTOMATIC_SEND_KEYS,
@@ -19,6 +21,8 @@ import {
   participationConfirmationDueAt,
   registrationOpenedDueAt,
 } from "./domain/automatic-sends";
+import { BULK_MESSAGE_TYPES } from "./domain/bulk";
+import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { selectDeclarationCandidates, selectReminderCandidates } from "./event-mail";
 
 /**
@@ -42,6 +46,12 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * "here is your race number" when registration closes (§214), and "registration is open" to the
  * addresses left on the event's page (§146).
  *
+ * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
+ * is queued and not yet sent — the reserve (`domain/bulk.ts`) may hold it until the allowance
+ * comes back, a day or a month — one line per send and release instant, with how many subscribers
+ * it goes to. Listed whatever the horizon: it is in the outbox already, and a month's wait is
+ * exactly what the club needs to see.
+ *
  * **What is not:** anything a person triggers — the organizer's message, the update notice, the
  * cancellation and the thank-you, which is sent by an Administrator (§82, never automatic) — and
  * the answers to a runner's own click (the link, the confirmation, "you are on the list"): those
@@ -54,14 +64,24 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * Reads only, on the page's own request; no job, no cache (§334: nothing here wakes the database).
  */
 
-export type AutomaticSend = "reminder" | "lastCall" | "participation" | "nextInLine" | "bibs" | "registrationOpened";
+export type AutomaticSend =
+  | "reminder"
+  | "lastCall"
+  | "participation"
+  | "nextInLine"
+  | "bibs"
+  | "registrationOpened"
+  // The subscribers' sends, already queued (§445).
+  | "newsletter"
+  | "newEventAlert";
 
 export type ForecastRow = {
   /** When the job will send it: the instant it becomes due (its next run after that), never before `now`. */
   at: Date;
   /** Already due and not yet queued: it goes at the job's next run. */
   overdue: boolean;
-  eventId: string;
+  /** The event it is about; null for a newsletter, which is about none. */
+  eventId: string | null;
   /** The event's title in each language it has; null for a language without a translation. */
   eventTitle: { ro: string | null; en: string | null };
   /** The event's own zone, in which the moment is read (§349). */
@@ -74,6 +94,10 @@ export type ForecastRow = {
   testRecipients: number;
   /** The registrations it would go to, real and test, when it goes to registrations. */
   registrationIds: string[];
+  /** A subscribers' send (§445): its id, a newsletter's subject, and whether the reserve holds it until `at`. */
+  sendId?: string;
+  subject?: { ro: string; en: string } | null;
+  held?: boolean;
 };
 
 export const FORECAST_HORIZON_DAYS = 14;
@@ -87,10 +111,21 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
   nextInLine: "WAITLIST_SPOT_OFFER",
   bibs: "BIB_ASSIGNED",
   registrationOpened: "REGISTRATION_OPENED",
+  newsletter: "NEWSLETTER",
+  newEventAlert: "NEW_EVENT_ALERT",
 };
 
-/** The order of sends due at one instant: the order a run of the job queues them in. */
-const RUN_ORDER: AutomaticSend[] = ["nextInLine", "bibs", "reminder", "lastCall", "participation", "registrationOpened"];
+/** The order of sends due at one instant: the order a run of the job queues them in — the subscribers' last (`domain/bulk.ts`). */
+const RUN_ORDER: AutomaticSend[] = [
+  "nextInLine",
+  "bibs",
+  "reminder",
+  "lastCall",
+  "participation",
+  "registrationOpened",
+  "newEventAlert",
+  "newsletter",
+];
 
 type Kind = "REAL" | "TEST";
 type Due = { at: Date; eventId: string; send: AutomaticSend; registrationId?: string; kind?: Kind; count?: number };
@@ -275,7 +310,8 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     if (inHorizon(at)) pending.push({ at, eventId: row.eventId, send: "registrationOpened", count: Number(row.addresses) });
   }
 
-  if (pending.length === 0) return [];
+  const bulk = await waitingSubscriberSends(db, now);
+  if (pending.length === 0 && bulk.length === 0) return [];
 
   // One row per event, send and instant.
   type Group = { at: Date; eventId: string; send: AutomaticSend; recipients: number; testRecipients: number; registrationIds: string[] };
@@ -293,8 +329,10 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     grouped.set(key, row);
   }
 
-  const eventIds = [...new Set([...grouped.values()].map((row) => row.eventId))];
-  const [zones, titles] = await Promise.all([
+  const eventIds = [
+    ...new Set([...[...grouped.values()].map((row) => row.eventId), ...bulk.flatMap((row) => (row.eventId ? [row.eventId] : []))]),
+  ];
+  const [zones, titles] = eventIds.length === 0 ? [[], []] : await Promise.all([
     db.select({ id: events.id, timezone: events.timezone }).from(events).where(inArray(events.id, eventIds)),
     db
       .select({ eventId: eventTranslations.eventId, locale: eventTranslations.locale, title: eventTranslations.title })
@@ -309,7 +347,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     titleOf.set(row.eventId, entry);
   }
 
-  return [...grouped.values()]
+  const automatic: ForecastRow[] = [...grouped.values()]
     .filter((row) => row.recipients + row.testRecipients > 0)
     .map((row) => ({
       at: row.at,
@@ -322,9 +360,90 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       recipients: row.recipients,
       testRecipients: row.testRecipients,
       registrationIds: row.registrationIds.sort(),
-    }))
-    .sort(
-      (a, b) =>
-        a.at.getTime() - b.at.getTime() || RUN_ORDER.indexOf(a.send) - RUN_ORDER.indexOf(b.send) || a.eventId.localeCompare(b.eventId),
-    );
+    }));
+  const subscribers: ForecastRow[] = bulk.map((row) => ({
+    at: row.at,
+    overdue: row.at.getTime() <= now.getTime(),
+    eventId: row.eventId,
+    eventTitle: row.eventId ? (titleOf.get(row.eventId) ?? { ro: null, en: null }) : { ro: null, en: null },
+    zone: row.eventId ? (zoneOf.get(row.eventId) ?? CLUB_TIME_ZONE) : CLUB_TIME_ZONE,
+    type: TYPE_OF[row.send],
+    send: row.send,
+    recipients: row.recipients,
+    testRecipients: 0,
+    registrationIds: [],
+    sendId: row.sendId,
+    subject: row.subject,
+    held: row.held,
+  }));
+
+  return [...automatic, ...subscribers].sort(
+    (a, b) =>
+      a.at.getTime() - b.at.getTime() ||
+      RUN_ORDER.indexOf(a.send) - RUN_ORDER.indexOf(b.send) ||
+      (a.eventId ?? "").localeCompare(b.eventId ?? "") ||
+      (a.sendId ?? "").localeCompare(b.sendId ?? ""),
+  );
+}
+
+type SubscriberSend = {
+  at: Date;
+  held: boolean;
+  send: "newsletter" | "newEventAlert";
+  sendId: string;
+  eventId: string | null;
+  subject: { ro: string; en: string } | null;
+  recipients: number;
+};
+
+/**
+ * The newsletters and new-event alerts in the outbox and not yet sent (§445), one line per send and
+ * release instant: when the reserve lets them go (`next_attempt_at`, the allowance's reset for a
+ * held row; the job's next run for one never tried), and how many subscribers — the club's own copy
+ * of the send is not a subscriber and is left out of the count.
+ */
+async function waitingSubscriberSends<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<SubscriberSend[]> {
+  const sendId = sql<string | null>`${emailOutbox.payloadJson}->>'sendId'`;
+  const eventId = sql<string | null>`${emailOutbox.payloadJson}->>'eventId'`;
+  const rows = await db
+    .select({
+      type: emailOutbox.messageType,
+      sendId,
+      eventId,
+      nextAttemptAt: emailOutbox.nextAttemptAt,
+      subscribers: sql<number>`count(*) FILTER (WHERE ${emailOutbox.payloadJson}->>${CLUB_COPY_FLAG} IS DISTINCT FROM 'true')::int`,
+    })
+    .from(emailOutbox)
+    .where(and(inArray(emailOutbox.status, ["PENDING", "PROCESSING"]), inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES])))
+    .groupBy(emailOutbox.messageType, sendId, eventId, emailOutbox.nextAttemptAt);
+
+  const merged = new Map<string, SubscriberSend>();
+  for (const row of rows) {
+    if (!row.sendId || Number(row.subscribers) === 0) continue;
+    const held = row.nextAttemptAt !== null && row.nextAttemptAt.getTime() > now.getTime();
+    const at = held && row.nextAttemptAt ? row.nextAttemptAt : now;
+    const key = `${row.sendId}|${at.getTime()}`;
+    const entry = merged.get(key) ?? {
+      at,
+      held,
+      send: row.type === "NEWSLETTER" ? ("newsletter" as const) : ("newEventAlert" as const),
+      sendId: row.sendId,
+      eventId: row.type === "NEW_EVENT_ALERT" ? row.eventId : null,
+      subject: null,
+      recipients: 0,
+    };
+    entry.recipients += Number(row.subscribers);
+    merged.set(key, entry);
+  }
+  const entries = [...merged.values()];
+  const newsletterIds = [...new Set(entries.filter((entry) => entry.send === "newsletter").map((entry) => entry.sendId))];
+  if (newsletterIds.length > 0) {
+    const sends = await db
+      .select({ id: newsletterSends.id, subject: newsletterSends.subject, body: newsletterSends.body })
+      .from(newsletterSends)
+      .where(inArray(newsletterSends.id, newsletterIds));
+    const subjectOf = new Map(sends.map((send) => [send.id, readNewsletterWords(send.subject, send.body)?.subject ?? null]));
+    for (const entry of entries) if (entry.send === "newsletter") entry.subject = subjectOf.get(entry.sendId) ?? null;
+  }
+  return entries;
 }

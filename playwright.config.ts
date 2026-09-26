@@ -48,6 +48,10 @@ export default defineConfig({
    *
    * It costs less than it used to: since §209 a pull request runs one viewport rather than two,
    * so serial-desktop is roughly what parallel-both-projects cost before.
+   *
+   * The wall clock is bought back across machines instead (§431): CI splits the suite with
+   * `--shard=i/n` over several runners, each with its own PostgreSQL seeded from nothing, and
+   * this one worker is per shard — the isolation this comment is about holds inside each.
    */
   workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,

@@ -30,6 +30,8 @@ import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { readWeatherStatus } from "@/modules/weather/source";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
+import { budgetOfInForce, readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
 import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
@@ -160,9 +162,13 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
   const db = getDb();
   const schema = await checkSchemaVersion(db);
+  // The month's budget as the governor reads it (§447), from the same meter as the Neon block below
+  // and against the Administrator's saved thresholds — the governor's own cached reader — so the
+  // colour here is the one Costuri and `/api/health` show.
+  const budget = neon.ok ? await budgetOfInForce(neon.consumption.meter, now) : await readNeonBudget(now);
   const jobs = await Promise.all(
     ["registration-maintenance", "email-outbox"].map((jobName) =>
-      checkJobHealth(db, jobName, now),
+      checkJobHealth(db, jobName, now, budget.effects.jobFloorMinutes),
     ),
   );
   /*
@@ -177,7 +183,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
     ),
   );
   const volume = await readEmailVolumeToday(db, now);
-  const emailHealth = await checkEmailHealth(db, now);
+  const emailHealth = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
   // The weather forecast's service and its last answer (§402): the cached entry the pages read, so no extra request inside the hour.
@@ -244,7 +250,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             ) : (
               <Stack spacing={1.5}>
                 {capturedEmails().map((message) => (
-                  <Box key={message.providerMessageId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                  <Box key={message.providerMessageId} data-testid="captured-email" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {message.subject}
                     </Typography>
@@ -258,6 +264,15 @@ export default async function DevsPage({ params, searchParams }: Props) {
                         </MuiLink>
                       ))}
                     </Stack>
+                    {/* The words themselves, folded (§446): what a journey walked by hand, or an end-to-end spec, reads. */}
+                    <Box component="details" sx={{ mt: 0.5 }}>
+                      <Typography component="summary" variant="caption" sx={{ cursor: "pointer", minHeight: 32, display: "flex", alignItems: "center" }}>
+                        {t("captured.text")}
+                      </Typography>
+                      <Typography component="pre" variant="caption" data-testid="captured-text" sx={{ whiteSpace: "pre-wrap", m: 0 }}>
+                        {message.text}
+                      </Typography>
+                    </Box>
                   </Box>
                 ))}
               </Stack>
@@ -612,6 +627,10 @@ export default async function DevsPage({ params, searchParams }: Props) {
               )}
             </Stack>
           )}
+          {/* The month's budget, the governor's level and effect, and which of Neon's readings the figure above is (§447). */}
+          <Box sx={{ mt: 2 }}>
+            <NeonBudgetPanel locale={locale} reading={budget} />
+          </Box>
           {/*
             Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"). Vercel
             publishes no usage figure to a Hobby project's own code, so this is what the platform

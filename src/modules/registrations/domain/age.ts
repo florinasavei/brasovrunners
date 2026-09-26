@@ -119,6 +119,19 @@ export function ageOn(birthDate: string, day: string): number | null {
 }
 
 /**
+ * Whether a birth date is under an event's minimum age on the event's day (§329) — the one rule
+ * every door asks: the registration's (`minimumAgeRule`) and a group run's self-declaration
+ * (§440). Zero is no minimum, so nobody is under it. A date that cannot be read is not "under":
+ * the caller's own check says what is wrong with it, and an age rule must not add a second,
+ * untrue reason. A birth date after the day is under any minimum.
+ */
+export function isUnderMinimumAge(birthDate: string, eventDay: string, minAge: number): boolean {
+  if (minAge <= 0) return false;
+  const age = ageOn(birthDate, eventDay);
+  return age !== null && age < minAge;
+}
+
+/**
  * The latest birth date that is still `years` old on `day` — the date input's `max` (§321), so
  * the picker cannot offer a date the server would refuse.
  *

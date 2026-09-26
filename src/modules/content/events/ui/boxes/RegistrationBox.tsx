@@ -3,13 +3,13 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
-import { Link } from "@/i18n/navigation";
 import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
   confirmationWindow,
@@ -117,7 +117,6 @@ export default async function RegistrationBox({
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
   const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
-  const needsDeclaration = initialMode === "INTERNAL" && declaration === null && event !== null;
   const design = readBibDesign(event?.bibDesign ?? null);
   const designOn = (["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const)
     .filter((field) => design[field])
@@ -177,7 +176,6 @@ export default async function RegistrationBox({
       id="box-registration"
       title={heading ?? t("editor.boxes.registration.title")}
       aside={summary}
-      openWhen={{ attention: needsDeclaration }}
       tone={risk ? "risk" : "default"}
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
@@ -269,16 +267,9 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
 
-                  {/* 8.2 — who may enter, and what they sign at confirmation. Deliberately not in the
-                      bib card: the declaration decides who may take part. */}
-                  <Panel
-                    collapsible
-                    level={3}
-                    id="box-conditions"
-                    title={t("editor.boxes.conditions.title")}
-                    aside={conditionsSummary(words, minAge, declaration)}
-                    openWhen={{ attention: needsDeclaration }}
-                  >
+                  {/* 8.2 — who may enter. What they sign at confirmation is chosen under «Regulamentul»
+                      since §448 (`DeclarationCard`): one place for declarations, under the rules. */}
+                  <Panel collapsible level={3} id="box-conditions" title={t("editor.boxes.conditions.title")} aside={conditionsSummary(words, minAge)}>
                     <Stack spacing={2}>
                       {/* Years reached by the event's day (§329), never below fourteen (§321). */}
                       <RecallField
@@ -289,24 +280,7 @@ export default async function RegistrationBox({
                         {...box("minAge", { inputMode: "numeric" })}
                         sx={{ width: { sm: 220 } }}
                       />
-                      {/* A choice among approved versions, never an editor (`AGENTS.md` §11.1). */}
-                      <RecallField
-                        select
-                        name="event.declarationDocumentId"
-                        label={t("editor.declarationDocument")}
-                        helperText={declarations.length === 0 ? t("editor.declarationNone") : t("editor.declarationDocumentHelp")}
-                        defaultValue={event?.declarationDocumentId ?? ""}
-                      >
-                        <MenuItem value="">{t("editor.declarationUnset")}</MenuItem>
-                        {declarations.map((document) => (
-                          <MenuItem key={document.id} value={document.id}>
-                            v{document.version} · {document.title}
-                          </MenuItem>
-                        ))}
-                      </RecallField>
-                      <Typography variant="body2">
-                        <Link href="/admin/legal">{t("editor.boxes.conditions.legalLink")}</Link>
-                      </Typography>
+                      <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>
                     </Stack>
                   </Panel>
 
@@ -379,7 +353,13 @@ export default async function RegistrationBox({
                     level={3}
                     id="box-bibs"
                     title={t("editor.boxes.bibs.title")}
-                    aside={bibsSummary(words, event?.bibStartNumber ?? 1, colourLabel, bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null)}
+                    aside={bibsSummary(
+                      words,
+                      event?.bibStartNumber ?? 1,
+                      colourLabel,
+                      bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null,
+                      event ? spareBandOf(event) : null,
+                    )}
                     openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>

@@ -42,8 +42,14 @@ import type { BibRow } from "./bibs";
  * the language.
  */
 
+/**
+ * One bib to print: a number and the name under it, or — a desk spare (§444) — no name, which
+ * prints an empty line where the name goes, for the marker at the desk.
+ */
+export type BibSheetRow = { bibNumber: BibRow["bibNumber"]; registeredName: string | null };
+
 export type BibSheetInput = {
-  rows: readonly Pick<BibRow, "bibNumber" | "registeredName">[];
+  rows: readonly BibSheetRow[];
   eventTitle: string;
   /** Already formatted in the event's zone and the sheet's language. */
   eventDate: string;
@@ -69,6 +75,11 @@ export type BibSheetInput = {
    * coloured band exactly as before (§249).
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null };
+  /**
+   * The small words under a desk spare's empty name line (§444) — «înscris la fața locului» — in
+   * the sheet's language, from the caller's catalogue; absent, the line alone.
+   */
+  blankMark?: string;
 };
 
 /**
@@ -205,7 +216,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   });
 
   /** One bib, in its A5 box: everything inside the white margin, nothing across the cut. */
-  const drawBib = (row: Pick<BibRow, "bibNumber" | "registeredName">, slot: BibSlot) => {
+  const drawBib = (row: BibSheetRow, slot: BibSlot) => {
     const left = slot.x + BIB_MARGIN;
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
@@ -274,19 +285,48 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight;
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
-    const drawName = (y: number) =>
+    /*
+      The name, or — on a desk spare (§444) — the empty line it is written on in marker: a rule
+      centred in the same strip, at the name's baseline, so the handwritten name sits where a
+      printed one would. `stripTop` is the strip's top; the name is set `nameTop` into it.
+    */
+    const drawName = (stripTop: number) => {
+      if (row.registeredName === null) {
+        const lineY = stripTop + L.blankLineTop;
+        const lineLeft = left + (BIB_CARD.width - L.blankLineWidth) / 2;
+        doc
+          .moveTo(lineLeft, lineY)
+          .lineTo(lineLeft + L.blankLineWidth, lineY)
+          .lineWidth(L.blankLineWeight)
+          .strokeColor(COLOR.ink)
+          .stroke();
+        if (input.blankMark) {
+          doc
+            .font("body")
+            .fontSize(L.blankMarkSize)
+            .fillColor(COLOR.inkMuted)
+            .text(input.blankMark, left + L.inset, stripTop + L.blankMarkTop, {
+              width: BIB_CARD.width - 2 * L.inset,
+              align: "center",
+              lineBreak: false,
+              ellipsis: true,
+            });
+        }
+        return;
+      }
       doc
         .font("bold")
         .fontSize(L.nameSize)
         .fillColor(COLOR.ink)
-        .text(row.registeredName, left + L.inset, y, {
+        .text(row.registeredName, left + L.inset, stripTop + L.nameTop, {
           width: BIB_CARD.width - 2 * L.inset,
           align: "center",
           lineBreak: false,
           ellipsis: true,
         });
+    };
 
-    if (nameAbove) drawName(top + L.bandHeight + L.nameTop);
+    if (nameAbove) drawName(top + L.bandHeight);
 
     doc.font("bold").fontSize(numberSize).fillColor(COLOR.ink);
     const numberHeight = doc.heightOfString(digits, { width: BIB_CARD.width, lineBreak: false });
@@ -297,7 +337,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     });
 
     // The name under the number, large enough to read at a finish line.
-    if (design.showName && !nameAbove) drawName(sponsorTop - L.nameBlock + L.nameTop);
+    if (design.showName && !nameAbove) drawName(sponsorTop - L.nameBlock);
 
     // The sponsors' strip above the small print (§249), its own proportion kept.
     if (sponsorPicture) {

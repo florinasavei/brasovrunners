@@ -39,7 +39,7 @@ function candidates(srcset: string): { url: string; width: number }[] {
   });
 }
 
-test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", () => {
+test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four levels §437)", () => {
   test("a picture and a film's poster go up at «Înaltă», say what they became, and the page offers their widths", async ({ page, browser }) => {
     test.setTimeout(180_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -58,17 +58,27 @@ test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", ()
     // The toolbar's picture control opens the bar: the quality first, then the file.
     await roEditor.getByRole("button", { name: "Imagine (încarcă din telefon sau calculator)" }).click();
     const bar = roEditor.getByTestId("rich-text-image-bar");
-    await expect(bar.getByRole("radio", { name: "Normală (recomandat)" })).toBeChecked();
+    await expect(bar.getByRole("radio", { name: "Medie (recomandat)" })).toBeChecked();
     // The help says what each choice keeps, from the same numbers the server resizes to.
     await expect(bar).toContainText("până la 2400 px");
-    await expect(bar).toContainText("până la 4000 px");
-    await bar.getByRole("radio", { name: "Înaltă (fișier mai mare)" }).check();
+    await expect(bar).toContainText("Mare păstrează 4000 px");
+    // Four levels (§437), and the help says what the new two keep.
+    for (const name of ["Minimă (fișier mic)", "Medie (recomandat)", "Mare", "Originală (fișier mare)"]) {
+      await expect(bar.getByRole("radio", { name, exact: true })).toBeVisible();
+    }
+    await expect(bar).toContainText("1280 px");
+    await expect(bar).toContainText("până la 6000 px");
+    await bar.getByRole("radio", { name: "Mare", exact: true }).check();
     await chooseFile(page, () => bar.getByRole("button", { name: "Alege imaginea" }).click(), "afis.png", await poster(3600, 2400));
     await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 30_000 });
     // 3600 pixels kept, not 2400: «Înaltă» is more pixels, not only another encoder.
-    await expect(roEditor.getByTestId("rich-text-image-stored")).toContainText("3600 × 2400 px, calitate înaltă", { timeout: 30_000 });
+    await expect(roEditor.getByTestId("rich-text-image-stored")).toContainText("3600 × 2400 px, calitate mare", { timeout: 30_000 });
+    // What was chosen, said as soon as it was read (§437): sent as it is at «Mare», so no second sentence.
+    await expect(roEditor.getByTestId("rich-text-image-chosen")).toHaveText(/^Fișierul ales: afis\.png, 3600 × 2400 px, \d+(,\d)? (KB|MB)\.$/);
     // The picture's own panel opened on it (§73); say what it shows and close it.
     const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
+    // The selected picture's stored size, in its panel (§437).
+    await expect(pictureWords.getByTestId("rich-text-image-pixels")).toHaveText("Imaginea stocată: 3600 × 2400 px.");
     await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill("Afișul crosului");
     await pictureWords.getByRole("button", { name: "Gata" }).click();
 
@@ -81,9 +91,10 @@ test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", ()
     await film.click();
     const filmPanel = page.getByTestId("rich-text-youtube-panel");
     await expect(filmPanel).toBeVisible();
-    await expect(filmPanel.getByRole("radio", { name: "Înaltă (fișier mai mare)" })).toBeChecked();
+    await expect(filmPanel.getByRole("radio", { name: "Mare", exact: true })).toBeChecked();
     await chooseFile(page, () => filmPanel.getByRole("button", { name: "Alege un thumbnail" }).click(), "poster.png", await poster(1920, 1080));
-    await expect(filmPanel.getByTestId("rich-text-poster-stored")).toContainText("1920 × 1080 px, calitate înaltă", { timeout: 30_000 });
+    await expect(filmPanel.getByTestId("rich-text-poster-stored")).toContainText("1920 × 1080 px, calitate mare", { timeout: 30_000 });
+    await expect(filmPanel.getByTestId("rich-text-poster-chosen")).toContainText("Fișierul ales: poster.png, 1920 × 1080 px");
     await expect(film.locator("img")).toHaveAttribute("src", /\/api\/media\/.+\/web\.webp$/);
     await filmPanel.getByRole("button", { name: "Gata" }).click();
 

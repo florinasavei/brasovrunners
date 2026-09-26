@@ -233,8 +233,8 @@ function ScheduleRowsEditorIsland({
               clearable={false}
               sx={{ gridArea: "date", minWidth: 0 }}
             />
-            {/* The platform's own `<input type="time">`, like the start time (`WallTimeField`),
-                posting `HH:mm` in either language of the backoffice (§345, amended). */}
+            {/* The typed 24-hour time box, like the start time (`WallTimeField`), showing and
+                posting `HH:mm` in either language of the backoffice (§400, §439). */}
             <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" clearable={false} sx={{ gridArea: "time", minWidth: 0 }} />
             <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" clearable={false} sx={{ gridArea: "end", minWidth: 0 }} />
             <TextField

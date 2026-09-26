@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { buildCalendar } from "@/modules/events/ical";
-import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
+import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
 import { env } from "@/shared/config/env";
 
 /**
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, { params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   const known = routing.locales.find((candidate) => candidate === locale);
-  const event = known ? await cachedPublishedEventBySlug(known, slug) : undefined;
+  const event = known ? await eventBySlugWithLastGood(known, slug) : undefined;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({

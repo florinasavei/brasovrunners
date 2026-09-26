@@ -26,7 +26,8 @@ export type RateLimitScope =
   | "job-invoke"
   | "admin-send-now"
   | "contact-message"
-  | "group-run-declaration";
+  | "group-run-declaration"
+  | "newsletter-subscribe";
 
 /**
  * What each guarded action allows, as data.
@@ -121,6 +122,14 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * per post. Five an hour is a runner signing for Monday and correcting a typo, several times over.
    */
   "group-run-declaration": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * The newsletter's pop-up on the contact page (§445), keyed on a hash of the canonical address
+   * like the contact form's. Every accepted post sends one message — the confirmation link, or the
+   * link to an existing subscription — to an address nobody has proven, so the bucket belongs to
+   * that mailbox: three an hour is a person who did not see the first email, and not a stranger
+   * filling somebody's inbox.
+   */
+  "newsletter-subscribe": { limit: 3, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {

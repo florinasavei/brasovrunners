@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isRefused, labelOf, missingControls, sameEntries, type WatchedControl } from "@/shared/ui/missing-controls";
+import { REGISTRATION_FORM_FIELDS } from "@/modules/registrations/form-errors";
+import ro from "../../../messages/ro.json";
 
 /**
  * §422 — the list of what is still missing above the registration form's send button
@@ -56,6 +58,12 @@ describe("§422 what is still missing, named", () => {
       { rulesAcknowledged: "Condițiile concursului" },
     );
     expect(entries).toEqual([{ key: "rulesAcknowledged", label: "Condițiile concursului", id: "f-rules" }]);
+  });
+
+  it("names an empty citizenship by the form's own short name (§432)", () => {
+    // MUI's select posts through a hidden native input carrying the name and `required`.
+    const names = Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, ro.Registration.fieldNames[name]]));
+    expect(missingControls([control({ name: "nationality" })], names)).toEqual([{ key: "nationality", label: "Cetățenie", id: null }]);
   });
 
   it("lists one entry per posted name: a phone's digits and its country are one question", () => {

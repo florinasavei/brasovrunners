@@ -8,9 +8,11 @@ import { registrations } from "@/db/schema/registrations";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { jobRuns } from "@/db/schema/job-runs";
+import { newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { RETENTION_PERIODS } from "./domain/retention-periods";
@@ -152,6 +154,8 @@ export type PruneCounts = {
   /** A group run's self-declarations, gone seven days after the run (§393). */
   groupRunDeclarations: number;
   auditLogs: number;
+  /** Newsletter addresses never confirmed, and the newsletter's links nobody can use any more (§445). */
+  newsletter: number;
 };
 
 /**
@@ -170,6 +174,7 @@ export const PRUNE_STEPS = [
   "unconfirmed-registrations",
   "registrations-after-event",
   "audit-log",
+  "newsletter",
 ] as const;
 export type PruneStep = (typeof PRUNE_STEPS)[number];
 
@@ -222,6 +227,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     minorSocials: 0,
     groupRunDeclarations: 0,
     auditLogs: 0,
+    newsletter: 0,
   };
   const failures: PruneFailure[] = [];
 
@@ -462,6 +468,54 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.auditLogs = deleted.length;
   });
 
+  /**
+   * The newsletter (§445): an address never confirmed is gone once its confirmation link can no
+   * longer work — the club's email-link window («Termene», `confirmationHours`, §377), counted
+   * from the last time the form was sent with it, and no live link left (one minted under a longer
+   * window before the club shortened it still runs its course). Somebody else may have typed it;
+   * nothing was ever sent to it but the one confirmation message. The links themselves go thirty
+   * days after they stopped working, the rule of the action tokens above. A confirmed subscriber
+   * stays until they unsubscribe, which deletes them at once.
+   */
+  await step("newsletter", async (tx) => {
+    const { confirmationHours } = await currentDeadlines(tx);
+    const unconfirmed = await tx
+      .delete(newsletterSubscribers)
+      .where(
+        and(
+          isNull(newsletterSubscribers.confirmedAt),
+          lt(newsletterSubscribers.updatedAt, new Date(now.getTime() - confirmationHours * 60 * 60_000)),
+          notExists(
+            tx
+              .select({ id: newsletterTokens.id })
+              .from(newsletterTokens)
+              .where(
+                and(
+                  eq(newsletterTokens.subscriberId, newsletterSubscribers.id),
+                  eq(newsletterTokens.purpose, "CONFIRM"),
+                  isNull(newsletterTokens.usedAt),
+                  isNull(newsletterTokens.invalidatedAt),
+                  sql`${newsletterTokens.expiresAt} > ${now.toISOString()}::timestamptz`,
+                ),
+              ),
+          ),
+        ),
+      )
+      .returning({ id: newsletterSubscribers.id });
+    const tokenCutoff = daysBefore(now, RETENTION.spentTokensDays);
+    const links = await tx
+      .delete(newsletterTokens)
+      .where(
+        or(
+          and(isNotNull(newsletterTokens.usedAt), lt(newsletterTokens.usedAt, tokenCutoff)),
+          and(isNotNull(newsletterTokens.invalidatedAt), lt(newsletterTokens.invalidatedAt, tokenCutoff)),
+          lt(newsletterTokens.expiresAt, tokenCutoff),
+        ),
+      )
+      .returning({ id: newsletterTokens.id });
+    counts.newsletter = unconfirmed.length + links.length;
+  });
+
   return { ...counts, failures };
 }
 
@@ -481,7 +535,8 @@ export function totalPruned(counts: PruneCounts): number {
     counts.emergencyContacts +
     counts.minorSocials +
     counts.groupRunDeclarations +
-    counts.auditLogs
+    counts.auditLogs +
+    counts.newsletter
   );
 }
 
