@@ -84,23 +84,34 @@ describe("the create page is the editor's page", () => {
     }
   });
 
-  it("shows the status read-only on create: a hidden SCHEDULED posts, and Anulat is never offered for an event that does not exist", () => {
-    expect(CREATE).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    // The card is there, inside the first box (§NNN), so the two pages look the same (§358) —
-    // handed no event, it is read-only.
+  it("offers the status on create as the editor does — Programat by default, Anulat with its reason, Încheiat (§NNN)", () => {
+    // The owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". No hidden
+    // SCHEDULED any more: the card's own select posts.
+    expect(CREATE).not.toContain('name="event.eventStatus"');
+    // The card is there, inside the first box (§NNN), so the two pages look the same (§358).
     expect(CREATE).toContain("<KindBox {...box} heading={flow.headings.kind} />");
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event: null })");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     // Keyed on the create page alone: a saved event always comes with its notice, by type, so it
-    // can never fall into the read-only "Programat" that posts nothing.
+    // can never fall into the create page's card, which has nobody to tell.
     expect(status).toContain("{ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice }");
     expect(status).not.toContain("!notice");
-    const createBranch = status.slice(at(status, "if (event === null) {"), at(status, "<RecallField"));
+    const createBranch = status.slice(at(status, "if (event === null) {"), at(status, "{risk && <RiskLine>"));
     expect(createBranch).toContain('data-testid="status-on-create"');
-    expect(createBranch).toContain("disabled");
-    expect(createBranch).not.toContain("name=");
+    expect(createBranch).toContain('{select("SCHEDULED")}');
+    expect(createBranch).not.toContain("disabled");
+    expect(createBranch).toContain("offerNotice={false}");
     expect(createBranch).toContain('t("editor.boxes.status.createNote")');
-    for (const [file, messages] of MESSAGES) expect(messages.Admin.editor.boxes.status.createNote, file).toBeTruthy();
+    for (const [file, messages] of MESSAGES) {
+      expect(messages.Admin.editor.boxes.status.createNote, file).toBeTruthy();
+      expect(messages.Admin.editor.boxes.status.completedRefused, file).toBeTruthy();
+      for (const key of ["cancelTitleCreate", "cancelIntroCreate", "cancelReasonHelpCreate"]) expect(messages.Admin.editor.notice[key], file + " " + key).toBeTruthy();
+    }
+    // The action reads the reason on a create too; the service requires it for CANCELLED and tells nobody.
+    const create = ACTIONS.slice(at(ACTIONS, "export async function createEventAction"), at(ACTIONS, "export async function duplicateEventAction"));
+    expect(create).toContain('form.has("cancel.reasonRo") || form.has("cancel.reasonEn")');
+    expect(create).toContain("notify: false");
+    expect(SERVICE).toContain("function readCreateStatus(");
     // And none of what needs a saved event.
     for (const edited of ["<BibPrintCard", "<RecurrenceSeriesPanel", 'id="box-received"', 'id="box-copy-delete"']) {
       expect(CREATE, edited).not.toContain(edited);

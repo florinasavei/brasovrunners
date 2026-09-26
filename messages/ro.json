@@ -1318,6 +1318,9 @@
         "note": "Ce s-a schimbat (opțional)",
         "noteHelp": "Opțional, în ambele limbi sau în niciuna · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris, sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
         "cancelTitle": "Anulezi evenimentul",
+        "cancelTitleCreate": "Creezi evenimentul anulat",
+        "cancelIntroCreate": "Evenimentul se creează cu starea Anulat și apare așa pe site dacă îl publici. Nu pleacă niciun email: nimeni nu e înscris la un eveniment nou.",
+        "cancelReasonHelpCreate": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Rămâne în jurnalul de audit, cu numele tău.",
         "cancelIntro": "Înscrierile rămân așa cum sunt, ca evidență: nimeni nu e retras și nu i se schimbă starea. Nu se mai oferă locuri, nu se mai dau numere și nu mai pleacă emailuri automate pentru acest eveniment.",
         "cancelReason": "Motivul anulării",
         "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
@@ -1455,7 +1458,8 @@
         },
         "status": {
           "title": "Starea evenimentului",
-          "createNote": "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
+          "createNote": "De obicei Programat. Alege Anulat pentru un eveniment deja anulat (trecut în evidență, de exemplu de pe Facebook) sau Încheiat pentru unul care a avut loc deja. Niciuna nu trimite emailuri: nimeni nu e încă înscris.",
+          "completedRefused": "Starea: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
         },
         "course": {
           "title": "Traseul"

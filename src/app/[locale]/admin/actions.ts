@@ -637,6 +637,12 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
           en: translationInputFrom(form, "en"),
         },
       },
+      // An event created already cancelled says why, in both languages (§NNN, §331): the service
+      // requires it for `CANCELLED` and ignores it otherwise; nobody is told — nobody is registered.
+      cancellation:
+        form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
+          ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: false }
+          : undefined,
       // The second button's marker: "create and publish". The service asks the role itself.
       publish: text(form, THEN_FIELD) === THEN_PUBLISH,
       repeat: repeats

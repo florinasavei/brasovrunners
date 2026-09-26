@@ -1,7 +1,7 @@
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import { getTranslations } from "next-intl/server";
+import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
 import { EVENT_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
@@ -17,8 +17,8 @@ export type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; ma
 
 /**
  * The create page hands no event and no notice; the editor hands both, always — the type says so,
- * so a saved event (possibly cancelled) can never fall into the create page's read-only
- * "Programat", which posts nothing.
+ * so a saved event (possibly cancelled) can never fall into the create page's card, which starts
+ * at "Programat" and has nobody to tell.
  */
 export type StatusCardProps = { risk?: RiskMark | null } & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
@@ -29,10 +29,13 @@ export type StatusCardProps = { risk?: RiskMark | null } & ({ event: null; notic
  * cards that are not a section of the page; §NNN brings it back, whole — its fields, its names, its
  * id — and the first box's closed line says it beside the type: «Alergare de grup · Programat».
  *
- * **On the create page it is read-only**: "Programat", and one line saying the status can be
- * changed once the event exists. The page posts a hidden `SCHEDULED` beside it — this card posts
- * nothing — so "Anulat" and "Încheiat" are never offered for an event that does not exist yet
- * (cancelling asks why and tells the people registered, §331, and a new event has neither).
+ * **On the create page it is the editor's same select** (§NNN, reversing the read-only
+ * "Programat" of §350/§358; the owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat
+ * din start"), starting at "Programat". "Anulat" asks why, in Română and in English, the same two
+ * boxes as the editor's (§331, §354) — and nothing else: there is no "tell them" box, because
+ * nobody can be registered for an event that does not exist yet, and the create sends no email.
+ * "Încheiat" is offered too, for an event that already took place; the service refuses it while
+ * the start is still ahead.
  *
  * **On the editor**, inside the save form, so a refusal keeps it (§315); while "Anulat" is chosen on
  * an event that was not cancelled, the cancellation's reason and its "tell them" appear under the
@@ -52,13 +55,54 @@ export default async function StatusCard({ event, risk, notice }: StatusCardProp
     tone: risk ? "risk" : "default",
   } as const;
 
+  const select = (initialStatus: (typeof EVENT_STATUSES)[number]) => (
+    <RecallField
+      select
+      name="event.eventStatus"
+      label={t("editor.eventStatus")}
+      defaultValue={initialStatus}
+      required={eventInputConstraints("eventStatus").required}
+      sx={{ maxWidth: 320 }}
+    >
+      {EVENT_STATUSES.map((value) => (
+        <MenuItem key={value} value={value}>
+          {EVENT_STATUS_LABEL[value]}
+        </MenuItem>
+      ))}
+    </RecallField>
+  );
+
   if (event === null) {
+    const tSite = await getTranslations("Site");
+    // Only the cancellation's own words: with nobody to tell, the notice's are never drawn.
+    const labels: EventNoticeLabels = {
+      notify: "",
+      notifyHelp: "",
+      note: "",
+      noteHelp: "",
+      cancelTitle: t("editor.notice.cancelTitleCreate"),
+      cancelIntro: t("editor.notice.cancelIntroCreate"),
+      cancelReason: t("editor.notice.cancelReason"),
+      cancelReasonHelp: t("editor.notice.cancelReasonHelpCreate", { max: String(EVENT_NOTICE_TEXT_MAX) }),
+      cancelNotify: "",
+      cancelNotifyHelp: "",
+      languageRo: tSite("languageName.ro"),
+      languageEn: tSite("languageName.en"),
+      identical: t("editor.identical.warning"),
+    };
     return (
       <Panel collapsible {...card}>
-        <Stack spacing={1} data-testid="status-on-create">
-          {/* No name: the page's hidden `event.eventStatus` is what posts. */}
-          <TextField label={t("editor.eventStatus")} defaultValue={EVENT_STATUS_LABEL.SCHEDULED} disabled sx={{ maxWidth: 320 }} />
+        <Stack spacing={2} data-testid="status-on-create">
+          {select("SCHEDULED")}
           <BoxNote>{t("editor.boxes.status.createNote")}</BoxNote>
+          <EventCancelFields
+            statusSelectName="event.eventStatus"
+            initialStatus="SCHEDULED"
+            wasCancelled={false}
+            offerNotice={false}
+            maxLength={EVENT_NOTICE_TEXT_MAX}
+            labels={labels}
+          />
         </Stack>
       </Panel>
     );
@@ -68,20 +112,7 @@ export default async function StatusCard({ event, risk, notice }: StatusCardProp
     <Panel collapsible {...card}>
       {risk && <RiskLine>{t("editor.risk.status")}</RiskLine>}
       <Stack spacing={2}>
-        <RecallField
-          select
-          name="event.eventStatus"
-          label={t("editor.eventStatus")}
-          defaultValue={event.eventStatus}
-          required={eventInputConstraints("eventStatus").required}
-          sx={{ maxWidth: 320 }}
-        >
-          {EVENT_STATUSES.map((value) => (
-            <MenuItem key={value} value={value}>
-              {EVENT_STATUS_LABEL[value]}
-            </MenuItem>
-          ))}
-        </RecallField>
+        {select(event.eventStatus)}
         <EventCancelFields
           statusSelectName="event.eventStatus"
           initialStatus={event.eventStatus}

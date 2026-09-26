@@ -1318,6 +1318,9 @@
         "note": "What changed (optional)",
         "noteHelp": "Optional, in both languages or neither · plain text, at most {max} characters each. Each participant gets it in the language they registered in, under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
         "cancelTitle": "You are cancelling the event",
+        "cancelTitleCreate": "You are creating the event as cancelled",
+        "cancelIntroCreate": "The event is created with the status Cancelled and shows so on the site if you publish it. No email goes out: nobody is registered for a new event.",
+        "cancelReasonHelpCreate": "Required, in both languages · plain text, at most {max} characters in each. It stays in the audit log, with your name.",
         "cancelIntro": "The registrations stay as they are, as a record: nobody is withdrawn and no status changes. No more places are offered, no numbers are given and no automatic emails go out for this event.",
         "cancelReason": "Why the event is cancelled",
         "cancelReasonHelp": "Required, in both languages · plain text, at most {max} characters each. Each participant gets it in the language they registered in; it also appears in the audit log, with your name.",
@@ -1455,7 +1458,8 @@
         },
         "status": {
           "title": "Event status",
-          "createNote": "A new event starts as scheduled (Programat); its status can be changed once the event exists."
+          "createNote": "Usually Scheduled. Choose Cancelled for an event already called off (recorded, say, from Facebook) or Completed for one that already took place. Neither sends an email: nobody is registered yet.",
+          "completedRefused": "Status: Completed can only be chosen for an event that has already started; otherwise choose Scheduled or Cancelled"
         },
         "course": {
           "title": "The course"

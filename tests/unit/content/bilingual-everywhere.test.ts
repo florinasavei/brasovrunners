@@ -190,7 +190,7 @@ describe("§354 the note's and the reason's boxes in the refusal summary", () =>
     locale = "ro";
     const labels = await eventFormFieldLabels();
     expect(labels["notice.noteEn"]).toBe("Salvare › Ce s-a schimbat (English): scrie mesajul în ambele limbi sau în niciuna, cel mult 500 de caractere");
-    expect(labels["cancel.reasonRo"]).toBe("Starea evenimentului › Motivul anulării (Română): obligatoriu în ambele limbi, cel mult 500 de caractere");
+    expect(labels["cancel.reasonRo"]).toBe("Ce fel de eveniment › Starea evenimentului › Motivul anulării (Română): obligatoriu în ambele limbi, cel mult 500 de caractere");
     catalogue = en;
     locale = "en";
     const english = await eventFormFieldLabels();

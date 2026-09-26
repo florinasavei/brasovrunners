@@ -23,11 +23,14 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
   const inBox = (box: string, label: string) => `${t(`editor.boxes.${box}.title`)} › ${label}`;
+  // The status is a card inside the first box since §NNN: its fields are named by both.
+  const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
 
   const labels: Record<string, string> = {
     "event.type": inBox("kind", t("editor.type")),
     "event.surface": inBox("course", t("editor.surface")),
-    "event.eventStatus": inBox("kind", `${t("editor.boxes.status.title")} › ${t("editor.eventStatus")}`),
+    // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§NNN).
+    "event.eventStatus": inStatus(t("editor.boxes.status.completedRefused")),
     "event.timezone": inBox("when", t("editor.timezone")),
     "event.startsAtDate": inBox("when", t("editor.startsAt")),
     "event.startsAtTime": inBox("when", t("editor.startsAt")),
@@ -90,8 +93,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     */
     "notice.noteRo": inBox("save", t("editor.notice.noteRoError", { max: EVENT_NOTICE_TEXT_MAX })),
     "notice.noteEn": inBox("save", t("editor.notice.noteEnError", { max: EVENT_NOTICE_TEXT_MAX })),
-    "cancel.reasonRo": inBox("status", t("editor.notice.cancelReasonRoError", { max: EVENT_NOTICE_TEXT_MAX })),
-    "cancel.reasonEn": inBox("status", t("editor.notice.cancelReasonEnError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "cancel.reasonRo": inStatus(t("editor.notice.cancelReasonRoError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "cancel.reasonEn": inStatus(t("editor.notice.cancelReasonEnError", { max: EVENT_NOTICE_TEXT_MAX })),
     "repeat.cadence": inBox("recurrence", t("editor.repeatCadence")),
     "repeat.until": inBox("recurrence", t("editor.repeatUntil")),
     weekday: inBox("recurrence", t("editor.repeatWeekdays")),

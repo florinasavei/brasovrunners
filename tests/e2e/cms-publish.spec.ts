@@ -435,6 +435,75 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
   });
 });
 
+/*
+  §NNN — the owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". The
+  create page's status card is the editor's select: "Anulat" asks why in both languages and has no
+  "tell them" box (nobody is registered), and the event goes live saying it is cancelled.
+*/
+test.describe("§NNN an event created already cancelled", () => {
+  test("creates and publishes it as Anulat, with its reason, and the page says it is cancelled", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `deja-anulat-${suffix}`;
+    const englishSlug = `already-cancelled-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+
+    await fillDateField(page, "Începutul evenimentului", "2027-05-09");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Deja anulat ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await summary("ro", "Anulat de organizator înainte să-l trecem pe site.");
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Already cancelled ${suffix}`);
+    await languageTab(page, "address", "en").click();
+    await field("translations.en.slug").fill(englishSlug);
+    await summary("en", "Called off by the organizer before we listed it.");
+
+    // The status: "Anulat", and the reason's two boxes — never a "tell them" box on a create.
+    const status = await openEditorBox(page, "Starea evenimentului");
+    await status.getByRole("combobox", { name: "Starea evenimentului" }).click();
+    await page.getByRole("option", { name: "Anulat" }).click();
+    const cancel = page.getByTestId("cancel-fields");
+    await expect(cancel).toBeVisible();
+    await expect(cancel).toContainText("Nu pleacă niciun email");
+    await expect(cancel.getByRole("checkbox")).toHaveCount(0);
+    await field("cancel.reasonRo").fill("Organizatorul a anulat cursa.");
+    await field("cancel.reasonEn").fill("The organizer called the race off.");
+
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    const editorUrl = page.url();
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
+    // The editor's own first box says it on its closed line; cancelled already, no reason asked again.
+    await expect(editorBox(page, "Ce fel de eveniment").locator(":scope > summary")).toContainText("Anulat");
+    await expect(page.getByTestId("cancel-fields")).toHaveCount(0);
+
+    // Live, and saying it is cancelled, in both languages.
+    await page.goto(`/ro/evenimente/${slug}`);
+    await expect(page.getByText("Acest eveniment a fost anulat.").first()).toBeVisible();
+    expect((await page.goto(`/en/events/${englishSlug}`))?.status()).toBe(200);
+
+    // Off the site again, so the listing other specs count is not one card longer.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+  });
+});
+
 test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event (§201)", () => {
   test("takes an event off the public site in both languages and puts it back", async ({ page }) => {
     const event = EVENT_BY_PROJECT[test.info().project.name];

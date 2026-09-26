@@ -101,7 +101,7 @@ export default async function KindBox({
               {t("editor.typeHelp")}
             </Typography>
           </Panel>
-          {/* 1.1 — the status (§NNN): read-only "Programat" on the create page. */}
+          {/* 1.1 — the status (§NNN): the same select on the create page, starting at "Programat". */}
           {status}
         </Stack>
       ) : (

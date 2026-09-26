@@ -17,8 +17,11 @@ import type { FoldNode } from "@/shared/ui/fold";
  * the same name, the same id — and the first box's closed line says it beside the type: «Alergare de
  * grup · Programat». The course and the links stay boxes of their own, where the page draws them.
  *
- * What §358 settled and still holds: the create page's status is read-only ("Programat", nothing
- * posted); a role that may only read the settings sees the first box's line and is told once; the
+ * The create page's status is no longer read-only (§NNN, the owner's second message of 2026-09-26:
+ * "ar trebui să pot crea un eveniment deja anulat din start"): the editor's same select, starting
+ * at "Programat", with the reason's two boxes while "Anulat" is chosen and no "tell them" box.
+ *
+ * What §358 settled and still holds: a role that may only read the settings sees the first box's line and is told once; the
  * status wears the amber outline of a card whose change reaches people — and so does the box that
  * holds it (the count itself is said once, under the page map, §408); a refusal opens the folds it
  * sits in.
@@ -265,28 +268,43 @@ describe("§358 a role that may only read the settings", () => {
   });
 });
 
-describe("§358 the create page's status is read-only", () => {
-  it("opens the type's box and shows «Programat» in its status card, no select, nothing posted, with the line that says when it can change", async () => {
+describe("§NNN the create page's status is the editor's select", () => {
+  it("opens the type's box and draws the status select in its card, at «Programat», posting SCHEDULED, with the line that says what the others do", async () => {
     const drawn = await boxes(null);
     expect(isOpen(foldTags(drawn.kind)[0])).toBe(true);
     expect(foldsAround(drawn.kind, "box-status")).toEqual(["box-kind"]);
     expect(drawn.kind).toContain('data-testid="status-on-create"');
-    expect(drawn.kind).toMatch(/<input[^>]*disabled[^>]*value="Programat"|<input[^>]*value="Programat"[^>]*disabled/);
-    expect(drawn.kind).not.toContain('name="event.eventStatus"');
-    expect(drawn.kind).not.toContain("Anulat");
-    expect(drawn.kind).not.toContain("Încheiat");
-    expect(drawn.kind).toContain("Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat.");
+    // The select itself: its posted input, named and at "Programat" — no disabled stand-in, no hidden field beside it.
+    expect(drawn.kind).toMatch(/<input[^>]*name="event.eventStatus"[^>]*value="SCHEDULED"|<input[^>]*value="SCHEDULED"[^>]*name="event.eventStatus"/);
+    expect(drawn.kind).not.toMatch(/<input[^>]*disabled[^>]*value="Programat"/);
+    expect(drawn.kind).toContain("Programat");
+    // While "Programat" is chosen, no cancellation block — and never a "tell them" box on a create.
+    expect(drawn.kind).not.toContain('data-testid="cancel-fields"');
+    expect(drawn.kind).not.toContain('name="cancel.notify"');
+    expect(drawn.kind).toContain("De obicei Programat. Alege Anulat pentru un eveniment deja anulat");
     const en = await boxes(null, { locale: "en" });
-    expect(en.kind).toContain("A new event starts as scheduled (Programat); its status can be changed once the event exists.");
+    expect(en.kind).toContain("Usually Scheduled. Choose Cancelled for an event already called off");
   });
 
-  it("keeps the hidden SCHEDULED on the create page, and no status box among the cards not on the page", () => {
+  it("offers all three statuses, and the cancellation's reason with nobody to tell", () => {
+    const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
+    expect(status).toContain('const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;');
+    const start = status.indexOf("if (event === null) {");
+    expect(start).toBeGreaterThan(-1);
+    const createBranch = status.slice(start, status.indexOf("{risk && <RiskLine>", start));
+    expect(createBranch).toContain('{select("SCHEDULED")}');
+    expect(createBranch).toContain("<EventCancelFields");
+    expect(createBranch).toContain("wasCancelled={false}");
+    expect(createBranch).toContain("offerNotice={false}");
+  });
+
+  it("posts no hidden status on the create page, and no status box among the cards not on the page", () => {
     for (const page of ["src/app/[locale]/admin/events/new/page.tsx", "src/app/[locale]/admin/events/[id]/page.tsx"]) {
       const source = read(page);
       expect(source, page).not.toContain("<StatusBox");
       expect(source, page).not.toContain("<StatusCard");
     }
-    expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
+    expect(read("src/app/[locale]/admin/events/new/page.tsx")).not.toContain('name="event.eventStatus"');
     expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toMatch(/<KindBox \{\.\.\.box\}[^>]*risk=\{risk\} notice=\{notice\} \/>/);
   });
 });

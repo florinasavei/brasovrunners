@@ -181,8 +181,8 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
   eveniment"), each where the page draws it; the status is a card inside the first box (§NNN). A link's label in one language only is a
   refusal only the server makes (§352, both or neither), and it names the empty box — inside
   "Linkuri și fișiere". The box is shut before the press, so the refusal is what has to open it,
-  and every box keeps what was typed. On the way, the create page's status box: there, read-only,
-  "Programat".
+  and every box keeps what was typed. On the way, the create page's status card: the editor's own
+  select, at "Programat" (§NNN).
 */
 test.describe("§406 a refusal inside the links box opens it", () => {
   // Built from parts: no hostname literal (`AGENTS.md` §8).
@@ -196,14 +196,13 @@ test.describe("§406 a refusal inside the links box opens it", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
     // The status card is on the create page too, inside the first box (§NNN), so the two pages
-    // look the same — read-only.
+    // look the same — the same select, at "Programat", and no cancellation block until "Anulat".
     const status = await openEditorBox(page, "Starea evenimentului");
     await expect(editorBox(page, "Ce fel de eveniment")).toHaveAttribute("open", "");
-    const statusBox = status.getByRole("textbox", { name: "Starea evenimentului" });
-    await expect(statusBox).toHaveValue("Programat");
-    await expect(statusBox).toBeDisabled();
-    await expect(status.getByRole("combobox")).toHaveCount(0);
-    await expect(status.getByTestId("status-on-create")).toContainText("starea se poate schimba după ce evenimentul e creat");
+    await expect(status.getByRole("combobox", { name: "Starea evenimentului" })).toHaveText("Programat");
+    await expect(field("event.eventStatus")).toHaveValue("SCHEDULED");
+    await expect(page.getByTestId("cancel-fields")).toHaveCount(0);
+    await expect(status.getByTestId("status-on-create")).toContainText("Niciuna nu trimite emailuri: nimeni nu e încă înscris.");
 
     await fillDateField(page, "Începutul evenimentului", "2027-07-04");
     await fillTimeField(page, "Ora", "09:00");
