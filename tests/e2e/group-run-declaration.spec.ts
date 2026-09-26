@@ -70,6 +70,10 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   // regression that asks for one under these texts would go unnoticed by a lenient check —
   // the field is asked exactly when the text names it, never otherwise.
   await expect(page.getByLabel(words.document, { exact: false })).toHaveCount(0);
+  // The run's own minimum age (§NNN): the editor's default fourteen binds nobody the adults-only
+  // text does not already bind, so the sentence is left out and no birth date is asked.
+  await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "Declar că am cel puțin" : "I declare that I am at least");
+  await expect(page.locator('input[name="birthDate"]')).toHaveCount(0);
   await page.getByRole("textbox", { name: words.email }).fill(email);
   await page.getByRole("checkbox", { name: words.accept }).check();
   await page.getByRole("textbox", { name: words.signature }).fill(name);

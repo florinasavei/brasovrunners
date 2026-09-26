@@ -20,7 +20,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { ERASE_REASON_MAX, ID_DOCUMENT_MAX, signingOpen, TYPED_NAME_MAX } from "./domain";
+import { birthDateRefusal, ERASE_REASON_MAX, ID_DOCUMENT_MAX, signingOpen, TYPED_NAME_MAX } from "./domain";
 import { insertGroupRunDeclaration } from "./repository";
 
 /**
@@ -53,6 +53,11 @@ export type GroupRunSigningInput = {
   typedName: string;
   /** The kind and the series and number, composed by the action (§283); absent or empty when not typed. */
   idDocument?: string;
+  /**
+   * The signer's birth date, `YYYY-MM-DD` (§NNN): asked only while the run has a minimum age, and
+   * counted against it on the run's day — never stored, never in the declaration or the PDF.
+   */
+  birthDate?: string;
   email: string;
   /** The language the declaration is signed in, and the PDF and the email are written in (§97). */
   locale: Locale;
@@ -77,6 +82,10 @@ export type SignableEvent = {
   editorialStatus: string;
   eventStatus: string;
   startsAt: Date;
+  /** The event's own minimum age (§329), zero for none: the signing page's door (§NNN). */
+  minAge: number;
+  /** The run's own zone: the day the minimum age is counted on (§321). */
+  timezone: string;
 };
 
 export async function findSignableEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<SignableEvent | undefined> {
@@ -89,6 +98,8 @@ export async function findSignableEvent<T extends Record<string, unknown>>(db: D
       editorialStatus: events.editorialStatus,
       eventStatus: events.eventStatus,
       startsAt: events.startsAt,
+      minAge: events.minAge,
+      timezone: events.timezone,
     })
     .from(events)
     .where(eq(events.id, eventId))
@@ -146,6 +157,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   }
   const invalid = [
     ...(needsDocument && (idDocument === "" || idDocument.length > ID_DOCUMENT_MAX) ? ["idDocument"] : []),
+    ...birthDateRefusal(event, input.birthDate),
     ...(typedName === "" || typedName.length > TYPED_NAME_MAX ? ["typedName"] : []),
     ...(canonicalEmail === null ? ["email"] : []),
     ...(input.accepted ? [] : ["accepted"]),
