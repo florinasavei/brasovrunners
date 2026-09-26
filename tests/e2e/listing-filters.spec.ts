@@ -34,15 +34,22 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(page.locator("#main").getByTestId("active-filters")).toHaveCount(0);
     await expect(heading(page, RACE)).toBeVisible();
 
-    // The button and every box are thumb-sized (criterion 6); the pill inside the label is small.
+    // The button and every box are thumb-sized (criterion 6); the pill each one draws is a small
+    // chip, 24 pixels, the active-filter chips' own size (§NNN — "Butonul de filtre e mult prea mare").
     const summaryBox = await fold.locator("summary").boundingBox();
     expect(Math.round(summaryBox!.height * 10) / 10).toBeGreaterThanOrEqual(44);
+    const buttonPill = await fold.locator("summary > span").boundingBox();
+    expect(Math.round(buttonPill!.height)).toBeLessThanOrEqual(26);
+    expect(buttonPill!.width).toBeLessThanOrEqual(summaryBox!.width);
     await fold.locator("summary").click();
     const labels = fold.locator("form label");
     expect(await labels.count()).toBeGreaterThan(1);
     for (const label of await labels.all()) {
       const box = await label.boundingBox();
-      expect.soft(Math.round(box!.height * 10) / 10, await label.innerText()).toBeGreaterThanOrEqual(44);
+      const name = await label.innerText();
+      expect.soft(Math.round(box!.height * 10) / 10, name).toBeGreaterThanOrEqual(44);
+      const pill = await label.locator("> span").boundingBox();
+      expect.soft(Math.round(pill!.height), name).toBeLessThanOrEqual(26);
     }
     // Groups drawn from the calendar's own values, each only where it narrows: the seed has two
     // kinds, three surfaces, two difficulties — and every row is free, so no cost group at all.
