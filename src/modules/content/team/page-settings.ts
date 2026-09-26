@@ -6,9 +6,9 @@ import type { Database } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canEditTeamPage, canShowTeamMember } from "@/modules/staff-identity/domain/roles";
-import { refuseOneLanguage } from "@/shared/forms/both-languages";
+import { type RichTextDoc, richTextSchema, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { DomainError } from "@/shared/errors/domain-error";
-import { normalizeTeamText } from "./fields";
+import { normalizeTeamText, resolveRichPair, richTextBox, storedTeamDoc } from "./fields";
 
 /**
  * «Echipa» as a page (§459): whether it is on the site at all, and the club's own introduction.
@@ -28,35 +28,60 @@ export const TEAM_PAGE_SETTING_KEY = "teamPage";
 /** `audit_logs.entity_id` for this setting, one fixed id per key, never reused (§164's rule). */
 export const TEAM_PAGE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00c";
 
-export const TEAM_INTRO_MAX = 600;
+/** The introduction's words, counted as the page reads them (`richTextToPlainText`). */
+export const TEAM_INTRO_MAX = 3000;
 
 export type TeamPageStatus = "DRAFT" | "PUBLISHED";
 
+/**
+ * The page's state and its introduction. Since §NNN the introduction is written in the rich-text
+ * editor and kept as `intro*Json`; `introRo` / `introEn` keep its words, written by every save, so
+ * the code serving during a rollout still reads an introduction, and a value saved before the
+ * editor still reads as paragraphs.
+ */
 export type TeamPageSettings = {
   status: TeamPageStatus;
   introRo: string | null;
   introEn: string | null;
+  introRoJson: RichTextDoc | null;
+  introEnJson: RichTextDoc | null;
 };
 
-export const DEFAULT_TEAM_PAGE: TeamPageSettings = { status: "DRAFT", introRo: null, introEn: null };
+export const DEFAULT_TEAM_PAGE: TeamPageSettings = { status: "DRAFT", introRo: null, introEn: null, introRoJson: null, introEnJson: null };
+
+/** A stored document, or null for anything that is not one (a value from before §NNN has none). */
+const storedDoc = z
+  .unknown()
+  .optional()
+  .transform((value) => (value === undefined || value === null ? null : readStoredDoc(value)));
+
+function readStoredDoc(value: unknown): RichTextDoc | null {
+  const parsed = richTextSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
 
 const storedSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED"]),
   introRo: z.string().nullable(),
   introEn: z.string().nullable(),
+  introRoJson: storedDoc,
+  introEnJson: storedDoc,
 });
 
-const optionalIntro = z
-  .string()
-  .default("")
-  .transform(normalizeTeamText)
-  .pipe(z.string().max(TEAM_INTRO_MAX))
-  .transform((value) => (value === "" ? null : value));
+/** The plain boxes of §459's form — a caller that posts no document — absent reading as empty. */
+const plainIntro = z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(TEAM_INTRO_MAX));
 
 const introSchema = z
-  .object({ introRo: optionalIntro, introEn: optionalIntro })
-  .superRefine((fields, ctx) => {
-    refuseOneLanguage(ctx, { ro: fields.introRo, en: fields.introEn }, { ro: ["introRo"], en: ["introEn"] }, "the introduction");
+  .object({ introRo: plainIntro, introEn: plainIntro, introRoBody: richTextBox, introEnBody: richTextBox })
+  .transform((fields, ctx) => {
+    const intro = resolveRichPair(
+      ctx,
+      { ro: { plain: fields.introRo, body: fields.introRoBody }, en: { plain: fields.introEn, body: fields.introEnBody } },
+      { ro: { plain: "introRo", body: "introRoBody" }, en: { plain: "introEn", body: "introEnBody" } },
+      // The page's own column: a table fits there, as on a standing page.
+      { max: TEAM_INTRO_MAX, tables: true, what: "the introduction" },
+    );
+    return { introRo: intro.ro.plain, introEn: intro.en.plain, introRoJson: intro.ro.doc, introEnJson: intro.en.doc };
   });
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -68,11 +93,21 @@ export async function readTeamPageSettings<T extends Record<string, unknown>>(db
   return parsed.success ? parsed.data : DEFAULT_TEAM_PAGE;
 }
 
-/** The introduction in this language, or null unless both sides are written (§352, §354). */
-export function teamIntroFor(locale: string, settings: TeamPageSettings): string | null {
-  const written = (value: string | null) => (value ?? "").trim() !== "";
-  if (!written(settings.introRo) || !written(settings.introEn)) return null;
-  return locale === "en" ? settings.introEn : settings.introRo;
+/** The introduction's two sides as the editor opens them: the stored document, or the plain words as paragraphs. */
+export function teamIntroDocs(settings: TeamPageSettings): { ro: RichTextDoc | null; en: RichTextDoc | null } {
+  return { ro: storedTeamDoc(settings.introRoJson, settings.introRo), en: storedTeamDoc(settings.introEnJson, settings.introEn) };
+}
+
+/**
+ * The introduction in this language — the document, and its words for the page's description —
+ * or nulls unless both sides are written (§352, §354).
+ */
+export function teamIntroFor(locale: string, settings: TeamPageSettings): { doc: RichTextDoc | null; text: string | null } {
+  const docs = teamIntroDocs(settings);
+  if (!docs.ro || !docs.en) return { doc: null, text: null };
+  const doc = locale === "en" ? docs.en : docs.ro;
+  const text = richTextToPlainText(doc).replace(/\s+/g, " ").trim();
+  return { doc, text: text === "" ? null : text };
 }
 
 async function writeSettings<T extends Record<string, unknown>>(
@@ -124,7 +159,7 @@ export async function saveTeamPageIntro<T extends Record<string, unknown>>(
     input.actor,
     next,
     // The shape of the change, never the words (§12.12).
-    { action: "team_page.intro_saved", metadata: { written: next.introRo !== null } },
+    { action: "team_page.intro_saved", metadata: { written: next.introRoJson !== null } },
     input.now ?? new Date(),
   );
   return next;
