@@ -209,7 +209,8 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     const value = (label: string) => facts.locator("dt", { hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
 
     // No bullets and no list: pills and lines.
-    await expect(facts.locator("li")).toHaveCount(0);
+    // The weather block (§416) draws its three hours as list items inside the facts; those are not bullets.
+    await expect(facts.locator("li:not([data-testid=\"weather-hour\"])")).toHaveCount(0);
     await expect(facts).not.toContainText("•");
 
     // The seeded Tâmpa run — 14 km, 600 m of climb, moderate, on trail — as four pills, in order:

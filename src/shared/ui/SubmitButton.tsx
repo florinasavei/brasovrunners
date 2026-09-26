@@ -3,11 +3,13 @@
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import { type ComponentType, useEffect, useId, useRef, useState } from "react";
+import { type ComponentType, type MouseEvent, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { paintedScheduler } from "@/shared/forms/after-paint";
+import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
 import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
@@ -18,6 +20,20 @@ import { accentOnHover } from "@/theme/surfaces";
  * flight is exactly as big as the glyph it replaced and the label does not move.
  */
 const GLYPH_PX = { small: 18, medium: 20, large: 22 } as const;
+
+/**
+ * Bring a listed control into view and focus it — opening any fold around it first, since a
+ * control inside a closed `<details>` can be neither seen nor focused. The link's own `#id` is
+ * the fallback with JavaScript off, and for a control this cannot find.
+ */
+function reach(event: MouseEvent<HTMLAnchorElement>, id: string) {
+  const control = document.getElementById(id);
+  if (!(control instanceof HTMLElement)) return;
+  event.preventDefault();
+  for (let fold = control.closest("details"); fold; fold = fold.parentElement?.closest("details") ?? null) fold.open = true;
+  control.scrollIntoView({ block: "center" });
+  control.focus({ preventScroll: true });
+}
 
 export type SubmitButtonProps = {
   label: string;
@@ -58,6 +74,21 @@ export type SubmitButtonProps = {
    * no label to read, `incompleteHint` is what is said. Either alone dims the button.
    */
   incompleteHintNamed?: string;
+  /**
+   * The heading of a live list, **above** the button, of every control the browser would refuse
+   * — not only the first (§422; the owner, of the registration form: a dimmed button and "fill in
+   * the fields marked *" while the one thing missing was a box nobody could see). Given, the list
+   * takes the place of the sentence beneath: each entry is a link that brings its field into view
+   * and focuses it, and the list shrinks as the form is filled. The same scan as the dimming — one
+   * pass over the form's own `validity`, never a second watcher.
+   */
+  missingTitle?: string;
+  /**
+   * Short names by control `name` for that list: a tick's label is a sentence ("Am citit și
+   * accept…"), and a list of sentences is a wall. A control not named here is listed by its own
+   * `<label>`, then its `aria-label`.
+   */
+  missingNames?: Readonly<Record<string, string>>;
   /** Under the button once a submit has been in flight for SLOW_AFTER_MS (§304): patience, not a second press. */
   slowHint?: string;
   color?: "primary" | "error" | "warning" | "inherit";
@@ -139,6 +170,8 @@ export default function SubmitButton({
   glyph,
   incompleteHint,
   incompleteHintNamed,
+  missingTitle,
+  missingNames,
   awaitsBotCheck,
   botCheckHint,
   slowHint,
@@ -156,30 +189,43 @@ export default function SubmitButton({
   const [complete, setComplete] = useState(true);
   // The label of the first control the browser would refuse, for the named sentence (§315).
   const [firstMissing, setFirstMissing] = useState<string | null>(null);
-  const watches = Boolean(incompleteHint || incompleteHintNamed);
+  // Every control the browser would refuse, in the form's order, for the list above (§422).
+  const [missing, setMissing] = useState<readonly MissingControl[]>([]);
+  const lists = Boolean(missingTitle);
+  const watches = Boolean(incompleteHint || incompleteHintNamed || lists);
+  // By value: a Server Component hands a new object on every render, and the watcher below must
+  // not be torn down and rebuilt for the same names.
+  const namesKey = missingNames ? JSON.stringify(missingNames) : "";
 
   useEffect(() => {
     if (!watches) return;
     const form = ref.current?.form;
     if (!form) return;
+    const names: Readonly<Record<string, string>> = namesKey ? JSON.parse(namesKey) : {};
 
     const measure = () => {
-      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState; labels?: NodeListOf<HTMLLabelElement> | null }>;
-      const invalid = controls.find((control) => control.validity && !control.validity.valid);
-      setComplete(invalid === undefined);
+      const controls = Array.from(form.elements) as WatchedControl[];
+      // `isRefused` skips a control that will not validate: one in a disabled fieldset
+      // (`ShownForMinor`) is not the browser's to refuse, and must not be listed as missing.
+      // The whole scan only where a list is drawn; elsewhere the first refusal is all that is said,
+      // and the event editor's few hundred boxes stop at it (§371).
+      const invalid = lists ? controls.filter(isRefused) : [];
+      const first = lists ? invalid[0] : controls.find(isRefused);
+      setComplete(first === undefined);
+      if (lists) {
+        const entries = missingControls(invalid, names);
+        // Only a different list is a render: the scan runs once a frame while somebody types.
+        setMissing((previous) => (sameEntries(previous, entries) ? previous : entries));
+      }
       // A tick's label is a sentence, not the name of a box — "Fill in first: I understand that…"
       // reads badly — so a tick is named only where the button has no sentence of its own for it
       // (the live-edit acknowledgement's `incompleteHint`).
-      const tick = invalid instanceof HTMLInputElement && invalid.type === "checkbox";
+      const tick = first instanceof HTMLInputElement && first.type === "checkbox";
       if (tick && incompleteHint) {
         setFirstMissing(null);
         return;
       }
-      // MUI marks a required label with " *"; the sentence names the box, not the asterisk. A box
-      // inside a language tab says which language, or "Titlu" would not say which of two titles.
-      const text = invalid?.labels?.[0]?.textContent?.replace(/\s*\*\s*$/, "").trim() || invalid?.getAttribute("aria-label");
-      const language = invalid?.closest("[data-language]")?.getAttribute("data-language");
-      setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
+      setFirstMissing(first ? labelOf(first) : null);
     };
     measure();
     // Behind the frame the keystroke leads to, once per frame (§371): the scan reads every box of
@@ -193,7 +239,7 @@ export default function SubmitButton({
       form.removeEventListener("change", scheduler.schedule);
       scheduler.cancel();
     };
-  }, [watches, incompleteHint]);
+  }, [watches, incompleteHint, lists, namesKey]);
 
   // The named sentence when there is a box to name; the button's own sentence otherwise; and
   // never the named one with its `{field}` unfilled.
@@ -302,9 +348,13 @@ export default function SubmitButton({
   }, [pending]);
 
   const dimmed = (watches && !complete && !pending) || (waiting && pressedEarly);
-  const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : incompleteSentence;
+  // The list, where one is asked for, says what the sentence beneath would have said — only better.
+  const showList = lists && !complete && !pending && missing.length > 0;
+  const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : showList ? undefined : incompleteSentence;
   // One id per button: a page with two forms has two buttons that may both be waiting (§315).
   const hintId = useId();
+  const listId = useId();
+  const describedBy = [showList ? listId : null, dimmed && hint ? hintId : null].filter(Boolean).join(" ") || undefined;
   const Glyph = glyph ?? (runner ? DirectionsRunIcon : null);
 
   return (
@@ -316,6 +366,46 @@ export default function SubmitButton({
         width: fullWidth ? "100%" : "auto",
       }}
     >
+      {/*
+        What is still missing, above the button (§422): where somebody about to press is already
+        looking, every entry a thumb's target (BR-REQ-041-01 criterion 6) that goes to its field.
+        Not a live region — a list re-read at every keystroke would talk over the typing; it is
+        the button's description instead, read with it.
+      */}
+      {showList && (
+        <Box
+          id={listId}
+          data-testid="form-missing"
+          sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 1.5, py: 1 }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {missingTitle}
+          </Typography>
+          <Box
+            component="ul"
+            sx={{ listStyle: "none", m: 0, mt: 0.5, p: 0, display: "flex", flexWrap: "wrap", columnGap: 1.5 }}
+          >
+            {missing.map(({ key, label, id }) => (
+              <li key={key}>
+                {id ? (
+                  <Link
+                    href={`#${id}`}
+                    onClick={(event) => reach(event, id)}
+                    variant="body2"
+                    sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+                  >
+                    {label}
+                  </Link>
+                ) : (
+                  <Typography variant="body2" component="span" sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+                    {label}
+                  </Typography>
+                )}
+              </li>
+            ))}
+          </Box>
+        </Box>
+      )}
       <Button
         ref={ref}
         type="submit"
@@ -331,7 +421,7 @@ export default function SubmitButton({
         // on press, is the explanation.
         aria-disabled={pending}
         aria-busy={pending}
-        aria-describedby={dimmed && hint ? hintId : undefined}
+        aria-describedby={describedBy}
         /*
           No ink under the finger (§371): the press answers with "Se salvează…" and the runner in
           the same frame, which is the feedback, and the ripple was the costliest thing in it — MUI

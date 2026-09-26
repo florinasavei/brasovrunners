@@ -3483,6 +3483,7 @@
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
+    "missingTitle": "Still missing:",
     "submittedTo": "We sent it to:",
     "submittedAlready": "If you were already registered for this event, that email is your existing confirmation — no second registration was created.",
     "done": {
@@ -3606,8 +3607,8 @@
       "instagramHandle": "Instagram",
       "guardianName": "Parent / guardian",
       "fitnessDeclared": "The statement that you are medically fit",
-      "rulesAcknowledged": "the race conditions",
-      "emailConfirm": "the address typed a second time",
+      "rulesAcknowledged": "The race conditions",
+      "emailConfirm": "The address typed a second time",
       "termsAccepted": "Accepting the terms and conditions",
       "fitnessAcknowledged": "The acknowledgement about the person's fitness statement"
     },
@@ -3703,7 +3704,9 @@
     "clubMemberHint": "I have been to at least 3 group runs in the past year.",
     "rules": {
       "open": "Read the race conditions",
-      "reading": "Press the button above. They open here, you read to the end, and only then can you confirm.",
+      "reading": "Press the box or the button: the conditions open here, you read them to the end, and only then is the box ticked.",
+      "tick": "I have read and agree to the race conditions",
+      "missing": "The race conditions — open them and read to the end",
       "panelTitle": "Race conditions — {event}",
       "keepReading": "Scroll to the end to be able to confirm.",
       "agreeButton": "I have read them and I agree",
@@ -3715,7 +3718,7 @@
     },
     "opensInNewTab": "opens in a new tab",
     "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits.",
-    "emailConfirm": "Type the address once more *",
+    "emailConfirm": "Type the address once more",
     "emailMismatch": "The two addresses are not the same — check the letters.",
     "emailNoPaste": "Type the address here by hand — copying it from the box above would check nothing.",
     "emailAllowPaste": "Cannot type it? Paste it anyway",
@@ -4265,7 +4268,7 @@
     "prefill": {
       "noEmail": "Hello! I tried to register for {event}, but the confirmation email never arrived — not even after I asked for it again. Could you help?\n\n(Write the name you want to be registered under below, if it differs from the one above.)"
     },
-    "emailConfirm": "Type the address once more *",
+    "emailConfirm": "Type the address once more",
     "emailMismatch": "The two addresses are not the same — check the letters."
   },
   "Offline": {

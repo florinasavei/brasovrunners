@@ -3483,6 +3483,7 @@
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
+    "missingTitle": "Mai lipsesc:",
     "submittedTo": "L-am trimis la adresa:",
     "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
     "done": {
@@ -3606,8 +3607,8 @@
       "instagramHandle": "Instagram",
       "guardianName": "Părinte / tutore",
       "fitnessDeclared": "Declarația că ești apt medical",
-      "rulesAcknowledged": "condițiile concursului",
-      "emailConfirm": "adresa scrisă a doua oară",
+      "rulesAcknowledged": "Condițiile concursului",
+      "emailConfirm": "Adresa scrisă a doua oară",
       "termsAccepted": "Acceptarea termenilor și condițiilor",
       "fitnessAcknowledged": "Confirmarea despre declarația de sănătate a persoanei"
     },
@@ -3703,7 +3704,9 @@
     "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
     "rules": {
       "open": "Citește condițiile concursului",
-      "reading": "Apasă butonul de mai sus. Se deschid aici, le citești până la capăt, și abia apoi poți confirma.",
+      "reading": "Apasă pe căsuță sau pe buton: condițiile se deschid aici, le citești până la capăt și abia apoi se bifează.",
+      "tick": "Am citit și sunt de acord cu condițiile concursului",
+      "missing": "Condițiile concursului — deschide-le și citește-le până la capăt",
       "panelTitle": "Condițiile concursului — {event}",
       "keepReading": "Derulează până la sfârșit ca să poți confirma.",
       "agreeButton": "Am citit și sunt de acord",
@@ -3715,7 +3718,7 @@
     },
     "opensInNewTab": "se deschide într-o filă nouă",
     "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele.",
-    "emailConfirm": "Scrie adresa încă o dată *",
+    "emailConfirm": "Scrie adresa încă o dată",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele.",
     "emailNoPaste": "Scrie adresa de mână aici — copierea din câmpul de deasupra n-ar verifica nimic.",
     "emailAllowPaste": "Nu poți scrie de mână? Lipește oricum",
@@ -4265,7 +4268,7 @@
     "prefill": {
       "noEmail": "Bună! Am încercat să mă înscriu la {event}, dar nu a ajuns emailul de confirmare — nici după ce l-am cerut din nou. Vă rog să mă ajutați.\n\n(Scrie mai jos numele cu care vrei să te înscrii, dacă e altul decât cel de sus.)"
     },
-    "emailConfirm": "Scrie adresa încă o dată *",
+    "emailConfirm": "Scrie adresa încă o dată",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Offline": {
