@@ -58,7 +58,9 @@ function candidates(srcset: string): { url: string; width: number }[] {
 /** One press, answered: the numbers the action put in the address (`giveOlderPicturesLadderAction`). */
 async function press(page: Page, left: number): Promise<{ saved: string; count: number; left: number; failed: number }> {
   await page.goto("/ro/admin/tasks");
-  const card = page.getByTestId("older-pictures");
+  // Inside `#main`: while the page streams, Next can hold a second, hidden copy of a section
+  // outside it for a moment, and the card is the one a person sees.
+  const card = page.locator("#main").getByTestId("older-pictures");
   // The card says the count the database says — before anything is pressed.
   await expect(card.getByTestId("older-pictures-left")).toContainText(`${left} `);
   await expect(card.getByTestId("older-pictures-left")).toContainText("fără mărimi");
@@ -132,7 +134,7 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§NNN)", 
         expect(answer).toEqual({ saved: "picturesLaddered", count: 1, left: 0, failed: 0 });
         // Nothing is left, so the card is gone.
         await expect(page.getByRole("heading", { level: 1, name: "Ce mai este de făcut" })).toBeVisible();
-        await expect(page.getByTestId("older-pictures")).toHaveCount(0);
+        await expect(page.locator("#main").getByTestId("older-pictures")).toHaveCount(0);
       } else {
         // A database with older pictures of its own: press until this one is converted, each
         // press converting at least one and the count going down, a failure only for a picture
@@ -145,8 +147,8 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§NNN)", 
           expect(answer.failed).toBeLessThanOrEqual(already);
           expect(answer.left).toBe(before - answer.count);
           expect(answer.saved).toBe(answer.failed > 0 ? "picturesLadderedFailed" : "picturesLaddered");
-          if (answer.left === 0) await expect(page.getByTestId("older-pictures")).toHaveCount(0);
-          else await expect(page.getByTestId("older-pictures-left")).toContainText(`${answer.left} `);
+          if (answer.left === 0) await expect(page.locator("#main").getByTestId("older-pictures")).toHaveCount(0);
+          else await expect(page.locator("#main").getByTestId("older-pictures-left")).toContainText(`${answer.left} `);
         }
       }
 
