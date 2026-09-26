@@ -53,7 +53,6 @@
       "label": "Event filters",
       "button": "Filters",
       "buttonCount": "Filters ({count})",
-      "help": "Within a group any tick will do; across groups, every one must match.",
       "groups": {
         "type": "Type",
         "surface": "Surface",

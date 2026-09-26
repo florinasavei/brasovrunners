@@ -163,9 +163,6 @@ export default async function ListingFilterPanel({
           {Object.entries(keep).map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />
           ))}
-          <Typography variant="body2" color="text.secondary" sx={{ gridColumn: "1 / -1" }}>
-            {t("filter.help")}
-          </Typography>
           {offer.groups.map(({ group, values }) => (
             <Box component="fieldset" key={group} sx={FIELDSET_SX}>
               <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>

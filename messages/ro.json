@@ -53,7 +53,6 @@
       "label": "Filtrele evenimentelor",
       "button": "Filtre",
       "buttonCount": "Filtre ({count})",
-      "help": "Într-un grup ajunge oricare bifă; între grupuri trebuie să se potrivească toate.",
       "groups": {
         "type": "Tipul",
         "surface": "Terenul",

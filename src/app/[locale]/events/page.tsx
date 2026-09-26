@@ -251,10 +251,11 @@ async function ListingLead({
           of kind chips and §401's «Colaborare» chip beside them. Nothing to narrow and nothing
           ticked, it does not render, and nothing on the listing moves for that.
 
-          The gap around it is `DENSITY.sectionGap` (§401 — the owner: "filters still need to be a
-          bit above the grid"): 16px on a phone and 24px from `sm`, above and below alike. */}
+          The gap around it is `DENSITY.gapSm` (§NNN, tightening §401's `sectionGap` — the owner: "in
+          general prea mult padding între carduri și restul"): 8px on a phone and 12px from `sm`,
+          above and below alike. */}
       {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
-        <Box sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
+        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 }, mb: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           <ListingFilterPanel
             locale={locale}
             pathname="/events"

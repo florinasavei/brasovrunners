@@ -137,8 +137,10 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // return shapes so the grid, the empty notice and the "Alte evenimente" fold each keep the
   // same gap under the row whichever one follows it — the filter row carried no `mb` and the
   // grid no `mt` before, so this is a genuinely new gap rather than a literal being converted.
-  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
-  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
+  // The filter panel's wrapper (§NNN, tightening §401): less space between it and the cards.
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 3 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 3 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5, count: 3 },
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
