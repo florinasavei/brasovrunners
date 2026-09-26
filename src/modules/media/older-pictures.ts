@@ -129,6 +129,7 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
 
   let converted = 0;
   let failed = 0;
+  const failedIds: string[] = [];
   /*
     A cursor, not "the first twenty again": a picture that fails stays a candidate, and with more
     failures than one page holds, re-reading the first page would convert nothing ever again. The
@@ -170,7 +171,10 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
         outcome = "failed";
       }
       if (outcome === "converted") converted += 1;
-      if (outcome === "failed") failed += 1;
+      if (outcome === "failed") {
+        failed += 1;
+        if (failedIds.length < perPress) failedIds.push(asset.id);
+      }
     }
   }
 
@@ -180,7 +184,7 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
     action: "media.ladder_given",
     entityType: "media_asset",
     entityId: null,
-    metadata: { converted, failed, left },
+    metadata: { converted, failed, left, ...(failedIds.length > 0 ? { failedIds } : {}) },
     now: options.now ?? new Date(),
   });
   // A body's address changed: every cached public read that carries one is stale (§333).
@@ -197,12 +201,18 @@ async function convertOne<T extends Record<string, unknown>>(
   const next = ladderKeyPrefixOf(old);
 
   const master = await storage.get(objectKey(old, "web"));
-  if (!master) return "failed";
+  if (!master) {
+    console.warn("[media] no ladder for", asset.id, "its master is missing from storage");
+    return "failed";
+  }
   let ladder: Awaited<ReturnType<typeof ladderFromStoredMaster>>;
   try {
     ladder = await ladderFromStoredMaster(master);
   } catch (error) {
-    if (isDomainError(error)) return "failed";
+    if (isDomainError(error)) {
+      console.warn("[media] no ladder for", asset.id, "its master could not be decoded", error);
+      return "failed";
+    }
     throw error;
   }
 

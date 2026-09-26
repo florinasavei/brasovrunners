@@ -2446,9 +2446,9 @@
           "other": "Au rămas {count} de imagini fără mărimi."
         },
         "failed": {
-          "one": "La ultima apăsare, {count} imagine nu a primit mărimile: fișierul ei lipsește din stocare sau nu e o imagine. Rămâne în numărătoare și fiecare apăsare o încearcă din nou, așa că încă o apăsare nu ajută. Încarc-o din nou acolo unde e folosită și scoate-o pe cea veche; când nu o mai folosește nimic, se șterge singură.",
-          "few": "La ultima apăsare, {count} imagini nu au primit mărimile: fișierul lor lipsește din stocare sau nu e o imagine. Rămân în numărătoare și fiecare apăsare le încearcă din nou, așa că încă o apăsare nu ajută. Încarcă fiecare imagine din nou acolo unde e folosită și scoate-o pe cea veche; când nu o mai folosește nimic, se șterge singură.",
-          "other": "La ultima apăsare, {count} de imagini nu au primit mărimile: fișierul lor lipsește din stocare sau nu e o imagine. Rămân în numărătoare și fiecare apăsare le încearcă din nou, așa că încă o apăsare nu ajută. Încarcă fiecare imagine din nou acolo unde e folosită și scoate-o pe cea veche; când nu o mai folosește nimic, se șterge singură."
+          "one": "La ultima apăsare, {count} imagine nu a primit mărimile: de obicei fișierul ei lipsește din stocare sau nu e o imagine. Rămâne în numărătoare și fiecare apăsare o încearcă din nou; dacă rămâne și după încă o apăsare, încarc-o din nou acolo unde e folosită și scoate-o pe cea veche — când nu o mai folosește nimic, se șterge singură.",
+          "few": "La ultima apăsare, {count} imagini nu au primit mărimile: de obicei fișierul lor lipsește din stocare sau nu e o imagine. Rămân în numărătoare și fiecare apăsare le încearcă din nou; dacă rămân și după încă o apăsare, încarcă fiecare din nou acolo unde e folosită și scoate-o pe cea veche — când nu o mai folosește nimic, se șterge singură.",
+          "other": "La ultima apăsare, {count} de imagini nu au primit mărimile: de obicei fișierul lor lipsește din stocare sau nu e o imagine. Rămân în numărătoare și fiecare apăsare le încearcă din nou; dacă rămân și după încă o apăsare, încarcă fiecare din nou acolo unde e folosită și scoate-o pe cea veche — când nu o mai folosește nimic, se șterge singură."
         },
         "failedLink": "Unde e folosită fiecare imagine →",
         "address": "Adresa fiecărei imagini se schimbă în paginile și evenimentele unde apare, iar vechea adresă merge în continuare — un link copiat în altă parte nu se strică. Un film de pe YouTube își păstrează imaginea mică a YouTube-ului.",

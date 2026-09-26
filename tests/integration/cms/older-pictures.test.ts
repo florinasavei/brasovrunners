@@ -232,7 +232,10 @@ describe("§NNN the pictures from before §414 get their ladder, a batch per pre
     const whole = await sharp(pixels, { raw: { width: 800, height: 600, channels: 3 } })
       .webp({ lossless: true })
       .toBuffer();
-    const cut = Buffer.from(whole.subarray(0, Math.floor(whole.byteLength * 0.9)));
+    // Kept even: an odd RIFF chunk size lacks the format's pad byte, so libwebp refuses the
+    // header outright (`metadata()` throws "Input buffer has corrupt header") instead of
+    // reading it and failing only the full decode, which is what this test needs.
+    const cut = Buffer.from(whole.subarray(0, Math.floor(whole.byteLength * 0.9) & ~1));
     cut.writeUInt32LE(cut.byteLength - 8, 4); // RIFF
     cut.writeUInt32LE(cut.byteLength - 20, 16); // VP8L
     expect((await sharp(cut).metadata()).width).toBe(800);
@@ -245,9 +248,9 @@ describe("§NNN the pictures from before §414 get their ladder, a batch per pre
     expect(rows.get(truncated.row.id)).toBe(truncated.row.keyPrefix);
     expect(isLadderKeyPrefix(rows.get(fine.row.id)!)).toBe(true);
     expect(await readLocalObject(objectKey(ladderKeyPrefixOf(truncated.row.keyPrefix), "web"))).toBeNull();
-    // The press was recorded, with the failure in its numbers.
+    // The press was recorded, with the failure in its numbers and the failed picture named.
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "media.ladder_given"));
-    expect(audit?.metadataJson).toEqual({ converted: 1, failed: 1, left: 1 });
+    expect(audit?.metadataJson).toEqual({ converted: 1, failed: 1, left: 1, failedIds: [truncated.row.id] });
 
     // And the next press is not jammed on it: it fails the same picture again and says so.
     expect(await giveOlderPicturesTheirLadder(db, admin, { now: T0 })).toEqual({ converted: 0, failed: 1, left: 1 });
