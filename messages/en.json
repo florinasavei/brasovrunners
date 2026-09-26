@@ -1341,6 +1341,9 @@
         "note": "What changed (optional)",
         "noteHelp": "Optional, in both languages or neither · plain text, at most {max} characters each. Each participant gets it in the language they registered in, under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
         "cancelTitle": "You are cancelling the event",
+        "cancelTitleCreate": "You are creating the event as cancelled",
+        "cancelIntroCreate": "The event is created with the status Cancelled and shows so on the site if you publish it. No email goes out: nobody is registered for a new event.",
+        "cancelReasonHelpCreate": "Required, in both languages · plain text, at most {max} characters in each. It stays in the audit log, with your name.",
         "cancelIntro": "The registrations stay as they are, as a record: nobody is withdrawn and no status changes. No more places are offered, no numbers are given and no automatic emails go out for this event.",
         "cancelReason": "Why the event is cancelled",
         "cancelReasonHelp": "Required, in both languages · plain text, at most {max} characters each. Each participant gets it in the language they registered in; it also appears in the audit log, with your name.",
@@ -1450,8 +1453,9 @@
           "earlierClose": "An earlier close stops only new registrations."
         },
         "conditions": {
-          "title": "Who may enter and what they sign",
-          "legalLink": "Legal documents — where a new version of the declaration is approved"
+          "title": "Who may enter",
+          "legalLink": "Legal documents — where a new version of the declaration is approved",
+          "declarationUnderRules": "The declaration a participant signs is chosen under “Rules” → “Self-declaration”."
         },
         "reminder": {
           "title": "The reminder before the start"
@@ -1477,7 +1481,8 @@
         },
         "status": {
           "title": "Event status",
-          "createNote": "A new event starts as scheduled (Programat); its status can be changed once the event exists."
+          "createNote": "Usually Scheduled. Choose Cancelled for an event already called off (recorded, say, from Facebook) or Completed for one that already took place. Neither sends an email: nobody is registered yet.",
+          "completedRefused": "Status: Completed can only be chosen for an event that has already started; otherwise choose Scheduled or Cancelled"
         },
         "course": {
           "title": "The course"
@@ -1645,6 +1650,11 @@
             "locked": "locked after publication",
             "none": "no address",
             "seoOneLanguage": "SEO in one language only"
+          },
+          "declaration": {
+            "offered": "declaration for {surface}",
+            "notOffered": "no declaration",
+            "notAsked": "not asked"
           }
         },
         "video": {
@@ -1654,6 +1664,11 @@
           "storedHelp": "The page shows this film under the rules, behind one press. It is a link saved before the editor had its YouTube button, and it is kept on every save. A new film goes in the description.",
           "noneHelp": "A film goes in the description, with the text editor's YouTube button, like a picture. The page has no other section for a film.",
           "toDescription": "Go to the description"
+        },
+        "declaration": {
+          "title": "Self-declaration",
+          "newest": "Newest approved version: v{version} · {title}. The participant signs it when confirming the registration.",
+          "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration."
         }
       },
       "identical": {
@@ -1665,9 +1680,11 @@
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
-        "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
+        "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
-        "minAgeHelp": "Reached by the day of the run. The declaration is for adults, so only an age above 18 counts: it is then stated in the declaration, and the signing page asks for the birth date and refuses anyone younger. 18 or less (and 0) changes nothing."
+        "minAgeHelp": "Reached by the day of the run. The declaration is for adults, so only an age above 18 counts: it is then stated in the declaration, and the signing page asks for the birth date and refuses anyone younger. 18 or less (and 0) changes nothing.",
+        "surface": "Surface, from “The course” card: {surface}",
+        "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
       "pageFlow": {
         "title": "The page, top to bottom",

@@ -109,18 +109,19 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
 
 /**
  * Whether the club has an approved group-run declaration in force for each surface (§393) — what
- * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked.
- * Asked in Romanian: both languages are required before a version can be approved (§46).
+ * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked —
+ * and, since §NNN, the version it names as the text in force, or null for none. Asked in Romanian:
+ * both languages are required before a version can be approved (§46).
  */
 export async function groupRunDeclarationsInForce<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-): Promise<Record<"ASPHALT" | "TRAIL", boolean>> {
+): Promise<Record<"ASPHALT" | "TRAIL", { version: number } | null>> {
   const [asphalt, trail] = await Promise.all([
     findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_ASPHALT", "ro", now),
     findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", now),
   ]);
-  return { ASPHALT: asphalt !== undefined, TRAIL: trail !== undefined };
+  return { ASPHALT: asphalt ? { version: asphalt.version } : null, TRAIL: trail ? { version: trail.version } : null };
 }
 
 /** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */

@@ -217,22 +217,27 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await languageTab(page, "title", "en").click();
     await excerpt("en", "Up the mountain.");
 
-    // "Traseul": the declaration box follows the surface — unticked while none is chosen.
-    await openEditorBox(page, "Traseul");
+    // «Regulamentul» › «Declarația pe propria răspundere» (§NNN): the declaration box follows the
+    // surface chosen in «Traseul» — unticked while none is chosen.
+    await openEditorBox(page, "Declarația pe propria răspundere");
     const box = page.getByRole("checkbox", { name: "Declarație opțională pe propria răspundere" });
     await expect(box).toBeDisabled();
     await expect(page.getByTestId("group-run-declaration-field")).toContainText("Doar pentru o alergare de grup pe asfalt sau pe trail");
+    await openEditorBox(page, "Traseul");
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
-    // On by default for a trail run (the mountain rescue asks for it), and a thumb's target.
+    // On by default for a trail run (the mountain rescue asks for it), and a thumb's target; the
+    // card names the surface and the approved text in force for it.
     await expect(box).toBeEnabled();
     await expect(box).toBeChecked();
+    await expect(page.getByTestId("group-run-declaration-surface")).toContainText("Trail");
+    await expect(page.getByTestId("group-run-declaration-in-force")).toContainText("Textul în vigoare pentru Trail");
     expect((await box.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 
     await hydrated(page);
-    await openEditorBox(page, "Traseul");
+    await openEditorBox(page, "Declarația pe propria răspundere");
     await expect(page.getByRole("checkbox", { name: "Declarație opțională pe propria răspundere" })).toBeChecked();
 
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();

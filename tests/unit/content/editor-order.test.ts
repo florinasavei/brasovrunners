@@ -53,7 +53,6 @@ const EDITOR_ORDER = [
   "<VideoBox",
   "<StartListBox",
   't("editor.groups.offPage")',
-  "<StatusBox",
   "<PromotionBox",
   "<AddressBox",
   'id="box-save"',
@@ -67,23 +66,27 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     }
   });
 
-  it("gives the status, the course and the links a box each, out of the first box, on both pages, each once (§406)", () => {
+  it("gives the course and the links a box each, out of the first box, and the status a card inside it, on both pages (§406, §NNN)", () => {
     const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
     for (const [page, source] of [
       ["edit", EDIT],
       ["create", CREATE],
     ] as const) {
-      // The first box is the type alone: it closes on itself and holds no card.
+      // The first box closes on itself: the status card is drawn by the box, not nested by the page.
       expect(source, page).toMatch(/<KindBox \{\.\.\.box\}[^>]*\/>/);
       expect(source, page).not.toContain("</KindBox>");
-      for (const card of ["<StatusBox", "<CourseBox", "<CostBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
+      expect(source, page).not.toContain("<StatusBox");
+      for (const card of ["<CourseBox", "<CostBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
     }
+    // The status: a level-3 card inside the first box, with the id it always had (§NNN).
+    const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
+    expect(status).toMatch(/const card = \{\s+id: "box-status",\s+level: 3/);
+    expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event, risk, notice })");
     // Boxes of their own, with the ids they always had, so a deep link or a refusal still lands on
     // them — a fold for whoever may change it, the same heading and id without the fold for a reader.
     for (const [file, id] of [
-      ["StatusBox", "box-status"],
       ["CourseBox", "box-course"],
       ["LinksBox", "box-links"],
     ] as const) {
@@ -137,14 +140,13 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
   });
 
   it("marks the five boxes a change reaches — date, place, programme, registration, status — and no other", () => {
-    for (const box of ["<WhenBox", "<PlaceBox", "<ProgrammeBox", "<RegistrationBox", "<StatusBox"]) {
+    for (const box of ["<WhenBox", "<PlaceBox", "<ProgrammeBox", "<RegistrationBox", "<KindBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
-    // The first box no longer holds the status (§406): the status box wears the mark itself, and
-    // the type's box, the course, the links, the partners, the promotion, the film and the list
-    // reach nobody.
-    for (const box of ["<KindBox", "<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
+    // The first box holds the status again (§NNN) and wears the mark for it; the course, the
+    // links, the partners, the promotion, the film and the list reach nobody.
+    for (const box of ["<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }

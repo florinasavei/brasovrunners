@@ -163,6 +163,8 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     // The cost between the course and the registration, as the page draws its row.
     expect(order.indexOf("box-course")).toBeLessThan(order.indexOf("box-cost"));
     expect(order.indexOf("box-cost")).toBeLessThan(order.indexOf("box-registration"));
-    expect(order.indexOf("box-start-list")).toBeLessThan(order.indexOf("box-status"));
+    // The status is a card inside the first box since §NNN, the declaration one inside the rules.
+    await expect(page.locator("#box-kind #box-status")).toHaveCount(1);
+    await expect(page.locator("#box-rules #box-declaration")).toHaveCount(1);
   });
 });

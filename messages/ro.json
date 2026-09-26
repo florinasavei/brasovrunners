@@ -1341,6 +1341,9 @@
         "note": "Ce s-a schimbat (opțional)",
         "noteHelp": "Opțional, în ambele limbi sau în niciuna · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris, sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
         "cancelTitle": "Anulezi evenimentul",
+        "cancelTitleCreate": "Creezi evenimentul anulat",
+        "cancelIntroCreate": "Evenimentul se creează cu starea Anulat și apare așa pe site dacă îl publici. Nu pleacă niciun email: nimeni nu e înscris la un eveniment nou.",
+        "cancelReasonHelpCreate": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Rămâne în jurnalul de audit, cu numele tău.",
         "cancelIntro": "Înscrierile rămân așa cum sunt, ca evidență: nimeni nu e retras și nu i se schimbă starea. Nu se mai oferă locuri, nu se mai dau numere și nu mai pleacă emailuri automate pentru acest eveniment.",
         "cancelReason": "Motivul anulării",
         "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
@@ -1450,8 +1453,9 @@
           "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
         },
         "conditions": {
-          "title": "Condiții de participare și declarația",
-          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
+          "title": "Condiții de participare",
+          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
+          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Regulamentul» → «Declarația pe propria răspundere»."
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -1477,7 +1481,8 @@
         },
         "status": {
           "title": "Starea evenimentului",
-          "createNote": "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
+          "createNote": "De obicei Programat. Alege Anulat pentru un eveniment deja anulat (trecut în evidență, de exemplu de pe Facebook) sau Încheiat pentru unul care a avut loc deja. Niciuna nu trimite emailuri: nimeni nu e încă înscris.",
+          "completedRefused": "Starea: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
         },
         "course": {
           "title": "Traseul"
@@ -1645,6 +1650,11 @@
             "locked": "blocată după publicare",
             "none": "fără adresă",
             "seoOneLanguage": "SEO într-o singură limbă"
+          },
+          "declaration": {
+            "offered": "declarație pentru {surface}",
+            "notOffered": "fără declarație",
+            "notAsked": "nu se cere"
           }
         },
         "video": {
@@ -1654,6 +1664,11 @@
           "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
           "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
           "toDescription": "Mergi la descriere"
+        },
+        "declaration": {
+          "title": "Declarația pe propria răspundere",
+          "newest": "Cea mai nouă versiune aprobată: v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
+          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația."
         }
       },
       "identical": {
@@ -1665,9 +1680,11 @@
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
-        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
-        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic."
+        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic.",
+        "surface": "Suprafața, din cardul «Traseul»: {surface}",
+        "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
       "pageFlow": {
         "title": "Pagina, de sus în jos",

@@ -6,6 +6,7 @@ import {
   bibsSummary,
   coHostsSummary,
   conditionsSummary,
+  declarationSummary,
   confirmationSummary,
   courseSummary,
   descriptionSummary,
@@ -224,8 +225,9 @@ describe("§350 each box's summary, empty and filled", () => {
         "ro",
       ),
     ).toBe("Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59");
-    expect(conditionsSummary(words, 14, { version: 3, title: "Declarația" })).toBe("de la 14 ani · declarația v3");
-    expect(conditionsSummary(words, 16, null)).toBe(`de la 16 ani · ${words.conditions.noDeclaration}`);
+    // §NNN: the declaration is chosen under «Regulamentul»; this card says the age alone.
+    expect(conditionsSummary(words, 14)).toBe("de la 14 ani");
+    expect(conditionsSummary(words, 16)).toBe("de la 16 ani");
     expect(confirmationSummary(words, 7, 2)).toBe("Cerută cu 7 zile înainte, termen cu 2 zile înainte");
     // §407: a deadline of zero is the start, and no window says so rather than two dead numbers.
     expect(confirmationSummary(words, 7, 0)).toBe("Cerută cu 7 zile înainte, termen la start");
@@ -356,5 +358,25 @@ describe("§350 every summary template, in both catalogues, fills without a stra
       const values = Object.fromEntries([...template.matchAll(/\{(\w+)\}/g)].map((match) => [match[1], "x"]));
       expect(fillIn(template, values), key).not.toMatch(/\{\w+\}/);
     }
+  });
+});
+
+describe("§NNN the declaration card under «Regulamentul» says what a runner signs", () => {
+  const groupRun = { takesRegistrations: false, declarationVersion: null, surface: "Trail" } as const;
+  const race = { takesRegistrations: true, declarationVersion: 3, surface: null } as const;
+  it("names a group run's offered self-declaration by its surface, or says there is none", () => {
+    expect(declarationSummary(words, { registrationMode: "NONE", offersGroupRunDeclaration: true }, groupRun)).toBe("declarație pentru Trail");
+    expect(declarationSummary(words, { registrationMode: "NONE", offersGroupRunDeclaration: false }, groupRun)).toBe("fără declarație");
+    expect(declarationSummary(words, null, groupRun)).toBe("fără declarație");
+    expect(declarationSummary(wordsEn, { registrationMode: "NONE", offersGroupRunDeclaration: true }, groupRun)).toBe("declaration for Trail");
+  });
+
+  it("names a race's declaration only while it registers on the site, and the missing one as the gap it is", () => {
+    expect(declarationSummary(words, { registrationMode: "INTERNAL", offersGroupRunDeclaration: false }, race)).toBe("declarația v3");
+    expect(declarationSummary(words, { registrationMode: "INTERNAL", offersGroupRunDeclaration: false }, { ...race, declarationVersion: null })).toBe(
+      words.conditions.noDeclaration,
+    );
+    expect(declarationSummary(words, { registrationMode: "EXTERNAL", offersGroupRunDeclaration: false }, race)).toBeNull();
+    expect(declarationSummary(words, null, race)).toBeNull();
   });
 });

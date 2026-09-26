@@ -18,7 +18,6 @@ import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
-import StatusBox from "@/modules/content/events/ui/boxes/StatusBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
@@ -64,9 +63,10 @@ export const dynamic = "force-dynamic";
  * (`EventEditorLayout`): the side column with Publicare, Recurență and the page's map, first on a
  * phone, and the main column's cards in the page's own order (§406), numbered and headed by
  * whether the page will show each, under the same titles, with the same field names and the same
- * Română | English tabs; then the cards that are not on the page. The status card is the one that
- * is read-only here: it says "Programat" and that the status can be changed once the event exists, and a hidden
- * `SCHEDULED` is what posts, so "Anulat" is never offered for an event that does not exist. What
+ * Română | English tabs; then the cards that are not on the page. The status card, inside the
+ * first box, is the editor's same select, starting at "Programat" (§NNN): an event already called
+ * off is created "Anulat" with its reason in both languages, and one that already took place
+ * "Încheiat" — and neither sends an email, since nobody is registered yet. What
  * the page leaves out cannot exist before the event does: allocation and printing, the series'
  * details, the registrations, copy and delete. Nothing stands in for what is left out.
  *
@@ -166,9 +166,6 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
       <ActionForm action={createEventAction} messages={messages} confirm={publishConfirm} id="event-create-form" data-testid="event-create-form">
         <input type="hidden" name="uiLocale" value={locale} />
-        {/* An event that does not exist yet is scheduled (§350): the status card shows it, read-only,
-            and this is what posts (§358). */}
-        <input type="hidden" name="event.eventStatus" value="SCHEDULED" />
 
         {/* What publication still needs, read once for every card line and chip as it is typed (§406). */}
         <PublishCheckProvider formId="event-create-form" locales={localeCodes} initial={blankGaps}>
@@ -241,14 +238,13 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />
               <ProgrammeBox {...box} languages={languages} heading={flow.headings.programme} />
-              <RulesBox languages={languages} heading={flow.headings.rules} />
+              <RulesBox {...box} languages={languages} heading={flow.headings.rules} declarations={declarations} />
               <VideoBox {...box} heading={flow.headings.video} />
               <StartListBox {...box} heading={flow.headings.startList} />
 
-              {/* Not a section of the page: the status — read-only here, "Programat" (§358) —,
-                  the marks, the address. */}
+              {/* Not a section of the page: the marks, the address. The status is in the first
+                  card since §NNN — "Programat", "Anulat" or "Încheiat", as on the editor. */}
               <EditorGroup label={t("editor.groups.offPage")} />
-              <StatusBox {...box} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />
 
