@@ -34,5 +34,7 @@ export function hasReachedEnd(measurement: ScrollMeasurement | null): boolean {
   const { scrollTop, clientHeight, scrollHeight } = measurement;
   // Nothing to scroll: the whole text is already on screen.
   if (scrollHeight <= clientHeight + SCROLL_END_TOLERANCE_PX) return true;
-  return scrollTop + clientHeight >= scrollHeight - SCROLL_END_TOLERANCE_PX;
+  // Rounded up (§422): at 125 % or a 90 % zoom `scrollTop` stops a fraction short of the last
+  // device pixel, and a fraction must never be the difference between read and not read.
+  return Math.ceil(scrollTop + clientHeight) >= scrollHeight - SCROLL_END_TOLERANCE_PX;
 }

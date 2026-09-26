@@ -33,7 +33,7 @@ import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/p
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
-import { acceptanceAfterRefusal, ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
+import { acceptanceAfterRefusal, ERROR_SUMMARY_ID, parseInvalidFields, REGISTRATION_FORM_FIELDS } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
 import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice";
@@ -1255,6 +1255,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   keepReadingLabel={t("rules.keepReading")}
                   closeLabel={t("rules.close")}
                   plainLabel={t("rules.plain")}
+                  tickLabel={t("rules.tick")}
+                  // A refusal about another field brings the tick back as posted (§286, §422).
+                  defaultAgreed={prefill("rulesAcknowledged") === "on"}
                   href={`${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}#rules`}
                   document={event.rulesJson}
                 />
@@ -1416,6 +1419,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 // the form is in flight. Decoration: the label is the button's name.
                 runner
                 incompleteHint={t("incompleteHint")}
+                /*
+                  Every required field still empty, listed above the button and going to it
+                  (§422) — named by the same short names the refusal summary at the top uses.
+                */
+                missingTitle={t("missingTitle")}
+                missingNames={{
+                  ...Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, t(`fieldNames.${name}`)])),
+                  // Not only what is missing but what to do about it: the box does not tick on a
+                  // press, so "Condițiile concursului" alone sent people to press it (§422).
+                  rulesAcknowledged: t("rules.missing"),
+                }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the
                   club's switch off, there is no token to wait for and waiting would be a button
