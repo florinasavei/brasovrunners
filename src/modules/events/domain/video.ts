@@ -47,7 +47,11 @@ export function isYoutubeLink(url: string | null | undefined): boolean {
  * embedded player through the IFrame API's postMessage protocol once it is on the page. No
  * `iframe_api` script is ever loaded — the origin is enough for the player to accept commands
  * posted to it, which is the whole of what `enablejsapi` is for.
+ *
+ * `vq=hd1080` asks for HD from the start (§NNN). It is the embed's undocumented quality hint —
+ * YouTube picks the stream from the viewing conditions since 2019 and may ignore it — so the
+ * volume control also posts `setPlaybackQuality` before `playVideo`; neither can do harm.
  */
 export function youtubeEmbedUrl(videoId: string, origin: string): string {
-  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&enablejsapi=1&origin=${encodeURIComponent(origin)}`;
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&vq=hd1080&enablejsapi=1&origin=${encodeURIComponent(origin)}`;
 }

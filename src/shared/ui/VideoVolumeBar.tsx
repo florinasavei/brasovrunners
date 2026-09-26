@@ -4,6 +4,7 @@ import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import { alpha, type Theme } from "@mui/material/styles";
 import Slider from "@mui/material/Slider";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -16,10 +17,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * back. It finds its iframe by `frameId` (the `id` `VideoFacade` gave it — a plain string, never
  * an element or a ref crossing the server/client boundary) and its `<details>` ancestor to know
  * when the film is showing, and renders nothing until then.
+ *
+ * Since §NNN it is no bar at all: a subtle volume glyph at the film's bottom-right corner, the
+ * mute toggle itself, with the slider unfolding beside it only on demand — the pointer resting
+ * on it, or the keyboard or a tap reaching it.
  */
 
 const YOUTUBE_ORIGIN = "https://www.youtube-nocookie.com";
 const CONTROL_SIZE = 44;
+/** The slider's width once unfolded — enough for a thumb to drag, small beside the film. */
+const SLIDER_WIDTH = 96;
+/**
+ * The quality the film asks for first (§NNN): HD. Since 2019 YouTube chooses the stream from
+ * the viewing conditions and documents `setPlaybackQuality` as unsupported, so this is a
+ * request, not a guarantee — sent alongside the embed's own `vq` hint (`youtubeEmbedUrl`),
+ * harmless where the player ignores it.
+ */
+const PREFERRED_QUALITY = "hd1080";
 /**
  * The IFrame API's handshake (`DECISIONS.md` §403): an embedded player posts nothing to its
  * parent — no `onReady`, no `infoDelivery` — until the parent has sent it `listening`, which is
@@ -32,7 +46,61 @@ const LISTENING_RETRY_MS = 250;
 const LISTENING_MAX_TRIES = 40;
 const READY_EVENTS = new Set(["onReady", "initialDelivery", "infoDelivery"]);
 
-type Command = { func: string; args?: number[] };
+type Command = { func: string; args?: (number | string)[] };
+
+/** How long the unfolded slider stays with nothing touching it before it folds again (§NNN). */
+export const REVEAL_IDLE_MS = 2500;
+
+/** What the film is told on opening, in order: HD first, then play (§NNN). */
+export function openingCommands(): Command[] {
+  return [{ func: "setPlaybackQuality", args: [PREFERRED_QUALITY] }, { func: "playVideo" }];
+}
+
+/**
+ * The slider's reveal as a tiny timer, apart from React so it can be tested with fake timers:
+ * `reveal()` unfolds it and (re)starts the idle countdown, `hide()` folds it at once.
+ */
+export function createRevealTimer(set: (revealed: boolean) => void, idleMs = REVEAL_IDLE_MS) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const clear = () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+  };
+  return {
+    reveal() {
+      clear();
+      set(true);
+      timer = setTimeout(() => {
+        timer = undefined;
+        set(false);
+      }, idleMs);
+    },
+    hide() {
+      clear();
+      set(false);
+    },
+    dispose: clear,
+  };
+}
+
+/**
+ * The slider wrapper's style: folded by width, not `display` or `visibility`, so Tab still
+ * reaches it on a desktop; never shown on a phone, which gets the mute toggle alone (§NNN);
+ * no transition for a visitor who asked for reduced motion.
+ */
+export function sliderWrapperSx(revealed: boolean) {
+  return {
+    display: { xs: "none", sm: "flex" },
+    alignItems: "center",
+    height: CONTROL_SIZE,
+    px: 1.5,
+    overflow: "hidden",
+    maxWidth: revealed ? SLIDER_WIDTH + 24 : 0,
+    opacity: revealed ? 1 : 0,
+    transition: "max-width 160ms ease, opacity 160ms ease",
+    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+  } as const;
+}
 
 export default function VideoVolumeBar({
   frameId,
@@ -45,6 +113,14 @@ export default function VideoVolumeBar({
   const [open, setOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(100);
+  const [revealed, setRevealed] = useState(false);
+  const revealRef = useRef<ReturnType<typeof createRevealTimer> | null>(null);
+  useEffect(() => {
+    const timer = createRevealTimer(setRevealed);
+    revealRef.current = timer;
+    return () => timer.dispose();
+  }, []);
+  const reveal = useCallback(() => revealRef.current?.reveal(), []);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   /** Whether the player has answered at all yet — until then, a command is queued, not sent. */
   const readyRef = useRef(false);
@@ -55,7 +131,7 @@ export default function VideoVolumeBar({
    *  later by exactly that first, stale answer). */
   const pendingRef = useRef<{ muted?: boolean; volume?: number } | null>(null);
 
-  const post = useCallback((func: string, args?: number[]) => {
+  const post = useCallback((func: string, args?: (number | string)[]) => {
     const frame = frameRef.current;
     if (!readyRef.current || !frame) {
       queueRef.current.push({ func, args });
@@ -119,8 +195,9 @@ export default function VideoVolumeBar({
     frameRef.current?.focus();
     // The click that opened the disclosure is the same gesture that should start the film
     // (the owner's call: a click means sound); the player answers `onReady` before this does
-    // anything, exactly like every other command here.
-    post("playVideo");
+    // anything, exactly like every other command here. HD is asked for first, before the film
+    // starts, so its first frames are not a low-resolution guess (§NNN).
+    for (const { func, args } of openingCommands()) post(func, args);
     // The handshake again, until the player answers — as YouTube's own script does.
     sendListening();
     let tries = 1;
@@ -168,15 +245,19 @@ export default function VideoVolumeBar({
   }, [flushQueue]);
 
   const toggleMute = useCallback(() => {
+    // A tap or click keeps the slider in view a moment longer on a desktop; a phone never
+    // shows it (the wrapper is hidden below `sm`).
+    reveal();
     const next = !muted;
     setMuted(next);
     pendingRef.current = { ...pendingRef.current, muted: next };
     post(next ? "mute" : "unMute");
-  }, [muted, post]);
+  }, [muted, post, reveal]);
 
   const changeVolume = useCallback(
     (_event: Event, value: number | number[]) => {
       const next = Array.isArray(value) ? (value[0] ?? 0) : value;
+      reveal();
       setVolume(next);
       pendingRef.current = { ...pendingRef.current, volume: next };
       if (next === 0) {
@@ -190,42 +271,58 @@ export default function VideoVolumeBar({
         post("setVolume", [next]);
       }
     },
-    [post],
+    [post, reveal],
   );
 
   return (
     <Box
+      data-volume-control=""
       sx={{
         // Present in the markup from the first render — hydration-stable, and testable without
         // a click event — but shown only once the disclosure this bar controls is open.
         display: open ? "flex" : "none",
+        // A subtle glyph at the film's bottom-right corner, in normal flow under the 16∶9 box —
+        // never over it, where YouTube's own controls are (§403) — with no bar of its own: the
+        // page's own background, the page's secondary ink, the glyph at its small size inside
+        // the full 44-px tap target (§NNN).
+        justifyContent: "flex-end",
         alignItems: "center",
-        gap: 1,
-        px: 1,
-        py: 0.5,
-        bgcolor: "grey.900",
-        borderBottomLeftRadius: 4,
-        borderBottomRightRadius: 4,
+        color: "text.secondary",
+        // The slider only on demand (§NNN): the pointer resting on the control, focus reaching
+        // it, or a tap — each unfolds it, and it folds again after REVEAL_IDLE_MS untouched.
       }}
+      onPointerEnter={reveal}
+      onFocus={reveal}
     >
+      <Box className="volume-slider" data-revealed={revealed ? "" : undefined} sx={sliderWrapperSx(revealed)}>
+        <Slider
+          size="small"
+          value={muted ? 0 : volume}
+          onChange={changeVolume}
+          min={0}
+          max={100}
+          aria-label={labels.volume}
+          sx={{ color: "text.secondary", width: SLIDER_WIDTH }}
+        />
+      </Box>
       <IconButton
         type="button"
         onClick={toggleMute}
         aria-pressed={muted}
         aria-label={muted ? labels.unmute : labels.mute}
-        sx={{ color: "common.white", width: CONTROL_SIZE, height: CONTROL_SIZE, flexShrink: 0 }}
+        sx={{
+          color: "inherit",
+          width: CONTROL_SIZE,
+          height: CONTROL_SIZE,
+          flexShrink: 0,
+          opacity: 0.7,
+          // A translucent disc behind the glyph, so it reads on any background (§NNN).
+          bgcolor: (theme: Theme) => alpha(theme.palette.background.paper, 0.6),
+          "&:hover, &:focus-visible": { opacity: 1 },
+        }}
       >
-        {muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+        {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
       </IconButton>
-      <Slider
-        size="small"
-        value={muted ? 0 : volume}
-        onChange={changeVolume}
-        min={0}
-        max={100}
-        aria-label={labels.volume}
-        sx={{ color: "common.white", flex: 1, maxWidth: 180, mr: 1, display: { xs: "none", sm: "flex" } }}
-      />
     </Box>
   );
 }
