@@ -13,6 +13,7 @@ import { followStartDate } from "@/modules/events/domain/schedule";
 import DateField from "@/shared/forms/pickers/DateField";
 import TimeField from "@/shared/forms/pickers/TimeField";
 import { useRecall } from "@/shared/forms/recall";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { DENSITY } from "@/theme/density";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
@@ -250,6 +251,8 @@ function ScheduleRowsEditorIsland({
             <Box sx={WHAT_SX}>
               <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
               <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+              {/* «Tradu din română» (§NNN): the row's English words from its Romanian ones. */}
+              <TranslateFieldButton en={name("en")} />
             </Box>
             {/* Last in the document, so the keyboard reaches it after every box of the row, wherever
                 the grid draws it. */}

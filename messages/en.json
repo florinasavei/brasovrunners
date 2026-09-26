@@ -920,7 +920,9 @@
       "neonPlanTitle": "Change the Neon plan?",
       "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
       "olderPicturesTitle": "Make the phone sizes?",
-      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving."
+      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving.",
+      "translationBudgetTitle": "Save the translation budget?",
+      "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -2303,6 +2305,17 @@
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
             "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
           ]
+        },
+        "translation": {
+          "title": "Automatic translation from Romanian (DeepL, free)",
+          "todo": "Built: beside every English box in the editors there is \"Translate from Romanian\", and \"Translate everything from Romanian\" at the top. It starts once DeepL's free key is on the server; until then the English boxes are written by hand, as now.",
+          "done": "Automatic translation is on: the editors have the \"Translate from Romanian\" buttons.",
+          "how": [
+            "Create a DeepL API Free account (the \"DeepL API\" page on DeepL's site → the Free plan): 500,000 characters a month, free. DeepL may ask for a card for verification only; the Free plan is not charged.",
+            "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
+            "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
+            "Open an event: under the English boxes there is \"Translate from Romanian\". This row turns green. The daily budget is chosen under Tasks → Costs."
+          ]
         }
       },
       "freeVerdict": {
@@ -2500,6 +2513,24 @@
           "immediate": "Emails go out right after the request that queued them, whatever the interval; the scheduled queue only picks up what is left (a retry, a message deferred until the daily allowance resets).",
           "scheduled": "Emails now go out only when the scheduled queue runs (the club's sending setting is on “scheduled”), so a longer interval delays them too, by up to that many minutes."
         }
+      },
+      "translationBudget": {
+        "title": "Automatic translation (DeepL)",
+        "intro": "The editors' \"Translate from Romanian\" and \"Translate everything from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
+        "inForce": {
+          "off": "In force: off (0 characters a day) — the buttons refuse every translation.",
+          "daily": "In force: at most {count} characters a day."
+        },
+        "today": "Today {used} of {budget} characters were sent.",
+        "configured": "The DeepL key is set on this server: the buttons show for the Copywriter, the Organizer and the Administrator.",
+        "notConfigured": "The DeepL key is not set on this server: the buttons do not show (see the row in Tasks).",
+        "privacy": "Only the club's own texts from the content boxes go to DeepL (EU) — never a participant's data and never the legal texts. The privacy notice does not change.",
+        "updatedAt": "Last changed: {when}.",
+        "readOnly": "Only an Administrator can change the budget.",
+        "field": "Characters a day",
+        "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters.",
+        "save": "Save the budget",
+        "saving": "Saving…"
       }
     },
     "richText": {
@@ -4526,7 +4557,36 @@
         "few": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
         "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
       },
-      "groupRunDeclarationErased": "The declaration was erased."
+      "groupRunDeclarationErased": "The declaration was erased.",
+      "translationBudget": "The translation budget was saved."
+    }
+  },
+  "Translate": {
+    "button": "Translate from Romanian",
+    "pending": "Translating…",
+    "all": "Translate everything from Romanian",
+    "allHelp": "Replaces every English box that has Romanian text with its translation, with the same layout. Nothing is saved until you press Save.",
+    "done": "Translated. Read it, correct it if needed, then save.",
+    "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
+    "confirm": {
+      "title": "Replace the English text?",
+      "body": "The English box already has text. The translation from Romanian replaces it; nothing is saved until you press Save.",
+      "allTitle": "Translate everything from Romanian?",
+      "allBody": "{count} English boxes are replaced with the translation of the Romanian ones, with the same layout (headings, lists, tables, pictures, links). Nothing is saved until you press Save. The boxes: {fields}",
+      "go": "Translate",
+      "cancel": "Cancel"
+    },
+    "refusal": {
+      "forbidden": "Your role cannot use automatic translation.",
+      "notConfigured": "Automatic translation is not set up on this server (the DeepL key is missing).",
+      "invalid": "This box cannot be translated automatically.",
+      "nothing": "The Romanian box is empty: there is nothing to translate.",
+      "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
+      "budget": "Today's translation budget is spent ({remaining} characters left). It resets tomorrow; an Administrator can raise it under Tasks → Costs.",
+      "quota": "DeepL has used this month's free characters. Translation comes back next month.",
+      "refused": "DeepL refused the key. An Administrator needs to check DEEPL_API_KEY (Tasks).",
+      "unavailable": "DeepL did not answer. Try again in a minute.",
+      "failed": "The translation did not start. Check the connection and try again."
     }
   }
 }

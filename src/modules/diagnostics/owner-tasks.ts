@@ -65,6 +65,7 @@ export type TaskId =
   | "botCheck"
   | "declarationArchiveMail"
   | "vercelUsage"
+  | "translation"
   | "contactForm"
   | "roDomain"
   | "neonLimits";
@@ -87,6 +88,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   botCheck: "account",
   declarationArchiveMail: "decision",
   vercelUsage: "account",
+  translation: "account",
   contactForm: "account",
   roDomain: "decision",
   neonLimits: "decision",
@@ -206,6 +208,11 @@ export type OwnerTaskInputs = {
   declarationArchiveConfigured: boolean;
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
   vercelUsageConfigured: boolean;
+  /**
+   * Is «Tradu din română» set up (§NNN): `TRANSLATE_PROVIDER=deepl` with `DEEPL_API_KEY`, or
+   * switched `off` on purpose? Off by absence, the buttons are simply not drawn.
+   */
+  translationConfigured: boolean;
   /**
    * Can the contact form reach the club (§149, §164)? Both halves: a way to send — the Gmail
    * account and its app password, `CONTACT_FORM_MODE` (`capture` on a laptop counts, as the
@@ -375,6 +382,13 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   push("vercelUsage", {
     owner: "club",
     state: input.vercelUsageConfigured ? "done" : "open",
+  });
+
+  // «Tradu din română» (§NNN): built; open until DeepL's free key is on the deployment, never
+  // blocking — without it the English boxes are written by hand, as before.
+  push("translation", {
+    owner: "club",
+    state: input.translationConfigured ? "done" : "open",
   });
 
   // Built (§149); open until the club's Gmail lends the form its app password, never

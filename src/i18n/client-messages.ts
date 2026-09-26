@@ -69,6 +69,9 @@ export const STAFF_CLIENT_MESSAGES = [
   // ToastProvider (`shared/feedback`): every "it worked" sentence, looked up by a `saved` code
   // at runtime, so the whole namespace — a few kilobytes, on pages only staff open (§384).
   "Feedback",
+  // «Tradu din română» (§NNN): the buttons beside every English box and at the top of an editor,
+  // their pressed state, their question and their refusals.
+  "Translate",
 ] as const;
 
 /**

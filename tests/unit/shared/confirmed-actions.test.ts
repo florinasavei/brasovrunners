@@ -120,6 +120,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateDeadlinesAction: [],
   // "Maxim de înscrieri pe o adresă" (§389): a limit every public submission meets from now on.
   updateAddressCapAction: [],
+  // «Tradu din română»'s daily character budget (§NNN): what the club may spend from now on.
+  updateTranslationBudgetAction: [],
 };
 
 /**
@@ -146,6 +148,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",
+  translateFieldAction:
+    "fills English boxes in the browser and saves nothing; replacing a box that already has words asks in the button itself (§NNN)",
 };
 
 type Site = { file: string; line: number; expression: string; verdict: "asks" | "bare"; why: string };

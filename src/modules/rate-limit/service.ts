@@ -26,7 +26,8 @@ export type RateLimitScope =
   | "job-invoke"
   | "admin-send-now"
   | "contact-message"
-  | "group-run-declaration";
+  | "group-run-declaration"
+  | "content-translate";
 
 /**
  * What each guarded action allows, as data.
@@ -121,6 +122,13 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * per post. Five an hour is a runner signing for Monday and correcting a typo, several times over.
    */
   "group-run-declaration": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * «Tradu din română» (§NNN), per member of staff, keyed on their id like "Send now". Sixty an
+   * hour is an event's every box pressed one by one, twice, with room to spare; the daily
+   * character budget is what bounds the cost, and this bounds a stuck finger or a script holding
+   * a session.
+   */
+  "content-translate": { limit: 60, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {

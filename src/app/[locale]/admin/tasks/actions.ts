@@ -11,6 +11,7 @@ import { updateJobCadence } from "@/modules/jobs/cadence";
 import { giveOlderPicturesTheirLadder } from "@/modules/media/older-pictures";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaffRole } from "@/modules/staff-identity/session";
+import { updateTranslationBudget } from "@/modules/translate/budget";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -106,6 +107,25 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   }
   await flashOutcome({ saved: "jobCadence" });
   redirect(`${path}?panel=costs&saved=jobCadence#admin-alert`);
+}
+
+/**
+ * «Tradu din română»'s daily allowance of characters (§NNN), beside the other brakes on what the
+ * club pays. Administrator at the door; the service asserts the role again, refuses a number out
+ * of range and writes the audit row; a save that changes nothing writes nothing.
+ */
+export async function updateTranslationBudgetAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/tasks" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateTranslationBudget(getDb(), actor, { dailyCharacters: form.get("dailyCharacters") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  await flashOutcome({ saved: "translationBudget" });
+  redirect(`${path}?panel=costs&saved=translationBudget#admin-alert`);
 }
 
 /**

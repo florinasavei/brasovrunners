@@ -85,6 +85,7 @@ import { clubNightEvent } from "@/modules/events/night-event";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
@@ -763,6 +764,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     gaps={storedGaps}
                   />
+                  {/* «Tradu tot din română» (§NNN): every English box of this form from its Romanian
+                      twin, the layout kept — one question naming them, nothing saved until Salvează. */}
+                  <TranslateAllButton />
                   {/* The page, top to bottom (§406): each card where the page draws the first thing
                       it holds, numbered and headed by whether the page shows it — the order of
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}

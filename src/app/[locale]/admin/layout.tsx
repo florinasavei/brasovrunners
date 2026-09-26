@@ -6,13 +6,17 @@ import type { ReactNode } from "react";
 import { BACKOFFICE_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { isTranslationConfigured } from "@/infrastructure/translate/translator";
+import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import TranslateProvider from "@/modules/translate/ui/TranslateProvider";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
 import { readFlash } from "@/shared/feedback/flash";
 import ToastProvider from "@/shared/feedback/ToastProvider";
 import PickerProvider from "@/shared/forms/pickers/PickerProvider";
 import { signOutAction } from "./actions";
+import { translateFieldAction } from "./translate/actions";
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
 
@@ -67,7 +71,11 @@ export default async function AdminLayout({ children, params }: Props) {
             `DECISIONS.md` §345) — never on a public route, which never imports this shell. The
             toasts the same: one provider, every backoffice form's "it worked" (§384). */}
         <ToastProvider flash={flash}>
-          <PickerProvider>{children}</PickerProvider>
+          {/* «Tradu din română» (§NNN): offered only where a translator is configured and the
+              reader's role writes the club's words; the action asks both again. */}
+          <TranslateProvider action={isTranslationConfigured(env) && canTranslateTexts(staffUser.role) ? translateFieldAction : null}>
+            <PickerProvider>{children}</PickerProvider>
+          </TranslateProvider>
         </ToastProvider>
       </BackofficeShell>
     </NextIntlClientProvider>

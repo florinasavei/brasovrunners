@@ -203,7 +203,14 @@ export type AuditAction =
    * version's number again; `versionNumberRetired` says so on the row rather than leaving it to
    * be inferred from another table.
    */
-  | "legal_document.deleted";
+  | "legal_document.deleted"
+  /**
+   * «Tradu din română» (§NNN): one row per press — who, which boxes by name, how many characters
+   * went to which provider. Never the words, in either language. Also the day's meter: the
+   * translation budget sums these rows' `characters` since the club's midnight.
+   */
+  | "content.translated"
+  | "translationBudget.changed";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
@@ -212,8 +219,9 @@ export type RecordAuditInput = {
   // `event` for the one action that is about a whole event's registrations at once;
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
   // that is about a version of the club's own text; `participant` for the one about a person
-  // across all their registrations (§322).
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant" | "media_asset";
+  // across all their registrations (§322); `content` for a translation press, about boxes in a
+  // form rather than a stored row (§NNN).
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant" | "media_asset" | "content";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

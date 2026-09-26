@@ -46,6 +46,7 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StarIcon from "@mui/icons-material/Star";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import TranslateIcon from "@mui/icons-material/Translate";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
 import VerifiedIcon from "@mui/icons-material/Verified";
@@ -155,6 +156,8 @@ export type ActionIconName =
   // Writing to an event's participants in the club's own words (§364): the loudspeaker, because
   // it is an announcement to many, not one message sent again.
   | "announce"
+  // «Tradu din română» (§NNN): the English box filled from the Romanian one, and the whole record at once.
+  | "translate"
   // People and settings.
   | "revoke"
   | "role"
@@ -223,6 +226,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   send: SendIcon,
   resend: ForwardToInboxIcon,
   announce: CampaignIcon,
+  translate: TranslateIcon,
 
   revoke: PersonOffIcon,
   role: ManageAccountsIcon,

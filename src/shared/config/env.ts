@@ -2,7 +2,7 @@ import { DEFAULT_CLUB_COORDINATES, parseCoordinates } from "@/modules/events/dom
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { CLUB_NAME } from "@/theme/brand";
 import { z } from "zod";
-import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
+import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES, TRANSLATE_PROVIDERS } from "./env-enums";
 
 // AGENTS.md §7.1: APP_ENV is the environment identity; NODE_ENV is not.
 // AGENTS.md §8: APP_BASE_URL is the single source of every absolute URL the app emits.
@@ -229,6 +229,15 @@ export const envSchema = z
      */
     TURNSTILE_SITE_KEY: z.string().min(1).optional(),
     TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+
+    /**
+     * «Tradu din română» (`DECISIONS.md` §NNN): which engine fills an English box from the
+     * Romanian one. `deepl` by default — DeepL API Free, 500 000 characters a month, the owner's
+     * choice for an ONG — and live only once `DEEPL_API_KEY` is set; `off` hides every button
+     * whatever keys exist. Without a key the buttons are absent and `/admin/tasks` shows the row.
+     */
+    TRANSLATE_PROVIDER: z.enum(TRANSLATE_PROVIDERS).default("deepl"),
+    DEEPL_API_KEY: z.string().trim().min(1).optional(),
 
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
     /**
