@@ -7,8 +7,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-090-07 criterion 7 (§334) — the owner's throttle: `platform_settings.jobCadence`, the
- * minimum minutes between two real runs of each job. Built like the Neon plan beside it: the
- * Administrator's, asserted on the server, audited from and to, a value this code cannot read
+ * minimum minutes between two real runs of each job. Built like the Neon plan beside it, and a
+ * rung higher: the Superadministrator's since §450, asserted on the server, audited from and to, a value this code cannot read
  * falling back to the default — and on save every cached schedule is forgotten, so the next ping
  * of each job plans under the new interval.
  */
@@ -32,7 +32,7 @@ beforeEach(async () => {
   fakeNextCache.reset();
 });
 
-async function staff(role: "ADMIN" | "MODERATOR" | "DEV") {
+async function staff(role: "SUPERADMIN" | "ADMIN" | "MODERATOR" | "DEV") {
   const [row] = await db
     .insert(staffUsers)
     .values({ email: `${role.toLowerCase()}@example.ro`, displayName: role, role })
@@ -57,8 +57,8 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
     expect((await readJobCadence(db)).minutes).toBe(0);
   });
 
-  it("is set by an Administrator, audited from and to, and forgets every cached schedule", async () => {
-    const admin = await staff("ADMIN");
+  it("is set by a Superadministrator, audited from and to, and forgets every cached schedule", async () => {
+    const admin = await staff("SUPERADMIN");
     const saved = await updateJobCadence(db, admin, { minutes: "30" }, NOW);
     expect(saved).toEqual({ minutes: 30, updatedAt: NOW });
     expect(await readJobCadence(db)).toEqual({ minutes: 30, updatedAt: NOW });
@@ -73,9 +73,10 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
     );
   });
 
-  it("is refused on the server for anybody but an Administrator, and leaves no trace", async () => {
-    // Organizator and Tehnic: the two roles closest to it that are not it.
-    for (const role of ["MODERATOR", "DEV"] as const) {
+  it("is refused on the server for anybody but a Superadministrator, and leaves no trace (§450)", async () => {
+    // The Administrator first — the platform's throttle is the one thing that tells the top two
+    // roles apart (§450) — then Organizator and Tehnic.
+    for (const role of ["ADMIN", "MODERATOR", "DEV"] as const) {
       expect(await refusal(updateJobCadence(db, await staff(role), { minutes: 15 }, NOW))).toBe("FORBIDDEN");
     }
     expect(await db.select().from(platformSettings)).toEqual([]);
@@ -84,9 +85,25 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
   });
 
   it("refuses a value outside the offered choices", async () => {
-    const admin = await staff("ADMIN");
+    const admin = await staff("SUPERADMIN");
     expect(await refusal(updateJobCadence(db, admin, { minutes: 45 }, NOW))).toBe("VALIDATION_ERROR");
     expect(await refusal(updateJobCadence(db, admin, { minutes: "soon" }, NOW))).toBe("VALIDATION_ERROR");
     expect(await db.select().from(platformSettings)).toEqual([]);
+  });
+});
+
+/*
+  BR-REQ-060-01 (§450) — the email delivery timing (§221) is the other platform setting beside the
+  throttle: "scheduled" holds every message for the pinger. It rode on `canManageStaff`, which
+  the Administrator now holds for the team, so it asks `canManagePlatform` of its own.
+*/
+describe("BR-REQ-060-01 the email delivery timing is a Superadministrator's (§450)", () => {
+  it("refuses an Administrator and lets a Superadministrator set it", async () => {
+    const { readDeliveryTiming, updateDeliveryTiming } = await import("@/modules/notifications/delivery-timing");
+    expect(await refusal(updateDeliveryTiming(db, await staff("ADMIN"), { timing: "scheduled" }, NOW))).toBe("FORBIDDEN");
+    expect((await readDeliveryTiming(db)).timing).toBe("immediate");
+
+    await updateDeliveryTiming(db, await staff("SUPERADMIN"), { timing: "scheduled" }, NOW);
+    expect((await readDeliveryTiming(db)).timing).toBe("scheduled");
   });
 });

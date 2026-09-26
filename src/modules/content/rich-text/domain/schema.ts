@@ -369,6 +369,17 @@ export function meaningfulCrop(crop: ImageCrop | null | undefined): ImageCrop | 
   return crop.w >= 0.999 && crop.h >= 0.999 ? null : crop;
 }
 
+/**
+ * `focus` is the point a listing card's 16∶9 frame is centred on (§454, `picture-frame.ts`): two
+ * fractions of the stored photograph, `x` from the left and `y` from the top. The card draws every
+ * picture in the same frame, and this is how the club keeps a face in it rather than a chest.
+ * Absent — every picture written before, and one nobody pointed at — the card centres on the
+ * middle of the crop. It changes nothing on the event page, which draws the crop whole.
+ */
+const imageFocus = z.object({ x: cropFraction, y: cropFraction }).strict();
+
+export type ImageFocus = z.infer<typeof imageFocus>;
+
 export const IMAGE_WIDTH_PERCENTS = [100, 75, 50, 33] as const;
 export type ImageWidthPercent = (typeof IMAGE_WIDTH_PERCENTS)[number];
 export const IMAGE_ALIGNMENTS = ["block", "left", "right"] as const;
@@ -406,6 +417,8 @@ const imageNode = z.object({
       .nullable()
       .optional()
       .transform((value) => meaningfulCrop(value)),
+    // Absent stays absent, so a body stored before keeps its exact JSON through a read and a save.
+    focus: imageFocus.nullable().optional(),
   }),
 });
 

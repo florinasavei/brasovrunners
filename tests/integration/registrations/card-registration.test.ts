@@ -155,7 +155,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     const event = await publish({ capacity: 10 });
     await take(event.id, 3);
     const html = await card();
-    expect(line(html).words).toBe("Înscrieri deschise până pe sâm., 26 sept. 2026, 10:00 · 7 locuri libere din 10");
+    expect(line(html).words).toBe("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · 7 locuri libere din 10");
     expect(await isBold(html, rawCard)).toBe(true);
     expect(html).toContain('data-testid="card-places"');
     expect(door(html)).toMatchObject({ href: "/ro/evenimente/cros/inscriere", words: "Înscrie-te la eveniment" });
@@ -177,14 +177,14 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     expect(line(await card()).words).toMatch(/· 50 de locuri libere din 50$/);
     locale = "en";
     const html = await card();
-    expect(line(html).words).toMatch(/^Registration open until Sat, 26 Sept? 2026, 10:00 · 50 places left out of 50$/);
+    expect(line(html).words).toMatch(/^Registration open until Sat, 26 Sept? 2026, at 10:00 · 50 places left out of 50$/);
     expect(door(html)?.words).toBe("Register for this event");
   });
 
   it("shows no number for an uncapped race, and still the button (BR-REQ-034-01 criterion 4)", async () => {
     await publish({ capacity: null });
     const html = await card();
-    expect(line(html).words).toBe("Înscrieri deschise până pe sâm., 26 sept. 2026, 10:00");
+    expect(line(html).words).toBe("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00");
     expect(html).not.toContain('data-testid="card-places"');
     expect(door(html)?.words).toBe("Înscrie-te la eveniment");
   });
@@ -193,7 +193,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     const event = await publish({ capacity: 2 });
     await take(event.id, 2);
     const html = await card();
-    expect(line(html).words).toBe("Înscrieri deschise până pe sâm., 26 sept. 2026, 10:00 · Lista de așteptare");
+    expect(line(html).words).toBe("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · Lista de așteptare");
     expect(door(html)).toMatchObject({ href: "/ro/evenimente/cros/inscriere", words: "Intră pe lista de așteptare" });
     expect(await page()).toContain("Intră pe lista de așteptare");
   });
@@ -218,7 +218,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
   it("names the opening day in bold before the window, with no button and no read of the count", async () => {
     await publish({ capacity: 10, registrationOpensAt: new Date("2026-10-01T15:00:00Z"), registrationClosesAt: null });
     const html = await card();
-    expect(line(html).words).toBe("Înscrierile se deschid pe joi, 1 oct. 2026, 18:00");
+    expect(line(html).words).toBe("Înscrierile se deschid joi, 1 oct. 2026, la 18:00");
     expect(await isBold(html, rawCard)).toBe(true);
     expect(door(html)).toBeNull();
   });

@@ -18,6 +18,7 @@ import {
   findPublishedPageTranslationsForPages,
   listPublishedPages,
 } from "@/modules/content/pages/repository";
+import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
   findEventForRegistrationById,
@@ -349,6 +350,16 @@ export async function cachedPublishedPageTranslations(pageId: string) {
   return publicRead(["pages.translations", pageId], ["pages"], () => findPublishedPageTranslations(getDb(), pageId));
 }
 
+/**
+ * `readPublicTeamPage`: «Echipa» (§459) — the page's state, its introduction and its shown cards,
+ * for the page, the "Echipa" entry in the navigation and the sitemap. Filed under `pages`: it is a
+ * standing page and sits in the navigation, and every write to a card or to the page's setting
+ * expires that kind (`content/team/service.ts`, `page-settings.ts`).
+ */
+export async function cachedTeamPage(locale: Locale) {
+  return publicRead(["team.page", locale], ["pages"], () => readPublicTeamPage(getDb(), locale));
+}
+
 /** The sitemap's standing pages: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */
 export async function cachedSitemapPages(locale: Locale) {
   return publicRead(["pages.sitemap", locale], ["pages"], async () => {
@@ -421,15 +432,15 @@ export async function cachedContactFormReaches(): Promise<boolean> {
 /**
  * The club's address as readers are shown it (§442): the footer, the header's "Contact" entry and
  * the contact page. Addresses the site prints anyway, so the list itself is cached. When the
- * database cannot answer, the environment's mailbox — what every page showed before.
+ * database cannot answer, the default: the configured Gmail, else the environment's mailbox.
  */
 export async function cachedShownContactAddresses(): Promise<string[]> {
   try {
     return await publicRead(["settings.shown-contact-address"], ["settings"], async () =>
-      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO),
+      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER),
     );
   } catch {
-    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO);
+    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);
   }
 }
 

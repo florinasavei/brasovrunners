@@ -1,16 +1,24 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import type { AdminSection } from "@/modules/staff-identity/domain/roles";
+import type { AdminSection, StaffRole } from "@/modules/staff-identity/domain/roles";
+import * as roles from "@/modules/staff-identity/domain/roles";
 import {
   allowedTransitions,
+  assignableRoles,
+  canAssignRole,
   canCreatePage,
   canDeleteEvent,
   canEditEventFields,
   canEditTexts,
   canEditTranslation,
   canHardDeleteEvent,
+  canManageMember,
+  canManagePlatform,
   canManageRegistrations,
   canManageStaff,
   canReadRegistrations,
+  canWriteLegalTexts,
   canTransition,
   EDITORIAL_STATUSES,
   isLiveContent,
@@ -179,23 +187,65 @@ describe("BR-REQ-051-01 criterion 4 live content is content that is published", 
 });
 
 describe("BR-REQ-060-01 what each role may reach", () => {
-  it("reserves staff administration to the Superadministrator", () => {
-    // The top of the hierarchy is defined by this one capability: a role that could grant
-    // itself a higher one would make every rule above it decorative. An Administrator reads the
-    // whole participant list and still cannot change who else may.
+  it("gives the team to the Administrator and everyone above (§450)", () => {
+    // The owner: "administrators should manage everything". Staff administration moved down one
+    // rung; what a role could grant itself is held by `canAssignRole` and `canManageMember` below.
     expect(canManageStaff("SUPERADMIN")).toBe(true);
-    expect(canManageStaff("ADMIN")).toBe(false);
+    expect(canManageStaff("ADMIN")).toBe(true);
     expect(canManageStaff("DEV")).toBe(false);
     expect(canManageStaff("MODERATOR")).toBe(false);
     expect(canManageStaff("COPYWRITER")).toBe(false);
     expect(canManageStaff("CONTRIBUTOR")).toBe(false);
   });
 
+  it("lets only a Superadministrator make, change or remove a Superadministrator (§450)", () => {
+    // An Administrator gives every role up to their own, and never the top one — so no
+    // Administrator can promote a colleague (or a second account of their own) past themselves.
+    expect(assignableRoles("ADMIN")).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]);
+    expect(assignableRoles("SUPERADMIN")).toEqual([...STAFF_ROLES]);
+    expect(canAssignRole("ADMIN", "SUPERADMIN")).toBe(false);
+    expect(canAssignRole("SUPERADMIN", "SUPERADMIN")).toBe(true);
+    expect(canManageMember("ADMIN", "SUPERADMIN")).toBe(false);
+    expect(canManageMember("ADMIN", "ADMIN")).toBe(true);
+    expect(canManageMember("SUPERADMIN", "SUPERADMIN")).toBe(true);
+
+    // Below the Administrator nobody gives or touches anything, whatever the target.
+    for (const actor of STAFF_ROLES.filter((role) => !canManageStaff(role))) {
+      expect(assignableRoles(actor), actor).toEqual([]);
+      for (const target of STAFF_ROLES) expect(canManageMember(actor, target), `${actor} on ${target}`).toBe(false);
+    }
+    // And the one property that makes the ladder safe: nobody gives a role above their own.
+    const rank = (role: (typeof STAFF_ROLES)[number]) => STAFF_ROLES.indexOf(role);
+    for (const actor of STAFF_ROLES) {
+      for (const role of assignableRoles(actor)) expect(rank(role), `${actor} gives ${role}`).toBeLessThanOrEqual(rank(actor));
+    }
+  });
+
+  it("gives the club's legal texts to the Administrator (§450)", () => {
+    expect(canWriteLegalTexts("SUPERADMIN")).toBe(true);
+    expect(canWriteLegalTexts("ADMIN")).toBe(true);
+    // The Organizer and the Redactor read the texts (§208) and write none of them.
+    expect(canWriteLegalTexts("DEV")).toBe(false);
+    expect(canWriteLegalTexts("MODERATOR")).toBe(false);
+    expect(canWriteLegalTexts("COPYWRITER")).toBe(false);
+    expect(canWriteLegalTexts("CONTRIBUTOR")).toBe(false);
+  });
+
+  it("keeps the platform settings that can stop the service to the Superadministrator (§450)", () => {
+    // "superadministrator is more like administrator + platform configs that can break stuff
+    // (throttling, etc)": the one capability that tells the top two roles apart.
+    expect(canManagePlatform("SUPERADMIN")).toBe(true);
+    for (const role of STAFF_ROLES.filter((r) => r !== "SUPERADMIN")) {
+      expect(canManagePlatform(role), role).toBe(false);
+    }
+  });
+
   it("reserves the hard delete — an event and everyone on it — to the Administrator, and no higher", () => {
     // Both halves of it, because it is the conjunction of two powers: deleting club content
     // and destroying participant data. The interesting assertion is the SUPERADMIN one — the
     // temptation is to reserve the most destructive verb to the highest role, and that would be
-    // wrong: SUPERADMIN is defined by staff administration, not by danger, and an Administrator
+    // wrong: SUPERADMIN is defined by the platform's settings (§450), not by what destroys club
+    // data, and an Administrator
     // may already erase each of these registrations one at a time. The gate that protects the
     // data is the typed title, the reason and the audit rows, not a rank.
     expect(canHardDeleteEvent("SUPERADMIN")).toBe(true);
@@ -336,12 +386,23 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(sections).not.toContain("newsletter");
   });
 
-  it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
-    const sections = visibleAdminSections("ADMIN");
-
-    expect(sections).toEqual(["events", "checkin", "guide", "pages", "gallery", "registrations", "tasks", "legal", "emails", "newsletter", "devs"]);
-    // An Administrator reads every registration and still cannot promote themselves.
-    expect(sections).not.toContain("staff");
+  it("gives ADMIN every section, the team included (§450)", () => {
+    // The Administrator runs the club; what they cannot do on the team page — make or touch a
+    // Superadministrator — is refused per row and in the service, not by hiding the section.
+    expect(visibleAdminSections("ADMIN")).toEqual([
+      "events",
+      "checkin",
+      "guide",
+      "pages",
+      "gallery",
+      "registrations",
+      "tasks",
+      "legal",
+      "emails",
+      "newsletter",
+      "staff",
+      "devs",
+    ]);
   });
 
   it("gives SUPERADMIN every section — the case that was broken", () => {
@@ -410,5 +471,126 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
         expect(missing, `${STAFF_ROLES[higher]} against ${STAFF_ROLES[lower]}`).toEqual(allowed);
       }
     }
+  });
+});
+
+/**
+ * BR-REQ-060-01, §450 — the whole matrix, as data. Every single-role capability `domain/roles.ts`
+ * exports, against every role, written out as the expected answer rather than derived from the
+ * ladder: a change to any one cell has to be made here too, on purpose. The first test refuses a
+ * capability exported without a row, so the table cannot fall behind the module.
+ */
+describe("BR-REQ-060-01 every capability × every role", () => {
+  // Columns in STAFF_ROLES order: Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator.
+  const ORDER = ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
+  const MATRIX: Record<string, readonly [boolean, boolean, boolean, boolean, boolean, boolean]> = {
+    //                          CONTRIB COPYW  MODER  DEV    ADMIN  SUPER
+    isEditorial: /*           */ [false, false, true, true, true, true],
+    canEditTexts: /*          */ [false, true, false, false, true, true],
+    canEditEventFields: /*    */ [false, false, true, true, true, true],
+    canCreateEvent: /*        */ [false, false, false, false, true, true],
+    canCreatePage: /*         */ [false, true, false, false, true, true],
+    canEditTeamPage: /*       */ [false, true, false, false, true, true],
+    canShowTeamMember: /*     */ [false, false, false, false, true, true],
+    canDeleteEvent: /*        */ [false, false, false, false, true, true],
+    canHardDeleteEvent: /*    */ [false, false, false, false, true, true],
+    canReadRegistrations: /*  */ [false, false, true, false, true, true],
+    canMessageParticipants: /**/ [false, false, true, false, true, true],
+    canSendNewsletter: /*     */ [false, false, true, false, true, true],
+    canManageRegistrations: /**/ [false, false, false, false, true, true],
+    canWorkTheDesk: /*        */ [true, true, true, true, true, true],
+    canManageTestRegistrations: [false, false, false, false, true, true],
+    canSeeDiagnostics: /*     */ [false, false, false, true, true, true],
+    canManageStaff: /*        */ [false, false, false, false, true, true],
+    isSuperadmin: /*          */ [false, false, false, false, false, true],
+    canWriteLegalTexts: /*    */ [false, false, false, false, true, true],
+    canManagePlatform: /*     */ [false, false, false, false, false, true],
+    canManageClubSettings: /* */ [false, false, false, false, true, true],
+    canReadContent: /*        */ [false, true, true, true, true, true],
+  };
+  // Exported functions of one argument that are not about a role.
+  const NOT_A_ROLE_CAPABILITY = new Set(["isLiveContent", "assignableRoles", "visibleAdminSections", "atLeast"]);
+  const capability = (name: string) => (roles as unknown as Record<string, (role: StaffRole) => boolean>)[name];
+
+  it("has a row for every capability the module exports, and the roles in their order", () => {
+    expect([...STAFF_ROLES]).toEqual([...ORDER]);
+    const exported = Object.entries(roles)
+      .filter(([name, value]) => typeof value === "function" && /^(can|is)[A-Z]/.test(name) && !NOT_A_ROLE_CAPABILITY.has(name))
+      .filter(([, value]) => (value as (...args: unknown[]) => unknown).length === 1)
+      .map(([name]) => name)
+      .sort();
+    expect(exported).toEqual(Object.keys(MATRIX).sort());
+  });
+
+  for (const [name, row] of Object.entries(MATRIX)) {
+    it.each(ORDER.map((role, index) => [role, row[index]] as const))(`${name}(%s) is %s`, (role, expected) => {
+      expect(capability(name)(role)).toBe(expected);
+    });
+  }
+
+  // Actor (row) × target (column), in STAFF_ROLES order. The Administrator gives and touches every
+  // role but the top one; the Superadministrator every role; nobody below the Administrator any.
+  const PAIRS: Record<StaffRole, readonly [boolean, boolean, boolean, boolean, boolean, boolean]> = {
+    CONTRIBUTOR: [false, false, false, false, false, false],
+    COPYWRITER: [false, false, false, false, false, false],
+    MODERATOR: [false, false, false, false, false, false],
+    DEV: [false, false, false, false, false, false],
+    ADMIN: [true, true, true, true, true, false],
+    SUPERADMIN: [true, true, true, true, true, true],
+  };
+  const pairs = ORDER.flatMap((actor) => ORDER.map((target, index) => [actor, target, PAIRS[actor][index]] as const));
+
+  it.each(pairs)("canAssignRole(%s, %s) is %s", (actor, target, expected) => {
+    expect(canAssignRole(actor, target)).toBe(expected);
+  });
+
+  it.each(pairs)("canManageMember(%s, %s) is %s", (actor, target, expected) => {
+    expect(canManageMember(actor, target)).toBe(expected);
+  });
+
+  it.each(ORDER)("assignableRoles(%s) is exactly the targets canAssignRole allows", (actor) => {
+    expect(assignableRoles(actor)).toEqual(ORDER.filter((_, index) => PAIRS[actor][index]));
+  });
+});
+
+/**
+ * BR-REQ-060-01, §450 — the doors the V2.03 batch added, each on the side of the line it belongs to.
+ *
+ * The roles branch drew the line (the Administrator runs the club; the Superadministrator adds the
+ * settings that can stop the service) while the batch was adding settings of its own. Each one is
+ * pinned here by the predicate its action asks at the door and its service asserts again, so a
+ * later move of any of them is made on purpose, in this file.
+ */
+describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)", () => {
+  const source = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
+  /** The body of one exported action, up to the next export. */
+  const action = (file: string, name: string) => {
+    const text = source(file);
+    const start = text.indexOf(`export async function ${name}(`);
+    expect(start, `${file}: ${name}`).toBeGreaterThan(-1);
+    const next = text.indexOf("\nexport ", start + 1);
+    return text.slice(start, next === -1 ? undefined : next);
+  };
+
+  it("«Prin ce pleacă emailurile» (§443) is a club setting: the Administrator's", () => {
+    expect(action("src/app/[locale]/admin/emails/actions.ts", "updateEmailTransportAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(source("src/modules/notifications/email-transport.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
+  });
+
+  it("«Adresa de contact afișată» (§442) is a club setting: the Administrator's", () => {
+    expect(action("src/app/[locale]/admin/emails/actions.ts", "updateShownContactAddressAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(source("src/modules/contact/shown-address.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
+  });
+
+  it("the month's budget thresholds (§447) are a platform setting: the Superadministrator's, form included", () => {
+    expect(action("src/app/[locale]/admin/tasks/actions.ts", "updateBudgetThresholdsAction")).toContain("requireStaffCapability(canManagePlatform)");
+    expect(source("src/modules/diagnostics/budget-thresholds.ts")).toMatch(/if \(!canManagePlatform\(actor\.role\)\)/);
+    expect(source("src/app/[locale]/admin/tasks/page.tsx")).toMatch(/<NeonBudgetPanel [^>]*mayEdit=\{canManagePlatform\(actor\.role\)\}/);
+    expect([canManagePlatform("ADMIN"), canManagePlatform("SUPERADMIN")]).toEqual([false, true]);
+  });
+
+  it("removing a newsletter address by hand (§445) is a registrations verb: the Administrator's", () => {
+    expect(action("src/app/[locale]/admin/newsletter/actions.ts", "withdrawNewsletterAddressAction")).toContain("requireStaffCapability(canManageRegistrations)");
+    expect(source("src/modules/newsletter/service.ts")).toMatch(/if \(!canManageRegistrations\(actor\.role\)\)/);
   });
 });

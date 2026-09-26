@@ -137,6 +137,15 @@ export function dropsParagraph(paragraph: string, values: MergeValues): boolean 
 export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
 
 /**
+ * The privacy notice's marker for «Echipa» (§459): the team page shows staff and volunteers' names
+ * and photographs, which is personal data, so the notice says so. Filled with the page's name in
+ * the reader's language, quoted, from the catalogue the page reads (`content/team/notice-words.ts`);
+ * and `/admin/tasks` and `/admin/pages/team` ask whether the notice in force names it
+ * (`describesTeamPage`), so the club is told to approve a notice that describes the page.
+ */
+export const TEAM_PAGE_MERGE_FIELD = "teamPage";
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -174,6 +183,7 @@ export const MERGE_FIELDS = [
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
+  TEAM_PAGE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -314,6 +324,11 @@ export function describesListStates(body: unknown): boolean {
  */
 export function describesNewsletter(body: unknown): boolean {
   return mergeFieldsIn(body).has(NEWSLETTER_MERGE_FIELD);
+}
+
+/** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */
+export function describesTeamPage(body: unknown): boolean {
+  return mergeFieldsIn(body).has(TEAM_PAGE_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {

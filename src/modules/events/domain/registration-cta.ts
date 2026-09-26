@@ -39,7 +39,8 @@ export type RegistrationCta =
   | { kind: "CANCELLED" }
   /** The race is over (§82): "it has ended", and no control. */
   | { kind: "COMPLETED" }
-  | { kind: "NOT_YET_OPEN"; opensAt: Date }
+  /** `opensAt` is null when the organizer announced "soon" with no date (§451). */
+  | { kind: "NOT_YET_OPEN"; opensAt: Date | null }
   | { kind: "CLOSED" }
   /** `availablePlaces` is null for an uncapped event — open, with no number to show. */
   | { kind: "OPEN"; availablePlaces: number | null }
@@ -80,7 +81,9 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "NOT_YET_OPEN":
       // The same fallback the window rule uses: an absent opening means publication
       // (BR-REQ-011-01 criterion 4). One of the two is non-null here — `NOT_YET_OPEN` is only
-      // returned when `now` is before it — so the date shown is always a real one.
+      // returned when `now` is before it — so the date shown is always a real one. «În curând»
+      // (§451) has no date at all, and says so with null rather than a date it does not have.
+      if (event.registrationOpensSoon) return { kind: "NOT_YET_OPEN", opensAt: null };
       return { kind: "NOT_YET_OPEN", opensAt: (event.registrationOpensAt ?? event.publishedAt) as Date };
 
     case "CLOSED":

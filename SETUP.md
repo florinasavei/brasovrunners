@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.03-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.04-2026-09-26 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.03-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.04-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -682,7 +682,7 @@ mail, and storing people's messages at a third party for nothing is not a featur
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
 Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
-is right, because every email the site sends carries `Reply-To: contact@…`. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
+is right, because every email the site sent carried `Reply-To: contact@…` until `BR-V2.04`; since then (§462) the Reply-To defaults to the Gmail in `CONTACT_SMTP_USER` unless the club saves «Adresa de contact afișată» on `/admin/emails`, so the Route matters for the older emails and for a club that chooses the mailbox. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
 is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
 as a PDF at signing. One more message per registration on Mailgun's allowance. **Since
 `DECISIONS.md` §244 this is a setting instead**: `/admin/emails` → "Copiile clubului", where an

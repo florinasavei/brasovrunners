@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -220,7 +220,7 @@ export async function updateEmailTransport<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<EmailTransportState> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change how email is sent`);
   }
   const parsed = emailTransportSettingSchema.safeParse(rawInput);

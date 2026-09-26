@@ -122,6 +122,26 @@ export const DEFAULT_CLUB_NOTICES: ClubNotices = {
   participants: { bcc: [] },
 };
 
+/**
+ * The form's box for each list the service validates (§457): the service names a refusal by the
+ * setting's own path (`participants.bcc`), the panel posts `participantsBcc`. One table, so the
+ * refusal summary links to the box and the box turns red — before this the refusal named
+ * `participants`, which is no box, and the save failed without saying where.
+ */
+export const CLUB_NOTICE_BOXES = {
+  "declarations.to": "declarationsTo",
+  "declarations.cc": "declarationsCc",
+  "declarations.bcc": "declarationsBcc",
+  "confirmations.to": "confirmationsTo",
+  "participants.bcc": "participantsBcc",
+} as const;
+
+/** The boxes a refusal names, from the service's list paths; a path with no box names the whole form. */
+export function clubNoticeBoxesOf(paths: readonly string[]): string[] {
+  const boxes = CLUB_NOTICE_BOXES as Readonly<Record<string, string>>;
+  return [...new Set(paths.flatMap((path) => (boxes[path] ? [boxes[path]] : [])))];
+}
+
 /** Where the declaration copy's "to" came from, for the sentence the task board prints. */
 export type ClubNoticeSource = "setting" | "environment" | "none";
 
@@ -170,6 +190,24 @@ export function declarationArchiveIsConfigured(
   environmentTo: string | undefined,
 ): boolean {
   return resolveDeclarationCopies(setting, environmentTo).to !== null;
+}
+
+/**
+ * The mailboxes that actually receive something from the club's lists, for the closed fold's
+ * summary on `/admin/emails` (§336): the declaration copy as it resolves — its Cc and Bcc only
+ * while it has a "to", since without one nothing is sent (§244) — the confirmation notices and
+ * the hidden copies of the participants' messages. A mailbox on two lists is one mailbox,
+ * compared without case the way the lists themselves drop a repeat; the first spelling is kept.
+ */
+export function mailboxesReceivingCopies(
+  declarations: DeclarationCopies,
+  notices: Pick<ClubNotices, "confirmations" | "participants">,
+): string[] {
+  const declarationMailboxes = declarations.to ? [declarations.to, ...declarations.cc, ...declarations.bcc] : [];
+  const all = [...declarationMailboxes, ...notices.confirmations.to, ...notices.participants.bcc].filter(Boolean);
+  const byKey = new Map<string, string>();
+  for (const address of all) if (!byKey.has(address.toLowerCase())) byKey.set(address.toLowerCase(), address);
+  return [...byKey.values()];
 }
 
 /** Who is told that somebody confirmed (§245). No environment fallback: this never had one. */

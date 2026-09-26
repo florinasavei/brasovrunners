@@ -19,7 +19,8 @@ import { env } from "@/shared/config/env";
 import LegalDocumentForm, {
   type LegalDocumentFormValues,
 } from "@/modules/legal-documents/ui/LegalDocumentForm";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { isUuid } from "@/shared/ids";
 import { createLegalVersionAction } from "../actions";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
@@ -59,7 +60,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  await requireStaffRole("SUPERADMIN");
+  // The Administrator writes the club's legal texts since §450 (`canWriteLegalTexts`).
+  await requireStaffCapability(canWriteLegalTexts);
 
   const { error, from, template } = await searchParams;
   const t = await getTranslations("Admin");

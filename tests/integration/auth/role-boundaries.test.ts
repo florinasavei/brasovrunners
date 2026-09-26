@@ -7,6 +7,7 @@ import { DEV_IDENTITIES, ensureDevStaffUser } from "@/modules/staff-identity/dev
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { findStaffUserById, listStaffUsers } from "@/modules/staff-identity/repository";
 import {
+  assertMayManageAccount,
   changeStaffRole,
   inviteStaffUser,
   listStaff,
@@ -211,6 +212,74 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
         .where(eq(eventTranslations.eventId, event.id));
       expect(translation.title).toBe("Crosul aniversar");
       expect(translation.authorStaffUserId).toBeNull();
+    });
+  });
+
+  /*
+    §450 — the owner: "administrators should manage everything; superadministrator is more like
+    administrator + platform configs that can break stuff". An Administrator runs the team, up to
+    their own rank; the Superadministrator's role and a Superadministrator's row stay with the
+    Superadministrator, so no Administrator can make one or take one away.
+  */
+  describe("an Administrator runs the team, and a Superadministrator's row is a Superadministrator's (§450)", () => {
+    let administrator: StaffUser;
+
+    beforeEach(async () => {
+      [administrator] = await db
+        .insert(staffUsers)
+        .values({ email: "admin@dev.test", displayName: "Administrator", role: "ADMIN" })
+        .returning();
+    });
+
+    it("lets an Administrator list, invite, change a role, resend and revoke below the top", async () => {
+      expect(await listStaff(db, administrator)).toHaveLength(4);
+      const invited = await inviteStaffUser(db, administrator, { email: "ana@dev.test", displayName: "Ana", role: "ADMIN" });
+      expect(invited.role).toBe("ADMIN");
+      await resendStaffInvitation(db, administrator, "ana@dev.test", new Date(Date.now() + 1000));
+      expect((await changeStaffRole(db, administrator, author.id, "MODERATOR")).role).toBe("MODERATOR");
+      expect((await changeStaffRole(db, administrator, invited.id, "DEV")).role).toBe("DEV");
+      await revokeStaffUser(db, administrator, editor.id);
+      expect(await findStaffUserById(db, editor.id)).toBeUndefined();
+    });
+
+    it("refuses an Administrator the Superadministrator role, on an invitation and on a change", async () => {
+      expect(
+        await codeOf(inviteStaffUser(db, administrator, { email: "boss@dev.test", displayName: "Boss", role: "SUPERADMIN" })),
+      ).toBe("FORBIDDEN");
+      expect(await codeOf(changeStaffRole(db, administrator, author.id, "SUPERADMIN"))).toBe("FORBIDDEN");
+      expect((await findStaffUserById(db, author.id))?.role).toBe("CONTRIBUTOR");
+      // Nothing was written by the refused invitation: no row, no email.
+      expect(await listStaffUsers(db)).toHaveLength(4);
+      expect(await db.select().from(emailOutbox).where(eq(emailOutbox.recipientEmail, "boss@dev.test"))).toHaveLength(0);
+    });
+
+    it("refuses an Administrator any verb on a Superadministrator's row", async () => {
+      expect(await codeOf(changeStaffRole(db, administrator, admin.id, "MODERATOR"))).toBe("FORBIDDEN");
+      expect(await codeOf(revokeStaffUser(db, administrator, admin.id))).toBe("FORBIDDEN");
+      expect(await codeOf(assertMayManageAccount(db, administrator, admin.email))).toBe("FORBIDDEN");
+      expect((await findStaffUserById(db, admin.id))?.role).toBe("SUPERADMIN");
+
+      // Nor on one who has not signed in yet: the invitation again is still a verb on their row.
+      const [pending] = await db
+        .insert(staffUsers)
+        .values({ email: "pending@dev.test", displayName: "Pending", role: "SUPERADMIN" })
+        .returning();
+      expect(await codeOf(resendStaffInvitation(db, administrator, pending.email))).toBe("FORBIDDEN");
+    });
+
+    it("answers the account verbs only for a colleague on the list the actor may manage", async () => {
+      // The password link and switching an account off reach the provider by address; the
+      // address must be a row on the team, and one this actor may touch.
+      expect((await assertMayManageAccount(db, administrator, "MODERATOR@dev.test")).id).toBe(editor.id);
+      expect(await codeOf(assertMayManageAccount(db, administrator, "stranger@dev.test"))).toBe("NOT_FOUND");
+      expect(await codeOf(assertMayManageAccount(db, editor, author.email))).toBe("FORBIDDEN");
+      expect((await assertMayManageAccount(db, admin, administrator.email)).id).toBe(administrator.id);
+    });
+
+    it("lets a Superadministrator make another, and demote an Administrator", async () => {
+      expect((await changeStaffRole(db, admin, administrator.id, "SUPERADMIN")).role).toBe("SUPERADMIN");
+      const named = await inviteStaffUser(db, admin, { email: "next@dev.test", displayName: "Next", role: "SUPERADMIN" });
+      expect(named.role).toBe("SUPERADMIN");
     });
   });
 

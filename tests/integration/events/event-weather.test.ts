@@ -147,10 +147,10 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     expect(weather?.dt).toMatch(/^<svg\b/);
   });
 
-  it("credits Open-Meteo with a 44-pixel link, as the data's licence asks", async () => {
+  it("carries no Open-Meteo credit in the facts — the site footer's fold credits it (§455; tests/unit/shared/site-footer.test.ts)", async () => {
     const html = withoutStyles(await page());
-    expect(html).toContain(`href="${OPEN_METEO_SITE}"`);
-    expect(text(html)).toContain("Prognoză: Open-Meteo");
+    expect(html).not.toContain(`href="${OPEN_METEO_SITE}"`);
+    expect(text(html)).not.toContain("Open-Meteo");
   });
 
   it("says it in English on the English page", async () => {
@@ -160,7 +160,8 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     expect(text(weather?.dd ?? "")).toContain("Thunderstorm");
     expect(text(weather?.dd ?? "")).toContain("70% chance of rain");
     expect(text(weather?.dd ?? "")).toContain("wind 23 km/h");
-    expect(text(html)).toContain("Forecast: Open-Meteo");
+    expect(html).not.toContain(`href="${OPEN_METEO_SITE}"`);
+    expect(text(html)).not.toContain("Open-Meteo");
   });
 
   it("is absent for a start more than seven days away, and asks nothing", async () => {
@@ -176,12 +177,13 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     expect(text(html)).not.toContain("Open-Meteo");
   });
 
-  it("is on the hero as one line with the credit, and never inside the compact card's facts (§416)", async () => {
+  it("is on the hero as one line without a credit (the footer's since §455), and never inside the compact card's facts (§416)", async () => {
     const weather = await forecastForEvent(event(), NOW, { fetch: openMeteo(), source: "open-meteo" });
     const hero = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "full", weather })));
     expect(text(hero)).toContain("Furtună");
     expect(text(hero)).toContain("16 °C");
-    expect(text(hero)).toContain("Prognoză: Open-Meteo");
+    expect(hero).not.toContain(`href="${OPEN_METEO_SITE}"`);
+    expect(text(hero)).not.toContain("Open-Meteo");
     // The hero is a summary: the page's details and hours stay the page's.
     expect(hero).not.toContain('data-testid="weather-hours"');
     expect(text(hero)).not.toContain("rafale");

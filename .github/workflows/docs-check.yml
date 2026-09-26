@@ -43,11 +43,11 @@ jobs:
       # It needs no database: the tests run PostgreSQL in process via PGlite.
       - run: yarn check
 
-      # The build's own cache (§276). Two things come out of it: a Turbopack build that does
-      # not start from nothing, and the fonts. `next/font/google` downloads its files at build
-      # time, and on 2026-09-22 a runner could not reach Google — twenty-one identical "cannot
-      # resolve @vercel/turbopack-next/internal/font/google/font" errors, a red pull request and
-      # nothing wrong with the code. A warm cache skips that request entirely.
+      # The build's own cache (§276): a Turbopack build that does not start from nothing. It
+      # used to carry the fonts too, while `next/font/google` downloaded them at build time and
+      # a runner that could not reach Google failed with "cannot resolve
+      # @vercel/turbopack-next/internal/font/google/font". Every face is a file in
+      # `src/theme/fonts/` since §460, so the build makes no request to Google at all.
       - uses: actions/cache@v4
         with:
           path: .next/cache
@@ -59,9 +59,9 @@ jobs:
       # Vercel builds serverless functions and never runs `yarn start`, so the portability
       # contract in BR-REQ-101-01 is exercised here or nowhere.
       #
-      # Twice before failing: the one failure this has ever had is a fetch to Google's font
-      # service, which either works on the second attempt or is a real outage, and a release
-      # held up by somebody else's bad minute is worse than a minute spent retrying.
+      # Twice before failing: the one failure this had was a fetch to Google's font service,
+      # gone since the fonts live in the repository (§460). The retry stays as cheap insurance —
+      # a release held up by somebody else's bad minute is worse than a minute spent retrying.
       - name: Build
         run: yarn build || (echo "::warning::the build failed once; retrying" && yarn build)
       - name: Verify the app serves on PORT

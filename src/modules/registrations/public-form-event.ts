@@ -25,6 +25,7 @@ export function publicFormEvent(
     | "registrationMode"
     | "startsAt"
     | "registrationOpensAt"
+    | "registrationOpensSoon"
     | "registrationClosesAt"
     | "capacity"
     | "raceId"
@@ -42,6 +43,7 @@ export function publicFormEvent(
     registrationMode: row.registrationMode,
     startsAt: row.startsAt,
     registrationOpensAt: row.registrationOpensAt,
+    registrationOpensSoon: row.registrationOpensSoon,
     registrationClosesAt: row.registrationClosesAt,
     capacity: row.capacity,
     raceId: row.raceId,

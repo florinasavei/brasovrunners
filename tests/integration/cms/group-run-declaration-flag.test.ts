@@ -29,7 +29,7 @@ vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/modules/staff-identity/session", () => ({
   DEV_STAFF_COOKIE: "dev-staff",
   requireStaff: async () => state.actor,
-  requireStaffRole: async () => state.actor,
+  requireStaffCapability: async () => state.actor,
 }));
 
 const { saveEventAndTranslationsAction } = await import("@/app/[locale]/admin/actions");

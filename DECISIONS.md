@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.03-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.04-2026-09-26 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.03-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.04-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -18035,3 +18035,171 @@ A cancelled event may still be published, in one press with «Creează și publi
 The refusal summary now names the status and the reason under the card's new home: «Ce fel de eveniment › Starea evenimentului › …».
 
 Baseline `BR-V2.03-2026-09-26`.
+
+## 449. The featured hero's route is the cards' pills
+
+§449 The featured hero's route is the cards' pills. The owner, 2026-09-26 16:35, with a screenshot of the listing: «astea de sus trebuie sa fie tot pills ca si in cardurile de mai jos». The hero's «Traseu» row is now `buildRoutePills` drawn by `RoutePills`. This is the same builder the card and the backoffice list use (§388), in the same order (§375, §394, §412, §428). The surface leaves the hero's chip row. What a pill cannot hold goes on one middle-dot line under the pills (`data-fact="route-extras"`): the amount, «plata pe {host}», «Donează pe {host}», «sugerat …», the organizer's fee and discount note, and the route, Strava and Facebook links. The hero's other rows keep their one-line form (§169, §356). Two deliberate exceptions. (1) The weather is not a pill on the hero, unlike the cards' last pill (§429). The hero keeps §416's «Vremea» row, because the owner asked for its details (rain chance, wind) on the main card, and a pill cannot hold them. The forecast is said once, in its fuller shape. (2) On an EXTERNAL + PAID event, the «Cu taxă» pill and «Cu taxă, la organizator: …» under it repeat two words. The line says who is paid, which the pill's closed-set word cannot. Amends §366 and §388.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 450. The Administrator runs the club; the Superadministrator adds the platform settings that can stop the service
+
+**The owner, 2026-09-26:** "I will make Amalia superadministrator but later administrators should manage everything; superadministrator is more like administrator + platform configs that can break stuff (throttling, etc)."
+
+**What moved to the Administrator (ADMIN).**
+- The team is the Administrator's (`canManageStaff`): inviting, changing a role, resending an invitation, the password link, switching an account off, and revoking access. It is capped by `canAssignRole` and `canManageMember`: an Administrator never makes a Superadministrator, never touches a Superadministrator's row, and never changes their own row.
+- The club's legal texts are the Administrator's (`canWriteLegalTexts`): writing and approving a version, the one-press approval of the platform's texts, and withdrawing and deleting a version. The guards that make approval one-way (the typed phrase and the reason) stay in the service, not in a rank.
+
+**What stays with the Superadministrator (`canManagePlatform`).** These are the settings whose wrong value stops the service for everyone at once:
+- the jobs' throttle, «Cât de des verifică platforma» (§334);
+- Neon's size ceiling and monthly quota (§335);
+- the email delivery timing (§221);
+- the anti-robot check, Turnstile and the honeypot (§254, §282). Off, every form is open to robots; on with a broken key, it can refuse every real person.
+
+Also the Superadministrator's: making, changing or removing another Superadministrator. The last Superadministrator can never be demoted or removed.
+
+**The Administrator's club settings are `canManageClubSettings`.** These are the email and Neon plans (§100, §280), «Termene» and the per-address limit (§377), the notices and email texts, the contact and copy recipients, «Trimite acum» (§80), and the older pictures' ladder (§414). Each changes what the club promises, says or pays, not whether the platform runs.
+
+**Every door names a capability.**
+- `requireStaffRole(rank)` is replaced by `requireStaffCapability(predicate)`.
+- The page that hides a button, the action that refuses the POST and the service that refuses the call all ask the same named predicate from `domain/roles.ts`. Before this, the legal pages asked `canWriteLegalTexts` while their actions asked "at least ADMIN", and the two could have drifted apart silently.
+- `isSuperadmin` names the one equality the team rules need.
+- `tests/unit/staff/no-raw-role-checks.test.ts` refuses `requireStaffRole(`, `atLeast(` or a role compared to a role string anywhere outside roles.ts, session.ts and src/db.
+
+**Closed on the way.** Before this change, any Administrator's replayed POST could deactivate the Superadministrator's Zitadel account or send it a password reset. `assertMayManageAccount` now refuses it.
+
+**Read-only, not hidden.** An Administrator sees the throttle, the limits, the delivery timing and the anti-robot state with current figures, plus a sentence saying who changes them. On /admin/staff, a Superadministrator's row shows a sentence instead of controls.
+
+One predicate per verb, asked three times. A club setting — the email plan, the club's copies, who receives the contact messages, «Termene», the per-address cap, the Neon plan, the older pictures' ladder — is `canManageClubSettings` at the page that draws its form, at the action that takes the POST and in the service that writes the row; none of them asks `canManageRegistrations` any more. "Send now" is not a setting: it is the registrations list's verb (§80), one service shared by two screens, so both screens' buttons, both actions and the service ask `canManageRegistrations`. The source-walk test holds the settings services and the two pages to it. The two predicates are the same threshold today; the point is that the day they part, what a role sees and what the server allows part with them rather than from each other.
+
+The role matrix is written as data: every single-role capability the module exports against every role, and every (actor, target) pair for giving a role and for touching a member. A capability exported without a row fails the suite. The team page is tested as the Administrator and the Superadministrator read it: the Superadministrator's row is a line with no verb for an Administrator, and every role select offers exactly `assignableRoles` of the reader.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 451. Registration can open «în curând» with no date
+
+The owner wants to announce an event and say «Înscrierile se deschid în curând» before the opening date is known. The editor's registration-window card has a tick for this, stored as `events.registration_opens_soon` (migration `0089`, expand only, DEFAULT false NOT NULL). A new column is needed because a null `registration_opens_at` already means "opens at publication" (BR-REQ-011-01 criterion 4). While the tick is on, an internal registration is NOT_YET_OPEN and the allocator refuses every door except the desk. The event page, the listing card, the calendar feed and the editor summary say "soon" instead of a date. «Anunță-mă» keeps collecting addresses. Unticking opens the window at the save, or at a date typed then, and the next maintenance run announces it. A date typed beside the tick is refused. An external event or a group run stores the tick off. Copies and series carry it. JSON-LD is unchanged (InStock, validFrom = publishedAt), the same as for a dated not-yet-open event.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 452. A date with its weekday takes no preposition; the hour inside a sentence takes «la» / «at»
+
+The owner, 2026-09-26 16:25: «textul asta nu e corect gramatical: "Înscrierile se deschid pe sâmbătă, 26 sept. 2026, 17:00."» Rule: a date that carries its weekday stands without a preposition in a Romanian sentence. That includes after «până», so a deadline reads «până vineri, 9 oct. 2026, la 09:00» and never «până la vineri…». A hold that ends at the start reads «până la start, <date>», and the formatted value itself carries «la start, ». The hour inside a sentence takes «la» (EN «at»), written by formatDay(position:"inline", withTime). Labels, cells, headings and a span's second half keep the bare «, HH:MM». «până la {x}» stays only where the value is a calendar day with no hour: a series' last date and the scope ranges. «Termenul de {deadline}» became «Termenul, {deadline}, a trecut». The declaration and group-run templates drop «în data de» / «din data de» before {{eventDate}}, and those versions need the club's approval. This amends §349's «pe, not la».
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 453. A visible line between the rows of every backoffice table
+
+The owner asked for separators between the events in the backoffice list. MUI's own cell border is the divider lightened almost to nothing, so a list of events with pills and a series' dates read as one block. `AdminTable`, the one table every backoffice list is built from, now gives each body row's cells a 1px bottom border in the theme's `divider` token. The border is on every cell, the actions cell included, so the line runs the full row width. The last row has none, because the frame's own border closes the table there. The body cells get a step more vertical padding (`py: 1.25`), so each row reads as one block. The header row gets a 2px rule in `text.secondary`, so the headings stand apart from the first row. Every colour is a theme token, so the dark scheme (§93) gets its own. Each body row says which it wears in `data-row-separator` ("line" or "none"). That is the stable handle the render test reads. Every other backoffice list built on `AdminTable` (registrations, staff and so on) gets the same lines. The phone layout already draws a bordered block per row and is unchanged.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 454. One 16:9 frame for the summary's pictures on every listing card and the featured hero, at a focal point the club picks; crop shapes in the crop box and the upload
+
+The owner, 2026-09-26, of a listing card whose portrait photograph stood twice as tall as its neighbours: "this card looks different than the others... I need some predefined crops and sizes for aspect ratios". This amends §241 (the crop), §275 (a card's picture had no crop and was capped at 420 px), §414 (the upload bar) and §417 (a card's pictures stand outside the three-line clamp).
+
+**The card frame.** Every picture in an event's short description is drawn in the same 16:9 frame on every listing card, single-date and series alike, and on the featured hero. The frame is the largest 16:9 rectangle inside the organizer's crop (the whole photograph when there is none), centred on a focal point the club picks, or on the middle of the crop when none is picked (`frameCrop`, `rich-text/domain/picture-frame.ts`). It is drawn with §241's own window geometry (`cardFrameGeometry`): `top` as a percentage of the frame's height, `left` of its width, the image `1 / frame.w` of the frame's width. A picture whose size was never stored is covered instead (`object-fit: cover` at the point). §275's 420-pixel ceiling is gone, because a portrait scaled to it was still twice its neighbours' height. §275's objection to a band, that "it chooses a shape for somebody", is answered by the focal point: the club chooses what the frame centres on, in the editor, while it looks at the frame.
+
+**Where the frame applies.** On a card, the frame takes the card's full width and the picture never floats. On the hero, which is the page's width and a card of its own above the listing, the frame keeps the organizer's width share and side, and only the shape changes (`EventExcerpt place="hero"`, `RichText framed`). The event page never frames: it draws the natural ratio or the organizer's crop, exactly as before.
+
+**The focal point.** The image node gains an optional, strict `focus: {x, y}` stored as fractions of the photograph. When it is absent it stays absent, so every stored body reads unchanged and no migration is needed. In the short description's editor, the crop box shows the card's frame as a dashed outline with a small preview («Așa apare pe card»). «Centrul pe card» lets the club tap the subject, and «Mijlocul decupajului» resets the point. The arrow keys move it.
+
+**Shapes.** The crop box offers Liber, 16:9, 4:3, 1:1 and 4:5. A shape draws its largest centred rectangle and keeps its proportions while the club drags or Shift-resizes it. What is stored is still §241's four crop fractions. The upload bar offers the same shapes for a new picture, and the stored-facts line after an upload says the shape it went in with («… · decupat 16:9 din mijloc (fișierul rămâne întreg)»).
+
+**A deliberate departure from the brief.** The brief asked for the upload shapes to crop the bitmap in the browser before shrinking and encoding. The shape is instead a crop over the whole stored file, for two reasons. The organizer can move or change it afterwards in the picture's panel without uploading again. And the same stored file serves both the page and the card's frame.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 455. Open-Meteo's credit lives only in the site footer's fold
+
+The owner asked (2026-09-26: "chiar e nevoie sa punk link catre Open-Meteo?") whether the Open-Meteo link has to appear on the event page at all. CC BY 4.0 requires attribution, but not on every row. Since §429 the site footer's «Despre club» fold already credits Open-Meteo on every page. So the event page's «Vremea» row and the featured hero's weather line no longer carry their own «Prognoză: Open-Meteo» link. The footer is the only place a page credits Open-Meteo. The reminder email keeps its plain-text source line, because an email has no footer fold. The `Weather.credit` message key stays: the footer and the email use it. Tests assert the credit is absent from the facts and the hero in both languages, and that it is present in the footer fold (unit and e2e).
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 456. Termene: the recommended value of every deadline
+
+Amends §377. Each deadline in «Termene» (`/admin/emails`) now has a recommended value: the platform's own default. It comes from one map, `RECOMMENDED` in `src/modules/deadlines/domain/deadlines.ts`, which equals `DEFAULT_DEADLINES`. The numbers live only in that map and never in a catalogue.
+
+- Each box's help reads «Recomandat: N. Între min și max.» / "Recommended: N. Between min and max.".
+- A box whose stored value is not the recommended one shows the chip «diferit de recomandat» / "differs from recommended".
+- «Completează valorile recomandate» / "Fill in the recommended values" is a client button inside the same form, `FillRecommendedButton`. It writes the recommended values into the boxes and saves nothing. The Administrator still presses «Salvează termenele», which asks first (§384) and goes through the same server gate. An earlier draft had a separate form that saved every default in one press. The review rejected it because a fill must not change the settings in force without the ordinary save.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 457. The club's copies (Bcc) on /admin/emails are shown back and save, with a reason when refused
+
+The owner, 2026-09-26: «trebuie să pot vedea pe cine am pus în BCC, nu pot salva aparent...». On `/admin/emails` → «Copiile clubului» there were three causes.
+
+**Separators.** Addresses separated by a space or one per line were read as one entry and refused as "not a valid email". No address can hold whitespace (the canonicalizer refuses it, §74), so `parseAddressList` (§164) now also splits on spaces and line breaks, in both address forms on the page (the club's copies and the contact recipients). «Declarațiile semnate merg la» is split the same way and its first entry taken, so 'arhiva@x.ro;' is the address and not a refusal naming it. Two addresses typed in that box are refused as `ONE_ADDRESS_ONLY`, a sentence that says the box takes one and where the others go. That check is made after the role is asserted.
+
+**A refusal that names the box.** The service named the setting's first path segment (`participants`, `declarations`), which matches no box, so the summary said only «Verifică datele introduse», with a link to nowhere. The service now names the list (`participants.bcc`), `clubNoticeBoxesOf` maps it to the form's box, and the sentence says why: the entries that are not addresses (`INVALID_ADDRESSES`, `{addresses}`) or the list over the ceiling (`TOO_MANY_ADDRESSES`, `{max}`).
+
+**What is in force, in words.** The declaration's Cc/Bcc could be saved while no archive address is set. They were then named nowhere («Nicio adresă»), so a save that had worked looked like one that had not. They are kept, but nothing sends them: a copy needs an address it is *for* (§244). The panel now says so in a warning that names them. It names the confirmation notices in force beside the participants' Bcc. The closed fold's summary (§336) lists the mailboxes by name, «Adrese care primesc copii: N — …», built by `mailboxesReceivingCopies`, which counts the declaration's Cc/Bcc only while a "to" resolves (the setting or `DECLARATIONS_ARCHIVE_TO`). That way the summary and the warning never disagree about who receives a copy. The four list boxes grow with what they hold (multiline, up to six rows), so every address typed is in view.
+
+**Not done, for the dispatcher to decide.** The brief asked for each address as plain text with its own «Șterge», plus an «Adaugă» field. This change keeps text boxes, now growing, and adds the in-force sentences. That meets the owner's words (see and save the Bcc) with the §100/§164 shape of one form and one Save. A per-address editor stays open if it is still wanted.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 458. The «Filtre» panel without its explanatory sentence, and tighter
+
+The owner, 2026-09-26 18:25: «șterge textul ăsta, e doar slop» (about «Într-un grup ajunge oricare bifă; între grupuri trebuie să se potrivească toate.») and «prea mult padding între carduri și restul». The sentence and its key `filter.help` are gone from both catalogues. The panel's wrapper on the listing goes from 16/24px to 8/12px (mt/mb `gapSm` / sm 1.5), amending §401's spacing. The panel's inner padding goes from 8/12px to 6/8px (`gapXs` / sm 1). The gap between groups goes from 6/8px to 6/4px: sm 0.5, and the phone stays on `gapXs`, the lowest step on the scale. This amends §413. The checkboxes keep their 44px targets. `tests/unit/theme/density.test.ts` records each site with its before and after values.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 459. «Echipa» / The team — a platform page, published as a whole, with per-person cards
+
+The owner, 2026-09-26: "facem și o pagină cu «Echipa» — să ne punem acolo, plus voluntarii care vor să apară", and later "ar trebui sa avem deja o pagina speciala de tip «Echipa» la fel cum e si cea de contact; restul de pagini sunt custom, pagina de echipa nu e o pagina custom".
+
+**Why a dedicated type rather than a standing page.** The page has a fixed structure: cards with a photo, a name, a role pair, a few words and one optional https link. It has a fixed bilingual route (`/ro/echipa`, `/en/team`), and its SEO and navigation rules belong to the platform. Each person gives consent and can ask to be removed. A rich-text standing page could not enforce both-or-neither for each card (§352) or keep a person's photo tracked as a media reference for the orphan sweep (§73).
+
+**Two gates.** The page as a whole is DRAFT until an Administrator publishes it. Publishing puts both languages live together (§28) and asks first through a ConfirmDialog that names both addresses (§384). A DRAFT page is a 404. Each card has its own «Pe site» switch, also the Administrator's (§201), and a new card starts hidden. The menu entry and the sitemap entry appear only while the page is published and at least one card is on it. A published page with no cards shows a sentence and is noindex. The page status and the optional introduction live in `platform_settings` under key `teamPage`. The introduction is RO and EN, both or neither; without one, the page shows the catalogue's sentence.
+
+**Roles.** The Redactor and the Administrator write cards and the introduction. Only the Administrator shows or hides a card, deletes a visible card, or publishes the page. The Organizer can only read. Every write leaves an `audit_logs` row in the same transaction, naming the card or setting by id and the staff member who acted, never the person's name or words (§12.12).
+
+**The privacy notice.** The page publishes the names and photographs of staff and volunteers, which is personal data. So the platform's privacy-notice template describes the page in section 4 and names it with `{{teamPage}}`. The field is filled with the page's title and also serves as a marker. `/admin/tasks` shows the open row `teamPageNotice`, and `/admin/pages/team` shows a warning, until a notice that names the field is in force. Publishing is not refused in the meantime: the owner decides.
+
+**Pictures.** The photo is stored as a WebP ladder (§414), with «Calitate: Normală / Înaltă» beside the upload. It is cut to a square and served in the album grid's `tile` column: two per row on a phone, three from `sm`, four from `md`.
+
+The «Echipa» page's setting keeps its audit rows under its own entity id, 00000000-0000-4000-8000-00000000e00c. The ids …e00a (the shown contact address) and …e00b (the governor thresholds / the club's to-do) belong to sibling branches, so no two settings share an audit trail.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 460. The fonts are files in the repository — the build never asks Google
+
+**2026-09-26.** The owner: "Fix that font issue, it keeps reappearing." `next/font/google` downloaded Roboto, Inter, Caveat and Nunito at build time. A runner that could not reach Google failed with "cannot resolve @vercel/turbopack-next/internal/font/google/font". The code was fine, but the pull request went red. §276's `.next/cache` and the build retry only made this less likely.
+
+**Decided.** Every face is a file in `src/theme/fonts/` and is loaded with `next/font/local` in `src/app/[locale]/layout.tsx`. The variables are unchanged (`--font-roboto`, `--font-inter`, `--font-signature`, `--font-nunito`), so the theme and the theme lab are untouched.
+
+- **The files.** Each weight the layout used before has one WOFF2: Roboto 300/400/500/700/900, Inter 400/500/700, Caveat 500 and Nunito 400/500/700. They are Google's own files, taken from the legacy CSS API with a user agent that gets one file per weight carrying **latin and latin-ext together**. `next/font/local` cannot give each file its own `unicode-range`, so a two-file split would not work. Each file is 25–59 KB. The SIL Open Font License sits beside each family as `<Family>-LICENSE.txt`, following Facón's convention.
+- **Preload.** Roboto, the body and heading face, is preloaded as before. Inter and Nunito (the theme lab) and Caveat (the signature hand) are `preload: false`: a browser fetches them only where a style names them. `next/font/google` used to preload their latin files on every page, so every page now preloads fewer files.
+- **Fallback.** `next/font/local` computes the Arial fallback metrics from the file itself, so layout shift is no worse than before. Facón's `fallback: ["Roboto", …]` now actually resolves to the self-hosted Roboto, because the generated family is named `roboto` and CSS family names are case-insensitive.
+- **Proof.** `tests/unit/theme/fonts.test.ts` checks four things. Nothing under `src/` imports `next/font/google` or names Google's font hosts. Every path the layout names exists and has its licence. No WOFF2 ships unnamed. Each WOFF2's own `cmap` carries ș ț ă â î (and the capitals, „ ” « » – — € … ’), and its `OS/2` weight is the one in its file name. The test uses a small WOFF2 reader built on Node's Brotli, with no font library.
+
+**Not changed.** The CI build's cache step stays for Turbopack's own sake. The build retry stays as cheap insurance. `scripts/ship.mjs`'s rerun on a `font/google` log line is now dead but harmless.
+
+**To update a face:** fetch `https://fonts.googleapis.com/css?family=<Family>:<weight>&subset=latin,latin-ext` with an old Firefox user agent (for example Firefox 40), download the single WOFF2 it names, and run the test.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 461. The club's address beside the contact form, always (amending §442)
+
+§442 showed the addresses in force only on a deployment where the contact form had no way out. Now every deployment shows them as `mailto:` links: under the form when the form works («Sau scrie-ne direct la» / "Or write to us directly at"), in the Gmail-first order of §442, with «sau» / "or" between them. A visitor who prefers their own mail client, or whose message the form cannot carry, can write straight to the club. When a message fails with a delivery error, the error alert already names the addresses, so the line under the form is not shown. The same addresses do not appear twice. The unit test renders the page in both languages, with the form working and with it not working.
+
+Baseline `BR-V2.04-2026-09-26`.
+
+## 462. Replies go to the club's Gmail by default, taken from configuration; newsletter defaults to Mailgun
+
+The owner, 2026-09-26: "I wanna have the mailgun reply to to be brasovrunners@gmail.com". This amends §442 and §443.
+
+**Reply-To (amends §442).** Until the club saves a choice, «Adresa de contact afișată» defaults to the Gmail mode when the deployment has a valid `CONTACT_SMTP_USER`, and to the Mailgun mailbox otherwise. Every read path gives the same answer: the footer, the contact page, the legal prefill, the bib print and every email's Reply-To.
+
+**Where the Gmail comes from.** The Gmail is no longer typed on `/admin/emails`. It is the configuration's own `CONTACT_SMTP_USER`, the account the contact form already sends through. The panel shows it read-only as «Gmail-ul clubului (din configurație)».
+- A save stores the mode alone.
+- A Gmail or «Amândouă» choice is refused when no Gmail is configured, and those radios are disabled.
+- A row saved while the Gmail was typed reads with the configured Gmail in its place. Its typed address counts only on a deployment with no Gmail configured.
+
+**What does not change.** The sender stays on the Mailgun domain, for DMARC reasons.
+
+**Newsletter (amends §443).** The newsletter group's default road is Mailgun, not Gmail. A newsletter sent to many addresses from a personal Gmail is the bulk pattern Google restricts. The rule of thumb is Gmail for mail addressed to the club itself, Mailgun for mail to participants or subscribers. The other groups' defaults are unchanged.
+
+Baseline `BR-V2.04-2026-09-26`.

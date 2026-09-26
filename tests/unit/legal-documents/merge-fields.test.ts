@@ -141,8 +141,9 @@ describe("the declaration's merge fields", () => {
         // 14), the fitness statement as health data, the processors' real locations, the incident
         // hold, restriction and the art. 12(3) extension. The declaration's moved with it: the
         // liability paragraph now says what it does not exclude, and the signature paragraph covers
-        // both the link and the paper.
-        const ceiling = key === "EVENT_DECLARATION" ? 9000 : key === "PRIVACY_NOTICE" ? 24000 : 11000;
+        // both the link and the paper. The notice's moved once more, by a paragraph each, for the
+        // newsletter (§445) and the team page's names and photographs (§459).
+        const ceiling = key === "EVENT_DECLARATION" ? 9000 : key === "PRIVACY_NOTICE" ? 25000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

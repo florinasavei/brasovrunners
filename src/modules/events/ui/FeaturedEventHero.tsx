@@ -82,7 +82,9 @@ export default async function FeaturedEventHero({
         {/* Special is not featured (§168): the lead event may also be an edition apart, and
             then it says both — "the one we are leading with" and "not an ordinary one". */}
         {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
-        <EventKindChips type={event.type} surface={event.surface} />
+        {/* The type alone: the surface is the first of the route's pills under «Traseu», as on
+            every listing card (§366, §449) — said once, never a chip here and a pill below. */}
+        <EventKindChips type={event.type} surface={null} />
         {/* Held with a partner (§367), as on every listing card. */}
         <PartnerChip event={event} />
         {/* BR-REQ-020-01 criterion 2: a cancelled event says so wherever it appears. */}
@@ -100,7 +102,7 @@ export default async function FeaturedEventHero({
         {event.title}
       </Typography>
 
-      <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />
+      <EventExcerpt place="hero" excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       {week && (
         <Typography

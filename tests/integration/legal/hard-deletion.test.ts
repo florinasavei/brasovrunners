@@ -80,7 +80,7 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
   });
 
@@ -404,15 +404,12 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
 
   it("refuses every role below the one that may write the club's legal text", async () => {
     /*
-      Superadministrator, the same gate as `createDraftVersion`, and an Administrator is refused
-      — which is the interesting boundary, because an Administrator may erase a registration and
-      an entire event with everyone on it. Those are participant data, where the hierarchy's
-      line is ADMIN. This is the club's own published word, and the role that publishes it is
-      the role that unpublishes it.
+      The same gate as `createDraftVersion` — the role that publishes the club's word is the role
+      that unpublishes it — and that is the Administrator since §450. An Organizer is refused.
     */
     const { first } = await twoApproved("PRIVACY_NOTICE");
 
-    for (const actor of [administrator, editor]) {
+    for (const actor of [editor]) {
       await expect(
         deleteApprovedVersion(db, actor, {
           versionId: first,
@@ -425,6 +422,10 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
 
     expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, first))).toHaveLength(1);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
+
+    // And the Administrator may, with the same phrase and reason the Superadministrator types.
+    await deleteApprovedVersion(db, administrator, { versionId: first, typedConfirmation: "GDPR 1", reason: "curățenie", now: LATER });
+    expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, first))).toHaveLength(0);
   });
 
   it("deletes a version that was withdrawn first, which is the row the fold is full of", async () => {

@@ -38,7 +38,7 @@ test.describe("BR-REQ-090-05 the cost half of the task board", () => {
     // A row per service, each carrying its own ceiling and how close this deployment is to it.
     await expect(main.getByRole("heading", { name: "Mailgun (trimiterea e-mailurilor)" })).toBeVisible();
     // A price with no age is a claim, so the page states how old these are.
-    await expect(main.getByText(/Prețurile au fost verificate pe/)).toBeVisible();
+    await expect(main.getByText(/Prețurile au fost verificate /)).toBeVisible();
 
     const overflow = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,

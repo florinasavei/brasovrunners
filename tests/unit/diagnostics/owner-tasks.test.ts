@@ -25,6 +25,7 @@ const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
   newsletterDescribed: true,
+  teamPageDescribed: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
@@ -77,6 +78,18 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §459 — the team page's names and photographs wait on the club's notice; open, never blocking. */
+  it("keeps the team-page notice row open while the notice in force does not describe the page", () => {
+    expect(stateOf({ ...LAUNCHED, teamPageDescribed: false }, "teamPageNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "teamPageNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "teamPageNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.teamPageNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -226,6 +239,7 @@ describe("owner tasks", () => {
       "approveLegalText",
       "listStatesNotice",
       "newsletterNotice",
+      "teamPageNotice",
       "liveEmail",
       "inviteStaff",
       "inviteKey",

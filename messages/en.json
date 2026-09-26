@@ -26,6 +26,7 @@
       "events": "Events",
       "calendar": "Calendar",
       "gallery": "Gallery",
+      "team": "Team",
       "more": "Menu",
       "contact": "Contact"
     },
@@ -53,7 +54,6 @@
       "label": "Event filters",
       "button": "Filters",
       "buttonCount": "Filters ({count})",
-      "help": "Within a group any tick will do; across groups, every one must match.",
       "groups": {
         "type": "Type",
         "surface": "Surface",
@@ -272,6 +272,8 @@
       },
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
+      "opensSoon": "Registration opens soon.",
+      "opensSoonShort": "Registration opens soon",
       "openUntilShort": "Registration open until {date}",
       "freeOf": {
         "one": "{count} place left out of {places}",
@@ -432,7 +434,8 @@
         "turnOn": "Turn the honeypot on"
       },
       "savedHoneypotOn": "The honeypot is on.",
-      "savedHoneypotOff": "The honeypot is off."
+      "savedHoneypotOff": "The honeypot is off.",
+      "readOnly": "The anti-bot check is changed by the Superadministrator: off, the form is open to robots; switched on wrongly, it can refuse real people. The state above is up to date for you too."
     },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
@@ -941,6 +944,9 @@
       "FORBIDDEN": "Your role does not allow this.",
       "NOT_FOUND": "That record no longer exists.",
       "VALIDATION_ERROR": "Check what you entered; something is not valid.",
+      "INVALID_ADDRESSES": "Not email addresses: {addresses}. Separate the addresses with commas, spaces or line breaks. Nothing was saved.",
+      "TOO_MANY_ADDRESSES": "At most {max} addresses in one box. Nothing was saved.",
+      "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
@@ -1092,6 +1098,8 @@
       "waitlistCapacity": "Maximum waiting-list length",
       "waitlistCapacityHelp": "Leave empty for unlimited. 0 means no waiting list: once the places are gone, registration stops. It only counts with a number of places. Lowered below how many already wait, it removes nobody from the list — it only takes nobody new.",
       "registrationOpensAt": "Registration opens",
+      "registrationOpensSoon": "Registration opens soon (no date yet)",
+      "registrationOpensSoonHelp": "Ticked, the page, the card and the calendar say “Registration opens soon” and the form stays closed. Leave the opening date empty. When you open registration, untick it: it opens when you save, or at the date you type then, and the people who asked to be told get the email.",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
@@ -1588,6 +1596,7 @@
           "window": {
             "range": "{from} – {to}",
             "fromPublication": "From publication",
+            "soon": "Opens soon",
             "untilStart": "until the start"
           },
           "conditions": {
@@ -1781,8 +1790,8 @@
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
         "DEV": "plus the technical page /devs. No participant data.",
-        "ADMIN": "plus registrations, the export, the legal texts, the emails, the tasks.",
-        "SUPERADMIN": "plus the team: who has access and with which role."
+        "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
+        "SUPERADMIN": "plus the platform settings that can stop the service (how often the platform checks, the database's limits, the anti-bot check) and naming another Superadministrator."
       },
       "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
@@ -1802,7 +1811,8 @@
       "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
-      "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console"
+      "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
+      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access."
     },
     "queue": {
       "title": "The registration queue",
@@ -1969,7 +1979,8 @@
         "minimumAge": "The event's minimum age, with its unit (“16 years”). On an event with no minimum age — on a group run, one of 18 or less — the sentence naming it is left out of the declaration",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
-        "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept."
+        "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept.",
+        "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2094,7 +2105,7 @@
         "defaultsUnset": "The project has no default size for a new compute; saving gives it the one chosen below.",
         "manyComputes": "The project has {count} read-write computes: the largest size is shown, and saving changes them all.",
         "quotaActive": "Limit in force: {hours} CU-hours, of which {used} spent. When it is reached, Neon stops the database until {end}.",
-        "readOnly": "The Administrator changes the limits. The figures above are current for you too.",
+        "readOnly": "The Superadministrator changes the limits: a wrong one can stop the site. The figures above are current for you too.",
         "maxCu": "The database's maximum size",
         "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load. The minimum stays {min} CU. Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
         "choose": "— choose a size —",
@@ -2202,7 +2213,7 @@
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
           "done": "The team has accounts.",
           "how": [
-            "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
+            "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events), Administrator (runs the club: registrations, legal texts, the team, this page) or Superadministrator (the platform settings too; only another Superadministrator can give this role).",
             "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
@@ -2357,6 +2368,16 @@
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
             "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
+          ]
+        },
+        "teamPageNotice": {
+          "title": "Privacy notice: the team page",
+          "todo": "The notice in force does not yet describe the team page, which shows the names and photographs of the club's team and volunteers. Approve a new notice before publishing the page.",
+          "done": "The notice in force describes the team page: what it shows, on what basis, and how a card is taken down.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 4 describes the team page.",
+            "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
+            "Only then publish the page, from /admin/pages/team → “Publish the page”."
           ]
         }
       },
@@ -2540,7 +2561,7 @@
         "lastPingRan": "last ping: {when}, ran",
         "lastPingSkipped": "last ping: {when}, skipped without the database",
         "updatedAt": "Set on {when}.",
-        "readOnly": "The Administrator changes the interval. The figures above are current for you too.",
+        "readOnly": "The Superadministrator changes the interval: a wrong one delays every job. The figures above are current for you too.",
         "field": "At most once every",
         "fieldHelp": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do. \"On demand\" means only the \"when something is due\" rule and the {cap}-minute safety check.",
         "option": {
@@ -2674,9 +2695,24 @@
       "imageAlignRight": "Right",
       "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way.",
       "imageCrop": "Crop — what is shown of the photograph",
-      "imageCropHelp": "Drag a box over the photograph: that is exactly what the page and the card show. Drag inside it to move it; the arrows move it, and Shift with them resizes it.",
+      "imageCropHelp": "Choose a shape or drag a box over the photograph: that is exactly what the page shows. A shape keeps its proportions while you drag. Drag inside the box to move it; the arrows move it, and Shift with them resizes it.",
       "imageCropReset": "No crop",
       "imageCropPosition": "{w}% × {h}% of the photograph, from the left {x}%, from the top {y}%",
+      "imageShapes": "Shape",
+      "imageShapeFree": "Free",
+      "imageShape169": "16:9",
+      "imageShape43": "4:3",
+      "imageShape11": "1:1",
+      "imageShape45": "4:5",
+      "imageCropTarget": "What a press on the photograph sets",
+      "imageCropTargetCrop": "The crop",
+      "imageCropTargetFocus": "The card's centre",
+      "imageFocusHelp": "On the listing cards every picture sits in the same 16:9 frame — the dashed outline. Choose \"The card's centre\" and press the subject: the frame moves there, inside the crop. The arrows move it.",
+      "imageFocusReset": "The middle of the crop",
+      "imageFocusPosition": "The card's centre: {x}% from the left, {y}% from the top",
+      "imageCardPreview": "How the card shows it",
+      "imageUploadShapeHelp": "\"Free\" keeps the whole photograph. A shape crops it from the middle without changing the file; move or change it in the picture's panel.",
+      "imageUploadCropped": "cropped {shape} from the middle (the file stays whole)",
       "table": "Table",
       "tableAddRow": "Add a row",
       "tableAddColumn": "Add a column",
@@ -2750,7 +2786,9 @@
         "seoDescription": "SEO description"
       },
       "seoHelp": "Optional, for search engines — in both languages or neither.",
-      "bothOrNeither": "write it in both languages or neither"
+      "bothOrNeither": "write it in both languages or neither",
+      "tabPages": "The club's pages",
+      "tabTeam": "The team page"
     },
     "pictures": {
       "title": "Pictures",
@@ -2773,7 +2811,8 @@
       "deleteBody": "“{name}” is deleted for good, from the library and from storage. This cannot be undone.",
       "tableCaption": "Uploaded pictures, newest first",
       "total": "{count, plural, one {# picture} other {# pictures}} · {size} MB stored",
-      "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes."
+      "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes.",
+      "usedInTeam": "On the team page: {title}"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -3116,6 +3155,9 @@
         "aside": "Addresses receiving copies: {count}",
         "intro": "Who at the club receives a copy of a signed declaration, who is told when somebody confirms their registration, and who receives a hidden copy of the emails to participants. Club addresses, never a participant's.",
         "participantsInForce": "Hidden copy of the emails to participants: {bcc}.",
+        "asideNames": "Addresses receiving copies: {count} — {addresses}",
+        "confirmationsInForce": "The notice that somebody confirmed goes to: {to}.",
+        "declarationCopiesIdle": "The declaration's copies are saved — Cc: {cc}; Bcc: {bcc} — but none leaves: a copy needs an address under “Signed declarations go to”. Type the archive mailbox there and the copies go too.",
         "source": {
           "setting": "In force: declarations go to {to}; visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
           "environment": "In force: declarations go to {to}, the address in the server's configuration (DECLARATIONS_ARCHIVE_TO), because the box below is empty. Visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
@@ -3125,14 +3167,14 @@
         "declarationsTo": "Signed declarations go to",
         "declarationsToHelp": "One address — the club's archive mailbox. Empty: no copy is sent.",
         "declarationsCc": "Visible copy (Cc)",
-        "declarationsCcHelp": "Addresses separated by commas. Every recipient can see the others.",
+        "declarationsCcHelp": "Addresses separated by commas, spaces or line breaks. Every recipient can see the others.",
         "declarationsBcc": "Hidden copy (Bcc)",
-        "declarationsBccHelp": "Addresses separated by commas. They appear nowhere in the message.",
+        "declarationsBccHelp": "Addresses separated by commas, spaces or line breaks. They appear nowhere in the message.",
         "bccWarning": "The declaration carries the participant's name and signature; in the club's copy the identity document's series and number are masked (for example “BV ••••56”). A hidden copy delivers that personal data to a mailbox nobody on the message can see. Use it only as a decision of the club.",
         "confirmationsTo": "Tell us when somebody confirms",
-        "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
+        "confirmationsToHelp": "Addresses separated by commas, spaces or line breaks. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
         "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
-        "participantsBccHelp": "Addresses separated by commas. Each receives, separately and without the participant knowing, a club copy of every email sent to a real participant — the declaration, the confirmation, the reminder, a number given by hand — with “[Club copy]” in the subject. Not of the address check or the link for another person, which go to an address nobody has confirmed yet; and of a message to everybody registered (the organizers' message, updated details), one copy per send, with how many received it and no names. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
+        "participantsBccHelp": "Addresses separated by commas, spaces or line breaks. Each receives, separately and without the participant knowing, a club copy of every email sent to a real participant — the declaration, the confirmation, the reminder, a number given by hand — with “[Club copy]” in the subject. Not of the address check or the link for another person, which go to an address nobody has confirmed yet; and of a message to everybody registered (the organizers' message, updated details), one copy per send, with how many received it and no names. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
         "participantsBccWarning": "The club copy carries none of the participant's personal links (confirming the address, signing the declaration, “I can't make it any more”), no QR code and no attachment, so nobody can take a step in their place from that mailbox. It still carries their name, the event and the race number: a club mailbox only, as a decision of the club.",
         "save": "Save",
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
@@ -3291,7 +3333,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "The subscription's confirmation, the newsletter written in the “Newsletter” menu and the new-event announcement, to those who subscribed on the contact page. The newsletter and the announcement go last and, through Mailgun, only from what is left after the registrations' reserve. Recommended: Gmail."
+            "help": "The subscription's confirmation, the newsletter written in the “Newsletter” menu and the new-event announcement, to those who subscribed on the contact page. The newsletter and the announcement go last and, through Mailgun, only from what is left after the registrations' reserve. Recommended: Mailgun — one message to many addresses from a personal Gmail is the bulk pattern Google restricts."
           }
         },
         "messages": "Messages in this group: {names}",
@@ -3358,7 +3400,7 @@
         "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
-        "bounds": "Between {min} and {max}; {default} by default.",
+        "bounds": "Recommended: {recommended}. Between {min} and {max}.",
         "fields": {
           "confirmationHours": "The address confirmation link is valid for (hours)",
           "holdMinutes": "A place is held for signing the declaration (minutes)",
@@ -3384,6 +3426,8 @@
         "save": "Save the deadlines",
         "saving": "Saving…",
         "saved": "The deadlines were saved; they apply from now on.",
+        "differs": "differs from recommended",
+        "fillRecommended": "Fill in the recommended values",
         "readOnly": "The Administrator changes the deadlines; you see the values in force."
       },
       "forecast": {
@@ -3453,13 +3497,14 @@
         "preview": "On the site: {shown} · Replies to: {replyTo}",
         "legend": "Which address we show",
         "modes": {
-          "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default",
-          "gmail": "The club's Gmail",
-          "both": "Both (the Gmail first, then {mailbox})"
+          "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default only when the server has no Gmail",
+          "gmail": "The club's Gmail (from configuration): {gmail} — default",
+          "both": "Both ({gmail} first, then {mailbox})"
         },
         "noMailbox": "not set on the server",
-        "gmail": "The club's Gmail",
-        "gmailHelp": "Required for “The club's Gmail” and “Both”. Mailgun has a daily cap; Gmail does not.",
+        "noGmail": "not set on the server",
+        "gmailConfigured": "The club's Gmail (from configuration): {gmail}. It is the account the contact form sends through; it is not typed here.",
+        "gmailMissing": "The server has no Gmail configured (CONTACT_SMTP_USER), so only the mailbox on the Mailgun domain is available.",
         "updatedAt": "Set {when}.",
         "readOnly": "The Administrator sets the address shown; you see the choice in force.",
         "save": "Save the address",
@@ -3473,7 +3518,7 @@
     },
     "guide": {
       "title": "How to use the platform",
-      "intro": "Every task has its own numbered steps. What is written «like this», in bold, is exactly what the button or the screen says — look for those words. Your role's sections come first and open; press a task to see its steps. If a button is missing, you do not have the role for it: ask a superadministrator for it, or ask someone who has that role.",
+      "intro": "Every task has its own numbered steps. What is written «like this», in bold, is exactly what the button or the screen says — look for those words. Your role's sections come first and open; press a task to see its steps. If a button is missing, you do not have the role for it: ask an administrator for it, or ask someone who has that role.",
       "sections": [
         {
           "title": "First steps",
@@ -3493,7 +3538,7 @@
                 "The first time: open the invitation email the club sent you and choose your password from it.",
                 "Open the club's site and add /en/admin at the end of the address.",
                 "On the «Staff sign-in» page press «Sign in» and use the email address the invitation came to and your password.",
-                "The top says «Signed in as» with your name and role. If the role is not the one you expected, tell a superadministrator.",
+                "The top says «Signed in as» with your name and role. If the role is not the one you expected, tell an administrator.",
                 "On a computer that is not yours, press «Sign out» when you finish."
               ]
             },
@@ -3526,8 +3571,8 @@
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
                 "The Organizer: reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants. Does not write the texts, publish, cancel or erase a registration, resend emails or assign numbers.",
                 "The Tehnic role: the platform's configuration page, for troubleshooting; may correct an event's settings. Does not see the registrations.",
-                "The Administrator: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines» and the Mailgun plan. Reads the legal documents but does not write or approve them, and does not see «Staff».",
-                "The Superadministrator: everything the Administrator does, plus the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access). A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it or to give it to you."
+                "The Administrator runs the club: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
+                "The Superadministrator: everything the Administrator does, plus the platform settings that can stop the service — «How often the platform checks», «The database's limits», the thresholds in «This month's budget» and «Anti-bot» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
               ]
             },
             {
@@ -3777,7 +3822,7 @@
                 "Print the numbers (see above).",
                 "«Events» → «Edit» → «Registrations received»: print a few «Paper declaration form (PDF)» and, if it is there, «Paper declaration form for a minor (PDF)».",
                 "There too, «Emergency sheet»: the phones and emergency contacts of everyone confirmed, on one page. Take it to the race and destroy it afterwards.",
-                "Volunteers: ask a superadministrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
+                "Volunteers: ask an administrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
                 "On race day: «Race day» in the top bar."
               ]
             },
@@ -3972,13 +4017,13 @@
               "title": "What the club still has to do",
               "steps": [
                 "«Tasks» → the «Club» tab: every row is read from the system, with the steps under it. A green row is done.",
-                "«Costs»: what the club pays and the database's limits."
+                "«Costs»: what the club pays and the database's limits. The platform's brakes there are a Superadministrator's to change (their section of this guide)."
               ]
             },
             {
-              "title": "Accounts for volunteers and colleagues (Superadministrator)",
+              "title": "Accounts for volunteers and colleagues",
               "steps": [
-                "Role needed: Superadministrator. «Staff» shows only for one; an Administrator does not see it and asks them.",
+                "«Staff» is the Administrator's and the Superadministrator's. The Superadministrator role and a Superadministrator's row are changed only by a Superadministrator.",
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
                 "It never arrived: on their row, «Resend the invitation».",
@@ -3988,8 +4033,57 @@
           ]
         },
         {
+          "title": "Superadministrator — the platform settings",
+          "who": "Role: Superadministrator. Everything the Administrator does, plus the settings that can stop the service.",
+          "roles": [
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "The brake on the scheduled jobs",
+              "steps": [
+                "Role needed: Superadministrator. An Administrator sees the current figures but does not change the interval.",
+                "«Tasks» → «Costs» → «How often the platform checks».",
+                "“On demand” is the default — the platform wakes the database only when it has something to do. A longer interval lowers the Neon bill, but delays every hand-over of a waiting-list place and every email the jobs send."
+              ]
+            },
+            {
+              "title": "The database's limits",
+              "steps": [
+                "Role needed: Superadministrator. A wrong limit can stop the site; an Administrator sees it but does not change it.",
+                "«Tasks» → «Costs» → «The database's limits».",
+                "The brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment, with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box."
+              ]
+            },
+            {
+              "title": "This month's budget thresholds",
+              "steps": [
+                "Role needed: Superadministrator. An Administrator sees the budget and what the platform is doing, but does not change the thresholds.",
+                "«Tasks» → «Costs» → «This month's budget» → «Save the thresholds».",
+                "The thresholds say at what share of the monthly limit the platform turns amber and red and brakes itself. One set too low brakes it for nothing; one set too high lets it reach the limit, and then Neon stops the database."
+              ]
+            },
+            {
+              "title": "The anti-bot check",
+              "steps": [
+                "Role needed: Superadministrator. An Administrator sees its state but does not change it.",
+                "«Tasks» → «Anti-bot»: the Cloudflare Turnstile check and the hidden honeypot trap.",
+                "Off, the form is open to robots; on with a wrong key, it can refuse real people. Switch it off on the day the box refuses people, and back on afterwards."
+              ]
+            },
+            {
+              "title": "Another Superadministrator",
+              "steps": [
+                "Role needed: Superadministrator.",
+                "«Staff»: only a Superadministrator makes somebody else a Superadministrator, changes a Superadministrator's role or takes their access away.",
+                "The last Superadministrator cannot be demoted or removed — whoever takes the platform over is named first."
+              ]
+            }
+          ]
+        },
+        {
           "title": "Legal documents and personal data (GDPR)",
-          "who": "Role: an Administrator reads; writing, approving, withdrawing and deleting the texts need a Superadministrator. Read once, before the first race with registrations.",
+          "who": "Role: Administrator or Superadministrator. Read once, before the first race with registrations.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3998,7 +4092,6 @@
             {
               "title": "Approve a new version of a legal text",
               "steps": [
-                "Role needed: Superadministrator. Only they see «New version» and approve; an Administrator reads the texts and the PDFs but does not write, approve or withdraw a version.",
                 "«Legal documents» → «New version».",
                 "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
@@ -4011,7 +4104,7 @@
             {
               "title": "The five texts, before the race is published",
               "steps": [
-                "Role needed: Superadministrator. In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
+                "In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
                 "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
                 "Until you approve the new notice, the public participant list shows the confirmed only."
               ]
@@ -4377,6 +4470,71 @@
       "previewEn": "Preview in English",
       "previewLoading": "Preparing the preview…",
       "previewUnavailable": "The preview is not available right now. The message can still be sent."
+    },
+    "team": {
+      "title": "The «Team» page",
+      "intro": "The club's people, one card each: a photograph, a name, what they do for the club, a few words and, if they want, a link. The page is the platform's, like the contact page: here you publish it and write its introduction and cards. A new card stays hidden until an Administrator puts it on the site. Ask the person's consent before putting their name and photograph on the site.",
+      "shownCount": "On the site: {count} of {total} cards.",
+      "noneShown": "No card is on the site, so the page does not appear in the site's menu.",
+      "viewPublic": "View the page",
+      "readOnly": "You can read the cards; the Copywriter or the Administrator writes them.",
+      "showIsAdmin": "You write and prepare the cards; the Administrator puts them on the site.",
+      "noStorage": "Picture storage is not configured here, so no photo can be added.",
+      "add": "Add a person",
+      "create": "Add the card",
+      "empty": "There are no cards yet.",
+      "listLabel": "The team's cards, in the page's order",
+      "visible": "On the site",
+      "hidden": "Hidden",
+      "noPhoto": "No photo",
+      "oneLanguage": "Text in one language only",
+      "moveUpNamed": "Move up: {name}",
+      "moveDownNamed": "Move down: {name}",
+      "show": "Put on the site",
+      "hide": "Take off the site",
+      "showTitle": "Put “{name}” on the site?",
+      "showBody": "The card appears on the team page while the page is published. Do you have the person's consent for the name and photograph?",
+      "hideTitle": "Take “{name}” off the site?",
+      "hideBody": "The card stays here, hidden; you can put it back at any time.",
+      "delete": "Delete the card",
+      "deleteTitle": "Delete the card “{name}”?",
+      "deleteBody": "The card is gone for good. The photo stays in Pictures for a week and is then deleted on its own, if nothing uses it any more.",
+      "edit": "Edit the card",
+      "name": "Name",
+      "nameHelp": "As the person wants to appear: first and last name, or the first name only.",
+      "roleRo": "What they do for the club (Română)",
+      "roleEn": "What they do for the club (English)",
+      "roleHelp": "For example “Antrenor” and “Coach”. Optional.",
+      "bioRo": "A few words (Română)",
+      "bioEn": "A few words (English)",
+      "bioHelp": "Optional, at most {max} characters.",
+      "bothOrNeither": "Write it in both languages or in neither.",
+      "photo": "Photo",
+      "photoChoose": "Choose a photo",
+      "photoReplace": "Change the photo",
+      "photoRemove": "Remove the photo",
+      "photoUploading": "Uploading…",
+      "photoFailed": "The photo did not upload. Try again or choose another file (JPEG, PNG or WebP).",
+      "photoNone": "No photo",
+      "photoHelp": "A square or portrait photo looks best: the site crops it square, keeping the face near the top. It is kept when you save the card.",
+      "pageHeading": "The page",
+      "pagePublished": "Published",
+      "pageDraft": "Draft",
+      "pagePublishedHelp": "The page is on the site in both languages: {ro} and {en}. It appears in the menu while it has at least one card on the site.",
+      "pageDraftHelp": "The page is not on the site: its address answers \"not found\" and the menu does not show it. Prepare the cards, then publish the page.",
+      "noticeMissing": "The privacy notice in force does not yet describe the team page, which shows names and photographs. First approve a new notice in /admin/legal (\"start from the platform's text\"), then publish the page.",
+      "publish": "Publish the page",
+      "unpublish": "Take the page down",
+      "publishTitle": "Publish the team page?",
+      "publishBody": "The page goes on the site in both languages at once, at {ro} and {en}, with every card that is on the site. Do you have the consent of every person on the cards?",
+      "unpublishTitle": "Take the team page down?",
+      "unpublishBody": "The page leaves the site in both languages and disappears from the menu. The cards stay here; you can publish it again at any time.",
+      "introFold": "The page's introduction",
+      "introRo": "Introduction (Română)",
+      "introEn": "Introduction (English)",
+      "introHelp": "Optional, at most {max} characters. Empty, the page uses the platform's text.",
+      "link": "Link (optional)",
+      "linkHelp": "One https:// address, for example a Strava or Instagram profile. The same in both languages."
     }
   },
   "NotFound": {
@@ -4706,7 +4864,7 @@
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
       "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
-      "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
+      "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (at most the first two and last two characters remain); we never keep a copy of the document.",
       "idDocumentPlaceholder": "BV 123456",
@@ -4922,10 +5080,10 @@
     "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
     "weather": {
       "title": "Weather forecast",
-      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
+      "ok": "Open-Meteo (public, keyless) — last answer on {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
       "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
-      "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
-      "stale": "Open-Meteo (public, keyless) — last answer at {when}, too old to show. The pages and the reminders show no weather until it answers.",
+      "failedAt": "Open-Meteo (public, keyless) — no answer on {when} ({reason}). The pages and the reminders show no weather until it answers.",
+      "stale": "Open-Meteo (public, keyless) — last answer on {when}, too old to show. The pages and the reminders show no weather until it answers.",
       "stub": "the test forecast (E2E_WEATHER_STUB) — the same fixed hour, and no request to Open-Meteo.",
       "off": "off in this environment."
     },
@@ -5010,8 +5168,8 @@
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
       "MODERATOR": "creates and configures events, publishes, the gallery",
       "DEV": "plus the configuration page. No participant data",
-      "ADMIN": "plus registrations, participants, export, legal texts, deleting an event",
-      "SUPERADMIN": "plus team administration: who has access and what they can do"
+      "ADMIN": "runs the club: plus registrations, participants, export, legal texts, the team, deleting an event",
+      "SUPERADMIN": "plus the platform settings that can stop the service, and naming another Superadministrator"
     },
     "settings": "Settings",
     "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",
@@ -5199,6 +5357,7 @@
       "bodyTo": "We will answer at {email}.",
       "body": "We will answer at your email address."
     },
+    "direct": "Or write to us directly at",
     "off": {
       "writeTo": "Write to us at",
       "none": "The contact form is not available at the moment.",
@@ -5531,7 +5690,16 @@
       },
       "newsletterDuplicate": "This newsletter had already been sent.",
       "newsletterWithdrawn": "The address was removed from the newsletter.",
-      "newsletterNotFound": "The address was not on the newsletter."
+      "newsletterNotFound": "The address was not on the newsletter.",
+      "teamMemberCreated": "The card was added, hidden until it is put on the site.",
+      "teamMemberSaved": "The card was saved.",
+      "teamMemberShown": "The card is on the site.",
+      "teamMemberHidden": "The card was taken off the site.",
+      "teamMemberMoved": "The order of the cards was changed.",
+      "teamMemberDeleted": "The card was deleted.",
+      "teamPageIntroSaved": "The team page's introduction was saved.",
+      "teamPagePublished": "The team page is on the site, in both languages.",
+      "teamPageUnpublished": "The team page was taken off the site."
     }
   },
   "Network": {
@@ -5669,5 +5837,12 @@
       "goneBody": "We deleted your address from the news list. You can come back at any time from the contact page.",
       "invalidBody": "It has expired or the subscription no longer exists. Every new email from us carries a new link; you can also subscribe again from the contact page."
     }
+  },
+  "Team": {
+    "title": "The team",
+    "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
+    "empty": "The club's team will be introduced here soon.",
+    "listLabel": "The team's people",
+    "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>."
   }
 }

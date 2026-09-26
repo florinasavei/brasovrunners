@@ -4,6 +4,7 @@ import { daysPhrase, deadlineWords, durationPhrase, hoursPhrase, leadPhrase, min
 import { deadlineMergeValues, isMergeField, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 // The notice also names the public list's states since §396, filled from the catalogue as the page fills it.
+import { teamPageMergeValues } from "@/modules/content/team/notice-words";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 
@@ -121,7 +122,7 @@ describe("§377 the deadlines as legal merge fields", () => {
   it("the platform's privacy notice, merged with a default of no reminder, names a reminder only where the event sends one, in either language", () => {
     const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
-      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, off), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale) })).join(" ");
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, off), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) })).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder before the start where the event sends one" : "un memento înainte de start, dacă evenimentul trimite unul");
       expect(all).not.toMatch(/\b0 (de )?ore\b|\b0 hours\b/);
       expect(all).not.toContain("…………");
@@ -130,7 +131,7 @@ describe("§377 the deadlines as legal merge fields", () => {
 
   it("the platform's privacy notice, merged with the club's default lead, names it hedged for the event's own choice, in either language", () => {
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
-      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, DEFAULT_DEADLINES), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale) })).join(" ");
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, DEFAULT_DEADLINES), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) })).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder 2 days before (or as the event chooses)" : "un memento cu 2 zile înainte (sau cât alege evenimentul)");
       expect(all).not.toContain("…………");
     }
@@ -161,7 +162,7 @@ describe("§418 the public list's ceiling as a legal merge field", () => {
       const paragraphs = body.sections.flatMap((section) => section.paragraphs);
       expect(paragraphs.filter((paragraph) => paragraph.includes("{{publicListPeriod}}")).length, locale).toBe(2);
       const all = paragraphs
-        .map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, { ...DEFAULT_DEADLINES, publicListDays: 45 }), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale) }))
+        .map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, { ...DEFAULT_DEADLINES, publicListDays: 45 }), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }))
         .join(" ");
       expect(all).toContain(locale === "en" ? "at most 45 days after the event" : "cel mult 45 de zile după eveniment");
       expect(all).not.toContain("…………");

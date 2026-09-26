@@ -11,6 +11,7 @@ import { routing } from "@/i18n/routing";
 import { legalPageMetadata, readLegalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { teamPageMergeValues } from "@/modules/content/team/notice-words";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
@@ -90,7 +91,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
               itself, and the public list's three state words (§396), from the catalogue the list reads. */}
           <LegalDocumentBody
             body={document.body}
-            values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale) }}
+            values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }}
             emphasizeFilled={false}
           />
         </>
