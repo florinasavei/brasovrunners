@@ -890,6 +890,8 @@
       "approveVersionBody": "The text becomes public and can no longer be changed. A later correction means a new version.",
       "emailPlanTitle": "Change the Mailgun plan?",
       "emailPlanBody": "The quotas, “how much we can still send” and the cost table follow the new plan from now on.",
+      "emailTransportTitle": "Change how emails leave?",
+      "emailTransportBody": "From now on the chosen groups leave through Gmail, within the limit and with the pause set here; the rest through Mailgun. Emails already sent stay as they were.",
       "contactRecipientsTitle": "Change who receives the contact messages?",
       "contactRecipientsBody": "Messages from the contact form reach the saved addresses from now on, and only them.",
       "clubNoticesTitle": "Change who receives the club's copies?",
@@ -3073,6 +3075,54 @@
         "forecastUnlimited": "A registration carried through to confirmation costs about {count} messages.",
         "forecastBcc": "Of those, {extra} are the hidden copies — one for each address under “The club's copies” (currently {bcc}) on every email to a participant."
       },
+      "transport": {
+        "title": "How emails leave: Mailgun or the club's Gmail",
+        "intro": "Mailgun costs money (the Free plan has 100 messages a day). The club's Gmail is free, but Google blocks a personal account that sends a lot, in bursts or automatically. Here you choose, per group, what leaves through Gmail; the rest leaves through Mailgun. For Gmail you set a daily limit and a pause between messages below.",
+        "aside": {
+          "on": "Gmail: {sent} of {cap} in the last day · {groups} of 4 groups through Gmail",
+          "off": "Gmail is not configured here: everything leaves through Mailgun"
+        },
+        "status": "The club's Gmail sent {sent} of {cap} messages in the last day (counted back from now). At the limit, the rest leaves through Mailgun.",
+        "unconfigured": "The club's Gmail is not configured in this environment (the account and its app password are missing, the same ones the contact form uses), so every email leaves through Mailgun, whatever you choose below. The choice stays saved and applies from the moment the account is configured.",
+        "groups": {
+          "links": {
+            "label": "Action links",
+            "help": "Confirming the address, signing the declaration, a place offered from the waiting list, the manage links. Late or in spam, the runner loses the place. Recommended: Mailgun."
+          },
+          "confirmations": {
+            "label": "Confirmations and status changes",
+            "help": "Registration confirmed, on the waiting list, cancelled, the offer expired, the race number, the signed copy of the declaration. Recommended: Mailgun."
+          },
+          "event": {
+            "label": "Messages to many participants at once",
+            "help": "The reminder, the event's update or cancellation, the organizer's message, the thank-you, “Registration is open”. Many messages at once is exactly what Google blocks on a personal account. Recommended: Mailgun."
+          },
+          "club": {
+            "label": "Messages to the club",
+            "help": "The club's copies, the declaration archive, the “Somebody confirmed” notice, colleagues' invitations. They land in the club's own mailboxes. Recommended: Gmail."
+          }
+        },
+        "messages": "Messages in this group: {names}",
+        "options": {
+          "mailgun": "Mailgun",
+          "gmail": "The club's Gmail"
+        },
+        "dailyCap": "Gmail limit per day (messages)",
+        "dailyCapHelp": "At most {max}: that is what Google allows a personal account a day, and the account is also used by the contact form and by people. Past the limit, messages leave through Mailgun.",
+        "pace": "Pause between two Gmail messages (seconds)",
+        "paceHelp": "Between 0 and {max}. An account that sends in bursts looks like a robot. What does not fit in the pauses leaves at the queue's next run.",
+        "overflow": "When Mailgun has used up today's messages",
+        "overflowOptions": {
+          "yes": "Send through Gmail, within its limit",
+          "no": "Wait until tomorrow"
+        },
+        "caveat": "Through Gmail we do not learn that a message bounced: the answer arrives as an email in the Gmail inbox and does not show in the email queue. The sender is the club's Gmail address, with the club's name.",
+        "save": "Save the routes",
+        "saving": "Saving…",
+        "saved": "The setting was saved. The next emails leave by the routes chosen.",
+        "readOnly": "An Administrator changes this setting.",
+        "updatedAt": "Set {when}."
+      },
       "contacts": {
         "title": "Who receives the contact messages",
         "aside": "They currently reach: {to}",
@@ -3171,6 +3221,10 @@
           "none": "Club copy: none. The club receives no copy of the emails to participants.",
           "some": "Club copy: every email above also goes, separately and with “[Club copy]” in the subject, to {addresses}. Not for test registrations, and not for “Registration is open”, which belongs to no registration.",
           "link": "Change it in “The club's copies”"
+        },
+        "road": {
+          "mailgun": "through Mailgun",
+          "gmail": "through Gmail"
         }
       },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
@@ -4465,6 +4519,7 @@
       "moved": "The order was changed.",
       "pageDeleted": "The page was deleted.",
       "emailPlan": "The Mailgun plan was saved.",
+      "emailTransport": "The email routes were saved.",
       "contactRecipients": "The contact recipients were saved.",
       "clubNotices": "The club's copies were saved.",
       "emailCopy": "The email's wording was saved.",

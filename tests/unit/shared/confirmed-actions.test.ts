@@ -105,6 +105,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   revokeStaffAction: [],
   // Settings that face outward.
   updateEmailPlanAction: [],
+  // Mailgun or the club's Gmail, per group (§NNN): every email from now on takes the new road.
+  updateEmailTransportAction: [],
   updateContactRecipientsAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],

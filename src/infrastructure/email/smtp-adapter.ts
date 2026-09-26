@@ -19,6 +19,8 @@ import nodemailer from "nodemailer";
  * contact message has several recipients, no row to retry from and no queue; a failure is
  * told to the visitor on the spot with the club's address to write to instead. Two narrow
  * types instead of one wide one, and nothing here is reachable from `createEmailSender`.
+ * Since §NNN the outbox has a Gmail road of its own — `gmail-adapter.ts`, a real `EmailAdapter`
+ * over the same connection (`createSmtpConnection`) — and this contract is still the contact form's.
  *
  * Nodemailer 10 ships its own types, and is the one SMTP client the ecosystem uses; Node has
  * no SMTP client of its own, and a hand-written one over `node:tls` is the kind of code that
@@ -73,7 +75,7 @@ const GREETING_TIMEOUT_MS = 8_000;
 const SOCKET_TIMEOUT_MS = 15_000;
 
 /** What the log may carry: the error's code or class. The message can quote the server's reply, which may echo the login. */
-function describeFailure(error: unknown): string {
+export function describeSmtpFailure(error: unknown): string {
   if (error && typeof error === "object") {
     const code = (error as { code?: unknown }).code;
     if (typeof code === "string" && code !== "") return `smtp ${code}`;
@@ -82,8 +84,12 @@ function describeFailure(error: unknown): string {
   return "smtp failure";
 }
 
-export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
-  const transporter = nodemailer.createTransport({
+/**
+ * The connection every SMTP send here opens — the contact form's and, since §NNN, the outbox's
+ * Gmail road (`gmail-adapter.ts`) — so both keep the same TLS rule and the same bounded waits.
+ */
+export function createSmtpConnection(config: SmtpConfig) {
+  return nodemailer.createTransport({
     host: config.host,
     port: config.port,
     // Implicit TLS on 465 (Gmail's submission port); STARTTLS otherwise, required, never
@@ -97,6 +103,10 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
     greetingTimeout: GREETING_TIMEOUT_MS,
     socketTimeout: SOCKET_TIMEOUT_MS,
   });
+}
+
+export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
+  const transporter = createSmtpConnection(config);
 
   return {
     name: "smtp",
@@ -121,7 +131,7 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
         if (info.accepted.length === 0) return { outcome: "failed", error: "smtp rejected every recipient" };
         return { outcome: "sent", providerMessageId: info.messageId };
       } catch (error) {
-        return { outcome: "failed", error: describeFailure(error) };
+        return { outcome: "failed", error: describeSmtpFailure(error) };
       }
     },
   };

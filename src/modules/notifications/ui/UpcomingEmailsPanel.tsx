@@ -10,6 +10,8 @@ import type { Locale } from "@/i18n/routing";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailTransport } from "../domain/email-transport";
 import type { ForecastRow } from "../forecast";
 
 type Props = {
@@ -22,6 +24,11 @@ type Props = {
    * or null for a reader who may not see that list — the line is left out for them.
    */
   clubCopies: string[] | null;
+  /**
+   * The road each message type would take now (§NNN): the club's choice for its group, Mailgun
+   * wherever Gmail is not configured. Absent, no road is said.
+   */
+  roads?: Readonly<Record<EmailMessageType, EmailTransport>>;
   openWhen?: FoldOpenWhen;
 };
 
@@ -38,7 +45,7 @@ const TAP = { display: "inline-flex", alignItems: "center", minHeight: 44 } as c
  * the cards it links to. Under the list, the club-copy line: whether the club gets a copy of each
  * of these, and where that is set.
  */
-export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, clubCopies, openWhen }: Props) {
+export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, clubCopies, roads, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const other: Locale = locale === "ro" ? "en" : "ro";
 
@@ -103,6 +110,11 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
                     {row.testRecipients > 0 &&
                       ` ${t(`emails.forecast.tests.${countForm(row.testRecipients, locale)}`, { count: row.testRecipients })}`}
                   </Typography>
+                  {roads && (
+                    <Typography component="span" variant="body2" color="text.secondary" data-testid="upcoming-email-road">
+                      {t(`emails.forecast.road.${roads[row.type]}`)}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             );

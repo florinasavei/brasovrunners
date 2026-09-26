@@ -2,13 +2,12 @@ import type { emailOutbox } from "@/db/schema/email-outbox";
 import type { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { StaffUser } from "@/db/schema/staff-users";
-import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { env } from "@/shared/config/env";
 import { type OutboxBatchSummary, processOutboxBatch } from "./outbox";
+import { createOutboxSender } from "./outbox-sender";
 import { createOutboxRenderer } from "./render";
 import { readEmailVolumeToday } from "./volume";
 
@@ -68,10 +67,12 @@ export async function sendOutboxNow(
   let batches = 0;
   let volume = await readEmailVolumeToday(db, now);
 
-  const { sender } = createEmailSenderForEnvironment(env);
+  // The club's road per group, Gmail's cap and pace (§NNN): one sender for the press, counting as it goes.
+  const { sender, route } = await createOutboxSender(db, now);
   while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
+      route,
       // A renderer per batch, so each event's words are read once per batch (§373, email follow-up).
       render: createOutboxRenderer(),
       now,

@@ -151,6 +151,8 @@ export type AuditAction =
   | "event.repeat_publish_changed"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
+  /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§NNN): from and to. */
+  | "email_transport.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
   /** The minimum minutes between two real runs of each scheduled job, from and to (§334). */

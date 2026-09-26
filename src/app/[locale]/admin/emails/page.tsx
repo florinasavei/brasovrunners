@@ -32,6 +32,9 @@ import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readOutboxQueue } from "@/modules/notifications/queue";
 import EmailCopyEditor from "@/modules/notifications/ui/EmailCopyEditor";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
+import EmailTransportPanel from "@/modules/notifications/ui/EmailTransportPanel";
+import { roadsByMessageType } from "@/modules/notifications/domain/email-transport";
+import { readEmailTransport } from "@/modules/notifications/email-transport";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmailsPanel";
@@ -124,8 +127,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, volume, recipients, queue, notices, written, deadlines, forecast, addressCap] = await Promise.all([
+  const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap] = await Promise.all([
     readEmailPlan(db),
+    // Which road each group takes, Gmail's cap and pace (§NNN), beside the plan it spends less of.
+    readEmailTransport(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
     readContactRecipients(db),
@@ -234,6 +239,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
+        {saved === "emailTransport" && <Alert severity="success">{t("emails.transport.saved")}</Alert>}
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
         {saved === "outboxSent" && <Alert severity="success">{t("outbox.sentNow", { count: sent ?? "0" })}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
@@ -251,6 +257,16 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         says how it stays in view.
       */}
       <EmailPlanPanel locale={locale} plan={plan} volume={volume} mayEdit={mayEditEmail} openWhen={{ saved: saved === "emailPlan" }} />
+
+      {/* Mailgun or the club's Gmail, per group (§NNN): what spends the plan above, and what does not. */}
+      <EmailTransportPanel
+        locale={locale}
+        setting={transport}
+        volume={volume}
+        mayEdit={mayEditEmail}
+        openWhen={{ saved: saved === "emailTransport" }}
+        neverQueued={NEVER_QUEUED}
+      />
 
       {/* What is actually queued, and the button that sends it (§243). "Send now" is the one
           form on this page that answers through `?error=`, so an error here is its own. */}
@@ -301,6 +317,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         rows={forecast}
         horizonDays={FORECAST_HORIZON_DAYS}
         clubCopies={notices ? notices.participants.bcc : null}
+        roads={roadsByMessageType(transport, volume.gmailConfigured)}
       />
 
       <ParticipantEmailsPanel

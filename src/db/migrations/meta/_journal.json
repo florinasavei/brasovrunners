@@ -575,6 +575,13 @@
       "when": 1790369923669,
       "tag": "0081_terms_acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1790421823820,
+      "tag": "0088_email_transport",
+      "breakpoints": true
     }
   ]
 }

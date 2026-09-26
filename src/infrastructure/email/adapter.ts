@@ -39,7 +39,16 @@ export type OutgoingEmail = {
   idempotencyKey: string;
   /** Files carried with the message — the signed declaration (§95). Rendered at send time, never stored in the outbox. */
   attachments?: EmailAttachment[];
+  /**
+   * The road the club chose for this message's group (§NNN). A wish, not an order: the sender
+   * takes Mailgun's road whenever Gmail is not configured, is at its daily cap, or failed. Absent
+   * means Mailgun.
+   */
+  transport?: EmailTransportName;
 };
+
+/** The two roads out (§NNN): the provider's HTTP API, or the club's own Gmail over SMTP. */
+export type EmailTransportName = "mailgun" | "gmail";
 
 export type EmailAttachment = { filename: string; contentType: string; data: Buffer };
 
@@ -66,11 +75,21 @@ export type EmailAttachment = { filename: string; contentType: string; data: Buf
  * is stored — never a body, an address, or an action token (§14.5).
  */
 export type SendResult =
-  | { outcome: "sent"; providerMessageId: string }
+  | {
+      outcome: "sent";
+      providerMessageId: string;
+      /** Which road carried it (§NNN), set by the sender; the outbox stores it. Absent is Mailgun. */
+      transport?: EmailTransportName;
+    }
   | { outcome: "transient_failure"; error: string }
   | {
       outcome: "throttled";
       error: string;
+      /**
+       * Held back by Gmail's pace, not refused by anybody (§NNN): nothing was tried, so the
+       * outbox gives the attempt back rather than spending one of six on a few seconds' wait.
+       */
+      paced?: true;
       /**
        * When the provider's allowance is expected back. The outbox schedules the next attempt
        * for then rather than applying its own backoff. Absent means "the adapter does not

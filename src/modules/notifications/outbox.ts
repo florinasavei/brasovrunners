@@ -6,7 +6,7 @@ import {
 } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
-import type { OutgoingEmail } from "@/infrastructure/email/adapter";
+import type { EmailTransportName, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { readClubNotices } from "./club-notices";
@@ -379,9 +379,19 @@ export type OutboxBatchSummary = {
  */
 export async function processOutboxBatch(
   db: Db,
-  params: { sender: EmailSender; render: EmailRenderer; now: Date; batchSize?: number },
+  params: {
+    sender: EmailSender;
+    render: EmailRenderer;
+    now: Date;
+    batchSize?: number;
+    /**
+     * The road each row asks for (§NNN, `outbox-sender.ts`): the club's setting for the row's
+     * group. Absent — a test's own sender — every message asks for Mailgun, as before.
+     */
+    route?: (row: OutboxRow) => EmailTransportName;
+  },
 ): Promise<OutboxBatchSummary> {
-  const { sender, render, now, batchSize = 20 } = params;
+  const { sender, render, now, batchSize = 20, route } = params;
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
 
@@ -399,6 +409,7 @@ export async function processOutboxBatch(
     let message: OutgoingEmail;
     try {
       message = await render(row, db, now);
+      if (route) message = { ...message, transport: route(row) };
     } catch (error) {
       await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
       summary.failed += 1;
@@ -422,6 +433,8 @@ export async function processOutboxBatch(
           status: "SENT",
           sentAt: now,
           providerMessageId: result.providerMessageId,
+          // Which road carried it (§NNN): Gmail's cap and Mailgun's allowance are counted from this.
+          transport: result.transport ?? "mailgun",
           lockedAt: null,
           nextAttemptAt: null,
           lastError: null,
@@ -443,6 +456,25 @@ export async function processOutboxBatch(
      *
      * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
      */
+    /*
+      Held back by Gmail's pace, not refused (§NNN): nothing was tried, so the attempt the claim
+      counted is given back, and the row is due again in the few seconds the pace asks for — the
+      next drain or job run takes it. Counted as a retry: the mechanism working, not the plan's limit.
+    */
+    if (result.outcome === "throttled" && result.paced) {
+      await db
+        .update(emailOutbox)
+        .set({
+          status: "PENDING",
+          lockedAt: null,
+          attemptCount: Math.max(0, row.attemptCount - 1),
+          nextAttemptAt: result.retryAfter ?? now,
+        })
+        .where(eq(emailOutbox.id, row.id));
+      summary.retrying += 1;
+      continue;
+    }
+
     if (result.outcome === "throttled") {
       await db
         .update(emailOutbox)

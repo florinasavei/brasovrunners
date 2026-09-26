@@ -890,6 +890,8 @@
       "approveVersionBody": "Textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
       "emailPlanTitle": "Schimbi planul Mailgun?",
       "emailPlanBody": "Cotele, „cât mai putem trimite” și tabelul de costuri se calculează de acum după noul plan.",
+      "emailTransportTitle": "Schimbi pe unde pleacă emailurile?",
+      "emailTransportBody": "De acum, grupurile alese pleacă prin Gmail, în limita și cu pauza de aici; restul prin Mailgun. Emailurile deja trimise rămân cum au fost.",
       "contactRecipientsTitle": "Schimbi cine primește mesajele de contact?",
       "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
       "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
@@ -3073,6 +3075,54 @@
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
         "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant."
       },
+      "transport": {
+        "title": "Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului",
+        "intro": "Mailgun costă (planul Free are 100 de mesaje pe zi). Gmail-ul clubului e gratuit, dar Google blochează un cont personal care trimite mult, în rafale sau automat. Aici alegi, pe grupuri, ce pleacă prin Gmail; restul pleacă prin Mailgun. Pentru Gmail pui mai jos o limită pe zi și o pauză între mesaje.",
+        "aside": {
+          "on": "Gmail: {sent} din {cap} în ultima zi · {groups} din 4 grupuri prin Gmail",
+          "off": "Gmail nu e configurat aici: totul pleacă prin Mailgun"
+        },
+        "status": "Gmail-ul clubului a trimis {sent} din {cap} mesaje în ultima zi (socotită de acum înapoi). La limită, restul pleacă prin Mailgun.",
+        "unconfigured": "Gmail-ul clubului nu e configurat pe acest mediu (lipsesc contul și parola de aplicație, aceleași ca la formularul de contact), deci toate emailurile pleacă prin Mailgun, orice ai alege mai jos. Alegerea rămâne salvată și se aplică din clipa în care contul e configurat.",
+        "groups": {
+          "links": {
+            "label": "Linkuri de acțiune",
+            "help": "Confirmarea adresei, semnarea declarației, locul oferit de pe lista de așteptare, linkurile de gestionare. Dacă întârzie sau ajung în spam, omul pierde locul. Recomandat: Mailgun."
+          },
+          "confirmations": {
+            "label": "Confirmări și schimbări de stare",
+            "help": "Înscriere confirmată, pe lista de așteptare, anulată, oferta expirată, numărul de concurs, copia semnată a declarației. Recomandat: Mailgun."
+          },
+          "event": {
+            "label": "Mesaje către mulți participanți deodată",
+            "help": "Reamintirea, actualizarea sau anularea evenimentului, mesajul organizatorului, mulțumirile, „S-au deschis înscrierile”. Multe mesaje deodată sunt exact ce blochează Google la un cont personal. Recomandat: Mailgun."
+          },
+          "club": {
+            "label": "Mesajele către club",
+            "help": "Copiile clubului, arhiva declarațiilor, anunțul „Cineva a confirmat”, invitațiile colegilor. Ajung în căsuțele clubului. Recomandat: Gmail."
+          }
+        },
+        "messages": "Mesajele din grup: {names}",
+        "options": {
+          "mailgun": "Mailgun",
+          "gmail": "Gmail-ul clubului"
+        },
+        "dailyCap": "Limita Gmail pe zi (mesaje)",
+        "dailyCapHelp": "Cel mult {max}: atât permite Google pe zi unui cont personal, iar contul e folosit și de formularul de contact și de oameni. Peste limită, mesajele pleacă prin Mailgun.",
+        "pace": "Pauza între două mesaje Gmail (secunde)",
+        "paceHelp": "Între 0 și {max}. Un cont care trimite în rafale arată a robot. Ce nu încape în pauze pleacă la următoarea rulare a cozii.",
+        "overflow": "Când Mailgun a terminat mesajele de azi",
+        "overflowOptions": {
+          "yes": "Trimite prin Gmail, în limita lui",
+          "no": "Așteaptă până mâine"
+        },
+        "caveat": "Prin Gmail nu aflăm dacă un mesaj a ricoșat: răspunsul vine ca email în căsuța Gmail și nu apare în coada de emailuri. Expeditorul este adresa Gmail a clubului, cu numele clubului.",
+        "save": "Salvează drumurile",
+        "saving": "Se salvează…",
+        "saved": "Setarea a fost salvată. Următoarele emailuri pleacă pe drumurile alese.",
+        "readOnly": "Setarea o schimbă Administratorul.",
+        "updatedAt": "Setat {when}."
+      },
       "contacts": {
         "title": "Cine primește mesajele de contact",
         "aside": "Acum ajung la: {to}",
@@ -3171,6 +3221,10 @@
           "none": "Copie club: niciuna. Clubul nu primește copii ale emailurilor către participanți.",
           "some": "Copie club: fiecare email de mai sus pleacă și, separat, cu „[Copie club]” în subiect, la {addresses}. Nu și pentru înscrierile de test și nici pentru „Înscrierile s-au deschis”, care nu ține de o înscriere.",
           "link": "Schimbă în „Copiile clubului”"
+        },
+        "road": {
+          "mailgun": "prin Mailgun",
+          "gmail": "prin Gmail"
         }
       },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
@@ -4465,6 +4519,7 @@
       "moved": "Ordinea a fost schimbată.",
       "pageDeleted": "Pagina a fost ștearsă definitiv.",
       "emailPlan": "Planul Mailgun a fost salvat.",
+      "emailTransport": "Drumurile emailurilor au fost salvate.",
       "contactRecipients": "Destinatarii mesajelor de contact au fost salvați.",
       "clubNotices": "Copiile clubului au fost salvate.",
       "emailCopy": "Textul emailului a fost salvat.",

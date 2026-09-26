@@ -1,5 +1,6 @@
 import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { gmailAdmission, type GmailUsage } from "@/modules/notifications/domain/email-transport";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
 /**
@@ -113,13 +114,82 @@ export type EmailSender = {
  * process in allowlist mode starts, captures everything not on the list, and only fails when
  * it genuinely tries to reach a real inbox.
  */
+/**
+ * The Gmail road, as the sender needs it for one batch (§NNN): the adapter (built on demand, like
+ * Mailgun's), the club's cap and pace, whether Mailgun's spent allowance spills over, and Gmail's
+ * usage as the database had it when the batch began — which the sender then keeps counting.
+ */
+export type GmailRoad = {
+  adapter: () => EmailAdapter;
+  usage: GmailUsage;
+  dailyCap: number;
+  paceSeconds: number;
+  overflowToGmail: boolean;
+  /** Injected for the tests; the real one waits. */
+  sleep?: (ms: number) => Promise<void>;
+  now?: () => Date;
+  /**
+   * The most one sender may spend waiting on the pace. Past it, a Gmail message is handed back
+   * `paced` for the next run rather than keeping a function alive on a timer.
+   */
+  paceBudgetMs?: number;
+};
+
+/** Twenty seconds of pacing per batch: ten Gmail sends at the default three seconds apart, and a function that ends. */
+export const GMAIL_PACE_BUDGET_MS = 20_000;
+
+const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export function createEmailSender(config: {
   appEnv: AppEnvironment;
   mode: EmailDeliveryMode;
   allowlist: readonly string[];
   capture: EmailAdapter;
   live: () => EmailAdapter;
+  /** The club's Gmail (§NNN). Absent — local, test, a deployment without the account — every message takes Mailgun's road. */
+  gmail?: GmailRoad;
 }): EmailSender {
+  const gmail = config.gmail;
+  const usage: GmailUsage | null = gmail ? { ...gmail.usage } : null;
+  const clock = gmail?.now ?? (() => new Date());
+  const sleep = gmail?.sleep ?? realSleep;
+  const budget = gmail?.paceBudgetMs ?? GMAIL_PACE_BUDGET_MS;
+  let waited = 0;
+  // One Gmail failure and this sender stops asking Gmail: the next message should not pay the
+  // same connection timeout to learn the same thing.
+  let gmailDown = false;
+
+  /**
+   * Gmail's answer for one message: carried, handed back for the pace, or not taken (null) —
+   * in which case Mailgun's road is next. `transmit` false is the captured case: nothing leaves,
+   * so nothing waits, but the route is still recorded as it would have gone.
+   */
+  async function viaGmail(message: OutgoingEmail, transmit: boolean): Promise<SendResult | null> {
+    if (!gmail || !usage || gmailDown) return null;
+    const admission = gmailAdmission(usage, { gmailDailyCap: gmail.dailyCap, gmailPaceSeconds: gmail.paceSeconds }, clock());
+    if (!admission.admitted) return null;
+    if (transmit && admission.waitMs > 0) {
+      if (waited + admission.waitMs > budget) {
+        return {
+          outcome: "throttled",
+          error: "gmail pace: handed to the next run",
+          retryAfter: new Date(clock().getTime() + admission.waitMs),
+          paced: true,
+        };
+      }
+      await sleep(admission.waitMs);
+      waited += admission.waitMs;
+    }
+    const result = await (transmit ? gmail.adapter() : config.capture).send(message);
+    if (result.outcome !== "sent") {
+      gmailDown = true;
+      return null;
+    }
+    usage.sentLastDay += 1;
+    usage.lastSentAt = clock();
+    return { ...result, transport: "gmail" };
+  }
+
   return {
     async send(message: OutgoingEmail): Promise<SendResult> {
       const marked: OutgoingEmail = {
@@ -128,7 +198,8 @@ export function createEmailSender(config: {
       };
 
       const decision = decideDelivery(config.mode, marked.to, config.allowlist);
-      const adapter = decision === "send" ? config.live() : config.capture;
+      const transmit = decision === "send";
+      const adapter = transmit ? config.live() : config.capture;
 
       /*
         A copy is a recipient (`DECISIONS.md` §244).
@@ -151,7 +222,31 @@ export function createEmailSender(config: {
             }
           : {};
 
-      return adapter.send({ ...marked, ...copies });
+      const outgoing: OutgoingEmail = { ...marked, ...copies };
+
+      /*
+        The road (§NNN). The environment's decision above is untouched and comes first: a captured
+        message is captured whichever road it would have taken, and the allowlist judges a Gmail
+        message exactly as it judges a Mailgun one — QA reaches a stranger by neither.
+
+        1. The club chose Gmail for this group: Gmail, if configured, under its cap and not failed
+           in this batch — after the pace. Otherwise, or if Gmail refuses, Mailgun, at once.
+        2. Mailgun refuses because the plan's allowance is spent (§40): Gmail, when the club lets
+           it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
+      */
+      if (outgoing.transport === "gmail") {
+        const carried = await viaGmail(outgoing, transmit);
+        if (carried) return carried;
+      }
+
+      const result = await adapter.send(outgoing);
+      if (result.outcome === "sent") return { ...result, transport: "mailgun" };
+      if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail") {
+        // Carried, or handed back for the pace — either is sooner than Mailgun's reset.
+        const spilled = await viaGmail(outgoing, transmit);
+        if (spilled) return spilled;
+      }
+      return result;
     },
   };
 }

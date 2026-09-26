@@ -140,6 +140,14 @@ export const emailOutbox = pgTable(
     lockedAt: timestamp("locked_at", { withTimezone: true }),
 
     providerMessageId: text("provider_message_id"),
+    /**
+     * Which road the message left by (§NNN): `mailgun`, or `gmail` — the club's own account over
+     * SMTP. Written with `sent_at`; null on a row not sent yet and on every row sent before the
+     * column existed, and a null is read as Mailgun, which is what carried all of those. It is
+     * what the Mailgun allowance is counted from (`volume.ts`) and what Gmail's own daily cap is
+     * counted from (`email-transport.ts`), so the two counts can never both claim one message.
+     */
+    transport: text("transport", { enum: ["mailgun", "gmail"] }),
     // Sanitized (§16.1): a short provider reason, never a body, a secret, or a token.
     lastError: text("last_error"),
 

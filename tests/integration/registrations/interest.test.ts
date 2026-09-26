@@ -254,6 +254,7 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
         nextAttemptAt: null,
         lockedAt: OPENS_AT,
         providerMessageId: null,
+        transport: null,
         lastError: null,
         createdAt: OPENS_AT,
         sentAt: null,

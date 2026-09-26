@@ -1,6 +1,5 @@
 import { after } from "next/server";
 import { getDb } from "@/db/client";
-import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
 
@@ -31,11 +30,12 @@ export function drainOutboxAfterResponse(): void {
   try {
     after(async () => {
       try {
-        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }] = await Promise.all([
+        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }, { createOutboxSender }] = await Promise.all([
           import("./outbox"),
           import("./render"),
           import("./delivery-timing"),
           import("@/modules/jobs/next-work"),
+          import("./outbox-sender"),
         ]);
         const db = getDb();
 
@@ -60,9 +60,11 @@ export function drainOutboxAfterResponse(): void {
           return;
         }
 
-        const { sender } = createEmailSenderForEnvironment(env);
+        // The club's road per group, Gmail's cap and pace (§NNN): read once for the batch.
+        const now = new Date();
+        const { sender, route } = await createOutboxSender(db, now);
         // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-        await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now: new Date() });
+        await processOutboxBatch(db, { sender, route, render: createOutboxRenderer(), now });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job

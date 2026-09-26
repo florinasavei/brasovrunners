@@ -1,6 +1,8 @@
 import type { Env } from "@/shared/config/env";
 import { type CaptureAdapter, type CapturedEmail, createCaptureAdapter } from "./capture-adapter";
 import { createEmailSender, type EmailSender } from "./delivery";
+import type { GmailUsage } from "@/modules/notifications/domain/email-transport";
+import { createGmailAdapter } from "./gmail-adapter";
 import { createMailgunAdapter } from "./mailgun-adapter";
 
 /**
@@ -49,6 +51,17 @@ export function capturedEmails(): readonly CapturedEmail[] {
   return [...all.slice(Math.max(0, all.length - CAPTURE_KEEP))].reverse();
 }
 
+/**
+ * The club's choice about the Gmail road for this batch (§NNN) and Gmail's usage when it began —
+ * read from the database by the caller (`notifications/outbox-sender.ts`); this file reads none.
+ */
+export type GmailRouting = {
+  dailyCap: number;
+  paceSeconds: number;
+  overflowToGmail: boolean;
+  usage: GmailUsage;
+};
+
 export function createEmailSenderForEnvironment(
   config: Pick<
     Env,
@@ -61,9 +74,35 @@ export function createEmailSenderForEnvironment(
     | "EMAIL_FROM_ADDRESS"
     | "EMAIL_FROM_NAME"
     | "EMAIL_REPLY_TO"
-  >,
+  > &
+    Pick<Env, "CONTACT_SMTP_HOST" | "CONTACT_SMTP_PORT" | "CONTACT_SMTP_USER" | "CONTACT_SMTP_PASSWORD">,
+  routing?: GmailRouting,
 ): { sender: EmailSender; capture: CaptureAdapter } {
   const capture = sharedCapture;
+  const { CONTACT_SMTP_USER: gmailUser, CONTACT_SMTP_PASSWORD: gmailPassword } = config;
+  /*
+    The Gmail road exists only with the account and its app password — the contact form's two
+    variables (§149) — and only when the caller brought the club's routing. Without either, every
+    message takes Mailgun's road, as before §NNN.
+  */
+  const gmail =
+    routing && routing.usage.configured && gmailUser && gmailPassword
+      ? {
+          adapter: () =>
+            createGmailAdapter({
+              host: config.CONTACT_SMTP_HOST,
+              port: config.CONTACT_SMTP_PORT,
+              user: gmailUser,
+              password: gmailPassword,
+              from: { name: config.EMAIL_FROM_NAME.replace(/["\\]/g, ""), address: gmailUser },
+              ...(config.EMAIL_REPLY_TO ? { replyTo: config.EMAIL_REPLY_TO } : {}),
+            }),
+          usage: routing.usage,
+          dailyCap: routing.dailyCap,
+          paceSeconds: routing.paceSeconds,
+          overflowToGmail: routing.overflowToGmail,
+        }
+      : undefined;
 
   const sender = createEmailSender({
     appEnv: config.APP_ENV,
@@ -87,6 +126,7 @@ export function createEmailSenderForEnvironment(
         from: formatSenderIdentity(config),
         replyTo: config.EMAIL_REPLY_TO,
       }),
+    ...(gmail ? { gmail } : {}),
   });
 
   return { sender, capture };
