@@ -10,7 +10,17 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { freeSpareNumbers, isSpareNumber, type SpareBand, spareBandOf } from "./domain/spare-bibs";
+import {
+  freeSpareNumbers,
+  isSpareNumber,
+  nextSpareCandidates,
+  planSpareReservation,
+  SPARE_BIBS_PER_PRINT,
+  type SpareBand,
+  spareBandOf,
+  type SpareState,
+  spareStateOf,
+} from "./domain/spare-bibs";
 import { holdsAPlace, TERMINAL_STATUSES } from "./domain/state-machine";
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -27,7 +37,7 @@ async function bandOf<T extends Record<string, unknown>>(
   startNumber?: number,
 ): Promise<{ start: number; spare: SpareBand | null }> {
   const [row] = await db
-    .select({ start: events.bibStartNumber, bibSpareFrom: events.bibSpareFrom, bibSpareTo: events.bibSpareTo })
+    .select({ start: events.bibStartNumber, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
@@ -440,7 +450,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     // The band this race counts from (§173), read once under the same lock.
     const [event] = await tx
-      .select({ id: events.id, bibStartNumber: events.bibStartNumber, bibSpareFrom: events.bibSpareFrom, bibSpareTo: events.bibSpareTo })
+      .select({ id: events.id, bibStartNumber: events.bibStartNumber })
       .from(events)
       .where(eq(events.id, input.eventId))
       .for("update");
@@ -478,10 +488,10 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
         anywhere the club could see it. The promotion is the fix: the number they were told is
         the number they keep.
       */
-      // Except a provisional number inside the desk's spares (§NNN) — one drawn before the club
-      // set the band — which is not kept: it would put a spare on an online runner's bib.
-      const keep = row.provisional !== null && !isSpareNumber(spareBandOf(event), row.provisional);
-      const number = keep ? (row.provisional as number) : await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber);
+      // A provisional number is always its holder's, inside the desk's reservation too (§NNN):
+      // the print reserves only numbers nobody has, so one there was held before the print.
+      const number =
+        row.provisional ?? (await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber));
       taken.add(number);
       given.push(number);
       await tx
@@ -590,19 +600,104 @@ export async function freeSpareBibNumbers<T extends Record<string, unknown>>(
 }
 
 /**
- * The spare the desk suggests next at each of these events (§NNN): the lowest free one, or null
- * where the club set no band or every spare is out. One call per event on a page that shows one or
- * two of them; the desk never shows more.
+ * Where the desk's spares stand at each of these events (§NNN): none reserved, the next free one
+ * to suggest, or every one given — which the desk says in words. One call per event on a page
+ * that shows one or two of them; the desk never shows more.
  */
-export async function nextSpareBibNumbers<T extends Record<string, unknown>>(
+export async function spareStates<T extends Record<string, unknown>>(
   db: Database<T>,
   eventIds: readonly string[],
-): Promise<Record<string, number | null>> {
+): Promise<Record<string, SpareState>> {
   const unique = [...new Set(eventIds)];
   const entries = await Promise.all(
-    unique.map(async (eventId) => [eventId, (await freeSpareBibNumbers(db, eventId)).free[0] ?? null] as const),
+    unique.map(async (eventId) => {
+      const { band, free } = await freeSpareBibNumbers(db, eventId);
+      return [eventId, spareStateOf(band, free)] as const;
+    }),
   );
   return Object.fromEntries(entries);
+}
+
+/**
+ * What the printing card needs about the spares (§NNN): the reservation and how many of it are
+ * free, and the numbers the next print would reserve — up to `SPARE_BIBS_PER_PRINT`, from the same
+ * `nextSpareCandidates` the write uses — so the confirmation names the exact range of whatever
+ * count the club types. Read without a lock; the write re-reads under one and refuses when the
+ * first number has moved since (`reserveSpareBibs`, `expectFrom`).
+ */
+export async function spareCardState<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ band: SpareBand | null; free: number; candidates: number[] }> {
+  const { start, spare } = await bandOf(db, eventId);
+  const taken = await numbersInUse(db, eventId);
+  return {
+    band: spare,
+    free: freeSpareNumbers(spare, taken).length,
+    candidates: nextSpareCandidates({ band: spare, taken, bibStartNumber: start, limit: SPARE_BIBS_PER_PRINT }),
+  };
+}
+
+/**
+ * Reserve `count` spares for the desk (§NNN) — what «Tipărește» does before the sheet is drawn.
+ *
+ * Under the event row's lock, the lock every draw of a number at this event takes through the
+ * allocator's transaction (`service.ts`), so no online runner is handed one of these numbers in
+ * the moment between the read and the write. The numbers are `planSpareReservation`'s: after the
+ * highest number anybody has on a first print, the next free ones after the reservation on a
+ * second — every one free, so no runner's number moves. `expectFrom` is the first number the
+ * confirmation named; when somebody registered in between and it has moved, nothing is written
+ * and the card is shown again with the new range (`CONFLICT` on `spareFrom`).
+ *
+ * Administrator-only, like the batch (§289): it changes which numbers online runners can get.
+ * Audited with the range, never a name.
+ */
+export async function reserveSpareBibs<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; eventId: string; count: number; expectFrom?: number; now?: Date },
+): Promise<{ from: number; to: number; count: number; band: SpareBand }> {
+  const now = input.now ?? new Date();
+  if (!canManageRegistrations(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not reserve spare race numbers`);
+  }
+  return db.transaction(async (tx) => {
+    const [event] = await tx
+      .select({ id: events.id, bibStartNumber: events.bibStartNumber, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
+      .from(events)
+      .where(eq(events.id, input.eventId))
+      .for("update");
+    if (!event) throw new DomainError("NOT_FOUND", "no such event");
+    const band = spareBandOf(event);
+    const plan = planSpareReservation({ band, taken: await numbersInUse(tx, input.eventId), bibStartNumber: event.bibStartNumber, count: input.count });
+    if (!plan.ok) {
+      throw plan.reason === "count"
+        ? new DomainError("VALIDATION_ERROR", `between 1 and ${SPARE_BIBS_PER_PRINT} spares at a time`, ["spareCount"])
+        : new DomainError("VALIDATION_ERROR", `no room for ${input.count} more spares (${plan.reason})`, [plan.reason === "size" ? "spareTotal" : "spareCeiling"]);
+    }
+    const from = plan.printed[0];
+    const to = plan.printed[plan.printed.length - 1];
+    if (input.expectFrom !== undefined && input.expectFrom !== from) {
+      throw new DomainError("CONFLICT", `the spares now start at ${from}, not ${input.expectFrom}`, ["spareFrom"]);
+    }
+    await tx
+      .update(events)
+      .set({ walkInBibStart: plan.walkInBibStart, walkInBibCount: plan.walkInBibCount })
+      .where(eq(events.id, input.eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: "registration.bib_spares_reserved",
+      entityType: "event",
+      entityId: input.eventId,
+      metadata: { from, to, count: plan.printed.length, reservedFrom: plan.walkInBibStart, reservedCount: plan.walkInBibCount },
+      now,
+    });
+    return {
+      from,
+      to,
+      count: plan.printed.length,
+      band: { from: plan.walkInBibStart, to: plan.walkInBibStart + plan.walkInBibCount - 1 },
+    };
+  });
 }
 
 /**

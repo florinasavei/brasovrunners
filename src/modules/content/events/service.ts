@@ -460,11 +460,6 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // so the editor's two controls posted into nothing — caught by review (§177).
     bibStartNumber: fields.bibStartNumber,
     bibColour: fields.bibColour,
-    // The desk's spares (§NNN), by the waiting list's discipline: a caller that sent neither box
-    // writes nothing, so no save clears a band the club set just by not mentioning it.
-    ...(fields.bibSpareFrom === undefined && fields.bibSpareTo === undefined
-      ? {}
-      : { bibSpareFrom: fields.bibSpareFrom ?? null, bibSpareTo: fields.bibSpareTo ?? null }),
     /*
       The rest of the bib's design (§249), and the same discipline the partners' list above
       follows: a caller that said nothing writes no column at all.
@@ -1582,10 +1577,6 @@ const SERIES_COLUMNS = [
   // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
-  // And its spares for the desk (§NNN): the same band printed blank for every date, each date's
-  // own numbers — a spare given at one date's desk is free at the next date's.
-  "bibSpareFrom",
-  "bibSpareTo",
   "bibDesign",
   "confirmationOpensDaysBefore",
   "confirmationDeadlineDaysBefore",

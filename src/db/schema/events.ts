@@ -463,18 +463,19 @@ export const events = pgTable(
     bibColour: text("bib_colour"),
 
     /**
-     * The spare bibs for on-the-spot entries (§NNN): a band of numbers, both ends included, that
-     * the club prints ahead with an empty name line and hands to a walk-in at the desk, the name
-     * written on with a marker. Null, both of them, is no spares — every event before this.
+     * The spare bibs for on-the-spot entries (§NNN): the numbers reserved for the desk, from
+     * `walk_in_bib_start`, `walk_in_bib_count` of them, printed ahead with an empty name line and
+     * handed to a walk-in, the name written on with a marker. Null, both of them, is no spares —
+     * every event before this.
      *
-     * **The allocator never draws from it** (`bibs.ts`): not the provisional number at
+     * **Written only by the print** (`bibs.ts#reserveSpareBibs`), never by the editor's save: the
+     * club types how many and the platform reserves them after the highest number anybody has, or
+     * extends the reservation by the next free numbers — so it can never land on a number
+     * somebody holds. **The allocator never draws from it**: not the provisional number at
      * submission, not the recompaction at the close, not a confirmation after it, not the batch.
-     * A number in it reaches a runner only by a person at the desk choosing it — the walk-in's
-     * box, "Confirmă aici", the number typed by hand — and the desk suggests the lowest one still
-     * free. Numbers already worn inside the band stay their runners' and are never printed blank.
      */
-    bibSpareFrom: integer("bib_spare_from"),
-    bibSpareTo: integer("bib_spare_to"),
+    walkInBibStart: integer("walk_in_bib_start"),
+    walkInBibCount: integer("walk_in_bib_count"),
 
     /**
      * The rest of what a bib looks like (`DECISIONS.md` §249): what is printed, how large the
@@ -629,12 +630,12 @@ export const events = pgTable(
      */
     check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
-    // The spare band (§NNN): both ends or neither, in order, within a five-digit bib, and at most
-    // 500 numbers — a sheet somebody prints, not a second race. `domain/spare-bibs.ts` says the
-    // same in words; the `IS NOT NULL`s are needed, since half a pair makes the rest NULL.
+    // The desk's spares (§NNN): a start and a count or neither, within a five-digit bib, and at
+    // most 500 numbers across every print. `domain/spare-bibs.ts` says the same in words; the
+    // `IS NOT NULL`s are needed, since half a pair makes the rest NULL.
     check(
-      "events_bib_spare_band",
-      sql`(${t.bibSpareFrom} IS NULL AND ${t.bibSpareTo} IS NULL) OR (${t.bibSpareFrom} IS NOT NULL AND ${t.bibSpareTo} IS NOT NULL AND ${t.bibSpareFrom} >= 1 AND ${t.bibSpareTo} <= 99999 AND ${t.bibSpareFrom} <= ${t.bibSpareTo} AND ${t.bibSpareTo} - ${t.bibSpareFrom} < 500)`,
+      "events_walk_in_bibs",
+      sql`(${t.walkInBibStart} IS NULL AND ${t.walkInBibCount} IS NULL) OR (${t.walkInBibStart} IS NOT NULL AND ${t.walkInBibCount} IS NOT NULL AND ${t.walkInBibStart} >= 1 AND ${t.walkInBibCount} >= 1 AND ${t.walkInBibCount} <= 500 AND ${t.walkInBibStart} + ${t.walkInBibCount} - 1 <= 99999)`,
     ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),

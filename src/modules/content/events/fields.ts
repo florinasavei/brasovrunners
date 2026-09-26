@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
-import { BIB_NUMBER_MAX, SPARE_BIBS_MAX, spareBandRefusal } from "@/modules/registrations/domain/spare-bibs";
 import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { isYoutubeLink } from "@/modules/events/domain/video";
 import { parseTypedCoordinates } from "@/modules/weather/domain/place";
@@ -309,23 +308,6 @@ function placeRule(
  * and `bibDesign` follow, and is never a reason to refuse: only a caller that *is* editing them
  * and left the required one blank is refused.
  */
-/**
- * The desk's spares (§NNN): both boxes or neither, the first no higher than the second, at most
- * `SPARE_BIBS_MAX` numbers — `domain/spare-bibs.ts` decides, and the refusal names the box. A
- * caller that sent neither (absent) is not editing them.
- */
-function spareRule(fields: { bibSpareFrom?: number | null; bibSpareTo?: number | null }, ctx: z.RefinementCtx): void {
-  if (fields.bibSpareFrom === undefined && fields.bibSpareTo === undefined) return;
-  const refusal = spareBandRefusal(fields.bibSpareFrom ?? null, fields.bibSpareTo ?? null);
-  if (!refusal) return;
-  const message =
-    refusal.reason === "half"
-      ? "the spare numbers need both the first and the last, or neither"
-      : refusal.reason === "order"
-        ? "the last spare number cannot be lower than the first"
-        : `at most ${SPARE_BIBS_MAX} spare numbers`;
-  ctx.addIssue({ code: "custom", path: [refusal.field], message });
-}
 
 function costRule(
   fields: { costType?: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
@@ -777,14 +759,6 @@ export const eventFieldsSchema = z
       .optional()
       .transform((value) => (value ? value.toLowerCase() : null)),
     /**
-     * The desk's spares (§NNN): the first and the last number printed blank for on-the-spot
-     * entries, both or neither (`spareRule`). Optional, and absent means "this caller is not
-     * editing them" — the discipline `waitlistCapacity` follows — so a save from anything that
-     * does not post the boxes keeps the band the club set.
-     */
-    bibSpareFrom: optionalWholeNumber({ min: 1, max: BIB_NUMBER_MAX }).optional(),
-    bibSpareTo: optionalWholeNumber({ min: 1, max: BIB_NUMBER_MAX }).optional(),
-    /**
      * The rest of the bib's design (§249): what is printed, the number's size, where the name
      * sits, the two pictures, the cut marks.
      *
@@ -834,8 +808,7 @@ export const eventFieldsSchema = z
   })
   .strict()
   .superRefine(placeRule)
-  .superRefine(costRule)
-  .superRefine(spareRule);
+  .superRefine(costRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

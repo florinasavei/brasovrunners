@@ -336,13 +336,16 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     their own email, and nobody at a table is holding a bib for them. Checked again under the event
     lock by the confirmation below; this is what makes the ordinary refusal cost nothing.
   */
-  assertHandedBibNumber(input.bibNumber);
-  if (input.bibNumber !== undefined) {
-    if (!input.fastTrack) {
-      throw new DomainError("VALIDATION_ERROR", "a race number is handed only to a person confirmed at the desk", ["bibNumber", "fastTrack"]);
-    }
-    if (await bibNumberInUse(db, { eventId: event.id, number: input.bibNumber })) {
-      throw new DomainError("CONFLICT", `number ${input.bibNumber} is already somebody's at this event`, ["bibNumber"]);
+  /*
+    Without the tick the box is ignored rather than refused: the desk prefills it with the next
+    spare, and a volunteer who unticks the fast track (the person finishes from their own email)
+    must not be trapped behind a refusal about a box they never typed in.
+  */
+  const handedBib = input.fastTrack ? input.bibNumber : undefined;
+  assertHandedBibNumber(handedBib);
+  if (handedBib !== undefined) {
+    if (await bibNumberInUse(db, { eventId: event.id, number: handedBib })) {
+      throw new DomainError("CONFLICT", `number ${handedBib} is already somebody's at this event`, ["bibNumber"]);
     }
   }
 
@@ -413,7 +416,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
 
   if (input.fastTrack && created) {
     try {
-      await confirmRegistrationByStaff(db, actor, created.id, now, { bibNumber: input.bibNumber });
+      await confirmRegistrationByStaff(db, actor, created.id, now, { bibNumber: handedBib });
     } catch (error) {
       // The spare went to somebody else between the check above and this lock (§NNN): the entry
       // stands, unconfirmed and emailed nothing, and the desk is told to confirm it with another.
@@ -452,7 +455,21 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
 
-  const result = await confirmByStaff(db, event, registrationId, actor, now, { bibNumber: options.bibNumber });
+  let result: Registration;
+  try {
+    result = await confirmByStaff(db, event, registrationId, actor, now, { bibNumber: options.bibNumber });
+  } catch (error) {
+    /*
+      The handed number worn by somebody else after all (§NNN): the check under the lock makes this
+      nearly impossible, and the unique index is the last word when it is not — said as the desk's
+      "that number is taken", naming the box, rather than as a 500. Nothing was written.
+    */
+    const message = error instanceof Error ? `${error.message} ${String((error as { cause?: unknown }).cause ?? "")}` : "";
+    if (options.bibNumber !== undefined && /registrations_event_bib_number_unique/.test(message)) {
+      throw new DomainError("CONFLICT", `number ${options.bibNumber} is already worn by somebody else at this event`, ["bibNumber"]);
+    }
+    throw error;
+  }
   const handed = options.bibNumber !== undefined && result.status === "CONFIRMED" && result.bibNumber === options.bibNumber;
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
@@ -555,6 +572,13 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   let updated: Registration;
   try {
     updated = await db.transaction(async (tx) => {
+      /*
+        The event row's lock first (§NNN), the one the confirmation holds when the desk hands a
+        spare with the paper and the print holds when it reserves spares: two volunteers giving the
+        same spare — one typing it here, one confirming with it — are then one after the other, and
+        the second meets the check below rather than the unique index.
+      */
+      await tx.select({ id: events.id }).from(events).where(eq(events.id, current.eventId)).for("update");
       /*
         Not a number somebody else is holding provisionally (§NNN, found while adding the spares):
         the unique index covers the settled column only, so 57 typed here while another runner is

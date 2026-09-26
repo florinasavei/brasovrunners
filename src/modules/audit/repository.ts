@@ -37,6 +37,8 @@ export type AuditAction =
   | "registration.resend_rate_limited"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"
+  // The desk's spare numbers reserved by a print (§NNN): the range, never a name.
+  | "registration.bib_spares_reserved"
   /** One number typed by hand, or cleared (BR-REQ-038-01 criterion 7). */
   | "registration.bib_set"
   /**

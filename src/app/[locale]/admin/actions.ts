@@ -256,10 +256,6 @@ function eventFieldsFrom(form: FormData) {
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
-    // The desk's spares (§NNN), only when the form carried the boxes, like the waiting list's
-    // length: empty is "no spares", and a form without them is "not editing them".
-    bibSpareFrom: form.has("event.bibSpareFrom") ? value("bibSpareFrom") : undefined,
-    bibSpareTo: form.has("event.bibSpareTo") ? value("bibSpareTo") : undefined,
     /*
       The bib's design (§249), and only when the form that posted actually carried the panel.
 

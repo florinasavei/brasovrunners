@@ -224,9 +224,9 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
     The provisional column is emptied in the same statement, so one runner is left holding
     exactly one number, which is the invariant the settle keeps too.
   */
-  // Not a provisional number inside the desk's spares (§NNN) — one drawn before the club set the
-  // band: it is printed blank for a walk-in, so the draw gives this runner a number of the race's.
-  if (current.provisionalBibNumber !== null && !(await isEventSpareNumber(tx, current.eventId, current.provisionalBibNumber))) {
+  // Inside the desk's reservation too (§NNN): the print reserves only numbers nobody holds, so a
+  // provisional number there was this runner's before the print, and stays theirs.
+  if (current.provisionalBibNumber !== null) {
     return { bibNumber: current.provisionalBibNumber, provisionalBibNumber: null };
   }
   return { bibNumber: await pickBibNumber(tx, current.eventId), provisionalBibNumber: null };
