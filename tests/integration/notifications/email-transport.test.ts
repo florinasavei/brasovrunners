@@ -306,10 +306,31 @@ describe("§443 email transport setting and the outbox's road", () => {
     expect(await processOutboxBatch(db, { sender: mailgunOnly, render, now: NOW })).toMatchObject({ claimed: 0 });
     expect(await newsletterRow()).toMatchObject({ status: "PENDING", attemptCount: 0, nextAttemptAt: nextAllowanceResetAt(NOW) });
 
-    // The club's setting sends the newsletter group by Gmail: Mailgun's reserve is not Gmail's, so it goes.
+    // The default setting sends the newsletter group by Mailgun (§NNN): the reserve holds it the same way.
     await db.update(emailOutbox).set({ nextAttemptAt: null }).where(eq(emailOutbox.idempotencyKey, "newsletter:sub"));
+    const byDefault = roadSender();
+    expect(await processOutboxBatch(db, { sender: byDefault, render, now: NOW, route: defaultRoute, roads: defaultRoads() })).toMatchObject({ claimed: 0 });
+    expect(byDefault.calls).toEqual([]);
+    expect(await newsletterRow()).toMatchObject({ status: "PENDING", attemptCount: 0 });
+
+    // The club switches the newsletter group to Gmail: Mailgun's reserve is not Gmail's, so it goes.
+    await db.update(emailOutbox).set({ nextAttemptAt: null }).where(eq(emailOutbox.idempotencyKey, "newsletter:sub"));
+    const newsletterByGmail = { ...DEFAULT_EMAIL_TRANSPORT, groups: { ...DEFAULT_EMAIL_TRANSPORT.groups, newsletter: "gmail" as const } };
+    const gmailRows = gmailRoadRows(newsletterByGmail);
     const sender = roadSender();
-    expect(await processOutboxBatch(db, { sender, render, now: NOW, route: defaultRoute, roads: defaultRoads() })).toMatchObject({ claimed: 1, sent: 1 });
+    expect(
+      await processOutboxBatch(db, {
+        sender,
+        render,
+        now: NOW,
+        route: (candidate) => preferredTransport(newsletterByGmail, candidate.messageType, isClubCopy(candidate.payloadJson)),
+        roads: {
+          gmailMessageTypes: gmailRows.messageTypes,
+          gmailClubCopies: gmailRows.clubCopies,
+          gmailBatchSize: gmailClaimSize(newsletterByGmail.gmailPaceSeconds, GMAIL_PACE_BUDGET_MS, 20),
+        },
+      }),
+    ).toMatchObject({ claimed: 1, sent: 1 });
     expect(sender.calls.map((call) => [call.to, call.transport])).toEqual([["sub@example.com", "gmail"]]);
     expect(await newsletterRow()).toMatchObject({ status: "SENT", transport: "gmail" });
   });
