@@ -137,7 +137,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // return shapes so the grid, the empty notice and the "Alte evenimente" fold each keep the
   // same gap under the row whichever one follows it — the filter row carried no `mb` and the
   // grid no `mt` before, so this is a genuinely new gap rather than a literal being converted.
-  // The filter panel's wrapper (§NNN, tightening §401): less space between it and the cards.
+  // The filter panel's wrapper (§431, tightening §401): less space between it and the cards.
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
@@ -175,8 +175,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   // The filter panel (§424, a fix round on §413/§424's small-chip button — the owner: "Butonul
   // de filtre e mult prea mare"): the open form's own padding and grid gap, tighter on a phone.
-  { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "p", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
-  { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1 },
+  { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "p", step: "gapXs", sm: 1, xsBefore: 1.5 }, // §431: was gapSm (8px) / sm 1.5 (12px), now 6px / 8px
+  { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "gap", step: "gapXs", sm: 0.5, xsBefore: 1 }, // §431: sm 1 (8px) → 0.5 (4px); xs stays on the lowest step
 ];
 
 const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;

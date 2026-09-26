@@ -251,7 +251,7 @@ async function ListingLead({
           of kind chips and §401's «Colaborare» chip beside them. Nothing to narrow and nothing
           ticked, it does not render, and nothing on the listing moves for that.
 
-          The gap around it is `DENSITY.gapSm` (§NNN, tightening §401's `sectionGap` — the owner: "in
+          The gap around it is `DENSITY.gapSm` (§431, tightening §401's `sectionGap` — the owner: "in
           general prea mult padding între carduri și restul"): 8px on a phone and 12px from `sm`,
           above and below alike. */}
       {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
