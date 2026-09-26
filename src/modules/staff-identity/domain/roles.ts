@@ -224,6 +224,24 @@ export function allowedTransitions(
 }
 
 /**
+ * The verbs an event's editor offers (§NNN): the table's, and «Publică» on a draft for a role
+ * that may publish — first, the page's own verb, beside "Trimite spre verificare". The create
+ * page's «Creează și publică» (§315) and the list's «Publică» (§351) already take a draft live in
+ * one press; the draft's own editor now does too, and the service walks DRAFT → IN_REVIEW →
+ * PUBLISHED through the table, so no move leaves it (`publishEvent`). Standing pages and albums
+ * keep the plain table.
+ */
+export function eventEditorTransitions(
+  role: StaffRole,
+  from: EditorialStatus,
+  isOwnDraft: boolean,
+): EditorialStatus[] {
+  const table = allowedTransitions(role, from, isOwnDraft);
+  if (from !== "DRAFT" || !canTransition(role, "IN_REVIEW", "PUBLISHED", isOwnDraft)) return table;
+  return ["PUBLISHED", ...table.filter((to) => to !== "PUBLISHED")];
+}
+
+/**
  * The event row itself — its times, its map link, and which event the site leads with — is
  * editorial control of what the club advertises, not authoring. A Contributor has drafts and
  * nothing else (§10.2).
