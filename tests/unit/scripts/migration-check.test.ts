@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { auditMigration, problemsFor } from "../../../scripts/migration-check.mjs";
+import { auditMigration, constraintKindsIn, problemsFor } from "../../../scripts/migration-check.mjs";
 import { compare } from "../../../scripts/wait-for-migration.mjs";
 
 /**
@@ -52,6 +52,66 @@ DROP TYPE "public"."event_kind";`;
     ]) {
       expect(auditMigration(statement).contracts, statement).toBe(true);
     }
+  });
+
+  it("counts DROP INDEX and DROP CONSTRAINT as contractions (§NNN)", () => {
+    for (const statement of [
+      `ALTER TABLE "registrations" DROP CONSTRAINT "registrations_event_participant_unique";`,
+      `ALTER TABLE "registrations" DROP CONSTRAINT IF EXISTS "registrations_event_id_events_id_fk";`,
+      `DROP INDEX "events_kind_starts_at_idx";`,
+      `DROP INDEX CONCURRENTLY IF EXISTS "public"."events_kind_starts_at_idx";`,
+      `drop index events_kind_starts_at_idx;`,
+    ]) {
+      expect(auditMigration(statement).contracts, statement).toBe(true);
+    }
+  });
+
+  it("classifies migration 0073 as the contract it is, note and all", () => {
+    // It passed as neither expand nor contract before §NNN, and carried its note by hand.
+    const sql = readFileSync("src/db/migrations/0073_drop_registration_participant_unique.sql", "utf8");
+    expect(auditMigration(sql)).toEqual({ expands: false, contracts: true, hasContractNote: true });
+    expect(problemsFor("0073_drop_registration_participant_unique.sql", sql)).toEqual([]);
+    // Without its note, the same drop is refused.
+    const bare = sql.replace(/^--.*$/gm, "");
+    expect(problemsFor("0073_x.sql", bare)[0]).toMatch(/-- contract:/);
+  });
+
+  it("refuses a file that drops a unique index and adds a column", () => {
+    const sql = `DROP INDEX "registrations_event_participant_unique";--> statement-breakpoint
+ALTER TABLE "registrations" ADD COLUMN "name_key" text;`;
+    expect(problemsFor("0090_x.sql", sql)[0]).toMatch(/expands and contracts/);
+  });
+
+  it("reads an index dropped and created again under its own name as a replacement, not a drop (migration 0080)", () => {
+    const sql = readFileSync("src/db/migrations/0080_registration_audit.sql", "utf8");
+    expect(auditMigration(sql)).toEqual({ expands: true, contracts: false, hasContractNote: false });
+    expect(problemsFor("0080_registration_audit.sql", sql)).toEqual([]);
+    const constraint = `ALTER TABLE "t" DROP CONSTRAINT "t_x_unique";--> statement-breakpoint
+ALTER TABLE "t" ADD CONSTRAINT "t_x_unique" UNIQUE("x","y");`;
+    expect(auditMigration(constraint).contracts).toBe(false);
+  });
+
+  it("reads a dropped CHECK constraint an earlier migration created as a loosening (migration 0024)", () => {
+    const created = readFileSync("src/db/migrations/0006_registrations_legal_docs_and_job_infra.sql", "utf8");
+    const kinds = constraintKindsIn(created);
+    expect(kinds.get("registrations_bib_number_not_assigned_in_m1")).toBe("CHECK");
+    const checks = new Set([...kinds].filter(([, kind]) => kind === "CHECK").map(([name]) => name));
+
+    const sql = readFileSync("src/db/migrations/0024_registration_bib_numbers.sql", "utf8");
+    expect(auditMigration(sql, checks).contracts).toBe(false);
+    expect(problemsFor("0024_registration_bib_numbers.sql", sql, checks)).toEqual([]);
+    // Without the history, the same drop could be a uniqueness, and is a contract.
+    expect(auditMigration(sql).contracts).toBe(true);
+  });
+
+  it("names the kind of every constraint a file defines, inline or added", () => {
+    const sql = `CREATE TABLE "t" (
+	"id" uuid PRIMARY KEY,
+	CONSTRAINT "t_positive" CHECK ("t"."n" > 0)
+);--> statement-breakpoint
+ALTER TABLE "t" ADD CONSTRAINT "t_event_fk" FOREIGN KEY ("event_id") REFERENCES "events"("id");--> statement-breakpoint
+ALTER TABLE "t" ADD CONSTRAINT "t_code_unique" UNIQUE("code");`;
+    expect(Object.fromEntries(constraintKindsIn(sql))).toEqual({ t_positive: "CHECK", t_event_fk: "FOREIGN", t_code_unique: "UNIQUE" });
   });
 
   it("does not read a comment as a statement", () => {

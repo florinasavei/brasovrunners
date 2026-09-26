@@ -6,12 +6,16 @@
  *        yarn ship 163 BR-V2.00-2026-09-25 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
- *   2. waits for the batch PR's checks, stops unless every one is green, and merges it into `qa`
- *      — an already-merged batch PR is taken as done, and the run continues from step 3;
+ *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
+ *      in a row, so a check that registers late is not missed (§NNN) — stops unless every one is
+ *      green, and merges it into `qa` — an already-merged batch PR is taken as done, and the run
+ *      continues from step 3;
  *   3. opens the `qa → main` release PR, or takes the one already open;
  *   4. waits for `qa`'s docs-check run on that merge, rerunning it once when the only failure is the
  *      Google Fonts download the build makes (a flake, not the code);
- *   5. merges the release PR;
+ *   5. waits the same way for the release PR's checks, stops on a red one — a Vercel deployment
+ *      check's red is reported and not stopped on, since the qa run has judged the code — and
+ *      merges the release PR;
  *   6. approves the gated `migrate.yml` run on `main` if one is waiting (`DECISIONS.md` §31) and waits for it;
  *   7. waits until production's `/api/health` reports the new baseline — the same answer `yarn smoke` reads.
  *
@@ -28,6 +32,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
+import { judgeChecks, waitForSettledChecks } from "./ship-checks.mjs";
 
 const [PR, NEW, PREV, TITLE] = process.argv.slice(2);
 if (!PR || !NEW || !PREV || !TITLE) stop('Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<title>"');
@@ -77,9 +82,27 @@ async function until(test, every, times) {
   return null;
 }
 
-function checksState(pr) {
-  const states = JSON.parse(ghMayFail("pr", "checks", pr, "--json", "state") || "[]").map((c) => c.state);
-  return [...new Set(states)].join(",");
+/**
+ * Waits until the PR's checks have settled — none pending, the same set on two readings in a row —
+ * and only then judges them (§NNN, `ship-checks.mjs`). Stops on a red that `tolerate` does not name.
+ */
+async function settledChecks(pr, { tolerate } = {}) {
+  const read = () => JSON.parse(ghMayFail("pr", "checks", pr, "--json", "name,state,bucket") || "[]");
+  const waited = await waitForSettledChecks(read, {
+    sleep,
+    every: 30,
+    polls: 180,
+    maxEmpty: 20,
+    onPending: (pending, i) => {
+      if (i % 4 === 0) console.log(`  waiting on ${pending.length} check(s): ${pending.join(", ")}`);
+    },
+  });
+  if (waited.status === "no-checks") stop(`PR #${pr} reported no checks for ten minutes`);
+  if (waited.status === "timeout") stop(`PR #${pr}: checks still pending after ninety minutes (${waited.pending.join(", ")})`);
+  const judged = judgeChecks(waited.checks, { tolerate });
+  console.log(`checks on #${pr}: ${judged.verdict} (${waited.checks.length})`);
+  if (judged.tolerated.length) console.log(`  red but not the code's verdict, reported and not stopped on: ${judged.tolerated.join(", ")}`);
+  if (judged.verdict !== "green") stop(`PR #${pr} is not green: ${judged.red.join(", ")}`);
 }
 
 const BASE = productionUrl();
@@ -101,10 +124,7 @@ if (batchInfo.state === "MERGED" && batchInfo.baseRefName === "qa") {
 } else if (batchInfo.state === "MERGED") {
   stop(`PR #${PR} is already merged, but into ${batchInfo.baseRefName}, not qa`);
 } else {
-  ghMayFail("pr", "checks", PR, "--watch", "--interval", "30");
-  const batchState = checksState(PR);
-  console.log(`checks: ${batchState}`);
-  if (batchState !== "SUCCESS") stop(`PR #${PR} is not green`);
+  await settledChecks(PR);
   gh("pr", "merge", PR, "--merge");
   batchMerge = gh("pr", "view", PR, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 }
@@ -139,8 +159,9 @@ for (let attempt = 1; attempt <= 2; attempt++) {
 }
 if (conclusion !== "success") stop(`the release is not merged: the qa run ended ${conclusion}`);
 
-ghMayFail("pr", "checks", release, "--watch", "--interval", "30");
-console.log(`release PR checks: ${checksState(release)}`);
+// The qa run above judged the code; a Vercel deployment check on the release PR can be red for
+// Hobby's daily deploy limit alone, so its red is reported and not stopped on.
+await settledChecks(release, { tolerate: /^Vercel\b/i });
 gh("pr", "merge", release, "--merge");
 const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 

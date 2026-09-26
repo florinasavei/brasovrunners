@@ -15,8 +15,12 @@
  *   3. replaces every `§NNN` in tracked files with its item's number, by the commit that wrote the line
  *      (git blame against the commits `base..branch`); a line written by a merge is listed for a hand decision;
  *   4. appends each item's section to DECISIONS.md — the fixer's text if a fix round rewrote it, plus every
- *      later round's addendum — and its CHANGELOG bullet, the latest stage's;
+ *      later round's addendum, less any fixer's housekeeping — and its CHANGELOG bullet: the implementer's,
+ *      or the item's own `changelog`, never a fixer's (`land-entry.mjs` says why);
  *   5. adds or amends the SPECS.md acceptance criteria, the latest stage winning per requirement.
+ *
+ * It stops, before writing anything, on a blank fix report (a round with no result or no summary), a blank
+ * `decisionsTitle` and a blank bullet; a manifest item's `title` and `changelog` override the results'.
  *
  * manifest.json (it lives outside the repository, beside the saved results; it names local paths):
  *   {
@@ -25,6 +29,7 @@
  *     "base": "origin/qa",                       // optional; where the branches forked
  *     "items": [
  *       { "branch": "feat/x", "chain": "<br-chain result>.json", "rounds": ["<br-fix-round result>.json"] },
+ *       { "branch": "feat/y", "chain": "…", "title": "optional: the § title", "changelog": "optional: the bullet" },
  *       { "chain": "<the orchestrator's own entry, { impl: { decisionsTitle, decisionsSection, … } }>.json" }
  *     ]
  *   }
@@ -36,6 +41,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import process from "node:process";
+import { entryFromResults, requirementOf } from "./land-entry.mjs";
 
 const [manifestPath, flag] = process.argv.slice(2);
 const APPLY = flag === "--apply";
@@ -77,38 +83,20 @@ function loadResult(path) {
   return json.result ?? json;
 }
 
-const requirementOf = (c) => (c.requirement.match(/BR-REQ-\d{3}-\d{2}/) ?? [c.requirement])[0];
-/** A later list replaces an earlier one's criteria for every requirement it names. */
-function mergeCriteria(...lists) {
-  const byRequirement = new Map();
-  for (const list of lists) {
-    const grouped = new Map();
-    for (const c of list ?? []) {
-      const r = requirementOf(c);
-      if (!grouped.has(r)) grouped.set(r, []);
-      grouped.get(r).push(c);
-    }
-    for (const [r, cs] of grouped) byRequirement.set(r, cs);
-  }
-  return [...byRequirement.values()].flat();
-}
-
+/**
+ * One item's title, body, bullet and criteria, by the rules in `land-entry.mjs`: a blank fix
+ * report, a blank title or a blank bullet stops the landing; a fixer's bullet and its housekeeping
+ * ("carried forward", "no DECISIONS.md edit was made") never land, and the dry run says so.
+ */
 function itemEntry(item) {
-  const chain = loadResult(item.chain);
-  const fixed = chain.fixed?.committed ? chain.fixed : null;
-  const base = fixed?.decisionsSection ? fixed : chain.impl;
-  if (!base?.decisionsSection) fail(`${item.chain}: no decisionsSection`);
-  let body = base.decisionsSection.trim();
-  let changelog = fixed?.changelogLine || base.changelogLine;
-  let criteria = mergeCriteria(chain.impl?.specsCriteria, fixed?.specsCriteria);
-  for (const path of item.rounds ?? []) {
-    const round = loadResult(path).fixed;
-    if (!round?.committed) continue;
-    if (round.decisionsAddendum?.trim()) body += `\n\n${round.decisionsAddendum.trim()}`;
-    if (round.changelogLine) changelog = round.changelogLine;
-    criteria = mergeCriteria(criteria, round.specsCriteria);
+  const label = item.branch ?? item.chain;
+  try {
+    const entry = entryFromResults(loadResult(item.chain), (item.rounds ?? []).map(loadResult), item, label);
+    for (const note of entry.notes) console.log(`  ${label}: ${note}`);
+    return { branch: item.branch, ...entry };
+  } catch (error) {
+    fail(error.message);
   }
-  return { branch: item.branch, title: base.decisionsTitle, body, changelog, criteria };
 }
 
 // 1. The baseline.
