@@ -432,15 +432,15 @@ export async function cachedContactFormReaches(): Promise<boolean> {
 /**
  * The club's address as readers are shown it (§442): the footer, the header's "Contact" entry and
  * the contact page. Addresses the site prints anyway, so the list itself is cached. When the
- * database cannot answer, the environment's mailbox — what every page showed before.
+ * database cannot answer, the default: the configured Gmail, else the environment's mailbox.
  */
 export async function cachedShownContactAddresses(): Promise<string[]> {
   try {
     return await publicRead(["settings.shown-contact-address"], ["settings"], async () =>
-      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO),
+      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER),
     );
   } catch {
-    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO);
+    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);
   }
 }
 

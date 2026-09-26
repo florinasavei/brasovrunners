@@ -130,13 +130,18 @@ export const emailTransportSettingSchema = z
 export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
 
 /**
- * The club's own mail and the newsletter through Gmail; everything a participant gets
- * through Mailgun, until the privacy notice names Gmail as a road for it.
+ * The club's own mail through Gmail; everything a participant or a subscriber gets through
+ * Mailgun, until the privacy notice names Gmail as a road for it. The rule of thumb: Gmail only
+ * for mail whose recipient is the club itself.
  *
- * - **club, newsletter → Gmail**: copies, archive, notices and invitations are the largest share of
- *   what the club itself costs the allowance (four copies per registration per address, §320), they
- *   go to mailboxes that expect the club, and the notice in force already says the club's copies
- *   reach its Gmail mailbox (section 6).
+ * - **club → Gmail**: copies, archive, notices and invitations are the largest share of what the
+ *   club itself costs the allowance (four copies per registration per address, §320), they go to
+ *   mailboxes that expect the club, and the notice in force already says the club's copies reach
+ *   its Gmail mailbox (section 6).
+ * - **newsletter → Mailgun** (§443 as amended): one message to a hundred and more subscribers from a personal
+ *   Gmail is exactly the bulk pattern Google restricts, and a restricted account also stops the
+ *   club's copies and the contact form; Mailgun is the authenticated sending domain with bounce
+ *   feedback built for it.
  * - **participants → Mailgun**: the notice lists Mailgun as the one that sends email and Gmail only
  *   as the club's mailbox; a participant's name, token links and signed PDF leaving through Google
  *   is a processor the notice does not name (§418 made that list accurate). An Administrator may
@@ -156,7 +161,7 @@ export const DEFAULT_EMAIL_TRANSPORT: EmailTransportSetting = {
     reminders: "mailgun",
     announcements: "mailgun",
     club: "gmail",
-    newsletter: "gmail",
+    newsletter: "mailgun",
   },
   gmailDailyCap: 200,
   gmailPaceSeconds: 6,

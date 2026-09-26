@@ -3333,7 +3333,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "Confirmarea abonării, newsletterul scris în meniul „Newsletter” și anunțul de eveniment nou, către cei abonați de pe pagina de contact. Newsletterul și anunțul pleacă ultimele și, prin Mailgun, doar din ce rămâne după rezerva pentru înscrieri. Recomandat: Gmail."
+            "help": "Confirmarea abonării, newsletterul scris în meniul „Newsletter” și anunțul de eveniment nou, către cei abonați de pe pagina de contact. Newsletterul și anunțul pleacă ultimele și, prin Mailgun, doar din ce rămâne după rezerva pentru înscrieri. Recomandat: Mailgun — un mesaj către multe adrese dintr-un Gmail personal e tiparul de trimitere în masă pe care Google îl restricționează."
           }
         },
         "messages": "Mesajele din grup: {names}",
@@ -3497,13 +3497,14 @@
         "preview": "Pe site: {shown} · Răspunde la: {replyTo}",
         "legend": "Ce adresă arătăm",
         "modes": {
-          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit",
-          "gmail": "Gmail-ul clubului",
-          "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
+          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit doar dacă serverul nu are un Gmail",
+          "gmail": "Gmail-ul clubului (din configurație): {gmail} — implicit",
+          "both": "Amândouă (întâi {gmail}, apoi {mailbox})"
         },
         "noMailbox": "nesetată pe server",
-        "gmail": "Gmail-ul clubului",
-        "gmailHelp": "Obligatoriu pentru „Gmail-ul clubului” și „Amândouă”. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "noGmail": "nesetat pe server",
+        "gmailConfigured": "Gmail-ul clubului (din configurație): {gmail}. Este contul prin care pleacă formularul de contact; nu se scrie aici.",
+        "gmailMissing": "Serverul nu are un Gmail configurat (CONTACT_SMTP_USER), așa că rămâne doar căsuța de pe domeniul Mailgun.",
         "updatedAt": "Setat {when}.",
         "readOnly": "Adresa afișată o stabilește Administratorul; tu vezi alegerea în vigoare.",
         "save": "Salvează adresa",

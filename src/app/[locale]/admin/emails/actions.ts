@@ -153,16 +153,11 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
 export async function updateShownContactAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/emails" });
-  const gmail = form.get("gmail");
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
-    await updateShownContactAddress(
-      getDb(),
-      actor,
-      { mode: form.get("mode"), gmail: typeof gmail === "string" ? gmail : null },
-      new Date(),
-    );
+    // The mode alone: the Gmail is the configuration's, never typed (§442 as amended).
+    await updateShownContactAddress(getDb(), actor, { mode: form.get("mode") }, new Date());
   } catch (error) {
     return refused(error, form);
   }
