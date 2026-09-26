@@ -9,7 +9,9 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
+  configuredGmailAddress,
   defaultShownContactAddress,
+  effectiveGmail,
   resolveShownContactAddresses,
   replyToHeader,
   type ShownContactAddress,
@@ -30,9 +32,11 @@ export type ShownContactAddressState = ShownContactAddress & { updatedAt: Date |
 
 /**
  * The setting in force. With no row — the club has not chosen — it is the configured Gmail
- * (`CONTACT_SMTP_USER`), or the mailbox where there is none (§NNN, `defaultShownContactAddress`);
+ * (`CONTACT_SMTP_USER`), or the mailbox where there is none (§442 as amended, `defaultShownContactAddress`);
  * `updatedAt: null` says it is the default. `configuredGmail` is the environment's unless a test
- * passes its own.
+ * passes its own. A saved `gmail` or `both` reads the configured Gmail, never a typed one: a row
+ * saved while the Gmail was typed reads as the configured mode (§442 as amended), its typed
+ * address kept only where no Gmail is configured.
  */
 export async function readShownContactAddress<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -47,13 +51,15 @@ export async function readShownContactAddress<T extends Record<string, unknown>>
   if (!row) return { ...fallback, updatedAt: null };
   // A value this code can no longer read is the default.
   const parsed = shownContactAddressSchema.safeParse(row.value);
-  return parsed.success ? { ...parsed.data, updatedAt: row.updatedAt } : { ...fallback, updatedAt: row.updatedAt };
+  if (!parsed.success) return { ...fallback, updatedAt: row.updatedAt };
+  const gmail = parsed.data.mode === "mailbox" ? null : effectiveGmail(parsed.data.gmail, configuredGmail);
+  return { mode: parsed.data.mode, gmail, updatedAt: row.updatedAt };
 }
 
 /**
  * The addresses in force, straight from the database, for a caller that already holds one — the
  * outbox's senders, the legal prefill. A database that cannot answer gives the default: the
- * configured Gmail, else the environment's mailbox (§NNN).
+ * configured Gmail, else the environment's mailbox (§442 as amended).
  */
 export async function shownContactAddresses<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -85,11 +91,14 @@ export async function updateShownContactAddress<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   rawInput: unknown,
   now: Date,
+  configuredGmail: string | null | undefined = env.CONTACT_SMTP_USER,
 ): Promise<ShownContactAddressState> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the shown contact address`);
   }
-  const parsed = shownContactAddressSchema.safeParse(rawInput);
+  // Only the mode is chosen; the Gmail is the configuration's (§442 as amended), never typed.
+  const mode = rawInput && typeof rawInput === "object" ? (rawInput as { mode?: unknown }).mode : undefined;
+  const parsed = shownContactAddressSchema.safeParse({ mode, gmail: null });
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -98,8 +107,11 @@ export async function updateShownContactAddress<T extends Record<string, unknown
     );
   }
   const next = parsed.data;
+  if (next.mode !== "mailbox" && !configuredGmailAddress(configuredGmail)) {
+    throw new DomainError("VALIDATION_ERROR", "mode: no Gmail is configured on this deployment (CONTACT_SMTP_USER)", ["mode"]);
+  }
 
-  const before = await readShownContactAddress(db);
+  const before = await readShownContactAddress(db, configuredGmail);
   await db.transaction(async (tx) => {
     await tx
       .insert(platformSettings)
@@ -119,5 +131,5 @@ export async function updateShownContactAddress<T extends Record<string, unknown
   });
   // The footer and the contact page read the address from the public cache (§333).
   revalidatePublicContent("settings");
-  return { ...next, updatedAt: now };
+  return { mode: next.mode, gmail: next.mode === "mailbox" ? null : configuredGmailAddress(configuredGmail), updatedAt: now };
 }

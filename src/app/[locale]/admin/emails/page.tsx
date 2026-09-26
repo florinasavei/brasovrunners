@@ -25,7 +25,7 @@ import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import DeadlinesPanel from "@/modules/deadlines/ui/DeadlinesPanel";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
-import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
+import { configuredGmailAddress, replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
 import { readClubNotices } from "@/modules/notifications/club-notices";
@@ -202,7 +202,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   };
   const actionUrl = emailSampleActionUrl(emailLocale);
   // The Reply-To the send sets (§442): the preview's "or reply to this email" line follows it, never the env alone.
-  const replyTo = replyToHeader(resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO));
+  const replyTo = replyToHeader(resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER));
   const mayWrite = canEditTexts(staff.role);
 
   const cards = types.map((messageType) => {
@@ -322,7 +322,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         locale={locale}
         state={shownAddress}
         mailbox={env.EMAIL_REPLY_TO ?? null}
-        resolved={resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO)}
+        configuredGmail={configuredGmailAddress(env.CONTACT_SMTP_USER)}
+        resolved={resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER)}
         mayEdit={mayEditEmail}
         openWhen={{ saved: saved === "shownContactAddress" }}
       />

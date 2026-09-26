@@ -3454,12 +3454,13 @@
         "legend": "Ce adresă arătăm",
         "modes": {
           "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit doar dacă serverul nu are un Gmail",
-          "gmail": "Gmail-ul clubului — implicit",
-          "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
+          "gmail": "Gmail-ul clubului (din configurație): {gmail} — implicit",
+          "both": "Amândouă (întâi {gmail}, apoi {mailbox})"
         },
         "noMailbox": "nesetată pe server",
-        "gmail": "Gmail-ul clubului",
-        "gmailHelp": "Obligatoriu pentru „Gmail-ul clubului” și „Amândouă”. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "noGmail": "nesetat pe server",
+        "gmailConfigured": "Gmail-ul clubului (din configurație): {gmail}. Este contul prin care pleacă formularul de contact; nu se scrie aici.",
+        "gmailMissing": "Serverul nu are un Gmail configurat (CONTACT_SMTP_USER), așa că rămâne doar căsuța de pe domeniul Mailgun.",
         "updatedAt": "Setat {when}.",
         "readOnly": "Adresa afișată o stabilește Administratorul; tu vezi alegerea în vigoare.",
         "save": "Salvează adresa",

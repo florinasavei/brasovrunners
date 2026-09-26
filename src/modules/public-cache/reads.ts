@@ -426,7 +426,7 @@ export async function cachedContactFormReaches(): Promise<boolean> {
 export async function cachedShownContactAddresses(): Promise<string[]> {
   try {
     return await publicRead(["settings.shown-contact-address"], ["settings"], async () =>
-      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO),
+      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER),
     );
   } catch {
     return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);

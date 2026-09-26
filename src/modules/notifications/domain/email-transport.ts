@@ -138,7 +138,7 @@ export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
  *   club itself costs the allowance (four copies per registration per address, §320), they go to
  *   mailboxes that expect the club, and the notice in force already says the club's copies reach
  *   its Gmail mailbox (section 6).
- * - **newsletter → Mailgun** (§NNN): one message to a hundred and more subscribers from a personal
+ * - **newsletter → Mailgun** (§443 as amended): one message to a hundred and more subscribers from a personal
  *   Gmail is exactly the bulk pattern Google restricts, and a restricted account also stops the
  *   club's copies and the contact form; Mailgun is the authenticated sending domain with bounce
  *   feedback built for it.

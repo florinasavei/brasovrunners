@@ -67,7 +67,7 @@ describe("§443 the message groups and the setting", () => {
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "REGISTRATION_CONFIRMED", true)).toBe("gmail");
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "REGISTRATION_CONFIRMED", false)).toBe("mailgun");
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "ORGANIZER_MESSAGE", false)).toBe("mailgun");
-    // §NNN: a newsletter to many addresses from a personal Gmail is the bulk pattern Google restricts.
+    // §443 as amended: a newsletter to many addresses from a personal Gmail is the bulk pattern Google restricts.
     expect(DEFAULT_EMAIL_TRANSPORT.groups.newsletter).toBe("mailgun");
     expect(defaultEmailTransportFor("production").groups.newsletter).toBe("mailgun");
     expect(defaultEmailTransportFor("qa").groups.newsletter).toBe("mailgun");

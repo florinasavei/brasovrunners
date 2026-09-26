@@ -306,7 +306,7 @@ describe("§443 email transport setting and the outbox's road", () => {
     expect(await processOutboxBatch(db, { sender: mailgunOnly, render, now: NOW })).toMatchObject({ claimed: 0 });
     expect(await newsletterRow()).toMatchObject({ status: "PENDING", attemptCount: 0, nextAttemptAt: nextAllowanceResetAt(NOW) });
 
-    // The default setting sends the newsletter group by Mailgun (§NNN): the reserve holds it the same way.
+    // The default setting sends the newsletter group by Mailgun (§443 as amended): the reserve holds it the same way.
     await db.update(emailOutbox).set({ nextAttemptAt: null }).where(eq(emailOutbox.idempotencyKey, "newsletter:sub"));
     const byDefault = roadSender();
     expect(await processOutboxBatch(db, { sender: byDefault, render, now: NOW, route: defaultRoute, roads: defaultRoads() })).toMatchObject({ claimed: 0 });

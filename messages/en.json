@@ -3454,12 +3454,13 @@
         "legend": "Which address we show",
         "modes": {
           "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default only when the server has no Gmail",
-          "gmail": "The club's Gmail — default",
-          "both": "Both (the Gmail first, then {mailbox})"
+          "gmail": "The club's Gmail (from configuration): {gmail} — default",
+          "both": "Both ({gmail} first, then {mailbox})"
         },
         "noMailbox": "not set on the server",
-        "gmail": "The club's Gmail",
-        "gmailHelp": "Required for “The club's Gmail” and “Both”. Mailgun has a daily cap; Gmail does not.",
+        "noGmail": "not set on the server",
+        "gmailConfigured": "The club's Gmail (from configuration): {gmail}. It is the account the contact form sends through; it is not typed here.",
+        "gmailMissing": "The server has no Gmail configured (CONTACT_SMTP_USER), so only the mailbox on the Mailgun domain is available.",
         "updatedAt": "Set {when}.",
         "readOnly": "The Administrator sets the address shown; you see the choice in force.",
         "save": "Save the address",
