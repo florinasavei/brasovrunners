@@ -68,6 +68,7 @@ test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
     await page.goto("/ro/evenimente/crosul-aniversar-brasov-runners");
     await expect(page.locator('[data-testid="event-facts"]')).toBeVisible();
     await expect(page.locator('[data-testid="event-facts"] dt').filter({ hasText: /^Vremea$/ })).toHaveCount(0);
-    await expect(page.getByText("Open-Meteo")).toHaveCount(0);
+    // The footer credits Open-Meteo on every page since §429; only the facts must stay silent.
+    await expect(page.locator('[data-testid="event-facts"]').getByText("Open-Meteo")).toHaveCount(0);
   });
 });
