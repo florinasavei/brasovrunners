@@ -151,6 +151,8 @@ export function emailSampleEventFacts(locale: EmailLocale): EmailEventFacts {
     locationToBeAnnounced: false,
     locationName: EMAIL_SAMPLE[locale].eventLocationName,
     mapUrl: `${base}/#map`,
+    latitude: null,
+    longitude: null,
     routeUrl: null,
     stravaEventUrl: null,
     facebookEventUrl: null,

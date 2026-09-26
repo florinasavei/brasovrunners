@@ -96,7 +96,7 @@ export default async function ListingFilterPanel({
       case "partner":
         return "partner";
       case "night":
-        return "headlamp";
+        return "night";
       case "registration":
         return "registration";
       default:

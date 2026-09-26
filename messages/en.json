@@ -168,6 +168,7 @@
     "elevationM": "{m} m elevation gain",
     "elevationShort": "{m} m climb",
     "night": {
+      "chip": "Night",
       "pill": "Night event",
       "runPill": "Night run",
       "tooltip": "The sun sets at {sunset}",

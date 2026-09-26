@@ -48,6 +48,11 @@ const FULL_ROUTE = {
   nightOverride: null,
   costType: "FREE" as const,
   registrationMode: "INTERNAL" as const,
+  // No place of its own: the club's (§NNN, §416's rule).
+  mapUrl: null,
+  latitude: null,
+  longitude: null,
+  locationToBeAnnounced: false,
 };
 
 /** Every chip in a fragment: its label, whether it is outlined, and whether it carries a glyph. */
@@ -66,15 +71,15 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Eveniment de noapte", "Gratuit"]);
-    expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY", "distance", "elevation", "headlamp", "cost:FREE"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
+    expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY", "distance", "elevation", "night", "cost:FREE"]);
   });
 
   it("builds the same order in English", async () => {
     currentLocale = "en";
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Night event", "Free"]);
+    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Night", "Free"]);
   });
 
   it("gives a pill only to what the club stated, and none at all when it stated nothing", async () => {
@@ -96,6 +101,10 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
         nightOverride: false,
         costType: null,
         registrationMode: "INTERNAL",
+        mapUrl: null,
+        latitude: null,
+        longitude: null,
+        locationToBeAnnounced: false,
       },
       t,
       format,
@@ -162,7 +171,7 @@ describe("§388 RoutePills — one small outlined chip per pill, its glyph, noth
     const format = await getFormatter();
     const html = renderToStaticMarkup(RoutePills({ pills: buildRoutePills(FULL_ROUTE, t, format) }));
     const drawn = chips(html);
-    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Eveniment de noapte", "Gratuit"]);
+    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
     for (const pill of drawn) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);

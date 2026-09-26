@@ -168,6 +168,7 @@
     "elevationM": "{m} m diferență de nivel",
     "elevationShort": "{m} m D+",
     "night": {
+      "chip": "Noapte",
       "pill": "Eveniment de noapte",
       "runPill": "Alergare de noapte",
       "tooltip": "Soarele apune la {sunset}",

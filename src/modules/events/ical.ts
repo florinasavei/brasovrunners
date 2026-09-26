@@ -73,6 +73,9 @@ export type CalendarEvent = {
   locationAddress?: string | null;
   /** The organizer's map link (§61): the calendar's place, so one tap opens the map (§129). */
   mapUrl?: string | null;
+  /** The typed «Coordonate» (§416): with the map link, where the night line's sun is read (§NNN). */
+  latitude?: number | null;
+  longitude?: number | null;
   /**
    * The place is not announced yet (§328): no `LOCATION` at all, and the description opens with
    * the page's sentence where the meeting point would be. The public query has already withheld
@@ -96,7 +99,8 @@ export type CalendarEvent = {
   elevationGainMeters?: number | null;
   /**
    * The organizer's night override (§394): true "Da", false "Nu", null or absent "Automat" — the
-   * start and the end against civil dusk and dawn at the club's place (the end is `endsAt`, else
+   * start and the end against civil dusk and dawn at the event's own place (§NNN: the map link's
+   * pin, the typed pair, else the club's place; the end is `endsAt`, else
    * the programme's last row of the day). A night event gets a line of its own under the facts
    * line, "Eveniment de noapte — apusul la 16:36, ia o frontală" in the calendar's language.
    */
@@ -399,6 +403,11 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     startsAt: event.startsAt,
     endsAt: event.endsAt,
     programme: event.programme,
+    // The event's own place (§NNN), as the pill reads it.
+    mapUrl: event.mapUrl,
+    latitude: event.latitude,
+    longitude: event.longitude,
+    locationToBeAnnounced: event.locationToBeAnnounced,
   });
   // A group run is «Alergare de noapte», as on its card and in its reminder (§394).
   // The start, the sunset and — when it is the reason — the end, all named (§404).

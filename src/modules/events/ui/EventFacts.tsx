@@ -670,9 +670,10 @@ export default async function EventFacts({
       route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
     }
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-    // The night event (§394, where §382 put the headlamp), with the headlamp's glyph like the pill
-    // it is on the card and the page, before the cost — the same pill's words, from the same function.
-    if (headlampPill) route.push(withGlyph(GLYPHS.headlamp, headlampPill.label));
+    // The night event (§394, where §382 put the headlamp), with the pill's own crescent (§NNN) like
+    // the pill it is on the card and the page, before the cost — the same pill's words, from the
+    // same function.
+    if (headlampPill) route.push(withGlyph(GLYPHS.night, headlampPill.label));
     // The coin for the cost, below, is the closed set's other glyph (§112).
     /*
       The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its

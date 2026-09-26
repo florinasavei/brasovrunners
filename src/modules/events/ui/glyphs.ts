@@ -3,12 +3,12 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
-import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import ModeNightIcon from "@mui/icons-material/ModeNight";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -98,10 +98,13 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * overline's `text.secondary`, a filled calendar entry's `primary.contrastText` — the way every
  * other glyph in this registry already does; no filter, no dark-scheme override.
  *
- * `headlamp` is a torch that is lit (§382; the owner, 2026-09-25: "a headlamp icon for the events
- * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
- * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
- * the kit). Always beside its word, "Eveniment de noapte" / "Night event", like every other pill.
+ * `night` is a crescent moon (§NNN, replacing §382's lit torch; the owner, 2026-09-26: "change that
+ * flashlight icon"). The torch was chosen when the pill was a stored "Necesită frontală" — the kit
+ * to bring. Since §394 the pill is computed from the sun and says a fact about the date, «Noapte»,
+ * and a moon is what reads as the time rather than the kit. Material's `ModeNight`, one file, not
+ * `DarkMode`: that crescent-in-a-disc is the header's light/dark switch (`ThemeModeToggle`), and
+ * one picture meaning two things on one screen is what §318 refused. Always beside its word,
+ * «Noapte» / «Night», like every other pill.
  *
  * There is no bare `difficulty` entry: every caller reads one value's own level, so only the
  * `difficulty:*` entries exist — one per level of `DIFFICULTY_LEVELS` (`DifficultyGaugeIcon.tsx`),
@@ -119,7 +122,7 @@ export const GLYPHS = {
   series: EventRepeatIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
-  headlamp: FlashlightOnIcon,
+  night: ModeNightIcon,
   // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
   discount: LocalOfferIcon,
   partner: HandshakeIcon,

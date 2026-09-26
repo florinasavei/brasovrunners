@@ -54,6 +54,9 @@ export type EmailEventFacts = Pick<
   | "facebookEventUrl"
   | "raceStartsAt"
   | "locationToBeAnnounced"
+  // The typed «Coordonate» (§416): with the map link, where the night pill's sun is read (§NNN).
+  | "latitude"
+  | "longitude"
 > & {
   startsAt: Date;
   timezone: string;
