@@ -5,7 +5,7 @@ import { formatDay } from "@/i18n/dates";
 import { openRegistrationClosing, registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
-import { freePlacesPhrase } from "./counted-phrases";
+import { countForm } from "@/i18n/count-form";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -15,17 +15,34 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
 export type CardRegistrationLine = {
   /** The state: "Înscrieri deschise până pe …", "Înscrierile se deschid pe …", "Înscrierile s-au închis". */
   lead: string;
-  /**
-   * The part of `lead` that is the fact — the date and hour — and alone bold in it (§NNN); null
-   * when the lead has no date, and then a bold line's lead is bold whole.
-   */
-  leadFact: string | null;
+  /** `lead` cut around its date and hour, the one part in bold (§NNN); null when it has no date. */
+  leadParts: FactParts | null;
   /** After a middle dot: "7 locuri libere din 10", or "Lista de așteptare" once the places are gone. */
   detail: string | null;
+  /** `detail` cut around "7 locuri libere", the one part in bold (§NNN); null for the waiting list. */
+  detailParts: FactParts | null;
   /** Bold where there is something to do or wait for; quiet where the question is closed. */
   bold: boolean;
   button: { cta: ButtonCta; label: string } | null;
 };
+
+/** A sentence in three pieces, the middle one the fact: "Înscrieri deschise până " + date + "". */
+export type FactParts = { before: string; fact: string; after: string };
+
+const SLOT = "";
+
+/**
+ * The catalogue's own sentence with `fact` in the slot `name`: the words around it come from the
+ * message itself, formatted with a marker in the slot and cut there, so the order is each
+ * language's own and nothing is searched for in the finished text (§NNN).
+ */
+function factParts(say: Say, key: string, values: Record<string, string | number>, name: string, fact: string): FactParts {
+  const framed = say(key, { ...values, [name]: SLOT });
+  const at = framed.indexOf(SLOT);
+  return { before: framed.slice(0, at), fact, after: framed.slice(at + SLOT.length) };
+}
+
+const whole = (parts: FactParts) => parts.before + parts.fact + parts.after;
 
 /**
  * The listing card's registration, in words (§409). The owner, 2026-09-25: "trebuie să văd
@@ -68,47 +85,44 @@ export function cardRegistrationLine(
   // Until when an open window stays open (§308) — the instant the button goes away.
   const closesAt = openRegistrationClosing(event, now);
   const closesText = closesAt ? shortDate(closesAt) : null;
-  const openUntil = closesText ? say("cta.openUntilShort", { date: closesText }) : say("registrationState.OPEN");
+  const untilParts = closesText ? factParts(say, "cta.openUntilShort", {}, "date", closesText) : null;
+  const openUntil = untilParts ? whole(untilParts) : say("registrationState.OPEN");
+  const quiet = { leadParts: null, detail: null, detailParts: null };
 
-  if (door.kind === "UNKNOWN") return { lead: openUntil, leadFact: closesText, detail: null, bold: true, button: null };
+  if (door.kind === "UNKNOWN") return { ...quiet, lead: openUntil, leadParts: untilParts, bold: true, button: null };
 
   const { cta, fill } = door;
   const button = hasDoorButton(cta) ? { cta, label: doorButtonLabel(say, cta) } : null;
   switch (cta.kind) {
-    case "OPEN":
-      return {
-        lead: openUntil,
-        leadFact: closesText,
-        detail: cta.availablePlaces !== null && fill ? freePlacesPhrase(say, locale, cta.availablePlaces, fill.capacity) : null,
-        bold: true,
-        button,
-      };
+    case "OPEN": {
+      const free = cta.availablePlaces;
+      const detailParts =
+        free !== null && fill
+          ? factParts(say, "cta.freeOfCard", { places: fill.capacity }, "free", say(`cta.freeCount.${countForm(free, locale)}`, { count: free }))
+          : null;
+      return { lead: openUntil, leadParts: untilParts, detail: detailParts && whole(detailParts), detailParts, bold: true, button };
+    }
     case "FULL":
-      return { lead: openUntil, leadFact: closesText, detail: say("cta.cardWaitlist"), bold: true, button };
+      return { ...quiet, lead: openUntil, leadParts: untilParts, detail: say("cta.cardWaitlist"), bold: true, button };
     case "WAITLIST_FULL":
-      return { lead: say("cta.waitlistFull"), leadFact: null, detail: null, bold: true, button: null };
+      return { ...quiet, lead: say("cta.waitlistFull"), bold: true, button: null };
     case "FULL_NO_WAITLIST":
-      return { lead: say("cta.fullNoWaitlist"), leadFact: null, detail: null, bold: true, button: null };
+      return { ...quiet, lead: say("cta.fullNoWaitlist"), bold: true, button: null };
     case "NOT_YET_OPEN": {
       // The opening date rather than "not yet" (§146) — or "soon" when there is none yet (§451).
       const opensText = cta.opensAt === null ? null : shortDate(cta.opensAt);
-      return {
-        lead: opensText === null ? say("cta.opensSoonShort") : say("cta.opensOnShort", { date: opensText }),
-        leadFact: opensText,
-        detail: null,
-        bold: true,
-        button: null,
-      };
+      const leadParts = opensText === null ? null : factParts(say, "cta.opensOnShort", {}, "date", opensText);
+      return { ...quiet, lead: leadParts ? whole(leadParts) : say("cta.opensSoonShort"), leadParts, bold: true, button: null };
     }
     case "EXTERNAL":
-      return { lead: say("registrationState.EXTERNAL"), leadFact: null, detail: null, bold: true, button };
+      return { ...quiet, lead: say("registrationState.EXTERNAL"), bold: true, button };
     case "CLOSED":
       // Race week on the featured card: where to go, in bold — it is something to do (§78).
-      if (raceWeek) return { lead: say("cta.closedRaceWeek"), leadFact: null, detail: null, bold: true, button: null };
-      return { lead: say(`registrationState.${registrationState(event, now)}`), leadFact: null, detail: null, bold: false, button: null };
+      if (raceWeek) return { ...quiet, lead: say("cta.closedRaceWeek"), bold: true, button: null };
+      return { ...quiet, lead: say(`registrationState.${registrationState(event, now)}`), bold: false, button: null };
     default:
       // Closed, cancelled, held, or none needed: the state's own words, quiet, as before §409.
-      return { lead: say(`registrationState.${registrationState(event, now)}`), leadFact: null, detail: null, bold: false, button: null };
+      return { ...quiet, lead: say(`registrationState.${registrationState(event, now)}`), bold: false, button: null };
   }
 }
 
@@ -128,7 +142,7 @@ export default function CardRegistration({ slug, line }: { slug: string; line: C
       >
         <HowToRegIcon aria-hidden="true" sx={ROW_ICON_SX} />
         <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
-          <LeadWords line={line} />
+          <Words text={line.lead} parts={line.leadParts} bold={line.bold} />
           {line.detail && (
             <>
               {" "}
@@ -136,8 +150,8 @@ export default function CardRegistration({ slug, line }: { slug: string; line: C
                 ·
               </Box>{" "}
               {/* The count stays whole on a phone: it wraps as one piece, never "7 locuri / libere". */}
-              <Box component="span" data-testid="card-places" sx={{ whiteSpace: "nowrap", fontWeight: line.bold ? 700 : undefined }}>
-                {line.detail}
+              <Box component="span" data-testid="card-places" sx={{ whiteSpace: "nowrap" }}>
+                <Words text={line.detail} parts={line.detailParts} bold={line.bold} />
               </Box>
             </>
           )}
@@ -155,20 +169,19 @@ export default function CardRegistration({ slug, line }: { slug: string; line: C
 }
 
 /**
- * The lead with only its fact in bold (§NNN, the owner 2026-09-26: "nu vreau totul să fie bold,
- * ci doar chestiile importante … adică doar data, ora și locurile libere"): "Înscrieri deschise
- * până **dum., 27 sept. 2026, la 07:00**". A lead without a date (the waiting list full, race week)
- * is itself the fact, bold whole; a quiet line is bold nowhere.
+ * Only the facts in bold (§NNN, the owner 2026-09-26: "nu vreau totul să fie bold, ci doar
+ * chestiile importante … adică doar data, ora și locurile libere"): "Înscrieri deschise până
+ * **dum., 27 sept. 2026, la 07:00** · **8 locuri libere** din 10". A sentence with no date or count
+ * (the waiting list full, race week, "soon", the organizer's site) has nothing in bold; it stays in
+ * the primary ink, so the line still reads as live.
  */
-function LeadWords({ line }: { line: CardRegistrationLine }) {
-  if (!line.bold) return <>{line.lead}</>;
-  const at = line.leadFact ? line.lead.indexOf(line.leadFact) : -1;
-  if (!line.leadFact || at < 0) return <Box component="strong" sx={{ fontWeight: 700 }}>{line.lead}</Box>;
+function Words({ text, parts, bold }: { text: string; parts: FactParts | null; bold: boolean }) {
+  if (!bold || !parts) return <>{text}</>;
   return (
     <>
-      {line.lead.slice(0, at)}
-      <Box component="strong" sx={{ fontWeight: 700 }}>{line.leadFact}</Box>
-      {line.lead.slice(at + line.leadFact.length)}
+      {parts.before}
+      <Box component="strong" sx={{ fontWeight: 700 }}>{parts.fact}</Box>
+      {parts.after}
     </>
   );
 }

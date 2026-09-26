@@ -597,11 +597,16 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
         const card = list.filter({ has: page.getByRole("link", { name: race[locale], exact: true }) });
         await expect(card, `the race's card (${locale})`).toHaveCount(1);
 
-        // The line: the state, then the free places after a middle dot, in bold.
+        // The line: the state, then the free places after a middle dot.
         const line = card.locator('[data-fact="registration"]');
         await expect(line).toContainText(locale === "ro" ? /^Înscrieri(le sunt)? deschise.* · 12 locuri libere din 12$/ : /^Registration (is )?open.* · 12 places left out of 12$/);
         await expect(line.getByTestId("card-places")).toHaveText(locale === "ro" ? "12 locuri libere din 12" : "12 places left out of 12");
-        expect(await line.evaluate((element) => getComputedStyle(element).fontWeight)).toBe("700");
+        // Only the facts in bold (§NNN): the date with its hour, and «12 locuri libere» — not «din 12».
+        expect(await line.evaluate((element) => getComputedStyle(element).fontWeight)).toBe("400");
+        const bold = line.locator("strong");
+        await expect(bold).toHaveCount(2);
+        await expect(bold.nth(1)).toHaveText(locale === "ro" ? "12 locuri libere" : "12 places left");
+        expect(await bold.nth(1).evaluate((element) => getComputedStyle(element).fontWeight)).toBe("700");
 
         // The button: the page's own words, to the same form, a whole tap target.
         const button = card.locator('[data-fact="door"] a');
@@ -616,13 +621,14 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
         expect(overflow).toBeLessThanOrEqual(0);
 
         // No other card offers a door its line does not announce: a card with a button says the
-        // state in bold, and a card with no registration line (a group run, §111) has no button.
+        // state in the primary ink, and a card with no registration line (a group run, §111) has no button.
         const count = await list.count();
         for (let i = 0; i < count; i += 1) {
           const other = list.nth(i);
           if ((await other.locator('[data-fact="door"]').count()) === 0) continue;
-          const weight = await other.locator('[data-fact="registration"]').evaluate((element) => getComputedStyle(element).fontWeight);
-          expect.soft(weight, `card ${i}: a door under a bold line (${locale})`).toBe("700");
+          const color = await other.locator('[data-fact="registration"]').evaluate((element) => getComputedStyle(element).color);
+          const quiet = await other.locator('[data-fact="registration"] svg').evaluate((element) => getComputedStyle(element).color);
+          expect.soft(color, `card ${i}: a door under a live, primary-ink line (${locale})`).not.toBe(quiet);
         }
       }
 

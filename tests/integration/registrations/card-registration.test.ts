@@ -129,17 +129,15 @@ function door(html: string): { href: string; words: string; attributes: string }
   if (!anchor) throw new Error("a door row with no link");
   return { href: /href="([^"]*)"/.exec(anchor[1])?.[1] ?? "", words: text(anchor[2]).trim(), attributes: anchor[1] };
 }
-/** A bold line is set in weight 700 through its Emotion class, whose rule is in the stream's styles. */
-async function isBold(html: string, raw: () => Promise<string>): Promise<boolean> {
-  const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(line(html).tag)?.[1];
-  const styles = await raw();
-  return !!cls && new RegExp(`\\.${cls}\\{[^}]*font-weight:\\s*700`).test(styles);
+/** The line's bold pieces (§NNN): only the date and hour and the free places are in <strong>. */
+function bolds(html: string): string[] {
+  const open = /<[^<>]*\bdata-fact="registration"[^>]*>/.exec(html);
+  if (!open) throw new Error("no registration line");
+  const rest = html.slice(open.index);
+  const end = rest.search(/data-fact="door"/);
+  const segment = end < 0 ? rest : rest.slice(0, end);
+  return [...segment.matchAll(/<strong[^>]*>([\s\S]*?)<\/strong>/g)].map((m) => text(m[1]).trim());
 }
-const rawCard = async (slug = "cros") => {
-  const stream = await renderToReadableStream(createElement(EventCard, { event: await row(slug), index: 0, now: NOW }));
-  await stream.allReady;
-  return new Response(stream).text();
-};
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -156,7 +154,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     await take(event.id, 3);
     const html = await card();
     expect(line(html).words).toBe("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · 7 locuri libere din 10");
-    expect(await isBold(html, rawCard)).toBe(true);
+    expect(bolds(html)).toEqual(["sâm., 26 sept. 2026, la 10:00", "7 locuri libere"]);
     expect(html).toContain('data-testid="card-places"');
     expect(door(html)).toMatchObject({ href: "/ro/evenimente/cros/inscriere", words: "Înscrie-te la eveniment" });
     // The page's own button, in the same words, to the same form.
@@ -219,7 +217,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     await publish({ capacity: 10, registrationOpensAt: new Date("2026-10-01T15:00:00Z"), registrationClosesAt: null });
     const html = await card();
     expect(line(html).words).toBe("Înscrierile se deschid joi, 1 oct. 2026, la 18:00");
-    expect(await isBold(html, rawCard)).toBe(true);
+    expect(bolds(html)).toEqual(["joi, 1 oct. 2026, la 18:00"]);
     expect(door(html)).toBeNull();
   });
 
@@ -227,7 +225,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     await publish({ capacity: 10, registrationClosesAt: new Date(NOW.getTime() - HOUR) });
     let html = await card();
     expect(line(html).words).toBe("Înscrierile s-au închis");
-    expect(await isBold(html, rawCard)).toBe(false);
+    expect(bolds(html)).toEqual([]);
     expect(door(html)).toBeNull();
 
     await resetTables(db);
@@ -251,7 +249,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     await publish({ type: "HIKE", registrationMode: "NONE", registrationClosesAt: null });
     const html = await card();
     expect(line(html).words).toBe("Nu este necesară înscrierea");
-    expect(await isBold(html, rawCard)).toBe(false);
+    expect(bolds(html)).toEqual([]);
     expect(door(html)).toBeNull();
   });
 

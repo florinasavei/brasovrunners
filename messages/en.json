@@ -275,6 +275,12 @@
         "few": "{count} places left out of {places}",
         "other": "{count} places left out of {places}"
       },
+      "freeCount": {
+        "one": "{count} place left",
+        "few": "{count} places left",
+        "other": "{count} places left"
+      },
+      "freeOfCard": "{free} out of {places}",
       "cardWaitlist": "Waiting list",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
