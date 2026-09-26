@@ -41,6 +41,7 @@ import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { weatherForEvent } from "@/modules/weather/source";
+import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailEventFacts } from "./domain/event-facts";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -154,6 +155,10 @@ async function renderRow(
   // A group run's self-declaration (§393) is about no registration: its own, shorter path.
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
     return renderGroupRunDeclarationRow(row, db, now, eventRows);
+  }
+  // The newsletter (§NNN) is about a subscriber, never a registration: its own path too.
+  if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
+    return renderNewsletterRow(row, db, now, eventRows);
   }
 
   /*

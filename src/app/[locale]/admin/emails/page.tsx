@@ -38,7 +38,10 @@ import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmails
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
 import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
+import { noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
+import { countNewsletterAudience, listNewsletterSends } from "@/modules/newsletter/service";
+import NewsletterPanel from "@/modules/newsletter/ui/NewsletterPanel";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { countForm } from "@/i18n/count-form";
@@ -47,7 +50,7 @@ import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string; message?: string }>;
+  searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string; message?: string; recipients?: string }>;
 };
 
 /** Nothing queues these any more (§331, `domain/never-queued.ts`): listed last, and said so. */
@@ -59,7 +62,8 @@ const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
  * it and no sample-value warning over it.
  */
 function perSend(messageType: EmailMessageType): boolean {
-  return messageType === "ORGANIZER_MESSAGE";
+  // The newsletter too (§NNN): written in its own composer, higher on this page.
+  return messageType === "ORGANIZER_MESSAGE" || messageType === "NEWSLETTER";
 }
 
 /**
@@ -86,7 +90,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const staff = await requireStaff();
-  const { lang, saved, error, sent, message } = await searchParams;
+  const { lang, saved, error, sent, message, recipients: newsletterRecipients } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
   /*
     Every type, as it would go out — and the three that nothing queues any more said to be so and
@@ -149,6 +153,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // How many registrations one address may carry at an event (§389), straight through like the deadlines.
     readAddressCap(db),
   ]);
+  // The newsletter (§NNN): numbers only, never an address; and whether the notice lets the pop-up show.
+  const [newsletterAudience, newsletterHistory, newsletterOffered] = await Promise.all([
+    countNewsletterAudience(db),
+    listNewsletterSends(db),
+    noticeDescribesNewsletter(db, now),
+  ]);
+  const newsletterSentCount = /^\d{1,9}$/.test(newsletterRecipients ?? "") ? Number(newsletterRecipients) : 0;
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
   const pageWords = deadlineWords(locale, deadlines.deadlines);
@@ -242,6 +253,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "deadlines" && <Alert severity="success">{t("emails.deadlines.saved")}</Alert>}
         {saved === "addressCap" && <Alert severity="success">{t("emails.addressCap.saved")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
+        {/* The newsletter's outcomes (§NNN): how many it was queued for, a second press, an address removed or not found. */}
+        {saved === "newsletterSent" && (
+          <Alert severity="success" data-testid="newsletter-sent-banner">
+            {t(`newsletter.sent.${countForm(newsletterSentCount, locale)}`, { count: newsletterSentCount })}
+          </Alert>
+        )}
+        {saved === "newsletterDuplicate" && <Alert severity="info">{t("newsletter.duplicate")}</Alert>}
+        {saved === "newsletterWithdrawn" && <Alert severity="success">{t("newsletter.withdrawn")}</Alert>}
+        {saved === "newsletterNotFound" && <Alert severity="info">{t("newsletter.notFound")}</Alert>}
       </Box>
 
       {/*
@@ -281,6 +301,18 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         resolved={resolvedRecipients}
         mayEdit={mayEditEmail}
         openWhen={{ saved: saved === "contactRecipients" }}
+      />
+
+      {/* The newsletter (§NNN), beside the contact page's other form: counts, the composer, the sends. */}
+      <NewsletterPanel
+        locale={locale}
+        audience={newsletterAudience}
+        history={newsletterHistory}
+        volume={volume}
+        offered={newsletterOffered}
+        maySend={canSendNewsletter(staff.role)}
+        mayWithdraw={mayEditEmail}
+        openWhen={{ saved: saved?.startsWith("newsletter") === true }}
       />
 
       {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
@@ -342,7 +374,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             // organizer's message has none to keep: it is written per send, on the event's page (§364).
             editor: perSend(messageType) ? (
               <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
-                {t("emails.perSend")}
+                {messageType === "NEWSLETTER" ? t("emails.perSendNewsletter") : t("emails.perSend")}
               </Alert>
             ) : mayWrite ? (
               <EmailCopyEditor

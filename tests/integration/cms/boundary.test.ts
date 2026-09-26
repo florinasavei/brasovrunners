@@ -228,6 +228,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/gallery/[slug]",
       "/legal/privacy",
       "/legal/terms",
+      // The newsletter's two link pages (§NNN): the confirmation and the subscriber's own page.
+      "/newsletter/confirm/[token]",
+      "/newsletter/manage/[token]",
       "/pages/[slug]",
       "/preview/events/[id]",
       "/registrations/confirm/[token]",

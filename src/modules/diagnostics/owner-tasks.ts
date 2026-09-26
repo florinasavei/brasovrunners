@@ -54,6 +54,7 @@ export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "
 export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
+  | "newsletterNotice"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -76,6 +77,7 @@ export type TaskId =
 export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
+  newsletterNotice: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -136,6 +138,11 @@ export type OwnerTaskInputs = {
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
    */
   listStatesDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the newsletter (§NNN,
+   * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
+   */
+  newsletterDescribed: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -266,6 +273,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listStatesNotice", {
       owner: "club",
       state: input.listStatesDescribed ? "done" : "open",
+    });
+    /*
+      The newsletter (§NNN), the same shape: open, never blocking — nothing is refused, the contact
+      page simply offers no subscription — and done by itself the day a notice naming
+      `{{newsletterTopics}}` takes effect.
+    */
+    push("newsletterNotice", {
+      owner: "club",
+      state: input.newsletterDescribed ? "done" : "open",
     });
   }
 

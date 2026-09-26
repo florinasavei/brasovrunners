@@ -8,6 +8,7 @@ import { registrations } from "@/db/schema/registrations";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { jobRuns } from "@/db/schema/job-runs";
+import { newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
@@ -100,6 +101,13 @@ export const RETENTION = {
    */
   unconfirmedRegistrationDays: 30,
   /**
+   * An address left in the newsletter's pop-up and never confirmed (§NNN): gone once its link can
+   * no longer work — the longest the club's email-link window may be (168 hours, `deadlines.ts`)
+   * plus a day — counted from the last time the form was sent with it. Somebody else may have
+   * typed it; nothing was ever sent to it but the one confirmation message.
+   */
+  unconfirmedSubscriberDays: 8,
+  /**
    * A registration and the declaration signed for it are kept three years from the event's
    * start — the general limitation period of Codul civil art. 2517, within which a claim
    * about the event could still be made and the declaration is the evidence — and then go,
@@ -152,6 +160,8 @@ export type PruneCounts = {
   /** A group run's self-declarations, gone seven days after the run (§393). */
   groupRunDeclarations: number;
   auditLogs: number;
+  /** Newsletter addresses never confirmed, and the newsletter's links nobody can use any more (§NNN). */
+  newsletter: number;
 };
 
 /**
@@ -170,6 +180,7 @@ export const PRUNE_STEPS = [
   "unconfirmed-registrations",
   "registrations-after-event",
   "audit-log",
+  "newsletter",
 ] as const;
 export type PruneStep = (typeof PRUNE_STEPS)[number];
 
@@ -222,6 +233,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     minorSocials: 0,
     groupRunDeclarations: 0,
     auditLogs: 0,
+    newsletter: 0,
   };
   const failures: PruneFailure[] = [];
 
@@ -462,6 +474,30 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.auditLogs = deleted.length;
   });
 
+  /**
+   * The newsletter (§NNN): an address never confirmed, once its link cannot work; and the links
+   * themselves thirty days after they stopped working, the rule of the action tokens above. A
+   * confirmed subscriber stays until they unsubscribe, which deletes them at once.
+   */
+  await step("newsletter", async (tx) => {
+    const unconfirmed = await tx
+      .delete(newsletterSubscribers)
+      .where(and(isNull(newsletterSubscribers.confirmedAt), lt(newsletterSubscribers.updatedAt, daysBefore(now, RETENTION.unconfirmedSubscriberDays))))
+      .returning({ id: newsletterSubscribers.id });
+    const tokenCutoff = daysBefore(now, RETENTION.spentTokensDays);
+    const links = await tx
+      .delete(newsletterTokens)
+      .where(
+        or(
+          and(isNotNull(newsletterTokens.usedAt), lt(newsletterTokens.usedAt, tokenCutoff)),
+          and(isNotNull(newsletterTokens.invalidatedAt), lt(newsletterTokens.invalidatedAt, tokenCutoff)),
+          lt(newsletterTokens.expiresAt, tokenCutoff),
+        ),
+      )
+      .returning({ id: newsletterTokens.id });
+    counts.newsletter = unconfirmed.length + links.length;
+  });
+
   return { ...counts, failures };
 }
 
@@ -481,7 +517,8 @@ export function totalPruned(counts: PruneCounts): number {
     counts.emergencyContacts +
     counts.minorSocials +
     counts.groupRunDeclarations +
-    counts.auditLogs
+    counts.auditLogs +
+    counts.newsletter
   );
 }
 

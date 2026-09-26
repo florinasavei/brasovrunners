@@ -1,7 +1,8 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
-import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD } from "../domain/merge-fields";
+import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD, NEWSLETTER_MERGE_FIELD } from "../domain/merge-fields";
+import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -91,6 +92,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_STATES_MERGE_FIELD}}}`,
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
+  },
+  // The privacy notice's marker for the newsletter (§NNN): filled with the pop-up's topics, and the
+  // switch that lets the contact page offer it (`describesNewsletter`).
+  {
+    token: `{{${NEWSLETTER_MERGE_FIELD}}}`,
+    messageKey: NEWSLETTER_MERGE_FIELD,
+    example: inBoth((locale) => newsletterMergeValues(locale).newsletterTopics),
   },
 ];
 

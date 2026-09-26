@@ -13,6 +13,7 @@ import { asksForMinorSignature, deadlineMergeValues, type MergeValues } from "@/
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { listStatesMergeValues } from "./list-state-words";
+import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
 /**
@@ -198,6 +199,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
       ...listStatesMergeValues(locale),
+      ...newsletterMergeValues(locale),
     },
     title: event.title,
     timezone: event.timezone,

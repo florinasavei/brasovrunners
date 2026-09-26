@@ -90,6 +90,16 @@ export function deadlineMergeValues(
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
+ * The privacy notice's marker for the newsletter (§NNN), the same two-in-one as the list's states
+ * above: filled, when the notice is shown, with the topics a subscriber may choose — the pop-up's
+ * own words, from the same catalogue (`newsletter/topic-words.ts`) — and the switch. The contact
+ * page offers the newsletter only while the notice in force, in every language, names it
+ * (`describesNewsletter`): an address is personal data taken under consent, and nothing is
+ * collected before the notice the club approved describes what happens to it (§146's rule).
+ */
+export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -125,6 +135,7 @@ export const MERGE_FIELDS = [
   "signedAt",
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
+  NEWSLETTER_MERGE_FIELD,
 ] as const;
 
 /**
@@ -256,6 +267,15 @@ export function asksForMinorSignature(body: unknown): boolean {
  */
 export function describesListStates(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_STATES_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the newsletter (§NNN): it names `{{newsletterTopics}}`. The
+ * gate for the contact page's pop-up and for every subscription the service takes — the club's
+ * approval of such a text is the switch, as for the list's states (§396).
+ */
+export function describesNewsletter(body: unknown): boolean {
+  return mergeFieldsIn(body).has(NEWSLETTER_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {

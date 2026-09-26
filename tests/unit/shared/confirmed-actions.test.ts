@@ -65,6 +65,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   assignBibNumbersAction: ["assignAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],
+  // The newsletter (§NNN): the send asks per topic, naming how many receive it; removing an
+  // address at someone's request asks too, and cannot be undone.
+  sendNewsletterAction: [],
+  withdrawNewsletterAddressAction: [],
   // Asks only when the press faces outward: the notice ticked, the status set to cancelled.
   saveEventAndTranslationsAction: [],
   // Asks only for the publish submitter (`then=publish`); the plain create is a draft nobody sees.

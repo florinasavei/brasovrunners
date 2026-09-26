@@ -1,0 +1,29 @@
+/**
+ * The contact page's newsletter pop-up (§NNN): its ids, and the outcome the action's redirect puts
+ * in `?newsletter=` — kept out of the action's module because a "use server" file may export only
+ * async functions, and out of the component so the action and the page read one list.
+ */
+export const NEWSLETTER_SECTION_ID = "newsletter";
+export const NEWSLETTER_DIALOG_ID = "newsletter-dialog";
+export const NEWSLETTER_TRIGGER_ID = "newsletter-open";
+export const NEWSLETTER_ERROR_SUMMARY_ID = "newsletter-errors";
+
+/** `open`: the button without a script. The rest are the action's answers. */
+export type NewsletterOutcome = "open" | "sent" | "invalid" | "captcha" | "limited" | "unavailable";
+
+const OUTCOMES: readonly NewsletterOutcome[] = ["open", "sent", "invalid", "captcha", "limited", "unavailable"];
+
+export function parseNewsletterOutcome(value: string | undefined): NewsletterOutcome | null {
+  return OUTCOMES.find((outcome) => outcome === value) ?? null;
+}
+
+/** Whether the page arrives with the pop-up open: asked for without a script, or a refusal to fix in it. */
+export function newsletterDialogOpen(outcome: NewsletterOutcome | null): boolean {
+  return outcome === "open" || outcome === "invalid" || outcome === "captcha" || outcome === "limited";
+}
+
+/** The boxes a refusal names, from `?fields=` — only the two the form has. */
+export function parseNewsletterFields(value: string | undefined): ("email" | "topics")[] {
+  const names = (value ?? "").split(",");
+  return (["email", "topics"] as const).filter((name) => names.includes(name));
+}

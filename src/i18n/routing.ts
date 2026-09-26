@@ -106,6 +106,13 @@ export const routing = defineRouting({
      * standing pages, so a page the club calls `contact` keeps its address at `/pagini/contact`.
      */
     "/contact": "/contact",
+    /**
+     * The newsletter's two link pages (§NNN): the double opt-in's confirmation, and the subscriber's
+     * own page — the topics and "unsubscribe" — that every newsletter links to. The secret in the
+     * path, like every emailed link; nothing about the person.
+     */
+    "/newsletter/confirm/[token]": { ro: "/noutati/confirmare/[token]", en: "/newsletter/confirm/[token]" },
+    "/newsletter/manage/[token]": { ro: "/noutati/abonament/[token]", en: "/newsletter/manage/[token]" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },

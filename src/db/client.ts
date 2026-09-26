@@ -8,6 +8,7 @@ import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventsSchema from "./schema/events";
 import * as jobRunsSchema from "./schema/job-runs";
 import * as legalDocumentsSchema from "./schema/legal-documents";
+import * as newsletterSchema from "./schema/newsletter";
 import * as pagesSchema from "./schema/pages";
 import * as gallerySchema from "./schema/gallery";
 import * as groupRunDeclarationsSchema from "./schema/group-run-declarations";
@@ -31,6 +32,7 @@ export const schema = {
   ...jobRunsSchema,
   ...auditLogsSchema,
   ...rateLimitSchema,
+  ...newsletterSchema,
 };
 type Schema = typeof schema;
 

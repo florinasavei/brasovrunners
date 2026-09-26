@@ -24,6 +24,7 @@ import {
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
+  newsletterDescribed: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
@@ -204,6 +205,7 @@ describe("owner tasks", () => {
     expect(clubOwned.map((task) => task.id)).toEqual([
       "approveLegalText",
       "listStatesNotice",
+      "newsletterNotice",
       "liveEmail",
       "inviteStaff",
       "inviteKey",

@@ -72,6 +72,18 @@ export const emailMessageType = pgEnum("email_message_type", [
   // link to the form for the other person (the address fixed) — or, at the club's limit of
   // registrations per address, the sentence that says so and no link.
   "REGISTER_ANOTHER_PERSON",
+  // The newsletter (§NNN), three types, none about a registration and none with a participant:
+  // the double opt-in's one message to an address left in the contact page's pop-up — the link
+  // that confirms the subscription, or, for an address already subscribed, the link to its own
+  // page; nothing else is ever sent to an unconfirmed address.
+  "NEWSLETTER_CONFIRM",
+  // A newsletter the club wrote on `/admin/emails`, in both languages, to the subscribers of one
+  // topic — its words in `newsletter_sends`, the row carrying only the send's id. The link to
+  // choose topics or unsubscribe in every one.
+  "NEWSLETTER",
+  // "A new event is on the calendar": queued by the maintenance job once per event, the first run
+  // after it is published, to the subscribers of its topics. The weekly group run never.
+  "NEW_EVENT_ALERT",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

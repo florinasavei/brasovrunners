@@ -350,6 +350,18 @@ export function canMessageParticipants(role: StaffRole): boolean {
 }
 
 /**
+ * **Sending the newsletter (§NNN)** — a message the club writes to every subscriber of one topic.
+ * The same people who may write to an event's participants (§364): the Organizer, the
+ * Administrator and the Superadministrator — it is the club speaking to people who asked to hear
+ * from it, the organizer's own kind of act. Nobody reads an address on the way: the page shows
+ * counts. Removing an address by hand (the notice's "or by writing to us") is the Administrator's,
+ * as the "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
+ */
+export function canSendNewsletter(role: StaffRole): boolean {
+  return canMessageParticipants(role);
+}
+
+/**
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.

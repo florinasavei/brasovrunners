@@ -16,8 +16,12 @@ import { routing } from "@/i18n/routing";
 import {
   cachedBotCheckSiteKey,
   cachedContactFormReaches,
+  cachedNewsletterOffered,
   cachedPublishedEventBySlug,
 } from "@/modules/public-cache/reads";
+import NewsletterSignup from "@/modules/newsletter/ui/NewsletterSignup";
+import { parseNewsletterFields, parseNewsletterOutcome } from "@/modules/newsletter/ui/newsletter-box";
+import { parseInterestSince } from "@/modules/registrations/interest-box";
 import {
   CONTACT_ERROR_SUMMARY_ID,
   CONTACT_MESSAGE_MAX,
@@ -36,7 +40,7 @@ import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ sent?: string; error?: string; fields?: string; about?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; fields?: string; about?: string; newsletter?: string; nfields?: string; since?: string }>;
 };
 
 /**
@@ -82,7 +86,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { sent, error: rawError, fields, about } = await searchParams;
+  const { sent, error: rawError, fields, about, newsletter, nfields, since } = await searchParams;
   const t = await getTranslations("Contact");
   const legal = await getTranslations("Legal");
   const now = new Date();
@@ -101,8 +105,16 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const invalid = new Set<string>(rejected);
   // What they typed before the rejection (§142) — and, after a send, the address alone, so
   // the confirmation can name where the answer goes without the address touching the URL.
-  const draft = error || sent ? await readFormDraft() : null;
-  const typed = (name: string) => draft?.[name];
+  /*
+    The newsletter's pop-up (§NNN): offered only while the privacy notice in force describes it —
+    tolerant of an outage like every read on this page, and then simply not offered. A refusal
+    comes back with the pop-up open and what was typed in the same sealed draft (its own keys).
+  */
+  const newsletterOutcome = parseNewsletterOutcome(newsletter);
+  const newsletterOffered = (await orNull(() => cachedNewsletterOffered(now))) === true;
+  const newsletterRefused = newsletterOutcome === "invalid" || newsletterOutcome === "captcha" || newsletterOutcome === "limited";
+  const draft = error || sent || newsletterRefused ? await readFormDraft() : null;
+  const typed = (name: string) => (error || sent ? draft?.[name] : undefined);
 
   const writeTo = env.EMAIL_REPLY_TO;
   // Guarded, because this is the page that has to work when nothing else does: a database
@@ -275,6 +287,21 @@ export default async function ContactPage({ params, searchParams }: Props) {
             </Stack>
           </form>
         </>
+      )}
+
+      {newsletterOffered && (
+        <NewsletterSignup
+          locale={locale}
+          outcome={newsletterOutcome}
+          refused={newsletterOutcome === "invalid" ? parseNewsletterFields(nfields) : []}
+          typed={
+            newsletterRefused
+              ? { email: draft?.newsletterEmail, topics: (draft?.newsletterTopics ?? "").split(",").filter(Boolean) }
+              : {}
+          }
+          siteKey={siteKey}
+          renderedAt={(newsletterRefused ? parseInterestSince(since, now) : null)?.toISOString() ?? now.toISOString()}
+        />
       )}
     </Container>
   );

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, not, or, type SQL, sql } from "drizzle-orm";
 import {
   type EmailMessageType,
   type EmailOutboxStatus,
@@ -19,6 +19,8 @@ import {
   isCopiedPerMessage,
   participantMessageBcc,
 } from "./domain/club-notices";
+import { readBulkLimit } from "./bulk-budget";
+import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { drainOutboxAfterResponse } from "./drain";
 import {
   MAX_SEND_ATTEMPTS,
@@ -95,6 +97,12 @@ export type EnqueueEmailParams = {
   requestedByStaffUserId?: string | null;
   isManualResend?: boolean;
   now: Date;
+  /**
+   * Whether this row schedules the after-response drain itself (`drain.ts`), as every row did —
+   * `false` for a send that queues hundreds of rows at once (the newsletter, §NNN) and schedules
+   * the one drain itself once they are all written, rather than one per row.
+   */
+  drainAfter?: boolean;
 };
 
 /**
@@ -148,7 +156,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
   await enqueueClubCopies(tx, params);
   // A new row is work; send it once this request's response is out (`drain.ts`, §68). The
   // transaction commits before the response does, so the drain sees the row.
-  drainOutboxAfterResponse();
+  if (params.drainAfter !== false) drainOutboxAfterResponse();
   return row;
 }
 
@@ -304,43 +312,76 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
  */
 export async function claimOutboxBatch(
   db: Db,
-  params: { now: Date; batchSize: number },
+  params: {
+    now: Date;
+    batchSize: number;
+    /**
+     * The most newsletter and new-event messages this batch may take (§NNN, `domain/bulk.ts`);
+     * `null` or absent is no limit. Either way they come last: every other due message is claimed
+     * first, and bulk ones only fill the room left.
+     */
+    bulkLimit?: number | null;
+  },
 ): Promise<OutboxRow[]> {
   const { now, batchSize } = params;
+  const bulkLimit = params.bulkLimit ?? null;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
+  const due = or(
+    and(eq(emailOutbox.status, "PENDING"), or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now))),
+    and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
+  );
+  const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
 
   return db.transaction(async (tx) => {
-    const claimable = tx
-      .select({ id: emailOutbox.id })
-      .from(emailOutbox)
-      .where(
-        or(
-          and(
-            eq(emailOutbox.status, "PENDING"),
-            or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)),
-          ),
-          and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
-        ),
-      )
-      .orderBy(asc(emailOutbox.createdAt))
-      .limit(batchSize)
-      .for("update", { skipLocked: true });
+    const claim = async (where: SQL | undefined, limit: number): Promise<OutboxRow[]> => {
+      if (limit <= 0) return [];
+      const claimable = tx
+        .select({ id: emailOutbox.id })
+        .from(emailOutbox)
+        .where(where)
+        .orderBy(asc(emailOutbox.createdAt))
+        .limit(limit)
+        .for("update", { skipLocked: true });
+      return tx
+        .update(emailOutbox)
+        .set({
+          status: "PROCESSING",
+          lockedAt: now,
+          attemptCount: sql`${emailOutbox.attemptCount} + 1`,
+        })
+        .where(inArray(emailOutbox.id, claimable))
+        .returning();
+    };
 
-    const claimed = await tx
-      .update(emailOutbox)
-      .set({
-        status: "PROCESSING",
-        lockedAt: now,
-        attemptCount: sql`${emailOutbox.attemptCount} + 1`,
-      })
-      .where(inArray(emailOutbox.id, claimable))
-      .returning();
+    // Everything that is not a newsletter first, oldest first; then the newsletter, in the room left.
+    const first = await claim(and(due, not(bulk)), batchSize);
+    const room = batchSize - first.length;
+    const second = await claim(and(due, bulk), bulkLimit === null ? room : Math.min(room, bulkLimit));
 
     // The sub-select orders which rows are claimed; RETURNING has no defined order at all.
     // Sorting here makes the batch oldest-first for the worker too, so a participant who has
-    // been waiting longest is not overtaken within a batch.
-    return claimed.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    // been waiting longest is not overtaken within a batch — each half on its own, the bulk last.
+    const byAge = (a: OutboxRow, b: OutboxRow) => a.createdAt.getTime() - b.createdAt.getTime();
+    return [...first.sort(byAge), ...second.sort(byAge)];
   });
+}
+
+/**
+ * The newsletter rows this batch had no room for under the reserve (§NNN, `domain/bulk.ts`), put
+ * off until the allowance comes back: no attempt spent, nothing sent, and the job's plan sees the
+ * reset as their next turn (`nextOutboxWork`) rather than "due now" on every ping.
+ */
+async function holdBulkUntilReset(db: Db, now: Date): Promise<void> {
+  await db
+    .update(emailOutbox)
+    .set({ nextAttemptAt: nextAllowanceResetAt(now) })
+    .where(
+      and(
+        eq(emailOutbox.status, "PENDING"),
+        inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]),
+        or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)),
+      ),
+    );
 }
 
 export type OutboxBatchSummary = {
@@ -385,7 +426,13 @@ export async function processOutboxBatch(
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
 
-  const claimed = await claimOutboxBatch(db, { now, batchSize });
+  // The newsletter's share of what the plan has left (§NNN): read only when one is due.
+  const bulkLimit = await readBulkLimit(db, now);
+  const claimed = await claimOutboxBatch(db, { now, batchSize, bulkLimit });
+  // The reserve is reached: whatever newsletter is still due waits for the reset, untouched.
+  if (bulkLimit !== null && claimed.filter((row) => isBulkMessage(row.messageType)).length >= bulkLimit) {
+    await holdBulkUntilReset(db, now);
+  }
   const summary: OutboxBatchSummary = {
     claimed: claimed.length,
     sent: 0,

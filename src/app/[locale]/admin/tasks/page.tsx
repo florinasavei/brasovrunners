@@ -18,7 +18,7 @@ import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
-import { findCurrentApprovedDocument, noticeDescribesListStates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesListStates, noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
 import {
   countTasks,
   filterTasks,
@@ -374,6 +374,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
       // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
+      // §NNN: the same switch for the newsletter's pop-up on the contact page.
+      newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.

@@ -108,7 +108,14 @@ const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]
 const PROVIDER_FIELDS = ["invite", "account"] as const;
 
 /** Sentences that say nothing happened, however the action got there: an `info`, never a green tick. */
-const NOTHING_HAPPENED: ReadonlySet<string> = new Set(["interestNotFound", "participantMessageDuplicate", "neonLimitsSame"]);
+const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
+  "interestNotFound",
+  "participantMessageDuplicate",
+  "neonLimitsSame",
+  // The newsletter (§NNN): the same form pressed twice, and an address that was not on the list.
+  "newsletterDuplicate",
+  "newsletterNotFound",
+]);
 
 /**
  * The notice a redirect's outcome carries, or none: `saved` names the sentence and the first

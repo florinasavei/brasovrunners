@@ -135,6 +135,13 @@ export type AuditAction =
    */
   | "event.participant_message_sent"
   /**
+   * A newsletter queued from `/admin/emails` (§NNN): who (the actor), the topic, how many
+   * subscribers and the subject in both languages — never an address, never the body (§12.12).
+   */
+  | "newsletter.sent"
+  /** A subscription removed by an Administrator at the person's written request (§NNN) — never the address. */
+  | "newsletter.address_withdrawn"
+  /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
    * thing and never the people: the event's title and date, how many registrations went with
@@ -207,7 +214,8 @@ export type RecordAuditInput = {
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
   // that is about a version of the club's own text; `participant` for the one about a person
   // across all their registrations (§322).
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant";
+  // `newsletter` for a send (its id) or a subscription removed by hand (no id: the row is gone).
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant" | "newsletter";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**
