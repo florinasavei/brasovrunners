@@ -1134,6 +1134,45 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   return moved;
 }
 
+export type PublishEventInput = Omit<TransitionEventInput, "to">;
+
+/**
+ * «Publică» on the editor, from a draft as from a submission (§NNN) — the one press
+ * «Creează și publică» (§315), the list's «Publică» on a series' drafts (§351) and the bulk
+ * publish already give a draft, now on the draft's own page too. The owner: "I am missing the
+ * create and publish for some new events… this should be consistent!" (§406): an event created
+ * as a draft, a copy, or a date a series made could only be sent for review from its editor,
+ * and published a second press later.
+ *
+ * It walks the table's own two moves, DRAFT → IN_REVIEW → PUBLISHED, through `transitionEvent`,
+ * so every guard is publication's own: the version the page was loaded with (a colleague's save
+ * in between is a CONFLICT), both languages complete, the meeting point. The two moves are one
+ * transaction — a refused publication leaves the draft a draft, never a submission nobody asked
+ * for. A role that may not publish is refused before anything moves; a Redactor still has
+ * "Trimite spre verificare", which is a different verb. From any other state it is the plain
+ * transition.
+ */
+export async function publishEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: PublishEventInput,
+): Promise<EditableEvent> {
+  const now = input.now ?? new Date();
+  if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish an event`);
+  }
+
+  return db.transaction(async (tx) => {
+    const [current] = await tx.select({ status: events.editorialStatus }).from(events).where(eq(events.id, input.eventId)).limit(1);
+    if (!current) throw new DomainError("NOT_FOUND", "no such event");
+    let expectedVersion = input.expectedVersion;
+    if (current.status === "DRAFT") {
+      const reviewed = await transitionEvent(tx, { actor: input.actor, eventId: input.eventId, expectedVersion, to: "IN_REVIEW", now });
+      expectedVersion = reviewed.version;
+    }
+    return transitionEvent(tx, { actor: input.actor, eventId: input.eventId, expectedVersion, to: "PUBLISHED", now });
+  });
+}
+
 // --- Telling the participants (§331) --------------------------------------------------------
 
 /**

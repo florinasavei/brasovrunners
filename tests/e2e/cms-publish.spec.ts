@@ -429,6 +429,22 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
     await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+
+    // The draft's own editor publishes in one press too (§NNN), as the create page did: «Publică»
+    // beside "Trimite spre verificare", the review step walked by the service.
+    await hydrated(page);
+    await expect(page.getByRole("button", { name: "Trimite spre verificare" })).toBeVisible();
+    await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
+    await expect(page).toHaveURL(/saved=PUBLISHED/);
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
+    expect((await page.goto(`/ro/evenimente/${slug}`))?.status()).toBe(200);
+
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });
 

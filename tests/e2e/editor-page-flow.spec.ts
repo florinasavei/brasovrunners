@@ -119,6 +119,14 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await hydrated(page);
     await expect(page.getByRole("heading", { name: /^6 · Traseul — apare pe pagină/ })).toBeVisible();
 
+    // «Publică» is on the draft itself (§NNN), as «Creează și publică» was on the create page, and
+    // gated the same way: pressed with the summaries missing, it posts nothing.
+    const onDraft = page.getByRole("button", { name: "Publică" });
+    await expect(onDraft).toBeVisible();
+    await onDraft.click();
+    await expect(page.getByTestId("publish-gaps")).toBeFocused();
+    await expect(page).not.toHaveURL(/saved=PUBLISHED/);
+
     // To review, then «Publică»: the same button, full look; pressed, it posts nothing and the
     // summary names the gaps of what is saved, focused, with the title card opened on them.
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();

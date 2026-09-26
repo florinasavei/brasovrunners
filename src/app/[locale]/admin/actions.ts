@@ -12,6 +12,7 @@ import {
   deleteEvent,
   duplicateEvent,
   hardDeleteEvent,
+  publishEvent,
   repeatEvent,
   saveEventAndTranslations,
   SERIES_EDIT_SCOPES,
@@ -365,12 +366,12 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
   let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
-    await transitionEvent(getDb(), {
-      actor,
-      eventId,
-      expectedVersion: Number(text(form, "expectedVersion")),
-      to: text(form, "to") as EditorialStatus,
-    });
+    const to = text(form, "to") as EditorialStatus;
+    const move = { actor, eventId, expectedVersion: Number(text(form, "expectedVersion")) };
+    // «Publică» is one press from a draft too (§NNN), as «Creează și publică» is: the service
+    // walks the review step itself, for a role that may publish, or refuses before anything moves.
+    if (to === "PUBLISHED") await publishEvent(getDb(), move);
+    else await transitionEvent(getDb(), { ...move, to });
     outcome = { saved: text(form, "to") };
   } catch (error) {
     outcome = outcomeOf(error);
