@@ -918,7 +918,9 @@
       "neonLimitsTitle": "Save the Neon limits?",
       "neonLimitsBody": "A project that reaches its monthly quota is suspended until the next period — the site does not answer until then.",
       "neonPlanTitle": "Change the Neon plan?",
-      "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan."
+      "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
+      "olderPicturesTitle": "Make the phone sizes?",
+      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -2439,6 +2441,28 @@
         "day": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
         "month": "This month {sent} of {allowance} messages went out (plan {plan}, no daily limit). Enough for about {count} more complete registrations — a floor, because somebody who lands on the waiting list costs more messages.",
         "none": "Plan {plan} has no message limit. {sent} went out today."
+      },
+      "olderPictures": {
+        "title": "Older pictures, without phone sizes",
+        "intro": "Pictures uploaded before the platform kept every picture in several sizes have one large file, which a phone downloads whole. The button makes their smaller sizes from the stored file, at most {perPress} per press. The picture looks the same; pages load faster on a phone.",
+        "left": {
+          "one": "{count} picture left without sizes.",
+          "few": "{count} pictures left without sizes.",
+          "other": "{count} pictures left without sizes."
+        },
+        "failed": {
+          "one": "At the last press {count} picture could not get its sizes: usually its file is missing from storage or is not a picture. It stays in the count and every press tries it again; if it is still there after one more press, upload the picture again where it is used and take the old one out — once nothing uses it, it deletes itself.",
+          "few": "At the last press {count} pictures could not get their sizes: usually their file is missing from storage or is not a picture. They stay in the count and every press tries them again; if they are still there after one more press, upload each one again where it is used and take the old one out — once nothing uses it, it deletes itself.",
+          "other": "At the last press {count} pictures could not get their sizes: usually their file is missing from storage or is not a picture. They stay in the count and every press tries them again; if they are still there after one more press, upload each one again where it is used and take the old one out — once nothing uses it, it deletes itself."
+        },
+        "failedLink": "Where each picture is used →",
+        "address": "Each picture's address changes on the pages and events where it appears, and the old address keeps working — a link copied elsewhere does not break. A YouTube film keeps YouTube's own small picture.",
+        "button": {
+          "one": "Make the sizes for {count} picture",
+          "few": "Make the sizes for {count} pictures",
+          "other": "Make the sizes for {count} pictures"
+        },
+        "working": "Making the sizes…"
       },
       "jobCadence": {
         "title": "How often the platform checks",
@@ -4492,6 +4516,16 @@
       "addressCap": "Limit per address saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed.",
+      "picturesLaddered": {
+        "one": "{count} picture got its phone sizes; left: {left}.",
+        "few": "{count} pictures got their phone sizes; left: {left}.",
+        "other": "{count} pictures got their phone sizes; left: {left}."
+      },
+      "picturesLadderedFailed": {
+        "one": "{count} picture got its phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
+        "few": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
+        "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
+      },
       "groupRunDeclarationErased": "The declaration was erased."
     }
   }

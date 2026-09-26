@@ -69,6 +69,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   saveEventAndTranslationsAction: [],
   // Asks only for the publish submitter (`then=publish`); the plain create is a draft nobody sees.
   createEventAction: [],
+  // The older pictures' phone sizes (§NNN): rewrites the address in every text a picture sits in.
+  giveOlderPicturesLadderAction: [],
   // Registrations.
   confirmRegistrationNowAction: [],
   promoteRegistrationAction: [],

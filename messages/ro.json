@@ -918,7 +918,9 @@
       "neonLimitsTitle": "Salvezi limitele Neon?",
       "neonLimitsBody": "Un proiect care își atinge cota lunară este suspendat până la perioada următoare — site-ul nu răspunde până atunci.",
       "neonPlanTitle": "Schimbi planul Neon?",
-      "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul."
+      "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
+      "olderPicturesTitle": "Faci mărimile pentru telefon?",
+      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -2439,6 +2441,28 @@
         "day": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
         "month": "Luna aceasta au plecat {sent} din {allowance} mesaje (planul {plan}, fără limită zilnică). Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
         "none": "Planul {plan} nu are o limită de mesaje. Astăzi au plecat {sent}."
+      },
+      "olderPictures": {
+        "title": "Imaginile vechi, fără mărimi pentru telefon",
+        "intro": "Imaginile încărcate înainte ca platforma să păstreze fiecare imagine în mai multe mărimi au un singur fișier mare, pe care un telefon îl descarcă întreg. Butonul le face mărimile mai mici din fișierul păstrat, cel mult {perPress} la o apăsare. Imaginea arată la fel; paginile se încarcă mai repede pe telefon.",
+        "left": {
+          "one": "A rămas {count} imagine fără mărimi.",
+          "few": "Au rămas {count} imagini fără mărimi.",
+          "other": "Au rămas {count} de imagini fără mărimi."
+        },
+        "failed": {
+          "one": "La ultima apăsare, {count} imagine nu a primit mărimile: de obicei fișierul ei lipsește din stocare sau nu e o imagine. Rămâne în numărătoare și fiecare apăsare o încearcă din nou; dacă rămâne și după încă o apăsare, încarc-o din nou acolo unde e folosită și scoate-o pe cea veche — când nu o mai folosește nimic, se șterge singură.",
+          "few": "La ultima apăsare, {count} imagini nu au primit mărimile: de obicei fișierul lor lipsește din stocare sau nu e o imagine. Rămân în numărătoare și fiecare apăsare le încearcă din nou; dacă rămân și după încă o apăsare, încarcă fiecare din nou acolo unde e folosită și scoate-o pe cea veche — când nu o mai folosește nimic, se șterge singură.",
+          "other": "La ultima apăsare, {count} de imagini nu au primit mărimile: de obicei fișierul lor lipsește din stocare sau nu e o imagine. Rămân în numărătoare și fiecare apăsare le încearcă din nou; dacă rămân și după încă o apăsare, încarcă fiecare din nou acolo unde e folosită și scoate-o pe cea veche — când nu o mai folosește nimic, se șterge singură."
+        },
+        "failedLink": "Unde e folosită fiecare imagine →",
+        "address": "Adresa fiecărei imagini se schimbă în paginile și evenimentele unde apare, iar vechea adresă merge în continuare — un link copiat în altă parte nu se strică. Un film de pe YouTube își păstrează imaginea mică a YouTube-ului.",
+        "button": {
+          "one": "Fă mărimile pentru {count} imagine",
+          "few": "Fă mărimile pentru {count} imagini",
+          "other": "Fă mărimile pentru {count} de imagini"
+        },
+        "working": "Se fac mărimile…"
       },
       "jobCadence": {
         "title": "Cât de des verifică platforma",
@@ -4492,6 +4516,16 @@
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
+      "picturesLaddered": {
+        "one": "{count} imagine a primit mărimile pentru telefon; rămase: {left}.",
+        "few": "{count} imagini au primit mărimile pentru telefon; rămase: {left}.",
+        "other": "{count} de imagini au primit mărimile pentru telefon; rămase: {left}."
+      },
+      "picturesLadderedFailed": {
+        "one": "{count} imagine a primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
+        "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
+        "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
+      },
       "groupRunDeclarationErased": "Declarația a fost ștearsă."
     }
   }
