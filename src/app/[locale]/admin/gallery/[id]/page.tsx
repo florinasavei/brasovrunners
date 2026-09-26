@@ -31,6 +31,7 @@ import { HIGH_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteAlbumAction, deletePhotoAction, saveAlbumAction, setCoverAction, transitionAlbumAction } from "../actions";
+import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -188,7 +189,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   />
                   {mayEdit && (
                     <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: "wrap", gap: 0.5 }}>
-                      <form action={setCoverAction}>
+                      <form action={setCoverAction} data-action-key={actionKeyOf(setCoverAction)}>
                         <input type="hidden" name="uiLocale" value={locale} />
                         <input type="hidden" name="albumId" value={album.id} />
                         <input type="hidden" name="itemId" value={photo.id} />

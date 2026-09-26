@@ -149,7 +149,7 @@ describe("§336 a #fragment opens the fold it names", () => {
 
 describe("§336 a kept form's refusal is never folded away", () => {
   it("opens the folds around the summary before focusing it, with JavaScript on", () => {
-    const form = read("src/shared/forms/ActionForm.tsx");
+    const form = read("src/shared/forms/ActionFormIsland.tsx");
     const effect = form.slice(form.indexOf("useEffect(() => {"), form.indexOf("}, [state]);"));
     expect(effect).toMatch(/openFoldsAround\(summary\.current\);\s*summary\.current\?\.focus\(\);/);
   });
@@ -158,7 +158,7 @@ describe("§336 a kept form's refusal is never folded away", () => {
     // The refusal summary's id is `form-refusal`, or `form-refusal-<scope>` on a page of several.
     const rule = BOXED_DISCLOSURE_SX["&:not([open]):has([id^='form-refusal'])::details-content"];
     expect(rule).toEqual({ contentVisibility: "visible", display: "block" });
-    expect(read("src/shared/forms/ActionForm.tsx")).toMatch(/REFUSAL_SUMMARY_ID = "form-refusal"/);
+    expect(read("src/shared/forms/ActionFormIsland.tsx")).toMatch(/REFUSAL_SUMMARY_ID = "form-refusal"/);
   });
 });
 

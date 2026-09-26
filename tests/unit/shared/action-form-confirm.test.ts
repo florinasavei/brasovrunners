@@ -19,7 +19,7 @@ import { succeeded } from "@/shared/forms/outcome";
  * is `tests/e2e/toasts-and-confirms.spec.ts`.
  */
 const ROOT = path.resolve(__dirname, "../../..");
-const source = readFileSync(path.join(ROOT, "src/shared/forms/ActionForm.tsx"), "utf8").replace(/\r\n/g, "\n");
+const source = readFileSync(path.join(ROOT, "src/shared/forms/ActionFormIsland.tsx"), "utf8").replace(/\r\n/g, "\n");
 
 describe("§384 ActionForm asks first", () => {
   it("gates the submit event and stops the action with preventDefault when a question matches", () => {

@@ -6,7 +6,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { revealField } from "@/shared/forms/ActionForm";
+import { revealField } from "@/shared/forms/ActionFormIsland";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { fieldId } from "@/shared/forms/outcome";
 import { fillIn } from "@/shared/forms/fill-in";

@@ -69,6 +69,14 @@ export const STAFF_CLIENT_MESSAGES = [
   // ToastProvider (`shared/feedback`): every "it worked" sentence, looked up by a `saved` code
   // at runtime, so the whole namespace — a few kilobytes, on pages only staff open (§384).
   "Feedback",
+  // A save a network refused (§NNN): the line after the simple-path replay (SaveFallbackNotice),
+  // the notice when even that could not be sent (SaveBlockedNotice), and the admin boundary's own two.
+  "Network.fallback",
+  "Network.check",
+  "Network.close",
+  "Network.blocked",
+  "Network.replaying",
+  "Network.retry",
 ] as const;
 
 /**

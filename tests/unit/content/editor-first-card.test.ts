@@ -55,7 +55,7 @@ const { default: KindBox } = await import("@/modules/content/events/ui/boxes/Kin
 const { default: StatusBox } = await import("@/modules/content/events/ui/boxes/StatusBox");
 const { default: CourseBox } = await import("@/modules/content/events/ui/boxes/CourseBox");
 const { default: LinksBox } = await import("@/modules/content/events/ui/boxes/LinksBox");
-const { revealField } = await import("@/shared/forms/ActionForm");
+const { revealField } = await import("@/shared/forms/ActionFormIsland");
 
 afterEach(() => {
   currentLocale = "ro";

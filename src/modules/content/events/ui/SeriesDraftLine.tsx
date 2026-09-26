@@ -6,6 +6,7 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Hint from "@/shared/ui/Hint";
+import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Action = (form: FormData) => Promise<void>;
 
@@ -95,7 +96,7 @@ export default function SeriesDraftLine({ uiLocale, text, dates, more, hint, pub
       {anyRemedy && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 0.5, "& .MuiButton-root": { textTransform: "none" } }}>
           {publish && (
-            <form action={publish.action}>
+            <form action={publish.action} data-action-key={actionKeyOf(publish.action)}>
               <input type="hidden" name="uiLocale" value={uiLocale} />
               {publish.refs.map((ref) => (
                 <input key={ref} type="hidden" name="eventRef" value={ref} />

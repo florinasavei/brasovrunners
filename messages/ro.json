@@ -3330,7 +3330,9 @@
         }
       ],
       "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor.",
-      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la BR-V1.94, actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri."
+      "familyPending": "Încă nu e pornit: baza de date păstrează deocamdată o singură înscriere pe adresă la un eveniment, până la BR-V1.94, actualizarea care o schimbă. Până atunci, a doua trimitere a formularului cu altă persoană retrimite doar emailul primei înscrieri.",
+      "network": "Salvarea nu merge de pe laptopul de la birou?",
+      "networkLink": "Verifică rețeaua"
     },
     "erase": {
       "backToEvent": "Înapoi la eveniment",
@@ -4478,6 +4480,62 @@
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
       "groupRunDeclarationErased": "Declarația a fost ștearsă."
+    }
+  },
+  "Network": {
+    "fallback": "Rețeaua de la birou a blocat cererea de salvare; am trimis-o pe calea simplă. Dacă salvarea nu reușește, încearcă de pe telefon sau de pe altă rețea — datele completate rămân aici.",
+    "check": "Verifică rețeaua",
+    "close": "Închide",
+    "replaying": "Rețeaua a blocat cererea; o trimitem din nou pe calea simplă…",
+    "retry": "Încearcă din nou",
+    "blocked": {
+      "title": "Salvarea nu a ajuns la site",
+      "kept": "Rețeaua pe care ești a blocat cererea, iar calea simplă nu a putut fi folosită. Nu s-a salvat nimic; ce ai completat a rămas în formular. Încearcă de pe telefon sau de pe altă rețea.",
+      "notKept": "Rețeaua pe care ești a blocat cererea, iar calea simplă nu a putut fi folosită. Nu s-a salvat nimic. Încearcă de pe telefon sau de pe altă rețea."
+    },
+    "page": {
+      "title": "Verificarea rețelei",
+      "intro": "Unele rețele de firmă lasă paginile să se deschidă, dar opresc salvările, pozele sau verificarea anti-robot. Pagina aceasta încearcă fiecare lucru din browserul tău și, pentru ce e blocat, spune ce trebuie să permită echipa IT. Dacă totul e verde, rețeaua nu e problema.",
+      "saves": {
+        "title": "Salvările",
+        "meaning": "Butoanele de salvare din panoul de administrare trimit o cerere POST către site, cu antetul Next-Action; răspunsul are tipul text/x-component.",
+        "allow": "Permite: cererile POST către {host} cu antetul Next-Action și răspunsurile lor de tip text/x-component."
+      },
+      "post": {
+        "title": "Calea simplă",
+        "meaning": "Un formular obișnuit trimis către site — calea pe care merge o salvare când rețeaua o blochează pe prima. Dacă doar aceasta e verde, salvările tot ajung.",
+        "allow": "Permite: formularele trimise prin POST (multipart/form-data) către {host}."
+      },
+      "pictures": {
+        "title": "Pozele",
+        "meaning": "Pozele din galerie și din texte se încarcă de la adresa spațiului de stocare, nu de la site.",
+        "allow": "Permite: imaginile de la {host}.",
+        "none": "Nu e încă nicio poză stocată cu care să verificăm.",
+        "unconfigured": "Stocarea pozelor nu e configurată aici; nu e nimic de verificat."
+      },
+      "botCheck": {
+        "title": "Verificarea anti-robot",
+        "meaning": "Formularele de înscriere și de contact încarcă verificarea Cloudflare Turnstile.",
+        "allow": "Permite: scripturile și cererile către {host}.",
+        "unconfigured": "Verificarea anti-robot nu e pornită pe acest site; nu e nimic de permis."
+      },
+      "state": {
+        "checking": "Se verifică…",
+        "ok": "Merge",
+        "blocked": "Blocat",
+        "skipped": "Nu se verifică"
+      },
+      "again": "Verifică din nou",
+      "report": {
+        "title": "Raportul pentru club",
+        "intro": "Copiază raportul și trimite-l clubului sau echipei IT. Conține doar rezultatele, adresa site-ului și descrierea browserului — nimic despre tine.",
+        "copy": "Copiază raportul",
+        "copied": "Raportul e copiat; lipește-l într-un mesaj.",
+        "copyFailed": "Nu am putut copia; selectează textul de mai jos și copiază-l.",
+        "heading": "{club} — verificarea rețelei",
+        "site": "Site",
+        "browser": "Browser"
+      }
     }
   }
 }

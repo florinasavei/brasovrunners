@@ -15,6 +15,7 @@ import AdminTabs, { type AdminTab } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
+import { actionKeyOf } from "@/shared/forms/action-key";
 
 /**
  * The backoffice's chrome — the title, who is signed in, sign out, and the tabs — around every
@@ -110,7 +111,7 @@ export default async function BackofficeShell({
           </Typography>
         </Box>
 
-        <form action={signOut}>
+        <form action={signOut} data-action-key={actionKeyOf(signOut)}>
           <input type="hidden" name="uiLocale" value={locale} />
           <GlyphButton icon="signOut" type="submit" size="small" variant="outlined">
             {t("signOut")}
