@@ -5,22 +5,32 @@ import { weatherWords } from "@/modules/weather/words";
 
 /**
  * BR-REQ-041-01 (§NNN, amending §416) — a listing card's weather pill wears the umbrella when rain
- * is likely at the start: a chance of 50% or more, unless the hour's own glyph says more (snow,
- * frost, the storm), because Open-Meteo's chance is of any precipitation.
+ * is likely at the start: a chance of 50% or more, or a forecast amount of 0.5 mm or more already
+ * falling in the hour, unless the hour's own glyph says more (snow, frost, the storm), because
+ * Open-Meteo's chance is of any precipitation.
  */
 describe("BR-REQ-041-01 rain is likely at the start (§NNN)", () => {
-  it("is likely from fifty percent, never below it, never without a chance", () => {
+  it("is likely from fifty percent, never below it, never without a chance or an amount", () => {
     expect(RAIN_LIKELY_PERCENT).toBe(50);
-    expect(rainLikely({ precipitationProbability: 49, glyph: "partlyCloudy" })).toBe(false);
-    expect(rainLikely({ precipitationProbability: 50, glyph: "partlyCloudy" })).toBe(true);
-    expect(rainLikely({ precipitationProbability: 100, glyph: "clear" })).toBe(true);
-    expect(rainLikely({ precipitationProbability: null, glyph: "rain" })).toBe(false);
+    expect(rainLikely({ precipitationProbability: 49, glyph: "partlyCloudy", precipitationMm: null })).toBe(false);
+    expect(rainLikely({ precipitationProbability: 50, glyph: "partlyCloudy", precipitationMm: null })).toBe(true);
+    expect(rainLikely({ precipitationProbability: 100, glyph: "clear", precipitationMm: null })).toBe(true);
+    expect(rainLikely({ precipitationProbability: null, glyph: "rain", precipitationMm: null })).toBe(false);
+  });
+
+  it("is also likely from an amount already falling, even at a lower chance", () => {
+    // A showery hour of 45% with 2 mm: below the chance threshold, above the amount one.
+    expect(rainLikely({ precipitationProbability: 45, glyph: "showers", precipitationMm: 2 })).toBe(true);
+    expect(rainLikely({ precipitationProbability: 45, glyph: "showers", precipitationMm: 0.4 })).toBe(false);
+    expect(rainLikely({ precipitationProbability: null, glyph: "showers", precipitationMm: 0.5 })).toBe(true);
+    // Still never on snow, frost or the storm, whatever the amount.
+    expect(rainLikely({ precipitationProbability: null, glyph: "snow", precipitationMm: 5 })).toBe(false);
   });
 
   it("leaves snow, frost and the storm their own glyph, and umbrellas every other sky", () => {
     const kept = new Set(["snow", "snowShowers", "ice", "thunder"]);
     for (const glyph of WEATHER_GLYPH_NAMES) {
-      expect(rainLikely({ precipitationProbability: 80, glyph }), glyph).toBe(!kept.has(glyph));
+      expect(rainLikely({ precipitationProbability: 80, glyph, precipitationMm: null }), glyph).toBe(!kept.has(glyph));
     }
   });
 

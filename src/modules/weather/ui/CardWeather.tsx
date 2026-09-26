@@ -14,8 +14,9 @@ import { WEATHER_GLYPH } from "./glyphs";
  * from `EventFacts`' compact form), after the cost — what the day will be like beside what the
  * route is, no longer among the marks above the title (type, partner, cancelled), which say what
  * the event is. And when rain is likely at the start (`rainLikely`: 50% or more, and the sky's own
- * glyph is not snow, frost or the storm), the glyph is the **umbrella** — the one picture that says
- * "pack for it" without a legend — and a screen reader hears the chance after the degrees.
+ * glyph is not snow, frost or the storm), the umbrella sits **beside** the sky's own glyph — «🌧 ☂
+ * 9 °C» — never replacing it, so a showers hour still reads as showers and the umbrella says
+ * something on its own; a screen reader hears «ploaie probabilă» / "rain likely" after the degrees.
  *
  * The glyph is a Material icon made here, in a Server Component, and never handed to a client
  * component as an element (§370): the pill is a plain `<span>`, not MUI's `Chip`, whose `icon` prop
@@ -26,8 +27,10 @@ import { WEATHER_GLYPH } from "./glyphs";
 export default function CardWeather({ reading, locale }: { reading: WeatherReading; locale: "ro" | "en" }) {
   const words = weatherWords(reading, locale);
   const umbrella = rainLikely(reading);
-  const Glyph = umbrella ? UmbrellaIcon : WEATHER_GLYPH[reading.glyph];
-  const spoken = [`${weatherListWords(locale).atStart}: ${words.summary}`, words.temperature, umbrella ? words.rain : null].filter(Boolean).join(", ");
+  const Glyph = WEATHER_GLYPH[reading.glyph];
+  const spoken = [`${weatherListWords(locale).atStart}: ${words.summary}`, words.temperature, umbrella ? words.rainLikely : null].filter(Boolean).join(
+    ", ",
+  );
   return (
     <Box
       component="span"
@@ -52,6 +55,7 @@ export default function CardWeather({ reading, locale }: { reading: WeatherReadi
       }}
     >
       <Glyph aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+      {umbrella ? <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} /> : null}
       <span aria-hidden="true">{words.temperature ?? words.summary}</span>
       <Box component="span" sx={SR_ONLY_SX}>
         {spoken}

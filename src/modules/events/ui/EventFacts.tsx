@@ -5,6 +5,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import UmbrellaIcon from "@mui/icons-material/Umbrella";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
@@ -13,7 +14,7 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import type { EventForecast, WeatherReading } from "@/modules/weather/domain/forecast";
+import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
@@ -772,10 +773,23 @@ export default async function EventFacts({
     */
     if (weather) {
       const words = weatherWords(weather.start, locale);
+      const wet = rainLikely(weather.start);
       lines.push({
         label: words.label,
         icon: WEATHER_GLYPH[weather.start.glyph],
-        value: [words.summary, ...words.details, links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit],
+        value: [
+          words.summary,
+          ...words.details,
+          ...(wet
+            ? [
+                <Box key="rain-likely" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+                  <UmbrellaIcon aria-hidden="true" sx={HERO_GLYPH_SX} />
+                  {words.rainLikely}
+                </Box>,
+              ]
+            : []),
+          links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit,
+        ],
         testId: "hero-weather",
       });
     }
@@ -1008,13 +1022,25 @@ export default async function EventFacts({
     const words = weatherWords(weather.start, locale);
     const list = weatherListWords(locale);
     const hours = weather.hours.map((hour) => ({ hour, words: weatherWords(hour, locale) }));
+    const wet = rainLikely(weather.start);
     rows.push({
       key: "weather",
       label: words.label,
       icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow([words.summary, ...words.details])}
+          {flow([
+            words.summary,
+            ...words.details,
+            ...(wet
+              ? [
+                  <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+                    <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+                    {words.rainLikely}
+                  </Box>,
+                ]
+              : []),
+          ])}
           {words.extras.length > 0 && (
             <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-details">
               {flow(words.extras)}

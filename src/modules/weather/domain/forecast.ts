@@ -225,16 +225,23 @@ export const RAIN_LIKELY_PERCENT = 50;
 const STRONGER_THAN_UMBRELLA: ReadonlySet<WeatherGlyphName> = new Set(["snow", "snowShowers", "ice", "thunder"]);
 
 /**
- * Whether a card says "rain is likely" at the start (§NNN): the chance of rain at the hour is at
- * least `RAIN_LIKELY_PERCENT`, and the hour's own glyph is not one that says more (snow, frost, the
- * storm). A missing chance is not a likely one.
+ * Below the chance threshold, a forecast amount already falling in the hour: 0.5 mm or more of
+ * rain is worth an umbrella even at a lower chance (a showery hour of 45% with 2 mm), the fix
+ * round's own reading of Open-Meteo's `precipitationMm` (§NNN).
  */
-export function rainLikely(reading: Pick<WeatherReading, "precipitationProbability" | "glyph">): boolean {
-  return (
-    reading.precipitationProbability !== null &&
-    reading.precipitationProbability >= RAIN_LIKELY_PERCENT &&
-    !STRONGER_THAN_UMBRELLA.has(reading.glyph)
-  );
+const RAIN_LIKELY_MM = 0.5;
+
+/**
+ * Whether a card says "rain is likely" at the start (§NNN): the chance of rain at the hour is at
+ * least `RAIN_LIKELY_PERCENT`, or the forecast amount is already `RAIN_LIKELY_MM` or more — and
+ * either way the hour's own glyph is not one that says more (snow, frost, the storm). A missing
+ * chance and a missing amount are neither a likely one.
+ */
+export function rainLikely(reading: Pick<WeatherReading, "precipitationProbability" | "glyph" | "precipitationMm">): boolean {
+  if (STRONGER_THAN_UMBRELLA.has(reading.glyph)) return false;
+  const byChance = reading.precipitationProbability !== null && reading.precipitationProbability >= RAIN_LIKELY_PERCENT;
+  const byAmount = reading.precipitationMm !== null && reading.precipitationMm >= RAIN_LIKELY_MM;
+  return byChance || byAmount;
 }
 
 /**

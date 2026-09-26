@@ -549,6 +549,8 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   const pillOf = (html: string) => /<span\b[^>]*data-testid="card-weather"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[0] ?? "";
   /** The glyph's path data, which names the Material icon it is. */
   const pathOf = (fragment: string) => /<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/.exec(fragment)?.[1] ?? "";
+  /** Every glyph's path data, in order — the sky's own glyph first, the umbrella after it when it wears one. */
+  const pathsOf = (fragment: string) => [...fragment.matchAll(/<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/g)].map((m) => m[1]);
 
   it("shows the glyph and the degrees as the last pill of the route's row, the word for a screen reader alone", async () => {
     const html = withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading })));
@@ -588,16 +590,20 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
       withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, precipitationProbability: 60 } }))),
     );
     expect(wet).toContain('data-rain-likely="true"');
-    expect(pathOf(wet)).not.toBe("");
-    expect(pathOf(wet)).not.toBe(pathOf(calm));
-    // The umbrella is the showers' own glyph (`weather/ui/glyphs.ts`).
+    // The sky's own glyph stays: the umbrella sits beside it, never replacing it.
+    expect(pathsOf(wet)[0]).toBe(pathOf(calm));
+    // A second glyph, the umbrella, joins it only when rain is likely.
+    expect(pathsOf(wet)).toHaveLength(2);
+    expect(pathsOf(calm)).toHaveLength(1);
+    // And it is not the showers' own glyph (`weather/ui/glyphs.ts`) — a showers hour still reads as
+    // showers, distinct from a partly-cloudy hour that also happens to be wet.
     const showers = pillOf(
       withoutStyles(
         await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 80, kind: "showers", glyph: "showers", precipitationProbability: 10 } })),
       ),
     );
-    expect(pathOf(wet)).toBe(pathOf(showers));
-    expect(text(wet)).toContain("Vremea la start: Înnorat, 12 °C, 60% șanse de ploaie");
+    expect(pathsOf(showers)).toHaveLength(1);
+    expect(text(wet)).toContain("Vremea la start: Înnorat, 12 °C, ploaie probabilă");
     expect(wet).toContain('<span aria-hidden="true">12 °C</span>');
     // Snow keeps its own glyph, whatever the chance: Open-Meteo's chance is of any precipitation.
     const snow = pillOf(

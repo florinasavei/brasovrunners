@@ -39,6 +39,8 @@ export type WeatherWords = {
   rainShort: string | null;
   /** The chance of rain as a phrase, «60% șanse de ploaie» — a card pill's spoken words when rain is likely (§NNN); null when the hour has none. */
   rain: string | null;
+  /** «ploaie probabilă» / "rain likely" — the words a card, the hero and the event page add to the spoken text when `rainLikely` holds (§NNN). */
+  rainLikely: string;
 };
 
 export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): WeatherWords {
@@ -76,6 +78,7 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     temperature,
     rainShort: reading.precipitationProbability !== null ? t("rainShort", { percent: whole(reading.precipitationProbability) }) : null,
     rain,
+    rainLikely: t("rainLikely"),
   };
 }
 
