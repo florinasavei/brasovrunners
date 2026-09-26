@@ -312,9 +312,10 @@ export default async function DeskRow({
               <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                 {/*
                   The bib handed with the paper (§NNN): the next desk spare, suggested, for a walk-in —
-                  a runner with no number at all, settled or provisional — so they get a pre-printed
-                  spare, never a number nobody printed. An online runner's provisional number, shown
-                  at the head of the row, stays theirs: no box, and the confirmation adopts it (§220).
+                  a staff entry with no settled number and no printed bib (`handsSpareAtConfirm`) —
+                  so they get a pre-printed spare, never a number nobody printed. An online runner's
+                  provisional number, shown at the head of the row, stays theirs: no box, and the
+                  confirmation adopts it (§220); the server refuses a handed number there too.
                   Emptied, the platform draws one as before. Only where the club set spares.
                 */}
                 {spare.kind !== "none" && handsSpareAtConfirm(row) && (

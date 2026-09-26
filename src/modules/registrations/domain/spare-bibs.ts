@@ -69,14 +69,27 @@ export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<numb
 export type SpareState = { kind: "none" } | { kind: "free"; next: number } | { kind: "out" };
 
 /**
- * Whether the desk's «Confirmă aici» carries a spare for this row (§NNN): only a real runner with no
- * number at all — neither settled nor provisional — which is the walk-in entered at the table. An
- * online runner holding a provisional number keeps it: the number is at the head of the row, in
- * their inbox, and becomes their final one at the confirmation (§220); a spare there would swap it
- * for another at the desk and release the one they were told.
+ * Whether the desk's «Confirmă aici» carries a spare for this row (§NNN): a real walk-in — a
+ * registration the staff entered (`source = STAFF`), or one holding no number at all — with no
+ * settled number and no printed bib. Every registration draws a provisional number when it is
+ * inserted (§214), a desk entry included, so "no provisional number" alone matched nobody; what
+ * makes a walk-in is that the staff typed them in and nothing with their number was ever printed
+ * or seen, so the spare in the volunteer's hand replaces a number that exists only in the
+ * database. An online runner keeps theirs: the provisional number is at the head of the row, on
+ * the screen they landed on, and becomes their final one at the confirmation (§220) — a spare
+ * there would swap it for another at the desk. A printed bib is never swapped either: it is in
+ * the pile with the runner's name on it. `confirmRegistrationByStaff` refuses a handed number
+ * under the same rule, so the box and the server say one thing.
  */
-export function handsSpareAtConfirm(row: { kind: string; bibNumber: number | null; provisionalBibNumber: number | null }): boolean {
-  return row.kind === "REAL" && row.bibNumber === null && row.provisionalBibNumber === null;
+export function handsSpareAtConfirm(row: {
+  kind: string;
+  source: string;
+  bibNumber: number | null;
+  provisionalBibNumber: number | null;
+  bibPrintedAt: Date | null;
+}): boolean {
+  if (row.kind !== "REAL" || row.bibNumber !== null || row.bibPrintedAt !== null) return false;
+  return row.source === "STAFF" || row.provisionalBibNumber === null;
 }
 
 export function spareStateOf(band: SpareBand | null, free: readonly number[]): SpareState {

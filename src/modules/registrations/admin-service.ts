@@ -23,7 +23,7 @@ import {
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import { bibNumberInUse, erasedBibNumbers, isEventSpareNumber } from "./bibs";
-import { BIB_NUMBER_MAX } from "./domain/spare-bibs";
+import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
@@ -453,6 +453,14 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   assertHandedBibNumber(options.bibNumber);
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  /*
+    A handed number only for a walk-in (§NNN), the rule the desk's box is drawn by: a runner who
+    registered online keeps the provisional number they were shown, and a printed bib is never
+    swapped. Refused naming the box, before anything is written; checked again under the lock.
+  */
+  if (options.bibNumber !== undefined && !handsSpareAtConfirm(current)) {
+    throw new DomainError("VALIDATION_ERROR", "a number is handed at the desk only to a walk-in with no printed bib", ["bibNumber"]);
+  }
   const event = await eventForRegistration(db, current.eventId);
 
   let result: Registration;

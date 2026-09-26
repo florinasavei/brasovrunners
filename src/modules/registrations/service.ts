@@ -15,6 +15,7 @@ import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, ensureProvisionalBibNumber, isEventSpareNumber, pickBibNumber } from "./bibs";
+import { handsSpareAtConfirm } from "./domain/spare-bibs";
 import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -253,8 +254,13 @@ async function handedBibAtConfirmation<T extends Record<string, unknown>>(
   if (current.kind !== "REAL") {
     throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number", ["bibNumber"]);
   }
-  if (current.bibNumber !== null && current.bibNumber !== handed) {
+  if (current.bibNumber !== null) {
     throw new DomainError("VALIDATION_ERROR", "this registration already has a race number; it cannot be changed", ["bibNumber"]);
+  }
+  // Only a walk-in (§NNN): an online runner keeps the provisional number they were shown, and a
+  // printed bib stays the one in the pile. The same rule the desk's box is drawn by, under the lock.
+  if (!handsSpareAtConfirm(current)) {
+    throw new DomainError("VALIDATION_ERROR", "a number is handed at the desk only to a walk-in with no printed bib", ["bibNumber"]);
   }
   if (await bibNumberInUse(tx, { eventId: current.eventId, number: handed, exceptRegistrationId: current.id })) {
     throw new DomainError("CONFLICT", `number ${handed} is already somebody's at this event`, ["bibNumber"]);

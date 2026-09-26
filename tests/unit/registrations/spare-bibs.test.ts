@@ -115,15 +115,24 @@ describe("§NNN the print's banner", () => {
 });
 
 describe("§NNN «Confirmă aici» hands a spare only to a walk-in", () => {
-  it("suggests the spare to a walk-in: a real runner with no number, settled or provisional", () => {
-    expect(handsSpareAtConfirm({ kind: "REAL", bibNumber: null, provisionalBibNumber: null })).toBe(true);
+  const walkIn = { kind: "REAL", source: "STAFF", bibNumber: null, provisionalBibNumber: 3, bibPrintedAt: null };
+
+  it("offers the spare to a staff walk-in, although the entry drew a provisional number like every row", () => {
+    expect(handsSpareAtConfirm(walkIn)).toBe(true);
+    // A row holding no number at all is a walk-in whatever its origin: nothing to keep.
+    expect(handsSpareAtConfirm({ ...walkIn, source: "PUBLIC", provisionalBibNumber: null })).toBe(true);
   });
 
   it("leaves an online runner's provisional number theirs: no spare box, the confirmation adopts it", () => {
-    expect(handsSpareAtConfirm({ kind: "REAL", bibNumber: null, provisionalBibNumber: 57 })).toBe(false);
-    // A settled number is never swapped either, and a test registration wears none.
-    expect(handsSpareAtConfirm({ kind: "REAL", bibNumber: 57, provisionalBibNumber: null })).toBe(false);
-    expect(handsSpareAtConfirm({ kind: "TEST", bibNumber: null, provisionalBibNumber: null })).toBe(false);
+    expect(handsSpareAtConfirm({ ...walkIn, source: "PUBLIC", provisionalBibNumber: 57 })).toBe(false);
+  });
+
+  it("never swaps a printed or settled bib, and a test registration wears none", () => {
+    const printed = new Date("2026-11-20T18:00:00Z");
+    expect(handsSpareAtConfirm({ ...walkIn, source: "PUBLIC", bibNumber: 57, provisionalBibNumber: null, bibPrintedAt: printed })).toBe(false);
+    expect(handsSpareAtConfirm({ ...walkIn, bibPrintedAt: printed })).toBe(false);
+    expect(handsSpareAtConfirm({ ...walkIn, bibNumber: 57, provisionalBibNumber: null })).toBe(false);
+    expect(handsSpareAtConfirm({ ...walkIn, kind: "TEST" })).toBe(false);
   });
 
   it("is what the desk row's spare box and its «out» sentence are gated on", () => {

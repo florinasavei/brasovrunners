@@ -459,6 +459,33 @@ describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
     expect(still.status).toBe("PENDING_EMAIL_CONFIRMATION");
   });
 
+  it("refuses a handed number for a runner who registered online, and for a printed bib, writing nothing", async () => {
+    const event = await createRace({ spare: [900, 902] });
+    // An online registration: the provisional number it was shown is theirs (§220), not a spare's.
+    const online = await enter(event, "online@example.org");
+    await db.update(registrations).set({ source: "PUBLIC", createdByStaffUserId: null }).where(eq(registrations.id, online.id));
+    expect(online.provisionalBibNumber).not.toBeNull();
+    expect(await refusalOf(confirmRegistrationByStaff(db, volunteer, online.id, later(1), { bibNumber: 900 }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["bibNumber"],
+    });
+    const [kept] = await db.select().from(registrations).where(eq(registrations.id, online.id));
+    expect(kept.status).toBe("PENDING_EMAIL_CONFIRMATION");
+    expect(kept.provisionalBibNumber).toBe(online.provisionalBibNumber);
+    // Without a handed number the desk confirms them as ever, adopting the provisional number.
+    const adopted = await confirmRegistrationByStaff(db, volunteer, online.id, later(2));
+    expect(adopted.bibNumber === null || adopted.bibNumber === online.provisionalBibNumber).toBe(true);
+
+    // A staff entry whose bib is on paper already keeps that bib.
+    const printed = await enter(event, "printed@example.org", { at: later(3) });
+    await db.update(registrations).set({ bibPrintedAt: later(3) }).where(eq(registrations.id, printed.id));
+    expect(await refusalOf(confirmRegistrationByStaff(db, volunteer, printed.id, later(4), { bibNumber: 901 }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["bibNumber"],
+    });
+    expect((await freeSpareBibNumbers(db, event.id)).free).toEqual([900, 901, 902]);
+  });
+
   it("marks a spare typed by hand as printed, and refuses a number somebody holds provisionally", async () => {
     const event = await createRace({ spare: [900, 902] });
     const a = await enter(event, "a@example.org", { fastTrack: true });
