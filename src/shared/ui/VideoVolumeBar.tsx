@@ -4,6 +4,7 @@ import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import { alpha, type Theme } from "@mui/material/styles";
 import Slider from "@mui/material/Slider";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -47,6 +48,60 @@ const READY_EVENTS = new Set(["onReady", "initialDelivery", "infoDelivery"]);
 
 type Command = { func: string; args?: (number | string)[] };
 
+/** How long the unfolded slider stays with nothing touching it before it folds again (§NNN). */
+export const REVEAL_IDLE_MS = 2500;
+
+/** What the film is told on opening, in order: HD first, then play (§NNN). */
+export function openingCommands(): Command[] {
+  return [{ func: "setPlaybackQuality", args: [PREFERRED_QUALITY] }, { func: "playVideo" }];
+}
+
+/**
+ * The slider's reveal as a tiny timer, apart from React so it can be tested with fake timers:
+ * `reveal()` unfolds it and (re)starts the idle countdown, `hide()` folds it at once.
+ */
+export function createRevealTimer(set: (revealed: boolean) => void, idleMs = REVEAL_IDLE_MS) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const clear = () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+  };
+  return {
+    reveal() {
+      clear();
+      set(true);
+      timer = setTimeout(() => {
+        timer = undefined;
+        set(false);
+      }, idleMs);
+    },
+    hide() {
+      clear();
+      set(false);
+    },
+    dispose: clear,
+  };
+}
+
+/**
+ * The slider wrapper's style: folded by width, not `display` or `visibility`, so Tab still
+ * reaches it on a desktop; never shown on a phone, which gets the mute toggle alone (§NNN);
+ * no transition for a visitor who asked for reduced motion.
+ */
+export function sliderWrapperSx(revealed: boolean) {
+  return {
+    display: { xs: "none", sm: "flex" },
+    alignItems: "center",
+    height: CONTROL_SIZE,
+    px: 1.5,
+    overflow: "hidden",
+    maxWidth: revealed ? SLIDER_WIDTH + 24 : 0,
+    opacity: revealed ? 1 : 0,
+    transition: "max-width 160ms ease, opacity 160ms ease",
+    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+  } as const;
+}
+
 export default function VideoVolumeBar({
   frameId,
   labels,
@@ -58,6 +113,14 @@ export default function VideoVolumeBar({
   const [open, setOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(100);
+  const [revealed, setRevealed] = useState(false);
+  const revealRef = useRef<ReturnType<typeof createRevealTimer> | null>(null);
+  useEffect(() => {
+    const timer = createRevealTimer(setRevealed);
+    revealRef.current = timer;
+    return () => timer.dispose();
+  }, []);
+  const reveal = useCallback(() => revealRef.current?.reveal(), []);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   /** Whether the player has answered at all yet — until then, a command is queued, not sent. */
   const readyRef = useRef(false);
@@ -134,8 +197,7 @@ export default function VideoVolumeBar({
     // (the owner's call: a click means sound); the player answers `onReady` before this does
     // anything, exactly like every other command here. HD is asked for first, before the film
     // starts, so its first frames are not a low-resolution guess (§NNN).
-    post("setPlaybackQuality", [PREFERRED_QUALITY]);
-    post("playVideo");
+    for (const { func, args } of openingCommands()) post(func, args);
     // The handshake again, until the player answers — as YouTube's own script does.
     sendListening();
     let tries = 1;
@@ -183,15 +245,19 @@ export default function VideoVolumeBar({
   }, [flushQueue]);
 
   const toggleMute = useCallback(() => {
+    // A tap or click keeps the slider in view a moment longer on a desktop; a phone never
+    // shows it (the wrapper is hidden below `sm`).
+    reveal();
     const next = !muted;
     setMuted(next);
     pendingRef.current = { ...pendingRef.current, muted: next };
     post(next ? "mute" : "unMute");
-  }, [muted, post]);
+  }, [muted, post, reveal]);
 
   const changeVolume = useCallback(
     (_event: Event, value: number | number[]) => {
       const next = Array.isArray(value) ? (value[0] ?? 0) : value;
+      reveal();
       setVolume(next);
       pendingRef.current = { ...pendingRef.current, volume: next };
       if (next === 0) {
@@ -205,7 +271,7 @@ export default function VideoVolumeBar({
         post("setVolume", [next]);
       }
     },
-    [post],
+    [post, reveal],
   );
 
   return (
@@ -222,20 +288,13 @@ export default function VideoVolumeBar({
         justifyContent: "flex-end",
         alignItems: "center",
         color: "text.secondary",
-        // The slider only on demand: folded to nothing until the pointer rests on the control or
-        // the keyboard (or a tap, which focuses the button) reaches it. Folded by width, not by
-        // `visibility` or `display`, so Tab still reaches the slider — and reaching it is itself
-        // what unfolds it.
-        "& .volume-slider": {
-          maxWidth: 0,
-          opacity: 0,
-          overflow: "hidden",
-          transition: "max-width 160ms ease, opacity 160ms ease",
-        },
-        "&:hover .volume-slider, &:focus-within .volume-slider": { maxWidth: SLIDER_WIDTH + 24, opacity: 1 },
+        // The slider only on demand (§NNN): the pointer resting on the control, focus reaching
+        // it, or a tap — each unfolds it, and it folds again after REVEAL_IDLE_MS untouched.
       }}
+      onPointerEnter={reveal}
+      onFocus={reveal}
     >
-      <Box className="volume-slider" sx={{ display: "flex", alignItems: "center", height: CONTROL_SIZE, px: 1.5 }}>
+      <Box className="volume-slider" data-revealed={revealed ? "" : undefined} sx={sliderWrapperSx(revealed)}>
         <Slider
           size="small"
           value={muted ? 0 : volume}
@@ -257,6 +316,8 @@ export default function VideoVolumeBar({
           height: CONTROL_SIZE,
           flexShrink: 0,
           opacity: 0.7,
+          // A translucent disc behind the glyph, so it reads on any background (§NNN).
+          bgcolor: (theme: Theme) => alpha(theme.palette.background.paper, 0.6),
           "&:hover, &:focus-visible": { opacity: 1 },
         }}
       >

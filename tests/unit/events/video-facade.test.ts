@@ -157,6 +157,59 @@ describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: 
   });
 });
 
+describe("§NNN VideoVolumeBar — the slider on demand, HD before play", () => {
+  const mod = () => import("@/shared/ui/VideoVolumeBar");
+
+  it("is folded by default in the markup", () => {
+    const html = renderToStaticMarkup(
+      createElement(VideoVolumeBar, { frameId: "video-frame-4", labels: { mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" } }),
+    );
+    expect(html).not.toContain("data-revealed");
+  });
+
+  it("reveals on demand, folds after the idle delay, and each interaction restarts the countdown", async () => {
+    const { createRevealTimer, REVEAL_IDLE_MS } = await mod();
+    vi.useFakeTimers();
+    try {
+      const states: boolean[] = [];
+      const timer = createRevealTimer((v) => states.push(v));
+      timer.reveal();
+      expect(states.at(-1)).toBe(true);
+      vi.advanceTimersByTime(REVEAL_IDLE_MS - 100);
+      timer.reveal(); // a slider change
+      vi.advanceTimersByTime(REVEAL_IDLE_MS - 100);
+      expect(states.at(-1)).toBe(true);
+      vi.advanceTimersByTime(200);
+      expect(states.at(-1)).toBe(false);
+      timer.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("the wrapper is hidden on a phone, folded until revealed, and drops its transition under reduced motion", async () => {
+    const { sliderWrapperSx } = await mod();
+    const folded = sliderWrapperSx(false);
+    expect(folded.display).toEqual({ xs: "none", sm: "flex" });
+    expect(folded.maxWidth).toBe(0);
+    expect(folded.opacity).toBe(0);
+    expect(sliderWrapperSx(true).opacity).toBe(1);
+    expect(folded["@media (prefers-reduced-motion: reduce)"]).toEqual({ transition: "none" });
+  });
+
+  it("asks for HD before it asks the film to play, through the iframe's postMessage", async () => {
+    const { openingCommands } = await mod();
+    const postMessage = vi.fn();
+    const frame = { contentWindow: { postMessage } };
+    for (const { func, args } of openingCommands()) {
+      frame.contentWindow.postMessage(JSON.stringify({ event: "command", func, args }), "https://www.youtube-nocookie.com");
+    }
+    const funcs = postMessage.mock.calls.map(([m]) => (JSON.parse(m as string) as { func: string }).func);
+    expect(funcs).toEqual(["setPlaybackQuality", "playVideo"]);
+    expect(JSON.parse(postMessage.mock.calls[0]![0] as string).args).toEqual(["hd1080"]);
+  });
+});
+
 /**
  * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414, found by re-review) — a club poster is an
  * upload like any picture, stored with its ladder, and the facade draws it from that ladder: a
