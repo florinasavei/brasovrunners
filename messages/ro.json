@@ -3754,7 +3754,8 @@
       "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
       "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând.",
       "changed": "Termenii și condițiile s-au schimbat cât completai formularul. Citește versiunea numită mai jos și bifează din nou."
-    }
+    },
+    "restingForm": "Formularul este oprit cât timp nu ne putem verifica evidențele — nu se poate trimite acum. Ce ai completat deja rămâne aici; revino peste câteva minute."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -4304,7 +4305,8 @@
       "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
       "cache": "Paginile publice își păstrează datele de {factor} ori mai mult; o modificare făcută de club apare tot imediat.",
       "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
-      "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal."
+      "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal.",
+      "cacheOnly": "Vizitatorii nu mai trezesc baza de date: o pagină care nu e în memorie se arată din ultima copie salvată și se reîmprospătează în fundal cel mult o dată la {minutes} minute."
     },
     "source": {
       "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
@@ -4329,7 +4331,10 @@
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până pe {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
-    "capacityRetry": "Încearcă din nou"
+    "capacityRetry": "Încearcă din nou",
+    "reloadingTitle": "Pagina se reîncarcă în câteva minute",
+    "reloadingBody": "Site-ul își ia acum datele doar din copiile salvate, iar pagina aceasta nu avea încă una. O pregătim chiar acum; pagina se reîncarcă singură în câteva minute.",
+    "reloadingLink": "Încearcă din nou acum"
   },
   "Weather": {
     "label": "Vremea",

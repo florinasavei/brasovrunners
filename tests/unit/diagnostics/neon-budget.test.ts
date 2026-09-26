@@ -72,13 +72,13 @@ describe("§NNN budgetLevel — green, amber, red against the month's line", () 
 describe("§NNN the governor's rulebook", () => {
   it("changes nothing when it knows nothing or while the month is green", () => {
     for (const level of ["unknown", "green"] as const) {
-      expect(GOVERNOR_EFFECTS[level]).toEqual({ jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1 });
+      expect(GOVERNOR_EFFECTS[level]).toEqual({ jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1, publicMissRefreshMinutes: 0 });
     }
   });
 
-  it("amber: jobs hourly, the public cache twice as long; red: every two hours, four times, health reused", () => {
-    expect(GOVERNOR_EFFECTS.amber).toEqual({ jobFloorMinutes: 60, healthReuseMinutes: 0, cacheCeilingFactor: 2 });
-    expect(GOVERNOR_EFFECTS.red).toEqual({ jobFloorMinutes: 120, healthReuseMinutes: 10, cacheCeilingFactor: 4 });
+  it("amber: jobs hourly, the public cache twice as long; red: every two hours, four times, health reused, cache only", () => {
+    expect(GOVERNOR_EFFECTS.amber).toEqual({ jobFloorMinutes: 60, healthReuseMinutes: 0, cacheCeilingFactor: 2, publicMissRefreshMinutes: 0 });
+    expect(GOVERNOR_EFFECTS.red).toEqual({ jobFloorMinutes: 120, healthReuseMinutes: 10, cacheCeilingFactor: 4, publicMissRefreshMinutes: 10 });
     for (const level of NEON_BUDGET_LEVELS) expect(GOVERNOR_EFFECTS[level].jobFloorMinutes).toBeLessThanOrEqual(MAX_QUIET_MINUTES);
   });
 
@@ -178,5 +178,35 @@ describe("§NNN readNeonBudget — the Administrator's thresholds", () => {
     expect(reading.level).toBe("red");
     expect(reading.thresholds).toEqual({ amberPercent: 50, redPercent: 65 });
     vi.doUnmock("@/shared/config/env");
+  });
+});
+
+/*
+  Finding (5) of the fix round (§NNN): `/devs` read the meter itself and coloured it with the
+  defaults, so with the Administrator's own thresholds saved it could show another level than
+  Costuri and `/api/health`. It now asks `budgetOfInForce`, which reads the thresholds through the
+  governor's own cached reader.
+*/
+describe("§NNN budgetOfInForce — a meter in hand, against the saved thresholds", () => {
+  it("reads the thresholds through the governor's cached reader, not the defaults", async () => {
+    vi.resetModules();
+    vi.doMock("@/modules/diagnostics/budget-thresholds", () => ({ cachedBudgetThresholds: async () => ({ amberPercent: 50, redPercent: 65 }) }));
+    const { budgetOf, budgetOfInForce } = await import("@/modules/diagnostics/neon-budget");
+    const meter = {
+      usedCuHours: 70,
+      source: "operations",
+      meteredCuHours: null,
+      operationsCuHours: 70,
+      legacyCuHours: 0,
+      awakeHours: 280,
+      floorCu: 0.25,
+      ...OCTOBER,
+      quotaCuHours: 100,
+      reportedPlan: null,
+    } as unknown as Parameters<typeof budgetOf>[0];
+    // The defaults (60/85) read 70% as amber; the Administrator's 50/65 read it red, as Costuri does.
+    expect(budgetOf(meter, on(30)).level).toBe("amber");
+    expect((await budgetOfInForce(meter, on(30))).level).toBe("red");
+    vi.doUnmock("@/modules/diagnostics/budget-thresholds");
   });
 });

@@ -152,7 +152,7 @@ const BUDGET_NOTE: Record<NeonQuotaHealth["level"], string | null> = {
   unknown: null,
   green: null,
   amber: "ahead of the month's line: the jobs run at most hourly, the public cache lives twice as long",
-  red: "near the quota: the jobs run at most every two hours, health reuses a ten-minute answer",
+  red: "near the quota: the jobs run at most every two hours, health reuses a ten-minute answer, public pages are served from the cache only",
 };
 
 /** How long the route waits for the month's budget before probing without it (§NNN). */
@@ -226,7 +226,7 @@ export async function GET(): Promise<Response> {
     `suspended` (§NNN): Neon has cut the project off for the rest of its billing period — its
     refusal says so ("exceeded the compute time quota"), or the governor reads the quota spent.
     Nothing is broken that a deploy could fix, the public pages serve their last good copies with
-    the date the site is whole again, and the jobs answer 200 without trying; so the status is
+    the date the site is whole again, and the jobs answer 200 when refused; so the status is
     `degraded` (still a 503 — the monitor must hear it) rather than `down`.
   */
   const database: "ok" | "down" | "suspended" = checks

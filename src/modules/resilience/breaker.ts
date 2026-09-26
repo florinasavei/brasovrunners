@@ -34,6 +34,34 @@ export class DatabaseRestingError extends Error {
   }
 }
 
+/**
+ * Thrown by a public read that missed the data cache while the month's budget is red (§NNN,
+ * `GOVERNOR_EFFECTS.publicMissRefreshMinutes`): the database was deliberately not asked, and no
+ * last good copy stood behind the read. A `DatabaseRestingError`, so every reader that already
+ * knows what to do when the database is away — serve a copy, drop an optional part of the page —
+ * does it, and `readWithLastGood` sends the reader to the short resting page when it has no copy
+ * either. Nothing failed, so nothing is logged.
+ */
+export class ColdMissError extends DatabaseRestingError {
+  constructor() {
+    super();
+    this.message = "the database is resting; a red month answers a cache miss without it (§NNN)";
+    this.name = "ColdMissError";
+  }
+}
+
+/** Whether this is a red month's cache miss, on the error or anywhere in its causes. */
+export function isColdMiss(error: unknown): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    seen.add(current);
+    if (current instanceof ColdMissError || (current as { name?: unknown }).name === "ColdMissError") return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
 const state: { openUntil: number; failures: number; lastError: unknown } = { openUntil: 0, failures: 0, lastError: undefined };
 
 /** Whether this instance should skip the database for now. */

@@ -1,10 +1,12 @@
-import { unstable_rethrow } from "next/navigation";
+import { headers } from "next/headers";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
-import { DatabaseRestingError } from "./breaker";
+import { DatabaseRestingError, isColdMiss } from "./breaker";
 import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
+import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
 import {
   type Envelope,
   isSnapshotTooOld,
@@ -154,6 +156,12 @@ export async function readWithLastGood<T>(
     const [envelope, restingUntil] = await Promise.all([recall<T>(key), restingSince(error, now)]);
     const maxAgeHours = restingUntil ? SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS : SNAPSHOT_MAX_AGE_HOURS;
     if (!envelope || isSnapshotTooOld(envelope, now, maxAgeHours)) {
+      /*
+        A red month's cache miss with nothing to show (§NNN): the database was not asked on
+        purpose, so this is not trouble — the reader goes to the short resting page (200,
+        `Retry-After`), which comes back here by itself once the background refresh has run.
+      */
+      if (isColdMiss(error)) await sendToRestingPage();
       // Nothing to show, or nothing recent enough to be honest about: the error page says the
       // site is having trouble, which is true, instead of showing last week's events as this
       // week's.
@@ -196,6 +204,36 @@ async function restingSince(error: unknown, now: Date): Promise<Date | null> {
   } catch {
     return quotaRefused ? defaultRestingUntil(now) : null;
   }
+}
+
+/**
+ * Keep `value` as the last good copy under `key` — this instance's memory, and the object store at
+ * most once every ten minutes per key. The public cache keeps one of every read it loads (§NNN), so a
+ * red month's miss can be answered without the database.
+ */
+export function keepCopy<T>(key: string, value: T, now: Date = new Date()): void {
+  remember(key, { takenAt: now, value });
+}
+
+/** The last good copy under `key`, when there is one no older than `maxAgeHours`; null otherwise. */
+export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours: number = SNAPSHOT_MAX_AGE_HOURS): Promise<Envelope<T> | null> {
+  const envelope = await recall<T>(key);
+  return envelope && !isSnapshotTooOld(envelope, now, maxAgeHours) ? envelope : null;
+}
+
+/**
+ * Send the reader to the short resting page (§NNN), naming the address they were on — which the
+ * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
+ * a request (a test, a script) there is no header, and the way back is the site's root.
+ */
+async function sendToRestingPage(): Promise<never> {
+  let back: string | null = null;
+  try {
+    back = (await headers()).get(REQUEST_PATH_HEADER);
+  } catch {
+    back = null;
+  }
+  redirect(restingPageHref(back));
 }
 
 /** For the tests, which must not see one case's snapshot in the next. */

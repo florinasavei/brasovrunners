@@ -34,10 +34,27 @@ vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
 }));
 
+/** What `after()` was handed: the work that runs once the response is sent. */
+const afterTasks = vi.hoisted(() => [] as Array<() => unknown>);
+vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }));
+
 const { revalidateTag, unstable_cache } = await import("next/cache");
 const { publicRead, revalidatePublicContent, PUBLIC_CACHE_CEILING_SECONDS } = await import("@/modules/public-cache/cache");
+const { forgetLastGood } = await import("@/modules/resilience/last-good");
+const { forgetMissRefreshes, pendingMissRefreshes } = await import("@/modules/public-cache/miss-refresh");
+const { ColdMissError } = await import("@/modules/resilience/breaker");
+
+/** Run what `after()` was handed, as Next does once the response is out. */
+async function afterTheResponse(): Promise<void> {
+  const tasks = afterTasks.splice(0);
+  for (const task of tasks) await task();
+}
 
 beforeEach(() => {
+  afterTasks.length = 0;
+  forgetLastGood();
+  forgetMissRefreshes();
+  budget.level = "unknown";
   cacheState.entries.clear();
   cacheState.options.length = 0;
   vi.mocked(unstable_cache).mockClear();
@@ -121,7 +138,8 @@ describe("§333 publicRead", () => {
       for (const [level, factor] of [["green", 1], ["amber", 2], ["red", 4]] as const) {
         budget.level = level;
         cacheState.options.length = 0;
-        await publicRead(["events.upcoming", level], ["events"], async () => []);
+        // At red a miss is not read in the request (below); the entry it asks for carries the ceiling all the same.
+        await publicRead(["events.upcoming", level], ["events"], async () => []).catch(() => undefined);
         expect(cacheState.options[0].revalidate).toBe(PUBLIC_CACHE_CEILING_SECONDS * factor);
       }
       budget.level = "unknown";
@@ -138,6 +156,85 @@ describe("§333 publicRead", () => {
       await expect(publicRead(["x"], ["events"], load)).rejects.toThrow("neon is asleep");
       expect(await publicRead(["x"], ["events"], load)).toBe("rows");
     });
+  });
+});
+
+/*
+  Finding (4) of the fix round (§NNN): at red, anonymous traffic is served from the cache only. A
+  miss never asks the database in the request — it is answered from the read's last good copy, or
+  throws `ColdMissError` for the page to send its reader to the resting page — and the read is
+  refreshed in the background at the next allowed moment.
+*/
+describe("§NNN publicRead while the month's budget is red", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    vi.stubEnv("NODE_ENV", "production");
+  });
+
+  it("performs zero database reads on a miss, and refreshes it after the response instead", async () => {
+    budget.level = "red";
+    const load = vi.fn(async () => ["crosul"]);
+
+    await expect(publicRead(["events.upcoming", "ro", "w1"], ["events"], load)).rejects.toBeInstanceOf(ColdMissError);
+    expect(load).not.toHaveBeenCalled();
+
+    // Once the response is out, the queued refresh reads it — one wave — and fills the cache.
+    await afterTheResponse();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(await publicRead(["events.upcoming", "ro", "w1"], ["events"], load)).toEqual(["crosul"]);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it("answers a miss from the read's last good copy, with no database read", async () => {
+    const startsAt = new Date("2026-11-21T08:00:00.000Z");
+    const load = vi.fn(async () => [{ slug: "crosul", startsAt }]);
+    await publicRead(["events.upcoming", "ro", "w1"], ["events"], load);
+    // A new deployment's keyspace: the data cache is empty, the copy is not.
+    cacheState.entries.clear();
+
+    budget.level = "red";
+    const read = await publicRead(["events.upcoming", "ro", "w1"], ["events"], load);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(read[0].startsAt).toBeInstanceOf(Date);
+    expect(read[0].startsAt.getTime()).toBe(startsAt.getTime());
+  });
+
+  it("never answers free places or the start list from a copy: they miss honestly", async () => {
+    const load = vi.fn(async () => 3);
+    await publicRead(["places.available", "event-1"], ["places", "events"], load);
+    cacheState.entries.clear();
+
+    budget.level = "red";
+    await expect(publicRead(["places.available", "event-1"], ["places", "events"], load)).rejects.toBeInstanceOf(ColdMissError);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs one wave per interval, and a write lets the next one run at once", async () => {
+    budget.level = "red";
+    const first = vi.fn(async () => 1);
+    const second = vi.fn(async () => 2);
+    await expect(publicRead(["a"], ["events"], first)).rejects.toThrow();
+    await afterTheResponse();
+    expect(first).toHaveBeenCalledTimes(1);
+
+    // Inside the interval: queued, not run.
+    await expect(publicRead(["b"], ["events"], second)).rejects.toThrow();
+    await afterTheResponse();
+    expect(second).not.toHaveBeenCalled();
+    expect(pendingMissRefreshes()).toBe(1);
+
+    // A write woke the compute already: the next miss starts a wave, and the queued read goes with it.
+    revalidatePublicContent("events");
+    await expect(publicRead(["c"], ["events"], async () => 3)).rejects.toThrow();
+    await afterTheResponse();
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it("reads through as ever below red", async () => {
+    budget.level = "amber";
+    const load = vi.fn(async () => "rows");
+    expect(await publicRead(["x"], ["events"], load)).toBe("rows");
+    expect(load).toHaveBeenCalledTimes(1);
   });
 });
 

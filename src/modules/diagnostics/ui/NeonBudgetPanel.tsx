@@ -91,6 +91,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
         {effects.jobFloorMinutes > 0 ? t("effect.floor", { minutes: effects.jobFloorMinutes }) : t("effect.none")}
         {effects.cacheCeilingFactor > 1 && ` ${t("effect.cache", { factor: effects.cacheCeilingFactor })}`}
         {effects.healthReuseMinutes > 0 && ` ${t("effect.healthReuse", { minutes: effects.healthReuseMinutes })}`}
+        {effects.publicMissRefreshMinutes > 0 && ` ${t("effect.cacheOnly", { minutes: effects.publicMissRefreshMinutes })}`}
         {` ${t("effect.monitor")}`}
       </Typography>
 

@@ -58,17 +58,15 @@ export async function answerJobPing(
 
   /*
     The month's budget (§NNN), from Neon's API and never the database, and only for a ping that
-    is about to run: the ones answered from the cache above never ask. Once the quota is spent Neon
-    has suspended the project, so trying would only fail — and a job endpoint that answers 500 all
-    day is one cron-job.org disables (§98), which would leave the scheduler off when the period
-    resets. It answers 200 with the reason instead, and records the ping so `/api/health` still
-    sees a pinger that calls.
+    is about to run: the ones answered from the cache above never ask. It only ever widens the
+    interval a run plans under (red's two hours); it never stops a job on its own. The platform's
+    estimate is not the counter Neon enforces, and an estimate that ran ahead of Neon would leave
+    the outbox, the reminders and the maintenance idle for days while the database answered — an
+    email silently not sent, which §40 forbids (a spent allowance defers, never discards). The
+    jobs rest only on Neon's own refusal, in the catch below, and the next ping is the probe that
+    resumes them.
   */
   const budget = await readNeonBudget(now);
-  if (budget.budget?.spent) {
-    await recordPing(job, now, false);
-    return NextResponse.json({ job, ran: false, reason: "budget", budgetLevel: budget.level, checkedAt: now.toISOString() });
-  }
 
   // The database, only now: everything above this line runs without a connection or its module.
   const [{ getDb: openDb }, { consumeRateLimit }, { readJobCadence }, { nextWork }] = await Promise.all([
@@ -93,8 +91,8 @@ export async function answerJobPing(
     outcome = await insideJobRun(job, () => run(db, now));
   } catch (error) {
     /*
-      The database is away — Neon's quota refusal while the governor still reads under 100%, a
-      compute that cannot start, a network that does not reach it (§NNN). Answering 500 on every
+      The database is away — Neon's quota refusal (the only thing that rests the jobs, whatever
+      the governor reads), a compute that cannot start, a network that does not reach it (§NNN). Answering 500 on every
       ping of an outage is how cron-job.org switches a monitor off (§98), and the scheduler would
       then stay off after the database is back. So an away-error answers 200 with the reason and
       records the ping; any other error is a bug and still fails loudly. Nothing is lost: a job

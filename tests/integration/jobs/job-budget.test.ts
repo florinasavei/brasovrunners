@@ -12,8 +12,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * touched (`job-sleep.test.ts`'s harness). The budget reading is stubbed: it is Neon's API, and
  * `diagnostics/neon-budget.test.ts` covers how it is read.
  *
- * - `exhausted`: a ping does not try the database at all, answers 200 with the reason, and still
- *   counts as a ping for `/api/health` — a 500 all day would get the monitor disabled (§98).
+ * - `exhausted` by the platform's own estimate: nothing stops — the run plans under red's two
+ *   hours. Only Neon's refusal rests a job: 200 with the reason, still counted as a ping for
+ *   `/api/health` (a 500 all day would get the monitor disabled, §98), and the next ping that
+ *   the database answers runs.
  * - `ahead`: a real run plans under the governor's hour, so the pings after it hold back from the
  *   cache even when work turns up — the owner's own interval's mechanism (§334), not a new one.
  * - The Administrator's longer interval still wins over a shorter floor.
@@ -107,17 +109,37 @@ beforeEach(async () => {
 });
 
 describe("§NNN a job ping under the month's budget", () => {
-  it("does not try a suspended database: 200, the reason, no run, and the ping still counted", async () => {
+  /*
+    The platform's own estimate never stops a job (§NNN): an estimate that ran ahead of the
+    counter Neon enforces would leave emails unsent for days while the database answered (§40).
+    At 100% it only plans under red's two hours; the jobs rest on Neon's refusal alone.
+  */
+  it("still runs when the platform's estimate reads the quota spent and the database answers", async () => {
     budget.level = "red";
     budget.spent = true;
-    const answer = await pingAt(0, { database: false });
+    const answer = await pingAt(0);
     expect(answer.status).toBe(200);
-    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: false, reason: "budget", budgetLevel: "red" });
+    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: true, cadenceMinutes: 120, budgetLevel: "red" });
+    expect(await realRuns()).toBe(1);
+    const outboxAnswer = await pingAt(1, { route: outbox });
+    expect(outboxAnswer.body).toMatchObject({ job: "email-outbox", ran: true, budgetLevel: "red" });
+  });
+
+  it("rests on Neon's refusal and resumes on the first ping the database answers", async () => {
+    budget.level = "red";
+    budget.spent = true;
+    pool.refuseWith = new Error("Your project has exceeded the compute time quota. Upgrade your plan to increase limits.");
+    const refused = await pingAt(0);
+    expect(refused.body).toMatchObject({ ran: false, reason: "database-away", quota: true });
     expect(await realRuns()).toBe(0);
-    const outboxAnswer = await pingAt(1, { database: false, route: outbox });
-    expect(outboxAnswer.body).toMatchObject({ job: "email-outbox", ran: false, reason: "budget" });
     // `/api/health` measures the pinger against the cached pings: this one is there.
-    expect(await readLastPing("registration-maintenance", at(1), 30 * MINUTE)).toMatchObject({ ran: false });
+    expect(await readLastPing("registration-maintenance", at(0), 30 * MINUTE)).toMatchObject({ ran: false });
+
+    // The period resets (or the owner raises the quota): the very next ping is the probe, and it runs.
+    pool.refuseWith = null;
+    const resumed = await pingAt(15);
+    expect(resumed.body).toMatchObject({ ran: true });
+    expect(await realRuns()).toBe(1);
   });
 
   it("plans a real run under the governor's hour while the month is amber, and holds the pings to it", async () => {

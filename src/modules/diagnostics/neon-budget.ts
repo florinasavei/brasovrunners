@@ -99,6 +99,20 @@ export function budgetOf(meter: NeonMeter, now: Date, thresholds: BudgetThreshol
   return { level: budget.level, effects: governorEffects(budget.level), budget, meter, thresholds };
 }
 
+/**
+ * The level for a meter already in hand, against the thresholds in force — the Administrator's
+ * saved ones, through the same cached reader the governor uses (`cachedBudgetThresholds`). What a
+ * page that read the meter itself (`/devs`) calls, so it can never show a different colour from
+ * Costuri and `/api/health` (§NNN).
+ */
+export async function budgetOfInForce(
+  meter: NeonMeter,
+  now: Date,
+  deps: Pick<BudgetDeps, "thresholds"> = {},
+): Promise<BudgetReading> {
+  return budgetOf(meter, now, await (deps.thresholds ?? cachedBudgetThresholds)());
+}
+
 /** For the tests, which must not see one case's answer in the next. */
 export function forgetNeonBudget(): void {
   memo = null;

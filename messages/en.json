@@ -3754,7 +3754,8 @@
       "accept": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
       "missing": "We cannot take registrations just now: the club has no approved terms and conditions yet. Please come back soon.",
       "changed": "The terms and conditions changed while you were filling in the form. Read the version named below and tick the box again."
-    }
+    },
+    "restingForm": "The form is paused while we cannot check our records — it cannot be sent right now. Whatever you have filled in stays here; come back in a few minutes."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -4304,7 +4305,8 @@
       "floor": "the scheduled jobs look at the database at most once every {minutes} minutes (reminders and freed places may wait that long; no place is ever given twice).",
       "cache": "The public pages keep their data {factor} times longer; a change the club makes still shows at once.",
       "healthReuse": "The health check reuses an answer at most {minutes} minutes old, so a stray caller does not wake the database.",
-      "monitor": "Emails still leave at once; registration and the backoffice work as usual."
+      "monitor": "Emails still leave at once; registration and the backoffice work as usual.",
+      "cacheOnly": "Visitors no longer wake the database: a page that is not in the cache is shown from its last saved copy and refreshed in the background at most once every {minutes} minutes."
     },
     "source": {
       "metered": "The figure is the one Neon bills (compute_unit_seconds).",
@@ -4329,7 +4331,10 @@
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
     "resting": "The site is showing a saved copy of this page, from {when}: registration and the forms are paused until {until}. Thank you for your patience!",
     "capacityUnknown": "We cannot check how many places are left right now.",
-    "capacityRetry": "Try again"
+    "capacityRetry": "Try again",
+    "reloadingTitle": "This page will reload in a few minutes",
+    "reloadingBody": "The site is serving its data from saved copies only just now, and this page did not have one yet. We are preparing it now; the page reloads by itself in a few minutes.",
+    "reloadingLink": "Try again now"
   },
   "Weather": {
     "label": "Weather",

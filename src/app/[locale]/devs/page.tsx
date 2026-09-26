@@ -30,7 +30,7 @@ import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { readWeatherStatus } from "@/modules/weather/source";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
-import { budgetOf, readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { budgetOfInForce, readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
@@ -162,8 +162,10 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
   const db = getDb();
   const schema = await checkSchemaVersion(db);
-  // The month's budget as the governor reads it (§NNN), from the same meter as the Neon block below.
-  const budget = neon.ok ? budgetOf(neon.consumption.meter, now) : await readNeonBudget(now);
+  // The month's budget as the governor reads it (§NNN), from the same meter as the Neon block below
+  // and against the Administrator's saved thresholds — the governor's own cached reader — so the
+  // colour here is the one Costuri and `/api/health` show.
+  const budget = neon.ok ? await budgetOfInForce(neon.consumption.meter, now) : await readNeonBudget(now);
   const jobs = await Promise.all(
     ["registration-maintenance", "email-outbox"].map((jobName) =>
       checkJobHealth(db, jobName, now, budget.effects.jobFloorMinutes),

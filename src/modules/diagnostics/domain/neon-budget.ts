@@ -153,6 +153,12 @@ export function neonBudget(input: NeonBudgetInput): NeonBudget {
  * - `cacheCeilingFactor` — the public data cache's safety-net lifetime (§333, a day) is multiplied
  *   by this: two at amber, four at red. A write still expires what it changed at once (§28: a
  *   cancelled event never reads as scheduled); only the refetch nobody asked for waits longer.
+ * - `publicMissRefreshMinutes` — at red, anonymous traffic is served from the cache only: a public
+ *   read that misses the data cache never asks the database in the request. It is answered from
+ *   the read's last good copy, or — with none — the page sends the reader to the short resting
+ *   page (200, `Retry-After`), and the read is refreshed in the background at the next allowed
+ *   moment: at most one wave of refreshes per this many minutes per instance, or at once after a
+ *   write this instance made (that write already woke the compute). Zero: a miss reads as always.
  *
  * The outbox is not in the table: its drain after a request runs inside the wake that request
  * already paid for (§68), so holding it for the scheduler would delay the club's mail and save
@@ -162,13 +168,14 @@ export type GovernorEffects = {
   jobFloorMinutes: JobCadenceMinutes;
   healthReuseMinutes: number;
   cacheCeilingFactor: number;
+  publicMissRefreshMinutes: number;
 };
 
 export const GOVERNOR_EFFECTS: Record<NeonBudgetLevel, GovernorEffects> = {
-  unknown: { jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1 },
-  green: { jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1 },
-  amber: { jobFloorMinutes: 60, healthReuseMinutes: 0, cacheCeilingFactor: 2 },
-  red: { jobFloorMinutes: 120, healthReuseMinutes: 10, cacheCeilingFactor: 4 },
+  unknown: { jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1, publicMissRefreshMinutes: 0 },
+  green: { jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1, publicMissRefreshMinutes: 0 },
+  amber: { jobFloorMinutes: 60, healthReuseMinutes: 0, cacheCeilingFactor: 2, publicMissRefreshMinutes: 0 },
+  red: { jobFloorMinutes: 120, healthReuseMinutes: 10, cacheCeilingFactor: 4, publicMissRefreshMinutes: 10 },
 };
 
 export function governorEffects(level: NeonBudgetLevel): GovernorEffects {
