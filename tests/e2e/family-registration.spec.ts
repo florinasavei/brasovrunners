@@ -207,8 +207,11 @@ test.describe("§389 the limit per address, set and stated", () => {
     await expect(main.locator("#email-REGISTER_ANOTHER_PERSON > summary")).toContainText("când formularul e trimis din nou cu altă persoană");
 
     await page.goto("/ro/admin/guide");
-    const section = page.locator("details", { hasText: "O familie pe o singură adresă" });
-    await section.locator("summary").click();
+    // The section by its own summary: other sections name it in their steps, and its jobs are
+    // folds of their own inside it (§NNN).
+    const summary = page.locator("summary", { hasText: "O familie pe o singură adresă" });
+    const section = summary.locator("xpath=..");
+    await summary.click();
     await expect(section).toContainText("Pe o adresă se pot înscrie cel mult 3 persoane la un eveniment.");
     await expect(section).toContainText("câte un cod QR pentru fiecare persoană confirmată");
 
