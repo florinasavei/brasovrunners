@@ -143,7 +143,7 @@ export async function giveOlderPicturesLadderAction(_previous: FormOutcome | nul
 /**
  * The month's budget thresholds (§447), from "Bugetul lunii" on the costs panel: the shares of the
  * Neon quota that turn the governor amber and red. The same door and shape as the interval above —
- * Superadministrator at the door since §NNN (a threshold set wrong brakes the platform for nothing
+ * Superadministrator at the door since §450 (a threshold set wrong brakes the platform for nothing
  * or lets the quota suspend the site), the service asserting the role again and writing the audit row — and
  * a refusal handed back as the form's state (§315).
  */

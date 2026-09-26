@@ -13,7 +13,7 @@ import { forgetNeonBudget } from "./neon-budget";
 
 /**
  * The two shares of the Neon quota that turn the month's budget amber and red (§447) — the
- * Superadministrator's to move on `/admin/tasks` → Costuri since §NNN (`canManagePlatform`: a
+ * Superadministrator's to move on `/admin/tasks` → Costuri since §450 (`canManagePlatform`: a
  * threshold set wrong brakes the platform for nothing or lets the quota suspend the site), built
  * like §334's interval beside it: one
  * `platform_settings` row, a strict schema, the role asserted here and not only by the hidden

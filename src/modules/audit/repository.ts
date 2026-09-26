@@ -254,7 +254,7 @@ export type RecordAuditInput = {
   // that is about a version of the club's own text; `participant` for the one about a person
   // across all their registrations (§322).
   // `newsletter` for a send (its id) or a subscription removed by hand (no id: the row is gone).
-  // `team_member` for a card of «Echipa» (§NNN).
+  // `team_member` for a card of «Echipa» (§459).
   entityType:
     | "registration"
     | "event"

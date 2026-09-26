@@ -582,7 +582,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *                                             «Club», «Anti-robot», «Costuri» canManageRegistrations,
  *                                             «Aplicația» canSeeDiagnostics (§397), «De făcut»
  *                                             canReadClubTodo (§438); the forms on them ask
- *                                             `canManageClubSettings` or `canManagePlatform` (§NNN)
+ *                                             `canManageClubSettings` or `canManagePlatform` (§450)
  *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
  *                                             `canWriteLegalTexts` (§450)
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves

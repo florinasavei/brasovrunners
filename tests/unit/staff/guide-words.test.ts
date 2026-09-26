@@ -152,10 +152,10 @@ describe("BR-REQ-060-01 criterion 34 the guide quotes the screen's own words", (
 
   /*
     A job only a Superadministrator can do — the platform settings that can stop the service
-    (`canManagePlatform`, §NNN: the jobs' interval, the database's limits, the month's budget
+    (`canManagePlatform`, §450: the jobs' interval, the database's limits, the month's budget
     thresholds, the anti-bot check) — says so in its first line, so an Administrator knows to ask
     before walking the steps into a missing button. The legal texts (`canWriteLegalTexts`) and
-    «Echipa» (`canManageStaff`) are the Administrator's since §NNN, so their jobs carry no such line.
+    «Echipa» (`canManageStaff`) are the Administrator's since §450, so their jobs carry no such line.
   */
   it("a job that needs a Superadministrator says so in its first line, and only such a job", () => {
     const platform = {

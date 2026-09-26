@@ -839,7 +839,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           so writing it is the Superadministrator's; `updateNeonLimits` asserts the role again.
         */}
         {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.
-            Its thresholds are a platform setting since §NNN, the Superadministrator's like the brakes. */}
+            Its thresholds are a platform setting since §450, the Superadministrator's like the brakes. */}
         <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} />
 
         {neonLimits && (

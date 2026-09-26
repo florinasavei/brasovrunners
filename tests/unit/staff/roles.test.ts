@@ -554,14 +554,14 @@ describe("BR-REQ-060-01 every capability × every role", () => {
 });
 
 /**
- * BR-REQ-060-01, §NNN — the doors the V2.03 batch added, each on the side of the line it belongs to.
+ * BR-REQ-060-01, §450 — the doors the V2.03 batch added, each on the side of the line it belongs to.
  *
  * The roles branch drew the line (the Administrator runs the club; the Superadministrator adds the
  * settings that can stop the service) while the batch was adding settings of its own. Each one is
  * pinned here by the predicate its action asks at the door and its service asserts again, so a
  * later move of any of them is made on purpose, in this file.
  */
-describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§NNN)", () => {
+describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)", () => {
   const source = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
   /** The body of one exported action, up to the next export. */
   const action = (file: string, name: string) => {
