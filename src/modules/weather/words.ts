@@ -37,6 +37,8 @@ export type WeatherWords = {
   temperature: string | null;
   /** The chance of rain alone, «20%» — an hour of the block; null when the hour has none. */
   rainShort: string | null;
+  /** The chance of rain as a phrase, «60% șanse de ploaie» — a card pill's spoken words when rain is likely (§NNN); null when the hour has none. */
+  rain: string | null;
 };
 
 export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): WeatherWords {
@@ -49,9 +51,10 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
   };
   const summary = t(`codes.${reading.kind}`);
   const temperature = reading.temperatureC !== null ? t("temperature", { degrees: whole(reading.temperatureC) }) : null;
+  const rain = reading.precipitationProbability !== null ? t("rain", { percent: whole(reading.precipitationProbability) }) : null;
   const details = [
     ...(temperature !== null ? [temperature] : []),
-    ...(reading.precipitationProbability !== null ? [t("rain", { percent: whole(reading.precipitationProbability) })] : []),
+    ...(rain !== null ? [rain] : []),
     ...(reading.windKmh !== null ? [t("wind", { speed: whole(reading.windKmh) })] : []),
   ];
   // Rain under a tenth of a millimetre and a UV index that rounds to 0 are nothing to read.
@@ -72,6 +75,7 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     extras,
     temperature,
     rainShort: reading.precipitationProbability !== null ? t("rainShort", { percent: whole(reading.precipitationProbability) }) : null,
+    rain,
   };
 }
 

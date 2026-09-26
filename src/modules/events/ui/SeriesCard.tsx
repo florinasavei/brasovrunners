@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
 import { specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
-import CardWeather from "@/modules/weather/ui/CardWeather";
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
@@ -94,8 +93,6 @@ export default async function SeriesCard({
           {special && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
           {/* The next date's partners (§367) — the date whose facts the card shows below. */}
           <PartnerChip event={next} />
-          {/* The next date's weather at its start, a glyph and the degrees (§416). */}
-          {weather && <CardWeather reading={weather} locale={locale} />}
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Box>
 
@@ -121,7 +118,9 @@ export default async function SeriesCard({
             label used to be a line of its own above them — then the place, its map link, and the
             pills. */}
         <Box sx={{ mt: GROUP_GAP }}>
-          <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} />
+          {/* The next date's weather at its start (§416) is the last pill of its route's row, the
+              umbrella when rain is likely (§NNN). */}
+          <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} cardWeather={weather} />
         </Box>
 
         {/* Every coming date, each a link to its own page — folded (§154; the owner: "these

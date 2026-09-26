@@ -183,7 +183,13 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     // The word is for a screen reader; the rain and the wind are the page's.
     await expect(pill).toContainText("Vremea la start: Parțial noros");
     await expect(pill).not.toContainText("ploaie");
-    // As tall as the card's other chips (24 px), inside its card.
+    // The last pill of the route's row (§NNN, amending §416), not among the marks above the title.
+    const row = pill.locator("xpath=ancestor::*[@data-fact='pills'][1]");
+    await expect(row).toHaveCount(1);
+    expect(await pill.evaluate((element) => element.nextElementSibling === null)).toBe(true);
+    // The stub's 20% is no umbrella.
+    await expect(pill).not.toHaveAttribute("data-rain-likely", "true");
+    // As tall as the route's pills beside it (24 px), inside its card.
     const box = await pill.boundingBox();
     expect(Math.round(box?.height ?? 0)).toBe(24);
     const card = pill.locator("xpath=ancestor::li[1]");

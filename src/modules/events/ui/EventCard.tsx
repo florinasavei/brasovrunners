@@ -8,7 +8,6 @@ import type { Locale } from "@/i18n/routing";
 import { riseIn } from "@/theme/motion";
 import { specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
-import CardWeather from "@/modules/weather/ui/CardWeather";
 import type { PublicEvent } from "../repository";
 import CardDoor from "./CardDoor";
 import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
@@ -73,8 +72,6 @@ export default async function EventCard({
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
           {/* Held with a partner (§367, amended §375, §379): the handshake and the generic "Colaborare" / "Partnership". */}
           <PartnerChip event={event} />
-          {/* The weather at the start, a glyph and the degrees (§416), within seven days of it. */}
-          {weather && <CardWeather reading={weather} locale={locale} />}
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
           {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}
@@ -92,9 +89,11 @@ export default async function EventCard({
             nothing, which is what the old `event.excerpt &&` did. */}
         <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
-        {/* The facts, with their links: the place is the map the club pasted. */}
+        {/* The facts, with their links: the place is the map the club pasted. The weather at the
+            start, a glyph and the degrees (§416), within seven days of it, is the last pill of the
+            route's row — the umbrella when rain is likely (§NNN). */}
         <Box sx={{ mt: GROUP_GAP }}>
-          <EventFacts event={event} now={now} variant="compact" />
+          <EventFacts event={event} now={now} variant="compact" cardWeather={weather} />
         </Box>
 
         {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri
