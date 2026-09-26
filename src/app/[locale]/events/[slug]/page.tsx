@@ -23,6 +23,8 @@ import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import PencilIcon from "@/shared/ui/PencilIcon";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
@@ -188,10 +190,15 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
         <Typography variant="body2">
-          <Link href="/events">{t("backToEvents")}</Link>
+          {/* A left arrow before the words, and a pencil in the staff edit button (§NNN). */}
+          <Link href="/events" style={{ display: "inline-flex", alignItems: "center", gap: 4, minHeight: 44 }}>
+            <ArrowBackIcon aria-hidden="true" sx={{ fontSize: 18 }} />
+            {t("backToEvents")}
+          </Link>
         </Typography>
         {editHref && (
-          <Button component="a" href={editHref} variant="outlined" size="small" sx={{ minHeight: 44 }}>
+          <Button component="a" href={editHref} variant="outlined" size="small" sx={{ minHeight: 44, gap: 1 }}>
+            <PencilIcon />
             {t("editInBackoffice")}
           </Button>
         )}

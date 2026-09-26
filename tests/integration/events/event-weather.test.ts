@@ -192,70 +192,41 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the event page's weather block: three hours and the start's details (§416)", () => {
+describe("BR-REQ-011-01 the event page's weather is one line (§NNN, replacing §416's hours and details)", () => {
   const weatherDd = async (overrides: Partial<PublicEvent> = {}) => {
     const html = withoutStyles(await page(overrides));
     return rows(html).find((row) => row.label === "Vremea" || row.label === "Weather")?.dd ?? "";
   };
 
-  it("draws the start hour and the two after it: the hour, the glyph, the degrees and the chance of rain", async () => {
+  it("says the start's summary and nothing more: no hours strip, no details line, no place line", async () => {
     const dd = await weatherDd();
-    const cells = [...dd.matchAll(/<li\b[^>]*data-testid="weather-hour"[^>]*>([\s\S]*?)<\/li>/g)].map(([, cell]) => cell);
-    expect(cells).toHaveLength(3);
-    expect(text(cells[0])).toContain("08:00");
-    expect(text(cells[1])).toContain("09:00");
-    expect(text(cells[2])).toContain("10:00");
-    expect(text(cells[2])).toContain("18 °C");
-    for (const cell of cells) {
-      expect(cell).toMatch(/<svg\b/);
-      expect(text(cell)).toContain("70% ploaie");
-    }
-    // An ordered list with a name, so a screen reader hears "list, 3 items".
-    expect(dd).toMatch(/<ol\b[^>]*aria-label="Pe ore, de la start"/);
-  });
-
-  it("says the start hour's details in one line: feels like, precipitation, gusts, humidity, UV", async () => {
-    const dd = await weatherDd();
-    const details = dd.match(/data-testid="weather-details"[^>]*>([\s\S]*?)<\/div>/)?.[1] ?? "";
-    expect(text(details)).toContain("se simte ca 14 °C");
-    expect(text(details)).toContain("2,4 mm precipitații");
-    expect(text(details)).toContain("rafale 41 km/h");
-    expect(text(details)).toContain("umiditate 88%");
-    expect(text(details)).toContain("indice UV 1");
-  });
-
-  it("and in English", async () => {
-    currentLocale = "en";
-    const dd = await weatherDd();
-    expect(text(dd)).toContain("feels like 14 °C");
-    expect(text(dd)).toContain("2.4 mm of precipitation");
-    expect(text(dd)).toContain("gusts 41 km/h");
-    expect(text(dd)).toContain("humidity 88%");
-    expect(text(dd)).toContain("UV index 1");
-    expect(text(dd)).toContain("For Brașov");
+    expect(text(dd)).toContain("Furtună");
+    expect(text(dd)).toContain("16 °C");
+    expect(dd).not.toContain('data-testid="weather-hours"');
+    expect(dd).not.toContain('data-testid="weather-details"');
+    expect(dd).not.toContain('data-testid="weather-credit"');
+    expect(text(dd)).not.toContain("rafale");
+    expect(text(dd)).not.toContain("Pentru Brașov");
   });
 
   it("is read at the pin the map link carries, and says «Pentru locul evenimentului»", async () => {
-    const dd = await weatherDd({ mapUrl: "https://www.google.com/maps?q=45.6427,25.5887" });
+    await weatherDd({ mapUrl: "https://www.google.com/maps?q=45.6427,25.5887" });
     expect(asked).toHaveLength(1);
     expect(asked[0].searchParams.get("latitude")).toBe("45.643");
     expect(asked[0].searchParams.get("longitude")).toBe("25.589");
-    expect(text(dd)).toContain("Pentru locul evenimentului");
   });
 
   it("is read at the typed «Coordonate» when the link is a short one, which is never followed", async () => {
-    const dd = await weatherDd({ mapUrl: "https://maps.app.goo.gl/AbCdEf123", latitude: 45.6384, longitude: 25.5921 });
+    await weatherDd({ mapUrl: "https://maps.app.goo.gl/AbCdEf123", latitude: 45.6384, longitude: 25.5921 });
     expect(asked).toHaveLength(1);
     expect(asked[0].searchParams.get("latitude")).toBe("45.638");
     expect(asked[0].searchParams.get("longitude")).toBe("25.592");
-    expect(text(dd)).toContain("Pentru locul evenimentului");
   });
 
   it("falls back to the club's place and says so, «Pentru Brașov»", async () => {
-    const dd = await weatherDd({ mapUrl: "https://maps.app.goo.gl/AbCdEf123" });
+    await weatherDd({ mapUrl: "https://maps.app.goo.gl/AbCdEf123" });
     expect(Number(asked[0].searchParams.get("latitude"))).toBeCloseTo(env.CLUB_COORDINATES.latitude, 3);
     expect(Number(asked[0].searchParams.get("longitude"))).toBeCloseTo(env.CLUB_COORDINATES.longitude, 3);
-    expect(text(dd)).toContain("Pentru Brașov");
   });
 
   it("reads the club's place for a place still to be announced, never the withheld pin (§328)", async () => {
