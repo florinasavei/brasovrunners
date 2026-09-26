@@ -5,7 +5,7 @@ import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
 import { isClubCopy } from "./domain/club-notices";
 import { preferredTransport } from "./domain/email-transport";
-import { gmailIsConfigured, readEmailTransport, readGmailUsage } from "./email-transport";
+import { gmailIsConfigured, readEmailTransport, readGmailUsage, recordGmailFailure } from "./email-transport";
 import type { OutboxRow } from "./outbox";
 
 /**
@@ -24,12 +24,15 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
 ): Promise<{ sender: EmailSender; route: OutboxRoute }> {
   const setting = await readEmailTransport(db);
   const configured = gmailIsConfigured();
-  const usage = configured ? await readGmailUsage(db, now, true) : { configured: false, sentLastDay: 0, lastSentAt: null };
+  const usage = configured ? await readGmailUsage(db, now, true) : { configured: false, sentLastDay: 0, lastSentAt: null, oldestInWindowAt: null };
   const { sender } = createEmailSenderForEnvironment(env, {
     dailyCap: setting.gmailDailyCap,
     paceSeconds: setting.gmailPaceSeconds,
+    atGmailCap: setting.atGmailCap,
     overflowToGmail: setting.overflowToGmail,
     usage,
+    // Every Gmail failure is kept for /admin/emails and /api/health (§NNN), not only fallen back from.
+    onFailure: (error, at) => recordGmailFailure(db, error, at),
   });
   return {
     sender,

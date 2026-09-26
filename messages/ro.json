@@ -3073,16 +3073,20 @@
         "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
         "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
-        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant."
+        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant.",
+        "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun."
       },
       "transport": {
         "title": "Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului",
-        "intro": "Mailgun costă (planul Free are 100 de mesaje pe zi). Gmail-ul clubului e gratuit, dar Google blochează un cont personal care trimite mult, în rafale sau automat. Aici alegi, pe grupuri, ce pleacă prin Gmail; restul pleacă prin Mailgun. Pentru Gmail pui mai jos o limită pe zi și o pauză între mesaje.",
+        "intro": "Mailgun costă după plan. Gmail-ul clubului e gratuit, dar Google blochează un cont personal care trimite mult, în rafale sau automat. Aici alegi, pe grupuri, ce pleacă prin Gmail; restul pleacă prin Mailgun. Pentru Gmail pui mai jos o limită pe zi, o pauză între mesaje și ce se întâmplă la limită.",
         "aside": {
-          "on": "Gmail: {sent} din {cap} în ultima zi · {groups} din 4 grupuri prin Gmail",
+          "on": "Gmail: {sent} din {cap} destinatari în ultima zi · {groups} din {total} grupuri prin Gmail",
           "off": "Gmail nu e configurat aici: totul pleacă prin Mailgun"
         },
-        "status": "Gmail-ul clubului a trimis {sent} din {cap} mesaje în ultima zi (socotită de acum înapoi). La limită, restul pleacă prin Mailgun.",
+        "status": {
+          "defer": "Gmail-ul clubului a ajuns la {sent} din {cap} destinatari în ultima zi (socotită de acum înapoi). La limită, mesajele grupurilor Gmail așteaptă până se eliberează loc.",
+          "mailgun": "Gmail-ul clubului a ajuns la {sent} din {cap} destinatari în ultima zi (socotită de acum înapoi). La limită, restul pleacă prin Mailgun."
+        },
         "unconfigured": "Gmail-ul clubului nu e configurat pe acest mediu (lipsesc contul și parola de aplicație, aceleași ca la formularul de contact), deci toate emailurile pleacă prin Mailgun, orice ai alege mai jos. Alegerea rămâne salvată și se aplică din clipa în care contul e configurat.",
         "groups": {
           "links": {
@@ -3093,13 +3097,21 @@
             "label": "Confirmări și schimbări de stare",
             "help": "Înscriere confirmată, pe lista de așteptare, anulată, oferta expirată, numărul de concurs, copia semnată a declarației. Recomandat: Mailgun."
           },
-          "event": {
-            "label": "Mesaje către mulți participanți deodată",
-            "help": "Reamintirea, actualizarea sau anularea evenimentului, mesajul organizatorului, mulțumirile, „S-au deschis înscrierile”. Multe mesaje deodată sunt exact ce blochează Google la un cont personal. Recomandat: Mailgun."
+          "reminders": {
+            "label": "Reamintiri și mulțumiri",
+            "help": "Reamintirea dinainte de start și mulțumirile de după: câte una pentru fiecare alergător, toate la aceeași oră — exact rafala pe care Google o blochează la un cont personal. Recomandat: Mailgun."
+          },
+          "announcements": {
+            "label": "Anunțurile organizatorilor",
+            "help": "Actualizarea sau anularea evenimentului, mesajul organizatorului, „S-au deschis înscrierile”. Rare și trimise cu pauză. Pot pleca prin Gmail după ce nota de confidențialitate aprobată spune că Gmail trimite și mesaje către participanți."
           },
           "club": {
             "label": "Mesajele către club",
             "help": "Copiile clubului, arhiva declarațiilor, anunțul „Cineva a confirmat”, invitațiile colegilor. Ajung în căsuțele clubului. Recomandat: Gmail."
+          },
+          "newsletter": {
+            "label": "Newsletter",
+            "help": "Încă nu există mesaje în acest grup: newsletterul are meniul lui în backoffice, în lucru. Drumul ales aici se aplică de la primul newsletter. Recomandat: Gmail."
           }
         },
         "messages": "Mesajele din grup: {names}",
@@ -3107,15 +3119,23 @@
           "mailgun": "Mailgun",
           "gmail": "Gmail-ul clubului"
         },
-        "dailyCap": "Limita Gmail pe zi (mesaje)",
-        "dailyCapHelp": "Cel mult {max}: atât permite Google pe zi unui cont personal, iar contul e folosit și de formularul de contact și de oameni. Peste limită, mesajele pleacă prin Mailgun.",
+        "dailyCap": "Limita Gmail pe zi (destinatari)",
+        "dailyCapHelp": "Cel mult {max}: atât permite Google pe zi unui cont personal, socotind fiecare destinatar, și copiile. Același cont e folosit de QA și de producție, de formularul de contact și de oameni, deci suma limitelor de pe cele două medii trebuie să rămână mult sub {max}.",
         "pace": "Pauza între două mesaje Gmail (secunde)",
         "paceHelp": "Între 0 și {max}. Un cont care trimite în rafale arată a robot. Ce nu încape în pauze pleacă la următoarea rulare a cozii.",
+        "atCap": "La limita Gmail",
+        "atCapHelp": "Pentru grupurile care pleacă prin Gmail. „Amână” nu cheltuie nimic din Mailgun: mesajul pleacă singur când cel mai vechi mesaj Gmail iese din ziua socotită.",
+        "atCapOptions": {
+          "defer": "Amână până se eliberează loc (de obicei până mâine)",
+          "mailgun": "Trimite prin Mailgun"
+        },
         "overflow": "Când Mailgun a terminat mesajele de azi",
         "overflowOptions": {
           "yes": "Trimite prin Gmail, în limita lui",
           "no": "Așteaptă până mâine"
         },
+        "lastFailure": "Ultima eroare Gmail: {when}, „{error}”. Mesajele de atunci au plecat prin Mailgun sau așteaptă o nouă încercare. Dacă eroarea e „smtp EAUTH”, parola de aplicație a contului trebuie refăcută.",
+        "privacy": "Nota de confidențialitate aprobată spune că mesajele către participanți pleacă prin Mailgun, iar Gmail este doar căsuța clubului. Grupurile cu participanți pot trece pe Gmail după ce clubul aprobă o notă care spune asta.",
         "caveat": "Prin Gmail nu aflăm dacă un mesaj a ricoșat: răspunsul vine ca email în căsuța Gmail și nu apare în coada de emailuri. Expeditorul este adresa Gmail a clubului, cu numele clubului.",
         "save": "Salvează drumurile",
         "saving": "Se salvează…",

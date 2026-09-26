@@ -2,6 +2,7 @@ import { and, count, desc, eq, gt, isNotNull, lt, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
+import { checkGmailHealth, type GmailHealth } from "./email-transport";
 
 /**
  * "Can the club still send email?" — the answer `/api/health` and `/admin/tasks` give
@@ -53,6 +54,13 @@ export type EmailHealth = {
   resumesAt: string | null;
   /** The provider's last sanitized reason on a deferred or failed row; never a body or a token. */
   lastError: string | null;
+  /**
+   * The club's Gmail road (§NNN): recipients it reached in the last day against the club's cap,
+   * and its last failure. Reported beside the counts, never a status of its own: a Gmail failure
+   * falls back to Mailgun or is retried by the outbox, whose own counts above turn a real stall
+   * into the 503 (§98), unchanged.
+   */
+  gmail: GmailHealth;
 };
 
 export async function checkEmailHealth<T extends Record<string, unknown>>(
@@ -126,6 +134,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     failed: row.failed,
     resumesAt: resumesAt ? resumesAt.toISOString() : null,
     lastError,
+    gmail: await checkGmailHealth(db, now),
   };
 }
 

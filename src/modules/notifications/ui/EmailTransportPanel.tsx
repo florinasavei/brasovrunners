@@ -11,6 +11,7 @@ import {
   EMAIL_GROUP_OF,
   EMAIL_GROUPS,
   EMAIL_TRANSPORTS,
+  GMAIL_AT_CAP,
   GMAIL_DAILY_CAP_MAX,
   GMAIL_PACE_SECONDS_MAX,
 } from "@/modules/notifications/domain/email-transport";
@@ -46,11 +47,18 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const viaGmail = EMAIL_GROUPS.filter((group) => setting.groups[group] === "gmail").length;
+  // Recent: within the rolling day Gmail's cap counts — older, it is history, not a warning.
+  const recentFailure = volume.gmailFailedLastDay;
   const namesOf = (group: (typeof EMAIL_GROUPS)[number]) =>
     (Object.keys(EMAIL_GROUP_OF) as EmailMessageType[])
       .filter((type) => EMAIL_GROUP_OF[type] === group && !neverQueued.has(type))
       .map((type) => t(`emails.types.${type}`))
       .join(", ");
+  // The newsletter group has no message yet: its help says so instead of an empty list.
+  const listOf = (group: (typeof EMAIL_GROUPS)[number]) => {
+    const names = namesOf(group);
+    return names ? ` ${t("emails.transport.messages", { names })}` : "";
+  };
 
   return (
     <Panel
@@ -58,24 +66,36 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
       intro={t("emails.transport.intro")}
       aside={
         volume.gmailConfigured
-          ? t("emails.transport.aside.on", { sent: volume.gmailSentLastDay, cap: volume.gmailDailyCap, groups: viaGmail })
+          ? t("emails.transport.aside.on", { sent: volume.gmailSentLastDay, cap: volume.gmailDailyCap, groups: viaGmail, total: EMAIL_GROUPS.length })
           : t("emails.transport.aside.off")
       }
       collapsible
       // Gmail at its cap is the one state here that asks for a decision: a higher cap, or Mailgun.
-      openWhen={{ ...openWhen, attention: volume.gmailConfigured && volume.gmailSentLastDay >= volume.gmailDailyCap }}
+      openWhen={{ ...openWhen, attention: volume.gmailConfigured && (volume.gmailSentLastDay >= volume.gmailDailyCap || recentFailure) }}
       id="email-transport"
       data-testid="email-transport"
     >
       {volume.gmailConfigured ? (
         <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="email-transport-status">
-          {t("emails.transport.status", { sent: volume.gmailSentLastDay, cap: volume.gmailDailyCap })}
+          {t(`emails.transport.status.${setting.atGmailCap}`, { sent: volume.gmailSentLastDay, cap: volume.gmailDailyCap })}
         </Typography>
       ) : (
         <Alert severity="info" data-testid="email-transport-unconfigured">
           {t("emails.transport.unconfigured")}
         </Alert>
       )}
+      {/* A Gmail failure falls back to Mailgun or waits for a retry; said here, or nobody would know (§NNN). */}
+      {volume.gmailLastFailure && (
+        <Alert severity={recentFailure ? "warning" : "info"} sx={{ mt: 1 }} data-testid="email-transport-failure">
+          {t("emails.transport.lastFailure", {
+            when: formatDay(volume.gmailLastFailure.at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+            error: volume.gmailLastFailure.error,
+          })}
+        </Alert>
+      )}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        {t("emails.transport.privacy")}
+      </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
         {t("emails.transport.caveat")}
       </Typography>
@@ -107,10 +127,13 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
             messages={await refusalMessages({
               links: t("emails.transport.groups.links.label"),
               confirmations: t("emails.transport.groups.confirmations.label"),
-              event: t("emails.transport.groups.event.label"),
+              reminders: t("emails.transport.groups.reminders.label"),
+              announcements: t("emails.transport.groups.announcements.label"),
               club: t("emails.transport.groups.club.label"),
+              newsletter: t("emails.transport.groups.newsletter.label"),
               gmailDailyCap: t("emails.transport.dailyCap"),
               gmailPaceSeconds: t("emails.transport.pace"),
+              atGmailCap: t("emails.transport.atCap"),
               overflowToGmail: t("emails.transport.overflow"),
             })}
             confirm={{
@@ -134,7 +157,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
                   defaultValue={setting.groups[group]}
                   size="small"
                   slotProps={{ select: { native: true } }}
-                  helperText={`${t(`emails.transport.groups.${group}.help`)} ${t("emails.transport.messages", { names: namesOf(group) })}`}
+                  helperText={`${t(`emails.transport.groups.${group}.help`)}${listOf(group)}`}
                 >
                   {EMAIL_TRANSPORTS.map((transport) => (
                     <option key={transport} value={transport}>
@@ -165,6 +188,21 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
                   fullWidth
                 />
               </Stack>
+              <RecallField
+                select
+                name="atGmailCap"
+                label={t("emails.transport.atCap")}
+                defaultValue={setting.atGmailCap}
+                size="small"
+                slotProps={{ select: { native: true } }}
+                helperText={t("emails.transport.atCapHelp")}
+              >
+                {GMAIL_AT_CAP.map((choice) => (
+                  <option key={choice} value={choice}>
+                    {t(`emails.transport.atCapOptions.${choice}`)}
+                  </option>
+                ))}
+              </RecallField>
               <RecallField
                 select
                 name="overflowToGmail"

@@ -7,8 +7,8 @@ import { readClubNotices } from "./club-notices";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
-import { mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
-import { readEmailTransport, readGmailUsage } from "./email-transport";
+import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
+import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
 
 /**
  * How much email today is going to cost, before the day proves it (AGENTS.md §16, §19).
@@ -150,6 +150,10 @@ export type EmailVolumeToday = {
   /** Messages the club's Gmail carried in the last 24 hours, and the club's cap on them (§NNN). */
   gmailSentLastDay: number;
   gmailDailyCap: number;
+  /** The last time Gmail refused or broke (§NNN): said on the panel, so a revoked password is seen. */
+  gmailLastFailure: GmailFailure | null;
+  /** Whether that failure is inside the last 24 hours: a warning then, history after. */
+  gmailFailedLastDay: boolean;
 };
 
 /**
@@ -222,7 +226,11 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const participantBccCount = participantMessageBcc(notices).length;
   const allMessagesPerRegistration = messagesPerCompletedRegistration({ archiveConfigured, participantBccCount });
   // What of it Mailgun carries, by the club's roads (§NNN), and Gmail's own last day beside it.
-  const [transport, gmail] = await Promise.all([readEmailTransport(db), readGmailUsage(db, now)]);
+  const [transport, gmail, gmailLastFailure] = await Promise.all([
+    readEmailTransport(db),
+    readGmailUsage(db, now),
+    readGmailLastFailure(db),
+  ]);
   const messagesPerRegistration = mailgunMessagesPerCompletedRegistration(transport, gmail.configured, {
     archiveConfigured,
     participantBccCount,
@@ -241,6 +249,8 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     gmailConfigured: gmail.configured,
     gmailSentLastDay: gmail.sentLastDay,
     gmailDailyCap: transport.gmailDailyCap,
+    gmailLastFailure,
+    gmailFailedLastDay: gmailLastFailure !== null && now.getTime() - gmailLastFailure.at.getTime() < GMAIL_WINDOW_MS,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     sentMessages,

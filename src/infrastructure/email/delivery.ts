@@ -1,6 +1,11 @@
 import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { gmailAdmission, type GmailUsage } from "@/modules/notifications/domain/email-transport";
+import {
+  type GmailAtCap,
+  gmailAdmission,
+  gmailJitterCeilingMs,
+  type GmailUsage,
+} from "@/modules/notifications/domain/email-transport";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
 /**
@@ -116,18 +121,28 @@ export type EmailSender = {
  */
 /**
  * The Gmail road, as the sender needs it for one batch (§NNN): the adapter (built on demand, like
- * Mailgun's), the club's cap and pace, whether Mailgun's spent allowance spills over, and Gmail's
- * usage as the database had it when the batch began — which the sender then keeps counting.
+ * Mailgun's), the club's cap, pace and choice at the cap, whether Mailgun's spent allowance spills
+ * over, and Gmail's usage as the database had it when the batch began — which the sender then keeps
+ * counting, in recipients, as Google counts them.
  */
 export type GmailRoad = {
   adapter: () => EmailAdapter;
   usage: GmailUsage;
   dailyCap: number;
   paceSeconds: number;
+  /** At the cap: wait for the rolling day to free room (`defer`), or Mailgun at once. */
+  atGmailCap: GmailAtCap;
   overflowToGmail: boolean;
+  /**
+   * Told of every Gmail failure, before the sender turns to Mailgun or hands the row back — so a
+   * revoked app password is on `/admin/emails` and in `/api/health`, not merely spending Mailgun.
+   */
+  onFailure?: (error: string, at: Date) => Promise<void>;
   /** Injected for the tests; the real one waits. */
   sleep?: (ms: number) => Promise<void>;
   now?: () => Date;
+  /** Injected for the tests; the real one is `Math.random`. */
+  random?: () => number;
   /**
    * The most one sender may spend waiting on the pace. Past it, a Gmail message is handed back
    * `paced` for the next run rather than keeping a function alive on a timer.
@@ -135,10 +150,15 @@ export type GmailRoad = {
   paceBudgetMs?: number;
 };
 
-/** Twenty seconds of pacing per batch: ten Gmail sends at the default three seconds apart, and a function that ends. */
+/** Twenty seconds of pacing per batch: three or four Gmail sends at the default six seconds apart, and a function that ends. */
 export const GMAIL_PACE_BUDGET_MS = 20_000;
 
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** The address and every copy: what Google counts against the day. */
+function recipientsOf(message: OutgoingEmail): number {
+  return 1 + (message.cc?.length ?? 0) + (message.bcc?.length ?? 0);
+}
 
 export function createEmailSender(config: {
   appEnv: AppEnvironment;
@@ -153,6 +173,7 @@ export function createEmailSender(config: {
   const usage: GmailUsage | null = gmail ? { ...gmail.usage } : null;
   const clock = gmail?.now ?? (() => new Date());
   const sleep = gmail?.sleep ?? realSleep;
+  const random = gmail?.random ?? Math.random;
   const budget = gmail?.paceBudgetMs ?? GMAIL_PACE_BUDGET_MS;
   let waited = 0;
   // One Gmail failure and this sender stops asking Gmail: the next message should not pay the
@@ -160,15 +181,38 @@ export function createEmailSender(config: {
   let gmailDown = false;
 
   /**
-   * Gmail's answer for one message: carried, handed back for the pace, or not taken (null) —
-   * in which case Mailgun's road is next. `transmit` false is the captured case: nothing leaves,
-   * so nothing waits, but the route is still recorded as it would have gone.
+   * Gmail's answer for one message: carried, handed back (the pace, the cap the club chose to wait
+   * out, or a failure that may have been accepted), or not taken (null) — in which case Mailgun's
+   * road is next. `transmit` false is the captured case: nothing leaves, so nothing waits and
+   * nothing is counted against the cap, but the route is still recorded as it would have gone.
+   * `chosen` is whether the club chose Gmail for this message's group — only then does "defer at
+   * the cap" apply; a spill-over from Mailgun keeps Mailgun's own deferral.
    */
-  async function viaGmail(message: OutgoingEmail, transmit: boolean): Promise<SendResult | null> {
-    if (!gmail || !usage || gmailDown) return null;
-    const admission = gmailAdmission(usage, { gmailDailyCap: gmail.dailyCap, gmailPaceSeconds: gmail.paceSeconds }, clock());
-    if (!admission.admitted) return null;
-    if (transmit && admission.waitMs > 0) {
+  async function viaGmail(message: OutgoingEmail, transmit: boolean, chosen: boolean): Promise<SendResult | null> {
+    if (!gmail || !usage || gmailDown || !usage.configured) return null;
+    if (!transmit) {
+      const captured = await config.capture.send(message);
+      return captured.outcome === "sent" ? { ...captured, transport: "gmail", recipients: 0 } : captured;
+    }
+
+    const recipients = recipientsOf(message);
+    const jitterMs = Math.floor(random() * gmailJitterCeilingMs(gmail.paceSeconds));
+    const admission = gmailAdmission(
+      usage,
+      { gmailDailyCap: gmail.dailyCap, gmailPaceSeconds: gmail.paceSeconds },
+      clock(),
+      recipients,
+      jitterMs,
+    );
+    if (!admission.admitted) {
+      // At the cap and the club said wait: deferred to the moment the oldest send leaves the
+      // rolling day, as a spent Mailgun allowance is deferred (§40) — never discarded.
+      if (admission.reason === "cap" && chosen && gmail.atGmailCap === "defer") {
+        return { outcome: "throttled", error: "gmail daily cap: deferred", retryAfter: admission.roomAt };
+      }
+      return null;
+    }
+    if (admission.waitMs > 0) {
       if (waited + admission.waitMs > budget) {
         return {
           outcome: "throttled",
@@ -180,14 +224,24 @@ export function createEmailSender(config: {
       await sleep(admission.waitMs);
       waited += admission.waitMs;
     }
-    const result = await (transmit ? gmail.adapter() : config.capture).send(message);
+    const result = await gmail.adapter().send(message);
     if (result.outcome !== "sent") {
       gmailDown = true;
+      const error = result.error;
+      try {
+        await gmail.onFailure?.(error, clock());
+      } catch {
+        // Recording the failure must never be what stops the message.
+      }
+      // Possibly accepted already: the outbox retries it later rather than Mailgun sending a second copy now.
+      if (result.outcome === "transient_failure" && result.mayHaveBeenAccepted) return result;
       return null;
     }
-    usage.sentLastDay += 1;
-    usage.lastSentAt = clock();
-    return { ...result, transport: "gmail" };
+    const at = clock();
+    usage.sentLastDay += recipients;
+    usage.lastSentAt = at;
+    usage.oldestInWindowAt ??= at;
+    return { ...result, transport: "gmail", recipients };
   }
 
   return {
@@ -229,21 +283,22 @@ export function createEmailSender(config: {
         message is captured whichever road it would have taken, and the allowlist judges a Gmail
         message exactly as it judges a Mailgun one — QA reaches a stranger by neither.
 
-        1. The club chose Gmail for this group: Gmail, if configured, under its cap and not failed
-           in this batch — after the pace. Otherwise, or if Gmail refuses, Mailgun, at once.
+        1. The club chose Gmail for this group: Gmail, if configured and not failed in this batch —
+           after the pace. At the cap, deferred or Mailgun, as the club chose. A failure before Gmail
+           could have taken it: Mailgun, at once. A failure after it might have: the outbox retries.
         2. Mailgun refuses because the plan's allowance is spent (§40): Gmail, when the club lets
            it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
       */
       if (outgoing.transport === "gmail") {
-        const carried = await viaGmail(outgoing, transmit);
+        const carried = await viaGmail(outgoing, transmit, true);
         if (carried) return carried;
       }
 
       const result = await adapter.send(outgoing);
-      if (result.outcome === "sent") return { ...result, transport: "mailgun" };
+      if (result.outcome === "sent") return { ...result, transport: "mailgun", recipients: transmit ? recipientsOf(outgoing) : 0 };
       if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail") {
         // Carried, or handed back for the pace — either is sooner than Mailgun's reset.
-        const spilled = await viaGmail(outgoing, transmit);
+        const spilled = await viaGmail(outgoing, transmit, false);
         if (spilled) return spilled;
       }
       return result;

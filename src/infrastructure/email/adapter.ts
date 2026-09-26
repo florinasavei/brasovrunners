@@ -80,8 +80,22 @@ export type SendResult =
       providerMessageId: string;
       /** Which road carried it (§NNN), set by the sender; the outbox stores it. Absent is Mailgun. */
       transport?: EmailTransportName;
+      /**
+       * How many recipients the send reached (§NNN): the address plus every copy transmitted, 0 when
+       * captured. Set by the sender; Gmail's cap is counted in recipients, as Google counts them.
+       */
+      recipients?: number;
     }
-  | { outcome: "transient_failure"; error: string }
+  | {
+      outcome: "transient_failure";
+      error: string;
+      /**
+       * The connection broke where the server may already have taken the message (a socket error or
+       * a timeout, §NNN): sending it again by another road could reach the runner twice with the
+       * same link, so the sender does not; the outbox retries it on its own backoff.
+       */
+      mayHaveBeenAccepted?: true;
+    }
   | {
       outcome: "throttled";
       error: string;

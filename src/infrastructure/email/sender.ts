@@ -1,7 +1,7 @@
 import type { Env } from "@/shared/config/env";
 import { type CaptureAdapter, type CapturedEmail, createCaptureAdapter } from "./capture-adapter";
 import { createEmailSender, type EmailSender } from "./delivery";
-import type { GmailUsage } from "@/modules/notifications/domain/email-transport";
+import type { GmailAtCap, GmailUsage } from "@/modules/notifications/domain/email-transport";
 import { createGmailAdapter } from "./gmail-adapter";
 import { createMailgunAdapter } from "./mailgun-adapter";
 
@@ -58,8 +58,11 @@ export function capturedEmails(): readonly CapturedEmail[] {
 export type GmailRouting = {
   dailyCap: number;
   paceSeconds: number;
+  atGmailCap: GmailAtCap;
   overflowToGmail: boolean;
   usage: GmailUsage;
+  /** Where a Gmail failure is recorded (§NNN, `notifications/email-transport.ts`). */
+  onFailure?: (error: string, at: Date) => Promise<void>;
 };
 
 export function createEmailSenderForEnvironment(
@@ -100,7 +103,9 @@ export function createEmailSenderForEnvironment(
           usage: routing.usage,
           dailyCap: routing.dailyCap,
           paceSeconds: routing.paceSeconds,
+          atGmailCap: routing.atGmailCap,
           overflowToGmail: routing.overflowToGmail,
+          ...(routing.onFailure ? { onFailure: routing.onFailure } : {}),
         }
       : undefined;
 

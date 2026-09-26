@@ -148,6 +148,12 @@ export const emailOutbox = pgTable(
      * counted from (`email-transport.ts`), so the two counts can never both claim one message.
      */
     transport: text("transport", { enum: ["mailgun", "gmail"] }),
+    /**
+     * How many recipients the send actually reached (§NNN): the address plus every copy the
+     * environment let through, and 0 for a captured message that reached nobody. Google counts
+     * recipients, not messages, so Gmail's rolling-day cap sums this; null on rows sent before it.
+     */
+    recipientCount: integer("recipient_count"),
     // Sanitized (§16.1): a short provider reason, never a body, a secret, or a token.
     lastError: text("last_error"),
 

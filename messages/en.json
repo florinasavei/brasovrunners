@@ -3073,16 +3073,20 @@
         "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared.",
         "forecast": "A registration carried through to confirmation costs about {count} messages; what is left pays for about {left} more registrations.",
         "forecastUnlimited": "A registration carried through to confirmation costs about {count} messages.",
-        "forecastBcc": "Of those, {extra} are the hidden copies — one for each address under “The club's copies” (currently {bcc}) on every email to a participant."
+        "forecastBcc": "Of those, {extra} are the hidden copies — one for each address under “The club's copies” (currently {bcc}) on every email to a participant.",
+        "forecastGmail": "Another {count} leave through the club's Gmail and cost nothing on Mailgun."
       },
       "transport": {
         "title": "How emails leave: Mailgun or the club's Gmail",
-        "intro": "Mailgun costs money (the Free plan has 100 messages a day). The club's Gmail is free, but Google blocks a personal account that sends a lot, in bursts or automatically. Here you choose, per group, what leaves through Gmail; the rest leaves through Mailgun. For Gmail you set a daily limit and a pause between messages below.",
+        "intro": "Mailgun costs according to the plan. The club's Gmail is free, but Google blocks a personal account that sends a lot, in bursts or automatically. Here you choose, per group, what leaves through Gmail; the rest leaves through Mailgun. For Gmail you set a daily limit, a pause between messages and what happens at the limit below.",
         "aside": {
-          "on": "Gmail: {sent} of {cap} in the last day · {groups} of 4 groups through Gmail",
+          "on": "Gmail: {sent} of {cap} recipients in the last day · {groups} of {total} groups through Gmail",
           "off": "Gmail is not configured here: everything leaves through Mailgun"
         },
-        "status": "The club's Gmail sent {sent} of {cap} messages in the last day (counted back from now). At the limit, the rest leaves through Mailgun.",
+        "status": {
+          "defer": "The club's Gmail has reached {sent} of {cap} recipients in the last day (counted back from now). At the limit, messages of the Gmail groups wait until room frees up.",
+          "mailgun": "The club's Gmail has reached {sent} of {cap} recipients in the last day (counted back from now). At the limit, the rest leaves through Mailgun."
+        },
         "unconfigured": "The club's Gmail is not configured in this environment (the account and its app password are missing, the same ones the contact form uses), so every email leaves through Mailgun, whatever you choose below. The choice stays saved and applies from the moment the account is configured.",
         "groups": {
           "links": {
@@ -3093,13 +3097,21 @@
             "label": "Confirmations and status changes",
             "help": "Registration confirmed, on the waiting list, cancelled, the offer expired, the race number, the signed copy of the declaration. Recommended: Mailgun."
           },
-          "event": {
-            "label": "Messages to many participants at once",
-            "help": "The reminder, the event's update or cancellation, the organizer's message, the thank-you, “Registration is open”. Many messages at once is exactly what Google blocks on a personal account. Recommended: Mailgun."
+          "reminders": {
+            "label": "Reminders and thank-yous",
+            "help": "The reminder before the start and the thank-you after: one per runner, all at the same hour — exactly the burst Google blocks on a personal account. Recommended: Mailgun."
+          },
+          "announcements": {
+            "label": "Organizers' announcements",
+            "help": "The event's update or cancellation, the organizer's message, “Registration is open”. Rare, and sent with a pause. They may leave through Gmail once the approved privacy notice says Gmail also sends messages to participants."
           },
           "club": {
             "label": "Messages to the club",
             "help": "The club's copies, the declaration archive, the “Somebody confirmed” notice, colleagues' invitations. They land in the club's own mailboxes. Recommended: Gmail."
+          },
+          "newsletter": {
+            "label": "Newsletter",
+            "help": "No messages in this group yet: the newsletter has its own backoffice menu, in progress. The road chosen here applies from the first newsletter. Recommended: Gmail."
           }
         },
         "messages": "Messages in this group: {names}",
@@ -3107,15 +3119,23 @@
           "mailgun": "Mailgun",
           "gmail": "The club's Gmail"
         },
-        "dailyCap": "Gmail limit per day (messages)",
-        "dailyCapHelp": "At most {max}: that is what Google allows a personal account a day, and the account is also used by the contact form and by people. Past the limit, messages leave through Mailgun.",
+        "dailyCap": "Gmail limit per day (recipients)",
+        "dailyCapHelp": "At most {max}: that is what Google allows a personal account a day, counting every recipient, copies included. The same account is used by QA and production, by the contact form and by people, so the two environments' limits together must stay well under {max}.",
         "pace": "Pause between two Gmail messages (seconds)",
         "paceHelp": "Between 0 and {max}. An account that sends in bursts looks like a robot. What does not fit in the pauses leaves at the queue's next run.",
+        "atCap": "At Gmail's limit",
+        "atCapHelp": "For the groups that leave through Gmail. “Postpone” spends nothing of Mailgun: the message leaves by itself once the oldest Gmail message falls out of the day being counted.",
+        "atCapOptions": {
+          "defer": "Postpone until room frees up (usually until tomorrow)",
+          "mailgun": "Send through Mailgun"
+        },
         "overflow": "When Mailgun has used up today's messages",
         "overflowOptions": {
           "yes": "Send through Gmail, within its limit",
           "no": "Wait until tomorrow"
         },
+        "lastFailure": "Last Gmail error: {when}, “{error}”. The messages since then left through Mailgun or wait for another try. If the error is “smtp EAUTH”, the account's app password must be made again.",
+        "privacy": "The approved privacy notice says messages to participants leave through Mailgun and Gmail is only the club's mailbox. The participant groups may move to Gmail once the club approves a notice that says so.",
         "caveat": "Through Gmail we do not learn that a message bounced: the answer arrives as an email in the Gmail inbox and does not show in the email queue. The sender is the club's Gmail address, with the club's name.",
         "save": "Save the routes",
         "saving": "Saving…",

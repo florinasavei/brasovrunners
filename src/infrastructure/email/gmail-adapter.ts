@@ -10,10 +10,13 @@ import { createSmtpConnection, describeSmtpFailure, type SmtpAddress, type SmtpC
  * inbox and never marks the row BOUNCED; no sending domain of the club's, so the From is the Gmail
  * address with the club's name (Google rewrites any other address to it anyway).
  *
- * Every failure is `transient_failure` here, deliberately. The sender does not retry a Gmail
- * failure on Gmail: it hands the same message to Mailgun at once (`delivery.ts`), whose own
- * classification then decides — so a Gmail refusal can never be the thing that marks a runner's
- * confirmation BOUNCED.
+ * Every failure is `transient_failure` here, deliberately. A failure before Gmail could have taken
+ * the message is not retried on Gmail: the sender hands it to Mailgun at once (`delivery.ts`),
+ * never a permanent refusal it would mark FAILED — delivery first, the owner's cost second. A
+ * failure that may have come after acceptance carries `mayHaveBeenAccepted`, and the sender leaves
+ * it to the outbox's own retry instead of risking a second copy of a single-use link. Where Mailgun
+ * takes over, its own classification decides — so a Gmail refusal can never be the thing that marks
+ * a runner's confirmation BOUNCED.
  */
 export type GmailAdapterConfig = SmtpConfig & {
   from: SmtpAddress;
@@ -54,8 +57,25 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
         return { outcome: "sent", providerMessageId: info.messageId, transport: "gmail" };
       } catch (error) {
         // A code or a class, never the server's reply, which may echo the login (§14.5).
-        return { outcome: "transient_failure", error: `gmail: ${describeSmtpFailure(error)}` };
+        const failure = `gmail: ${describeSmtpFailure(error)}`;
+        return gmailFailureIsBeforeAcceptance(error)
+          ? { outcome: "transient_failure", error: failure }
+          : { outcome: "transient_failure", error: failure, mayHaveBeenAccepted: true };
       }
     },
   };
+}
+
+/**
+ * Nodemailer's codes for a failure that happened before Gmail could have taken the message: no
+ * connection, no TLS, no DNS, a refused login, an envelope or a message the server answered "no"
+ * to. Anything else — a socket error, a timeout, an unknown throw — may have come after the
+ * server accepted DATA, and is reported as such so the sender does not send it again by Mailgun.
+ */
+const BEFORE_ACCEPTANCE = new Set(["ECONNECTION", "EDNS", "ETLS", "EAUTH", "ENOAUTH", "EOAUTH2", "EENVELOPE", "EMESSAGE"]);
+
+export function gmailFailureIsBeforeAcceptance(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === "string" && BEFORE_ACCEPTANCE.has(code);
 }

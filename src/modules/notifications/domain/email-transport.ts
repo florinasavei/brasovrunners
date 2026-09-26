@@ -8,7 +8,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
  * much as it can and Mailgun only what it must — but that has to be a setting; Google blocks an
  * account that sends too much in bulk or looks automated." So the choice is the club's, per
  * **group** of messages rather than per message (twenty-five types is a form nobody reads), with
- * Gmail's daily cap and its pace as numbers beside it.
+ * Gmail's daily cap, its pace and what happens at the cap as numbers and choices beside it.
  *
  * Pure: the groups, the setting's shape, its defaults, and the one decision the sender makes per
  * message. The worker (`outbox.ts`) asks `preferredTransport` for a row; the sender
@@ -19,19 +19,23 @@ export const EMAIL_TRANSPORTS = ["mailgun", "gmail"] as const;
 export type EmailTransport = (typeof EMAIL_TRANSPORTS)[number];
 
 /**
- * The four groups, in the order the panel lists them.
+ * The six groups, in the order the panel lists them — the brief's A–F, with F (the contact form)
+ * outside the outbox: it already leaves through the club's Gmail (§149) and has no row to route.
  *
- * - **links** — a single-use action link the participant must act on (confirm the address, sign,
- *   take a freed place, manage a registration). Late or in spam, a place is lost.
+ * - **links** (A) — a single-use action link the participant must act on (confirm the address,
+ *   sign, take a freed place, manage a registration). Late or in spam, a place is lost.
+ * - **reminders** (B) — the reminder before the start and the thank-you after: one per runner of
+ *   an event, all at the job's hour — the burst Google flags on a personal account.
+ * - **announcements** (C) — what the organizers decide to say: the update notice, the
+ *   cancellation, the organizer's message, "registration is open". Rare, and paced.
  * - **confirmations** — the answers to a runner's own step: confirmed, on the waiting list,
  *   cancelled, an offer that lapsed, a number given, the signed copy.
- * - **event** — what goes to many runners at once: the reminder, the update notice, the
- *   cancellation, the organizer's message, the thank-you, "registration is open". Bulk is exactly
- *   what Google flags on a personal account.
- * - **club** — mail to the club's own mailboxes: the club's copies, the declaration archive, "somebody
- *   confirmed", a colleague's invitation. Low volume, to people who know the sender: Gmail's case.
+ * - **club** (D) — mail to the club's own mailboxes: the club's copies, the declaration archive,
+ *   "somebody confirmed", a colleague's invitation. To people who know the sender: Gmail's case.
+ * - **newsletter** (E) — nothing yet: the newsletter's own menu is being built on its own branch;
+ *   the group is here so its road is decided before its first message is queued.
  */
-export const EMAIL_GROUPS = ["links", "confirmations", "event", "club"] as const;
+export const EMAIL_GROUPS = ["links", "confirmations", "reminders", "announcements", "club", "newsletter"] as const;
 export type EmailGroup = (typeof EMAIL_GROUPS)[number];
 
 /**
@@ -53,12 +57,12 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   BIB_ASSIGNED: "confirmations",
   DECLARATION_SIGNED: "confirmations",
   GROUP_RUN_DECLARATION_SIGNED: "confirmations",
-  EVENT_REMINDER: "event",
-  EVENT_THANKS: "event",
-  EVENT_UPDATE_NOTICE: "event",
-  EVENT_CANCELLED: "event",
-  ORGANIZER_MESSAGE: "event",
-  REGISTRATION_OPENED: "event",
+  EVENT_REMINDER: "reminders",
+  EVENT_THANKS: "reminders",
+  EVENT_UPDATE_NOTICE: "announcements",
+  EVENT_CANCELLED: "announcements",
+  ORGANIZER_MESSAGE: "announcements",
+  REGISTRATION_OPENED: "announcements",
   DECLARATION_ARCHIVE: "club",
   GROUP_RUN_DECLARATION_ARCHIVE: "club",
   CLUB_CONFIRMATION_NOTICE: "club",
@@ -74,12 +78,20 @@ export function emailGroupOf(messageType: EmailMessageType, clubCopy: boolean): 
 }
 
 /**
- * Gmail's own ceiling for a personal account is 500 recipients in a rolling day, and the club's
- * people send from the same account by hand; the setting may not go above it.
+ * Google's own ceiling for a personal Gmail account: "more than 500 recipients in a single email
+ * and or more than 500 emails sent in a day" gets the account's sending suspended — Gmail Help,
+ * "Limits for sending & getting mail" (article 22839; the address is in the §NNN decision, read
+ * 2026-09-26). Google counts **recipients** in a rolling day, so the cap here counts recipients too
+ * (the address and every copy: `email_outbox.recipient_count`). The club's people send from the
+ * same account by hand, and QA and production share it (one `CONTACT_SMTP_USER`), so the setting
+ * may not go above it and the two environments' defaults add up to half of it.
  */
 export const GMAIL_DAILY_CAP_MAX = 500;
 /** Ten seconds between two Gmail sends at most: a batch must still finish inside a function's life. */
 export const GMAIL_PACE_SECONDS_MAX = 10;
+
+export const GMAIL_AT_CAP = ["defer", "mailgun"] as const;
+export type GmailAtCap = (typeof GMAIL_AT_CAP)[number];
 
 export const emailTransportSettingSchema = z
   .object({
@@ -87,14 +99,22 @@ export const emailTransportSettingSchema = z
       .object({
         links: z.enum(EMAIL_TRANSPORTS),
         confirmations: z.enum(EMAIL_TRANSPORTS),
-        event: z.enum(EMAIL_TRANSPORTS),
+        reminders: z.enum(EMAIL_TRANSPORTS),
+        announcements: z.enum(EMAIL_TRANSPORTS),
         club: z.enum(EMAIL_TRANSPORTS),
+        newsletter: z.enum(EMAIL_TRANSPORTS),
       })
       .strict(),
-    /** Messages Gmail may carry in any rolling 24 hours; past it, Mailgun carries the rest. */
+    /** Recipients Gmail may reach in any rolling 24 hours. */
     gmailDailyCap: z.number().int().min(1).max(GMAIL_DAILY_CAP_MAX),
-    /** The least time between two Gmail sends, in seconds. */
+    /** The least time between two Gmail sends, in seconds; a small random jitter is added on top. */
     gmailPaceSeconds: z.number().int().min(0).max(GMAIL_PACE_SECONDS_MAX),
+    /**
+     * At Gmail's cap, a message whose group goes through Gmail either waits until the rolling day
+     * frees room («amână până mâine», the default — Mailgun's allowance untouched) or goes through
+     * Mailgun at once.
+     */
+    atGmailCap: z.enum(GMAIL_AT_CAP),
     /**
      * When Mailgun refuses because the plan's allowance is spent (§40), Gmail takes the message —
      * inside its own cap — instead of the message waiting for the reset.
@@ -106,26 +126,47 @@ export const emailTransportSettingSchema = z
 export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
 
 /**
- * The club's own mail through Gmail, everything a participant must act on or is told through
- * Mailgun, and Gmail as the spill-over when Mailgun's day is spent.
+ * The club's own mail and the (future) newsletter through Gmail; everything a participant gets
+ * through Mailgun, until the privacy notice names Gmail as a road for it.
  *
- * - **club → Gmail**: copies, archive, notices and invitations are the largest share of what the
- *   club itself costs the allowance (four copies per registration per address, §320), they go to
- *   mailboxes that expect the club, and none carries a link a runner loses a place over.
- * - **participants → Mailgun**: a sending domain with SPF, DKIM and a bounce webhook (§16.5);
- *   Gmail has none of the webhook, and a personal account sending hundreds of near-identical
- *   messages to strangers is what Google suspends.
- * - **250 a day, 3 seconds apart**: half of Gmail's published 500, because the contact form and
- *   the people answering by hand spend the same account.
- * - **overflow on**: a confirmation link sent through Gmail today is better than one Mailgun
- *   sends tomorrow; it applies only while Gmail is configured and under its cap.
+ * - **club, newsletter → Gmail**: copies, archive, notices and invitations are the largest share of
+ *   what the club itself costs the allowance (four copies per registration per address, §320), they
+ *   go to mailboxes that expect the club, and the notice in force already says the club's copies
+ *   reach its Gmail mailbox (section 6).
+ * - **participants → Mailgun**: the notice lists Mailgun as the one that sends email and Gmail only
+ *   as the club's mailbox; a participant's name, token links and signed PDF leaving through Google
+ *   is a processor the notice does not name (§418 made that list accurate). An Administrator may
+ *   switch announcements (C) or any other group once a notice naming it is approved.
+ * - **defer at the cap**: the owner asked to spend Mailgun as little as possible; a club copy a day
+ *   late costs nothing, and a runner's message is Mailgun's by default anyway.
+ * - **6 seconds apart** (ten a minute, jittered): an account that sends like a script is what Google
+ *   suspends.
+ * - **overflow off**: the same notice question as the participant groups.
+ * - **200 a day on production, 50 elsewhere**: one Gmail account serves both environments and the
+ *   people answering by hand; 250 of Google's 500 leaves them the rest.
  */
 export const DEFAULT_EMAIL_TRANSPORT: EmailTransportSetting = {
-  groups: { links: "mailgun", confirmations: "mailgun", event: "mailgun", club: "gmail" },
-  gmailDailyCap: 250,
-  gmailPaceSeconds: 3,
-  overflowToGmail: true,
+  groups: {
+    links: "mailgun",
+    confirmations: "mailgun",
+    reminders: "mailgun",
+    announcements: "mailgun",
+    club: "gmail",
+    newsletter: "gmail",
+  },
+  gmailDailyCap: 200,
+  gmailPaceSeconds: 6,
+  atGmailCap: "defer",
+  overflowToGmail: false,
 };
+
+/** Every environment but production shares production's Gmail account, and gets a smaller share of it. */
+export const NON_PRODUCTION_GMAIL_DAILY_CAP = 50;
+
+/** The default for one environment: production's, with a smaller cap everywhere else. */
+export function defaultEmailTransportFor(appEnv: string): EmailTransportSetting {
+  return appEnv === "production" ? DEFAULT_EMAIL_TRANSPORT : { ...DEFAULT_EMAIL_TRANSPORT, gmailDailyCap: NON_PRODUCTION_GMAIL_DAILY_CAP };
+}
 
 /** The road the club chose for one outbox row. Whether Gmail can take it *now* is the sender's call. */
 export function preferredTransport(
@@ -152,33 +193,60 @@ export function roadsByMessageType(
 }
 
 /**
- * Gmail's state as the sender sees it before a message: configured or not, how many it carried in
- * the last 24 hours, and when it last sent.
+ * Gmail's state as the sender sees it before a message: configured or not, how many recipients it
+ * reached in the last 24 hours, when it last sent, and when the oldest send still inside the
+ * rolling day was — the moment that send leaves the window and frees its room.
  */
 export type GmailUsage = {
   configured: boolean;
   sentLastDay: number;
   lastSentAt: Date | null;
+  oldestInWindowAt: Date | null;
 };
 
+export const GMAIL_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 /**
- * Whether Gmail may take one more message now, and how long to wait first for the pace.
+ * At most this much random wait on top of the pace: two seconds, or half the pace when it is
+ * shorter — enough that the sends are not a metronome, never enough to double the pace.
+ */
+export function gmailJitterCeilingMs(paceSeconds: number): number {
+  return Math.min(2_000, Math.floor((paceSeconds * 1000) / 2));
+}
+
+export type GmailAdmission =
+  | { admitted: false; reason: "unconfigured" | "too-many-recipients" }
+  | { admitted: false; reason: "cap"; roomAt: Date }
+  | { admitted: true; waitMs: number };
+
+/**
+ * Whether Gmail may take one more message of `recipients` recipients now, and how long to wait
+ * first for the pace.
  *
  * - not configured → no (Mailgun carries it, as it did before this setting);
- * - at the cap → no (Mailgun carries it: delivery first, and an account over Google's limit is
- *   locked for a day, the contact form with it);
- * - otherwise yes, after `waitMs` — zero when the last Gmail send is at least the pace ago.
+ * - more recipients than the whole cap → no, ever (Mailgun carries it; waiting would never help);
+ * - over the cap → no, with `roomAt` — when the oldest send inside the rolling day leaves it — for
+ *   the sender to defer to, or Mailgun at once, as the club chose;
+ * - otherwise yes, after `waitMs` — the rest of the pace since the last Gmail send, plus `jitterMs`.
  */
 export function gmailAdmission(
   usage: GmailUsage,
   setting: Pick<EmailTransportSetting, "gmailDailyCap" | "gmailPaceSeconds">,
   now: Date,
-): { admitted: false; reason: "unconfigured" | "cap" } | { admitted: true; waitMs: number } {
+  recipients = 1,
+  jitterMs = 0,
+): GmailAdmission {
   if (!usage.configured) return { admitted: false, reason: "unconfigured" };
-  if (usage.sentLastDay >= setting.gmailDailyCap) return { admitted: false, reason: "cap" };
+  if (recipients > setting.gmailDailyCap) return { admitted: false, reason: "too-many-recipients" };
+  if (usage.sentLastDay + recipients > setting.gmailDailyCap) {
+    const oldest = usage.oldestInWindowAt ?? now;
+    return { admitted: false, reason: "cap", roomAt: new Date(Math.max(now.getTime(), oldest.getTime() + GMAIL_WINDOW_MS)) };
+  }
   const paceMs = setting.gmailPaceSeconds * 1000;
-  const since = usage.lastSentAt ? now.getTime() - usage.lastSentAt.getTime() : Number.POSITIVE_INFINITY;
-  return { admitted: true, waitMs: Math.max(0, Math.min(paceMs, paceMs - since)) };
+  if (!usage.lastSentAt) return { admitted: true, waitMs: 0 };
+  const since = now.getTime() - usage.lastSentAt.getTime();
+  const rest = Math.max(0, Math.min(paceMs, paceMs - since));
+  return { admitted: true, waitMs: rest > 0 ? rest + Math.max(0, jitterMs) : 0 };
 }
 
 /**
@@ -199,11 +267,33 @@ export function mailgunMessagesPerCompletedRegistration(
   const perGroup: Record<EmailGroup, number> = {
     links: 2,
     confirmations: 2,
-    event: 1,
+    reminders: 1,
+    announcements: 0,
     club: 4 * copies + 1 + (input.archiveConfigured ? 1 : 0),
+    newsletter: 0,
   };
   return EMAIL_GROUPS.reduce(
     (total, group) => total + (gmailConfigured && setting.groups[group] === "gmail" ? 0 : perGroup[group]),
     0,
   );
+}
+
+/**
+ * The sentence under the Mailgun plan's forecast about the club's copies (§320), which must agree
+ * with the figure beside it: the hidden copies counted in Mailgun's cost while the club's mail goes
+ * through Mailgun, or the messages Gmail carries instead once any group goes through Gmail — never
+ * "8 of 5 are copies" (§NNN review).
+ */
+export function forecastCopiesNote(input: {
+  participantBccCount: number;
+  copiedMessagesPerRegistration: number;
+  allMessagesPerRegistration: number;
+  messagesPerRegistration: number;
+}): { kind: "bcc"; bcc: number; extra: number } | { kind: "gmail"; count: number } | null {
+  const viaGmail = input.allMessagesPerRegistration - input.messagesPerRegistration;
+  if (viaGmail > 0) return { kind: "gmail", count: viaGmail };
+  if (input.participantBccCount > 0) {
+    return { kind: "bcc", bcc: input.participantBccCount, extra: input.participantBccCount * input.copiedMessagesPerRegistration };
+  }
+  return null;
 }

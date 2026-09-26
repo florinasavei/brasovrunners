@@ -182,6 +182,7 @@ describe("§377 the reminder lead, the event's or the club's", () => {
       lockedAt: NOW,
       providerMessageId: null,
       transport: null,
+      recipientCount: null,
       lastError: null,
       createdAt: NOW,
       sentAt: null,

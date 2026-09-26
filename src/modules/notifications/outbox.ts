@@ -435,6 +435,8 @@ export async function processOutboxBatch(
           providerMessageId: result.providerMessageId,
           // Which road carried it (§NNN): Gmail's cap and Mailgun's allowance are counted from this.
           transport: result.transport ?? "mailgun",
+          // What Google counts against the day (§NNN): the address and every copy that left; 0 when captured.
+          recipientCount: result.recipients ?? null,
           lockedAt: null,
           nextAttemptAt: null,
           lastError: null,

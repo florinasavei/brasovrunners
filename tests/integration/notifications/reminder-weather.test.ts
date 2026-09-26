@@ -126,6 +126,7 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     lockedAt: NOW,
     providerMessageId: null,
     transport: null,
+    recipientCount: null,
     lastError: null,
     createdAt: NOW,
     sentAt: null,

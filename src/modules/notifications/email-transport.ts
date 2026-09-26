@@ -1,4 +1,4 @@
-import { and, count, eq, gte, max } from "drizzle-orm";
+import { and, eq, gt, gte, max, min, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -9,8 +9,9 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
-  DEFAULT_EMAIL_TRANSPORT,
+  defaultEmailTransportFor,
   type EmailTransportSetting,
+  GMAIL_WINDOW_MS,
   emailTransportSettingSchema,
   type GmailUsage,
 } from "./domain/email-transport";
@@ -45,23 +46,27 @@ export async function readEmailTransport<T extends Record<string, unknown>>(db: 
     .from(platformSettings)
     .where(eq(platformSettings.key, EMAIL_TRANSPORT_SETTING_KEY))
     .limit(1);
-  if (!row) return { ...DEFAULT_EMAIL_TRANSPORT, updatedAt: null };
+  // Production's default, or a smaller Gmail share where the account is production's too (§NNN).
+  const fallback = defaultEmailTransportFor(env.APP_ENV);
+  if (!row) return { ...fallback, updatedAt: null };
   // A value this code can no longer read falls back to the default rather than stopping the
   // outbox: this is read before every batch the platform sends.
   const parsed = emailTransportSettingSchema.safeParse(row.value);
   return parsed.success
     ? { ...parsed.data, updatedAt: row.updatedAt }
-    : { ...DEFAULT_EMAIL_TRANSPORT, updatedAt: row.updatedAt };
+    : { ...fallback, updatedAt: row.updatedAt };
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /**
- * What Gmail carried in the last 24 hours and when it last sent — from the outbox's own
- * `transport` column, so the cap holds across batches, requests and instances.
+ * How many recipients Gmail reached in the last 24 hours, when it last sent and when the oldest of
+ * those sends was — from the outbox's own `transport` and `recipient_count` columns, so the cap
+ * holds across batches, requests and instances.
  *
- * Rolling, not since midnight: Google counts a rolling day. The contact form's messages are not
- * in the outbox and are not counted here; the cap's default leaves room for them.
+ * Rolling, not since midnight, and in recipients, not messages: Google counts both that way
+ * (`domain/email-transport.ts#GMAIL_DAILY_CAP_MAX`). A captured row reached nobody
+ * (`recipient_count` 0) and is not counted. The contact form's messages, the people writing by
+ * hand and the other environment on the same account are not in this outbox; the cap's default
+ * leaves room for them.
  */
 export async function readGmailUsage<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -69,10 +74,85 @@ export async function readGmailUsage<T extends Record<string, unknown>>(
   configured: boolean = gmailIsConfigured(),
 ): Promise<GmailUsage> {
   const [usage] = await db
-    .select({ sent: count(), last: max(emailOutbox.sentAt) })
+    .select({
+      sent: sql<string | null>`sum(${emailOutbox.recipientCount})`,
+      last: max(emailOutbox.sentAt),
+      oldest: min(emailOutbox.sentAt),
+    })
     .from(emailOutbox)
-    .where(and(eq(emailOutbox.transport, "gmail"), gte(emailOutbox.sentAt, new Date(now.getTime() - DAY_MS))));
-  return { configured, sentLastDay: usage?.sent ?? 0, lastSentAt: usage?.last ?? null };
+    .where(
+      and(
+        eq(emailOutbox.transport, "gmail"),
+        gt(emailOutbox.recipientCount, 0),
+        gte(emailOutbox.sentAt, new Date(now.getTime() - GMAIL_WINDOW_MS)),
+      ),
+    );
+  return {
+    configured,
+    sentLastDay: Number(usage?.sent ?? 0),
+    lastSentAt: usage?.last ? new Date(usage.last) : null,
+    oldestInWindowAt: usage?.oldest ? new Date(usage.oldest) : null,
+  };
+}
+
+/** The last time Gmail refused or broke (§NNN), kept beside the setting; never a body, an address or a secret. */
+export const GMAIL_LAST_FAILURE_KEY = "gmailLastFailure";
+
+export type GmailFailure = { at: Date; error: string };
+
+/**
+ * Record a Gmail failure the sender met — a revoked app password, a refused login, a connection
+ * that broke. Without this, every Gmail message quietly fell back to Mailgun and spent its allowance
+ * with nobody told; now `/admin/emails` and `/api/health` say when and why. The error is the
+ * adapter's already-sanitized code (`smtp EAUTH`), never the server's reply (§14.5).
+ */
+export async function recordGmailFailure<T extends Record<string, unknown>>(db: Database<T>, error: string, at: Date): Promise<void> {
+  const value = { at: at.toISOString(), error: error.slice(0, 200) };
+  await db
+    .insert(platformSettings)
+    .values({ key: GMAIL_LAST_FAILURE_KEY, value, updatedAt: at, updatedByStaffUserId: null })
+    .onConflictDoUpdate({ target: platformSettings.key, set: { value, updatedAt: at, updatedByStaffUserId: null } });
+}
+
+export async function readGmailLastFailure<T extends Record<string, unknown>>(db: Database<T>): Promise<GmailFailure | null> {
+  const [row] = await db
+    .select({ value: platformSettings.value })
+    .from(platformSettings)
+    .where(eq(platformSettings.key, GMAIL_LAST_FAILURE_KEY))
+    .limit(1);
+  const value = row?.value as { at?: unknown; error?: unknown } | undefined;
+  if (!value || typeof value.at !== "string" || typeof value.error !== "string") return null;
+  const at = new Date(value.at);
+  return Number.isNaN(at.getTime()) ? null : { at, error: value.error };
+}
+
+/**
+ * Gmail's part of "can the club still send email?" (§98, §NNN): what it carried against its cap and
+ * its last failure. Reported, never a status of its own — a Gmail failure falls back to Mailgun or
+ * is retried by the outbox, and the outbox's own counts already turn a real stall into the 503.
+ */
+export type GmailHealth = {
+  configured: boolean;
+  sentLastDay: number;
+  cap: number;
+  lastFailureAt: string | null;
+  lastFailure: string | null;
+};
+
+export async function checkGmailHealth<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<GmailHealth> {
+  const configured = gmailIsConfigured();
+  const [setting, failure, usage] = await Promise.all([
+    readEmailTransport(db),
+    readGmailLastFailure(db),
+    configured ? readGmailUsage(db, now, true) : Promise.resolve(null),
+  ]);
+  return {
+    configured,
+    sentLastDay: usage?.sentLastDay ?? 0,
+    cap: setting.gmailDailyCap,
+    lastFailureAt: failure ? failure.at.toISOString() : null,
+    lastFailure: failure?.error ?? null,
+  };
 }
 
 export async function updateEmailTransport<T extends Record<string, unknown>>(
@@ -114,6 +194,7 @@ export async function updateEmailTransport<T extends Record<string, unknown>>(
           groups: before.groups,
           gmailDailyCap: before.gmailDailyCap,
           gmailPaceSeconds: before.gmailPaceSeconds,
+          atGmailCap: before.atGmailCap,
           overflowToGmail: before.overflowToGmail,
         },
         to: next,

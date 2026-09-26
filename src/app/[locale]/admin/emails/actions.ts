@@ -72,7 +72,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * "Prin ce pleacă emailurile" (§NNN): the road per group, Gmail's cap and pace, the overflow. The
+ * "Prin ce pleacă emailurile" (§NNN): the road per group, Gmail's cap, pace and choice at the cap, the overflow. The
  * plan's gate and shape: Administrator at the door, the service asserting the role again and
  * validating every field, a refusal returned with the boxes as typed (§315).
  */
@@ -95,11 +95,14 @@ export async function updateEmailTransportAction(_previous: FormOutcome | null, 
         groups: {
           links: choice("links"),
           confirmations: choice("confirmations"),
-          event: choice("event"),
+          reminders: choice("reminders"),
+          announcements: choice("announcements"),
           club: choice("club"),
+          newsletter: choice("newsletter"),
         },
         gmailDailyCap: whole("gmailDailyCap"),
         gmailPaceSeconds: whole("gmailPaceSeconds"),
+        atGmailCap: choice("atGmailCap"),
         overflowToGmail: form.get("overflowToGmail") === "yes",
       },
       new Date(),
