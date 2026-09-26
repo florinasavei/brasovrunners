@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/shared/config/env";
-import { isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
+import { formerKeyPrefixOf, isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 
 /**
  * Where a photo's bytes live, behind the four-method adapter of AGENTS.md §17 — three of
@@ -67,7 +67,16 @@ export function objectKey(keyPrefix: string, variant: StoredVariant): string {
  */
 export function assetObjectKeys(keyPrefix: string): string[] {
   const keys = [objectKey(keyPrefix, "web"), objectKey(keyPrefix, "thumb")];
-  if (isLadderKeyPrefix(keyPrefix)) keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
+  if (isLadderKeyPrefix(keyPrefix)) {
+    keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
+    /*
+      A picture that got its ladder from the one-off button (§NNN) kept its two old files at its
+      old address, because an address may have been copied out of the site; they go when the
+      picture goes. For a picture uploaded with its ladder these two keys were never written.
+    */
+    const former = formerKeyPrefixOf(keyPrefix);
+    keys.push(objectKey(former, "web"), objectKey(former, "thumb"));
+  }
   return keys;
 }
 

@@ -184,6 +184,57 @@ export async function processUploadedImage(
   return { web, thumb, rungs, width: info.width, height: info.height, quality, encoding };
 }
 
+/** What a stored master becomes when it is given its ladder afterwards (§NNN). */
+export type LadderFromMaster = {
+  thumb: Buffer;
+  rungs: { width: number; body: Buffer }[];
+  /** Of the master as it is stored — read from its bytes, never from the row. */
+  width: number;
+  height: number;
+};
+
+/**
+ * The ladder of a picture stored before §414, made from the one file it still has: its master,
+ * `web.webp` (the original was never kept, §66). The one-off button of §NNN calls it.
+ *
+ * The master itself is not re-encoded — the caller stores its bytes as they are, so the file a
+ * wide screen loads is exactly the one it loaded before — and every rung and the thumbnail are
+ * made from it at «Normală»'s own settings, the same `RUNG_QUALITY` and `THUMB_QUALITY` an upload
+ * uses: such a master is at most 2400 pixels, which is «Normală»'s ceiling, and a rung is drawn at
+ * its own width, so the second generation is a reduction and its artefacts are never magnified.
+ * The thumbnail is made again rather than kept, because a picture from before §176 has a 480-pixel
+ * one where the site now draws 640.
+ *
+ * Refuses what is not a WebP the size of a picture — the store's own file, but read back from a
+ * bucket, so checked like anything else that arrives (§17).
+ */
+export async function ladderFromStoredMaster(master: Buffer): Promise<LadderFromMaster> {
+  let metadata: Metadata;
+  try {
+    metadata = await sharp(master).metadata();
+  } catch {
+    throw new DomainError("VALIDATION_ERROR", "the stored picture is not an image");
+  }
+  if (metadata.format !== "webp") throw new DomainError("VALIDATION_ERROR", "the stored picture is not a WebP");
+  const width = metadata.width ?? 0;
+  const height = metadata.height ?? 0;
+  if (width < MIN_DIMENSION || height < MIN_DIMENSION || width > MAX_DIMENSION || height > MAX_DIMENSION) {
+    throw new DomainError("VALIDATION_ERROR", "the stored picture has a size no upload could have given it");
+  }
+
+  const { data, info } = await sharp(master, { failOn: "error" }).toColourspace("srgb").raw({ depth: "uchar" }).toBuffer({ resolveWithObject: true });
+  const pixels = () => sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } });
+  const widths = ladderWidths(info.width);
+  const [thumb, ...rungBodies] = await Promise.all([
+    pixels()
+      .resize({ width: THUMB_MAX, height: THUMB_MAX, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: THUMB_QUALITY, effort: 6 })
+      .toBuffer(),
+    ...widths.map((rung) => pixels().resize({ width: rung }).webp(lossy(RUNG_QUALITY, RUNG_EFFORT)).toBuffer()),
+  ]);
+  return { thumb, rungs: widths.map((rung, index) => ({ width: rung, body: rungBodies[index] })), width: info.width, height: info.height };
+}
+
 /** "Înaltă": near-lossless when it costs at most twice lossy 90 on a probe, lossy 90 otherwise. */
 async function highEncoding(pixels: () => Sharp, masterWidth: number): Promise<ImageEncoding> {
   const probe = () => pixels().resize({ width: Math.min(PROBE_WIDTH, masterWidth) });

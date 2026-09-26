@@ -34,7 +34,9 @@ import { opsTaskPanels, resolveTaskPanel, type TaskPanel } from "@/modules/diagn
 import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
+import { countOlderPictures } from "@/modules/media/older-pictures";
 import { isStorageConfigured } from "@/modules/media/storage";
+import OlderPicturesPanel from "@/modules/media/ui/OlderPicturesPanel";
 import { readBotCheck } from "@/modules/registrations/bot-check";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import BotCheckPanel from "@/modules/registrations/ui/BotCheckPanel";
@@ -85,6 +87,13 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+/**
+ * A Server Action runs in the function of the page it is posted from, so this is also the older
+ * pictures' button's ceiling (§NNN): a press starts no new picture after thirty seconds
+ * (`OLDER_PICTURES_BUDGET_MS`), and the upload routes' own sixty is the room it finishes in.
+ */
+export const maxDuration = 60;
 
 /**
  * The panels this screen is divided into (§265; the owner: "partea de configurare ar trebui să
@@ -408,6 +417,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // The refusal codes (`?error=FORBIDDEN|VALIDATION_ERROR`, from the Neon and Mailgun plan actions) are
   // `Admin.errors.*`, shared by every backoffice page — `Admin.tasks.errors` does not exist.
   const tErrors = await getTranslations("Admin.errors");
+  /*
+    The older pictures' button (§NNN), on the list of what is owed while anything is left to
+    convert — one count, only for this panel, and nothing where there is no store to convert in.
+  */
+  const olderPictures = panel === "todo" && isStorageConfigured() ? await countOlderPictures(db) : 0;
   // Over every row, filter or not: what blocks a real registration is not a matter of view.
   const blocking = tasks.filter((task) => task.state === "blocking").length;
 
@@ -592,6 +606,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
       {panel === "todo" && (
         <>
+        {/* A thing owed once (§NNN): the pictures from before §414 get their phone sizes. Gone at zero. */}
+        {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} />}
+
         {/* Who and what kind — two rows of links, no client code, each keeping the other's
             choice (§150). The link is 44 px tall; the chip inside it is small. */}
         <Stack spacing={0.5}>
