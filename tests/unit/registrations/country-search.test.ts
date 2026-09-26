@@ -58,3 +58,17 @@ describe("BR-REQ-031-04 a country is found by typing part of it", () => {
     }
   });
 });
+
+describe("BR-REQ-031-04 the English name and everyday aliases find a country on the Romanian page", () => {
+  const withEnglish = citizenship.map((country) => ({ ...country, altLabel: countryName(country.code, "en") }));
+  const enNames = phoneCountryLabels("en");
+  const prefixesWithEnglish = prefixes.map((country) => ({ ...country, altLabel: enNames[country.code] }));
+
+  it("finds Germany, Spain and the UK by their English words", () => {
+    expect(codes(searchCountries(withEnglish, "germany"))[0]).toBe("DE");
+    expect(codes(searchCountries(withEnglish, "spain"))[0]).toBe("ES");
+    expect(codes(searchCountries(withEnglish, "uk"))[0]).toBe("GB");
+    expect(codes(searchCountries(prefixesWithEnglish, "germany"))[0]).toBe("DE");
+    expect(codes(searchCountries(prefixesWithEnglish, "UK"))[0]).toBe("GB");
+  });
+});

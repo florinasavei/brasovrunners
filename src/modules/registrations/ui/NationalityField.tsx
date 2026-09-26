@@ -37,6 +37,7 @@ export default function NationalityField({
   defaultValue,
   countries,
   words,
+  required = false,
 }: {
   id: string;
   name: string;
@@ -49,9 +50,17 @@ export default function NationalityField({
   defaultValue?: string;
   countries: readonly SearchableCountry[];
   words: CountrySearchWords;
+  /**
+   * An answer is owed (V2.03's required citizenship): no clear button, no "Nu spun", the
+   * visible box carries `required` (the §422 missing list and the browser both read it), and
+   * with no draft the answer starts at România.
+   */
+  required?: boolean;
 }) {
   const [value, setValue] = useState<SearchableCountry | null>(
-    () => countries.find((country) => country.code === defaultValue) ?? null,
+    () =>
+      countries.find((country) => country.code === defaultValue) ??
+      (required ? (countries.find((country) => country.code === "RO") ?? null) : null),
   );
 
   return (
@@ -59,9 +68,10 @@ export default function NationalityField({
       <Autocomplete
         id={id}
         autoHighlight
+        disableClearable={required}
         options={countries as SearchableCountry[]}
         value={value}
-        onChange={(_event, next) => setValue(next)}
+        onChange={(_event, next) => setValue(next ?? null)}
         filterOptions={(options, state) => searchCountries(options, state.inputValue)}
         getOptionLabel={(country) => country.label}
         isOptionEqualToValue={(option, chosen) => option.code === chosen.code}
@@ -83,7 +93,8 @@ export default function NationalityField({
           <TextField
             {...params}
             label={label}
-            placeholder={noneLabel}
+            placeholder={required ? undefined : noneLabel}
+            required={required}
             error={error}
             helperText={helperText}
             slotProps={{

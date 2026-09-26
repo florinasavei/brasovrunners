@@ -3597,7 +3597,7 @@
     "phone": "Telefon",
     "phoneCountry": "Țara",
     "countrySearch": {
-      "search": "Caută țara (nume sau prefix)",
+      "search": "Caută țara (nume, cod sau prefix)",
       "noMatch": "Nicio țară nu se potrivește",
       "clear": "Șterge",
       "open": "Deschide lista țărilor",

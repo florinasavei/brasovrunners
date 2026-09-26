@@ -14,7 +14,9 @@
  *   and nobody should need them to find their own country.
  * - **The start of any word first.** "ger" puts Germania before Algeria; then any other place in
  *   the name, so "land" still finds "Olanda" and "Finlanda".
- * - **The ISO code, typed whole.** "GB", "US", "MD" — what people write on forms.
+ * - **The English name as well**, where the server sends it (`altLabel`): "germany" on the
+ *   Romanian page finds Germania.
+ * - **The ISO code, typed whole**, and a few everyday aliases: "GB", "US", "MD", "UK".
  * - **The dialling code, for the telephone.** "+40", "40" or "0040" finds Romania; a prefix of
  *   the digits narrows as it is typed ("+3" → every +3x).
  *
@@ -28,7 +30,15 @@ export type SearchableCountry = {
   label: string;
   /** The E.164 country code without its `+`, where the picker is a telephone prefix. */
   dialingCode?: string;
+  /**
+   * The country's English name, sent by the server beside the reader's own: "germany" or
+   * "spain" typed on the Romanian page still finds Germania and Spania.
+   */
+  altLabel?: string;
 };
+
+/** What people type that is neither an ISO code nor a name: "UK" is GB's everyday code. */
+const ALIASES: Readonly<Record<string, string>> = { UK: "GB", EN: "GB", USA: "US", UAE: "AE" };
 
 /** Lower case, accents and punctuation-like apostrophes gone: what a search compares. */
 export function foldForSearch(text: string): string {
@@ -69,10 +79,10 @@ export function searchCountries<T extends SearchableCountry>(countries: readonly
       else if (country.dialingCode?.startsWith(digits)) wordStart.push(country);
       continue;
     }
-    const name = foldForSearch(country.label);
-    if (country.code === upper || name === folded) exact.push(country);
-    else if (name.startsWith(folded) || name.split(/[\s\-–(),.]+/).some((word) => word.startsWith(folded))) wordStart.push(country);
-    else if (name.includes(folded)) inside.push(country);
+    const names = [country.label, country.altLabel].filter((name): name is string => !!name).map(foldForSearch);
+    if (country.code === upper || ALIASES[upper] === country.code || names.includes(folded)) exact.push(country);
+    else if (names.some((name) => name.split(/[\s\-–(),.]+/).some((word) => word.startsWith(folded)))) wordStart.push(country);
+    else if (names.some((name) => name.includes(folded))) inside.push(country);
   }
 
   return [...exact, ...wordStart, ...inside];

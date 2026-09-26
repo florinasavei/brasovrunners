@@ -143,7 +143,18 @@ export function CountrySearchPopover({
         renderOption={(props, country) => {
           const { key, ...rest } = props;
           return (
-            <Box component="li" key={key} {...rest} sx={OPTION_SX}>
+            <Box
+              component="li"
+              key={key}
+              {...rest}
+              // Autocomplete skips onChange for the country already chosen; a tap on it still
+              // closes the popover.
+              onClick={(event) => {
+                rest.onClick?.(event);
+                if (country.code === value) onChoose(country.code);
+              }}
+              sx={OPTION_SX}
+            >
               <CountryOptionRow country={country} />
             </Box>
           );

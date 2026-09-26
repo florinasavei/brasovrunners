@@ -188,6 +188,7 @@ function PhoneFieldIsland({
   countryLabel,
   countryOrder,
   countryNames,
+  countryAltNames,
   value,
   draft,
   required = false,
@@ -220,6 +221,8 @@ function PhoneFieldIsland({
    * mismatch that cost the form its hydration in the first place.
    */
   countryNames: Readonly<Record<string, string>>;
+  /** The English name of each code, for the search only (§NNN): "germany" on the Romanian page. */
+  countryAltNames?: Readonly<Record<string, string>>;
   /** A stored E.164 number to prefill, or nothing. */
   value?: string | null;
   /** What was typed before a rejected submit (§142): the two controls as posted, over `value`. */
@@ -433,7 +436,7 @@ function PhoneFieldIsland({
   const focusAfterSearch = useRef<"digits" | "flag">("flag");
   const searchOptions = countryOrder
     .filter((code) => code in DIALING_CODES)
-    .map((code) => ({ code, label: countryNames[code] ?? code, dialingCode: DIALING_CODES[code] }));
+    .map((code) => ({ code, label: countryNames[code] ?? code, altLabel: countryAltNames?.[code], dialingCode: DIALING_CODES[code] }));
   const chooseCountry = (code: string) => {
     const select = selectRef.current;
     if (select && select.value !== code) {

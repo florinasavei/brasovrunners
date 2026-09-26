@@ -3597,7 +3597,7 @@
     "phone": "Phone",
     "phoneCountry": "Country",
     "countrySearch": {
-      "search": "Search for a country (name or code)",
+      "search": "Search for a country (name, code or prefix)",
       "noMatch": "No country matches",
       "clear": "Clear",
       "open": "Open the list of countries",

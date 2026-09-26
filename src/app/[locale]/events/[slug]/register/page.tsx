@@ -298,12 +298,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const tEvent = await getTranslations("Event");
   const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
-  const countries = countryOptions(locale, (code) => countryName(code, locale));
+  const countries = countryOptions(locale, (code) => countryName(code, locale)).map((country) => ({
+    ...country,
+    // The English name too, so the search finds "germany" on the Romanian page (§NNN).
+    altLabel: countryName(country.code, "en"),
+  }));
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser
   // (§324): the two runtimes' ICU data name countries differently, and computing either again
   // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  const phoneAltNames = phoneCountryLabels("en");
   // The two country pickers' search words (§NNN), as plain strings for the islands (§353).
   const countrySearchWords = {
     search: t("countrySearch.search"),
@@ -896,6 +901,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
                 countryNames={phoneNames}
+                countryAltNames={phoneAltNames}
                 searchWords={countrySearchWords}
                 // Optional for another person on the address (§389): often a child with no phone of
                 // their own; the emergency contact below is still asked.
@@ -931,6 +937,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   countryLabel={t("phoneCountry")}
                   countryOrder={phoneOrder}
                   countryNames={phoneNames}
+                  countryAltNames={phoneAltNames}
                   searchWords={countrySearchWords}
                   required
                   autoComplete="off"
