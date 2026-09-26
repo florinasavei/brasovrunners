@@ -915,7 +915,7 @@
       "neonPlanTitle": "Schimbi planul Neon?",
       "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
-      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la o jumătate de minut. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva."
+      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",

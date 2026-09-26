@@ -90,8 +90,9 @@ export const dynamic = "force-dynamic";
 
 /**
  * A Server Action runs in the function of the page it is posted from, so this is also the older
- * pictures' button's ceiling (§NNN): a press starts no new picture after thirty seconds
- * (`OLDER_PICTURES_BUDGET_MS`), and the upload routes' own sixty is the room it finishes in.
+ * pictures' button's ceiling (§NNN): a press starts no new picture after twelve seconds
+ * (`OLDER_PICTURES_BUDGET_MS`) and ends within about twenty; the upload routes' own sixty is the
+ * room a slow last picture finishes in.
  */
 export const maxDuration = 60;
 

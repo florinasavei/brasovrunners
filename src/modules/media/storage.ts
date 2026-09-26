@@ -125,12 +125,28 @@ const fakeObjects: Map<string, { body: Buffer; contentType: string }> = ((
   globalThis as { __brFakeMedia?: Map<string, { body: Buffer; contentType: string }> }
 ).__brFakeMedia ??= new Map());
 
+/**
+ * A miss in the fake store, read from `.media/` on the disk when the end-to-end server says so
+ * (`E2E_FAKE_MEDIA_FROM_DISK`, §NNN) — a spec's fixture of a picture no upload makes any more.
+ * Read-only: a put or a delete touches only the Map, so the disk holds what the spec wrote.
+ */
+async function fakeObject(key: string): Promise<{ body: Buffer; contentType: string } | null> {
+  const stored = fakeObjects.get(key);
+  if (stored) return stored;
+  if (!env.E2E_FAKE_MEDIA_FROM_DISK) return null;
+  try {
+    return { body: await readFile(safeLocalPath(key)), contentType: "image/webp" };
+  } catch {
+    return null;
+  }
+}
+
 const fakeStorage: Storage = {
   async put(key, body, contentType) {
     fakeObjects.set(key, { body, contentType });
   },
   async get(key) {
-    return fakeObjects.get(key)?.body ?? null;
+    return (await fakeObject(key))?.body ?? null;
   },
   async delete(key) {
     fakeObjects.delete(key);
@@ -142,7 +158,7 @@ const fakeStorage: Storage = {
 
 /** What `/api/media/[...key]` serves in `local` and `fake` mode. Null when nothing is there. */
 export async function readLocalObject(key: string): Promise<{ body: Buffer; contentType: string } | null> {
-  if (env.STORAGE_MODE === "fake") return fakeObjects.get(key) ?? null;
+  if (env.STORAGE_MODE === "fake") return fakeObject(key);
   if (env.STORAGE_MODE === "local") {
     try {
       return { body: await readFile(safeLocalPath(key)), contentType: "image/webp" };

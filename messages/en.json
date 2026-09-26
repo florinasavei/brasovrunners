@@ -915,7 +915,7 @@
       "neonPlanTitle": "Change the Neon plan?",
       "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
       "olderPicturesTitle": "Make the phone sizes?",
-      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to half a minute. Anyone with the editor of such a page or event open will be asked to reload it before saving."
+      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",

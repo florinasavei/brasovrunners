@@ -115,6 +115,12 @@ export default defineConfig({
        * in-process fixture, the same shape as `E2E_DISABLE_NEON` above.
        */
       E2E_STUB_YOUTUBE_POSTER: "true",
+      /**
+       * Under CI's `APP_ENV=test` the server's store is a Map the specs cannot reach; this lets a
+       * miss there read `.media/` on the disk, where `older-pictures.spec.ts` writes a picture as
+       * the site stored one before §414 (`env.ts`, `E2E_FAKE_MEDIA_FROM_DISK`, §NNN).
+       */
+      E2E_FAKE_MEDIA_FROM_DISK: "true",
     },
   },
 });

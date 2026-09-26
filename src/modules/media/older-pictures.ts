@@ -50,8 +50,8 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
  *
  * ## Why in batches
  *
- * An old master is at most 2400 pixels; its six files take a few seconds, and a Server Action
- * has a minute. A press takes at most `OLDER_PICTURES_PER_PRESS` pictures and starts none after
+ * An old master is at most 2400 pixels; its seven new files take one to three seconds here and
+ * up to about seven on a deployed function, and a Server Action has a minute. A press takes at most `OLDER_PICTURES_PER_PRESS` pictures and starts none after
  * `OLDER_PICTURES_BUDGET_MS`, then says how many are left; the button stays until none are.
  *
  * ## What it never does
@@ -63,14 +63,22 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
  * is where it is removed.
  */
 
-/** The most pictures one press converts. */
-export const OLDER_PICTURES_PER_PRESS = 20;
-
 /**
- * After this many milliseconds a press starts no new picture: one picture takes a few seconds,
- * and the action runs inside the page's 60-second function (`admin/tasks/page.tsx`).
+ * The most pictures one press converts, and the time after which it starts no new one — sized
+ * from a measurement, not a guess (§NNN). `ladderFromStoredMaster` on a 2400 × 1349 «Normală»
+ * master (six rungs and the thumbnail) took 0.9–1.5 s on the development machine with every
+ * core, and 2.5–2.6 s with `sharp` and libuv held to one thread — the honest figure for a
+ * Vercel function, whose one vCPU runs the `Promise.all` of encodes one after another. Counting
+ * that twice again for a slower CPU, eight R2 writes (about 0.8 MB) and the move's transaction,
+ * one picture is at most about 7 s there. So a press starts none after 12 s and finishes within
+ * about 20 s even when the last picture it starts is a slow one; on a fast machine it stops at
+ * eight. The action runs inside the page's 60-second function (`admin/tasks/page.tsx`), so a
+ * picture three times slower still ends in time.
  */
-export const OLDER_PICTURES_BUDGET_MS = 30_000;
+export const OLDER_PICTURES_PER_PRESS = 8;
+
+/** See `OLDER_PICTURES_PER_PRESS`: no new picture after this many milliseconds. */
+export const OLDER_PICTURES_BUDGET_MS = 12_000;
 
 /** A picture stored before §414: its prefix is a version-4 UUID (`ladder.ts`). */
 const isOlderPicture = sql`${mediaAssets.keyPrefix} ~ ${FORMER_KEY_PREFIX_PATTERN}`;
@@ -143,7 +151,19 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
     for (const asset of page) {
       if (converted >= perPress || clock() - started >= budgetMs) break pages;
       after = asset;
-      const outcome = await convertOne(db, storage, asset);
+      /*
+        One picture's surprise is that picture's failure, never the press's: an exception here
+        (a transient database error inside the move, a store that throws) would otherwise skip
+        the audit row and the cache expiry for the pictures already moved, and — the press going
+        oldest first — end every later press on this same picture (§NNN).
+      */
+      let outcome: Outcome;
+      try {
+        outcome = await convertOne(db, storage, asset);
+      } catch (error) {
+        console.error("[media] could not give the ladder to", asset.id, error);
+        outcome = "failed";
+      }
       if (outcome === "converted") converted += 1;
       if (outcome === "failed") failed += 1;
     }

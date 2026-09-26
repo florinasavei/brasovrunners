@@ -25,7 +25,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-054-01 criterion 14, BR-REQ-050-03 criterion 23 (`DECISIONS.md` §NNN) — the one-off
+ * BR-REQ-054-01 criterion 14, BR-REQ-090-05 criterion 14 (`DECISIONS.md` §NNN) — the one-off
  * button that gives the pictures stored before §414 their ladder.
  *
  * What is proven: a press converts the oldest pictures first, at most a batch; the master is kept
@@ -196,6 +196,59 @@ describe("§NNN the pictures from before §414 get their ladder, a batch per pre
     expect(isLadderKeyPrefix(rows.get(fine.row.id)!)).toBe(true);
     // Nothing half-written under the failed pictures' new prefixes.
     expect(await readLocalObject(objectKey(ladderKeyPrefixOf(broken.row.keyPrefix), "web"))).toBeNull();
+  });
+
+  it("counts a master whose header reads but whose body is cut short as failed, and the press goes on", async () => {
+    // A WebP with the last tenth of its pixels cut off and its two chunk sizes made to agree, so
+    // `metadata()` reads its size from the header and only the full decode fails. Lossless, whose
+    // header libwebp reads without the image data. Oldest, so it is first in line on every press —
+    // it must never stop the ones after it.
+    const truncated = await olderPicture(db, "cut.jpg", T0, { withFiles: false, width: 800 });
+    const whole = await sharp({ create: { width: 800, height: 600, channels: 3, background: "#000000", noise: { type: "gaussian", mean: 128, sigma: 30 } } })
+      .webp({ lossless: true })
+      .toBuffer();
+    const cut = Buffer.from(whole.subarray(0, Math.floor(whole.byteLength * 0.9)));
+    cut.writeUInt32LE(cut.byteLength - 8, 4); // RIFF
+    cut.writeUInt32LE(cut.byteLength - 20, 16); // VP8L
+    expect((await sharp(cut).metadata()).width).toBe(800);
+    await expect(sharp(cut, { failOn: "error" }).raw().toBuffer()).rejects.toThrow();
+    await getStorage().put(objectKey(truncated.row.keyPrefix, "web"), cut, "image/webp");
+    const fine = await olderPicture(db, "fine.jpg", new Date(T0.getTime() + 60_000), { width: 800 });
+
+    expect(await giveOlderPicturesTheirLadder(db, admin, { now: T0 })).toEqual({ converted: 1, failed: 1, left: 1 });
+    const rows = new Map((await db.select().from(mediaAssets)).map((row) => [row.id, row.keyPrefix]));
+    expect(rows.get(truncated.row.id)).toBe(truncated.row.keyPrefix);
+    expect(isLadderKeyPrefix(rows.get(fine.row.id)!)).toBe(true);
+    expect(await readLocalObject(objectKey(ladderKeyPrefixOf(truncated.row.keyPrefix), "web"))).toBeNull();
+    // The press was recorded, with the failure in its numbers.
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "media.ladder_given"));
+    expect(audit?.metadataJson).toEqual({ converted: 1, failed: 1, left: 1 });
+
+    // And the next press is not jammed on it: it fails the same picture again and says so.
+    expect(await giveOlderPicturesTheirLadder(db, admin, { now: T0 })).toEqual({ converted: 0, failed: 1, left: 1 });
+  });
+
+  it("keeps a picture that a text names at its old address, saved after the move", async () => {
+    const older = await olderPicture(db, "kept.jpg", T0, { width: 800 });
+    expect((await giveOlderPicturesTheirLadder(db, admin)).converted).toBe(1);
+    // A new page's form, open since before the press, saved with the old address: nothing
+    // refuses it, and the picture — its old files kept for exactly this — must stay.
+    await createPage(db, {
+      actor: admin,
+      fields: {
+        navOrder: "20",
+        translations: {
+          ro: { slug: "veche", title: "Veche", body: bodyWith(older.src, 800), seoTitle: "", seoDescription: "" },
+          en: { slug: "old", title: "Old", body: "", seoTitle: "", seoDescription: "" },
+        },
+      },
+      now: T0,
+    });
+
+    expect(await sweepOrphanAssets(db, new Date(T0.getTime() + 9 * 24 * 60 * 60_000))).toBe(0);
+    const error = await deleteMediaAsset(db, { actor: admin, assetId: older.row.id }).catch((caught: unknown) => caught);
+    expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");
+    expect(await readLocalObject(objectKey(older.row.keyPrefix, "web"))).not.toBeNull();
   });
 
   it("never touches a YouTube poster or a picture that already has its ladder", async () => {
