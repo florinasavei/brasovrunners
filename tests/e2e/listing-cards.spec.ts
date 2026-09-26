@@ -676,13 +676,18 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       await expect(picture).toHaveCount(1);
       await expect(words.locator("figure")).toHaveCount(0);
       await expect(picture).toBeVisible();
-      // Drawn whole, not clipped: walk the picture's ancestors up to the card and check each one
-      // that hides overflow against the picture's own box — none may cut it, which is what the
+      // In the card's own 16∶9 frame (§NNN), which is the only box allowed to cut the photograph.
+      const frame = summary.getByTestId("card-picture");
+      await expect(frame).toHaveCount(1);
+      const frameBox = await frame.boundingBox();
+      expect((frameBox?.width ?? 0) / (frameBox?.height ?? 1)).toBeCloseTo(16 / 9, 1);
+      // The frame drawn whole, not clipped: walk its ancestors up to the card and check each one
+      // that hides overflow against the frame's own box — none may cut it, which is what the
       // clamped summary did to a picture under its third line.
-      const clippedBy = await picture.evaluate((img) => {
-        const own = img.getBoundingClientRect();
+      const clippedBy = await frame.evaluate((shown) => {
+        const own = shown.getBoundingClientRect();
         if (own.height === 0) return "no height";
-        for (let box = img.parentElement; box && box.tagName !== "LI"; box = box.parentElement) {
+        for (let box = shown.parentElement; box && box.tagName !== "LI"; box = box.parentElement) {
           const style = getComputedStyle(box);
           if (style.overflow === "visible" && style.overflowY === "visible") continue;
           const around = box.getBoundingClientRect();
@@ -697,9 +702,10 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
         return Math.round(box.getBoundingClientRect().height / lineHeight);
       });
       expect(lines).toBeLessThanOrEqual(3);
-      // Under the words, where it was written.
-      const [wordsBox, pictureBox] = [await words.boundingBox(), await picture.boundingBox()];
-      expect(pictureBox?.y ?? 0).toBeGreaterThanOrEqual((wordsBox?.y ?? 0) + (wordsBox?.height ?? 0));
+      // Under the words, where it was written — the frame, since the photograph inside it may be
+      // pulled up past the frame's top to centre the chosen point (§NNN).
+      const wordsBox = await words.boundingBox();
+      expect(frameBox?.y ?? 0).toBeGreaterThanOrEqual((wordsBox?.y ?? 0) + (wordsBox?.height ?? 0));
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(0);
       passed = true;

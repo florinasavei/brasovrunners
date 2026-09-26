@@ -65,13 +65,15 @@ import {
   TABLE_HEADER_FILLS,
   type BlockAlignment,
   type ImageCrop,
+  type ImageFocus,
   type TableBorderColour,
   type TableBorders,
   type TableHeaderFill,
   type TableValign,
 } from "../domain/schema";
+import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-frame";
 import { editorLook, sameEditorLook } from "./editor-look";
-import ImageCropBox from "./ImageCropBox";
+import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 
@@ -163,6 +165,7 @@ function RichTextEditorIsland({
   label,
   accessibleSuffix,
   features = { media: true, tables: true },
+  cardPictures = false,
   labels,
 }: {
   /** The form field the JSON is posted as — the same name the textarea used. */
@@ -188,6 +191,11 @@ function RichTextEditorIsland({
    * is what every editorial form wants.
    */
   features?: { media?: boolean; tables?: boolean };
+  /**
+   * The body is an event's short description, whose pictures every listing card draws in one
+   * 16∶9 frame (§NNN): the picture's panel then shows that frame and offers the card's centre.
+   */
+  cardPictures?: boolean;
   /** Translated control names. Passed in, because a client island cannot read the catalogue. */
   labels: {
     bold: string;
@@ -248,6 +256,12 @@ function RichTextEditorIsland({
     imageCropHelp: string;
     imageCropReset: string;
     imageCropPosition: string;
+    /**
+     * The shapes, the card's centre and its preview (§NNN), in the crop box's own shape; the
+     * upload bar's shape choice (`imageUploadShapeHelp`) reuses the shapes' names.
+     */
+    imageShapes: Omit<ImageCropLabels, "title" | "help" | "reset" | "position">;
+    imageUploadShapeHelp: string;
     imageRemove: string;
     imageDone: string;
     /** The ✕ on the picture's panel, and the panel's own heading (§258). */
@@ -301,6 +315,17 @@ function RichTextEditorIsland({
   const [imageBarOpen, setImageBarOpen] = useState(false);
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
+  /**
+   * The shape a new upload starts in (§NNN): «Liber», the whole photograph as before, or one of
+   * the presets, stored as §241's crop and changeable afterwards in the picture's panel. Mirrored
+   * in a ref, because a paste or a drop calls the `insertImage` Tiptap kept from the first render.
+   */
+  const [uploadShape, setUploadShapeState] = useState<CropPreset>("free");
+  const uploadShapeRef = useRef<CropPreset>("free");
+  const setUploadShape = (next: CropPreset) => {
+    uploadShapeRef.current = next;
+    setUploadShapeState(next);
+  };
   /**
    * What the last poster became (§414), with its address: shown in a film's panel only while that
    * film's poster is this one, so another film selected afterwards never shows these facts.
@@ -452,6 +477,8 @@ function RichTextEditorIsland({
              * `renderHTML` below turns them into the window the page uses.
              */
             crop: { default: null, renderHTML: () => ({}) },
+            /** The listing card's centre (§NNN): drawn by the card alone, never by this editor. */
+            focus: { default: null, renderHTML: () => ({}) },
           };
         },
         /**
@@ -537,12 +564,15 @@ function RichTextEditorIsland({
     try {
       const uploaded = await uploadPicture(file);
       setStored(uploaded.stored ?? null);
+      // The shape chosen in the bar, as a crop of the stored photograph (§NNN); «Liber» is none.
+      const shape = uploadShapeRef.current;
+      const crop = shape === "free" ? null : presetCrop(shape, { width: uploaded.width, height: uploaded.height });
       // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
       // and an empty alt is what the nag under the editor counts.
       editor
         ?.chain()
         .focus()
-        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100, align: "block", crop: null } as never)
+        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100, align: "block", crop, focus: null } as never)
         .run();
       setImageState("idle");
     } catch {
@@ -639,7 +669,7 @@ function RichTextEditorIsland({
     editor
       ?.chain()
       .focus()
-      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block", crop: null } as never)
+      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block", crop: null, focus: null } as never)
       .run();
     setGallery(null);
   };
@@ -931,6 +961,31 @@ function RichTextEditorIsland({
             data-testid="rich-text-image-bar"
           >
             <ImageQualityChoice value={imageQuality} onChange={setImageQuality} labels={labels.imageQuality} />
+            {/* The shape it goes in with (§NNN): a crop of the stored photograph, never its pixels. */}
+            <Box data-testid="rich-text-upload-shape">
+              <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 600, mb: 0.5 }}>
+                {labels.imageShapes.presets}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={uploadShape}
+                onChange={(_event, next: CropPreset | null) => {
+                  if (next !== null) setUploadShape(next);
+                }}
+                aria-label={labels.imageShapes.presets}
+                sx={{ flexWrap: "wrap" }}
+              >
+                {CROP_PRESETS.map((value) => (
+                  <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
+                    {labels.imageShapes.preset[value]}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                {labels.imageUploadShapeHelp}
+              </Typography>
+            </Box>
             <Stack direction="row" spacing={1}>
               <Button variant="contained" onClick={() => fileInputRef.current?.click()} sx={{ minHeight: 44 }}>
                 {labels.imageChoose}
@@ -1431,14 +1486,21 @@ function RichTextEditorIsland({
             */}
             {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (
               <ImageCropBox
+                // One box per picture: the shape it holds is that picture's, not the last one's.
+                key={`${String(imageAttrs.src ?? "")}@${imageNodeAt ?? ""}`}
                 src={String(imageAttrs.src ?? "")}
+                intrinsic={{ width: imageAttrs.width, height: imageAttrs.height }}
                 crop={(imageAttrs.crop as ImageCrop | null) ?? null}
                 onChange={(crop) => setImageAttr({ crop })}
+                focus={(imageAttrs.focus as ImageFocus | null) ?? null}
+                onFocusChange={(focus) => setImageAttr({ focus })}
+                card={cardPictures}
                 labels={{
                   title: labels.imageCrop,
                   help: labels.imageCropHelp,
                   reset: labels.imageCropReset,
                   position: labels.imageCropPosition,
+                  ...labels.imageShapes,
                 }}
               />
             )}

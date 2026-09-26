@@ -10,7 +10,16 @@ import {
   tableColumnFractions,
 } from "../domain/schema";
 import { shortenUrls } from "../domain/short-url";
-import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
+import {
+  CARD_FRAME_SX,
+  cardCoverSx,
+  cardFrameGeometry,
+  cropGeometry,
+  cropImageSx,
+  cropWindowSx,
+  imageCaptionSx,
+  imageFigureSx,
+} from "./image-layout";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
 import { tableSx } from "./table-layout";
@@ -103,17 +112,18 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
       // A picture the organizer cropped (§241) is the same <img> inside a window that shows the
       // rectangle they drew. The window is emitted only when there is a crop, so every picture
       // written before today renders the markup it rendered yesterday, byte for byte.
+      if (pictures === "card") return renderCardPicture(block);
       const crop = cropGeometry(block.attrs.crop, block.attrs);
       /*
         The ladder (§414): a picture stored since then names its smaller siblings, and `sizes`
         says how wide it is drawn here — the column's share of the screen, magnified by the crop
         when there is one, because a cropped photograph is drawn `1 / crop.w` times its window.
         A picture from before has no siblings, gets no `srcset`, and renders the markup it
-        rendered yesterday. A card's picture is always the card's width (`CARD_EXCERPT_SX`).
+        rendered yesterday. A card's picture is drawn by `renderCardPicture` instead.
       */
       const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
       const sizes = srcSet
-        ? pictureSizes(pictures, pictures === "card" ? 100 : block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
+        ? pictureSizes(pictures, block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
         : undefined;
       return (
         <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
@@ -277,6 +287,37 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
       );
     }
   }
+}
+
+/**
+ * A picture on a listing card (§NNN): the same 16∶9 frame on every card, over the organizer's crop,
+ * centred on the focal point the club picked (`cardFrameGeometry`). The figure's column share and
+ * side are overridden by the card's own rules (`CARD_EXCERPT_SX`); the caption stays under it.
+ */
+function renderCardPicture(block: Extract<RichTextBlock, { type: "image" }>): ReactNode {
+  const frame = cardFrameGeometry(block.attrs);
+  const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
+  const sizes = srcSet ? pictureSizes("card", 100, frame?.magnify ?? 1) : undefined;
+  return (
+    <Box component="figure" sx={imageFigureSx(block.attrs, false)}>
+      <Box className="rt-card-frame" data-testid="card-picture" sx={CARD_FRAME_SX}>
+        <Box
+          component="img"
+          src={block.attrs.src}
+          srcSet={srcSet}
+          sizes={sizes}
+          alt={block.attrs.alt}
+          loading="lazy"
+          sx={frame ? cropImageSx(frame.geometry) : cardCoverSx(block.attrs.focus)}
+        />
+      </Box>
+      {block.attrs.caption !== "" && (
+        <Typography component="figcaption" variant="body2" color="text.secondary" sx={imageCaptionSx(block.attrs)}>
+          {block.attrs.caption}
+        </Typography>
+      )}
+    </Box>
+  );
 }
 
 /**

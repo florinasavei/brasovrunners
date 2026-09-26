@@ -40,12 +40,13 @@ export const PAGE_EXCERPT_SX = {
  *   of the excerpt would reach into the date and the place beneath it. The card puts every
  *   picture back in the flow.
  *
- * The height is **not** one of them any more (§260). The card used to cap every picture at 180
- * pixels and cut the rest from the centre, which is a crop nobody asked for and nobody could
- * see — the owner: "practic pe card au o înălțime fixă, ceea ce e cam greșit". A picture on a
- * card now has the shape it has, which is the shape it has in the editor and on the page: the
- * organizer's own crop box (§241) is where a portrait photograph becomes a band, and it is a
- * choice that is visible while it is being made.
+ * **The shape is one of them again, and this time it is chosen where it is seen (§NNN).** §260
+ * removed the 180-pixel band every card's picture was cut to from the centre — a crop nobody
+ * asked for and nobody could see ("practic pe card au o înălțime fixă, ceea ce e cam greșit") —
+ * and §275 capped a tall one at 420 pixels instead. A row of cards was then as uneven as its
+ * photographs ("this card looks different than the others"). Every card's picture is now the
+ * same 16∶9 frame, over the organizer's crop, centred on the focal point the club picks in the
+ * crop box — which shows that frame while the point is being chosen.
  *
  * The words stay the size a card's words were (`body2`): this change is about the picture, and
  * a listing whose type grew would be a second, unasked-for change.
@@ -89,16 +90,12 @@ export const CARD_EXCERPT_SX = {
   // chosen side — both media queries from `sm` up — are overridden without `!important`.
   "& figure": { width: "100%", my: 1, float: "none", marginLeft: "auto", marginRight: "auto" },
   /*
-    A picture keeps its shape and stops growing (§275).
-
-    §260 removed the 180-pixel band every card's picture was cut to, and that stands: nothing
-    here crops. What it did not foresee is a portrait photograph seven hundred pixels tall
-    beside a card with no picture at all — the owner, of the listing: "these cards are ugly".
-    A ceiling scales the picture down and centres it; a short or wide one is untouched, and a
-    tall one is the whole photograph, smaller. The crop box in the editor (§241) is still the
-    only thing that cuts anything, and it is a choice somebody makes while looking at it.
+    Every picture on a card is the same 16∶9 frame (§NNN), drawn by `RichText`'s card reading
+    (`CARD_FRAME_SX`, `cardFrameGeometry`) around the focal point the club picked — which is what
+    replaced §275's 420-pixel ceiling: a portrait photograph scaled to the ceiling was still a card
+    twice as tall as its neighbours ("this card looks different than the others"). So there is no
+    rule here on the picture itself; the frame is the card's width and its own height.
   */
-  "& figure > img": { height: "auto", maxHeight: 420, width: "auto", maxWidth: "100%", mx: "auto", display: "block" },
   // The caption follows the picture: centred under a band, and every card's picture is a band.
   "& figcaption": { textAlign: "center" },
 } as const;

@@ -1,4 +1,5 @@
-import type { ImageAlignment, ImageCrop, ImageWidthPercent } from "../domain/schema";
+import { CARD_FRAME_ASPECT, frameCrop } from "../domain/picture-frame";
+import type { ImageAlignment, ImageCrop, ImageFocus, ImageWidthPercent } from "../domain/schema";
 
 /**
  * Where a picture sits in the text column, as `sx` — separated from `RichText` because this is
@@ -138,6 +139,66 @@ export function cropWindowCss(geometry: CropGeometry): string {
 
 export function cropImageCss(geometry: CropGeometry): string {
   return `position:absolute;display:block;width:${geometry.width};height:auto;max-width:none;left:${geometry.left};top:${geometry.top};margin:0;border-radius:0`;
+}
+
+/**
+ * A picture on a listing card (§NNN): every one in the same 16∶9 frame, so a row of cards is one
+ * height whatever was uploaded — the owner, 2026-09-26: "this card looks different than the
+ * others". It reverses §275's "a picture on a card has no crop": a portrait photograph scaled to a
+ * 420-pixel ceiling was still a card twice as tall as its neighbours. What made §275 refuse a band
+ * — "a band *chooses* a shape for somebody" — is answered by the focal point: the club chooses
+ * what the frame is centred on, in the editor, while looking at the frame (`ImageCropBox`).
+ *
+ * The frame covers the organizer's crop (the whole photograph when there is none) and is drawn
+ * with §241's own window: the same magnification and pull, from `frameCrop`. `null` when the
+ * photograph's size was never stored — then `cardCoverSx` fills the frame with `object-fit: cover`
+ * at the focal point, which needs no size at all.
+ *
+ * `magnify` is how much wider than the frame the photograph is drawn, for `sizes` (§414).
+ */
+export function cardFrameGeometry(attrs: {
+  crop?: ImageCrop | null;
+  focus?: ImageFocus | null;
+  width?: number | null;
+  height?: number | null;
+}): { geometry: CropGeometry; magnify: number } | null {
+  const { width, height } = attrs;
+  if (!width || !height) return null;
+  const frame = frameCrop(attrs.crop ?? null, attrs.focus ?? null, { width, height });
+  return {
+    geometry: {
+      aspectRatio: CARD_FRAME_ASPECT,
+      width: percent(1 / frame.w),
+      left: percent(-frame.x / frame.w),
+      top: percent(-frame.y / frame.h),
+    },
+    magnify: 1 / frame.w,
+  };
+}
+
+/** The card's frame itself: the card's width, 16∶9, and nothing outside it shown. */
+export const CARD_FRAME_SX = {
+  position: "relative",
+  overflow: "hidden",
+  width: "100%",
+  aspectRatio: CARD_FRAME_ASPECT,
+  borderRadius: 1,
+} as const;
+
+/**
+ * A picture whose size was never stored, in the card's frame: covered, and pinned at the focal
+ * point (the middle when there is none). `object-position` puts that point of the photograph at
+ * the same point of the frame — near enough for a picture from before sizes were recorded.
+ */
+export function cardCoverSx(focus: ImageFocus | null | undefined) {
+  const at = focus ?? { x: 0.5, y: 0.5 };
+  return {
+    display: "block",
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    objectPosition: `${percent(at.x)} ${percent(at.y)}`,
+  } as const;
 }
 
 /**
