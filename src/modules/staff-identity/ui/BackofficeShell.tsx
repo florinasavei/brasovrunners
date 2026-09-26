@@ -8,7 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getDb } from "@/db/client";
-import { registeredBadgeCount } from "@/modules/registrations/nav-count";
+import { registeredBadgeBreakdown, registeredBadgeHint } from "@/modules/registrations/nav-count";
 import { type AdminSection, canReadRegistrations, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
@@ -66,18 +66,33 @@ export default async function BackofficeShell({
     How many are signed up, beside the "Înscrieri" tab (§255).
 
     Read here because the shell is the one place every backoffice page passes through, and
-    memoized for a minute inside `registeredBadgeCount` so the badge costs about one indexed
+    memoized for a minute per language inside `registeredBadgeBreakdown` so the badge costs about one indexed
     count a minute rather than one per page view — the club's database is a free Neon plan that
     bills compute time (§68). Only for the roles that may open the list — the Organizer since
     §289 — so for everybody else there is no query and no number.
   */
-  const registered = canReadRegistrations(staffUser.role) ? await registeredBadgeCount(getDb(), new Date()) : null;
+  const breakdown = canReadRegistrations(staffUser.role)
+    ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
+    : null;
+  const registered = breakdown?.total ?? null;
+  /*
+    The tooltip says what the figure counts, per event (§NNN): the rule in one line, then each
+    upcoming event with its number, the first five by start and how many more after them — so
+    a reader whose list disagrees with the badge sees which event the difference is on.
+  */
+  const registeredHint = breakdown
+    ? registeredBadgeHint(breakdown.events, {
+        rule: t("nav.registeredHint"),
+        event: (title, count) => t("nav.registeredEvent", { title, count }),
+        more: (count) => t("nav.registeredMoreEvents", { count }),
+      })
+    : undefined;
 
   const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
-    ...(section === "registrations" ? { count: registered, countHint: t("nav.registeredHint") } : {}),
+    ...(section === "registrations" ? { count: registered, countHint: registeredHint } : {}),
   }));
 
   return (

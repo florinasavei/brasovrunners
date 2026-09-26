@@ -475,7 +475,9 @@
       "checkin": "Race day",
       "emails": "Emails",
       "guide": "Guide",
-      "registeredHint": "How many are signed up across every event still to come",
+      "registeredHint": "Active registrations (no cancelled, no tests) on the events still to come:",
+      "registeredEvent": "{title}: {count}",
+      "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter"
     },
     "outbox": {
@@ -715,7 +717,7 @@
       "filtersInUse": "filters on",
       "summaryScopeEvent": "for {event}",
       "summaryScopeAll": "every event",
-      "summaryScopeHelp": "The numbers above are for the selected event alone; the figure on the Înscrieri tab counts every event still to come.",
+      "summaryScopeHelp": "The figures above are for the selected event only.",
       "summaryScopeAllLink": "Show every event",
       "bulkEraseTitle": "Erase the ticked registrations for good",
       "bulkEraseHelp": "They are removed, their places are released, and it cannot be undone. Only an audit line remains: who erased and why, never whom.",
