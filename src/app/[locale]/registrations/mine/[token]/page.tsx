@@ -17,6 +17,7 @@ import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadl
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { env } from "@/shared/config/env";
+import PublicFlash from "@/shared/feedback/PublicFlash";
 import ContactLink from "@/shared/ui/ContactLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
@@ -68,6 +69,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
           {t("mine.cancelledTitle")}
         </Typography>
         <Alert severity="success">{t("mine.cancelled")}</Alert>
+        {/* The toast the cancel flashed (§NNN), on this outcome only. */}
+        <PublicFlash accept={["unregistered"]} />
         <Typography sx={{ mt: 2 }}>
           <Link href="/registrations/mine">{t("mine.newLink")}</Link>
         </Typography>

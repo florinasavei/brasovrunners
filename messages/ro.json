@@ -4317,6 +4317,12 @@
   },
   "Feedback": {
     "close": "Închide",
+    "public": {
+      "contactSent": "Mesaj trimis clubului.",
+      "unregistered": "Gata: înscrierea ta e anulată.",
+      "declarationConfirmed": "Declarație semnată: înscrierea ta e confirmată.",
+      "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare."
+    },
     "toast": {
       "saved": "Salvat.",
       "event": "Evenimentul a fost salvat.",
