@@ -55,7 +55,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 
 /** What both surfaces open with: who, which run, that it is optional and not a race. */
 const openingRo = [
-  "Subsemnatul/a {{participant}}, declar pe propria răspundere că am împlinit 18 ani, că particip la alergarea de grup {{event}}, din data de {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
+  "Subsemnatul/a {{participant}}, declar pe propria răspundere că am împlinit 18 ani, că particip la alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
   // The run's own minimum age (§329, §440), left out whole on a run with none (`dropsParagraph`).
   "Declar că am cel puțin {{minimumAge}}.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",

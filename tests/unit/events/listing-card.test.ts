@@ -435,7 +435,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     const block = facts(html);
     const keys = [...block.matchAll(/data-fact="(\w+)"/g)].map((match) => match[1]);
     expect(keys).toEqual(["when", "where", "pills", "registration"]);
-    expect(text(fact(html, "registration"))).toBe("Înscrierile se deschid pe joi, 1 oct. 2026, 18:00");
+    expect(text(fact(html, "registration"))).toBe("Înscrierile se deschid joi, 1 oct. 2026, la 18:00");
   });
 
   it("in English too", async () => {

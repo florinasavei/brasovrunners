@@ -48,7 +48,7 @@ describe("§377 the 'Termene' panel", () => {
       expect(input, key).toContain(`value="${key === "offerHours" ? 12 : DEFAULT_DEADLINES[key]}"`);
     }
     expect(html).toContain(ro.Admin.emails.deadlines.save);
-    expect(html).toContain("Setat joi, 24 sept. 2026, 10:00.");
+    expect(html).toContain("Setat joi, 24 sept. 2026, la 10:00.");
   });
 
   it("shows anybody else the numbers in force and no form", async () => {

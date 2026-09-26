@@ -166,7 +166,7 @@ describe("the club's declaration (§95)", () => {
     const text = merged.sections.flatMap((s) => s.paragraphs).join(" ");
     // The blanks are filled: the person, the document, the event, its date and its place.
     expect(text).toContain("Subsemnatul/a Ana Popescu, posesor/posesoare al/a actului de identitate bv 123456");
-    expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
+    expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc duminică, 11 oct. 2026, în locația Parcul Tractorul");
     expect(text).not.toContain("{{");
     expect(entry!.signature?.idDocument).toBe("bv 123456");
     // Under the "Data" label the signing instant starts the value, with its weekday (§349).
@@ -375,7 +375,7 @@ describe("the club's declaration (§95)", () => {
     const facts = await eventMergeValues(db, event.id, "ro");
     const blank = (document!.body as LegalDocumentBody).sections.flatMap((s) => s.paragraphs).join("\n");
     const merged = mergeText(blank, facts!.values);
-    expect(merged).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
+    expect(merged).toContain("la evenimentul Crosul aniversar, care va avea loc duminică, 11 oct. 2026, în locația Parcul Tractorul");
     expect(merged).toContain(`Subsemnatul/a ${BLANK}, posesor/posesoare al/a actului de identitate ${BLANK}`);
     expect(merged).not.toContain("{{");
   });

@@ -565,30 +565,30 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
 
   it("the automatic line for the date and time in the form, in both languages — the same sun as the pill", () => {
     const november = { date: "2026-11-18", time: "19:00", timeZone: ZONE };
-    expect(nightAutoLine(lineWords(ro, "ro"), november, BRASOV).line).toBe("Automat: pe mie., 18 nov. 2026, începe la 19:00, apusul la 16:44 — eveniment de noapte");
+    expect(nightAutoLine(lineWords(ro, "ro"), november, BRASOV).line).toBe("Automat: mie., 18 nov. 2026, începe la 19:00, apusul la 16:44 — eveniment de noapte");
     expect(nightAutoLine(lineWords(en, "en"), november, BRASOV).line).toBe("Automatic: on Wed, 18 Nov 2026, starts at 19:00, sunset at 16:44 — a night event");
     expect(nightAutoLine(lineWords(ro, "ro"), { date: "2027-06-16", time: "19:00", timeZone: ZONE }, BRASOV).line).toMatch(
-      /^Automat: pe mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/,
+      /^Automat: mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/,
     );
   });
 
   it("a 05:30 January start names that day's sunrise, never the evening's sunset, in both languages (§404)", () => {
     const january = { date: "2027-01-13", time: "05:30", timeZone: ZONE };
     expect(nightAutoLine(lineWords(ro, "ro"), january, BRASOV).line).toBe(
-      "Automat: pe mie., 13 ian. 2027, începe la 05:30, înainte de răsăritul de la 07:56 — eveniment de noapte",
+      "Automat: mie., 13 ian. 2027, începe la 05:30, înainte de răsăritul de la 07:56 — eveniment de noapte",
     );
     expect(nightAutoLine(lineWords(en, "en"), january, BRASOV).line).toBe(
       "Automatic: on Wed, 13 Jan 2027, starts at 05:30, before sunrise at 07:56 — a night event",
     );
     // After sunrise the same morning is a day date, and the ordinary line names the sunset.
     expect(nightAutoLine(lineWords(ro, "ro"), { ...january, time: "09:00" }, BRASOV).line).toBe(
-      "Automat: pe mie., 13 ian. 2027, începe la 09:00, apusul la 16:57 — nu e eveniment de noapte",
+      "Automat: mie., 13 ian. 2027, începe la 09:00, apusul la 16:57 — nu e eveniment de noapte",
     );
   });
 
   it("asks for the time when there is only a date, and for the date when there is none", () => {
     expect(nightAutoLine(lineWords(ro, "ro"), { date: "2026-11-18", time: "", timeZone: ZONE }, BRASOV).line).toBe(
-      "Automat: pe mie., 18 nov. 2026, apusul la 16:44 — alege ora startului",
+      "Automat: mie., 18 nov. 2026, apusul la 16:44 — alege ora startului",
     );
     expect(nightAutoLine(lineWords(en, "en"), { date: "", time: "19:00", timeZone: ZONE }, BRASOV).line).toBe(en.Admin.editor.night.autoLineNoDate);
   });

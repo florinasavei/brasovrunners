@@ -104,7 +104,7 @@ function join(words: SummaryWords, parts: readonly (string | null | undefined | 
  * line (`formatDay`'s short form, §350), in the reader's language and the event's zone. `inline`
  * keeps Romanian's lower case for a date inside a sentence ("până la dum., 1 nov. 2026").
  */
-export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" = "start"): string {
+export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" | "continues" = "start"): string {
   return formatDay(date, { locale, timeZone: zone, style: "short", withTime: true, position });
 }
 
@@ -386,7 +386,7 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
     : event?.registrationOpensAt
       ? summaryDateTime(event.registrationOpensAt, event.timezone, locale)
       : words.window.fromPublication;
-  const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "inline") : words.window.untilStart;
+  const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "continues") : words.window.untilStart;
   return fillIn(words.window.range, { from, to });
 }
 

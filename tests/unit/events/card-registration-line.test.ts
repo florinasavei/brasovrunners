@@ -48,7 +48,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
   it("says the window and the free places, in bold, with the page's register button", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 7 }, { taken: 3, capacity: 10 }));
     expect(line).toEqual({
-      lead: "Înscrieri deschise până pe sâm., 26 sept. 2026, 10:00",
+      lead: "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
       detail: "7 locuri libere din 10",
       bold: true,
       button: { cta: { kind: "OPEN", availablePlaces: 7 }, label: "Înscrie-te la eveniment" },
@@ -70,7 +70,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
 
   it("says the window and no number, and offers no button, when the count could not be read (§281)", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, { kind: "UNKNOWN" });
-    expect(line).toEqual({ lead: "Înscrieri deschise până pe sâm., 26 sept. 2026, 10:00", detail: null, bold: true, button: null });
+    expect(line).toEqual({ lead: "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00", detail: null, bold: true, button: null });
   });
 
   it("offers no button on a full list, a closed window or one not open yet — as the page", () => {
