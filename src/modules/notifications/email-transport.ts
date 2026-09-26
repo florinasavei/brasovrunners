@@ -13,6 +13,8 @@ import {
   type EmailTransportSetting,
   GMAIL_WINDOW_MS,
   emailTransportSettingSchema,
+  gmailAdmission,
+  type GmailLedger,
   type GmailUsage,
 } from "./domain/email-transport";
 
@@ -92,6 +94,63 @@ export async function readGmailUsage<T extends Record<string, unknown>>(
     sentLastDay: Number(usage?.sent ?? 0),
     lastSentAt: usage?.last ? new Date(usage.last) : null,
     oldestInWindowAt: usage?.oldest ? new Date(usage.oldest) : null,
+  };
+}
+
+/** The latest Gmail slot any sender holds (§NNN review): one row every sender takes in turn. */
+export const GMAIL_SLOT_KEY = "gmailSlot";
+
+/**
+ * Gmail's ledger in the database (§NNN review), shared by every sender in every instance.
+ *
+ * Before each Gmail message the sender asks it, and it answers from the outbox itself — the rolling
+ * day's recipients and the last `sent_at`, which is the moment Gmail took the message, not the
+ * batch's start — plus the latest slot another sender holds. The read and the hold are one short
+ * transaction behind a row lock on the slot row (`FOR UPDATE`), never around the SMTP call: two
+ * senders asking at once are answered one after the other, and the second paces from the first's
+ * slot. What the lock cannot see is a message another sender is sending this very second against
+ * the cap — at most one per sender in flight, under a cap set well below Google's 500.
+ */
+export function createGmailLedger<T extends Record<string, unknown>>(db: Database<T>): GmailLedger {
+  return {
+    async admit(request) {
+      return db.transaction(async (tx) => {
+        await tx
+          .insert(platformSettings)
+          .values({ key: GMAIL_SLOT_KEY, value: { at: null }, updatedAt: request.clock(), updatedByStaffUserId: null })
+          .onConflictDoNothing({ target: platformSettings.key });
+        const [slot] = await tx
+          .select({ value: platformSettings.value })
+          .from(platformSettings)
+          .where(eq(platformSettings.key, GMAIL_SLOT_KEY))
+          .for("update");
+        // The clock once this sender has its turn: a slot taken before the wait for the lock would be stale.
+        const now = request.clock();
+        const usage = await readGmailUsage(tx, now, true);
+        const heldValue = (slot?.value as { at?: unknown } | undefined)?.at;
+        const held = typeof heldValue === "string" ? new Date(heldValue) : null;
+        const lastSentAt =
+          held && !Number.isNaN(held.getTime()) && (!usage.lastSentAt || held > usage.lastSentAt) ? held : usage.lastSentAt;
+        const admission = gmailAdmission(
+          { ...usage, lastSentAt },
+          { gmailDailyCap: request.dailyCap, gmailPaceSeconds: request.paceSeconds },
+          now,
+          request.recipients,
+          request.jitterMs,
+        );
+        if (admission.admitted && admission.waitMs <= request.maxWaitMs) {
+          const slotAt = new Date(now.getTime() + admission.waitMs);
+          await tx
+            .update(platformSettings)
+            .set({ value: { at: slotAt.toISOString() }, updatedAt: now })
+            .where(eq(platformSettings.key, GMAIL_SLOT_KEY));
+          return { ...admission, slotAt };
+        }
+        return admission;
+      });
+    },
+    // Nothing to note: the outbox writes the row's `sent_at` with the moment Gmail took it.
+    async accepted() {},
   };
 }
 

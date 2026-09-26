@@ -13,7 +13,10 @@ import {
   forecastCopiesNote,
   GMAIL_WINDOW_MS,
   gmailAdmission,
+  gmailClaimSize,
   gmailJitterCeilingMs,
+  type GmailLedger,
+  gmailRoadRows,
   type GmailUsage,
   mailgunMessagesPerCompletedRegistration,
   NON_PRODUCTION_GMAIL_DAILY_CAP,
@@ -151,6 +154,8 @@ describe("§NNN Gmail's admission", () => {
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() - 2_000) }), setting, NOW)).toEqual({ admitted: true, waitMs: 3_000 });
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() - 2_000) }), setting, NOW, 1, 700)).toEqual({ admitted: true, waitMs: 3_700 });
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() - 9_000) }), setting, NOW, 1, 700)).toEqual({ admitted: true, waitMs: 0 });
+    // A slot another sender holds two seconds ahead: the pace runs from that slot (§NNN review).
+    expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() + 2_000) }), setting, NOW)).toEqual({ admitted: true, waitMs: 7_000 });
   });
 
   it("keeps the jitter under two seconds and under half the pace", () => {
@@ -170,6 +175,37 @@ describe("§NNN a Gmail failure that may have been accepted is not sent again by
     }
   });
 });
+
+/**
+ * Gmail's ledger in memory, with the database's rule (`notifications/email-transport.ts`): read,
+ * decide and hold the slot in one step, count what Gmail took when it took it.
+ */
+function memoryLedger(start: GmailUsage = usage()): GmailLedger {
+  const state = { ...start };
+  return {
+    async admit(request) {
+      const now = request.clock();
+      const admission = gmailAdmission(
+        state,
+        { gmailDailyCap: request.dailyCap, gmailPaceSeconds: request.paceSeconds },
+        now,
+        request.recipients,
+        request.jitterMs,
+      );
+      if (admission.admitted && admission.waitMs <= request.maxWaitMs) {
+        const slotAt = new Date(now.getTime() + admission.waitMs);
+        state.lastSentAt = slotAt;
+        return { ...admission, slotAt };
+      }
+      return admission;
+    },
+    async accepted(recipients, at) {
+      state.sentLastDay += recipients;
+      state.lastSentAt = at;
+      state.oldestInWindowAt ??= at;
+    },
+  };
+}
 
 type Fake = EmailAdapter & { sent: OutgoingEmail[]; answer: SendResult };
 
@@ -206,7 +242,7 @@ function setup(overrides: Partial<GmailRoad> = {}, mode: "live" | "allowlist" | 
     live: () => mailgun,
     gmail: {
       adapter: () => gmail,
-      usage: usage(),
+      ledger: memoryLedger(),
       dailyCap: 100,
       paceSeconds: 0,
       atGmailCap: "mailgun",
@@ -259,7 +295,7 @@ describe("§NNN the sender's road", () => {
   });
 
   it("hands Mailgun what Gmail's cap leaves over when the club chose so, counting recipients as it goes", async () => {
-    const { sender, mailgun, gmail } = setup({ dailyCap: 3, usage: usage({ sentLastDay: 1 }) });
+    const { sender, mailgun, gmail } = setup({ dailyCap: 3, ledger: memoryLedger(usage({ sentLastDay: 1 })) });
     expect(await sender.send(message("gmail", "a@example.ro", { cc: ["b@example.org"] }))).toMatchObject({ transport: "gmail", recipients: 2 });
     expect(await sender.send(message("gmail", "c@example.ro"))).toMatchObject({ transport: "mailgun" });
     expect(gmail.sent).toHaveLength(1);
@@ -268,7 +304,7 @@ describe("§NNN the sender's road", () => {
 
   it("defers at the cap when the club chose to wait — until the oldest send leaves the rolling day, Mailgun untouched", async () => {
     const oldest = new Date(NOW.getTime() - 20 * 60 * 60 * 1000);
-    const { sender, mailgun, gmail } = setup({ dailyCap: 2, atGmailCap: "defer", usage: usage({ sentLastDay: 2, oldestInWindowAt: oldest }) });
+    const { sender, mailgun, gmail } = setup({ dailyCap: 2, atGmailCap: "defer", ledger: memoryLedger(usage({ sentLastDay: 2, oldestInWindowAt: oldest })) });
     const result = await sender.send(message("gmail"));
     expect(result).toEqual({ outcome: "throttled", error: "gmail daily cap: deferred", retryAfter: new Date(oldest.getTime() + GMAIL_WINDOW_MS) });
     expect(gmail.sent).toHaveLength(0);
@@ -309,7 +345,7 @@ describe("§NNN the sender's road", () => {
 
   it("keeps Mailgun's own deferral for a spill-over at Gmail's cap, whatever the choice at the cap", async () => {
     const spent: SendResult = { outcome: "throttled", error: "mailgun 420: limit exceeded" };
-    const { sender, mailgun } = setup({ dailyCap: 1, atGmailCap: "defer", usage: usage({ sentLastDay: 1, oldestInWindowAt: NOW }) });
+    const { sender, mailgun } = setup({ dailyCap: 1, atGmailCap: "defer", ledger: memoryLedger(usage({ sentLastDay: 1, oldestInWindowAt: NOW })) });
     mailgun.answer = spent;
     expect(await sender.send(message("mailgun"))).toBe(spent);
   });
@@ -341,5 +377,26 @@ describe("§NNN the sender's road", () => {
     const sender = createEmailSender({ appEnv: "production", mode: "live", allowlist: [], capture: fakeAdapter("capture"), live: () => mailgun });
     expect(await sender.send(message("gmail"))).toMatchObject({ outcome: "sent", transport: "mailgun" });
     expect(mailgun.sent).toHaveLength(1);
+  });
+});
+
+describe("§NNN review — Gmail's rows are claimed apart, as many as the pace lets one batch send", () => {
+  it("names the same rows the route sends through Gmail", () => {
+    const rows = gmailRoadRows(DEFAULT_EMAIL_TRANSPORT);
+    expect(rows.clubCopies).toBe(true);
+    expect(new Set(rows.messageTypes)).toEqual(
+      new Set(emailMessageType.enumValues.filter((type) => preferredTransport(DEFAULT_EMAIL_TRANSPORT, type, false) === "gmail")),
+    );
+    expect(rows.messageTypes).not.toContain("VERIFY_REGISTRATION_EMAIL");
+    const allMailgun = gmailRoadRows({ ...DEFAULT_EMAIL_TRANSPORT, groups: { ...DEFAULT_EMAIL_TRANSPORT.groups, club: "mailgun", newsletter: "mailgun" } });
+    expect(allMailgun).toEqual({ messageTypes: [], clubCopies: false });
+  });
+
+  it("claims the first at once and one per pace within the batch's waiting, never more than the batch", () => {
+    expect(gmailClaimSize(6, 20_000, 20)).toBe(4);
+    expect(gmailClaimSize(10, 20_000, 20)).toBe(3);
+    expect(gmailClaimSize(1, 20_000, 20)).toBe(20);
+    expect(gmailClaimSize(0, 20_000, 20)).toBe(20);
+    expect(gmailClaimSize(6, 20_000, 2)).toBe(2);
   });
 });

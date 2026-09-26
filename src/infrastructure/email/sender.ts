@@ -1,7 +1,7 @@
 import type { Env } from "@/shared/config/env";
 import { type CaptureAdapter, type CapturedEmail, createCaptureAdapter } from "./capture-adapter";
 import { createEmailSender, type EmailSender } from "./delivery";
-import type { GmailAtCap, GmailUsage } from "@/modules/notifications/domain/email-transport";
+import type { GmailAtCap, GmailLedger } from "@/modules/notifications/domain/email-transport";
 import { createGmailAdapter } from "./gmail-adapter";
 import { createMailgunAdapter } from "./mailgun-adapter";
 
@@ -52,15 +52,16 @@ export function capturedEmails(): readonly CapturedEmail[] {
 }
 
 /**
- * The club's choice about the Gmail road for this batch (§NNN) and Gmail's usage when it began —
- * read from the database by the caller (`notifications/outbox-sender.ts`); this file reads none.
+ * The club's choice about the Gmail road for this batch (§NNN) and the ledger Gmail's usage is read
+ * from before every message — the database's, built by the caller (`notifications/outbox-sender.ts`);
+ * this file reads none.
  */
 export type GmailRouting = {
   dailyCap: number;
   paceSeconds: number;
   atGmailCap: GmailAtCap;
   overflowToGmail: boolean;
-  usage: GmailUsage;
+  ledger: GmailLedger;
   /** Where a Gmail failure is recorded (§NNN, `notifications/email-transport.ts`). */
   onFailure?: (error: string, at: Date) => Promise<void>;
 };
@@ -89,7 +90,7 @@ export function createEmailSenderForEnvironment(
     message takes Mailgun's road, as before §NNN.
   */
   const gmail =
-    routing && routing.usage.configured && gmailUser && gmailPassword
+    routing && gmailUser && gmailPassword
       ? {
           adapter: () =>
             createGmailAdapter({
@@ -100,7 +101,7 @@ export function createEmailSenderForEnvironment(
               from: { name: config.EMAIL_FROM_NAME.replace(/["\\]/g, ""), address: gmailUser },
               ...(config.EMAIL_REPLY_TO ? { replyTo: config.EMAIL_REPLY_TO } : {}),
             }),
-          usage: routing.usage,
+          ledger: routing.ledger,
           dailyCap: routing.dailyCap,
           paceSeconds: routing.paceSeconds,
           atGmailCap: routing.atGmailCap,

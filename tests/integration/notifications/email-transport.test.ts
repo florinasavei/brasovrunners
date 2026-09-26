@@ -5,14 +5,18 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
-import { createEmailSender } from "@/infrastructure/email/delivery";
+import { createEmailSender, GMAIL_PACE_BUDGET_MS, type GmailRoad } from "@/infrastructure/email/delivery";
+import { isClubCopy } from "@/modules/notifications/domain/club-notices";
 import {
   DEFAULT_EMAIL_TRANSPORT,
   GMAIL_WINDOW_MS,
+  gmailClaimSize,
+  gmailRoadRows,
   NON_PRODUCTION_GMAIL_DAILY_CAP,
   preferredTransport,
 } from "@/modules/notifications/domain/email-transport";
 import {
+  createGmailLedger,
   readEmailTransport,
   readGmailLastFailure,
   readGmailUsage,
@@ -20,7 +24,7 @@ import {
   updateEmailTransport,
 } from "@/modules/notifications/email-transport";
 import { checkEmailHealth } from "@/modules/notifications/health";
-import { type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
+import { type OutboxRoads, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -201,7 +205,7 @@ describe("§NNN email transport setting and the outbox's road", () => {
             return { outcome: "sent", providerMessageId: "gm:1" };
           },
         }),
-        usage: await readGmailUsage(db, NOW, true),
+        ledger: createGmailLedger(db),
         dailyCap: 2,
         paceSeconds: 0,
         atGmailCap: "defer",
@@ -237,5 +241,130 @@ describe("§NNN email transport setting and the outbox's road", () => {
     const volume = await readEmailVolumeToday(db, later);
     expect(volume.gmailLastFailure).toEqual({ at: later, error: "gmail: smtp ECONNECTION" });
     expect(volume.gmailFailedLastDay).toBe(true);
+  });
+
+  /** The default setting's roads, as `outbox-sender.ts` builds them. */
+  const defaultRoads = (gmailBatchSize = gmailClaimSize(DEFAULT_EMAIL_TRANSPORT.gmailPaceSeconds, GMAIL_PACE_BUDGET_MS, 20)): OutboxRoads => {
+    const gmail = gmailRoadRows(DEFAULT_EMAIL_TRANSPORT);
+    return { gmailMessageTypes: gmail.messageTypes, gmailClubCopies: gmail.clubCopies, gmailBatchSize };
+  };
+  const defaultRoute = (candidate: OutboxRow) =>
+    preferredTransport(DEFAULT_EMAIL_TRANSPORT, candidate.messageType, isClubCopy(candidate.payloadJson));
+
+  it("claims Gmail's rows apart: 25 due club messages never keep a newer runner's link from the first drain (§NNN review)", async () => {
+    const older = (i: number) => new Date(NOW.getTime() - (60 - i) * 60_000);
+    await db.insert(emailOutbox).values([
+      // The club's copies of a runner's confirmation: a participant type, the club's mail.
+      ...Array.from({ length: 5 }, (_, i) =>
+        row(100 + i, {
+          messageType: "REGISTRATION_CONFIRMED",
+          recipientEmail: `copy${i}@example.com`,
+          payloadJson: { clubCopy: true },
+          idempotencyKey: `copy:${i}`,
+          createdAt: older(i),
+        }),
+      ),
+      ...Array.from({ length: 20 }, (_, i) => row(200 + i, { idempotencyKey: `club:${i}`, createdAt: older(5 + i) })),
+      // The newest of all: a runner's link to confirm the address, Mailgun's road.
+      row(300, { messageType: "VERIFY_REGISTRATION_EMAIL", recipientEmail: "ana@example.com", idempotencyKey: "verify:ana", createdAt: new Date(NOW.getTime() - 1_000) }),
+    ]);
+    const sender = roadSender();
+
+    const summary = await processOutboxBatch(db, { sender, render, now: NOW, route: defaultRoute, roads: defaultRoads() });
+
+    // Four of Gmail's (what six seconds apart fits in twenty seconds of waiting), and the runner's link.
+    expect(summary).toMatchObject({ claimed: 5, sent: 5 });
+    const [verify] = await db.select().from(emailOutbox).where(eq(emailOutbox.idempotencyKey, "verify:ana"));
+    expect(verify).toMatchObject({ status: "SENT", transport: "mailgun" });
+    expect(sender.calls.filter((call) => call.transport === "gmail").map((call) => call.to)).toEqual([
+      "copy0@example.com",
+      "copy1@example.com",
+      "copy2@example.com",
+      "copy3@example.com",
+    ]);
+    const pending = await db.select().from(emailOutbox).where(eq(emailOutbox.status, "PENDING"));
+    expect(pending).toHaveLength(21);
+  });
+
+  /** A Gmail road over this database's ledger, with an adapter that notes when it was handed each message. */
+  function gmailSender(overrides: Partial<GmailRoad>, sentAt: number[]) {
+    return createEmailSender({
+      appEnv: "production",
+      mode: "live",
+      allowlist: [],
+      capture: { name: "capture", send: async () => ({ outcome: "sent", providerMessageId: "capture:1" }) },
+      live: () => ({ name: "mailgun", send: async () => ({ outcome: "sent", providerMessageId: "mg:1" }) }),
+      gmail: {
+        adapter: () => ({
+          name: "gmail",
+          send: async (m) => {
+            sentAt.push((overrides.now?.() ?? new Date()).getTime());
+            return { outcome: "sent", providerMessageId: `gm:${m.idempotencyKey}` };
+          },
+        }),
+        ledger: createGmailLedger(db),
+        dailyCap: 100,
+        paceSeconds: 6,
+        atGmailCap: "defer",
+        overflowToGmail: false,
+        random: () => 0,
+        ...overrides,
+      },
+    });
+  }
+
+  it("keeps Gmail's pace between two senders taking turns on one database, and records the moment Gmail took each (§NNN review)", async () => {
+    await db.insert(emailOutbox).values(
+      Array.from({ length: 4 }, (_, i) => row(i, { idempotencyKey: `club:${i}`, createdAt: new Date(NOW.getTime() - (10 - i) * 1_000) })),
+    );
+    let clock = NOW.getTime();
+    const sentAt: number[] = [];
+    const virtual = {
+      now: () => new Date(clock),
+      sleep: async (ms: number) => {
+        clock += ms;
+      },
+    };
+    // Two instances: each its own sender, its own batch — the drain after a response and the pinger.
+    const first = gmailSender(virtual, sentAt);
+    const second = gmailSender(virtual, sentAt);
+    const roads = defaultRoads(1);
+
+    for (const sender of [first, second, first, second]) {
+      await processOutboxBatch(db, { sender, render, now: new Date(clock), route: defaultRoute, roads });
+      // A second passes between the two instances' batches.
+      clock += 1_000;
+    }
+
+    expect(sentAt).toHaveLength(4);
+    for (let i = 1; i < sentAt.length; i += 1) expect(sentAt[i]! - sentAt[i - 1]!).toBeGreaterThanOrEqual(6_000);
+    // Each row's `sent_at` is the moment Gmail took it, not its batch's start.
+    const stored = (await db.select().from(emailOutbox)).map((r) => r.sentAt?.getTime() ?? 0).sort((x, y) => x - y);
+    expect(stored).toEqual([...sentAt].sort((x, y) => x - y));
+  });
+
+  it("keeps Gmail's pace between two senders sending at the same time on one database (§NNN review)", { timeout: 20_000 }, async () => {
+    await db.insert(emailOutbox).values(
+      Array.from({ length: 4 }, (_, i) => row(i, { idempotencyKey: `club:${i}`, createdAt: new Date(Date.now() - (10 - i) * 1_000) })),
+    );
+    const sentAt: number[] = [];
+    const road = { paceSeconds: 1 };
+    const [a, b] = [gmailSender(road, sentAt), gmailSender(road, sentAt)];
+    const roads = defaultRoads(2);
+
+    const now = new Date();
+    const [one, two] = await Promise.all([
+      processOutboxBatch(db, { sender: a, render, now, route: defaultRoute, roads }),
+      processOutboxBatch(db, { sender: b, render, now, route: defaultRoute, roads }),
+    ]);
+
+    expect(one.sent + two.sent).toBe(4);
+    const times = [...sentAt].sort((x, y) => x - y);
+    /*
+      Real timers: each sender sends at its slot, and a slot is a pace after the one before it —
+      exact on the virtual clock above. Here a timer wakes within the operating system's timer
+      granularity of its slot (about 16 ms on Windows), and nothing closer than the pace beyond that.
+    */
+    for (let i = 1; i < times.length; i += 1) expect(times[i]! - times[i - 1]!).toBeGreaterThanOrEqual(1_000 - 20);
   });
 });

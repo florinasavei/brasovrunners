@@ -186,5 +186,7 @@ export const emailOutbox = pgTable(
       t.createdAt,
     ),
     index("email_outbox_registration_created_idx").on(t.registrationId, t.createdAt),
+    // Gmail's rolling day and its last send, read before every Gmail message (§NNN review).
+    index("email_outbox_transport_sent_idx").on(t.transport, t.sentAt),
   ],
 );

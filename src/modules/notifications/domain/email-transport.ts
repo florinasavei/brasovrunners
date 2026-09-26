@@ -244,9 +244,66 @@ export function gmailAdmission(
   }
   const paceMs = setting.gmailPaceSeconds * 1000;
   if (!usage.lastSentAt) return { admitted: true, waitMs: 0 };
+  /*
+    Not clamped at one pace: `lastSentAt` may be a slot another sender holds a few seconds ahead
+    (`notifications/email-transport.ts#createGmailLedger`), and the pace runs from that slot.
+  */
   const since = now.getTime() - usage.lastSentAt.getTime();
-  const rest = Math.max(0, Math.min(paceMs, paceMs - since));
+  const rest = Math.max(0, paceMs - since);
   return { admitted: true, waitMs: rest > 0 ? rest + Math.max(0, jitterMs) : 0 };
+}
+
+/**
+ * What one sender asks Gmail's ledger before a message (§NNN): the message's recipients, the
+ * sender's clock — read by the ledger once it has its turn, not before — the jitter drawn for it,
+ * the club's cap and pace, and how long the sender may still wait on the pace in this batch.
+ */
+export type GmailSlotRequest = {
+  recipients: number;
+  clock: () => Date;
+  jitterMs: number;
+  maxWaitMs: number;
+  dailyCap: number;
+  paceSeconds: number;
+};
+
+/**
+ * Gmail's usage as every sender shares it (§NNN review) — the drain after a response, the pinger's
+ * job and "Trimite acum", in one instance or several.
+ *
+ * - `admit` reads the usage afresh and decides in one step; an admission whose wait fits
+ *   `maxWaitMs` also **holds** its slot (`slotAt`, now plus the wait), so the next sender, wherever
+ *   it runs, paces from that slot rather than from a send it cannot see yet — and the sender sends
+ *   at its slot, not merely after its wait. An admission that does not fit holds nothing: the
+ *   sender hands the message back.
+ * - `accepted` is told when Gmail took the message, at the moment it did.
+ */
+export type GmailLedger = {
+  admit(request: GmailSlotRequest): Promise<GmailAdmission & { slotAt?: Date }>;
+  accepted(recipients: number, at: Date): Promise<void>;
+};
+
+/**
+ * The outbox rows the club sends through Gmail, as the claim can select them (§NNN review): the
+ * message types whose group the club put on Gmail, and whether the club's copies are Gmail's too.
+ * The same answer `preferredTransport` gives row by row, so the claim and the route cannot differ.
+ */
+export function gmailRoadRows(setting: EmailTransportSetting): { messageTypes: EmailMessageType[]; clubCopies: boolean } {
+  return {
+    messageTypes: (Object.keys(EMAIL_GROUP_OF) as EmailMessageType[]).filter((type) => preferredTransport(setting, type, false) === "gmail"),
+    clubCopies: setting.groups.club === "gmail",
+  };
+}
+
+/**
+ * How many Gmail-road rows one batch claims (§NNN review): what the pace lets one sender send in
+ * the waiting it may spend — the first at once, then one per pace — never more than the batch.
+ * Claimed apart from the Mailgun rows, so a queue of club copies waiting on Gmail's pace never
+ * stands in front of a runner's link.
+ */
+export function gmailClaimSize(paceSeconds: number, budgetMs: number, batchSize: number): number {
+  if (paceSeconds <= 0) return batchSize;
+  return Math.max(1, Math.min(batchSize, Math.floor(budgetMs / (paceSeconds * 1000)) + 1));
 }
 
 /**

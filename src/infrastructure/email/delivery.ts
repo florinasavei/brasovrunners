@@ -1,11 +1,6 @@
 import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import {
-  type GmailAtCap,
-  gmailAdmission,
-  gmailJitterCeilingMs,
-  type GmailUsage,
-} from "@/modules/notifications/domain/email-transport";
+import { type GmailAtCap, gmailJitterCeilingMs, type GmailLedger } from "@/modules/notifications/domain/email-transport";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
 /**
@@ -122,12 +117,12 @@ export type EmailSender = {
 /**
  * The Gmail road, as the sender needs it for one batch (§NNN): the adapter (built on demand, like
  * Mailgun's), the club's cap, pace and choice at the cap, whether Mailgun's spent allowance spills
- * over, and Gmail's usage as the database had it when the batch began — which the sender then keeps
- * counting, in recipients, as Google counts them.
+ * over, and the ledger Gmail's usage is read from before every message — shared by every sender, so
+ * the cap (in recipients, as Google counts them) and the pace hold across drains and instances.
  */
 export type GmailRoad = {
   adapter: () => EmailAdapter;
-  usage: GmailUsage;
+  ledger: GmailLedger;
   dailyCap: number;
   paceSeconds: number;
   /** At the cap: wait for the rolling day to free room (`defer`), or Mailgun at once. */
@@ -170,7 +165,6 @@ export function createEmailSender(config: {
   gmail?: GmailRoad;
 }): EmailSender {
   const gmail = config.gmail;
-  const usage: GmailUsage | null = gmail ? { ...gmail.usage } : null;
   const clock = gmail?.now ?? (() => new Date());
   const sleep = gmail?.sleep ?? realSleep;
   const random = gmail?.random ?? Math.random;
@@ -189,7 +183,7 @@ export function createEmailSender(config: {
    * the cap" apply; a spill-over from Mailgun keeps Mailgun's own deferral.
    */
   async function viaGmail(message: OutgoingEmail, transmit: boolean, chosen: boolean): Promise<SendResult | null> {
-    if (!gmail || !usage || gmailDown || !usage.configured) return null;
+    if (!gmail || gmailDown) return null;
     if (!transmit) {
       const captured = await config.capture.send(message);
       return captured.outcome === "sent" ? { ...captured, transport: "gmail", recipients: 0 } : captured;
@@ -197,13 +191,19 @@ export function createEmailSender(config: {
 
     const recipients = recipientsOf(message);
     const jitterMs = Math.floor(random() * gmailJitterCeilingMs(gmail.paceSeconds));
-    const admission = gmailAdmission(
-      usage,
-      { gmailDailyCap: gmail.dailyCap, gmailPaceSeconds: gmail.paceSeconds },
-      clock(),
+    /*
+      Read afresh before every message, never from what this sender counted (§NNN review): another
+      drain or instance may have sent a second ago, and an admission that fits the batch's waiting
+      holds its slot for all of them.
+    */
+    const admission = await gmail.ledger.admit({
       recipients,
+      clock,
       jitterMs,
-    );
+      maxWaitMs: Math.max(0, budget - waited),
+      dailyCap: gmail.dailyCap,
+      paceSeconds: gmail.paceSeconds,
+    });
     if (!admission.admitted) {
       // At the cap and the club said wait: deferred to the moment the oldest send leaves the
       // rolling day, as a spent Mailgun allowance is deferred (§40) — never discarded.
@@ -221,7 +221,13 @@ export function createEmailSender(config: {
           paced: true,
         };
       }
-      await sleep(admission.waitMs);
+      /*
+        Until the slot the ledger holds, by this sender's clock now: the ledger's own transaction
+        took some of the wait already, and a send before its slot would be closer than the pace to
+        the one before it.
+      */
+      const rest = admission.slotAt ? Math.max(0, admission.slotAt.getTime() - clock().getTime()) : admission.waitMs;
+      if (rest > 0) await sleep(rest);
       waited += admission.waitMs;
     }
     const result = await gmail.adapter().send(message);
@@ -237,11 +243,14 @@ export function createEmailSender(config: {
       if (result.outcome === "transient_failure" && result.mayHaveBeenAccepted) return result;
       return null;
     }
+    // The moment Gmail took it: the row's `sent_at`, which every other sender paces from.
     const at = clock();
-    usage.sentLastDay += recipients;
-    usage.lastSentAt = at;
-    usage.oldestInWindowAt ??= at;
-    return { ...result, transport: "gmail", recipients };
+    try {
+      await gmail.ledger.accepted(recipients, at);
+    } catch {
+      // Sent is sent: a ledger that could not note it must never turn the message into a retry.
+    }
+    return { ...result, transport: "gmail", recipients, acceptedAt: at };
   }
 
   return {

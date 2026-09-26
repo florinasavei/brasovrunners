@@ -60,11 +60,11 @@ export function drainOutboxAfterResponse(): void {
           return;
         }
 
-        // The club's road per group, Gmail's cap and pace (§NNN): read once for the batch.
+        // The club's road per group, read once for the batch (§NNN); Gmail's cap and pace from the database before each Gmail message.
         const now = new Date();
-        const { sender, route } = await createOutboxSender(db, now);
+        const { sender, route, roads } = await createOutboxSender(db);
         // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-        await processOutboxBatch(db, { sender, route, render: createOutboxRenderer(), now });
+        await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer(), now });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job

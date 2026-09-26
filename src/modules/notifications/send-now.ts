@@ -67,12 +67,13 @@ export async function sendOutboxNow(
   let batches = 0;
   let volume = await readEmailVolumeToday(db, now);
 
-  // The club's road per group, Gmail's cap and pace (§NNN): one sender for the press, counting as it goes.
-  const { sender, route } = await createOutboxSender(db, now);
+  // The club's road per group (§NNN): one sender for the press; Gmail's cap and pace from the database before each Gmail message.
+  const { sender, route, roads } = await createOutboxSender(db);
   while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
       route,
+      roads,
       // A renderer per batch, so each event's words are read once per batch (§373, email follow-up).
       render: createOutboxRenderer(),
       now,

@@ -719,6 +719,27 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "email_outbox_transport_sent_idx": {
+          "name": "email_outbox_transport_sent_idx",
+          "columns": [
+            {
+              "expression": "transport",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sent_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {

@@ -85,6 +85,11 @@ export type SendResult =
        * captured. Set by the sender; Gmail's cap is counted in recipients, as Google counts them.
        */
       recipients?: number;
+      /**
+       * When the server took the message (§NNN review), set by the sender for Gmail: the row's
+       * `sent_at`, which every other sender paces from. Absent is the batch's own time.
+       */
+      acceptedAt?: Date;
     }
   | {
       outcome: "transient_failure";

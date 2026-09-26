@@ -24,10 +24,10 @@ export async function POST(request: Request): Promise<Response> {
       import("@/modules/notifications/render"),
       import("@/modules/notifications/outbox-sender"),
     ]);
-    // The club's road per group, Gmail's cap and pace (§NNN): read once for the batch.
-    const { sender, route } = await createOutboxSender(db, now);
+    // The club's road per group, read once for the batch (§NNN); Gmail's cap and pace from the database before each Gmail message.
+    const { sender, route, roads } = await createOutboxSender(db);
     // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-    const summary = await processOutboxBatch(db, { sender, route, render: createOutboxRenderer(), now });
+    const summary = await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer(), now });
     return { summary, failed: false };
   });
 }
