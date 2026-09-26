@@ -216,7 +216,9 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const inPages = await db
     .select({ assetId: mediaAssets.id, id: pageTranslations.pageId, title: pageTranslations.title, locale: pageTranslations.locale })
     .from(mediaAssets)
-    .innerJoin(pageTranslations, sql`${pageTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'`);
+    // At the address or the former one (§NNN), as the check that refuses a delete reads it: a
+    // picture the list shows as used nowhere must not be one the delete then refuses.
+    .innerJoin(pageTranslations, names(sql`${pageTranslations.bodyJson}::text`));
 
   const inEvents = await db
     .select({ assetId: mediaAssets.id, id: eventTranslations.eventId, title: eventTranslations.title, locale: eventTranslations.locale })

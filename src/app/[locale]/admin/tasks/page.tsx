@@ -423,6 +423,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     convert — one count, only for this panel, and nothing where there is no store to convert in.
   */
   const olderPictures = panel === "todo" && isStorageConfigured() ? await countOlderPictures(db) : 0;
+  /*
+    How many the press just made failed, from the address the action lands on — said on the card
+    with what to do, not only in the toast that fades (§NNN). A number and nothing else; any other
+    value reads as none.
+  */
+  const failedRaw = query.saved === "picturesLadderedFailed" ? Number(first(query.failed)) : 0;
+  const lastPressFailed = Number.isSafeInteger(failedRaw) && failedRaw > 0 ? failedRaw : 0;
   // Over every row, filter or not: what blocks a real registration is not a matter of view.
   const blocking = tasks.filter((task) => task.state === "blocking").length;
 
@@ -608,7 +615,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       {panel === "todo" && (
         <>
         {/* A thing owed once (§NNN): the pictures from before §414 get their phone sizes. Gone at zero. */}
-        {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} />}
+        {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
 
         {/* Who and what kind — two rows of links, no client code, each keeping the other's
             choice (§150). The link is 44 px tall; the chip inside it is small. */}

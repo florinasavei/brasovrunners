@@ -91,6 +91,7 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§NNN)", 
     const db = new pg.Client({ connectionString: databaseUrl() });
     await db.connect();
     await db.query("SELECT pg_advisory_lock($1)", [LOCK_KEY]);
+    let goneId: string | null = null;
     try {
       const waiting = async () => Number((await db.query<{ n: string }>(`SELECT count(*) AS n FROM media_assets WHERE key_prefix ~ $1`, [OLDER])).rows[0].n);
       // What was waiting before this spec seeded anything: nothing on CI's fresh database; a
@@ -175,7 +176,23 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§NNN)", 
       const oldAnswer = await page.request.get(oldSrc);
       expect(oldAnswer.status()).toBe(200);
       expect(Buffer.from(await oldAnswer.body()).equals(master)).toBe(true);
+
+      // A picture whose file is gone: the press says so on the card itself, with what to do, and
+      // not only in the toast that fades (§NNN). Its row is this spec's and goes in `finally`.
+      const gone = await db.query<{ id: string }>(
+        `INSERT INTO media_assets (key_prefix, original_filename, width, height, byte_size) VALUES ($1, 'lipsa.jpg', 800, 600, 1000) RETURNING id`,
+        [randomUUID()],
+      );
+      goneId = gone.rows[0].id;
+      const failedPress = await press(page, await waiting());
+      expect(failedPress.saved).toBe("picturesLadderedFailed");
+      expect(failedPress.failed).toBeGreaterThanOrEqual(1);
+      const failedLine = page.locator("#main").getByTestId("older-pictures-failed");
+      await expect(failedLine).toContainText(`La ultima apăsare, ${failedPress.failed} `);
+      await expect(failedLine).toContainText("încă o apăsare nu ajută");
+      await expect(failedLine.getByRole("link", { name: /Unde e folosită fiecare imagine/ })).toHaveAttribute("href", "/ro/admin/gallery/pictures");
     } finally {
+      if (goneId) await db.query(`DELETE FROM media_assets WHERE id = $1`, [goneId]).catch(() => undefined);
       await db.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]).catch(() => undefined);
       await db.end();
     }

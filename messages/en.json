@@ -2445,6 +2445,12 @@
           "few": "{count} pictures left without sizes.",
           "other": "{count} pictures left without sizes."
         },
+        "failed": {
+          "one": "At the last press {count} picture could not get its sizes: its file is missing from storage or is not a picture. It stays in the count and every press tries it again, so pressing again will not help. Upload the picture again where it is used and take the old one out; once nothing uses it, it deletes itself.",
+          "few": "At the last press {count} pictures could not get their sizes: their file is missing from storage or is not a picture. They stay in the count and every press tries them again, so pressing again will not help. Upload each picture again where it is used and take the old one out; once nothing uses it, it deletes itself.",
+          "other": "At the last press {count} pictures could not get their sizes: their file is missing from storage or is not a picture. They stay in the count and every press tries them again, so pressing again will not help. Upload each picture again where it is used and take the old one out; once nothing uses it, it deletes itself."
+        },
+        "failedLink": "Where each picture is used →",
         "address": "Each picture's address changes on the pages and events where it appears, and the old address keeps working — a link copied elsewhere does not break. A YouTube film keeps YouTube's own small picture.",
         "button": {
           "one": "Make the sizes for {count} picture",

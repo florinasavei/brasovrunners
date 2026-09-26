@@ -133,16 +133,21 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
     A cursor, not "the first twenty again": a picture that fails stays a candidate, and with more
     failures than one page holds, re-reading the first page would convert nothing ever again. The
     failures are retried on the next press — a missing file is one quick read.
+
+    The cursor's time is PostgreSQL's own text of the column, never a JavaScript `Date`: a `Date`
+    holds milliseconds and `created_at` holds microseconds, so a cursor made from one sits just
+    before the row it came from, and that row — a failed one, still a candidate — would be read
+    again and again until the time budget ran out (§NNN).
   */
-  let after = null as { createdAt: Date; id: string } | null;
+  let after = null as { createdAt: string; id: string } | null;
   pages: while (converted < perPress) {
     const cursor = after;
     const page = await db
-      .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, createdAt: mediaAssets.createdAt })
+      .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, createdAt: sql<string>`${mediaAssets.createdAt}::text` })
       .from(mediaAssets)
       .where(
         cursor
-          ? and(isOlderPicture, sql`(${mediaAssets.createdAt}, ${mediaAssets.id}) > (${cursor.createdAt.toISOString()}::timestamptz, ${cursor.id}::uuid)`)
+          ? and(isOlderPicture, sql`(${mediaAssets.createdAt}, ${mediaAssets.id}) > (${cursor.createdAt}::timestamptz, ${cursor.id}::uuid)`)
           : isOlderPicture,
       )
       .orderBy(asc(mediaAssets.createdAt), asc(mediaAssets.id))

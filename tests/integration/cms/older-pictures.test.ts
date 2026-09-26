@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
@@ -17,7 +17,7 @@ import {
   pictureSrcSet,
 } from "@/modules/media/ladder";
 import { countOlderPictures, giveOlderPicturesTheirLadder } from "@/modules/media/older-pictures";
-import { deleteMediaAsset, sweepOrphanAssets } from "@/modules/media/references";
+import { deleteMediaAsset, listMediaAssetsForAdmin, sweepOrphanAssets } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { bodyImageSrc, getStorage, objectKey, readLocalObject } from "@/modules/media/storage";
 import { posterKeyPrefix } from "@/modules/media/video-poster";
@@ -198,13 +198,38 @@ describe("§NNN the pictures from before §414 get their ladder, a batch per pre
     expect(await readLocalObject(objectKey(ladderKeyPrefixOf(broken.row.keyPrefix), "web"))).toBeNull();
   });
 
+  it("reads a failed picture once per press when its time has microseconds, as PostgreSQL stores it", async () => {
+    // A millisecond cursor would sit just before these rows and read the first one again and again.
+    const first = await olderPicture(db, "a.jpg", T0, { withFiles: false, width: 800 });
+    const second = await olderPicture(db, "b.jpg", T0, { withFiles: false, width: 800 });
+    const fine = await olderPicture(db, "fine.jpg", T0, { width: 800 });
+    await db.update(mediaAssets).set({ createdAt: sql`'2026-09-20 10:00:00.000123+00'::timestamptz` }).where(eq(mediaAssets.id, first.row.id));
+    await db.update(mediaAssets).set({ createdAt: sql`'2026-09-20 10:00:00.000456+00'::timestamptz` }).where(eq(mediaAssets.id, second.row.id));
+    await db.update(mediaAssets).set({ createdAt: sql`'2026-09-20 10:00:00.000789+00'::timestamptz` }).where(eq(mediaAssets.id, fine.row.id));
+
+    // Pages of one row each, and a clock that ends a press stuck on one picture well before the test would.
+    let ticks = 0;
+    const clock = () => (ticks += 1);
+    expect(await giveOlderPicturesTheirLadder(db, admin, { perPress: 1, budgetMs: 50, clock })).toEqual({ converted: 1, failed: 2, left: 2 });
+    const rows = new Map((await db.select().from(mediaAssets)).map((row) => [row.id, row.keyPrefix]));
+    expect(isLadderKeyPrefix(rows.get(fine.row.id)!)).toBe(true);
+  });
+
   it("counts a master whose header reads but whose body is cut short as failed, and the press goes on", async () => {
     // A WebP with the last tenth of its pixels cut off and its two chunk sizes made to agree, so
     // `metadata()` reads its size from the header and only the full decode fails. Lossless, whose
     // header libwebp reads without the image data. Oldest, so it is first in line on every press —
     // it must never stop the ones after it.
     const truncated = await olderPicture(db, "cut.jpg", T0, { withFiles: false, width: 800 });
-    const whole = await sharp({ create: { width: 800, height: 600, channels: 3, background: "#000000", noise: { type: "gaussian", mean: 128, sigma: 30 } } })
+    // Seeded noise, not sharp's own: with random pixels the cut landed where libwebp could not
+    // read even the header about one run in three, and the test failed on its own setup.
+    const pixels = Buffer.alloc(800 * 600 * 3);
+    let seed = 414;
+    for (let i = 0; i < pixels.length; i += 1) {
+      seed = (Math.imul(seed, 1_103_515_245) + 12_345) >>> 0;
+      pixels[i] = seed >>> 24;
+    }
+    const whole = await sharp(pixels, { raw: { width: 800, height: 600, channels: 3 } })
       .webp({ lossless: true })
       .toBuffer();
     const cut = Buffer.from(whole.subarray(0, Math.floor(whole.byteLength * 0.9)));
@@ -233,7 +258,7 @@ describe("§NNN the pictures from before §414 get their ladder, a batch per pre
     expect((await giveOlderPicturesTheirLadder(db, admin)).converted).toBe(1);
     // A new page's form, open since before the press, saved with the old address: nothing
     // refuses it, and the picture — its old files kept for exactly this — must stay.
-    await createPage(db, {
+    const page = await createPage(db, {
       actor: admin,
       fields: {
         navOrder: "20",
@@ -249,6 +274,9 @@ describe("§NNN the pictures from before §414 get their ladder, a batch per pre
     const error = await deleteMediaAsset(db, { actor: admin, assetId: older.row.id }).catch((caught: unknown) => caught);
     expect(isDomainError(error) && error.code).toBe("VALIDATION_ERROR");
     expect(await readLocalObject(objectKey(older.row.keyPrefix, "web"))).not.toBeNull();
+    // And the pictures page says where, as the refusal does: the page that names the old address.
+    const listed = (await listMediaAssetsForAdmin(db, "ro")).find((asset) => asset.id === older.row.id);
+    expect(listed?.references).toEqual([{ kind: "page", id: page.id, title: "Veche" }]);
   });
 
   it("never touches a YouTube poster or a picture that already has its ladder", async () => {
