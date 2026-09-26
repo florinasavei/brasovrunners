@@ -89,6 +89,14 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  // The prefix's search (§NNN), the same words as the public form.
+  const countrySearchWords = {
+    search: rt("countrySearch.search"),
+    noMatch: rt("countrySearch.noMatch"),
+    clear: rt("countrySearch.clear"),
+    open: rt("countrySearch.open"),
+    close: rt("countrySearch.close"),
+  };
 
   return (
     <Stack spacing={3}>
@@ -181,7 +189,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             />
           </StaffGuardian>
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
-          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} />
+          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} searchWords={countrySearchWords} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
@@ -189,6 +197,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             countryLabel={rt("phoneCountry")}
             countryOrder={phoneOrder}
             countryNames={phoneNames}
+            searchWords={countrySearchWords}
           />
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the

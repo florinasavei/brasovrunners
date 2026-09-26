@@ -3596,6 +3596,13 @@
     },
     "phone": "Telefon",
     "phoneCountry": "Țara",
+    "countrySearch": {
+      "search": "Caută țara (nume sau prefix)",
+      "noMatch": "Nicio țară nu se potrivește",
+      "clear": "Șterge",
+      "open": "Deschide lista țărilor",
+      "close": "Închide lista țărilor"
+    },
     "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",

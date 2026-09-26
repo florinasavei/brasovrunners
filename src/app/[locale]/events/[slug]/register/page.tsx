@@ -52,9 +52,9 @@ import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import ShownForMinor from "@/modules/registrations/ui/ShownForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
-import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import NationalityField from "@/modules/registrations/ui/NationalityField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
@@ -304,6 +304,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  // The two country pickers' search words (§NNN), as plain strings for the islands (§353).
+  const countrySearchWords = {
+    search: t("countrySearch.search"),
+    noMatch: t("countrySearch.noMatch"),
+    clear: t("countrySearch.clear"),
+    open: t("countrySearch.open"),
+    close: t("countrySearch.close"),
+  };
 
   /**
    * The props every text field shares: its anchor, its name, whether it was rejected, and the
@@ -888,6 +896,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
                 countryNames={phoneNames}
+                searchWords={countrySearchWords}
                 // Optional for another person on the address (§389): often a child with no phone of
                 // their own; the emergency contact below is still asked.
                 required={!family}
@@ -922,6 +931,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   countryLabel={t("phoneCountry")}
                   countryOrder={phoneOrder}
                   countryNames={phoneNames}
+                  searchWords={countrySearchWords}
                   required
                   autoComplete="off"
                   /* The contact must be somebody else (§228), said as it is typed and refused
@@ -1047,44 +1057,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Typography variant="body2" color="text.secondary">
                     {t("originHelp")}
                   </Typography>
-                  <TextField
-                    {...field("nationality")}
+                  {/*
+                    A box to type into, the flag before each name (§171, §NNN): the owner, "vreau
+                    searchbox să pot găsi țara". Posts the ISO code as `nationality`, or nothing.
+                  */}
+                  <NationalityField
+                    id={fieldId("nationality")}
+                    name="nationality"
                     label={t("nationality")}
-                    select
-                    fullWidth
+                    noneLabel={t("nationalityNone")}
+                    error={invalid.has("nationality")}
+                    helperText={invalid.has("nationality") ? t("errors.field") : undefined}
                     defaultValue={prefill("nationality", "")}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-                    sx={SELECT_WITH_GLYPHS_SX}
-                  >
-                    <MenuItem value="" sx={OPTION_ROW_SX}>
-                      <Box component="span" sx={OPTION_LABEL_SX}>
-                        {t("nationalityNone")}
-                      </Box>
-                    </MenuItem>
-                    {/*
-                      The flag before the name (§171), from the set `scripts/sync-flags.mjs`
-                      already copies into `public/flags/` — which that script's own comment
-                      anticipated for exactly this ("will show many when a participant can state
-                      their country"). Normalised to 4:3, so a column of two hundred names does
-                      not wobble between Romania's 2:3 and the United Kingdom's 1:2.
-
-                      Not the regional-indicator emoji, which Windows draws as two boxed capitals
-                      — and Windows is what the club's own laptop runs.
-                    */}
-                    {countries.map((country) => (
-                      <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
-                        {/* The flag is `display: block` and 20×15; the fixed box is what stops it
-                            taking a line of its own in the closed field and what keeps every
-                            country name starting at the same x. */}
-                        <Box component="span" sx={OPTION_GLYPH_SX}>
-                          <Flag code={country.code} width={20} />
-                        </Box>
-                        <Box component="span" sx={OPTION_LABEL_SX}>
-                          {country.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    countries={countries}
+                    words={countrySearchWords}
+                  />
                   <TextField {...field("city")} label={t("city")} autoComplete="address-level2" />
                 </Stack>
               </Box>
