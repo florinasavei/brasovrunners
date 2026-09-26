@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §431 (amending §377) — "Termene" advises a value per deadline: `RECOMMENDED`, the platform's
+ * §NNN (amending §377) — "Termene" advises a value per deadline: `RECOMMENDED`, the platform's
  * defaults; each box's help says it in both languages; a chip marks a stored value that differs;
  * «Completează valorile recomandate» fills the boxes and never saves.
  */
@@ -36,7 +36,7 @@ async function render(locale: "ro" | "en", deadlines = DEFAULT_DEADLINES, mayEdi
 
 beforeEach(() => save.mockClear());
 
-describe("§431 the recommended deadlines", () => {
+describe("§NNN the recommended deadlines", () => {
   it("recommends exactly the platform's defaults", () => {
     expect(RECOMMENDED).toEqual(DEFAULT_DEADLINES);
   });

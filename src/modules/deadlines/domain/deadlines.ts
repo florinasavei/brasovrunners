@@ -93,7 +93,7 @@ export const DEFAULT_DEADLINES: Deadlines = Object.freeze(
 );
 
 /**
- * §431 (amending §377): the value the club is advised to keep for each deadline — the platform's
+ * §NNN (amending §377): the value the club is advised to keep for each deadline — the platform's
  * own default, one map so the panel's help, its «diferit de recomandat» chip and the fill button
  * read the same numbers and no catalogue carries one.
  */

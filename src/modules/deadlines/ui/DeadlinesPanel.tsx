@@ -122,7 +122,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
                   helperText={`${t(`emails.deadlines.help.${key}`)} ${t("emails.deadlines.bounds", { min: rule.min, max: rule.max, recommended: RECOMMENDED[key] })}`}
                   slotProps={{ htmlInput: { min: rule.min, max: rule.max, step: 1, inputMode: "numeric" } }}
                 />
-                {/* §431: the value in force is not the recommended one — said by the stored value, not the typed one. */}
+                {/* §NNN: the value in force is not the recommended one — said by the stored value, not the typed one. */}
                 {deadlines[key] !== RECOMMENDED[key] && (
                   <Chip size="small" variant="outlined" color="warning" sx={{ mt: 0.5 }} label={t("emails.deadlines.differs")} data-testid={`deadline-${key}-differs`} />
                 )}
@@ -131,7 +131,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
             })}
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               <GlyphSubmitButton label={t("emails.deadlines.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
-              {/* §431: fills the boxes, never saves — the save above does, after its question. */}
+              {/* §NNN: fills the boxes, never saves — the save above does, after its question. */}
               <FillRecommendedButton values={RECOMMENDED} label={t("emails.deadlines.fillRecommended")} />
             </Box>
           </Stack>

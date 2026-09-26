@@ -5,7 +5,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 type Fields = { namedItem(name: string): unknown };
 
 /**
- * §431 (amending §377): write each recommended value into its box of the form this button sits
+ * §NNN (amending §377): write each recommended value into its box of the form this button sits
  * in, and nothing else — no submit, no action; «Salvează termenele» still does the saving, with
  * its question first (§384). The boxes are uncontrolled (`RecallField`), so setting `.value` is
  * what the browser posts next. Exported for the unit test.
