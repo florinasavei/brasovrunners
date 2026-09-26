@@ -270,11 +270,12 @@
       "opensSoon": "Înscrierile se deschid în curând.",
       "opensSoonShort": "Înscrierile se deschid în curând",
       "openUntilShort": "Înscrieri deschise până {date}",
-      "freeOf": {
-        "one": "{count} loc liber din {places}",
-        "few": "{count} locuri libere din {places}",
-        "other": "{count} de locuri libere din {places}"
+      "freeCount": {
+        "one": "{count} loc liber",
+        "few": "{count} locuri libere",
+        "other": "{count} de locuri libere"
       },
+      "freeOfCard": "{free} din {places}",
       "cardWaitlist": "Lista de așteptare",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
