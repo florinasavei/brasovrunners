@@ -101,8 +101,22 @@ export default function GlyphChip({
   ) : (
     <Chip size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} />
   );
+  // `describeChild` sets `aria-describedby` on the chip while the tooltip is open, so a screen
+  // reader that already read the sentence out of `srSuffix` — part of the chip's own accessible
+  // name — would read it again as the tooltip's description. Left off here so hover and focus
+  // still open the tooltip for a sighted visitor, only the redundant description goes.
+  //
+  // MUI's `describeChild={false}` branch instead sets `aria-label` to `title` whenever `title` is
+  // a plain string — which would replace the chip's whole accessible name (the glyph's word, e.g.
+  // "Noapte", and the suffix both) with the tooltip alone, permanently, not only while open. A
+  // `title` that is a React node rather than a string skips that branch (MUI's own
+  // `titleIsString` guard), which is why the tooltip is wrapped in a fragment only on this path —
+  // the string form stays on every other chip, whose native, pre-hydration `title` attribute
+  // `describeChild={true}` sets depends on it.
+  const describeChild = srSuffix !== tooltip;
+  const tooltipTitle = describeChild ? tooltip : tooltip != null ? <>{tooltip}</> : tooltip;
   return tooltip ? (
-    <Tooltip title={tooltip} arrow describeChild enterTouchDelay={0}>
+    <Tooltip title={tooltipTitle} arrow describeChild={describeChild} enterTouchDelay={0}>
       {chip}
     </Tooltip>
   ) : (

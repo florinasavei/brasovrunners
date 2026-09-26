@@ -164,7 +164,7 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
     expect(ro).toContain(`Unde: Parcul Tractorul\n  Strada Carpaților 60\n  Vezi pe hartă: ${MAP}`);
     expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
     // The page's pills, in the page's order, the page's words; the route link lives under #route with a description.
-    expect(ro).toContain(`Traseu: Trail · Greu · 21,1 km · 900 m D+ · Noapte\n  Evenimentul pe Strava: ${STRAVA}`);
+    expect(ro).toContain(`Traseu: Trail · Greu · 21,1 km · 900 m D+ · Noapte (Soarele apune la 16:42)\n  Evenimentul pe Strava: ${STRAVA}`);
     expect(ro).toContain(`Cost: 50 lei\n  plata pe pay.example: ${PAY}`);
     expect(ro).toMatch(
       new RegExp(`Linkuri:\\n  Pagina evenimentului: \\S+${page}\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`),

@@ -672,8 +672,20 @@ export default async function EventFacts({
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
     // The night event (§394, where §382 put the headlamp), with the pill's own crescent (§NNN) like
     // the pill it is on the card and the page, before the cost — the same pill's words, from the
-    // same function.
-    if (headlampPill) route.push(withGlyph(GLYPHS.night, headlampPill.label));
+    // same function. The card and the page hear the sunset through a hovered or focused tooltip
+    // (`GlyphChip`'s `srSuffix`); the hero's bare word never opens one — it is a line, not a
+    // chip — so the same sentence rides along as a visually hidden span, read unconditionally
+    // (§NNN, matching `GlyphChip`'s own technique, `SR_ONLY_SX`).
+    if (headlampPill)
+      route.push(
+        withGlyph(
+          GLYPHS.night,
+          <>
+            {headlampPill.label}
+            {headlampPill.srSuffix && <Box component="span" sx={SR_ONLY_SX}>{` — ${headlampPill.srSuffix}`}</Box>}
+          </>,
+        ),
+      );
     // The coin for the cost, below, is the closed set's other glyph (§112).
     /*
       The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its

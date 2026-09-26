@@ -385,6 +385,20 @@ describe("§394 the listing card and the hero", () => {
     const day = text(rows(withoutStyles(renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW })))).find((row) => row.label === "Traseu")!.dd);
     expect(day).not.toContain("Noapte");
   });
+
+  it("the hero's bare «Noapte» carries the sunset too, in a visually hidden span — it opens no tooltip of its own to hear it from (§NNN)", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
+    const route = rows(withoutStyles(html)).find((row) => row.label === "Traseu")!.dd;
+    // «Noapte» itself stays visible, in front of the hidden sentence — the same order and the
+    // same em dash `GlyphChip`'s own `srSuffix` uses, never a bare word with the sunset lost.
+    const match = route.match(/Noapte<span class="MuiBox-root (css-[\w-]+)">\s*— Soarele apune la 16:44<\/span>/);
+    expect(match, "the hidden span sits right after the visible word").not.toBeNull();
+    const rule = html.match(new RegExp(`\\.${match![1]}\\{([^}]*)\\}`))?.[1] ?? "";
+    // Clipped to a pixel, `GlyphChip`'s own technique (`SR_ONLY_SX`) — never sized like ordinary
+    // content, which would draw the sentence for a sighted visitor too.
+    expect(rule).toContain("width:1px");
+    expect(rule).toContain("height:1px");
+  });
 });
 
 describe("§394 the calendar entry names it after the place, with the sunset", () => {
