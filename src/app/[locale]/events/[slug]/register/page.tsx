@@ -50,6 +50,7 @@ import {
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
@@ -797,6 +798,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   htmlInput: { min: earliestBirthDate, max: latestBirthDate },
                 }}
               />
+              {/* The typed date in words, with the age on race day (§NNN): a date box shows
+                  "03/04/1990" in whichever order the browser likes, so the runner reads back
+                  what they meant. */}
+              <BirthDateEcho
+                birthDateId={fieldId("birthDate")}
+                locale={locale}
+                eventDay={dayIn(event.startsAt, event.timezone)}
+                template={t("birthDateEcho", { date: "{date}", age: "{age}" })}
+              />
+
+              {/* The city, required and right after the birth date (§NNN; the owner, 2026-09-26:
+                  "orașul ar trebui să fie obligatoriu, pune după data nașterii"), reversing
+                  §322's optional fold. */}
+              <TextField
+                {...field("city", t("originHelp"))}
+                label={t("city")}
+                required
+                autoComplete="address-level2"
+              />
 
               {/* What the answer is for, under the field (§322): a category ranking, and "prefer
                   not to say" is an answer. */}
@@ -1045,22 +1065,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     clubName={CLUB_NAME}
                     lockedHelperText={t("clubNameFromMembership")}
                   />
-                </Stack>
-              </Box>
-
-              {/*
-                The runner's city (§322): optional, and on this side of the form for that reason.
-                Citizenship left this fold for the required half beside the birth date (§432).
-              */}
-              <Box component="details" open sx={disclosureSx}>
-                <Typography component="summary" variant="body2">
-                  {t("disclosure.origin")}
-                </Typography>
-                <Stack spacing={2} sx={{ pb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("originHelp")}
-                  </Typography>
-                  <TextField {...field("city")} label={t("city")} autoComplete="address-level2" />
                 </Stack>
               </Box>
 

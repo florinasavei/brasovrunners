@@ -5,6 +5,7 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { latestBirthDateFor, MIN_PARTICIPANT_AGE } from "../domain/age";
 import { BIB_NUMBER_MAX, type SpareState } from "../domain/spare-bibs";
+import BirthDateEcho from "./BirthDateEcho";
 import GuardianForMinor from "./GuardianForMinor";
 
 /**
@@ -180,5 +181,26 @@ export function StaffGuardian({ children }: { children: ReactNode }) {
     <GuardianForMinor key={recall.generation} birthDateId={recall.idOf("birthDate")} forceOpen={recall.named("guardianName")}>
       {children}
     </GuardianForMinor>
+  );
+}
+
+/**
+ * The public form's read-back under the desk's birth-date box (§NNN): the typed day in words and
+ * the age on the chosen event's own day, following the event select. Re-mounted with every
+ * refusal, as `StaffGuardian` is, because the kept form re-mounts its boxes then (§315).
+ */
+export function StaffBirthDateEcho({ locale, template }: { locale: string; template: string }) {
+  const recall = useRecall();
+  const { selected, eventDays } = useContext(ChoiceContext);
+  const day = selected ? eventDays[selected] : undefined;
+  if (!day) return null;
+  return (
+    <BirthDateEcho
+      key={recall.generation}
+      birthDateId={recall.idOf("birthDate")}
+      locale={locale}
+      eventDay={day}
+      template={template}
+    />
   );
 }

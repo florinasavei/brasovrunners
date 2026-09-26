@@ -58,10 +58,12 @@ const submissionFields = z.object({
    * Required on the public form again since §432 (the owner, 2026-09-26: "cetățenia ar trebui să
    * fie obligatorie; by default pune Român"), reversing §322's optional: the form asks it beside
    * the birth date, pre-chosen on `RO`, so a Romanian runner leaves it. Optional for a staff entry
-   * (paper), relaxed below; older rows without it stay blank. The city stays optional (§322).
+   * (paper), relaxed below; older rows without it stay blank. The city is required on the public form too since
+   * §NNN (the owner, 2026-09-26: "orașul ar trebui să fie obligatoriu"), reversing §322's optional,
+   * and asked right after the birth date; optional for a staff entry.
    */
   nationality: z.string().trim().length(2).toUpperCase(),
-  city: z.string().trim().min(1).max(120).optional(),
+  city: z.string().trim().min(1).max(120),
 
   /**
    * The organizer's way of reaching somebody on race day, and somebody else if that fails.
@@ -420,6 +422,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
     sex: true,
     // Citizenship is required on the public form only (§432): a paper entry may not have it.
     nationality: true,
+    // The city likewise (§NNN): required on the public form, optional on paper.
+    city: true,
     phone: true,
     emergencyContactName: true,
     emergencyContactPhone: true,
