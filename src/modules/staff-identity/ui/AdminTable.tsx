@@ -108,6 +108,17 @@ type Props<Row> = {
   empty: ReactNode;
 };
 
+/**
+ * A visible line between two rows (§NNN): MUI's own cell border is the divider lightened
+ * almost to nothing, and a list of events with pills and a series' dates read as one block.
+ * The theme's `divider` token, so the dark scheme (§93) gets its own; none under the last row,
+ * where the frame's border already is.
+ */
+const ROW_SEPARATOR = {
+  "& > td": { borderBottom: 1, borderColor: "divider" },
+  "&:last-child > td": { borderBottom: 0 },
+} as const;
+
 const HIDE = {
   sm: { display: { xs: "none", sm: "table-cell" } },
   md: { display: { xs: "none", md: "table-cell" } },
@@ -246,7 +257,7 @@ export default function AdminTable<Row>({
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={rowKey(row)} hover>
+              <TableRow key={rowKey(row)} hover sx={ROW_SEPARATOR}>
                 {columns.map((column) => (
                   <TableCell
                     key={column.key}
