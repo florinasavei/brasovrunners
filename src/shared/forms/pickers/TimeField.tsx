@@ -6,7 +6,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useTranslations } from "next-intl";
-import type { SyntheticEvent } from "react";
+import type { KeyboardEvent, SyntheticEvent } from "react";
 import { useRef } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import { normalizeTypedTime, TIME_PATTERN } from "./wall-values";
@@ -48,7 +48,7 @@ function announce(input: HTMLInputElement) {
  *
  * **Typing it.** A numeric keypad on a phone (`inputMode="numeric"`), at most five characters,
  * and a colon added after a valid two-digit hour as it is typed ("19" → "19:"). On leaving the
- * box, `normalizeTypedTime` reads the usual shapes — "1900", "19.00", "930", "9:30", "7" — as
+ * box or pressing Enter in it, `normalizeTypedTime` reads the usual shapes — "1900", "19.00", "930", "9:30", "7" — as
  * `HH:mm`; what it cannot read stays as typed for `pattern` (with JavaScript or without) and the
  * server (`isTimeValue`) to refuse. No AM/PM is ever read or shown.
  *
@@ -82,13 +82,19 @@ export default function TimeField({ name, label, defaultValue = "", required = f
     if (/^([01]\d|2[0-3])$/.test(input.value)) input.value = `${input.value}:`;
   }
 
-  function onBlur() {
+  function normalize() {
     const input = field.current;
     if (!input) return;
     const normal = normalizeTypedTime(input.value);
     if (normal === input.value) return;
     input.value = normal;
     announce(input);
+  }
+
+  // Enter submits the form without leaving the box: normalise first, so «1900» + Enter posts
+  // 19:00 instead of meeting `pattern`'s refusal. The keydown runs before the implicit submit.
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" && event.target === field.current) normalize();
   }
 
   return (
@@ -106,7 +112,8 @@ export default function TimeField({ name, label, defaultValue = "", required = f
       size={size}
       sx={sx}
       onInput={onInput}
-      onBlur={onBlur}
+      onBlur={normalize}
+      onKeyDown={onKeyDown}
       slotProps={{
         inputLabel: { shrink: true },
         // `pattern` holds the box to `HH:mm` on submit, with JavaScript and without.
