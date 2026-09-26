@@ -59,13 +59,15 @@ const NO_ARTIFACT_EDIT = new RegExp(
 );
 /**
  * "Carried forward from the implementer", "carries forward unchanged", "carrying forward
- * verbatim" — any tense of "carry … forward" whose complement says it is a copy of something
- * else. A sentence like "a declined offer carries the place forward to the next person", or
- * "a waiting-list offer's deadline is carried forward to the next day", is the fix's substance
- * (a direct object between "carr(y|ies|ied|ying)" and "forward", or no qualifier at all) and
- * must not match.
+ * verbatim", "carrying forward the implementer's section", "carry forward the text" — any
+ * tense of "carry … forward" whose complement names the landing text itself (a qualifier, or
+ * "the implementer's <noun>" / "the text", as the object *after* "forward"). A sentence like
+ * "a declined offer carries the place forward to the next person", or "a waiting-list offer's
+ * deadline is carried forward to the next day", is the fix's substance (a direct object
+ * between "carr(y|ies|ied|ying)" and "forward", or an object after "forward" that names
+ * something other than the document text) and must not match.
  */
-const CARRIED_FORWARD = /\bcarr(?:y|ies|ied|ying)\s+forward\b[^.;]{0,30}\b(from the implementer|verbatim|unchanged)\b/i;
+const CARRIED_FORWARD = /\bcarr(?:y|ies|ied|ying)\s+forward\b[^.;]{0,30}\b(from the implementer|verbatim|unchanged|the implementer's\s+\w+|the text)\b/i;
 /** A whole text that says nothing, including a bare "(carried forward)" with no qualifier. */
 const EMPTY_WORDS = /^[(\s]*(none|n\/a|unchanged|carried forward|no (changes?|edits?|addendum)|nothing( (new|to add))?|same( as (above|before))?|—|-+)[.)\s]*$/i;
 
@@ -174,7 +176,7 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
   let title = String(impl.decisionsTitle ?? "").trim();
   for (const { who, report, text, addendum } of fixers) {
     const { text: clean, dropped } = withoutHousekeeping(text);
-    for (const sentence of dropped) notes.push(`dropped from ${who}: "${sentence.slice(0, 160)}"`);
+    for (const sentence of dropped) notes.push(`DROPPED from ${who}: "${sentence.slice(0, 160)}"`);
     if (clean) body = addendum ? `${body}\n\n${clean}` : clean;
     if (!addendum && !blank(report.decisionsTitle) && !EMPTY_WORDS.test(report.decisionsTitle) && !CARRIED_FORWARD.test(report.decisionsTitle)) title = report.decisionsTitle.trim();
     if (!blank(report.changelogLine) && report.changelogLine.trim() !== String(impl.changelogLine ?? "").trim() && !CARRIED_FORWARD.test(report.changelogLine)) {

@@ -103,7 +103,7 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
     expect(entry.body).toBe(
       `${impl.decisionsSection}\n\nThis round made the helper the one every listing spec uses. The changelogLine and specsCriteria above are text for the orchestrator to place.`,
     );
-    expect(entry.notes.some((n) => n.startsWith("dropped from fix round 1: \"No DECISIONS.md"))).toBe(true);
+    expect(entry.notes.some((n) => n.startsWith("DROPPED from fix round 1: \"No DECISIONS.md"))).toBe(true);
   });
 
   it("drops only the housekeeping clause of a ';' sentence, keeping real substance the clause shares it with", () => {
@@ -116,7 +116,7 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
     expect(entry.body).toBe(
       `${impl.decisionsSection}\n\nThis round made the helper the one every listing spec uses. The desk now refuses a check-in without a signed declaration.`,
     );
-    expect(entry.notes.some((n) => n.startsWith("dropped from fix round 1: \"No DECISIONS.md"))).toBe(true);
+    expect(entry.notes.some((n) => n.startsWith("DROPPED from fix round 1: \"No DECISIONS.md"))).toBe(true);
   });
 
   it("drops an addendum that is nothing but housekeeping", () => {
@@ -126,6 +126,8 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
       "No changes to DECISIONS.md were needed.",
       "The section carries forward from the implementer.",
       "This round is carrying forward the earlier text, unchanged.",
+      "This round is carrying forward the implementer's section.",
+      "Carry forward the text.",
     ]) {
       const entry = entryFromResults({ impl }, [round({ decisionsAddendum: addendum })]);
       expect(entry.body, addendum).toBe(impl.decisionsSection);
