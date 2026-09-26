@@ -92,6 +92,13 @@ export const DEFAULT_DEADLINES: Deadlines = Object.freeze(
   Object.fromEntries(DEADLINE_KEYS.map((key) => [key, DEADLINE_RULES[key].default])) as Deadlines,
 );
 
+/**
+ * §NNN (amending §377): the value the club is advised to keep for each deadline — the platform's
+ * own default, one map so the panel's help, its «diferit de recomandat» chip and the fill button
+ * read the same numbers and no catalogue carries one.
+ */
+export const RECOMMENDED: Deadlines = DEFAULT_DEADLINES;
+
 /** The per-event reminder's column bounds (`events.reminder_hours_before`): 0 is "no reminder". */
 export const EVENT_REMINDER_MAX_HOURS = DEADLINE_RULES.reminderHours.max;
 

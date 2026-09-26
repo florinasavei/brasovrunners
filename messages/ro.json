@@ -3380,7 +3380,7 @@
         "intro": "Cât durează fiecare termen pe care platforma îl dă unui participant. Se aplică de la salvare înainte: un link, un loc ținut sau o ofertă deja date își păstrează termenul primit. Numerele apar singure oriunde sunt scrise — în emailuri, pe formular și în cei cinci pași, în ghid, pe această pagină și în textele legale aprobate din șablonul nou.",
         "aside": "Link {confirmation} · loc ținut {hold} · ofertă {offer} · reminder {reminder}",
         "reminderOff": "fără",
-        "bounds": "Între {min} și {max}; implicit {default}.",
+        "bounds": "Recomandat: {recommended}. Între {min} și {max}.",
         "fields": {
           "confirmationHours": "Linkul de confirmare a adresei e valabil (ore)",
           "holdMinutes": "Locul e ținut pentru semnarea declarației (minute)",
@@ -3406,6 +3406,8 @@
         "save": "Salvează termenele",
         "saving": "Se salvează…",
         "saved": "Termenele au fost salvate; se aplică de acum înainte.",
+        "differs": "diferit de recomandat",
+        "fillRecommended": "Completează valorile recomandate",
         "readOnly": "Termenele le schimbă Administratorul; tu vezi valorile în vigoare."
       },
       "forecast": {

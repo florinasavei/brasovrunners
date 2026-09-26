@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -16,8 +17,9 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import type { DeadlinesState } from "../deadlines";
-import { DEADLINE_KEYS, DEADLINE_RULES } from "../domain/deadlines";
+import { DEADLINE_KEYS, DEADLINE_RULES, RECOMMENDED } from "../domain/deadlines";
 import { deadlineWords } from "../domain/duration-words";
+import FillRecommendedButton from "./FillRecommendedButton";
 
 type Props = {
   locale: Locale;
@@ -109,25 +111,33 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
             {DEADLINE_KEYS.map((key) => {
               const rule = DEADLINE_RULES[key];
               return (
+                <Box key={key}>
                 <RecallField
-                  key={key}
                   name={key}
                   type="number"
                   label={labels[key]}
                   defaultValue={deadlines[key]}
                   size="small"
                   required
-                  helperText={`${t(`emails.deadlines.help.${key}`)} ${t("emails.deadlines.bounds", { min: rule.min, max: rule.max, default: rule.default })}`}
+                  helperText={`${t(`emails.deadlines.help.${key}`)} ${t("emails.deadlines.bounds", { min: rule.min, max: rule.max, recommended: RECOMMENDED[key] })}`}
                   slotProps={{ htmlInput: { min: rule.min, max: rule.max, step: 1, inputMode: "numeric" } }}
                 />
+                {/* §NNN: the value in force is not the recommended one — said by the stored value, not the typed one. */}
+                {deadlines[key] !== RECOMMENDED[key] && (
+                  <Chip size="small" variant="outlined" color="warning" sx={{ mt: 0.5 }} label={t("emails.deadlines.differs")} data-testid={`deadline-${key}-differs`} />
+                )}
+                </Box>
               );
             })}
-            <Box>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               <GlyphSubmitButton label={t("emails.deadlines.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
+              {/* §NNN: fills the boxes, never saves — the save above does, after its question. */}
+              <FillRecommendedButton values={RECOMMENDED} label={t("emails.deadlines.fillRecommended")} />
             </Box>
           </Stack>
         </ActionForm>
       )}
+
 
       {addressCap && (
         <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }} data-testid="address-cap">
@@ -159,7 +169,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
                   defaultValue={addressCap.cap.registrationsPerAddress}
                   size="small"
                   required
-                  helperText={`${t("emails.addressCap.help")} ${t("emails.deadlines.bounds", { min: ADDRESS_CAP_RULE.min, max: ADDRESS_CAP_RULE.max, default: ADDRESS_CAP_RULE.default })}`}
+                  helperText={`${t("emails.addressCap.help")} ${t("emails.deadlines.bounds", { min: ADDRESS_CAP_RULE.min, max: ADDRESS_CAP_RULE.max, recommended: ADDRESS_CAP_RULE.default })}`}
                   slotProps={{ htmlInput: { min: ADDRESS_CAP_RULE.min, max: ADDRESS_CAP_RULE.max, step: 1, inputMode: "numeric" } }}
                 />
                 <Box>
