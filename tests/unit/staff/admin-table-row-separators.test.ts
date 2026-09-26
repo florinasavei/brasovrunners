@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import AdminTable from "@/modules/staff-identity/ui/AdminTable";
 
 /**
- * §431 — every backoffice table row but the last carries a visible separator; the last one
+ * §NNN — every backoffice table row but the last carries a visible separator; the last one
  * none, the frame's own border closing the table.
  */
 type Row = { id: string; name: string };
@@ -14,7 +14,7 @@ const rows: Row[] = [
   { id: "c", name: "Gamma" },
 ];
 
-describe("AdminTable row separators (§431)", () => {
+describe("AdminTable row separators (§NNN)", () => {
   it("marks a line under every body row but the last", () => {
     const html = renderToStaticMarkup(
       createElement(AdminTable<Row>, {
