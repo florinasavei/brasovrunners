@@ -2253,14 +2253,16 @@
             "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
           ]
         },
-        "roDomain": {
-          "title": "Domeniul .ro, peste un an",
-          "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",
-          "done": "Site-ul răspunde și pe domeniul .ro.",
+        "domainRenewal": {
+          "title": "Reînnoirea domeniului .com",
+          "todo": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}). Galben cu 90 de zile înainte, roșu cu 30 — și atunci /api/health anunță monitorul. Un domeniu expirat oprește site-ul, linkurile din emailuri și trimiterea emailurilor, toate odată.",
+          "done": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}) — e timp destul.",
+          "expired": "Domeniul a expirat pe {domainExpiresOn}. Reînnoiește-l azi la registrar: până atunci site-ul și emailurile pot să nu mai meargă.",
+          "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire. .ro nu se mai cumpără (o singură adresă, pentru motoarele de căutare); rămâne doar .com.",
           "how": [
-            "Peste un an (septembrie 2027), cumpără domeniul .ro cu același nume, la ROTLD sau la registrarul .com.",
-            "Rulează `yarn domain:bind production <numele>.ro --alias-of {apex}`: leagă domeniul de proiectul Vercel ca redirect permanent către .com și tipărește înregistrările DNS de creat.",
-            "Creează înregistrările la registrar. Rândul acesta devine verde când site-ul răspunde pe .ro."
+            "Reînnoiește pe mai mulți ani la registrar; apoi actualizează DOMAIN_RENEWAL_YEARS.",
+            "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4. În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
+            "Verifică: rândul acesta arată noua dată de expirare și devine verde când mai sunt peste 90 de zile. Schimbarea domeniului e în SETUP.md §26."
           ]
         },
         "contactForm": {

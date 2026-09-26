@@ -5,6 +5,7 @@ import { checkSchemaVersion } from "@/db/schema-version";
 import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { checkNeonQuotaHealth } from "@/modules/diagnostics/neon";
+import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
@@ -138,6 +139,15 @@ export async function GET(): Promise<Response> {
   const schemaDown = schema?.status === "behind";
   const schemaDegraded = schema?.status === "ahead";
 
+  /*
+    The domain's renewal (§NNN): thirty days or fewer before the expiry — or past it — is
+    `degraded`, so the monitor's 503 reaches the owner while there is still a week to renew.
+    Configuration and the clock only, never a query or a registrar's WHOIS; unset dates are
+    `unknown` and change nothing.
+  */
+  const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
+  const domainDue = domain.status === "urgent" || domain.status === "expired";
+
   const status =
     database === "down" || schemaDown
       ? "down"
@@ -145,7 +155,8 @@ export async function GET(): Promise<Response> {
           schemaDegraded ||
           email?.status === "stalled" ||
           neonQuota.status === "near-limit" ||
-          turnstile === "misconfigured"
+          turnstile === "misconfigured" ||
+          domainDue
         ? "degraded"
         : "ok";
 
@@ -175,6 +186,12 @@ export async function GET(): Promise<Response> {
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
       // endpoint reports; only `misconfigured` is.
       turnstile: { status: turnstile },
+      // The domain's expiry (§NNN) is public at any registrar, so the day and the days left are
+      // published; the domain's name is not repeated — it is the host this answer came from.
+      domain:
+        domain.status === "unknown"
+          ? { status: domain.status }
+          : { status: domain.status, expiresOn: domain.expiresOn, daysLeft: domain.daysLeft },
       checkedAt: now.toISOString(),
     },
     { status: status === "ok" ? 200 : 503 },
