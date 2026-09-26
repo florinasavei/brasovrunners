@@ -3,11 +3,14 @@ import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { riseIn } from "@/theme/motion";
-import { specialCard } from "@/theme/surfaces";
+import { featuredCard, specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import { raceWeek } from "../domain/race-week";
 import type { PublicEvent } from "../repository";
 import CardDoor from "./CardDoor";
 import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
@@ -37,33 +40,58 @@ import PartnerChip from "./PartnerChip";
  * — §242 kept that list dense so the lead was not followed by a scroll — and the owner asked
  * for the opposite once a picture could be cropped to the shape a card shows (§241): "on the
  * event card I wanna be able to see pictures in the preview".
+ *
+ * **The featured event is this card too** (§470, replacing the hero above the listing; the owner,
+ * 2026-09-26: "vreau doar sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3
+ * carduri, dar toate cardurile trebuie sa aiba aceeasi latime"). Given `featured`, it is the first
+ * card of the grid, at the grid's one width, and differs only by its frame and background
+ * (`featuredCard`) and the «Evenimentul principal» chip first among its marks — plus, in the club's
+ * race week (§78, §377), the countdown line and the desk's "come with the QR" once registration has
+ * closed, which are the one thing a visitor wants that week. It is a region named by its title, as
+ * the hero was, so a screen reader can still jump to "the event the club leads with".
  */
 export default async function EventCard({
   event,
   index,
   now,
   weather = null,
+  featured,
 }: {
   event: PublicEvent;
   index: number;
   now: Date;
   /** The forecast at the start (§416), read by the listing for every card at once (`forecastsForEvents`); null outside the seven days or on any failure. */
   weather?: WeatherReading | null;
+  /** The listing's lead event (§470): the club's race-week days (§377), read by the page from the data cache. */
+  featured?: { raceWeekDays: number };
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
   const page = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } });
+  // The last days before the start (§78; seven unless the club changed it, §377), counted on the
+  // event's own calendar — the featured card only.
+  const week = featured ? raceWeek(event, now, featured) : null;
+  const tEvents = featured ? await getTranslations("Events") : null;
   return (
     <Card
       component="li"
       variant="outlined"
-      /* An event the club marked special wears it on the whole card (§272), not only as a chip. */
-      sx={{ ...riseIn(index), ...(event.isSpecial ? specialCard : {}) }}
+      data-featured={featured ? "true" : undefined}
+      /* The lead event wears its frame and background (§470); one the club marked special wears
+         that on the whole card (§272), not only as a chip. One frame per card: the lead's wins. */
+      sx={{ ...riseIn(index), ...(featured ? featuredCard : event.isSpecial ? specialCard : {}) }}
     >
       {/* The shape the series card has, from the same constants (`card-layout.ts`, §366): the door
-          right after the facts, and what the row leaves over below it rather than above it. */}
-      <Box sx={CARD_BODY_SX}>
+          right after the facts, and what the row leaves over below it rather than above it. The
+          lead's body is a region named by its title (§470), as the hero's `<section>` was. */}
+      <Box
+        component={featured ? "section" : "div"}
+        aria-labelledby={featured ? "featured-event-title" : undefined}
+        sx={CARD_BODY_SX}
+      >
         <Box sx={CARD_CHIPS_SX}>
+          {/* The one mark that says "the event the club leads with" (§470), first. */}
+          {tEvents && <GlyphChip glyph="featured" color="primary" label={tEvents("featured")} />}
           {/* What it is, with its glyph (§112). What it is run on is a pill with the facts below,
               said once on the card (§366). */}
           <EventKindChips type={event.type} surface={null} />
@@ -80,7 +108,7 @@ export default async function EventCard({
         {/* The title is the card's link to its page, in the one style every card's title has
             (`CARD_TITLE_SX`): the club's blue, visited or not, underlined under a pointer or the
             keyboard. A screen reader hears the title, not every word on the card. */}
-        <Typography variant="h2" sx={CARD_TITLE_SX}>
+        <Typography variant="h2" id={featured ? "featured-event-title" : undefined} sx={CARD_TITLE_SX}>
           <Link href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>{event.title}</Link>
         </Typography>
 
@@ -88,6 +116,23 @@ export default async function EventCard({
             no link (`CARD_EXCERPT_SX`, §366). `EventExcerpt` renders nothing when there is
             nothing, which is what the old `event.excerpt &&` did. */}
         <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />
+
+        {/* The countdown (§78), the lead's alone and only in race week: "În 3 zile, sâmbătă, 21 nov.
+            2026, la 10:00" — the noun agreeing with the number (§377), the date inline (§349, §452).
+            In the club's blue and bold, at the card's own size; a group's gap above it like any group. */}
+        {week && tEvents && (
+          <Typography
+            component="p"
+            variant="body1"
+            data-testid="race-week-countdown"
+            sx={{ mt: GROUP_GAP, mb: 0, fontWeight: 700, color: "primary.main" }}
+          >
+            {tEvents(week.days === 0 ? "raceWeek.today" : week.days === 1 ? "raceWeek.tomorrow" : "raceWeek.inDays", {
+              days: durationPhrase(locale, week.days, "days"),
+              when: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
+            })}
+          </Typography>
+        )}
 
         {/* The facts, with their links: the place is the map the club pasted. The weather at the
             start, a glyph and the degrees (§416), within seven days of it, is the last pill of the
@@ -106,7 +151,7 @@ export default async function EventCard({
             other breakpoints in this module are measured and pasted (`EventFacts.tsx`'s own
             comments). */}
         <Box sx={{ mt: GROUP_GAP }}>
-          <EventFacts event={event} now={now} variant="compact" cardWeather={weather} />
+          <EventFacts event={event} now={now} variant="compact" cardWeather={weather} raceWeek={week !== null} />
         </Box>
 
         {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri

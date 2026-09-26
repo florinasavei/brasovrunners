@@ -5,7 +5,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID } from "@/modules/registrations/domain/family";
 import { waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
-import { consumeAndConfirmFamilyEntry } from "@/modules/registrations/token-actions";
+import { consumeAndConfirmFamilyEntry, consumeAndDeclineFamilyEntry } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /** The refusals the page has a sentence for, in the order a refusal is read; anything else is the generic one. */
@@ -46,4 +46,17 @@ export async function confirmFamilyEntryAction(form: FormData): Promise<void> {
   }
   if (!result.ok) redirect(`${path}?invalid=1`);
   redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlist" : "declare"}`);
+}
+
+/**
+ * «Nu înscriu această persoană» (§468): the other answer to the same single-use link. The token is
+ * spent and the kept form deleted (`declineFamilyEntry`); lands on `done=declined`, or on the one
+ * generic notice when the link was spent, lapsed or unknown. Markers only in the URL (§14.5).
+ */
+export async function declineFamilyEntryAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const path = getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token } } });
+  const result = await consumeAndDeclineFamilyEntry(token, new Date());
+  redirect(result.ok ? `${path}?done=declined` : `${path}?invalid=1`);
 }

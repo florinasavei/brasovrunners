@@ -39,7 +39,7 @@ import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import {
-  birthDateText,
+  awaitingSignatureOnAddress,
   findFamilyEntryById,
   linkFamilyEntryToken,
   personOfEntry,
@@ -320,6 +320,16 @@ async function renderRow(
     if (row.messageType === "COMPLETE_DECLARATION" || row.messageType === "WAITLIST_SPOT_OFFER") {
       data.minorSigns = await declarationAsksMinorToSign(db, registration.locale as Locale, now);
     }
+  }
+  /*
+    A family on one address (§471): the declaration request names the address's other declarations
+    still to sign at the event, first name and initial, because the one link signs them all, one
+    after the other. Read at send time, like every fact of the message. The inbox's alone: a club
+    copy carries no link to sign with.
+  */
+  if (row.messageType === "COMPLETE_DECLARATION" && registration && !clubCopy) {
+    const others = await awaitingSignatureOnAddress(db, registration.eventId, registration.participantId, registration.id);
+    if (others.length > 0) data.familyToSign = others;
   }
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   /*
@@ -606,7 +616,7 @@ async function renderRow(
       familyEntry = kept;
       const person = personOfEntry(kept);
       data.familyPersonName = person.legalName;
-      data.familyPersonBirthDate = birthDateText(person.birthDate);
+      data.familyPersonBirthDate = person.birthDate?.slice(0, 10) ?? "";
       data.familyRegistered = await registeredOnAddress(db, kept.eventId, kept.participantId);
     } else if (!data.addressAtCap) {
       // Confirmed, or lapsed and purged — deferred past the window (§40) or sent again after the
@@ -639,6 +649,11 @@ async function renderRow(
       await linkFamilyEntryToken(db, familyEntry.id, issued.token.id);
       const path = getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token: issued.secret } } });
       actionUrl = `${env.APP_BASE_URL}${path}`;
+      /*
+        «Nu înscriu această persoană» (§468): the same token, the page's "no" shape. One decision per
+        link: whichever answer is pressed spends it, and opening either changes nothing (§12.8).
+      */
+      data.familyDeclineUrl = `${actionUrl}?decline=1`;
     }
   } else if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];

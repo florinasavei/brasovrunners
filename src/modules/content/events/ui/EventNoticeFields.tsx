@@ -10,6 +10,7 @@ import { type FormEvent, useState } from "react";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { useSelectedValue } from "./OnlyForType";
 
 /** The words, all of them already translated on the server; the counts are in the sentences. */
@@ -217,6 +218,8 @@ function NoticeTextPair({
           />
         ))}
       </Stack>
+      {/* «Tradu din română» (§464): the English note or reason from the Romanian one. */}
+      <TranslateFieldButton en={names.en} />
       <Typography id={helpId} variant="caption" color="text.secondary">
         {help}
       </Typography>

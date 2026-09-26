@@ -136,19 +136,19 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r1"), db, NOW);
     const lines = message.text.split("\n");
     // Romanian half: right under «Când», the credit the licence asks for under it, then «Unde».
-    const ro = lines.indexOf("Vremea: Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h");
+    const ro = lines.indexOf("Vremea: Ploaie, 6 °C, ploaie probabilă 80 %");
     expect(ro).toBeGreaterThan(0);
     expect(lines[ro - 1]).toMatch(/^Când: /);
     expect(lines[ro + 1]).toBe("  Prognoză: Open-Meteo");
     expect(lines[ro + 2]).toMatch(/^Unde: /);
     // English half, in its own words.
-    const en = lines.indexOf("Weather: Rain, 6 °C, 80% chance of rain, wind 17 km/h");
+    const en = lines.indexOf("Weather: Rain, 6 °C, rain likely 80%");
     expect(en).toBeGreaterThan(ro);
     expect(lines[en - 1]).toMatch(/^When: /);
     expect(lines[en + 1]).toBe("  Forecast: Open-Meteo");
     // In the HTML, inside the facts block, the label bold as every row's.
     const block = message.html.match(/<div data-email-part="event-facts"[^]*?<\/div>/)?.[0] ?? "";
-    expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h<br>Prognoză: Open-Meteo");
+    expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, ploaie probabilă 80 %<br>Prognoză: Open-Meteo");
   });
 
   it("stays one line — the start hour's facts, never the page's details (§416)", async () => {

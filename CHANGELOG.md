@@ -8,6 +8,18 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.05-2026-09-27
+
+- **The phone prefix and the citizenship are found by typing.** On the registration form, a tap on the phone's flag opens a search box: type part of a name, the ISO code or the dialling code, with or without accents. Citizenship is a box you type into, the flag shown before the chosen country. Without JavaScript the phone's own list still works. §463.
+- **«Tradu din română» in the backoffice**: a button under every English box (events, pages, albums, partners, links, programme rows, notices, messages to participants) and «Tradu tot din română» at the top of the event, page and album editors. DeepL API Free fills the English from the Romanian as a draft, keeping the layout (headings, lists, tables, pictures, links). It asks before replacing written words and saves nothing. It needs `DEEPL_API_KEY`, has a daily character budget on Sarcini → Costuri, and never sends legal texts or participant data. §464.
+- **The listing's past events lose the redundant line** under their heading, in both languages. §465.
+- **The editor's Cost card sits inside «Ce fel de eveniment»**: a named card after the status. The page map's «7 · Costul» still opens it, and the public page is unchanged. §466.
+- **The city is required and asked right after the birth date, and the typed birth date is read back in words with the age on the event day** — the owner, 2026-09-26; optional for a staff entry. §467.
+- **The family email puts what matters in bold, and can be declined**: one outlined box states the event, who the address holds and the person the form named, each value in bold; a second, outlined button «Nu înscriu această persoană» on the same single-use link deletes the kept form, and nobody is registered. §468.
+- **The event page's weather is one line, and its controls have glyphs**: the «Vremea» row shows only the summary line, «Înapoi la evenimente» has a left arrow, and the staff edit button has a pencil. §469.
+- **The featured event is the first card of the listing**, as wide as every other card (two or three to a row on a desktop), set apart by a blue frame, the hero's gradient and the «Evenimentul principal» chip; in race week it still counts down and, once registration closes, sends registered runners to the desk with their QR — the full-width hero and the «Toate evenimentele» fold under it are gone. §470.
+- **A family's declarations are one wizard:** the declaration link of any person on an address now signs everybody's declaration on that address, one person per step, with a stepper and «Pasul N din M». Each person still signs with their own name and documents and gets their own confirmation and PDF. The declaration email names the others still waiting. §471.
+- **The card's registration line bolds only what matters**: the date, the hour and the free places, not the whole sentence. §472.
 ## BR-V2.04-2026-09-26
 
 - **The featured hero's route is the cards' pills** — surface, difficulty, distance, climb, night and cost, the same pills in the same order as every listing card, the surface no longer a chip beside the type; the amount, where to pay and the route's links on a line under them. §449.

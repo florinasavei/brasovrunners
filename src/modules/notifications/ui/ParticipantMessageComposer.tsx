@@ -15,6 +15,7 @@ import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { previewPause, type PreviewLanguage } from "./preview-pause";
 
 /**
@@ -255,6 +256,9 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
               />
             ))}
           </Stack>
+          {/* «Tradu din română» (§464): the English subject or text from the Romanian one — the
+              club's own words only; no participant's data is in either box. */}
+          <TranslateFieldButton en={`${part}En`} />
           <Typography id={`participant-message-${part}-help`} variant="caption" color="text.secondary">
             {help}
           </Typography>

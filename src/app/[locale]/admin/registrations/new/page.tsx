@@ -12,6 +12,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import {
+  StaffBirthDateEcho,
   StaffBirthDateField,
   StaffEventScope,
   StaffEventSelect,
@@ -91,6 +92,13 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  // The prefix's search (§463), the same words as the public form.
+  const countrySearchWords = {
+    search: rt("countrySearch.search"),
+    noMatch: rt("countrySearch.noMatch"),
+    open: rt("countrySearch.open"),
+    close: rt("countrySearch.close"),
+  };
   // The next free desk spare per event (§444), suggested only to the desk — a person on the
   // telephone, entered from the list, is not standing at a table with a bib.
   const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
@@ -172,6 +180,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           {/* Optional here too, and when it is given the server counts it (§321): under the chosen event's own minimum (§329, the "N+" beside its name) on
               the race day is refused, so the field says so before the volunteer presses. */}
           <StaffBirthDateField label={rt("birthDate")} helperText={t("registrations.birthDateMinimumAge")} />
+          <StaffBirthDateEcho locale={locale} template={rt("birthDateEcho", { date: "{date}", age: "{age}" })} />
           {/*
             The parent or guardian (§108), shown when the birth date says under eighteen today —
             the public form's own island and rule (§188), so a fourteen-to-seventeen-year-old can
@@ -188,7 +197,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             />
           </StaffGuardian>
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
-          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} />
+          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} searchWords={countrySearchWords} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
@@ -196,6 +205,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             countryLabel={rt("phoneCountry")}
             countryOrder={phoneOrder}
             countryNames={phoneNames}
+           
+            searchWords={countrySearchWords}
           />
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the

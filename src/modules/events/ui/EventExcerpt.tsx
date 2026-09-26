@@ -11,14 +11,13 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import { LINE_GAP } from "./card-layout";
 
 /**
- * Where the short description is read: the event page and the hero give it the column, a
- * listing card gives it a card's worth of room. The hero is the page's column too, but its
- * pictures are the listing's 16∶9 frame at their focal point (§454): it is the first card of the
- * listing, and a portrait poster in it stood as tall as the screen.
+ * Where the short description is read: the event page gives it the column, a listing card gives
+ * it a card's worth of room. The featured hero had a third place (§454) — the page's column with
+ * the cards' 16∶9 frame — until §470 made the featured event a card like the others.
  */
-export type ExcerptPlace = "page" | "hero" | "card";
+export type ExcerptPlace = "page" | "card";
 
-/** The excerpt as the page and the hero render it: the body's own type, the column's width. */
+/** The excerpt as the page renders it: the body's own type, the column's width. */
 export const PAGE_EXCERPT_SX = {
   color: "text.secondary",
   mb: 1,
@@ -145,7 +144,7 @@ export function splitCardExcerpt(doc: RichTextDoc): { before: RichTextBlock[]; w
 const docOf = (content: RichTextBlock[]): RichTextDoc => ({ type: "doc", content });
 
 /**
- * The short description, on the hero, the event page, its preview and the listing cards
+ * The short description, on the event page, its preview and the listing cards (the featured one's too)
  * (`DECISIONS.md` §73): the rich excerpt when one was written — a sentence or two and, when
  * the organizer wanted one, a picture — and the plain `excerpt` as one paragraph for events
  * from before it. Nothing at all when there is nothing, so the facts move up rather than
@@ -158,7 +157,7 @@ export default function EventExcerpt({
 }: {
   excerptJson: unknown;
   excerpt: string | null;
-  /** `card` constrains the picture to the card and clamps the words alone (`CARD_EXCERPT_SX`); `hero` frames the pictures alone. */
+  /** `card` constrains the picture to the card and clamps the words alone (`CARD_EXCERPT_SX`). */
   place?: ExcerptPlace;
 }) {
   const doc = excerptJson ? readRichText(excerptJson) : fromPlainText(excerpt);
@@ -166,7 +165,7 @@ export default function EventExcerpt({
   if (place !== "card") {
     return (
       <Box sx={PAGE_EXCERPT_SX}>
-        <RichText body={doc} framed={place === "hero"} />
+        <RichText body={doc} />
       </Box>
     );
   }

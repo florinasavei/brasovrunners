@@ -25,6 +25,7 @@ import CoHostLinkGlyph from "@/modules/events/ui/co-host-glyphs";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
 import { useRecall } from "@/shared/forms/recall";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 
 export type CoHostLinkRowValue = { kind: string; url: string; labelRo: string; labelEn: string };
 export type CoHostRowValue = { name: string; descriptionRo: string; descriptionEn: string; links: CoHostLinkRowValue[] };
@@ -303,6 +304,8 @@ function CoHostRowsEditorIsland({
                     );
                   })}
                 </Stack>
+                {/* «Tradu din română» (§464): the English description from the Romanian one. */}
+                <TranslateFieldButton en={descriptionField("En")} />
                 <Typography id={aboutHelpId} variant="caption" color="text.secondary">
                   {labels.descriptionHelp}
                 </Typography>
@@ -385,6 +388,7 @@ function CoHostRowsEditorIsland({
                           slotProps={{ htmlInput: { ...constraints.label } }}
                         />
                       </Stack>
+                      <TranslateFieldButton en={box("labelEn")} />
                       <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
                         <IconButton
                           aria-label={`${labels.moveLinkUp} ${ln}`}

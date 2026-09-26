@@ -94,6 +94,11 @@ export type DayOptions = {
    */
   year?: boolean;
   /**
+   * "long" writes the month in full ("5 noiembrie 1990") — only the typed birth date read back in
+   * words (§467); every other date keeps the abbreviated month.
+   */
+  month?: "short" | "long";
+  /**
    * "start" capitalises the first letter (the default); "inline" keeps Romanian's lower case
    * and, inside the sentence, says "la" / "at" before the hour (§452); "continues" keeps the lower
    * case with the bare hour — a span's second half, not a sentence.
@@ -127,7 +132,7 @@ function compose(instant: Date, timeZone: string, options: Omit<DayOptions, "tim
   const weekday = formatter(intl, { weekday: options.style ?? "long", timeZone }).format(instant);
   const day = formatter(intl, {
     day: "numeric",
-    month: "short",
+    month: options.month ?? "short",
     ...(options.year === false ? {} : { year: "numeric" }),
     timeZone,
   }).format(instant);
@@ -161,6 +166,18 @@ export function formatDay(date: Date, options: DayOptions): string {
 export function formatCalendarDay(date: string | Date, options: Omit<DayOptions, "timeZone" | "withTime">): string {
   const iso = typeof date === "string" ? date.slice(0, 10) : date.toISOString().slice(0, 10);
   return compose(new Date(`${iso}T12:00:00Z`), "UTC", options, false);
+}
+
+/**
+ * A birth date in words, as a person reads it (§468, amending §446): "3 iunie 1974" / "3 June 1974" —
+ * never "03.06.1974". A `YYYY-MM-DD`, read as the calendar day it names; "" for anything else.
+ */
+export function formatBirthDate(ymd: string, locale: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd);
+  if (!match) return "";
+  return formatter(intlLocale(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${match[1]}-${match[2]}-${match[3]}T12:00:00Z`),
+  );
 }
 
 /** "09:30", always 24-hour, in the zone the caller names. */

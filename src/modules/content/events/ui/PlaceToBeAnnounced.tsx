@@ -14,6 +14,7 @@ import type { textFieldConstraints } from "@/shared/forms/constraints";
 import { fillIn } from "@/shared/forms/fill-in";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { PLACE_NAMES_AS_TYPED_FIELD } from "../form-names";
 import { ShownWhen } from "./OnlyForType";
 
@@ -281,6 +282,8 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
                 >
                   {labels.copyToEnglish}
                 </Button>
+                {/* «Tradu din română» (§464): the place's name translated, where the page offers it. */}
+                <TranslateFieldButton en={EN_NAME} />
               </Stack>
             </Stack>
             <Typography id="place-names-help" variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, px: 1.75 }}>

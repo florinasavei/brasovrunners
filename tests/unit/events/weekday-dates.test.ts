@@ -96,19 +96,22 @@ describe("BR-REQ-040-03 criterion 4 the event's facts carry the day of the week,
     expect(html).not.toContain("Sâmbătă");
   });
 
+  // The date and hour sit in their own <strong> (§472), so the sentence is read as text.
+  const words = (html: string) => html.replace(/<style[^>]*>[^<]*<\/style>/g, "").replace(/<[^>]+>/g, "");
+
   it("names the registration's opening day inside the card's sentence in lower case, in Romanian", async () => {
     pageLocale = "ro";
     const early = new Date("2026-09-20T09:00:00Z");
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: early, variant: "compact", links: false }));
     expect(html).toContain("Sâmbătă, 16 ian. 2027");
-    expect(html).toContain("Înscrierile se deschid joi, 1 oct. 2026, la 18:00");
+    expect(words(html)).toContain("Înscrierile se deschid joi, 1 oct. 2026, la 18:00");
   });
 
   it("and in English", async () => {
     pageLocale = "en";
     const early = new Date("2026-09-20T09:00:00Z");
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: early, variant: "compact", links: false }));
-    expect(html).toContain("Registration opens on Thu, 1 Oct 2026, at 18:00");
+    expect(words(html)).toContain("Registration opens on Thu, 1 Oct 2026, at 18:00");
   });
 });
 

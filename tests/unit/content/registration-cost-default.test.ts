@@ -35,7 +35,7 @@ describe("§398 a new event starts free", () => {
   it("keeps CostFields' shown/hidden switch and the closed line off the same value", () => {
     expect(SOURCE).toContain("initialCostType={initialCostType}");
     expect(SOURCE).toMatch(/costAmount = initialCostType === "PAID" \|\| initialCostType === "DONATION"/);
-    expect(SOURCE).toMatch(/costLabel = initialCostType\s*\?/);
+    expect(SOURCE).toMatch(/return initialCostType\s*\?/);
   });
 });
 

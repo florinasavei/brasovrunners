@@ -17,7 +17,6 @@ import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/c
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
 import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/BibPrint";
 import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
-import CostBox from "@/modules/content/events/ui/boxes/CostBox";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
@@ -84,6 +83,7 @@ import { clubNightEvent } from "@/modules/events/night-event";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
@@ -791,17 +791,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     gaps={storedGaps}
                   />
+                  {/* «Tradu tot din română» (§464): every English box of this form from its Romanian
+                      twin, the layout kept — one question naming them, nothing saved until Salvează. */}
+                  <TranslateAllButton />
                   {/* The page, top to bottom (§406): each card where the page draws the first thing
                       it holds, numbered and headed by whether the page shows it — the order of
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
                   <EditorGroup label={t("editor.groups.page")} />
-                  <KindBox {...box} heading={flow.headings.kind} registered={realCount} risk={risk} notice={notice} />
+                  <KindBox {...box} heading={flow.headings.kind} languages={languages} registered={realCount} risk={risk} notice={notice} />
                   <TitleSummaryBox languages={languages} creating={false} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} inSeries={inSeries} heading={flow.headings.when} />
                   <PlaceBox {...box} risk={risk} languages={languages} heading={flow.headings.place} />
                   <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} />
-                  <CostBox {...box} languages={languages} heading={flow.headings.cost} />
                   <RegistrationBox
                     {...box}
                     heading={flow.headings.registration}

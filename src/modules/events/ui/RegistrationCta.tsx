@@ -29,12 +29,9 @@ import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButto
 export default async function RegistrationCta({
   event,
   now,
-  raceWeek = false,
 }: {
   event: PublicEvent;
   now: Date;
-  /** The last seven days (§78): a closed window then says where to go instead of only "closed". */
-  raceWeek?: boolean;
 }) {
   const t = await getTranslations("Event");
   const locale = await getLocale();
@@ -122,9 +119,9 @@ export default async function RegistrationCta({
       : cta.kind === "COMPLETED"
         ? t("cta.completed")
       : cta.kind === "CLOSED"
-        ? raceWeek
-          ? t("cta.closedRaceWeek")
-          : t("cta.closed")
+        ? // Race week's "come to the desk with the QR" is the featured card's line since §470
+          // (`cardRegistrationLine`); the page keeps the plain sentence, as it always did.
+          t("cta.closed")
         : cta.opensAt === null
           ? // Announced with no date (§451): the same big blue line, saying "soon".
             t("cta.opensSoon")

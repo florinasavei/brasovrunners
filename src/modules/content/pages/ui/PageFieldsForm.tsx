@@ -6,6 +6,8 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { pageInputConstraints, pageTranslationConstraints } from "../constraints";
 
 export type EditablePageTranslation = {
@@ -70,11 +72,16 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
+      {/* «Tradu tot din română» (§464): every English box from its Romanian twin, one question first. */}
+      <TranslateAllButton />
+
       <LocaleTabPanels
         idPrefix="locale"
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;
+          // «Tradu din română» under each English box (§464); nothing on the Romanian tab.
+          const translate = (field: string) => (locale === "en" ? <TranslateFieldButton en={name(field)} /> : null);
 
           return {
             locale,
@@ -87,6 +94,7 @@ export default async function PageFieldsForm({
                 defaultValue={translation?.title ?? ""}
                 {...box("title")}
               />
+              {translate("title")}
               <RecallField
                 name={name("slug")}
                 label={t("fields.slug")}
@@ -102,6 +110,7 @@ export default async function PageFieldsForm({
                 accessibleSuffix={t(`language.${locale}`)}
                 labels={richTextEditorLabels(rt)}
               />
+              {translate("body")}
               <RecallField
                 name={name("seoTitle")}
                 label={t("fields.seoTitle")}
@@ -109,6 +118,7 @@ export default async function PageFieldsForm({
                 defaultValue={translation?.seoTitle ?? ""}
                 {...box("seoTitle")}
               />
+              {translate("seoTitle")}
               <RecallField
                 name={name("seoDescription")}
                 label={t("fields.seoDescription")}
@@ -118,6 +128,7 @@ export default async function PageFieldsForm({
                 minRows={2}
                 {...box("seoDescription")}
               />
+              {translate("seoDescription")}
               </Stack>
             ),
           };

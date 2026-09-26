@@ -93,6 +93,7 @@ describe("AGENTS.md §19.4 throttle keys for an email identity", () => {
         emergencyContactName: "Ion Pop",
         emergencyContactPhone: "+40722222222",
         nationality: "RO",
+        city: "Brașov",
         email: "ana@example.ro",
         locale: "ro",
         privacyAcknowledged: true,

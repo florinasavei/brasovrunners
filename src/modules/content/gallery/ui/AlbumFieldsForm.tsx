@@ -7,6 +7,8 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { albumInputConstraints, albumTranslationConstraints } from "../constraints";
 
 export type EditableAlbumTranslation = {
@@ -71,18 +73,23 @@ export default async function AlbumFieldsForm({
         </RecallField>
       </Stack>
 
+      {/* «Tradu tot din română» (§464): the album's English title and description from the Romanian. */}
+      <TranslateAllButton />
+
       {/* One tab per language, as every other editor has (§259). */}
       <LocaleTabPanels
         idPrefix="locale"
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;
+          const translate = (field: string) => (locale === "en" ? <TranslateFieldButton en={name(field)} /> : null);
           return {
             locale,
             label: t(`language.${locale}`),
             content: (
               <Stack spacing={2} sx={{ pt: 2 }}>
               <RecallField name={name("title")} label={t("fields.title")} defaultValue={translation?.title ?? ""} {...box("title")} />
+              {translate("title")}
               <RecallField
                 name={name("slug")}
                 label={t("fields.slug")}
@@ -100,6 +107,7 @@ export default async function AlbumFieldsForm({
                 minRows={2}
                 {...box("description")}
               />
+              {translate("description")}
               </Stack>
             ),
           };

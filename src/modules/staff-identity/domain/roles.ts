@@ -401,6 +401,19 @@ export function canSendNewsletter(role: StaffRole): boolean {
 }
 
 /**
+ * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
+ * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
+ * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the
+ * Superadministrator; never the volunteer, and never Tehnic, who writes no text of the club's.
+ *
+ * The press saves nothing — it fills a box in the browser, and the save that follows asserts its
+ * own right to that box — so this gate guards the club's translation allowance, not a text.
+ */
+export function canTranslateTexts(role: StaffRole): boolean {
+  return canEditTexts(role) || canMessageParticipants(role);
+}
+
+/**
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.

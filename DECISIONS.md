@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.04-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.05-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.04-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.05-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -18203,3 +18203,236 @@ The owner, 2026-09-26: "I wanna have the mailgun reply to to be brasovrunners@gm
 **Newsletter (amends §443).** The newsletter group's default road is Mailgun, not Gmail. A newsletter sent to many addresses from a personal Gmail is the bulk pattern Google restricts. The rule of thumb is Gmail for mail addressed to the club itself, Mailgun for mail to participants or subscribers. The other groups' defaults are unchanged.
 
 Baseline `BR-V2.04-2026-09-26`.
+
+## 463. The telephone prefix and the citizenship are found by typing
+
+The owner, 2026-09-26: «în dropdown-urile de telefon și cetățenie vreau searchbox să pot găsi țara». This amends §337 and §322/§171.
+
+**Why MUI Autocomplete.** It is already installed, and it gives combobox semantics, keyboard handling and screen-reader support at no extra cost. A native select whose options start with a flag cannot even jump to a letter.
+
+**What a search matches** (one pure module, `country-search.ts`, used by both pickers):
+- the name in the reader's language, and also the English name that the server sends as `altLabel`, so «germany» finds Germania on the Romanian page;
+- accents and case are ignored;
+- the start of a word ranks before a match inside a word;
+- the ISO code typed whole, plus the everyday aliases UK, USA and UAE;
+- for the telephone, the dialling code in every form (+40, 40, 0040).
+
+The server's order is kept within each tier (§324).
+
+**The telephone prefix.** It keeps its native `<select name="<name>Country">`, which does the posting and works without JavaScript. Once the page is hydrated, a popover search sits over the select, and a choice sets the select and dispatches `change`.
+
+**Citizenship.** It becomes an Autocomplete. A hidden input carries the ISO code as `nationality`, so what is posted, the draft (§142) and the error summary's id are all unchanged. With `required` (V2.03's required citizenship), the field has no clear button and no «Nu spun» placeholder, the visible box carries `required` for the browser and for the §422 missing list, and the answer starts at România when there is no draft. Without JavaScript the box posts only the prefilled answer, which is no worse than the MUI Select it replaces, since that also needed JS to open.
+
+**Why two components.** The prefix is one part of a telephone number and must keep its native select for posting. Citizenship is a whole field. They share the search rule and the option row (`CountryOptionRow`), not the component.
+
+Rows are 44 px in both lists.
+
+Both country fields post through a native `<select>` that the server draws: `phoneCountry`, and since this round `nationality`, which is required, starts on Romania and has no empty option (§432). A reader without JavaScript picks from the phone's own list, and a refused submission's draft (§142) and the error summary's link read the same control. Once the page hydrates, a transparent button covers the select and opens the one shared `CountryPicker` (mode `dialling` or `citizenship`). A choice is written into the select and announced with a bubbling `change` event.
+
+The English country names the search also matches ("germany" on the Romanian page) are built in the browser with `Intl.DisplayNames("en")`, only once the picker opens. They are never shown, so the two runtimes' ICU differences (§324) cannot affect hydration, and the page sends no second list of names.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 464. «Tradu din română» — DeepL Free fills the English boxes, never saves
+
+**The ask.** The owner, 2026-09-26: «I need to introduce the option to auto-translate from RO to EN from the backoffice», then «use the free stuff, we are an ONG» and «override the descriptions and all from RO to EN so I have the same layout». The club writes every text in both languages (§352, "multi-lingual, always"), and the English half is where the time goes.
+
+**Decided.**
+
+- **The provider is DeepL API Free**, behind a one-method adapter (`src/infrastructure/translate/adapter.ts`, the `AGENTS.md` §17 shape), so a second provider is one new file and one line in `translator.ts`. The adapter uses the free host when the key ends in `:fx`, targets EN-GB, uses HTML tag handling for rich text, sends the club's glossary as the unbilled `context`, and sends at most 50 texts a request. It maps HTTP 456, 403 and anything else to `quota`, `refused` and `unavailable`. `TRANSLATE_PROVIDER=deepl|off` and `DEEPL_API_KEY` configure it. With no key there is no button, and `/admin/tasks` shows a "translation" row until the key is set. There is no new dependency and no migration.
+- **It fills and never saves.** The answer goes back to the browser as a draft in the English boxes. The ordinary save then stores it under every rule it always had: both languages or neither (§352), the role for that box, and the version. It asks before replacing English words already written.
+- **Only the club's own words cross.** An allowlist (`modules/translate/domain/fields.ts`) names the boxes that may be translated:
+  - the event's, page's and album's English translation fields;
+  - the meeting place;
+  - the partner descriptions and link labels, and the link rows;
+  - the programme rows;
+  - the notice and cancellation texts;
+  - the participant message (§364).
+
+It never includes a legal text (§418: counsel-reviewed, translated by a person), a slug, or anything a participant typed. A request naming any other box is refused whole.
+- **Rich text goes block by block**, so only words travel. Pictures, films, tables, marks and links keep every attribute, a link's address is never sent, and the rebuilt document passes the save's allowlist again before it is returned.
+- **Placeholders never travel as words.** The participant message's `{participantName}`, `{eventTitle}` and the rest go out as numbered markers and are put back byte for byte afterwards (`domain/placeholders.ts`). This holds even if the provider spaces a marker, so a translated draft never fails the send's unknown-placeholder check.
+- **Who and how much.**
+  - Pressing is allowed for Redactor, Organizator, Administrator and Superadministrator, asserted on the server (BR-REQ-060-01).
+  - Each person is throttled to 60 presses an hour.
+  - The club has a daily character budget: 50 000 by default, set by an Administrator on `/admin/tasks` → Costuri, where 0 turns translation off.
+  - The budget is metered from one `content.translated` audit row per press that the provider billed. The row holds who, which boxes, how many characters, which provider and the outcome, never the words. A failure after the provider already answered part of the press is metered too.
+  - A press asking for more than is left is refused, and the refusal says how many characters remain today, formatted for the reader.
+- **Where it appears.** «Tradu din română» sits under every English box listed above. «Tradu tot din română» sits at the top of the event, page and album editors. The action reaches the islands through a context provided by the backoffice layout, so no client island imports server code.
+- **A translation into a shut fold survives a refusal.** A rich text whose fold is still shut takes the translated document in its hidden box and mounts its editor from it when the fold opens. That document wins over §315's recalled value, so a refused save never brings back the old English.
+- **A cut is said, not silent.** English often runs longer than Romanian. A plain answer longer than its box's limit is cut to that limit, and the status line names the box so the person checks its ending.
+
+**Not done.** Legal texts are excluded on purpose. The budget's check and spend are not atomic: two simultaneous presses can together go slightly past the day's figure, which is acceptable at a small club's scale. DeepL's own 500 000-character monthly ceiling is the hard stop behind it.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 465. The past-events fold says only its count
+
+The owner (2026-09-26) found the line under the listing's past-events heading — «Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.» — redundant: the heading already names the past events and their count, and the calendar is in the navigation. The line and its `pastHelp` key are removed in both languages; the heading keeps the spacing the line gave.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 466. The cost is asked in card 1, «Ce fel de eveniment»
+
+The owner, 2026-09-26 21:05: «cardul 7. Cost poate fi inclus in cardul 1. la ce fel de eveniment». This amends §406 and §358.
+
+**What changed.** The event editor no longer has a top-level Cost card. `CostBox` is drawn inside `KindBox` as a level-3 card titled plain «Cost», after the status card (§448), on both the create page and the editor, and for every role: a words-only reader may still own the discount note (§394). It keeps its id `box-cost`, so a refusal or a deep link opens card 1 and the cost inside it. The form field names are unchanged.
+
+**The numbering.** In `PAGE_SECTIONS` the cost section is marked `nestedIn: "kind"`. `numberedPageSections` gives such a section no number, `pageFlow` gives it no heading, and the page map gives it no chip. The editor's cards therefore run 1..13 with no gap: «7 · Participare și înscrieri», … «13 · Lista publică a participanților». The public page still draws the cost row where §356 put it, after the course, and `page-sections.test.ts` still holds the page's own order.
+
+**The closed line.** Card 1's line names the type, the status and the cost, for example «Alergare de grup · Programat · Cu taxă, 50 lei». It uses the same `costLine` that the cost card's own line uses.
+
+No migration, no new dependency, no catalogue change.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 467. The birth date read back in words under the box, and the city required right after it
+
+The owner, 2026-09-26: «Orașul ar trebui să fie obligatoriu, pune după data nașterii!»
+
+**The city is required on the public registration form** and sits right after the birth date. This reverses §322, where it was an optional field in a fold. The schema requires it on the public form. The staff entry (`staffRegistrationSubmissionSchema.partial`) keeps it optional, because the desk records the minimum from a paper form.
+
+**The typed birth date is read back in words under the box**, with the age on the event's own day. For example: «Vineri, 17 mai 1990 · 36 de ani în ziua evenimentului». A native date box shows «03/04/1990» in whatever order the browser uses, so the line says which day was meant. `birthDateEchoText` is pure and formats through `src/i18n/dates.ts`. It keeps the weekday, as §349 asks of every date a person reads. The island has no words of its own: its template comes from the catalogue (§353). It shows nothing before a full date is typed and nothing without JavaScript. The same line appears under the desk's birth-date box (`StaffBirthDateEcho`). There it follows the event chosen in the select and is re-mounted after a refusal, as the parent's box is (§315).
+
+The typed birth date is read back with the month in full words («Luni, 5 noiembrie 1990 · 36 de ani în ziua evenimentului»): `formatCalendarDay` takes `month: "long"` for this echo alone; every other date on the platform keeps §349's abbreviated month.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 468. The family link's email states the facts in bold, and offers «Nu înscriu această persoană»
+
+The owner, on the family email (amending §446): «Mailul asta trebuie sa fie mai clar si cu chestii evidentiate! … trebuie sa avem bold pe chestiile importante! … trebuie sa am optiunea de a ignora aceasta a doua persoana».
+
+**The facts box.** Before the body, the email for another person on one address carries one outlined box. Each fact has its label on its own line and its value under it. The important parts are bold, each one separately, never the words that join them. The box says:
+- the event and when it is
+- who the address already holds at the event
+- the person the form named, with the name and the birth date each in bold, the date in words in the reader's language («11 iulie 1990» / «11 July 1990», never 11.07.1990)
+- «Ce se întâmplă dacă apeși»: their own place, their own email with the declaration, their own QR code
+- «Termen»: the link's life from Termene in bold, usable once
+- «Limita»: at most the club's per-address number of people
+
+The body around the box is cut to one opening line plus the consent sentence, which keeps the privacy link.
+
+**The second answer.** Under the confirmation button there is a quieter outlined button, «Nu înscriu această persoană» / «I am not registering this person». It opens the same page on the same single-use token with ?decline=1, so no second token and no migration are needed. The GET only reads the link. The POST spends the token and deletes the kept form in one transaction, so nobody is registered. Once either answer is pressed, the other finds the link spent. The page then says «Gata — nu am înscris pe nimeni; datele trimise au fost șterse.» A club copy carries no second button.
+
+**The audit.** The decline writes an event.family_entry_declined row in the same transaction. It has no staff actor. The participant is the address holder, who answered by the link, the entity is the event, and the metadata is {by: "family_link"}. It never records the name or birth date the form carried.
+
+The family link's «Nu înscriu această persoană» reuses the confirmation link's own single-use hashed token with `?decline=1`, not a second token: one link, one decision. Either answer spends the token, so a confirmed person cannot be declined afterwards, nor a declined one confirmed. The facts box gives the birth date its own row, «Data nașterii» / "Date of birth", with the month in words, so the sentence needs no gendered adjective. The body keeps the third choice, ignoring the message: nobody is registered, and the details are deleted when the link expires.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 469. The event page's weather is one short line; the back link has an arrow, the edit button a pencil
+
+The owner, 2026-09-26: «vreau informatia cu prognoza de la Open-Meteo sa fie minimala»; «butonul de inapoi la evenimente trebuie sa aiba si o sageata spre stanga»; «butonul de edit trebuie sa aiba si iconita de editare». This amends §416.
+
+- **Weather on the event page.** The «Vremea» row is now one line: the forecast's own glyph, the sky's word and the temperature at the start hour. An umbrella with «ploaie probabilă» / «rain likely» follows only when rain is likely (§429's `rainLikely`). A dry hour shows no chance of rain, and no hour shows the wind. §416's details line (feels like, precipitation, gusts, humidity, UV), the three-hour strip and the «Pentru locul evenimentului» / «Pentru Brașov» place line are gone. The forecast is still read at the event's own place (map pin, then typed «Coordonate», then the club's). With no forecast there is no row. The featured hero, the listing cards and the reminder keep their own lines. Open-Meteo is still credited in the footer (§455).
+- **Back link.** «Înapoi la evenimente» opens with Material's `ArrowBack` in a 44-px target.
+- **Edit button.** The staff «Editează» button carries Material's `Edit` pencil. It is a child element inside the button, not a prop across the client boundary (§318).
+- **Removed.** `forecastPlaceWords` and the catalogue's `Weather.hours` and `Weather.place` words no longer have a caller and are removed.
+
+The reminder's forecast is one line, the same pieces as the page's row: the sky's word, the start hour's degrees and, only when rain is likely (`rainLikely`), «ploaie probabilă 60 %» / "rain likely 60%". No wind, no humidity, and no chance of rain on a dry hour. The line is built once, as `weatherWords(...).line`, so the email and the page cannot word it differently. The page's umbrella carries the same chance through `rainLikelyChance`.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 470. The featured event is the first card of the listing's grid, as wide as every other card (replacing the hero; amending §78, §416, §449, §454)
+
+The owner, 2026-09-26, of the hero that stood across the page above the cards: «vreau doar sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile trebuie sa aiba aceeasi latime».
+
+**Decided.** `FeaturedEventHero` is gone. The lead event is `EventCard` with `featured`, and it is the first `<li>` of the listing's one grid (`CARD_GRID_SX`: one column on a phone, two from `md`, three from `xl`). The past fold uses the same grid. Nothing lets any card span more than its column.
+
+**What sets the lead apart.** It has the card's own structure: the chips, the title as the blue link, the summary, the facts, the route pills, the registration line and the page's door (§366, §409). Three things differ:
+- **The frame.** The card's 1px border is recoloured to `primary.main`, and a 1px `box-shadow` ring sits outside it. Together they read as the hero's two pixels of blue. The ring takes no room, so the lead's box and the room inside it match every other card's to the pixel. A 2px border would have taken two pixels from the width budget that EventFacts' «when» row was measured against (§366, §375).
+- **The background.** The hero's gradient (`heroSurface`, §166). It is asserted against body and muted text in `brand.test.ts`.
+- **The chip.** «Evenimentul principal» / «Featured event», first among the chips.
+
+A lead that is also special keeps the lead's frame (one frame per card), and its «Ediție specială» chip says the second thing. The lead's body is still a `<section aria-labelledby="featured-event-title">`, so a screen reader can still jump to the event the club leads with.
+
+**What stays of §78, on the lead only.**
+- Within the club's race week (§377), a bold blue countdown line after the summary: «În 3 zile, duminică, 27 sept. 2026, la 10:00».
+- Once registration has closed in that week, the card's registration line reads «Înscrierile s-au închis — vino la masă cu QR-ul din email.» in bold. `cardRegistrationLine` takes a `raceWeek` flag. `RegistrationCta` loses its `raceWeek` prop, which only the hero ever passed; the event page never did.
+
+**What went with the hero.**
+- **The «Toate evenimentele (N)» heading and its phone fold (§78).** They existed so that a hero a whole screen tall was not followed by a scroll of cards. A lead the size of a card is followed by cards, the way the listing without a lead always was, and that listing never had a fold.
+- **The hero's «Vremea» row (§416, §449's exception).** The lead wears the cards' weather pill (§429), read with every other card in one `forecastsForEvents` call. The start hour's rain and wind stay on the event page. `#main` on the listing now carries no Open-Meteo link; the footer credits it (§455).
+- **The hero's facts form, the route-extras line (§449) and the «Vezi detaliile cursei» button.** The card's door and pills replace them. The amount and the discount note are the event page's, as on every card (§343).
+- **The `"hero"` excerpt place and RichText's `framed` prop (§454).** A listing card is now the only place that frames pictures in 16∶9.
+- **`DENSITY.heroPad`.** The scale is seven steps.
+- **The keys `featuredCallToAction`, `others`, `othersCount` and `othersCountFiltered`**, from both catalogues. `others` was already unused.
+
+**Left for a chore.** EventFacts' default one-line summary form (the `<dl>` the hero drew) has no caller now. Its unit tests still exercise it. Removing the form and those tests is a separate chore.
+
+**Tests.**
+- `tests/unit/events/featured-card.test.ts`:
+  - the chip first, in both languages;
+  - the region named by its title;
+  - the lead's markup from the title down, identical to the same event unfeatured when outside race week;
+  - the countdown and the desk sentence in race week, and neither on the same event unfeatured;
+  - the frame: no border width, the ring, the gradient, not the special wash;
+  - on the page's source: the lead first in the same `<ul>` as `cards.map`, no span, no hero, no fold, one shared grid.
+- `card-registration-line.test.ts`: the race-week closed sentence in RO and EN; an open window unchanged by the flag.
+- e2e `event-pages.spec.ts`: the lead is the first `<li>` with `data-featured`, it appears once, and every card in the grid is as wide as it (±1px).
+- e2e `registration-entry.spec.ts`, `event-cost-external-discount.spec.ts` and `weather-place.spec.ts`: they read the lead as a card (`card-places`, the cost pill and the organizer's door, `card-weather`).
+
+Baseline `BR-V2.04-2026-09-26`.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 471. A family's declarations, signed as a wizard
+
+**The owner, 2026-09-26:** «ai înțeles cum trebuie să faci cu semnarea declarațiilor pt familie? trebuie să fie ca un wizzard».
+
+**Before.** Each person on an address (§389, §446) had their own registration, their own declaration and their own link. A parent who registered three people opened three emails, one after the other, each on its own page.
+
+**Now.** The declaration page is one stepper over the address's registrations at the event. The person whose link was opened comes first, then the others in the order they registered, one person per step. Each step uses the same signing form as before: the name checked against that person (§314), the identity document, and a minor's two signatures (§330). Each signature gives one acceptance, one confirmation and one PDF.
+
+- The step reads «Declarația N din M — nume».
+- The button says «Semnează și treci la următoarea» while another person follows. The last one says «Semnează și confirmă».
+- Every step has «Semnez mai târziu». It changes no registration, token or table. The person is shown as "mai târziu", is never current again in this pass, and their own emailed link still signs them.
+- The last screen lists everybody with what comes next: a confirmed person's desk code and QR (the picture «Înscrierile mele» shows, §77), the waiting list, or "sign from your own email" for a person left for later. «Gata» goes to the event page.
+
+The declaration request email names the address's other declarations still to sign (first name and initial) and says the one link signs them all. The club copy never carries that line.
+
+**Three ways in.**
+1. An emailed link, before its person signs. Pressing «Semnez mai târziu» on that person starts the wizard without spending the link.
+2. The same link after its own person signed. That signature spends it exactly as before, single use, in the transaction that records the acceptance.
+3. «Înscrierile mele». For every event where the address holds two or more declarations to sign, a «Semnează declarațiile» button posts the page's own live link. The server reads the link without spending it and exchanges it for the wizard's pass. The wizard opens on the declaration page under that same link. No new token is minted and none goes in a URL.
+
+**The pass (AGENTS.md §13.2 step 4, "a short-lived, purpose-limited HTTP-only action session").** It is kept in the browser, sealed, not in a table:
+- **Sealed:** AES-256-GCM under the deployment's secret for this purpose, the form draft's sealing. It is `httpOnly` and `sameSite=lax`, and sent only to its own link's page in both languages.
+- **Bound to a secret the server re-reads on every use:**
+  - the origin's declaration or offer link, spent by its own signature;
+  - that same link still live, but only while its person is in the pass's skipped list;
+  - or the live «Înscrierile mele» link it was exchanged for.
+- **Bound to people:** the registration ids on the address at the event when the pass was issued. Somebody added later is never a step. Every named id must be that participant's registration at that event. Each press signs only the step that is current, re-read from the rows, through the unchanged `signDeclaration`: the event's lock, the approved text by id and hash, the names, the documents, the allocator.
+- **Short-lived:** 30 minutes after the last press, and never later than the earliest hold still running among the people left to sign.
+- **Ended by the last step:** once no step is current, the pass is `done`. It still lists who was signed on the last screen, and it signs and skips nobody.
+
+Why a sealed cookie rather than a server-side table:
+- The pass is a few ids, and nothing in it is trusted beyond "the people this browser was walking through".
+- Every use re-reads the token it is bound to and the rows it names, so revocation lives server-side already. Spending or expiring the bound link, a hold lapsing, or a person being signed elsewhere all end what the pass can do.
+- It needs no migration and no sweep job.
+
+**The throttle (§19.4, §202).** A request is not charged a token attempt only when its pass holds beside this very secret, which the server checks before reading the token. Any other request pays, including one carrying a valid pass for another link, and so does a family press whose pass does not hold. A family of four walks the page eight or nine times in a few minutes, which the link's ten attempts an hour would not survive.
+
+**When the pass is gone.** A used link opened without a pass that still works, on an address that still has declarations to sign at the event, says in one line that each person's own emailed link still works.
+
+GET only reads. No migration, no new dependency.
+
+Found in review, 2026-09-26. Someone on the address who signed before the wizard began is a step shown as signed and counted in «Declarația N din M». Signed means a declaration acceptance exists for them, whether signed on a link or on paper, and their registration is confirmed, or on the waiting list after a signature that found no free place. Without that acceptance, a waiting-list entry is still not a step. So a parent who opens the second child's link after signing the first sees the whole family, not a list that has quietly shrunk.
+
+The fresh link wins. Beside a live declaration link, only a pass opened on that same link carries the wizard on; any other pass is ignored and the link signs its own person. When the link's own person signs and no wizard follows, the browser's earlier pass is taken back, so a stale walk never lists itself on the new signature's page.
+
+A refused «Semnează declarațiile» on «Înscrierile mele» says why. A dead link keeps the page's own notice, as every other press there does. An address with nobody left to sign at the event, or with one person alone (who signs from their own emailed link), lands back on the list with an information toast naming the reason. These are §427's public toasts, with two keys and one slot on the page.
+
+Baseline `BR-V2.05-2026-09-27`.
+
+## 472. The card's registration line: only the date, the hour and the free places in bold
+
+The owner, 2026-09-26: «nu vreau totul sa fie bold, ci doar chestiile importante "Înscrieri deschise până dum., 27 sept. 2026, la 07:00 · 8 locuri libere din 10" adica doar data, ora si locurile libere».
+
+This amends §409. The listing card's registration line is now regular weight. Only the facts are bold: the closing (or opening) date with its hour, and the free-places count with its noun. In «Înscrieri deschise până **dum., 27 sept. 2026, la 07:00** · **8 locuri libere** din 10», the phrases «Înscrieri deschise până» and «din 10» are regular. A sentence with no date or count has nothing in bold: the full waiting list, the full event with no waiting list, the race-week desk sentence (§78), «Înscrierile se deschid în curând» (§451) and the organizer's site. It stays in the primary ink, so a live line still reads differently from a closed one, which stays secondary as before.
+
+The bold parts come from the catalogue, not from a search in the finished text. The sentence is formatted with a marker in its date or count slot and cut there, so each language keeps its own word order. The count has two keys of its own in both catalogues: `cta.freeCount.{one,few,other}` («8 locuri libere» / «8 places left») and `cta.freeOfCard` («{free} din {places}» / «{free} out of {places}»). The page's `cta.freeOf` is untouched.
+
+The card cuts the catalogue's sentence at a printable marker, `{{fact}}`, formatted into the slot. A unit test holds both catalogues free of it. The old whole-sentence phrase `cta.freeOf` / `freePlacesPhrase` is gone, because the card now builds its count from `cta.freeOfCard` and `cta.freeCount`.
+
+Baseline `BR-V2.05-2026-09-27`.

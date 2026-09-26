@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -242,14 +242,16 @@ describe("§454 the card draws the frame, the page does not", () => {
     expect(imageOf(portrait).replace(/top:[^;]+;|css-\w+/g, "")).toBe(imageOf(landscape).replace(/top:[^;]+;|css-\w+/g, ""));
   });
 
-  it("frames the featured hero's summary too, and never the event page's", () => {
-    const hero = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null, place: "hero" }));
-    expect(hero).toContain('data-testid="card-picture"');
-    expect(hero).toContain("aspect-ratio:16/9");
+  it("frames the featured event's summary as a card's (§470), and never the event page's", () => {
+    const card = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null, place: "card" }));
+    expect(card).toContain('data-testid="card-picture"');
+    expect(card).toContain("aspect-ratio:16/9");
     const page = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null }));
     expect(page).not.toContain("card-picture");
-    const heroSource = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "FeaturedEventHero.tsx"), "utf8");
-    expect(heroSource).toContain('<EventExcerpt place="hero"');
+    // The lead event is an `EventCard` with `featured` since §470 — one card, one summary, no third place.
+    const cardSource = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "EventCard.tsx"), "utf8");
+    expect(cardSource).toContain('<EventExcerpt place="card"');
+    expect(existsSync(path.join(process.cwd(), "src", "modules", "events", "ui", "FeaturedEventHero.tsx"))).toBe(false);
   });
 
   it("is drawn by one function, shared with the editor's preview", () => {

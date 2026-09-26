@@ -79,7 +79,7 @@ async function noSidewaysScroll(page: Page) {
 }
 
 test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)", () => {
-  test("a map link with a pin: the start and the two hours after it, the start's details, «Pentru locul evenimentului»", async ({ page }) => {
+  test("a map link with a pin: the page's weather is one line (§469)", async ({ page }) => {
     const id = await insertDraft({ mapUrl: "https://www.google.com/maps?q=45.6384,25.5921" }, "pin");
     try {
       await signIn(page, "Dev Administrator");
@@ -88,42 +88,13 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
       await expect(weather).toBeVisible();
       await expect(weather).toContainText("Parțial noros");
 
-      // Three hours, each its time, its glyph, its degrees and its chance of rain.
-      const hours = weather.getByTestId("weather-hours");
-      await expect(hours).toHaveAttribute("aria-label", "Pe ore, de la start");
-      const cells = hours.getByTestId("weather-hour");
-      await expect(cells).toHaveCount(3);
-      for (const cell of await cells.all()) {
-        await expect(cell).toContainText(/\d\d:\d\d/);
-        await expect(cell).toContainText("14 °C");
-        await expect(cell).toContainText("20% ploaie");
-        await expect(cell.locator("svg")).toHaveCount(1);
-      }
-      // One row of three on a 320-pixel phone: the cells share a top edge.
-      const tops = await Promise.all((await cells.all()).map(async (cell) => Math.round((await cell.boundingBox())?.y ?? -1)));
-      expect(new Set(tops).size).toBe(1);
-
-      // The start hour's details, in one line under the first.
-      const details = weather.getByTestId("weather-details");
-      await expect(details).toContainText("se simte ca 12 °C");
-      await expect(details).toContainText("0,4 mm precipitații");
-      await expect(details).toContainText("rafale 24 km/h");
-      await expect(details).toContainText("umiditate 72%");
-      await expect(details).toContainText("indice UV 3");
-
-      // Where it was read; Open-Meteo is credited in the footer only (§455).
-      const credit = weather.getByTestId("weather-credit");
-      await expect(credit).toContainText("Pentru locul evenimentului");
-      await expect(credit).not.toContainText("Open-Meteo");
+      // One line since §469: no hours strip, no details, no place line; Open-Meteo in the footer only (§455).
+      await expect(weather.getByTestId("weather-hours")).toHaveCount(0);
+      await expect(weather.getByTestId("weather-details")).toHaveCount(0);
+      await expect(weather.getByTestId("weather-credit")).toHaveCount(0);
+      await expect(weather).not.toContainText("Open-Meteo");
+      await expect(weather).not.toContainText("km/h");
       await noSidewaysScroll(page);
-
-      // The same in English.
-      await page.goto(`/en/preview/events/${id}`);
-      const english = weatherRow(page, "Weather");
-      await expect(english.getByTestId("weather-details")).toContainText("feels like 12 °C");
-      await expect(english.getByTestId("weather-details")).toContainText("gusts 24 km/h");
-      await expect(english.getByTestId("weather-hour").first()).toContainText("20% rain");
-      await expect(english.getByTestId("weather-credit")).toContainText("For the event's place");
 
       // The editor's «Coordonate» box stays empty, and the line under it says the link's pin is read.
       await page.goto(`/ro/admin/events/${id}`);
@@ -134,20 +105,20 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
     }
   });
 
-  test("a short link with typed «Coordonate»: read at the pair; neither: read at the club's place, and said so", async ({ page }) => {
+  test("a short link with typed «Coordonate»: read at the pair; neither: read at the club's place", async ({ page }) => {
     const typed = await insertDraft({ mapUrl: "https://maps.app.goo.gl/AbCdEf123", latitude: 45.6384, longitude: 25.5921 }, "typed");
     const none = await insertDraft({ mapUrl: "https://maps.app.goo.gl/AbCdEf123" }, "club");
     try {
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/preview/events/${typed}`);
-      await expect(weatherRow(page, "Vremea").getByTestId("weather-credit")).toContainText("Pentru locul evenimentului");
+      await expect(weatherRow(page, "Vremea")).toBeVisible();
       await page.goto(`/ro/admin/events/${typed}`);
       await hydrated(page);
       await expect(page.locator('input[name="event.coordinates"]')).toHaveValue("45.6384, 25.5921");
       await expect(page.getByTestId("weather-place")).toContainText("aceste coordonate (45.6384, 25.5921)");
 
       await page.goto(`/ro/preview/events/${none}`);
-      await expect(weatherRow(page, "Vremea").getByTestId("weather-credit")).toContainText("Pentru Brașov");
+      await expect(weatherRow(page, "Vremea")).toBeVisible();
       await page.goto(`/ro/admin/events/${none}`);
       await hydrated(page);
       await expect(page.locator('input[name="event.coordinates"]')).toHaveValue("");
@@ -197,12 +168,10 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((cardBox?.x ?? 0) + (cardBox?.width ?? 0) + 0.5);
 
     // No credit strip under the listing's cards any more (the owner, 2026-09-26: "nu vreau footer
-    // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead.
-    // The only Open-Meteo link left in `#main` is the featured hero's own, on its «Vremea» line
-    // (BR-REQ-041-01 c.83) — none when the hero has no forecast, exactly one when it has.
-    const heroCredits = await main.getByTestId("hero-weather").locator('a[href*="open-meteo"]').count();
-    expect(heroCredits).toBeLessThanOrEqual(1);
-    await expect(main.locator('a[href*="open-meteo"]')).toHaveCount(heroCredits);
+    // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead
+    // (§455), and since §470 there is no hero with a «Vremea» line of its own: no Open-Meteo link
+    // anywhere in `#main`.
+    await expect(main.locator('a[href*="open-meteo"]')).toHaveCount(0);
     const footerCredit = page.getByTestId("footer-weather-credit");
     await expect(footerCredit).toBeHidden();
     await page.getByTestId("footer-about-fold").locator("summary").click();
@@ -212,15 +181,18 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     await noSidewaysScroll(page);
   });
 
-  test("the anniversary race, three weeks out, carries no weather on the hero", async ({ page }) => {
+  test("the anniversary race, three weeks out, carries no weather on its featured card", async ({ page }) => {
     await page.goto("/ro/evenimente");
     await expect(page.locator("#main ul > li h2").first()).toBeAttached();
-    await expect(page.getByTestId("hero-weather")).toHaveCount(0);
+    const lead = page.locator('section[aria-labelledby="featured-event-title"]').first();
+    await expect(lead).toBeVisible();
+    await expect(lead.getByTestId("card-weather")).toHaveCount(0);
   });
 
   /**
-   * The positive case of the hero's «Vremea» row (a review finding, §416): the test above only
-   * proves it is absent three weeks out. The featured event is the shared `FEATURED` singleton
+   * The positive case of the featured card's weather (a review finding, §416; a card's pill since
+   * §470, the hero's «Vremea» row gone with the hero): the test above only proves it is absent
+   * three weeks out. The featured event is the shared `FEATURED` singleton
    * (`DECISIONS.md` §28: the database refuses a second), so both its gathering and its gun time —
    * `weatherInstant` reads `raceStartsAt` over `startsAt` when the event has one (`forecast.ts`),
    * and `events_race_start_within_event` requires `raceStartsAt >= startsAt` — are moved into the
@@ -233,7 +205,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
    * showing the old date, the way `event-cost-external-discount.spec.ts`'s own `FEATURED` case
    * already found for its cost row.
    */
-  test("a featured event within seven days: the hero carries the word, the degrees, the rain and the wind, both languages", async ({ page }) => {
+  test("a featured event within seven days: its card carries the cards' weather pill, both languages", async ({ page }) => {
     // Two full editor saves (the move and the `finally`'s own restore) plus four page reads —
     // past the 30-second default (`event-cost-external-discount.spec.ts`'s own featured-hero
     // case takes the same allowance for the same reason).
@@ -266,23 +238,22 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
     await moveFeaturedRaceTimes(page, gathering, "09:00", gathering, "10:00");
 
     await page.goto("/ro/evenimente");
+    // The same pill every card wears (§429): the glyph and the degrees, the word for a screen
+    // reader; the rain and the wind are the event page's.
     const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
     await expect(hero).toBeVisible();
-    const weather = hero.getByTestId("hero-weather");
+    const weather = hero.getByTestId("card-weather");
     await expect(weather).toBeVisible();
-    await expect(weather).toContainText("Parțial noros");
+    await expect(weather).toContainText("Vremea la start: Parțial noros");
     await expect(weather).toContainText("14 °C");
-    await expect(weather).toContainText("20% șanse de ploaie");
-    await expect(weather).toContainText("vânt 11 km/h");
+    await expect(weather).not.toContainText("ploaie");
 
     await page.goto("/en/events");
     const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
-    const weatherEn = heroEn.getByTestId("hero-weather");
+    const weatherEn = heroEn.getByTestId("card-weather");
     await expect(weatherEn).toBeVisible();
     await expect(weatherEn).toContainText("Partly cloudy");
     await expect(weatherEn).toContainText("14 °C");
-    await expect(weatherEn).toContainText("20% chance of rain");
-    await expect(weatherEn).toContainText("wind 11 km/h");
   } finally {
     // Whatever the assertions above found, `FEATURED` is left exactly as every other spec
     // expects it — three weeks out, the seed's own dates — even on a failed assertion.
