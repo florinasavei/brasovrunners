@@ -140,6 +140,19 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(sheet).not.toContain("<f>");
   });
 
+  /** §NNN — the terms accepted on the form (§421), the CSV's two columns, last and in the same order. */
+  it("ends with the accepted terms version as a number and its moment as a date", async () => {
+    expect(REGISTRATION_SHEET_HEADERS.slice(-2)).toEqual(["Terms version", "Terms accepted"]);
+    const parts = unzip(
+      await buildRegistrationsWorkbook([row({ bibNumber: null, termsVersion: 42, termsAcceptedAt: new Date("2026-09-25T10:00:00.000Z") })], "Test"),
+    );
+    const sheet = parts.get("xl/worksheets/sheet1.xml") ?? "";
+    expect(sheet).toMatch(/<v>42<\/v>/);
+    // A blank row for a staff entry: no number, no date — and the file is still written.
+    const blank = unzip(await buildRegistrationsWorkbook([row({ termsVersion: null, termsAcceptedAt: null })], "Test"));
+    expect(blank.get("xl/worksheets/sheet1.xml")).toBeTruthy();
+  });
+
   it("takes a sheet name Excel would refuse and makes one it accepts", async () => {
     const parts = unzip(await buildRegistrationsWorkbook([row()], "Cros/2026: ediția a [V]-a, pe Tâmpa și retur"));
     const workbook = parts.get("xl/workbook.xml") ?? "";

@@ -777,6 +777,23 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="body2">
           {tr("registrations.submitted")}: {dt(registration.submittedAt)}
         </Typography>
+        {/*
+          The two legal texts this cycle's form was sent under (§NNN), one line each and in the same
+          shape: the privacy notice every registration acknowledges, and the club's terms accepted
+          expressly on the form (§421). A staff or desk entry records no terms — the paper carries
+          them (§67) — and a row sent before the column existed has no number to show; §316's
+          window on /admin/legal is what answers for those.
+        */}
+        <Typography variant="body2" data-testid="timeline-privacy-notice">
+          {tr("registrations.privacyNoticeLine", { date: dt(registration.cycleStartedAt) ?? "", version: registration.privacyNoticeVersion })}
+        </Typography>
+        <Typography variant="body2" data-testid="timeline-terms">
+          {registration.termsVersion !== null
+            ? tr("registrations.termsLine", { date: dt(registration.termsAcceptedAt) ?? "—", version: registration.termsVersion })
+            : registration.source === "STAFF"
+              ? tr("registrations.termsOnPaper")
+              : tr("registrations.termsNotRecorded")}
+        </Typography>
         {/* Each time the form came back with the same address, right under the first (§312). */}
         {resubmissions.map((line, index) => (
           <Typography key={`resubmitted-${index}`} variant="body2" data-testid="timeline-resubmitted">
