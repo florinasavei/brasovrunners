@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { events } from "@/db/schema/events";
 import { newsletterSends, newsletterSubscribers } from "@/db/schema/newsletter";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
@@ -7,9 +8,10 @@ import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { type EventNotificationRow, eventNotificationDetailsIn } from "@/modules/events/repository";
+import { bulkCopyRecipients, isClubCopy } from "@/modules/notifications/domain/club-notices";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
 import { readEmailCopyForSending } from "@/modules/notifications/email-copy";
-import type { EmailRenderer, OutboxRow } from "@/modules/notifications/outbox";
+import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
@@ -28,6 +30,13 @@ type RendererDb = Parameters<EmailRenderer>[1];
  * A subscriber gone by the time the row is sent (unsubscribed while it was being claimed — their
  * waiting rows are deleted with them) has nobody to write to: the render fails and the row is
  * marked so, and nothing leaves.
+ *
+ * A new-event alert is read against its event again as it leaves: a bulk row may wait a day or a
+ * month for the allowance, and an event cancelled, taken down or started in the meantime is no
+ * news — the row is withdrawn (`OutboxMessageWithdrawn`), not failed (§331: a cancelled event goes quiet).
+ *
+ * The club's one copy of a send (`clubCopy`, §419's shape) has no subscriber: the same words, the
+ * count, no topics line and no link of anybody's.
  */
 export async function renderNewsletterRow(
   row: OutboxRow,
@@ -38,18 +47,34 @@ export async function renderNewsletterRow(
   const locale = row.locale as Locale;
   const other: Locale = locale === "ro" ? "en" : "ro";
   const payload = (row.payloadJson ?? {}) as { subscriberId?: unknown; sendId?: unknown; eventId?: unknown };
+  const clubCopy = isClubCopy(row.payloadJson) && row.messageType !== "NEWSLETTER_CONFIRM";
+  const eventId = typeof payload.eventId === "string" ? payload.eventId : null;
+
+  if (row.messageType === "NEW_EVENT_ALERT") {
+    const [event] = eventId
+      ? await db
+          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt })
+          .from(events)
+          .where(eq(events.id, eventId))
+          .limit(1)
+      : [];
+    if (!event) throw new OutboxMessageWithdrawn("newsletter: the event is gone");
+    if (event.editorialStatus !== "PUBLISHED" || event.eventStatus !== "SCHEDULED" || event.startsAt.getTime() <= now.getTime()) {
+      throw new OutboxMessageWithdrawn("newsletter: the event is no longer news");
+    }
+  }
+
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;
-  const [subscriber] = subscriberId
+  const [subscriber] = !clubCopy && subscriberId
     ? await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1)
     : [];
-  if (!subscriber) throw new Error("newsletter: the subscriber is no longer on the list");
+  if (!clubCopy && !subscriber) throw new Error("newsletter: the subscriber is no longer on the list");
 
   const settings = await currentDeadlines(db);
-  const topics = normalizeTopics(subscriber.topics);
+  const topics = subscriber ? normalizeTopics(subscriber.topics) : [];
   const data: TemplateData = {
     participantName: "",
-    newsletterTopics: topicsPhrase(locale, topics),
-    newsletterTopicsOther: topicsPhrase(other, topics),
+    ...(subscriber ? { newsletterTopics: topicsPhrase(locale, topics), newsletterTopicsOther: topicsPhrase(other, topics) } : {}),
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
     eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
@@ -61,7 +86,14 @@ export async function renderNewsletterRow(
       linkDays: DEFAULT_TOKEN_HOURS / 24,
     },
   };
-  const manageUrl = async () => {
+  if (clubCopy) {
+    data.clubCopy = true;
+    const count = bulkCopyRecipients(row.payloadJson);
+    if (count !== null) data.clubCopyRecipients = count;
+  }
+  // No link of anybody's on the club's copy (§320): the manage link is minted for a subscriber alone.
+  const manageUrl = async (): Promise<string | undefined> => {
+    if (!subscriber) return undefined;
     const secret = await issueNewsletterToken(db, {
       subscriberId: subscriber.id,
       purpose: "MANAGE",
@@ -73,6 +105,7 @@ export async function renderNewsletterRow(
 
   let actionUrl: string | undefined;
   if (row.messageType === "NEWSLETTER_CONFIRM") {
+    if (!subscriber) throw new Error("newsletter: a confirmation has a subscriber");
     if (subscriber.confirmedAt !== null) {
       // Already subscribed: nothing to confirm, and the owner of the address changes things there.
       data.newsletterAlready = true;
@@ -89,7 +122,7 @@ export async function renderNewsletterRow(
     }
   } else if (row.messageType === "NEWSLETTER") {
     // Never to an address that has not confirmed, whatever a hand-made row says.
-    if (subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");
+    if (subscriber && subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");
     const sendId = typeof payload.sendId === "string" ? payload.sendId : null;
     const [send] = sendId ? await db.select().from(newsletterSends).where(eq(newsletterSends.id, sendId)).limit(1) : [];
     const words = send ? readNewsletterWords(send.subject, send.body) : null;
@@ -100,8 +133,7 @@ export async function renderNewsletterRow(
     data.newsletterBodyOther = words.body[other];
     data.newsletterManageUrl = await manageUrl();
   } else {
-    if (subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");
-    const eventId = typeof payload.eventId === "string" ? payload.eventId : null;
+    if (subscriber && subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");
     const texts = eventId ? await eventRows(db, eventId) : [];
     const details = eventNotificationDetailsIn(texts, locale);
     if (!details) throw new Error("newsletter: the event cannot be read");

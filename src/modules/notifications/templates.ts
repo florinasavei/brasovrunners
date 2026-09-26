@@ -1134,6 +1134,9 @@ const T = {
       /** A bulk send's one copy (§419): how many received it, and nobody's name. */
       bulkNote: (count: number) =>
         `Copie pentru club a mesajului trimis la ${participantsPhrase("ro", count)}, fiecăruia în limba înscrierii lui. Numele destinatarilor nu apar aici, iar legăturile personale au fost scoase.`,
+      /** A newsletter's or a new-event alert's one copy (§NNN): how many subscribers, and no address. */
+      subscribersNote: (count: number) =>
+        `Copie pentru club a mesajului trimis la ${subscribersPhrase("ro", count)} la noutăți, fiecăruia în limba aleasă. Adresele destinatarilor nu apar aici, iar linkul personal de dezabonare a fost scos.`,
     },
     /** The greeting of a message addressed to nobody by name — a bulk send's club copy (§419). */
     hello: "Salut,",
@@ -1505,6 +1508,9 @@ const T = {
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
       bulkNote: (count: number) =>
         `Club copy of the message sent to ${participantsPhrase("en", count)}, each in the language of their registration. The recipients' names are not included, and the personal links have been removed.`,
+      /** A newsletter's or a new-event alert's one copy (§NNN): how many subscribers, and no address. */
+      subscribersNote: (count: number) =>
+        `Club copy of the message sent to ${subscribersPhrase("en", count)} to the news, each in the language they chose. The recipients' addresses are not included, and the personal unsubscribe link has been removed.`,
     },
     hello: "Hello,",
     guardianIntro: (participant: string) => `This message is about the registration you made, as parent or guardian, for ${participant}.`,
@@ -1603,6 +1609,13 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
   return form === "one" ? "one participant" : `${count} participants`;
+}
+
+/** "12 abonați", "un abonat" / "12 subscribers", "one subscriber" — a newsletter copy's count (§NNN). */
+function subscribersPhrase(locale: EmailLocale, count: number): string {
+  const form = countForm(count, locale);
+  if (locale === "ro") return form === "one" ? "un abonat" : form === "few" ? `${count} abonați` : `${count} de abonați`;
+  return form === "one" ? "one subscriber" : `${count} subscribers`;
 }
 
 /**
@@ -1803,7 +1816,15 @@ export function buildTemplateContent(
     */
     paragraphs: [
       // What this is, before anything else is read (§320) — for a bulk send, to how many (§419).
-      ...(clubCopy ? [bulkCopy ? copy.clubCopy.bulkNote(data.clubCopyRecipients ?? 0) : copy.clubCopy.note] : []),
+      ...(clubCopy
+        ? [
+            bulkCopy
+              ? NEWSLETTER_MESSAGES.has(messageType)
+                ? copy.clubCopy.subscribersNote(data.clubCopyRecipients ?? 0)
+                : copy.clubCopy.bulkNote(data.clubCopyRecipients ?? 0)
+              : copy.clubCopy.note,
+          ]
+        : []),
       // Whose registration this is, under the parent's greeting (§419).
       ...(guardianName ? [copy.guardianIntro(data.participantName)] : []),
       // The number when the message carries one: a settled number, or the provisional one the

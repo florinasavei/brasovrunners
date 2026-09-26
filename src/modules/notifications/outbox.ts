@@ -247,8 +247,10 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
 export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   params: {
-    messageType: BulkClubCopyMessage;
-    eventId: string;
+    /** The organizer's message and the update notice (§419), and the newsletter's two sends (§NNN). */
+    messageType: BulkClubCopyMessage | (typeof BULK_MESSAGE_TYPES)[number];
+    /** The event the send is about; null for a newsletter, which is about none. */
+    eventId: string | null;
     /** The payload every recipient's row carries — the words, the changes. */
     payload: Record<string, unknown>;
     /** The send's own key, without the registration: `organizer-message:<send id>`. */
@@ -273,7 +275,11 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
         // The club's own language; the message is bilingual either way (§96).
         locale: "ro",
         recipientEmail: recipient,
-        payloadJson: { ...clubCopyPayload(params.payload), eventId: params.eventId, [BULK_COPY_RECIPIENTS]: params.realRecipients },
+        payloadJson: {
+          ...clubCopyPayload(params.payload),
+          ...(params.eventId !== null ? { eventId: params.eventId } : {}),
+          [BULK_COPY_RECIPIENTS]: params.realRecipients,
+        },
         idempotencyKey: `${params.sendKey}:club-copy:${recipient.toLowerCase()}`,
         requestedByStaffUserId: params.requestedByStaffUserId ?? null,
         isManualResend: false,
@@ -287,6 +293,20 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
   }
   if (queued > 0) drainOutboxAfterResponse();
   return queued;
+}
+
+/**
+ * A renderer's answer that a message has nothing left to say (§NNN): a new-event alert whose event
+ * was cancelled, taken down or has started while the row waited for the allowance
+ * (`holdBulkUntilReset`), which may be a day or a month. §331's rule — a cancelled event goes
+ * quiet — at the moment of sending, not only at the moment of queueing. The batch deletes the
+ * row: nothing was sent, nothing failed, and `/api/health` has nothing to say about it.
+ */
+export class OutboxMessageWithdrawn extends Error {
+  constructor(reason: string) {
+    super(reason);
+    this.name = "OutboxMessageWithdrawn";
+  }
 }
 
 /**
@@ -447,6 +467,10 @@ export async function processOutboxBatch(
     try {
       message = await render(row, db, now);
     } catch (error) {
+      if (error instanceof OutboxMessageWithdrawn) {
+        await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));
+        continue;
+      }
       await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
       summary.failed += 1;
       continue;

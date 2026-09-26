@@ -67,6 +67,8 @@ describe("§NNN the new-event alert", () => {
     startsAt: new Date(NOW.getTime() + 30 * DAY),
     publishedAt: new Date(NOW.getTime() - 60 * 60_000),
     repeatOf: null,
+    repeats: false,
+    partnered: false,
   };
 
   it("announces a published, scheduled event ahead, first published within the window", () => {
@@ -75,14 +77,27 @@ describe("§NNN the new-event alert", () => {
     expect(eventAlertWanted({ ...race, editorialStatus: "DRAFT" }, NOW)).toBe(false);
     expect(eventAlertWanted({ ...race, eventStatus: "CANCELLED" }, NOW)).toBe(false);
     expect(eventAlertWanted({ ...race, startsAt: new Date(NOW.getTime() - DAY) }, NOW)).toBe(false);
-    expect(eventAlertWanted({ ...race, type: "GROUP_RUN" }, NOW)).toBe(false);
     expect(eventAlertWanted({ ...race, repeatOf: "source" }, NOW)).toBe(false);
   });
 
+  it("never announces a repeated group run, source or date; announces one held once, and any special edition", () => {
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeats: true }, NOW)).toBe(false);
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeatOf: "source" }, NOW)).toBe(false);
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN" }, NOW)).toBe(true);
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeats: true, isSpecial: true }, NOW)).toBe(true);
+    expect(eventAlertWanted({ ...race, type: "HIKE", repeatOf: "source", isSpecial: true }, NOW)).toBe(true);
+    // A special edition still waits for publication and a start ahead.
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", isSpecial: true, eventStatus: "CANCELLED" }, NOW)).toBe(false);
+  });
+
   it("goes to new events always, and to the event's own topics", () => {
-    expect(eventAlertTopics({ type: "HIKE", isSpecial: false })).toEqual(["NEW_EVENTS"]);
-    expect(eventAlertTopics({ type: "RACE", isSpecial: true })).toEqual(["NEW_EVENTS", "BIG_EVENTS", "SPECIAL_EVENTS"]);
-    expect(eventAlertTopics({ type: "GEAR_TEST", isSpecial: false })).toEqual(["NEW_EVENTS", "GEAR_TESTING"]);
+    expect(eventAlertTopics({ type: "HIKE", isSpecial: false, partnered: false })).toEqual(["NEW_EVENTS"]);
+    expect(eventAlertTopics({ type: "RACE", isSpecial: true, partnered: false })).toEqual(["NEW_EVENTS", "BIG_EVENTS", "SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "GEAR_TEST", isSpecial: false, partnered: false })).toEqual(["NEW_EVENTS", "GEAR_TESTING"]);
+    // "Events held with other organizers", as the topic's hint says: another organizer's, or with partners.
+    expect(eventAlertTopics({ type: "EXTERNAL", isSpecial: false, partnered: false })).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "HIKE", isSpecial: false, partnered: true })).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "GROUP_RUN", isSpecial: true, partnered: false })).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
   });
 });
 

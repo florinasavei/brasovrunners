@@ -11,7 +11,8 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
 import { BULK_MESSAGE_TYPES } from "@/modules/notifications/domain/bulk";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
-import { enqueueEmail } from "@/modules/notifications/outbox";
+import { enqueueBulkClubCopies, enqueueEmail } from "@/modules/notifications/outbox";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
@@ -48,6 +49,8 @@ const subscribeSchema = z.object({
   topics: z.array(z.string().max(40)).max(NEWSLETTER_TOPICS.length * 2),
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
+  /** The pop-up's one consent tick, naming the privacy notice (§NNN): the person's own act, required. */
+  consent: z.literal(true),
 });
 
 export type SubscribeOutcome =
@@ -58,8 +61,8 @@ export type SubscribeOutcome =
 
 /**
  * Take an address from the pop-up: a confirmation link to a new or unconfirmed one, the link to its
- * own page to one already subscribed. Refuses a malformed address or no topic (the person's own
- * fix, `VALIDATION_ERROR` naming the box) and a notice that does not describe the newsletter
+ * own page to one already subscribed. Refuses a malformed address, no topic or no consent tick (the
+ * person's own fix, `VALIDATION_ERROR` naming each box) and a notice that does not describe the newsletter
  * (`CONFLICT`: the page offers no pop-up then).
  */
 export async function subscribeToNewsletter<T extends Record<string, unknown>>(
@@ -71,10 +74,12 @@ export async function subscribeToNewsletter<T extends Record<string, unknown>>(
   // The ticks are read whatever else is wrong, so a refusal names each box that needs fixing once.
   const rawTopics = (rawInput as { topics?: unknown } | null)?.topics;
   const topics = normalizeTopics(Array.isArray(rawTopics) ? rawTopics : []);
-  if (!parsed.success || topics.length === 0) {
+  const consented = (rawInput as { consent?: unknown } | null)?.consent === true;
+  if (!parsed.success || topics.length === 0 || !consented) {
     const fields = [
       ...(!parsed.success && parsed.error.issues.some((issue) => issue.path[0] === "email") ? ["email"] : []),
       ...(topics.length === 0 ? ["topics"] : []),
+      ...(!consented ? ["consent"] : []),
     ];
     throw new DomainError("VALIDATION_ERROR", "the newsletter form is malformed", fields.length > 0 ? fields : ["email"]);
   }
@@ -98,16 +103,23 @@ export async function subscribeToNewsletter<T extends Record<string, unknown>>(
   if (!verdict.allowed) return "limited";
 
   await db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select()
-      .from(newsletterSubscribers)
-      .where(eq(newsletterSubscribers.canonicalEmail, identity.canonicalEmail))
-      .for("update")
-      .limit(1);
+    const lockExisting = () =>
+      tx
+        .select()
+        .from(newsletterSubscribers)
+        .where(eq(newsletterSubscribers.canonicalEmail, identity.canonicalEmail))
+        .for("update")
+        .limit(1);
+    let [existing] = await lockExisting();
 
-    let subscriberId: string;
+    let subscriberId: string | null = null;
     let subscribed = false;
     if (!existing) {
+      /*
+        Two first posts of one address at the same moment both find no row to lock. The UNIQUE
+        constraint decides between them: the loser inserts nothing, waits on the winner's row and
+        reads it as the existing one below — the same "check your inbox", never a 500.
+      */
       const [row] = await tx
         .insert(newsletterSubscribers)
         .values({
@@ -120,8 +132,15 @@ export async function subscribeToNewsletter<T extends Record<string, unknown>>(
           createdAt: now,
           updatedAt: now,
         })
+        .onConflictDoNothing({ target: newsletterSubscribers.canonicalEmail })
         .returning({ id: newsletterSubscribers.id });
-      subscriberId = row.id;
+      if (row) subscriberId = row.id;
+      else [existing] = await lockExisting();
+    }
+    if (subscriberId !== null) {
+      // Written just now.
+    } else if (!existing) {
+      throw new Error("newsletter: the address's row is neither new nor readable");
     } else if (existing.confirmedAt === null) {
       // Still unconfirmed: the latest choice is the one the new link confirms.
       await tx
@@ -334,6 +353,10 @@ export function refusedNewsletterBoxes(issues: readonly NewsletterIssue[]): stri
  * never an address or the body (§12.12). The outbox gives them the reserve's share of the
  * allowance (`domain/bulk.ts`), so a newsletter larger than today's room goes over the next days
  * rather than eating a registration's mail. One drain after, not one per row.
+ *
+ * The club gets **one** copy of the send per address on its copy list (§320's spirit, §419's
+ * shape): the words and how many subscribers it went to, with no token, no manage link and no
+ * address — the record of what went out in the club's name.
  */
 export async function sendNewsletter<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -389,6 +412,15 @@ export async function sendNewsletter<T extends Record<string, unknown>>(
         drainAfter: false,
       });
     }
+    await enqueueBulkClubCopies(tx, {
+      messageType: "NEWSLETTER",
+      eventId: null,
+      payload: { sendId: input.sendId },
+      sendKey: `newsletter:${input.sendId}`,
+      realRecipients: recipients.length,
+      requestedByStaffUserId: actor.id,
+      now,
+    });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "newsletter.sent",
@@ -466,6 +498,10 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
       startsAt: events.startsAt,
       publishedAt: events.publishedAt,
       repeatOf: events.repeatOf,
+      repeatRule: events.repeatRule,
+      coHosts: events.coHosts,
+      coHostName: events.coHostName,
+      coHostUrl: events.coHostUrl,
     })
     .from(events)
     .leftJoin(newsletterSends, eq(newsletterSends.eventId, events.id))
@@ -480,7 +516,8 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
 
   let queued = 0;
   let drain = false;
-  for (const event of candidates) {
+  for (const row of candidates) {
+    const event = { ...row, repeats: row.repeatRule !== null, partnered: readCoHosts(row).length > 0 };
     if (!eventAlertWanted(event, now)) continue;
     const topics = eventAlertTopics(event);
     await db.transaction(async (tx) => {
@@ -510,6 +547,15 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
       }
       if (recipients.length > 0) {
         await tx.update(newsletterSends).set({ recipients: recipients.length }).where(eq(newsletterSends.id, send.id));
+        // The club's one copy of the announcement, with the count (§NNN, as for a newsletter above).
+        await enqueueBulkClubCopies(tx, {
+          messageType: "NEW_EVENT_ALERT",
+          eventId: event.id,
+          payload: { sendId: send.id, eventId: event.id },
+          sendKey: `newsletter:${send.id}`,
+          realRecipients: recipients.length,
+          now,
+        });
         drain = true;
       }
     });

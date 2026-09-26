@@ -22,8 +22,12 @@ export function newsletterDialogOpen(outcome: NewsletterOutcome | null): boolean
   return outcome === "open" || outcome === "invalid" || outcome === "captcha" || outcome === "limited";
 }
 
-/** The boxes a refusal names, from `?fields=` — only the two the form has. */
-export function parseNewsletterFields(value: string | undefined): ("email" | "topics")[] {
+/** The boxes the pop-up's form has, in the order it shows them — the order a refusal lists them in (§47). */
+export const NEWSLETTER_BOXES = ["email", "topics", "consent"] as const;
+export type NewsletterBox = (typeof NEWSLETTER_BOXES)[number];
+
+/** The boxes a refusal names, from `?nfields=` — only the ones the form has. */
+export function parseNewsletterFields(value: string | undefined): NewsletterBox[] {
   const names = (value ?? "").split(",");
-  return (["email", "topics"] as const).filter((name) => names.includes(name));
+  return NEWSLETTER_BOXES.filter((name) => names.includes(name));
 }

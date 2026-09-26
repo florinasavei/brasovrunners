@@ -3070,6 +3070,7 @@
           "month": "Plan {plan}: {sent} of {allowance} messages sent this month, {remaining} left; no daily limit; waiting: {waiting}.",
           "none": "Plan {plan}: no limit. Sent today: {sent}; waiting: {waiting}."
         },
+        "bulkWaiting": "Of those in the queue, {count} are newsletters and new-event announcements: they go last, only from what is left after the reserve for registrations, and may wait until the allowance comes back.",
         "updatedAt": "Set on {when}. Note: {note}",
         "field": "The plan the Mailgun account is on",
         "fieldHelp": "Prices and limits from mailgun.com/pricing, checked on {checkedOn}. Basic covers a whole season.",
@@ -3158,7 +3159,7 @@
       },
       "forecast": {
         "title": "Upcoming automatic emails",
-        "intro": "What the platform sends participants on its own in the coming days, event by event: when, which message, and how many people it reaches if it went now. A message goes at the job's first run after the moment shown. Not listed: what a staff member sends (the update notice, the cancellation, the thank-you after the race, the organizers' message), nor the answers to a runner's own click (the confirmation link, the confirmation, the waiting list), which go at once.",
+        "intro": "What the platform sends participants on its own in the coming days, event by event: when, which message, and how many people it reaches if it went now. A message goes at the job's first run after the moment shown. Not listed: what a staff member sends (the update notice, the cancellation, the thank-you after the race, the organizers' message), nor the answers to a runner's own click (the confirmation link, the confirmation, the waiting list), which go at once. Last, the newsletters and new-event announcements already queued for subscribers, with the moment they go.",
         "aside": {
           "one": "1 send in the next {days} days",
           "few": "{count} sends in the next {days} days",
@@ -3166,6 +3167,7 @@
         },
         "empty": "Nothing in the next {days} days: no registration is waiting for an automatic email.",
         "nextRun": "at the job's next run",
+        "held": "held for the registrations' reserve, goes then",
         "recipients": {
           "one": "1 recipient now",
           "few": "{count} recipients now",
@@ -3182,11 +3184,14 @@
           "participation": "the participation confirmation opens, to those who have not signed yet",
           "nextInLine": "a held place lapses; it goes to the next on the waiting list",
           "bibs": "registration closes; race numbers become final",
-          "registrationOpened": "registration opens, to the addresses left on the event's page"
+          "registrationOpened": "registration opens, to the addresses left on the event's page",
+          "newEventAlert": "the new-event announcement, to the subscribers of its topics",
+          "newsletter": "the newsletter, to the topic's subscribers"
         },
         "zone": "{zone} time",
         "untitled": "(untitled event)",
         "untitledOther": "(untitled event) — {title} ({locale})",
+        "newsletterUntitled": "(newsletter without a subject)",
         "clubCopy": {
           "none": "Club copy: none. The club receives no copy of the emails to participants.",
           "some": "Club copy: every email above also goes, separately and with “[Club copy]” in the subject, to {addresses}. Not for test registrations, and not for “Registration is open”, which belongs to no registration.",
@@ -4378,6 +4383,7 @@
     "topicsHelp": "Choose at least one topic. You can change them at any time from the link in every email.",
     "privacy": "We keep your address and the topics you chose only to send you these emails; you unsubscribe at any time from the link in every message. Details in the",
     "privacyLinkLabel": "privacy notice",
+    "consent": "I have read the privacy notice and agree to receive the club's news by email on the topics I ticked.",
     "submit": "Subscribe me",
     "submitting": "Sending…",
     "sent": {
@@ -4388,6 +4394,7 @@
       "title": "The subscription has not started yet",
       "email": "Type a valid email address.",
       "topics": "Choose at least one topic.",
+      "consent": "Tick the consent: without it we cannot send you the news.",
       "captcha": "The anti-robot check did not pass. Tick it again and send.",
       "limited": "You have already asked a few times in the last hour. Check your inbox (and the Spam folder) or try again later.",
       "unavailable": "Subscribing to the news is not available right now. Try again later."

@@ -87,6 +87,12 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           waiting: volume.waitingMessages,
         })}
       </Typography>
+      {/* The subscribers' mail in that queue (§NNN): last in line, in what the reserve leaves. */}
+      {volume.bulkWaitingMessages > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-bulk-waiting">
+          {t("emails.plan.bulkWaiting", { count: volume.bulkWaitingMessages })}
+        </Typography>
+      )}
       {/*
         One account, two deployments (§100, §163): the club's Mailgun allowance is shared by
         QA and production, and the count above is this environment's own outbox rows — so

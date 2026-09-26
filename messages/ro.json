@@ -3070,6 +3070,7 @@
           "month": "Planul {plan}: {sent} din {allowance} mesaje trimise luna aceasta, mai rămân {remaining}; fără limită zilnică; în coadă: {waiting}.",
           "none": "Planul {plan}: fără limită. Trimise azi: {sent}; în coadă: {waiting}."
         },
+        "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația.",
         "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul pe care e contul Mailgun",
         "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate pe {checkedOn}. Basic ajunge pentru un sezon întreg.",
@@ -3158,7 +3159,7 @@
       },
       "forecast": {
         "title": "Următoarele emailuri automate",
-        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc.",
+        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc. La sfârșit, newsletterele și anunțurile de eveniment nou deja puse în coadă pentru abonați, cu momentul în care pleacă.",
         "aside": {
           "one": "1 trimitere în următoarele {days} zile",
           "few": "{count} trimiteri în următoarele {days} zile",
@@ -3166,6 +3167,7 @@
         },
         "empty": "Nimic în următoarele {days} zile: nicio înscriere nu așteaptă un email automat.",
         "nextRun": "la următoarea rulare a jobului",
+        "held": "ținut pentru rezerva înscrierilor, pleacă atunci",
         "recipients": {
           "one": "1 destinatar acum",
           "few": "{count} destinatari acum",
@@ -3182,11 +3184,14 @@
           "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
           "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
           "bibs": "se închid înscrierile; numerele de concurs devin finale",
-          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului"
+          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
+          "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
+          "newsletter": "newsletterul, către abonații temei"
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
         "untitledOther": "(eveniment fără titlu) — {title} ({locale})",
+        "newsletterUntitled": "(newsletter fără subiect)",
         "clubCopy": {
           "none": "Copie club: niciuna. Clubul nu primește copii ale emailurilor către participanți.",
           "some": "Copie club: fiecare email de mai sus pleacă și, separat, cu „[Copie club]” în subiect, la {addresses}. Nu și pentru înscrierile de test și nici pentru „Înscrierile s-au deschis”, care nu ține de o înscriere.",
@@ -4378,6 +4383,7 @@
     "topicsHelp": "Alege cel puțin o temă. Le poți schimba oricând din linkul din fiecare email.",
     "privacy": "Păstrăm adresa și temele alese doar ca să îți trimitem aceste emailuri; te dezabonezi oricând din linkul din fiecare mesaj. Detalii în",
     "privacyLinkLabel": "nota de confidențialitate",
+    "consent": "Am citit nota de confidențialitate și sunt de acord să primesc pe email noutățile clubului despre temele bifate.",
     "submit": "Abonează-mă",
     "submitting": "Se trimite…",
     "sent": {
@@ -4388,6 +4394,7 @@
       "title": "Abonarea nu a pornit încă",
       "email": "Scrie o adresă de email validă.",
       "topics": "Alege cel puțin o temă.",
+      "consent": "Bifează acordul: fără el nu îți putem trimite noutățile.",
       "captcha": "Verificarea anti-robot nu a trecut. Bifeaz-o din nou și trimite.",
       "limited": "Ai cerut deja de câteva ori în ultima oră. Verifică-ți căsuța (și dosarul Spam) sau încearcă din nou mai târziu.",
       "unavailable": "Abonarea la noutăți nu este disponibilă acum. Încearcă mai târziu."

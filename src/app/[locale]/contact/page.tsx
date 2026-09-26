@@ -296,11 +296,18 @@ export default async function ContactPage({ params, searchParams }: Props) {
           refused={newsletterOutcome === "invalid" ? parseNewsletterFields(nfields) : []}
           typed={
             newsletterRefused
-              ? { email: draft?.newsletterEmail, topics: (draft?.newsletterTopics ?? "").split(",").filter(Boolean) }
+              ? {
+                  email: draft?.newsletterEmail,
+                  topics: (draft?.newsletterTopics ?? "").split(",").filter(Boolean),
+                  consent: draft?.newsletterConsent === "on",
+                }
               : {}
           }
           siteKey={siteKey}
           renderedAt={(newsletterRefused ? parseInterestSince(since, now) : null)?.toISOString() ?? now.toISOString()}
+          // This render's own time, never `since`: a refusal redraws with the same `since`, and a
+          // Turnstile reset keyed on it would never run, posting the spent token again (§185).
+          attempt={now.toISOString()}
         />
       )}
     </Container>

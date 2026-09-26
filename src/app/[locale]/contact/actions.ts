@@ -33,7 +33,13 @@ export async function submitNewsletterAction(form: FormData): Promise<void> {
   const topics = form.getAll("topics").filter((value): value is string => typeof value === "string");
   const renderedAt = text(form, "renderedAt");
   // What was typed comes back sealed, so a refusal never costs the address or the ticks (§142).
-  const keepTyped = () => stashDraftValues({ newsletterEmail: text(form, "newsletterEmail").trim(), newsletterTopics: topics.join(",") }, path);
+  // The consent tick is the person's own act: posted as "on" only when ticked (§NNN).
+  const consent = form.get("consent") === "on";
+  const keepTyped = () =>
+    stashDraftValues(
+      { newsletterEmail: text(form, "newsletterEmail").trim(), newsletterTopics: topics.join(","), newsletterConsent: consent ? "on" : "" },
+      path,
+    );
   // The corrected form is timed from the render it corrects (§146's `since`), or a quick fix reads as a bot.
   const since = renderedAt ? `&since=${encodeURIComponent(renderedAt)}` : "";
 
@@ -54,6 +60,7 @@ export async function submitNewsletterAction(form: FormData): Promise<void> {
         email: text(form, "newsletterEmail"),
         locale,
         topics,
+        consent,
         honeypot: text(form, "honeypot") || undefined,
         renderedAt: renderedAt || undefined,
       },

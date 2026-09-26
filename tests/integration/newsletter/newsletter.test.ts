@@ -22,7 +22,11 @@ import {
   updateNewsletterTopics,
   withdrawNewsletterAddress,
 } from "@/modules/newsletter/service";
+import { updateClubNotices } from "@/modules/notifications/club-notices";
+import { forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { checkEmailHealth } from "@/modules/notifications/health";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { nextAllowanceResetAt } from "@/modules/notifications/domain/retry";
 import { processOutboxBatch } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
@@ -87,7 +91,14 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
     });
   }
 
-  const form = (email: string, topics: string[], extra: Record<string, unknown> = {}) => ({ email, locale: "ro", topics, renderedAt: RENDERED, ...extra });
+  const form = (email: string, topics: string[], extra: Record<string, unknown> = {}) => ({
+    email,
+    locale: "ro",
+    topics,
+    consent: true,
+    renderedAt: RENDERED,
+    ...extra,
+  });
 
   async function outboxOf(type: "NEWSLETTER_CONFIRM" | "NEWSLETTER" | "NEW_EVENT_ALERT") {
     return db.select().from(emailOutbox).where(eq(emailOutbox.messageType, type));
@@ -101,6 +112,11 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
     expect(await confirmNewsletter(db, secretIn(message, "confirm"), NOW)).toBe(true);
     const [subscriber] = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.deliveryEmail, email));
     return subscriber;
+  }
+
+  /** The confirmation messages as sent, so a batch below sends only what the test is about. */
+  async function confirmationsSent() {
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: new Date(NOW.getTime() - 60_000) }).where(eq(emailOutbox.messageType, "NEWSLETTER_CONFIRM"));
   }
 
   async function staff(role: "CONTRIBUTOR" | "COPYWRITER" | "MODERATOR" | "DEV" | "ADMIN" | "SUPERADMIN") {
@@ -165,6 +181,22 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       // A filled trap: the same answer as a person's, and nothing kept.
       expect(await subscribeToNewsletter(db, form("bot@example.org", ["ALL"], { honeypot: "x" }), NOW)).toBe("done");
       expect(await db.select().from(newsletterSubscribers)).toEqual([]);
+    });
+
+    it("refuses a form without the consent tick by its box, keeps nothing, and names every box at once", async () => {
+      await approveNotice({ describesNewsletter: true });
+      const unticked = await subscribeToNewsletter(db, form("ana@example.org", ["ALL"], { consent: false }), NOW).catch((error: unknown) => error);
+      expect(isDomainError(unticked) && unticked.code).toBe("VALIDATION_ERROR");
+      expect(isDomainError(unticked) && unticked.fields).toEqual(["consent"]);
+      // Anything but the literal tick is no consent: a posted string, or nothing at all.
+      const posted = await subscribeToNewsletter(db, form("ana@example.org", ["ALL"], { consent: "on" }), NOW).catch((error: unknown) => error);
+      expect(isDomainError(posted) && posted.fields).toEqual(["consent"]);
+      const everything = await subscribeToNewsletter(db, { email: "nope", locale: "ro", topics: [], renderedAt: RENDERED }, NOW).catch(
+        (error: unknown) => error,
+      );
+      expect(isDomainError(everything) && everything.fields).toEqual(["email", "topics", "consent"]);
+      expect(await db.select().from(newsletterSubscribers)).toEqual([]);
+      expect(await db.select().from(emailOutbox)).toEqual([]);
     });
 
     it("says 'everything' alone when everything is ticked with the rest", async () => {
@@ -332,7 +364,8 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
     it("never announces the weekly group run, a later date of a series, a draft, or an event published long ago", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("all@example.org", ["ALL"]);
-      await seedEvent({ type: "GROUP_RUN" });
+      const weekly = await seedEvent({ type: "GROUP_RUN", repeatRule: { cadence: "WEEKLY", weekdays: [3], until: null } });
+      await seedEvent({ type: "GROUP_RUN", repeatOf: weekly.id });
       const source = await seedEvent({ type: "HIKE" });
       await seedEvent({ type: "HIKE", repeatOf: source.id });
       await seedEvent({ editorialStatus: "DRAFT" });
@@ -340,6 +373,71 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(await queueNewEventAlerts(db, NOW)).toBe(1);
       const [row] = await outboxOf("NEW_EVENT_ALERT");
       expect(row.payloadJson).toMatchObject({ eventId: source.id });
+    });
+
+    it("§NNN announces a group run held once, a special date of the weekly run, and a partnered or external event to special events", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("special@example.org", ["SPECIAL_EVENTS"]);
+      await subscribed("new@example.org", ["NEW_EVENTS"]);
+      const weekly = await seedEvent({ type: "GROUP_RUN", repeatRule: { cadence: "WEEKLY", weekdays: [3], until: null } });
+      const special = await seedEvent({ type: "GROUP_RUN", repeatOf: weekly.id, isSpecial: true });
+      const once = await seedEvent({ type: "GROUP_RUN" });
+      const partnered = await seedEvent({ type: "HIKE", coHosts: [{ name: "Magazinul de alergare", links: [] }] });
+      const external = await seedEvent({ type: "EXTERNAL" });
+
+      await queueNewEventAlerts(db, NOW);
+      const sends = await db.select().from(newsletterSends);
+      const topicsOf = (eventId: string) => sends.find((send) => send.eventId === eventId)?.topics;
+      expect(topicsOf(weekly.id)).toBeUndefined();
+      expect(topicsOf(special.id)).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+      expect(topicsOf(once.id)).toEqual(["NEW_EVENTS"]);
+      expect(topicsOf(partnered.id)).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+      expect(topicsOf(external.id)).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+      const rows = await outboxOf("NEW_EVENT_ALERT");
+      const toSpecial = rows.filter((row) => row.recipientEmail === "special@example.org").map((row) => (row.payloadJson as { eventId: string }).eventId);
+      expect(toSpecial.sort()).toEqual([special.id, partnered.id, external.id].sort());
+    });
+
+    it("§NNN sends nothing for an event cancelled or taken down while its alert waited for the allowance, and raises no alarm", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("all@example.org", ["ALL"]);
+      await subscribed("new@example.org", ["NEW_EVENTS"], "en");
+      await confirmationsSent();
+      const cancelled = await seedEvent();
+      const unpublished = await seedEvent({ type: "HIKE" });
+      const kept = await seedEvent({ type: "GEAR_TEST" });
+      expect(await queueNewEventAlerts(db, NOW)).toBe(6);
+      // Held for the reset, as the reserve does (`holdBulkUntilReset`): the alerts wait a day.
+      const reset = nextAllowanceResetAt(NOW);
+      await db.update(emailOutbox).set({ nextAttemptAt: reset }).where(eq(emailOutbox.messageType, "NEW_EVENT_ALERT"));
+
+      // Meanwhile one event is cancelled and one taken down.
+      await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, cancelled.id));
+      await db.update(events).set({ editorialStatus: "DRAFT" }).where(eq(events.id, unpublished.id));
+
+      const later = new Date(reset.getTime() + 60_000);
+      const sender = recordingSender();
+      const summary = await processOutboxBatch(db, { sender, render: renderOutboxMessage, now: later });
+      expect(summary.failed).toBe(0);
+      // Only the event still on the calendar is announced.
+      expect(sender.calls).toHaveLength(2);
+      expect(sender.calls.every((call) => call.subject.includes("Crosul aniversar") || call.subject.includes("The anniversary cross"))).toBe(true);
+      const left = await outboxOf("NEW_EVENT_ALERT");
+      expect(left.map((row) => (row.payloadJson as { eventId: string }).eventId)).toEqual([kept.id, kept.id]);
+      expect(left.every((row) => row.status === "SENT")).toBe(true);
+      expect((await checkEmailHealth(db, later)).status).toBe("ok");
+    });
+
+    it("§NNN sends nothing for an event that started while its alert waited", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("all@example.org", ["ALL"]);
+      await confirmationsSent();
+      await seedEvent({ startsAt: new Date(NOW.getTime() + 2 * 60 * 60_000) });
+      expect(await queueNewEventAlerts(db, NOW)).toBe(1);
+      const sender = recordingSender();
+      await processOutboxBatch(db, { sender, render: renderOutboxMessage, now: new Date(NOW.getTime() + 3 * 60 * 60_000) });
+      expect(sender.calls).toEqual([]);
+      expect(await outboxOf("NEW_EVENT_ALERT")).toEqual([]);
     });
 
     it("marks an event with nobody to tell as seen, so a later subscriber is not told it is new", async () => {
@@ -405,6 +503,77 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       const next = recordingSender();
       await processOutboxBatch(db, { sender: next, render: renderOutboxMessage, now: tomorrow });
       expect(next.calls).toHaveLength(8);
+    });
+  });
+
+  describe("§NNN the club's copy of a send, and what the panel says waits", () => {
+    it("gives the club one copy of a newsletter and of an alert, with the count and no link of anybody's", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("ana@example.org", ["DISCOUNTS"]);
+      await subscribed("ion@example.org", ["ALL"], "en");
+      const admin = await staff("ADMIN");
+      await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
+
+      await sendNewsletter(db, admin, { topic: "DISCOUNTS", subject: { ro: "Cod", en: "Code" }, body: { ro: "Textul", en: "The text" }, sendId: SEND_ID }, NOW);
+      const newsletters = await outboxOf("NEWSLETTER");
+      const copy = newsletters.find((row) => row.recipientEmail === "arhiva@club.test");
+      expect(newsletters).toHaveLength(3);
+      expect(copy?.payloadJson).toMatchObject({ clubCopy: true, recipients: 2, sendId: SEND_ID });
+      expect(copy?.payloadJson).not.toHaveProperty("subscriberId");
+      const copied = await renderOutboxMessage(copy!, db, NOW);
+      expect(copied.subject).toContain("[Copie club]");
+      expect(copied.text).toContain("2 abonați");
+      expect(copied.text).toContain("Textul");
+      expect(copied.text).not.toMatch(/noutati\/abonament|newsletter\/manage/);
+      // Minting a manage link for nobody would leave a token row; the copy leaves none.
+      const tokensBefore = (await db.select().from(newsletterTokens)).length;
+      await renderOutboxMessage(copy!, db, NOW);
+      expect((await db.select().from(newsletterTokens)).length).toBe(tokensBefore);
+
+      await seedEvent();
+      await queueNewEventAlerts(db, NOW);
+      const alerts = await outboxOf("NEW_EVENT_ALERT");
+      const alertCopy = alerts.find((row) => row.recipientEmail === "arhiva@club.test");
+      expect(alerts).toHaveLength(2);
+      expect(alertCopy?.payloadJson).toMatchObject({ clubCopy: true, recipients: 1 });
+      const alertCopied = await renderOutboxMessage(alertCopy!, db, NOW);
+      expect(alertCopied.text).toContain("un abonat");
+      expect(alertCopied.text).not.toMatch(/noutati\/abonament|newsletter\/manage/);
+    });
+
+    it("lists a held newsletter and a held alert in the forecast, by send, with the subscribers and the release; counts them in the volume", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("ana@example.org", ["ALL"]);
+      await subscribed("ion@example.org", ["CLUB_NEWS"]);
+      await confirmationsSent();
+      const admin = await staff("ADMIN");
+      await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
+      await sendNewsletter(db, admin, { topic: "CLUB_NEWS", subject: { ro: "Știri", en: "News" }, body: { ro: "a", en: "b" }, sendId: SEND_ID }, NOW);
+      const race = await seedEvent();
+      await queueNewEventAlerts(db, NOW);
+      const reset = nextAllowanceResetAt(NOW);
+      await db.update(emailOutbox).set({ nextAttemptAt: reset }).where(eq(emailOutbox.messageType, "NEWSLETTER"));
+
+      const rows = await forecastAutomaticEmails(db, { now: NOW, deadlines: DEFAULT_DEADLINES });
+      const newsletter = rows.find((row) => row.send === "newsletter");
+      const alert = rows.find((row) => row.send === "newEventAlert");
+      expect(newsletter).toMatchObject({
+        type: "NEWSLETTER",
+        eventId: null,
+        sendId: SEND_ID,
+        subject: { ro: "Știri", en: "News" },
+        recipients: 2,
+        held: true,
+        overdue: false,
+      });
+      expect(newsletter?.at.getTime()).toBe(reset.getTime());
+      expect(alert).toMatchObject({ type: "NEW_EVENT_ALERT", eventId: race.id, recipients: 1, held: false, overdue: true });
+      expect(alert?.eventTitle).toEqual({ ro: "Crosul aniversar", en: "The anniversary cross" });
+
+      const volume = await readEmailVolumeToday(db, NOW);
+      // Two subscribers and the club's copy of the newsletter, one subscriber and the copy of the alert.
+      expect(volume.bulkWaitingMessages).toBe(5);
+      expect(volume.waitingMessages).toBe(5);
     });
   });
 

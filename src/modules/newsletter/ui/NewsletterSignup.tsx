@@ -22,20 +22,27 @@ import {
   NEWSLETTER_SECTION_ID,
   NEWSLETTER_TRIGGER_ID,
   newsletterDialogOpen,
+  type NewsletterBox,
   type NewsletterOutcome,
 } from "./newsletter-box";
 
 type Props = {
   locale: Locale;
   outcome: NewsletterOutcome | null;
-  /** The boxes a refusal named (`?fields=`). */
-  refused: readonly ("email" | "topics")[];
-  /** What was typed before a refusal, from the sealed draft (§142): the address and the ticked topics. */
-  typed: { email?: string; topics?: readonly string[] };
+  /** The boxes a refusal named (`?nfields=`). */
+  refused: readonly NewsletterBox[];
+  /** What was typed before a refusal, from the sealed draft (§142): the address, the ticked topics and the consent. */
+  typed: { email?: string; topics?: readonly string[]; consent?: boolean };
   /** Cloudflare Turnstile's site key when the club's check is on (§97), or nothing. */
   siteKey: string | undefined;
   /** When the form was first drawn — the corrected form is timed from the render it corrects (§146's `since`). */
   renderedAt: string;
+  /**
+   * This render's own time, new on every render — never `renderedAt`, which a refusal carries over
+   * unchanged. Turnstile resets on it (§185): keyed on `renderedAt`, a refusal would post the spent
+   * token again and every later press would answer "tick it again" until the page was reloaded.
+   */
+  attempt: string;
 };
 
 /**
@@ -44,15 +51,16 @@ type Props = {
  *
  * A Server Component: a heading, one sentence, the button, and the pop-up — a native `<dialog>`
  * drawn here with the whole form in it: the address, the topics as plain checkboxes (each a
- * 44-pixel row), the anti-bot defences of every public form, and the sentence and the link to the
- * privacy notice that describes what happens to the address. The one island is the button that
+ * 44-pixel row), the anti-bot defences of every public form, the sentence and the link to the
+ * privacy notice that describes what happens to the address, and the one consent tick that names
+ * that notice — required, refused by its box when left empty, like every other box (§47). The one island is the button that
  * opens it modally (`NewsletterDialogButton`); with no script the button is a link to the page with
  * the dialog open, and every guard is on the server.
  *
  * The page draws this only while the privacy notice in force describes the newsletter
  * (`cachedNewsletterOffered`): nothing is collected before the club's approved text says why.
  */
-export default async function NewsletterSignup({ locale, outcome, refused, typed, siteKey, renderedAt }: Props) {
+export default async function NewsletterSignup({ locale, outcome, refused, typed, siteKey, renderedAt, attempt }: Props) {
   const t = await getTranslations("Newsletter");
   const contactPath = getPathname({ locale, href: "/contact" });
   const open = newsletterDialogOpen(outcome);
@@ -131,7 +139,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
         triggerId={NEWSLETTER_TRIGGER_ID}
         dialogId={NEWSLETTER_DIALOG_ID}
         arrival={open ? "modal" : outcome === "sent" || outcome === "unavailable" ? "closed" : "none"}
-        stamp={renderedAt}
+        stamp={attempt}
       />
 
       <Box
@@ -260,7 +268,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
 
             {siteKey && (
               <Box id="newsletter-captcha">
-                <TurnstileWidget siteKey={siteKey} locale={locale} attempt={renderedAt} />
+                <TurnstileWidget siteKey={siteKey} locale={locale} attempt={attempt} />
               </Box>
             )}
 
@@ -272,6 +280,42 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
               </Link>
               .
             </Typography>
+
+            {/* The consent itself: one tick, the person's own act, naming the notice it rests on. */}
+            <Box
+              component="label"
+              id="newsletter-consent"
+              data-testid="newsletter-consent"
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 1.5,
+                minHeight: TAP_TARGET.minHeight,
+                py: 0.75,
+                cursor: "pointer",
+                color: invalid.has("consent") ? "error.main" : undefined,
+                "& input": { width: 22, height: 22, mt: 0.25, flexShrink: 0, accentColor: "var(--mui-palette-primary-main)" },
+              }}
+            >
+              <input
+                type="checkbox"
+                name="consent"
+                required
+                defaultChecked={typed.consent === true}
+                aria-invalid={invalid.has("consent") || undefined}
+                aria-describedby={invalid.has("consent") ? "newsletter-consent-error" : undefined}
+              />
+              <Box component="span">
+                <Box component="span" sx={{ display: "block" }}>
+                  {t("consent")}
+                </Box>
+                {invalid.has("consent") && (
+                  <Typography id="newsletter-consent-error" component="span" variant="body2" color="error" sx={{ display: "block" }}>
+                    {t("errors.consent")}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
 
             <SubmitButton label={t("submit")} pendingLabel={t("submitting")} size="large" fullWidth />
           </Stack>
