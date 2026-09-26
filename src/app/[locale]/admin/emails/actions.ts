@@ -17,6 +17,7 @@ import { DEADLINE_KEYS } from "@/modules/deadlines/domain/deadlines";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
+import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -69,6 +70,50 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
   revalidatePath(path);
   await flashOutcome({ saved: "emailPlan" });
   redirect(`${path}?saved=emailPlan#admin-alert`);
+}
+
+/**
+ * "Prin ce pleacă emailurile" (§NNN): the road per group, Gmail's cap, pace and choice at the cap, the overflow. The
+ * plan's gate and shape: Administrator at the door, the service asserting the role again and
+ * validating every field, a refusal returned with the boxes as typed (§315).
+ */
+export async function updateEmailTransportAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/emails" });
+  const choice = (name: string): unknown => form.get(name);
+  const whole = (name: string): number => {
+    const value = form.get(name);
+    if (typeof value !== "string" || value.trim() === "") return Number.NaN;
+    return Number(value);
+  };
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateEmailTransport(
+      getDb(),
+      actor,
+      {
+        groups: {
+          links: choice("links"),
+          confirmations: choice("confirmations"),
+          reminders: choice("reminders"),
+          announcements: choice("announcements"),
+          club: choice("club"),
+          newsletter: choice("newsletter"),
+        },
+        gmailDailyCap: whole("gmailDailyCap"),
+        gmailPaceSeconds: whole("gmailPaceSeconds"),
+        atGmailCap: choice("atGmailCap"),
+        overflowToGmail: form.get("overflowToGmail") === "yes",
+      },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "emailTransport" });
+  redirect(`${path}?saved=emailTransport#admin-alert`);
 }
 
 /**

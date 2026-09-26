@@ -173,6 +173,7 @@ export async function GET(): Promise<Response> {
       database,
       schema,
       jobs,
+      // With its `gmail` block since §NNN: recipients against the cap and the last failure, no status of its own.
       email,
       // The monthly compute quota's early warning (§335): `percent: null` means nothing was
       // asked (no key, or Neon did not answer within the timeout) rather than "there is no

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, not, or, type SQL, sql } from "drizzle-orm";
 import {
   type EmailMessageType,
   type EmailOutboxStatus,
@@ -6,13 +6,14 @@ import {
 } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
-import type { OutgoingEmail } from "@/infrastructure/email/adapter";
+import type { EmailTransportName, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { readClubNotices } from "./club-notices";
 import {
   BULK_COPY_RECIPIENTS,
   type BulkClubCopyMessage,
+  CLUB_COPY_FLAG,
   clubCopyPayload,
   clubCopyRecipients,
   isClubCopy,
@@ -281,6 +282,28 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
   return queued;
 }
 
+/** The worker's batch when the caller names none: twenty rows. */
+export const OUTBOX_BATCH_SIZE = 20;
+
+/**
+ * Which rows the club sends through Gmail, and how many of them one batch takes (§NNN review) —
+ * built from the club's setting by `outbox-sender.ts`, the same answer its `route` gives row by row.
+ */
+export type OutboxRoads = {
+  gmailMessageTypes: readonly EmailMessageType[];
+  gmailClubCopies: boolean;
+  gmailBatchSize: number;
+};
+
+/** A row whose road is Gmail, as SQL: a club copy when the club's mail goes by Gmail, or a listed type. */
+function gmailRoadCondition(roads: OutboxRoads): SQL {
+  // `::text`: jsonb has `->` for a key and for an index, and an untyped parameter matches both.
+  const clubCopy = sql`coalesce(${emailOutbox.payloadJson} -> ${CLUB_COPY_FLAG}::text = 'true'::jsonb, false)`;
+  const listed = roads.gmailMessageTypes.length > 0 ? inArray(emailOutbox.messageType, [...roads.gmailMessageTypes]) : sql`false`;
+  const participantRow = and(not(clubCopy), listed) as SQL;
+  return roads.gmailClubCopies ? (or(clubCopy, participantRow) as SQL) : participantRow;
+}
+
 /**
  * Take ownership of up to `batchSize` messages.
  *
@@ -304,27 +327,42 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
  */
 export async function claimOutboxBatch(
   db: Db,
-  params: { now: Date; batchSize: number },
+  params: { now: Date; batchSize: number; roads?: OutboxRoads },
 ): Promise<OutboxRow[]> {
-  const { now, batchSize } = params;
+  const { now, batchSize, roads } = params;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
+  const due = or(
+    and(
+      eq(emailOutbox.status, "PENDING"),
+      or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)),
+    ),
+    and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
+  );
 
   return db.transaction(async (tx) => {
-    const claimable = tx
-      .select({ id: emailOutbox.id })
-      .from(emailOutbox)
-      .where(
-        or(
-          and(
-            eq(emailOutbox.status, "PENDING"),
-            or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)),
-          ),
-          and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
-        ),
-      )
-      .orderBy(asc(emailOutbox.createdAt))
-      .limit(batchSize)
-      .for("update", { skipLocked: true });
+    const pick = (road: SQL | undefined, limit: number) =>
+      tx
+        .select({ id: emailOutbox.id })
+        .from(emailOutbox)
+        .where(road ? and(due, road) : due)
+        .orderBy(asc(emailOutbox.createdAt))
+        .limit(limit)
+        .for("update", { skipLocked: true });
+
+    /*
+      One claim per road when Gmail carries anything (§NNN review). Gmail's rows wait on its pace
+      and its cap, and a single oldest-first claim let twenty of them — club copies pile up fast on
+      a busy day — stand in front of a runner's link to confirm the address, batch after batch. So
+      Mailgun's rows are claimed as if Gmail's were not there, and Gmail's apart, as many as its pace
+      lets one batch send.
+    */
+    const gmailRoad = roads ? gmailRoadCondition(roads) : undefined;
+    const claimable = gmailRoad
+      ? or(
+          inArray(emailOutbox.id, pick(not(gmailRoad), batchSize)),
+          inArray(emailOutbox.id, pick(gmailRoad, Math.min(batchSize, roads?.gmailBatchSize ?? batchSize))),
+        )
+      : inArray(emailOutbox.id, pick(undefined, batchSize));
 
     const claimed = await tx
       .update(emailOutbox)
@@ -333,7 +371,7 @@ export async function claimOutboxBatch(
         lockedAt: now,
         attemptCount: sql`${emailOutbox.attemptCount} + 1`,
       })
-      .where(inArray(emailOutbox.id, claimable))
+      .where(claimable)
       .returning();
 
     // The sub-select orders which rows are claimed; RETURNING has no defined order at all.
@@ -379,13 +417,28 @@ export type OutboxBatchSummary = {
  */
 export async function processOutboxBatch(
   db: Db,
-  params: { sender: EmailSender; render: EmailRenderer; now: Date; batchSize?: number },
+  params: {
+    sender: EmailSender;
+    render: EmailRenderer;
+    now: Date;
+    batchSize?: number;
+    /**
+     * The road each row asks for (§NNN, `outbox-sender.ts`): the club's setting for the row's
+     * group. Absent — a test's own sender — every message asks for Mailgun, as before.
+     */
+    route?: (row: OutboxRow) => EmailTransportName;
+    /**
+     * Which rows are Gmail's, claimed apart from Mailgun's (§NNN review, `outbox-sender.ts`).
+     * Absent — no Gmail account, or a test's own sender — one claim, oldest first, as before.
+     */
+    roads?: OutboxRoads;
+  },
 ): Promise<OutboxBatchSummary> {
-  const { sender, render, now, batchSize = 20 } = params;
+  const { sender, render, now, batchSize = OUTBOX_BATCH_SIZE, route, roads } = params;
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
 
-  const claimed = await claimOutboxBatch(db, { now, batchSize });
+  const claimed = await claimOutboxBatch(db, { now, batchSize, ...(roads ? { roads } : {}) });
   const summary: OutboxBatchSummary = {
     claimed: claimed.length,
     sent: 0,
@@ -399,6 +452,7 @@ export async function processOutboxBatch(
     let message: OutgoingEmail;
     try {
       message = await render(row, db, now);
+      if (route) message = { ...message, transport: route(row) };
     } catch (error) {
       await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
       summary.failed += 1;
@@ -420,8 +474,13 @@ export async function processOutboxBatch(
         .update(emailOutbox)
         .set({
           status: "SENT",
-          sentAt: now,
+          // The moment Gmail took it when it did (§NNN review): the pace runs from here in every sender.
+          sentAt: result.acceptedAt ?? now,
           providerMessageId: result.providerMessageId,
+          // Which road carried it (§NNN): Gmail's cap and Mailgun's allowance are counted from this.
+          transport: result.transport ?? "mailgun",
+          // What Google counts against the day (§NNN): the address and every copy that left; 0 when captured.
+          recipientCount: result.recipients ?? null,
           lockedAt: null,
           nextAttemptAt: null,
           lastError: null,
@@ -443,6 +502,25 @@ export async function processOutboxBatch(
      *
      * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
      */
+    /*
+      Held back by Gmail's pace, not refused (§NNN): nothing was tried, so the attempt the claim
+      counted is given back, and the row is due again in the few seconds the pace asks for — the
+      next drain or job run takes it. Counted as a retry: the mechanism working, not the plan's limit.
+    */
+    if (result.outcome === "throttled" && result.paced) {
+      await db
+        .update(emailOutbox)
+        .set({
+          status: "PENDING",
+          lockedAt: null,
+          attemptCount: Math.max(0, row.attemptCount - 1),
+          nextAttemptAt: result.retryAfter ?? now,
+        })
+        .where(eq(emailOutbox.id, row.id));
+      summary.retrying += 1;
+      continue;
+    }
+
     if (result.outcome === "throttled") {
       await db
         .update(emailOutbox)

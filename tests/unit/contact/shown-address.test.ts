@@ -94,6 +94,11 @@ describe("the Reply-To every email carries", () => {
       EMAIL_FROM_ADDRESS: undefined,
       EMAIL_FROM_NAME: "Club",
       EMAIL_REPLY_TO: MAILBOX,
+      // No Gmail account: every message takes Mailgun's road (§NNN, the transport setting).
+      CONTACT_SMTP_HOST: "smtp.gmail.com",
+      CONTACT_SMTP_PORT: 465,
+      CONTACT_SMTP_USER: undefined,
+      CONTACT_SMTP_PASSWORD: undefined,
     };
     const message = { to: "ana@example.ro", subject: "S", html: "<p>x</p>", text: "x", locale: "ro" as const, idempotencyKey: "k" };
 

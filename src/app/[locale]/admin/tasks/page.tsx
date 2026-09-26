@@ -474,7 +474,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     The older pictures' button (§430), on the list of what is owed while anything is left to
     convert — one count, only for this panel, and nothing where there is no store to convert in.
   */
-  const olderPictures = panel === "todo" && isStorageConfigured() ? await countOlderPictures(db) : 0;
+  const olderPictures = panel === "club" && isStorageConfigured() ? await countOlderPictures(db) : 0;
   /*
     How many the press just made failed, from the address the action lands on — said on the card
     with what to do, not only in the toast that fades (§430). A number and nothing else; any other

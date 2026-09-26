@@ -140,6 +140,20 @@ export const emailOutbox = pgTable(
     lockedAt: timestamp("locked_at", { withTimezone: true }),
 
     providerMessageId: text("provider_message_id"),
+    /**
+     * Which road the message left by (§NNN): `mailgun`, or `gmail` — the club's own account over
+     * SMTP. Written with `sent_at`; null on a row not sent yet and on every row sent before the
+     * column existed, and a null is read as Mailgun, which is what carried all of those. It is
+     * what the Mailgun allowance is counted from (`volume.ts`) and what Gmail's own daily cap is
+     * counted from (`email-transport.ts`), so the two counts can never both claim one message.
+     */
+    transport: text("transport", { enum: ["mailgun", "gmail"] }),
+    /**
+     * How many recipients the send actually reached (§NNN): the address plus every copy the
+     * environment let through, and 0 for a captured message that reached nobody. Google counts
+     * recipients, not messages, so Gmail's rolling-day cap sums this; null on rows sent before it.
+     */
+    recipientCount: integer("recipient_count"),
     // Sanitized (§16.1): a short provider reason, never a body, a secret, or a token.
     lastError: text("last_error"),
 
@@ -172,5 +186,7 @@ export const emailOutbox = pgTable(
       t.createdAt,
     ),
     index("email_outbox_registration_created_idx").on(t.registrationId, t.createdAt),
+    // Gmail's rolling day and its last send, read before every Gmail message (§NNN review).
+    index("email_outbox_transport_sent_idx").on(t.transport, t.sentAt),
   ],
 );

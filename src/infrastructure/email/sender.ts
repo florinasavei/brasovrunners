@@ -1,6 +1,8 @@
 import type { Env } from "@/shared/config/env";
 import { type CaptureAdapter, type CapturedEmail, createCaptureAdapter } from "./capture-adapter";
 import { createEmailSender, type EmailSender } from "./delivery";
+import type { GmailAtCap, GmailLedger } from "@/modules/notifications/domain/email-transport";
+import { createGmailAdapter } from "./gmail-adapter";
 import { createMailgunAdapter } from "./mailgun-adapter";
 
 /**
@@ -49,6 +51,21 @@ export function capturedEmails(): readonly CapturedEmail[] {
   return [...all.slice(Math.max(0, all.length - CAPTURE_KEEP))].reverse();
 }
 
+/**
+ * The club's choice about the Gmail road for this batch (§NNN) and the ledger Gmail's usage is read
+ * from before every message — the database's, built by the caller (`notifications/outbox-sender.ts`);
+ * this file reads none.
+ */
+export type GmailRouting = {
+  dailyCap: number;
+  paceSeconds: number;
+  atGmailCap: GmailAtCap;
+  overflowToGmail: boolean;
+  ledger: GmailLedger;
+  /** Where a Gmail failure is recorded (§NNN, `notifications/email-transport.ts`). */
+  onFailure?: (error: string, at: Date) => Promise<void>;
+};
+
 export function createEmailSenderForEnvironment(
   config: Pick<
     Env,
@@ -61,15 +78,49 @@ export function createEmailSenderForEnvironment(
     | "EMAIL_FROM_ADDRESS"
     | "EMAIL_FROM_NAME"
     | "EMAIL_REPLY_TO"
-  >,
-  /**
-   * The Reply-To in force (§NNN): «Adresa de contact afișată» on `/admin/emails` — the mailbox,
-   * the club's Gmail, or both, comma-separated. Absent, `EMAIL_REPLY_TO` as before. Only the
-   * Reply-To follows the setting; the From stays on the Mailgun domain (a Gmail From fails DMARC).
-   */
-  overrides: { replyTo?: string } = {},
+  > &
+    Pick<Env, "CONTACT_SMTP_HOST" | "CONTACT_SMTP_PORT" | "CONTACT_SMTP_USER" | "CONTACT_SMTP_PASSWORD">,
+  options: {
+    /**
+     * The Reply-To in force (§NNN): «Adresa de contact afișată» on `/admin/emails` — the mailbox,
+     * the club's Gmail, or both, comma-separated. Absent, `EMAIL_REPLY_TO` as before. Only the
+     * Reply-To follows the setting, on either road; the From stays the road's own — the Mailgun
+     * domain on Mailgun's (a Gmail From there fails DMARC), the Gmail account on Gmail's.
+     */
+    replyTo?: string;
+    /** The club's routing for the Gmail road (§NNN); absent, every message takes Mailgun's. */
+    gmail?: GmailRouting;
+  } = {},
 ): { sender: EmailSender; capture: CaptureAdapter } {
   const capture = sharedCapture;
+  const replyTo = options.replyTo ?? config.EMAIL_REPLY_TO;
+  const routing = options.gmail;
+  const { CONTACT_SMTP_USER: gmailUser, CONTACT_SMTP_PASSWORD: gmailPassword } = config;
+  /*
+    The Gmail road exists only with the account and its app password — the contact form's two
+    variables (§149) — and only when the caller brought the club's routing. Without either, every
+    message takes Mailgun's road, as before §NNN.
+  */
+  const gmail =
+    routing && gmailUser && gmailPassword
+      ? {
+          adapter: () =>
+            createGmailAdapter({
+              host: config.CONTACT_SMTP_HOST,
+              port: config.CONTACT_SMTP_PORT,
+              user: gmailUser,
+              password: gmailPassword,
+              from: { name: config.EMAIL_FROM_NAME.replace(/["\\]/g, ""), address: gmailUser },
+              ...(replyTo ? { replyTo } : {}),
+            }),
+          ledger: routing.ledger,
+          dailyCap: routing.dailyCap,
+          paceSeconds: routing.paceSeconds,
+          atGmailCap: routing.atGmailCap,
+          overflowToGmail: routing.overflowToGmail,
+          ...(routing.onFailure ? { onFailure: routing.onFailure } : {}),
+        }
+      : undefined;
 
   const sender = createEmailSender({
     appEnv: config.APP_ENV,
@@ -91,8 +142,9 @@ export function createEmailSenderForEnvironment(
         domain: config.MAILGUN_DOMAIN ?? "",
         apiBaseUrl: config.MAILGUN_API_BASE_URL ?? "",
         from: formatSenderIdentity(config),
-        replyTo: overrides.replyTo ?? config.EMAIL_REPLY_TO,
+        replyTo,
       }),
+    ...(gmail ? { gmail } : {}),
   });
 
   return { sender, capture };

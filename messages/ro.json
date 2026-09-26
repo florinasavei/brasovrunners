@@ -899,6 +899,8 @@
       "approveVersionBody": "Textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
       "emailPlanTitle": "Schimbi planul Mailgun?",
       "emailPlanBody": "Cotele, „cât mai putem trimite” și tabelul de costuri se calculează de acum după noul plan.",
+      "emailTransportTitle": "Schimbi pe unde pleacă emailurile?",
+      "emailTransportBody": "De acum, grupurile alese pleacă prin Gmail, în limita și cu pauza de aici; restul prin Mailgun. Emailurile deja trimise rămân cum au fost.",
       "contactRecipientsTitle": "Schimbi cine primește mesajele de contact?",
       "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
       "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
@@ -3186,7 +3188,75 @@
         "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
         "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
-        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant."
+        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant.",
+        "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun."
+      },
+      "transport": {
+        "title": "Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului",
+        "intro": "Mailgun costă după plan. Gmail-ul clubului e gratuit, dar Google blochează un cont personal care trimite mult, în rafale sau automat. Aici alegi, pe grupuri, ce pleacă prin Gmail; restul pleacă prin Mailgun. Pentru Gmail pui mai jos o limită pe zi, o pauză între mesaje și ce se întâmplă la limită.",
+        "aside": {
+          "on": "Gmail: {sent} din {cap} destinatari în ultima zi · {groups} din {total} grupuri prin Gmail",
+          "off": "Gmail nu e configurat aici: totul pleacă prin Mailgun"
+        },
+        "status": {
+          "defer": "Gmail-ul clubului a ajuns la {sent} din {cap} destinatari în ultima zi (socotită de acum înapoi). La limită, mesajele grupurilor Gmail așteaptă până se eliberează loc.",
+          "mailgun": "Gmail-ul clubului a ajuns la {sent} din {cap} destinatari în ultima zi (socotită de acum înapoi). La limită, restul pleacă prin Mailgun."
+        },
+        "unconfigured": "Gmail-ul clubului nu e configurat pe acest mediu (lipsesc contul și parola de aplicație, aceleași ca la formularul de contact), deci toate emailurile pleacă prin Mailgun, orice ai alege mai jos. Alegerea rămâne salvată și se aplică din clipa în care contul e configurat.",
+        "groups": {
+          "links": {
+            "label": "Linkuri de acțiune",
+            "help": "Confirmarea adresei, semnarea declarației, locul oferit de pe lista de așteptare, linkurile de gestionare. Dacă întârzie sau ajung în spam, omul pierde locul. Recomandat: Mailgun."
+          },
+          "confirmations": {
+            "label": "Confirmări și schimbări de stare",
+            "help": "Înscriere confirmată, pe lista de așteptare, anulată, oferta expirată, numărul de concurs, copia semnată a declarației. Recomandat: Mailgun."
+          },
+          "reminders": {
+            "label": "Reamintiri și mulțumiri",
+            "help": "Reamintirea dinainte de start și mulțumirile de după: câte una pentru fiecare alergător, toate la aceeași oră — exact rafala pe care Google o blochează la un cont personal. Recomandat: Mailgun."
+          },
+          "announcements": {
+            "label": "Anunțurile organizatorilor",
+            "help": "Actualizarea sau anularea evenimentului, mesajul organizatorului, „S-au deschis înscrierile”. Rare și trimise cu pauză. Pot pleca prin Gmail după ce nota de confidențialitate aprobată spune că Gmail trimite și mesaje către participanți."
+          },
+          "club": {
+            "label": "Mesajele către club",
+            "help": "Copiile clubului, arhiva declarațiilor, anunțul „Cineva a confirmat”, invitațiile colegilor. Ajung în căsuțele clubului. Recomandat: Gmail."
+          },
+          "newsletter": {
+            "label": "Newsletter",
+            "help": "Încă nu există mesaje în acest grup: newsletterul are meniul lui în backoffice, în lucru. Drumul ales aici se aplică de la primul newsletter. Recomandat: Gmail."
+          }
+        },
+        "messages": "Mesajele din grup: {names}",
+        "options": {
+          "mailgun": "Mailgun",
+          "gmail": "Gmail-ul clubului"
+        },
+        "dailyCap": "Limita Gmail pe zi (destinatari)",
+        "dailyCapHelp": "Cel mult {max}: atât permite Google pe zi unui cont personal, socotind fiecare destinatar, și copiile. Același cont e folosit de QA și de producție, de formularul de contact și de oameni, deci suma limitelor de pe cele două medii trebuie să rămână mult sub {max}.",
+        "pace": "Pauza între două mesaje Gmail (secunde)",
+        "paceHelp": "Între 0 și {max}. Un cont care trimite în rafale arată a robot. Ce nu încape în pauze pleacă la următoarea rulare a cozii.",
+        "atCap": "La limita Gmail",
+        "atCapHelp": "Pentru grupurile care pleacă prin Gmail. „Amână” nu cheltuie nimic din Mailgun: mesajul pleacă singur când cel mai vechi mesaj Gmail iese din ziua socotită.",
+        "atCapOptions": {
+          "defer": "Amână până se eliberează loc (de obicei până mâine)",
+          "mailgun": "Trimite prin Mailgun"
+        },
+        "overflow": "Când Mailgun a terminat mesajele de azi",
+        "overflowOptions": {
+          "yes": "Trimite prin Gmail, în limita lui",
+          "no": "Așteaptă până mâine"
+        },
+        "lastFailure": "Ultima eroare Gmail: {when}, „{error}”. Mesajele de atunci au plecat prin Mailgun sau așteaptă o nouă încercare. Dacă eroarea e „smtp EAUTH”, parola de aplicație a contului trebuie refăcută.",
+        "privacy": "Nota de confidențialitate aprobată spune că mesajele către participanți pleacă prin Mailgun, iar Gmail este doar căsuța clubului. Grupurile cu participanți pot trece pe Gmail după ce clubul aprobă o notă care spune asta.",
+        "caveat": "Prin Gmail nu aflăm dacă un mesaj a ricoșat: răspunsul vine ca email în căsuța Gmail și nu apare în coada de emailuri. Expeditorul este adresa Gmail a clubului, cu numele clubului.",
+        "save": "Salvează drumurile",
+        "saving": "Se salvează…",
+        "saved": "Setarea a fost salvată. Următoarele emailuri pleacă pe drumurile alese.",
+        "readOnly": "Setarea o schimbă Administratorul.",
+        "updatedAt": "Setat {when}."
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
@@ -3286,6 +3356,10 @@
           "none": "Copie club: niciuna. Clubul nu primește copii ale emailurilor către participanți.",
           "some": "Copie club: fiecare email de mai sus pleacă și, separat, cu „[Copie club]” în subiect, la {addresses}. Nu și pentru înscrierile de test și nici pentru „Înscrierile s-au deschis”, care nu ține de o înscriere.",
           "link": "Schimbă în „Copiile clubului”"
+        },
+        "road": {
+          "mailgun": "prin Mailgun",
+          "gmail": "prin Gmail"
         }
       },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
@@ -3360,7 +3434,7 @@
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
                 "«Emailuri»: ce primesc participanții, planul Mailgun și «Termene».",
-                "«De făcut»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând.",
+                "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Pagini», «Galerie», «Echipa», «Configurație» și «Ghid» (pagina aceasta)."
               ]
             },
@@ -3508,7 +3582,7 @@
               "steps": [
                 "În editorul de text pune cursorul unde vrei poza.",
                 "Apasă «Imagine» în bara editorului.",
-                "La «Calitate» lasă «Normală (recomandat)».",
+                "La «Calitate» lasă «Medie (recomandat)».",
                 "Apasă «Alege imaginea» și alege fișierul. O poză deja încărcată o iei din «Din galerie».",
                 "Scrie «Ce arată imaginea (text alternativ)», apoi «Gata».",
                 "Apasă «Salvează»."
@@ -3654,18 +3728,6 @@
         {
           "title": "Administrator — evenimente, înscrieri, emailuri",
           "who": "Rol: Administrator sau Superadministrator.",
-          "steps": [
-            "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
-            "Căutarea după nume, fără un eveniment ales, caută în toate evenimentele. „Reînscriere ×2” pe un rând înseamnă că persoana a mai trimis formularul de două ori cu aceeași adresă; în cronologia înscrierii vezi când, în ce stare era și ce email i-am retrimis. Ea află din email că era deja înscrisă — pe ecranul formularului nu scrie nimic, ca să nu poată afla oricine cine e înscris.",
-            "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
-            "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
-            "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
-            "„Sarcini” → „Club”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat. „Sarcini” → „De făcut”: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
-            "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
-            "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
-            "„Sarcini” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
-            "„Sarcini” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
-          ],
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3702,7 +3764,7 @@
               "steps": [
                 "Deschide cardul («Titlu și rezumat» sau «Descrierea evenimentului») și pune cursorul unde vrei poza.",
                 "Apasă «Imagine» în bara editorului.",
-                "La «Calitate» lasă «Normală (recomandat)».",
+                "La «Calitate» lasă «Medie (recomandat)».",
                 "Apasă «Alege imaginea» și alege fișierul. O poză deja încărcată o iei din «Din galerie».",
                 "Scrie «Ce arată imaginea (text alternativ)», apoi «Gata».",
                 "Apasă «Salvează». Ca să înlocuiești o poză: apasă pe ea, «Șterge imaginea», apoi pune-o pe cea nouă."
@@ -3788,7 +3850,7 @@
                 "Întâi plătești planul în contul Mailgun.",
                 "«Emailuri» → «Planul Mailgun și cât mai putem trimite».",
                 "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
-                "Apasă «Salvează planul» și confirmă. Cifrele din «De făcut» și butonul «Trimite acum» se iau după el.",
+                "Apasă «Salvează planul» și confirmă. Cifrele din «Sarcini» și butonul «Trimite acum» se iau după el.",
                 "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul»."
               ]
             },
@@ -3813,14 +3875,14 @@
               "steps": [
                 "O pagină: «Pagini» → «Pagină nouă» (sau pe una existentă) → scrie în ambele limbi → «Salvează». Pe lista paginilor, meniul ⋮ de pe rândul ei → «Publică».",
                 "Un album: «Galerie» → «Album nou» → data, evenimentul, titlul în ambele limbi → «Album nou».",
-                "Pe pagina albumului: «Încarcă fotografii», cu «Calitate» «Normală (recomandat)»; alege o «Copertă».",
+                "Pe pagina albumului: «Încarcă fotografii», cu «Calitate» «Medie (recomandat)»; alege o «Copertă».",
                 "Pe lista albumelor, meniul ⋮ de pe rândul lui → «Publică albumul». Un album fără fotografii nu se publică."
               ]
             },
             {
               "title": "Ce mai are clubul de făcut",
               "steps": [
-                "«De făcut» → tabul «De făcut»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
+                "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
                 "«Costuri»: ce plătește clubul și limitele bazei de date."
               ]
             },
@@ -5189,6 +5251,7 @@
       "moved": "Ordinea a fost schimbată.",
       "pageDeleted": "Pagina a fost ștearsă definitiv.",
       "emailPlan": "Planul Mailgun a fost salvat.",
+      "emailTransport": "Drumurile emailurilor au fost salvate.",
       "contactRecipients": "Destinatarii mesajelor de contact au fost salvați.",
       "clubNotices": "Copiile clubului au fost salvate.",
       "emailCopy": "Textul emailului a fost salvat.",
@@ -5215,7 +5278,7 @@
         "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
       },
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
-      "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "shownContactAddress": "Adresa de contact afișată a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
@@ -5281,8 +5344,7 @@
         "heading": "{club} — verificarea rețelei",
         "site": "Site",
         "browser": "Browser"
-      },
-      "shownContactAddress": "Adresa de contact afișată a fost salvată."
+      }
     }
   }
 }

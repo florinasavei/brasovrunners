@@ -1,7 +1,5 @@
 import { after } from "next/server";
 import { getDb } from "@/db/client";
-import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
-import { replyToInForce } from "@/modules/contact/shown-address";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
 
@@ -32,11 +30,12 @@ export function drainOutboxAfterResponse(): void {
   try {
     after(async () => {
       try {
-        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }] = await Promise.all([
+        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }, { createOutboxSender }] = await Promise.all([
           import("./outbox"),
           import("./render"),
           import("./delivery-timing"),
           import("@/modules/jobs/next-work"),
+          import("./outbox-sender"),
         ]);
         const db = getDb();
 
@@ -61,11 +60,12 @@ export function drainOutboxAfterResponse(): void {
           return;
         }
 
-        // The Reply-To the club chose to show (§NNN), read once per drain.
-        const replyTo = await replyToInForce(db);
-        const { sender } = createEmailSenderForEnvironment(env, { replyTo });
+        // The club's road per group and the Reply-To it chose to show, read once for the batch (§NNN);
+        // Gmail's cap and pace from the database before each Gmail message.
+        const now = new Date();
+        const { sender, route, roads, replyTo } = await createOutboxSender(db);
         // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-        await processOutboxBatch(db, { sender, render: createOutboxRenderer({ replyTo }), now: new Date() });
+        await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer({ replyTo }), now });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job

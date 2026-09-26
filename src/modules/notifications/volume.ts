@@ -7,6 +7,8 @@ import { readClubNotices } from "./club-notices";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
+import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
+import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
 
 /**
  * How much email today is going to cost, before the day proves it (AGENTS.md §16, §19).
@@ -115,9 +117,12 @@ export type EmailVolumeToday = {
   queuedMessages: number;
   /** Rows not yet delivered — pending or mid-flight — whatever day they were queued. */
   waitingMessages: number;
-  /** Outbox rows actually transmitted today. What the allowance has actually paid for. */
+  /**
+   * Outbox rows Mailgun transmitted today. What the allowance has actually paid for — the rows the
+   * club's Gmail carried (§NNN) are not in it: they cost Mailgun nothing.
+   */
   sentMessages: number;
-  /** Transmitted since the first of the month (UTC): what a monthly plan counts against. */
+  /** Mailgun's since the first of the month (UTC): what a monthly plan counts against. */
   sentThisMonth: number;
   /** The plan the club says it is on (§100), and its name for the pages. */
   plan: EmailPlanId;
@@ -132,9 +137,30 @@ export type EmailVolumeToday = {
   archiveConfigured: boolean;
   /** How many club addresses receive a hidden copy of every participant message (2026-09-22). */
   participantBccCount: number;
-  /** `messagesPerCompletedRegistration` of the two above: what one completed registration costs today. */
+  /**
+   * What one completed registration costs **Mailgun** today: `messagesPerCompletedRegistration` of
+   * the two above, less the groups the club sends through its Gmail (§NNN). The allowance is
+   * Mailgun's, so this is the figure every "how many more fit" divides by.
+   */
   messagesPerRegistration: number;
+  /** Every message one completed registration causes, whichever road it takes. */
+  allMessagesPerRegistration: number;
+  /** Whether the club's Gmail is configured on this deployment, so any group can take its road (§NNN). */
+  gmailConfigured: boolean;
+  /** Messages the club's Gmail carried in the last 24 hours, and the club's cap on them (§NNN). */
+  gmailSentLastDay: number;
+  gmailDailyCap: number;
+  /** The last time Gmail refused or broke (§NNN): said on the panel, so a revoked password is seen. */
+  gmailLastFailure: GmailFailure | null;
+  /** Whether that failure is inside the last 24 hours: a warning then, history after. */
+  gmailFailedLastDay: boolean;
 };
+
+/**
+ * A row Mailgun carried: every sent row but the club's Gmail's (§NNN). A null `transport` is a row
+ * sent before the column existed, and Mailgun carried all of those.
+ */
+const carriedByMailgun = sql`(${emailOutbox.transport} IS NULL OR ${emailOutbox.transport} <> 'gmail')`;
 
 /** The first of the month, UTC, matching the day boundary below. */
 function startOfUtcMonth(now: Date): Date {
@@ -174,7 +200,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const [sent] = await db
     .select({ value: count() })
     .from(emailOutbox)
-    .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`));
+    .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`, carriedByMailgun));
 
   const [waiting] = await db
     .select({ value: count() })
@@ -184,7 +210,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const [sentMonth] = await db
     .select({ value: count() })
     .from(emailOutbox)
-    .where(and(gte(emailOutbox.sentAt, startOfUtcMonth(now)), sql`${emailOutbox.sentAt} IS NOT NULL`));
+    .where(and(gte(emailOutbox.sentAt, startOfUtcMonth(now)), sql`${emailOutbox.sentAt} IS NOT NULL`, carriedByMailgun));
 
   const realRegistrations = registrationCounts?.real ?? 0;
   const testRegistrations = registrationCounts?.test ?? 0;
@@ -198,7 +224,17 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const notices = await readClubNotices(db);
   const archiveConfigured = declarationArchiveIsConfigured(notices, env.DECLARATIONS_ARCHIVE_TO);
   const participantBccCount = participantMessageBcc(notices).length;
-  const messagesPerRegistration = messagesPerCompletedRegistration({ archiveConfigured, participantBccCount });
+  const allMessagesPerRegistration = messagesPerCompletedRegistration({ archiveConfigured, participantBccCount });
+  // What of it Mailgun carries, by the club's roads (§NNN), and Gmail's own last day beside it.
+  const [transport, gmail, gmailLastFailure] = await Promise.all([
+    readEmailTransport(db),
+    readGmailUsage(db, now),
+    readGmailLastFailure(db),
+  ]);
+  const messagesPerRegistration = mailgunMessagesPerCompletedRegistration(transport, gmail.configured, {
+    archiveConfigured,
+    participantBccCount,
+  });
   const ceilings = emailCeilings(setting);
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
 
@@ -209,6 +245,12 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     archiveConfigured,
     participantBccCount,
     messagesPerRegistration,
+    allMessagesPerRegistration,
+    gmailConfigured: gmail.configured,
+    gmailSentLastDay: gmail.sentLastDay,
+    gmailDailyCap: transport.gmailDailyCap,
+    gmailLastFailure,
+    gmailFailedLastDay: gmailLastFailure !== null && now.getTime() - gmailLastFailure.at.getTime() < GMAIL_WINDOW_MS,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     sentMessages,
