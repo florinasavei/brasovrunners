@@ -43,7 +43,6 @@ const EDITOR_ORDER = [
   "<WhenBox",
   "<PlaceBox",
   "<CourseBox",
-  "<CostBox",
   "<RegistrationBox",
   "<CoHostsBox",
   "<AutomaticSection",
@@ -76,7 +75,9 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       expect(source, page).toMatch(/<KindBox \{\.\.\.box\}[^>]*\/>/);
       expect(source, page).not.toContain("</KindBox>");
       expect(source, page).not.toContain("<StatusBox");
-      for (const card of ["<CourseBox", "<CostBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
+      // The cost is a card inside the first box since §NNN, drawn by the box, never by the page.
+      expect(source, page).not.toContain("<CostBox");
+      for (const card of ["<CourseBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
     }
@@ -146,7 +147,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     }
     // The first box holds the status again (§448) and wears the mark for it; the course, the
     // links, the partners, the promotion, the film and the list reach nobody.
-    for (const box of ["<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
+    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }

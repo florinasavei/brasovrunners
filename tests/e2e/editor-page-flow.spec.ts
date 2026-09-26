@@ -27,14 +27,15 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    // The map: fourteen cards and the share links, in the page's order, the share links named as automatic.
+    // The map: thirteen cards and the share links (the cost is inside card 1, §NNN), in the page's order, the share links named as automatic.
     const map = page.getByTestId("section-map");
     await expect(map).toBeVisible();
-    await expect(map.getByRole("listitem")).toHaveCount(15);
-    await expect(map.getByRole("link")).toHaveCount(14);
+    await expect(map.getByRole("listitem")).toHaveCount(14);
+    await expect(map.getByRole("link")).toHaveCount(13);
+    await expect(map.locator('[data-section="cost"]')).toHaveCount(0);
     await expect(map.locator('[data-section="share"]')).toHaveAttribute("aria-label", "Distribuie — automat, fără card");
     await expect(chip(page, /^1 · Tipul — apare pe pagină$/)).toHaveAttribute("href", "#box-kind");
-    await expect(chip(page, /^14 · Lista participanților — gol, nu apare pe pagină$/)).toHaveAttribute("href", "#box-start-list");
+    await expect(chip(page, /^13 · Lista participanților — gol, nu apare pe pagină$/)).toHaveAttribute("href", "#box-start-list");
     // A thumb's target, every one of them.
     for (const link of await map.getByRole("link").all()) {
       expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -44,15 +45,15 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.getByRole("heading", { name: /^4 · Data și ora — apare pe pagină/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^3 · Descrierea evenimentului — gol, nu apare pe pagină/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^Starea evenimentului/ })).toBeVisible();
-    // The cost is a card of its own, where the page draws its row: a new event starts free (§398).
-    await expect(chip(page, /^7 · Costul — apare pe pagină$/)).toHaveAttribute("href", "#box-cost");
-    await expect(page.getByRole("heading", { name: /^7 · Cost — apare pe pagină/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /^8 · Participare și înscrieri — gol, nu apare pe pagină/ })).toBeVisible();
+    // The cost is a plain card inside card 1 since §NNN: no number, no chip; the cards after it renumber.
+    await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: /^\d+ · Cost/ })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /^7 · Participare și înscrieri — gol, nu apare pe pagină/ })).toBeVisible();
 
     // A chip opens its card (§336): shut on arrival, open after the press, and the address names it.
     const links = editorBox(page, "Linkuri și fișiere");
     await expect(links).not.toHaveAttribute("open", "");
-    await chip(page, /^10 · Linkuri și fișiere/).click();
+    await chip(page, /^9 · Linkuri și fișiere/).click();
     await expect(links).toHaveAttribute("open", "");
     await expect(page).toHaveURL(/#box-links$/);
 
@@ -94,10 +95,10 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await hydrated(page);
 
     // The same map, now from what is saved.
-    await expect(page.getByTestId("section-map").getByRole("link")).toHaveCount(14);
+    await expect(page.getByTestId("section-map").getByRole("link")).toHaveCount(13);
     await expect(chip(page, /^2 · Titlul — apare pe pagină/)).toBeVisible();
     await expect(chip(page, /^5 · Unde — apare pe pagină/)).toBeVisible();
-    await expect(chip(page, /^12 · Regulamentul — gol, nu apare pe pagină/)).toBeVisible();
+    await expect(chip(page, /^11 · Regulamentul — gol, nu apare pe pagină/)).toBeVisible();
     await expect(page.getByRole("heading", { name: /^2 · Titlu și rezumat — apare pe pagină/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^6 · Traseul — gol, nu apare pe pagină/ })).toBeVisible();
 
@@ -160,11 +161,9 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     const order = await page.locator("details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
     expect(order.indexOf("box-rules")).toBeLessThan(order.indexOf("box-video"));
     expect(order.indexOf("box-video")).toBeLessThan(order.indexOf("box-start-list"));
-    // The cost between the course and the registration, as the page draws its row.
-    expect(order.indexOf("box-course")).toBeLessThan(order.indexOf("box-cost"));
-    expect(order.indexOf("box-cost")).toBeLessThan(order.indexOf("box-registration"));
-    // The status is a card inside the first box since §448, the declaration one inside the rules.
+    // The status (§448) and the cost (§NNN) are cards inside the first box, the declaration one inside the rules.
     await expect(page.locator("#box-kind #box-status")).toHaveCount(1);
+    await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.locator("#box-rules #box-declaration")).toHaveCount(1);
   });
 });

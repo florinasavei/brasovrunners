@@ -167,10 +167,15 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
 }
 
 describe("§448 the first box holds the type and the status, and its line says both", () => {
-  it("holds the status as a named card inside it — and neither the course nor the links", async () => {
+  it("holds the status and the cost as named cards inside it — and neither the course nor the links (§NNN)", async () => {
     const { kind } = await boxes(EVENT);
-    expect(namedFolds(kind)).toEqual(["box-kind", "box-status"]);
+    expect(namedFolds(kind)).toEqual(["box-kind", "box-status", "box-cost"]);
     expect(foldsAround(kind, "box-status")).toEqual(["box-kind"]);
+    expect(foldsAround(kind, "box-cost")).toEqual(["box-kind"]);
+    expect(kind).toContain('name="event.costType"');
+    // A plain «Cost» card, never a page-numbered one (§NNN).
+    expect(kind).toMatch(/<h3[^>]*>Cost<span/);
+    expect(kind).not.toMatch(/\d+ · Cost/);
     for (const id of ["box-course", "box-links"]) expect(kind).not.toContain(`id="${id}"`);
     expect(isOpen(foldTags(kind)[0])).toBe(false);
     expect(kind).toMatch(/<h3[^>]*>Starea evenimentului<span[^>]*>Programat<\/span>/);
@@ -180,11 +185,13 @@ describe("§448 the first box holds the type and the status, and its line says b
     expect(kind).toContain("Ce înseamnă fiecare tip?");
   });
 
-  it("says the type and the status on its closed line, in both catalogues", async () => {
-    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>Ce fel de eveniment<span[^>]*>Alergare de grup · Programat<\/span>/);
+  it("says the type, the status and the cost on its closed line, in both catalogues (§NNN)", async () => {
+    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat<\/span>/);
     const cancelled = { ...EVENT, type: "RACE", eventStatus: "CANCELLED" } as unknown as EditableEvent;
     expect(summaryOf((await boxes(cancelled)).kind)).toContain("Concurs · Anulat");
-    expect(summaryOf((await boxes(EVENT, { locale: "en" })).kind)).toMatch(/<h2[^>]*>What kind of event<span[^>]*>Group run · Programat<\/span>/);
+    const paid = { ...EVENT, costType: "PAID", costAmount: "50 lei" } as unknown as EditableEvent;
+    expect(summaryOf((await boxes(paid)).kind)).toContain("Alergare de grup · Programat · Cu taxă, 50 lei");
+    expect(summaryOf((await boxes(EVENT, { locale: "en" })).kind)).toMatch(/<h2[^>]*>What kind of event<span[^>]*>Group run · Programat · [^<]+<\/span>/);
   });
 
   it("keeps the course and the links as closed level-2 boxes, with the ids and lines they always had", async () => {
