@@ -22,6 +22,7 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CLUB_NAME } from "@/theme/brand";
 import { deletePageAction, movePageAction, transitionPageAction } from "../actions";
+import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -166,7 +167,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                   explain about an arrow that would move the first page above itself, and a
                   control that never does anything is worse than one that is not there. */}
               {index > 0 && (
-                <Box component="form" action={movePageAction}>
+                <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="pageId" value={row.id} />
                   <input type="hidden" name="direction" value="up" />
@@ -179,7 +180,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                 </Box>
               )}
               {index < rows.length - 1 && (
-                <Box component="form" action={movePageAction}>
+                <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="pageId" value={row.id} />
                   <input type="hidden" name="direction" value="down" />

@@ -14,8 +14,8 @@
  *   and nobody should need them to find their own country.
  * - **The start of any word first.** "ger" puts Germania before Algeria; then any other place in
  *   the name, so "land" still finds "Olanda" and "Finlanda".
- * - **The English name as well**, where the server sends it (`altLabel`): "germany" on the
- *   Romanian page finds Germania.
+ * - **The English name as well** (`altLabel`, named in the browser by the picker): "germany" on
+ *   the Romanian page finds Germania.
  * - **The ISO code, typed whole**, and a few everyday aliases: "GB", "US", "MD", "UK".
  * - **The dialling code, for the telephone.** "+40", "40" or "0040" finds Romania; a prefix of
  *   the digits narrows as it is typed ("+3" → every +3x).
@@ -31,7 +31,7 @@ export type SearchableCountry = {
   /** The E.164 country code without its `+`, where the picker is a telephone prefix. */
   dialingCode?: string;
   /**
-   * The country's English name, sent by the server beside the reader's own: "germany" or
+   * The country's English name beside the reader's own, for the search only: "germany" or
    * "spain" typed on the Romanian page still finds Germania and Spania.
    */
   altLabel?: string;

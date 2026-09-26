@@ -23,7 +23,7 @@ test.describe("§265 the configuration panels", () => {
     // The first panel, from a bare URL: the checklist, and no cost table.
     await page.goto("/ro/admin/tasks");
     await expect(main.getByRole("heading", { name: "Cât costă" })).toHaveCount(0);
-    await expect(main.getByRole("navigation").getByRole("link", { name: "De făcut" })).toHaveAttribute("aria-current", "page");
+    await expect(main.getByRole("navigation").getByRole("link", { name: "Club", exact: true })).toHaveAttribute("aria-current", "page");
 
     // The switch, one press away rather than seven hundred lines down.
     await main.getByRole("link", { name: "Anti-robot" }).click();
@@ -38,7 +38,7 @@ test.describe("§265 the configuration panels", () => {
 
     // A panel nobody offered reads as the first one, never as an empty screen.
     await page.goto("/ro/admin/tasks?panel=nonsense");
-    await expect(main.getByRole("navigation").getByRole("link", { name: "De făcut" })).toHaveAttribute("aria-current", "page");
+    await expect(main.getByRole("navigation").getByRole("link", { name: "Club", exact: true })).toHaveAttribute("aria-current", "page");
   });
 
   test("divides the system screen into status, general and email", async ({ page }) => {
@@ -84,7 +84,7 @@ test.describe("§360 the sub-tabs on a phone", () => {
     const main = page.locator("#main");
 
     const rows = [
-      { url: "/ro/admin/tasks", nav: "Ce mai este de făcut", current: "De făcut" },
+      { url: "/ro/admin/tasks", nav: "Ce mai este de făcut", current: "Club" },
       { url: "/ro/devs?panel=general", nav: "Configurația acestui mediu", current: "General" },
       { url: "/ro/admin/gallery/pictures", nav: "Galerie foto", current: "Imagini" },
     ];

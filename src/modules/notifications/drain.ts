@@ -1,6 +1,5 @@
 import { after } from "next/server";
 import { getDb } from "@/db/client";
-import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
 
@@ -22,20 +21,24 @@ import { env } from "@/shared/config/env";
  * (`FOR UPDATE SKIP LOCKED` in `claimOutboxBatch`).
  *
  * Silent outside a request (the tests call `enqueueEmail` directly) and in `test`, where a
- * drain would send through the fake adapter behind a test's back. The outbox and renderer are
- * imported inside the callback: `enqueueEmail` calls this, so a static import here would be a
- * cycle.
+ * drain would send through the fake adapter behind a test's back — except on the end-to-end
+ * suite's own server (`E2E_DRAIN_OUTBOX`, set by `playwright.config.ts` alone): CI runs it under
+ * `test`, and a spec that reads a sent message where the server captured it (`/devs` → «Emailuri»)
+ * or waits for one to leave the outbox found nothing there, while the same spec passed on a
+ * laptop, where `local` drains. The outbox and renderer are imported inside the callback:
+ * `enqueueEmail` calls this, so a static import here would be a cycle.
  */
 export function drainOutboxAfterResponse(): void {
-  if (env.APP_ENV === "test") return;
+  if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
   try {
     after(async () => {
       try {
-        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }] = await Promise.all([
+        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }, { createOutboxSender }] = await Promise.all([
           import("./outbox"),
           import("./render"),
           import("./delivery-timing"),
           import("@/modules/jobs/next-work"),
+          import("./outbox-sender"),
         ]);
         const db = getDb();
 
@@ -60,9 +63,12 @@ export function drainOutboxAfterResponse(): void {
           return;
         }
 
-        const { sender } = createEmailSenderForEnvironment(env);
+        // The club's road per group and the Reply-To it chose to show, read once for the batch (§442);
+        // Gmail's cap and pace from the database before each Gmail message.
+        const now = new Date();
+        const { sender, route, roads, replyTo } = await createOutboxSender(db);
         // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-        await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now: new Date() });
+        await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer({ replyTo }), now });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job

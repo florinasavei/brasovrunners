@@ -125,6 +125,10 @@ export async function updateEmailCopy<T extends Record<string, unknown>>(
   if (input.messageType === "ORGANIZER_MESSAGE") {
     throw new DomainError("VALIDATION_ERROR", "the organizer's message is written per send, on the event's page, not here");
   }
+  // So is the newsletter (§445), in its own composer on this page.
+  if (input.messageType === "NEWSLETTER") {
+    throw new DomainError("VALIDATION_ERROR", "the newsletter is written per send, in its composer, not here");
+  }
 
   const key = emailCopyKey(input.messageType, input.locale);
   const before = await readEmailCopy(db);

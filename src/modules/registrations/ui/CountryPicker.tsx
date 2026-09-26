@@ -5,14 +5,21 @@ import Box from "@mui/material/Box";
 import Popover from "@mui/material/Popover";
 import type { PopperProps } from "@mui/material/Popper";
 import TextField from "@mui/material/TextField";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import Flag from "@/shared/ui/Flag";
 import { OPTION_GLYPH_SX, OPTION_LABEL_SX } from "@/shared/ui/select-option";
 import { type SearchableCountry, searchCountries } from "../country-search";
 
 /**
- * The pieces both searchable country pickers share (§NNN): the words, the row, and the list with
- * a search box that the telephone prefix opens in a popover.
+ * The one searchable country picker (§NNN) both country fields open: the telephone prefix
+ * (`mode="dialling"`, each row with its `+40`, digits searched) and the citizenship
+ * (`mode="citizenship"`, names only).
+ *
+ * Neither field posts through it. Each keeps a native `<select>` that the server draws, the form
+ * posts and a reader without JavaScript uses; once the field's island runs, a button lies over
+ * that select and opens this popover, and a choice is written back to the select with a real
+ * `change` event (`chooseInSelect`). So what is posted, the draft a refusal brings back (§142)
+ * and the error summary's link are exactly what they were.
  *
  * The words come from the server as plain strings, like every other label these islands draw —
  * a public page ships no catalogue to the browser (§353).
@@ -22,15 +29,15 @@ export type CountrySearchWords = {
   search: string;
   /** Said in the list when nothing matches. */
   noMatch: string;
-  /** The clear button's accessible name (citizenship only — a prefix is never empty). */
-  clear: string;
   /** The open and close buttons' accessible names. */
   open: string;
   close: string;
 };
 
+export type CountryPickerMode = "dialling" | "citizenship";
+
 /** One country in a list: flag, name and, for a telephone, its code — "🇷🇴 România +40". */
-export function CountryOptionRow({ country }: { country: SearchableCountry }) {
+function CountryOptionRow({ country }: { country: SearchableCountry }) {
   return (
     <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%", minWidth: 0 }}>
       <Box component="span" sx={OPTION_GLYPH_SX}>
@@ -50,6 +57,36 @@ export function CountryOptionRow({ country }: { country: SearchableCountry }) {
 }
 
 /**
+ * Writes a choice into the native select the field posts, and announces it with a bubbling
+ * `change` event, so the select's own React `onChange` runs exactly as if its list had been used.
+ */
+export function chooseInSelect(select: HTMLSelectElement | null, code: string) {
+  if (!select || select.value === code) return;
+  select.value = code;
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+/**
+ * The English name of every country, for the search only: "germany" on the Romanian page finds
+ * Germania. Named here, in the browser, once the picker opens — never drawn, so the two runtimes'
+ * ICU differences (§324) cannot touch hydration, and the page ships no second list of names.
+ */
+function withEnglishNames(countries: readonly SearchableCountry[], mode: CountryPickerMode): SearchableCountry[] {
+  let english: Intl.DisplayNames | null = null;
+  try {
+    english = new Intl.DisplayNames(["en"], { type: "region" });
+  } catch {
+    english = null;
+  }
+  return countries.map((country) => ({
+    code: country.code,
+    label: country.label,
+    altLabel: english?.of(country.code) ?? undefined,
+    dialingCode: mode === "dialling" ? country.dialingCode : undefined,
+  }));
+}
+
+/**
  * The list drawn in place inside the popover rather than floated over it: the popover is already
  * the floating surface, and a second one anchored to its search box would cover the page.
  *
@@ -63,12 +100,27 @@ function InlineList(props: PopperProps) {
 /** 44 pixels a row: a thumb picks a country out of a list of them (BR-REQ-041-01 criterion 6). */
 const OPTION_SX = { minHeight: 44 } as const;
 
+/** The overlay button's look: the whole field's box, transparent, one 44-pixel-plus target. */
+export const PICKER_BUTTON_SX = {
+  position: "absolute",
+  inset: 0,
+  zIndex: 1,
+  width: "100%",
+  height: "100%",
+  m: 0,
+  p: 0,
+  border: 0,
+  bgcolor: "transparent",
+  cursor: "pointer",
+} as const;
+
 /**
- * The telephone prefix's search (§NNN): a popover under the flag, the search box focused, the
- * list under it filtering as letters or digits are typed. Choosing a country hands its code back
- * and the field moves on to the digits; Escape or a tap outside leaves the country as it was.
+ * A popover under the field, the search box focused, the list under it filtering as letters (or,
+ * for a telephone, digits) are typed. Choosing a country hands its code back; Escape or a tap
+ * outside leaves the country as it was.
  */
-export function CountrySearchPopover({
+export function CountryPicker({
+  mode,
   open,
   anchorEl,
   countries,
@@ -79,12 +131,13 @@ export function CountrySearchPopover({
   onDismiss,
   onExited,
 }: {
+  mode: CountryPickerMode;
   open: boolean;
-  /** The flag's button: the popover opens under it. */
+  /** The field's button: the popover opens under it. */
   anchorEl: HTMLElement;
   countries: readonly SearchableCountry[];
   value: string;
-  /** The picker's accessible name — the field's own "Țara". */
+  /** The picker's accessible name — the field's own "Țara" or "Cetățenie". */
   label: string;
   words: CountrySearchWords;
   onChoose: (code: string) => void;
@@ -93,7 +146,8 @@ export function CountrySearchPopover({
   onExited: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const selected = countries.find((country) => country.code === value) ?? null;
+  const options = useMemo(() => withEnglishNames(countries, mode), [countries, mode]);
+  const selected = options.find((country) => country.code === value) ?? null;
   return (
     <Popover
       open={open}
@@ -101,8 +155,7 @@ export function CountrySearchPopover({
       onClose={onDismiss}
       anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       transformOrigin={{ vertical: "top", horizontal: "left" }}
-      // The field puts focus where it belongs once the popover is gone: on the digits after a
-      // choice, back on the flag after a dismissal.
+      // The field puts focus where it belongs once the popover is gone.
       disableRestoreFocus
       slotProps={{
         paper: { sx: { width: "min(22rem, calc(100vw - 32px))" } },
@@ -120,9 +173,9 @@ export function CountrySearchPopover({
         disablePortal
         disableClearable
         autoHighlight
-        options={countries as SearchableCountry[]}
-        // Always a country: a prefix is never empty, and the list holds the one the field shows.
-        value={selected ?? countries[0]}
+        options={options}
+        // Always a country: both fields always hold one, and the list holds the one shown.
+        value={selected ?? options[0]}
         inputValue={query}
         onInputChange={(_event, next, reason) => {
           if (reason === "input" || reason === "clear") setQuery(next);
@@ -133,13 +186,12 @@ export function CountrySearchPopover({
         onClose={(_event, reason) => {
           if (reason === "escape") onDismiss();
         }}
-        filterOptions={(options, state) => searchCountries(options, state.inputValue)}
+        filterOptions={(list, state) => searchCountries(list, state.inputValue)}
         getOptionLabel={(country) => country.label}
         isOptionEqualToValue={(option, chosen) => option.code === chosen.code}
         noOptionsText={words.noMatch}
         openText={words.open}
         closeText={words.close}
-        clearText={words.clear}
         renderOption={(props, country) => {
           const { key, ...rest } = props;
           return (

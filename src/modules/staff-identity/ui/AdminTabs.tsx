@@ -15,6 +15,7 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import GroupIcon from "@mui/icons-material/Group";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import NewspaperIcon from "@mui/icons-material/Newspaper";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import SettingsIcon from "@mui/icons-material/Settings";
 
@@ -30,7 +31,7 @@ export type AdminTab = {
 
 /**
  * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
- * MUI ships — imported one file each, so the bundle carries eleven glyphs and not the set.
+ * MUI ships — imported one file each, so the bundle carries twelve glyphs and not the set.
  *
  * Every section in `AdminSection` needs a row here, and `emails` had none: a missing key is
  * not a type error, because the record is keyed by `string`, so the tab simply rendered as the
@@ -49,6 +50,8 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   tasks: ChecklistIcon,
   legal: GavelIcon,
   emails: ForwardToInboxIcon,
+  // The club's news to the people who asked for it (§445): a paper, not an envelope — «Emailuri» is the envelope.
+  newsletter: NewspaperIcon,
   staff: GroupIcon,
   devs: SettingsIcon,
 };
@@ -89,12 +92,20 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
    * into view once, when it mounts; with nine tabs and a slow phone the fonts and the
    * hydration land later than that, and "Ziua cursei" sat off the right edge. This does it
    * again after hydration, and centres it, so a volunteer sees where they are.
+   *
+   * Only when the tab is not already wholly in view. Centring one that is moved the whole bar
+   * after hydration — on a desktop too, once the Administrator's eleven tabs (§445's «Newsletter»)
+   * overflowed it by a hundred pixels — and a click that landed mid-hydration pressed on one tab
+   * and released on its neighbour, which navigates nowhere.
    */
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const scroller = root.current?.querySelector<HTMLElement>(".MuiTabs-scroller");
     const selected = root.current?.querySelector<HTMLElement>('[aria-selected="true"]');
     if (!scroller || !selected) return;
+    const bar = scroller.getBoundingClientRect();
+    const tab = selected.getBoundingClientRect();
+    if (tab.left >= bar.left - 1 && tab.right <= bar.right + 1) return;
     // The scroller's own `scrollLeft`, never `scrollIntoView`: that also scrolls the *page*
     // to bring the bar into view, which on a phone yanks the viewport away from whatever the
     // volunteer was about to tap (the e2e walk-in test caught it on 2026-09-18).

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { mediaAssets } from "@/db/schema/gallery";
 import type { Database } from "@/db/types";
 import { type ImageEncoding, type ProcessedImage, processUploadedImage, storedBytes } from "./images";
@@ -20,10 +20,14 @@ export type StoredImageFacts = {
   bytes: number;
   files: number;
   totalBytes: number;
+  /** The widest rung below the master (§437): what a laptop at 2× loads; `null` without one. */
+  topRung: { width: number; bytes: number } | null;
 };
 
 export function storedImageFacts(processed: ProcessedImage): StoredImageFacts {
+  const top = processed.rungs.at(-1);
   return {
+    topRung: top ? { width: top.width, bytes: top.body.byteLength } : null,
     width: processed.width,
     height: processed.height,
     quality: processed.quality,
@@ -104,4 +108,19 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
     height: processed.height,
     stored: storedImageFacts(processed),
   };
+}
+
+/**
+ * The small picture of the newest stored asset, for the network check (§436): a real object on the
+ * host pictures are read from, so a browser that can load it can load the gallery. `null` when no
+ * picture is stored yet, or the store is not configured here.
+ */
+export async function newestThumbnailUrl<T extends Record<string, unknown>>(db: Database<T>): Promise<string | null> {
+  const [row] = await db.select({ keyPrefix: mediaAssets.keyPrefix }).from(mediaAssets).orderBy(desc(mediaAssets.createdAt)).limit(1);
+  if (!row) return null;
+  try {
+    return getStorage().publicUrl(objectKey(row.keyPrefix, "thumb"));
+  } catch {
+    return null;
+  }
 }

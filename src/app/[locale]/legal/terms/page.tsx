@@ -12,6 +12,7 @@ import { legalPageMetadata, readLegalDocumentsInForce } from "@/modules/legal-do
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
+import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -76,7 +77,7 @@ export default async function TermsPage({ params }: Props) {
             })}
           </Typography>
           {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text itself. */}
-          <LegalDocumentBody body={document.body} values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale) }} emphasizeFilled={false} />
+          <LegalDocumentBody body={document.body} values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale), ...newsletterMergeValues(locale) }} emphasizeFilled={false} />
         </>
       ) : (
         <>

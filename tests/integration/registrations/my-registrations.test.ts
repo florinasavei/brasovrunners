@@ -133,6 +133,8 @@ describe("BR-REQ-036-04 my registrations", () => {
         nextAttemptAt: null,
         lockedAt: NOW,
         providerMessageId: null,
+        transport: null,
+        recipientCount: null,
         lastError: null,
         createdAt: NOW,
         sentAt: null,

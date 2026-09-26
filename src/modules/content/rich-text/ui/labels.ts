@@ -1,5 +1,5 @@
 import type { getTranslations } from "next-intl/server";
-import { HIGH_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
+import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import type RichTextEditor from "./RichTextEditor";
 
 type Translate = Awaited<ReturnType<typeof getTranslations<"Admin.richText">>>;
@@ -72,19 +72,37 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageUploading: rt("imageUploading"),
     imageFailed: rt("imageFailed"),
     // The quality beside the upload and what the picture became (§414).
+    // Four levels since §437.
     imageQuality: {
       legend: rt("imageQualityLegend"),
+      low: rt("imageQualityLow"),
       normal: rt("imageQualityNormal"),
       high: rt("imageQualityHigh"),
-      help: rt("imageQualityHelp", { normalMax: String(WEB_MAX), highMax: String(HIGH_WEB_MAX) }),
+      original: rt("imageQualityOriginal"),
+      help: rt("imageQualityHelp", {
+        lowMax: String(LOW_WEB_MAX),
+        normalMax: String(WEB_MAX),
+        highMax: String(HIGH_WEB_MAX),
+        originalMax: String(ORIGINAL_WEB_MAX),
+      }),
     },
     imageChoose: rt("imageChoose"),
+    // Raw, with their placeholders: the island says the chosen file's pixels and weight (§437).
+    imageChosen: {
+      chosen: rt.raw("imageChosen") as string,
+      sent: rt.raw("imageSent") as string,
+      lighter: rt.raw("imageLighter") as string,
+    },
+    imagePixels: rt.raw("imagePixels") as string,
     // Raw, with its six placeholders: the island substitutes the facts itself.
     imageStored: {
       template: rt.raw("imageStored") as string,
+      topRung: rt.raw("imageStoredTopRung") as string,
+      low: rt("imageStoredLow"),
       normal: rt("imageStoredNormal"),
       high: rt("imageStoredHigh"),
-      nearLossless: rt("imageStoredNearLossless"),
+      original: rt("imageStoredOriginal"),
+      nearLossless: rt.raw("imageStoredNearLossless") as string,
     },
     imageAlt: rt("imageAlt"),
     imageAltHelp: rt("imageAltHelp"),

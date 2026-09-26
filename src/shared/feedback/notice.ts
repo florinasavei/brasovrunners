@@ -78,6 +78,8 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   // A press of the older pictures' button (§430): how many got their ladder, and how many are left.
   picturesLaddered: { count: "count", values: { left: "left" } },
   picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
+  // The desk's spares a print reserved (§444): how many, and the first and last number.
+  sparesReserved: { count: "count", values: { from: "from", to: "to" } },
 };
 
 /**
@@ -111,7 +113,16 @@ const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]
 const PROVIDER_FIELDS = ["invite", "account"] as const;
 
 /** Sentences that say nothing happened, however the action got there: an `info`, never a green tick. */
-const NOTHING_HAPPENED: ReadonlySet<string> = new Set(["interestNotFound", "participantMessageDuplicate", "neonLimitsSame"]);
+const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
+  "interestNotFound",
+  "participantMessageDuplicate",
+  "neonLimitsSame",
+  // «Salvează» on a club to-do line whose words, owner and day were already these (§438).
+  "clubTodoUnchanged",
+  // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
+  "newsletterDuplicate",
+  "newsletterNotFound",
+]);
 
 /**
  * The notice a redirect's outcome carries, or none: `saved` names the sentence and the first

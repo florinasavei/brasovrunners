@@ -16,7 +16,9 @@ import {
   StaffEventScope,
   StaffEventSelect,
   StaffGuardian,
+  StaffHandedBibField,
 } from "@/modules/registrations/ui/StaffEventBirthDate";
+import { spareStates } from "@/modules/registrations/bibs";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -89,15 +91,16 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
-  const phoneAltNames = phoneCountryLabels("en");
   // The prefix's search (§NNN), the same words as the public form.
   const countrySearchWords = {
     search: rt("countrySearch.search"),
     noMatch: rt("countrySearch.noMatch"),
-    clear: rt("countrySearch.clear"),
     open: rt("countrySearch.open"),
     close: rt("countrySearch.close"),
   };
+  // The next free desk spare per event (§444), suggested only to the desk — a person on the
+  // telephone, entered from the list, is not standing at a table with a bib.
+  const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
 
   return (
     <Stack spacing={3}>
@@ -141,6 +144,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             email: t("registrations.participantEmail"),
             participantLocale: t("registrations.participantLocale"),
             relayedByParticipantRequest: t("registrations.relayConfirmation"),
+            fastTrack: t("desk.fastTrack"),
+            bibNumber: t("desk.handedBib"),
           })}
           // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
           confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
@@ -190,7 +195,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             />
           </StaffGuardian>
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
-          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} countryAltNames={phoneAltNames} searchWords={countrySearchWords} />
+          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} searchWords={countrySearchWords} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
@@ -198,7 +203,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             countryLabel={rt("phoneCountry")}
             countryOrder={phoneOrder}
             countryNames={phoneNames}
-            countryAltNames={phoneAltNames}
+           
             searchWords={countrySearchWords}
           />
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
@@ -260,6 +265,16 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary">
                 {t("desk.fastTrackHelp")}
               </Typography>
+              {/* The bib handed with the paper (§444): the next desk spare, suggested from the desk. */}
+              <Box sx={{ mt: 1.5 }}>
+                <StaffHandedBibField
+                  label={t("desk.handedBib")}
+                  spareHelp={`${t("desk.handedBibHelp")} ${t("desk.handedBibFastTrackOnly")}`}
+                  noSpareHelp={`${t("desk.handedBibNoSpares")} ${t("desk.handedBibFastTrackOnly")}`}
+                  outHelp={`${t("desk.sparesOut")} ${t("desk.handedBibFastTrackOnly")}`}
+                  suggestions={spareSuggestions}
+                />
+              </Box>
             </Box>
 
             <Box>

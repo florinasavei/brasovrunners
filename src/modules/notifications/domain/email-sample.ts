@@ -140,6 +140,9 @@ export type EmailSampleValues = {
    */
   organizerSubject: string;
   organizerBody: string;
+  /** A sample newsletter (§445), written per send like the organizer's message, so its card previews one. */
+  newsletterSubject: string;
+  newsletterBody: string;
 };
 
 export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
@@ -166,6 +169,11 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
       "Prognoza anunță furtună până la 9:00, așa că mutăm startul la 10:00. Masa de înscrieri se deschide la 9:15, în același loc.",
       "Aduceți o haină de ploaie.",
     ].join("\n\n"),
+    newsletterSubject: "Cod de reducere la încălțăminte de alergare",
+    newsletterBody: [
+      "Partenerul nostru oferă abonaților 15% reducere la încălțăminte de alergare până la sfârșitul lunii.",
+      "Codul: EXEMPLU15\nSe folosește o singură dată, în magazin sau online.",
+    ].join("\n\n"),
   },
   en: {
     participantName: "Ana Popescu",
@@ -190,6 +198,11 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
       "The forecast says storms until 9:00, so we are moving the start to 10:00. The registration desk opens at 9:15, in the same place.",
       "Bring a rain jacket.",
     ].join("\n\n"),
+    newsletterSubject: "A discount code for running shoes",
+    newsletterBody: [
+      "Our partner offers subscribers 15% off running shoes until the end of the month.",
+      "The code: EXEMPLU15\nIt can be used once, in the shop or online.",
+    ].join("\n\n"),
   },
 };
 
@@ -209,6 +222,17 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
  * (`email-copy-fields.ts`), exactly as the bib and the status are.
  */
 export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
+
+/**
+ * The preview's family on one address (§446): who the sample address holds — the sample runner, as
+ * the email names a registered person, first name and initial — and the person the form named.
+ * Machinery lines of the message, never fields of the closed set: no club text can hold them.
+ */
+export const EMAIL_SAMPLE_FAMILY = {
+  registered: ["Ana P."],
+  personName: "Mihai Popescu",
+  personBirthDate: "12.03.2012",
+} as const;
 
 /**
  * The sample's value for a field of the closed set, in one language — every field has one since

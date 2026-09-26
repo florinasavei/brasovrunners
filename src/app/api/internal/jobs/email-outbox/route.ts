@@ -19,15 +19,16 @@ import { answerJobPing } from "@/modules/jobs/ping";
 export async function POST(request: Request): Promise<Response> {
   return answerJobPing(request, "email-outbox", async (db, now) => {
     // Imported here, not above: a ping that answers from the cache never loads the sender.
-    const [{ processOutboxBatch }, { createOutboxRenderer }, { createEmailSenderForEnvironment }, { env }] = await Promise.all([
+    const [{ processOutboxBatch }, { createOutboxRenderer }, { createOutboxSender }] = await Promise.all([
       import("@/modules/notifications/outbox"),
       import("@/modules/notifications/render"),
-      import("@/infrastructure/email/sender"),
-      import("@/shared/config/env"),
+      import("@/modules/notifications/outbox-sender"),
     ]);
-    const { sender } = createEmailSenderForEnvironment(env);
+    // The club's road per group and the Reply-To it chose to show, read once for the batch (§442);
+    // Gmail's cap and pace from the database before each Gmail message.
+    const { sender, route, roads, replyTo } = await createOutboxSender(db);
     // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-    const summary = await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now });
+    const summary = await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer({ replyTo }), now });
     return { summary, failed: false };
   });
 }

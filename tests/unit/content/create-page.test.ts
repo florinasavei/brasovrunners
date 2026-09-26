@@ -19,7 +19,7 @@ const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf
 
 const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
 const EDIT = read("src/app/[locale]/admin/events/[id]/page.tsx");
-const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
+const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");
 const TRANSLATION_FIELDS = read("src/modules/content/events/ui/TranslationFields.tsx");
@@ -28,7 +28,7 @@ const ROWS = read("src/modules/content/events/ui/ScheduleRowsEditor.tsx");
 const ACTIONS = read("src/app/[locale]/admin/actions.ts");
 const SERVICE = read("src/modules/content/events/service.ts");
 const TABS = read("src/shared/ui/LocaleTabPanels.tsx");
-const FORM = read("src/shared/forms/ActionForm.tsx");
+const FORM = read("src/shared/forms/ActionFormIsland.tsx");
 const MESSAGES = ["messages/ro.json", "messages/en.json"].map((file) => [file, JSON.parse(read(file))] as const);
 
 const at = (source: string, needle: string) => {
@@ -70,7 +70,6 @@ describe("the create page is the editor's page", () => {
       "<VideoBox",
       "<StartListBox",
       't("editor.groups.offPage")',
-      "<StatusBox",
       "<PromotionBox",
       "<AddressBox",
       'id="box-save"',
@@ -85,21 +84,34 @@ describe("the create page is the editor's page", () => {
     }
   });
 
-  it("shows the status read-only on create: a hidden SCHEDULED posts, and Anulat is never offered for an event that does not exist", () => {
-    expect(CREATE).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    // The card is there, so the two pages look the same (§358) — handed no event, it is read-only.
-    expect(CREATE).toContain("<StatusBox {...box} />");
+  it("offers the status on create as the editor does — Programat by default, Anulat with its reason, Încheiat (§448)", () => {
+    // The owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". No hidden
+    // SCHEDULED any more: the card's own select posts.
+    expect(CREATE).not.toContain('name="event.eventStatus"');
+    // The card is there, inside the first box (§448), so the two pages look the same (§358).
+    expect(CREATE).toContain("<KindBox {...box} heading={flow.headings.kind} />");
+    expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event: null })");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     // Keyed on the create page alone: a saved event always comes with its notice, by type, so it
-    // can never fall into the read-only "Programat" that posts nothing.
+    // can never fall into the create page's card, which has nobody to tell.
     expect(status).toContain("{ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice }");
     expect(status).not.toContain("!notice");
-    const createBranch = status.slice(at(status, "if (event === null) {"), at(status, "<RecallField"));
+    const createBranch = status.slice(at(status, "if (event === null) {"), at(status, "{risk && <RiskLine>"));
     expect(createBranch).toContain('data-testid="status-on-create"');
-    expect(createBranch).toContain("disabled");
-    expect(createBranch).not.toContain("name=");
+    expect(createBranch).toContain('{select("SCHEDULED")}');
+    expect(createBranch).not.toContain("disabled");
+    expect(createBranch).toContain("offerNotice={false}");
     expect(createBranch).toContain('t("editor.boxes.status.createNote")');
-    for (const [file, messages] of MESSAGES) expect(messages.Admin.editor.boxes.status.createNote, file).toBeTruthy();
+    for (const [file, messages] of MESSAGES) {
+      expect(messages.Admin.editor.boxes.status.createNote, file).toBeTruthy();
+      expect(messages.Admin.editor.boxes.status.completedRefused, file).toBeTruthy();
+      for (const key of ["cancelTitleCreate", "cancelIntroCreate", "cancelReasonHelpCreate"]) expect(messages.Admin.editor.notice[key], file + " " + key).toBeTruthy();
+    }
+    // The action reads the reason on a create too; the service requires it for CANCELLED and tells nobody.
+    const create = ACTIONS.slice(at(ACTIONS, "export async function createEventAction"), at(ACTIONS, "export async function duplicateEventAction"));
+    expect(create).toContain('form.has("cancel.reasonRo") || form.has("cancel.reasonEn")');
+    expect(create).toContain("notify: false");
+    expect(SERVICE).toContain("function readCreateStatus(");
     // And none of what needs a saved event.
     for (const edited of ["<BibPrintCard", "<RecurrenceSeriesPanel", 'id="box-received"', 'id="box-copy-delete"']) {
       expect(CREATE, edited).not.toContain(edited);
@@ -160,20 +172,21 @@ describe("no film box", () => {
   });
 });
 
-describe("the time is the platform's own native input, always on the 24-hour clock", () => {
+describe("the time is a typed box, shown and posted on the 24-hour clock", () => {
   const TIME_FIELD = read("src/shared/forms/pickers/TimeField.tsx");
 
-  it("makes every time box a native <input type=\"time\">, which reads HH:MM and never AM/PM (§345, amended)", () => {
-    // §345's own MUI wheel picker was replaced 2026-09-25 — the owner: "I simply hate this time
-    // picker" — by `type="time"`, which every browser already renders as a 24-hour or 12-hour
-    // control that always *posts* `HH:mm`; §345's date half is untouched, still MUI's picker.
+  it("makes every time box a 24-hour text box, never the browser's AM/PM time control (§400, §439)", () => {
+    // §345's MUI wheel picker went on 2026-09-25 — "I simply hate this time picker" — for the
+    // browser's `type="time"`, which an English-language browser draws as "07:00 PM"; the owner,
+    // 2026-09-26: "am zis că vreau 24H format!". The box is now text showing what it posts.
     expect(WALL_TIME).toContain("<DateField");
     expect(WALL_TIME).toContain("<TimeField");
     expect(WALL_TIME).not.toContain("TimePicker");
     expect(ROWS).toContain("<DateField");
     expect(ROWS.match(/<TimeField/g)).toHaveLength(2);
-    expect(TIME_FIELD).toContain('type="time"');
-    expect(TIME_FIELD).toContain("step: 60");
+    expect(TIME_FIELD).toContain('type="text"');
+    expect(TIME_FIELD).not.toContain('type="time"');
+    expect(TIME_FIELD).toContain("normalizeTypedTime");
     expect(TIME_FIELD).not.toContain("@mui/x-date-pickers");
     const pkg = JSON.parse(read("package.json"));
     // The date half still needs the library; the time half no longer does.

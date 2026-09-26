@@ -1,29 +1,26 @@
 "use client";
 
-import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
+import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import Flag from "@/shared/ui/Flag";
 import type { SearchableCountry } from "../country-search";
-import { searchCountries } from "../country-search";
-import { CountryOptionRow, type CountrySearchWords } from "./CountrySearch";
+import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_SX } from "./CountryPicker";
 
 /**
- * Citizenship as a box you type into (§NNN): the owner, "vreau searchbox să pot găsi țara".
+ * Citizenship: required, Romania unless the runner says otherwise (§432), and searchable (§NNN;
+ * the owner, "vreau searchbox să pot găsi țara").
  *
- * It was a MUI `Select` of two hundred and fifty flags and names — a scroll, with nothing to
- * type. Now the field *is* the search: tap, type "germ", pick Germania. The same rule as the
- * telephone prefix's search (`country-search.ts`), accents and case ignored.
+ * **What posts is a native `<select name="nationality" required>`**, drawn by the server with
+ * every country as an option and the draft's (or Romania's) chosen — so a reader without
+ * JavaScript, or before hydration, picks from the phone's own list and posts an ISO code the
+ * server accepts, and a refusal's draft (§142) and the error summary's link to `id` read what they
+ * read before. There is no empty option: §432 has no "no answer" and no clear.
  *
- * **What is posted is unchanged**: a hidden `nationality` carrying the ISO code, or empty for no
- * answer (§322, optional — the clear button is how an answer is taken back, and the empty box
- * says "Nu spun"). The server's schema, the draft a refusal brings back (§142) and the error
- * summary's link to `id` all read what they read before.
- *
- * **Nothing lost against the select it replaces**: MUI's `Select` needed JavaScript to open as
- * well, so a reader without it could not choose a country before either; the hidden input posts
- * the prefilled answer (or none) exactly as the select's own hidden input did.
+ * **Once the island runs**, a transparent button lies over the select and opens the shared
+ * `CountryPicker` with its search box; a choice is written into the select with a real `change`
+ * event, exactly as the telephone prefix does it.
  *
  * The countries, their order and their names are the server's (§324), handed down as data.
  */
@@ -31,95 +28,116 @@ export default function NationalityField({
   id,
   name,
   label,
-  noneLabel,
   error,
   helperText,
   defaultValue,
   countries,
   words,
-  required = false,
 }: {
   id: string;
   name: string;
   label: string;
-  /** What the empty box says: "Nu spun". */
-  noneLabel: string;
   error?: boolean;
   helperText?: string;
-  /** The code a refused submission posted (§142), or nothing. */
+  /** The code to start on: a refused submission's (§142), else Romania. */
   defaultValue?: string;
   countries: readonly SearchableCountry[];
   words: CountrySearchWords;
-  /**
-   * An answer is owed (V2.03's required citizenship): no clear button, no "Nu spun", the
-   * visible box carries `required` (the §422 missing list and the browser both read it), and
-   * with no draft the answer starts at România.
-   */
-  required?: boolean;
 }) {
-  const [value, setValue] = useState<SearchableCountry | null>(
-    () =>
-      countries.find((country) => country.code === defaultValue) ??
-      (required ? (countries.find((country) => country.code === "RO") ?? null) : null),
+  const initial = countries.some((country) => country.code === defaultValue)
+    ? (defaultValue as string)
+    : (countries.find((country) => country.code === "RO")?.code ?? countries[0]?.code ?? "");
+  const [value, setValue] = useState(initial);
+  const hydrated = useSyncExternalStore(
+    useCallback(() => () => {}, []),
+    () => true,
+    () => false,
   );
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [searching, setSearching] = useState(false);
+  const chosenName = countries.find((country) => country.code === value)?.label ?? value;
 
   return (
-    <>
-      <Autocomplete
-        id={id}
-        autoHighlight
-        disableClearable={required}
-        options={countries as SearchableCountry[]}
-        value={value}
-        onChange={(_event, next) => setValue(next ?? null)}
-        filterOptions={(options, state) => searchCountries(options, state.inputValue)}
-        getOptionLabel={(country) => country.label}
-        isOptionEqualToValue={(option, chosen) => option.code === chosen.code}
-        noOptionsText={words.noMatch}
-        openText={words.open}
-        closeText={words.close}
-        clearText={words.clear}
-        renderOption={(props, country) => {
-          const { key, ...rest } = props;
-          return (
-            // 44 pixels a row: a thumb picks one out of a list (BR-REQ-041-01 criterion 6).
-            <Box component="li" key={key} {...rest} sx={{ minHeight: 44 }}>
-              <CountryOptionRow country={country} />
-            </Box>
-          );
-        }}
-        slotProps={{ listbox: { sx: { maxHeight: "min(50vh, 20rem)" } } }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label={label}
-            placeholder={required ? undefined : noneLabel}
-            required={required}
-            error={error}
-            helperText={helperText}
-            slotProps={{
-              ...params.slotProps,
-              // Shrunk always, so "Nu spun" is read as the answer it is rather than hidden
-              // under the label, as the select's empty option was (§322).
-              inputLabel: { ...params.slotProps.inputLabel, shrink: true },
-              input: {
-                ...params.slotProps.input,
-                startAdornment: value ? (
-                  <Box component="span" sx={{ display: "inline-flex", alignItems: "center", pl: 0.5 }}>
-                    <Flag code={value.code} width={20} />
-                  </Box>
-                ) : null,
-              },
-              htmlInput: {
-                ...params.slotProps.htmlInput,
-                // Not an address field: the browser's own suggestions would cover the list.
-                autoComplete: "off",
-              },
-            }}
-          />
-        )}
-      />
-      <input type="hidden" name={name} value={value?.code ?? ""} />
-    </>
+    <TextField
+      id={id}
+      name={name}
+      label={label}
+      select
+      required
+      fullWidth
+      error={error}
+      helperText={helperText}
+      defaultValue={initial}
+      onChange={(event) => setValue(event.target.value)}
+      sx={{
+        "& .MuiInputBase-root:has(> button:focus-visible)": {
+          outline: "2px solid",
+          outlineColor: "primary.main",
+          outlineOffset: "-3px",
+        },
+      }}
+      slotProps={{
+        select: { native: true },
+        inputLabel: { shrink: true },
+        htmlInput: {
+          ref: selectRef,
+          // Under the search's button once it is there: one control in the tab order, not two.
+          tabIndex: hydrated ? -1 : undefined,
+          "aria-hidden": hydrated ? true : undefined,
+        },
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <Box component="span" sx={{ display: "inline-flex", alignItems: "center" }}>
+                <Flag code={value} width={20} />
+              </Box>
+            </InputAdornment>
+          ),
+          endAdornment: hydrated ? (
+            <>
+              <Box
+                component="button"
+                ref={buttonRef}
+                type="button"
+                aria-label={`${label}: ${chosenName}`}
+                aria-haspopup="dialog"
+                aria-expanded={searching}
+                onClick={(event) => {
+                  setAnchor(event.currentTarget);
+                  setSearching(true);
+                }}
+                sx={PICKER_BUTTON_SX}
+              />
+              {/* Mounted while it closes too, so the transition ends and `onExited` places focus. */}
+              {anchor && (
+                <CountryPicker
+                  mode="citizenship"
+                  open={searching}
+                  anchorEl={anchor}
+                  countries={countries}
+                  value={value}
+                  label={label}
+                  words={words}
+                  onChoose={(code) => {
+                    chooseInSelect(selectRef.current, code);
+                    setSearching(false);
+                  }}
+                  onDismiss={() => setSearching(false)}
+                  onExited={() => buttonRef.current?.focus()}
+                />
+              )}
+            </>
+          ) : null,
+        },
+      }}
+    >
+      {countries.map((country) => (
+        <option key={country.code} value={country.code}>
+          {country.label}
+        </option>
+      ))}
+    </TextField>
   );
 }

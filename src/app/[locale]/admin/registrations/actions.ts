@@ -13,6 +13,7 @@ import {
   correctRegisteredName,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
+  handedBibRefusalCode,
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
@@ -72,6 +73,16 @@ async function backTo(
   redirect(query ? `${path}?${query}#admin-alert` : path);
 }
 
+/**
+ * The number typed into a desk box (§444): absent when the box was not on the form or was left
+ * empty — the platform's own draw — and otherwise what was typed, as a number the service checks
+ * (`Number("abc")` is NaN, which it refuses naming the box; `Number("")` would be 0 and a lie).
+ */
+function handedBibNumber(form: FormData): number | undefined {
+  const raw = text(form, "bibNumber").trim();
+  return raw === "" ? undefined : Number(raw);
+}
+
 function outcomeOf(error: unknown): { error: string } {
   if (isDomainError(error)) return { error: error.code };
   throw error;
@@ -122,12 +133,14 @@ export async function confirmRegistrationNowAction(_previous: FormOutcome | null
   let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
-    const result = await confirmRegistrationByStaff(getDb(), actor, registrationId, new Date());
+    // The number handed with the paper, when the row offered the box (§444); empty is the draw.
+    const result = await confirmRegistrationByStaff(getDb(), actor, registrationId, new Date(), { bibNumber: handedBibNumber(form) });
     outcome = { saved: result.status === "CONFIRMED" ? "registrationConfirmed" : "registrationWaitlisted" };
   } catch (error) {
     // No place and the waiting list full (§348): the desk says so, rather than "check the data"
-    // about a button with no data behind it. Nothing was written; the row stays as it was.
-    outcome = { error: waitlistRefusalCode(error) ?? outcomeOf(error).error };
+    // about a button with no data behind it. Nothing was written; the row stays as it was. A
+    // handed number somebody else has (§444) is said as that, and nothing was written either.
+    outcome = { error: waitlistRefusalCode(error) ?? handedBibRefusalCode(error) ?? outcomeOf(error).error };
   }
   return backToDesk(form, locale, registrationId, outcome);
 }
@@ -248,6 +261,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         listOptOut: form.get("listOptIn") !== "on",
         relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
         fastTrack: form.get("fastTrack") === "on",
+        // The number handed with the paper (§444); empty is the platform's own draw.
+        bibNumber: handedBibNumber(form),
       },
       new Date(),
     );
@@ -275,6 +290,14 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     */
     const full = waitlistRefusalCode(error);
     if (full) return { ...refusal, error: full, fields: [] };
+    /*
+      The number handed with the paper (§444): somebody else's already — the box named, nothing
+      written — or given away between the desk's check and the confirmation, when the entry stands
+      unconfirmed and the sentence says what to do with it.
+    */
+    const bib = handedBibRefusalCode(error);
+    if (bib === "BIB_NUMBER_TAKEN") return { ...refusal, error: bib, fields: ["bibNumber"] };
+    if (bib === "WALK_IN_BIB_TAKEN") return { ...refusal, error: bib, fields: [] };
     if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
     const event = await findEventForRegistrationById(getDb(), eventId);
     return {

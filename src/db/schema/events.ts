@@ -463,6 +463,21 @@ export const events = pgTable(
     bibColour: text("bib_colour"),
 
     /**
+     * The spare bibs for on-the-spot entries (§444): the numbers reserved for the desk, from
+     * `walk_in_bib_start`, `walk_in_bib_count` of them, printed ahead with an empty name line and
+     * handed to a walk-in, the name written on with a marker. Null, both of them, is no spares —
+     * every event before this.
+     *
+     * **Written only by the print** (`bibs.ts#reserveSpareBibs`), never by the editor's save: the
+     * club types how many and the platform reserves them after the highest number anybody has, or
+     * extends the reservation by the next free numbers — so it can never land on a number
+     * somebody holds. **The allocator never draws from it**: not the provisional number at
+     * submission, not the recompaction at the close, not a confirmation after it, not the batch.
+     */
+    walkInBibStart: integer("walk_in_bib_start"),
+    walkInBibCount: integer("walk_in_bib_count"),
+
+    /**
      * The rest of what a bib looks like (`DECISIONS.md` §249): what is printed, how large the
      * number is, where the name sits, a picture instead of the coloured band, a sponsors'
      * strip, and whether the sheet carries cut marks.
@@ -615,6 +630,13 @@ export const events = pgTable(
      */
     check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
+    // The desk's spares (§444): a start and a count or neither, within a five-digit bib, and at
+    // most 500 numbers across every print. `domain/spare-bibs.ts` says the same in words; the
+    // `IS NOT NULL`s are needed, since half a pair makes the rest NULL.
+    check(
+      "events_walk_in_bibs",
+      sql`(${t.walkInBibStart} IS NULL AND ${t.walkInBibCount} IS NULL) OR (${t.walkInBibStart} IS NOT NULL AND ${t.walkInBibCount} IS NOT NULL AND ${t.walkInBibStart} >= 1 AND ${t.walkInBibCount} >= 1 AND ${t.walkInBibCount} <= 500 AND ${t.walkInBibStart} + ${t.walkInBibCount} - 1 <= 99999)`,
+    ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
     // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The

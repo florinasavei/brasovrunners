@@ -33,6 +33,7 @@ import {
   replaceEmailSampleLiterals,
 } from "./domain/email-sample";
 import { ORGANIZER_MESSAGE_PLACEHOLDERS } from "./domain/organizer-message";
+import { topicsPhrase } from "@/modules/newsletter/topic-words";
 import type { EmailEventFacts } from "./domain/event-facts";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
@@ -135,8 +136,20 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     organizerSubjectOther: other.organizerSubject,
     organizerBody: sample.organizerBody,
     organizerBodyOther: other.organizerBody,
+    // The newsletter (§445): a sample subscriber's topics, a sample newsletter and its way out —
+    // read only by the newsletter's three templates.
+    newsletterTopics: topicsPhrase(locale, EMAIL_SAMPLE_NEWSLETTER_TOPICS),
+    newsletterTopicsOther: topicsPhrase(OTHER[locale], EMAIL_SAMPLE_NEWSLETTER_TOPICS),
+    newsletterSubject: sample.newsletterSubject,
+    newsletterSubjectOther: other.newsletterSubject,
+    newsletterBody: sample.newsletterBody,
+    newsletterBodyOther: other.newsletterBody,
+    newsletterManageUrl: `${base}/${locale}/EXAMPLE-newsletter`,
   };
 }
+
+/** The sample subscriber's topics (§445): two of them, so the preview reads a list. */
+const EMAIL_SAMPLE_NEWSLETTER_TOPICS = ["BIG_EVENTS", "DISCOUNTS"] as const;
 
 /**
  * The sample event's facts block data in one language (§392): `EMAIL_SAMPLE_EVENT` with the sample's
@@ -197,9 +210,10 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  *   have no field, and the platform adds the note and the reason after the words whoever wrote them;
  * - **the declaration's first wording is the club's hold's (§377)**, as the preview shows it; a
  *   saved text replaces both wordings, as it always has (§247);
- * - **the reply line of the cancellation follows the deployment's reply address**, as the send does.
+ * - **the reply line of the cancellation follows the Reply-To in force**, as the send does: the page
+ *   passes the one «Adresa de contact afișată» resolves to (§442); absent, the deployment's.
  */
-function fieldsData(): TemplateData {
+function fieldsData(replyTo: string | undefined = env.EMAIL_REPLY_TO ?? undefined): TemplateData {
   const field = (name: EmailCopyPlaceholder) => `{${name}}`;
   return {
     participantName: field("participantName"),
@@ -220,7 +234,7 @@ function fieldsData(): TemplateData {
     confirmationHours: field("confirmationHours"),
     // The waiting-list offer's length (§377), which the freed place's message states (§419).
     offerHours: field("offerHours"),
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    replyTo,
   };
 }
 
@@ -262,9 +276,16 @@ function ownParagraphsOf(paragraph: string): string[] {
   return paragraphs;
 }
 
-/** The editor's starting text for one message and language: the platform's words, with the fields. */
-export function emailCopyPrefill(messageType: EmailMessageType, locale: EmailLocale): EmailCopyPrefill {
-  const words = platformWords(messageType, locale, fieldsData());
+/**
+ * The editor's starting text for one message and language: the platform's words, with the fields.
+ * `replyTo` is the Reply-To in force (§442); absent, `EMAIL_REPLY_TO`.
+ */
+export function emailCopyPrefill(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  replyTo: string | undefined = env.EMAIL_REPLY_TO ?? undefined,
+): EmailCopyPrefill {
+  const words = platformWords(messageType, locale, fieldsData(replyTo));
   const body = emailDocFromParagraphs(words.paragraphs.flatMap(ownParagraphsOf));
   return { subject: words.subject, paragraphs: emailBodyToParagraphs(body), body };
 }
@@ -281,9 +302,20 @@ export function placeholdersUsedBy(messageType: EmailMessageType, locale: EmailL
  * another person on a registered address (§389) — it answers whoever filled the form, often a parent,
  * so it greets nobody and names no runner.
  */
-const NO_PERSON: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_OPENED", "REGISTER_ANOTHER_PERSON"]);
-/** Messages about no event: "my registrations" is about a person (§77), the invitation about the team (§141). */
-const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION"]);
+// The newsletter's three messages (§445) go to an address too, never to a named person.
+const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
+  "REGISTRATION_OPENED",
+  "REGISTER_ANOTHER_PERSON",
+  "NEWSLETTER_CONFIRM",
+  "NEWSLETTER",
+  "NEW_EVENT_ALERT",
+]);
+/**
+ * Messages about no event: "my registrations" is about a person (§77), the invitation about the team
+ * (§141), the newsletter's confirmation and a newsletter about the club (§445) — the new-event
+ * alert, the newsletter's third, is about its event.
+ */
+const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION", "NEWSLETTER_CONFIRM", "NEWSLETTER"]);
 /** Messages about no one registration: the two above, and "registration is open". */
 // A group run's self-declaration (§393) is about a signature, never a registration: no status to state.
 const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
@@ -292,6 +324,10 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "REGISTRATION_OPENED",
   "GROUP_RUN_DECLARATION_SIGNED",
   "GROUP_RUN_DECLARATION_ARCHIVE",
+  // The newsletter's (§445): a subscription, never a registration.
+  "NEWSLETTER_CONFIRM",
+  "NEWSLETTER",
+  "NEW_EVENT_ALERT",
 ]);
 /** The fields only a few messages carry, and which. */
 const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>> = {
@@ -332,6 +368,8 @@ export function placeholdersFilledBy(messageType: EmailMessageType): EmailCopyPl
     const organizerSet = new Set<EmailCopyPlaceholder>(ORGANIZER_MESSAGE_PLACEHOLDERS);
     return EMAIL_COPY_PLACEHOLDERS.filter((name) => organizerSet.has(name));
   }
+  // A newsletter is written per send and fills no field at all (§445): its composer refuses one.
+  if (messageType === "NEWSLETTER") return [];
   return EMAIL_COPY_PLACEHOLDERS.filter((name) => {
     const only = ONLY_IN[name];
     if (only) return only.includes(messageType);

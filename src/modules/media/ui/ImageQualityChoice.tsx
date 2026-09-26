@@ -10,8 +10,8 @@ import { useId, useSyncExternalStore } from "react";
 import { DEFAULT_IMAGE_QUALITY, IMAGE_QUALITIES, type ImageQuality, parseImageQuality } from "../ladder";
 
 /**
- * «Calitate: Normală (recomandat) / Înaltă (fișier mai mare)», beside every upload (§414; the
- * owner: "I wanna choose the quality of the image when uploading it").
+ * «Calitate: Minimă / Medie (recomandat) / Mare / Originală», beside every upload (§414, four
+ * levels since §437; the owner: "I wanna choose the quality of the image when uploading it").
  *
  * **Per upload, remembered for the session.** The choice is about the picture — a poster with a
  * list of rules wants "high", a photograph from the finish does not — so it is made where the
@@ -87,10 +87,9 @@ export function useImageQuality(): [ImageQuality, (next: ImageQuality) => void] 
   return [quality, rememberQuality];
 }
 
-export type ImageQualityLabels = {
+/** One label per choice (§437: «Minimă», «Medie», «Mare», «Originală»), the legend and the help. */
+export type ImageQualityLabels = Record<ImageQuality, string> & {
   legend: string;
-  normal: string;
-  high: string;
   help: string;
 };
 
@@ -130,7 +129,7 @@ export default function ImageQualityChoice({
             key={quality}
             value={quality}
             control={<Radio size="small" />}
-            label={quality === "normal" ? labels.normal : labels.high}
+            label={labels[quality]}
             // A thumb must hit it (BR-REQ-041-01 criterion 6): the whole row is the target.
             sx={{ minHeight: 44, mr: 2 }}
           />

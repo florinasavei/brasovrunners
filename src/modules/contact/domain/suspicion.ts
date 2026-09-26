@@ -119,7 +119,7 @@ export type ClubIdentity = {
  * The club's domain and name from this deployment's hostname, or `null` when there is nothing
  * worth matching: `localhost`, an IP address, a bare name, a provider's shared domain, or a
  * label too short to be a name. Deliberately the last two labels and no public-suffix list —
- * the club is on a `.com` and will be on a `.ro`, and a `co.uk`-shaped host switches the rule
+ * the club is on a `.com`, and a `co.uk`-shaped host switches the rule
  * off rather than matching every "co".
  */
 export function clubIdentity(host: string | null | undefined): ClubIdentity | null {

@@ -8,7 +8,7 @@ import { useRecall } from "@/shared/forms/recall";
 import Flag from "@/shared/ui/Flag";
 import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "../phone";
 import { formatNationalNumber, phoneMaxLength, phonePlaceholder, reformatPhoneInput } from "../phone-format";
-import { CountrySearchPopover, type CountrySearchWords } from "./CountrySearch";
+import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_SX } from "./CountryPicker";
 
 /**
  * A telephone number as one box: the country's flag at its start, the digits after it, grouped
@@ -145,18 +145,7 @@ const COUNTRY_ADORNMENT_SX = {
   },
   // The search's button (§NNN), laid over the select once the island runs: the tap opens the
   // popover with a search box rather than the phone's own list. Same box, same 44-pixel target.
-  "& > button": {
-    position: "absolute",
-    inset: 0,
-    zIndex: 1,
-    width: "100%",
-    height: "100%",
-    m: 0,
-    p: 0,
-    border: 0,
-    bgcolor: "transparent",
-    cursor: "pointer",
-  },
+  "& > button": PICKER_BUTTON_SX,
   "&:has(> select:focus-visible), &:has(> button:focus-visible)": {
     outline: "2px solid",
     outlineColor: "primary.main",
@@ -188,7 +177,6 @@ function PhoneFieldIsland({
   countryLabel,
   countryOrder,
   countryNames,
-  countryAltNames,
   value,
   draft,
   required = false,
@@ -221,8 +209,6 @@ function PhoneFieldIsland({
    * mismatch that cost the form its hydration in the first place.
    */
   countryNames: Readonly<Record<string, string>>;
-  /** The English name of each code, for the search only (§NNN): "germany" on the Romanian page. */
-  countryAltNames?: Readonly<Record<string, string>>;
   /** A stored E.164 number to prefill, or nothing. */
   value?: string | null;
   /** What was typed before a rejected submit (§142): the two controls as posted, over `value`. */
@@ -436,13 +422,9 @@ function PhoneFieldIsland({
   const focusAfterSearch = useRef<"digits" | "flag">("flag");
   const searchOptions = countryOrder
     .filter((code) => code in DIALING_CODES)
-    .map((code) => ({ code, label: countryNames[code] ?? code, altLabel: countryAltNames?.[code], dialingCode: DIALING_CODES[code] }));
+    .map((code) => ({ code, label: countryNames[code] ?? code, dialingCode: DIALING_CODES[code] }));
   const chooseCountry = (code: string) => {
-    const select = selectRef.current;
-    if (select && select.value !== code) {
-      select.value = code;
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-    }
+    chooseInSelect(selectRef.current, code);
     focusAfterSearch.current = "digits";
     setSearching(false);
   };
@@ -500,7 +482,8 @@ function PhoneFieldIsland({
       )}
       {/* Mounted while it closes too, so the transition ends and `onExited` places focus. */}
       {searchable && searchAnchor && (
-        <CountrySearchPopover
+        <CountryPicker
+          mode="dialling"
           open={searching}
           anchorEl={searchAnchor}
           countries={searchOptions}

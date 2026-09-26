@@ -10,6 +10,8 @@ import type { Locale } from "@/i18n/routing";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailTransport } from "../domain/email-transport";
 import type { ForecastRow } from "../forecast";
 
 type Props = {
@@ -22,6 +24,11 @@ type Props = {
    * or null for a reader who may not see that list — the line is left out for them.
    */
   clubCopies: string[] | null;
+  /**
+   * The road each message type would take now (§443): the club's choice for its group, Mailgun
+   * wherever Gmail is not configured. Absent, no road is said.
+   */
+  roads?: Readonly<Record<EmailMessageType, EmailTransport>>;
   openWhen?: FoldOpenWhen;
 };
 
@@ -33,12 +40,14 @@ const TAP = { display: "inline-flex", alignItems: "center", minHeight: 44 } as c
  * its own in the coming days, sorted by the moment it becomes due — the event (a link to its
  * editor), the moment with its weekday in the event's own zone (§349), the message (a link to its
  * preview card further down this page) and how many runners the job would pick if it ran now.
+ * Last, the subscribers' sends already queued (§445): a newsletter by its subject, an alert by its
+ * event, when the reserve lets them go and how many subscribers they reach.
  *
  * A Server Component and a closed fold (§336), directly above "Emailurile trimise participanților",
  * the cards it links to. Under the list, the club-copy line: whether the club gets a copy of each
  * of these, and where that is set.
  */
-export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, clubCopies, openWhen }: Props) {
+export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, clubCopies, roads, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const other: Locale = locale === "ro" ? "en" : "ro";
 
@@ -69,11 +78,11 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
               ? t("emails.forecast.untitledOther", { title: otherTitle, locale: other.toUpperCase() })
               : t("emails.forecast.untitled"));
             const moment = formatDay(row.at, { locale, timeZone: row.zone, style: "short", withTime: true });
-            const editor = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: row.eventId } } });
+            const editor = row.eventId ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: row.eventId } } }) : null;
             return (
               <Box
                 component="li"
-                key={`${row.eventId}-${row.send}-${row.at.getTime()}`}
+                key={`${row.eventId ?? row.sendId}-${row.send}-${row.at.getTime()}`}
                 data-testid="upcoming-email"
                 data-type={row.type}
                 data-send={row.send}
@@ -83,11 +92,20 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
                   {moment}
                   {row.zone !== CLUB_TIME_ZONE && ` (${t("emails.forecast.zone", { zone: row.zone })})`}
                   {row.overdue && ` · ${t("emails.forecast.nextRun")}`}
+                  {/* Held back by the reserve for registrations (`domain/bulk.ts`): it goes when the allowance comes back. */}
+                  {row.held && ` · ${t("emails.forecast.held")}`}
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2, alignItems: "center" }}>
-                  <Link href={editor} sx={TAP} data-testid="upcoming-email-event">
-                    {title}
-                  </Link>
+                  {editor ? (
+                    <Link href={editor} sx={TAP} data-testid="upcoming-email-event">
+                      {title}
+                    </Link>
+                  ) : (
+                    // A newsletter is about no event: its subject, in the reader's language.
+                    <Typography component="span" variant="body2" sx={{ ...TAP, fontWeight: 600 }} data-testid="upcoming-email-subject">
+                      {row.subject?.[locale] ?? t("emails.forecast.newsletterUntitled")}
+                    </Typography>
+                  )}
                   {/*
                     Labelled by what actually triggers it (`sends.*`), not by the message type: a
                     type such as BIB_ASSIGNED covers more than this one automatic send (it also
@@ -103,6 +121,11 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
                     {row.testRecipients > 0 &&
                       ` ${t(`emails.forecast.tests.${countForm(row.testRecipients, locale)}`, { count: row.testRecipients })}`}
                   </Typography>
+                  {roads && (
+                    <Typography component="span" variant="body2" color="text.secondary" data-testid="upcoming-email-road">
+                      {t(`emails.forecast.road.${roads[row.type]}`)}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             );
