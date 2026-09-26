@@ -115,7 +115,9 @@ function LazyRichTextEditorIsland({
       </Typography>
       <Box>
         {mounted ? (
-          <RichTextEditor {...editor} initialBody={filled ?? editor.initialBody} />
+          // `override`, not `initialBody`: after a refusal the editor would otherwise mount from the
+          // recalled document and drop the translation that arrived while the fold was shut.
+          <RichTextEditor {...editor} override={filled} />
         ) : (
           <input ref={hidden} type="hidden" name={editor.name} value={JSON.stringify(stored)} readOnly />
         )}

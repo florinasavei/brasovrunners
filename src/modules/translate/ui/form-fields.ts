@@ -72,14 +72,21 @@ export function writePlainBox(box: Box, text: string): void {
   box.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-/** One translated answer, put in its English box. */
-export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): void {
+/**
+ * One translated answer, put in its English box. English often runs longer than Romanian: an
+ * answer past the box's `maxLength` is cut to it (the box could not hold more, and the save's own
+ * ceiling is the same), and the answer is `true` so the press can say which box lost its ending.
+ */
+export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): boolean {
   if (value.kind === "rich") {
     fillRichText(name, value.doc);
-    return;
+    return false;
   }
   const box = boxNamed(form, name);
-  if (box) writePlainBox(box, box.maxLength > 0 ? value.text.slice(0, box.maxLength) : value.text);
+  if (!box) return false;
+  const cut = box.maxLength > 0 && value.text.length > box.maxLength;
+  writePlainBox(box, cut ? value.text.slice(0, box.maxLength) : value.text);
+  return cut;
 }
 
 /**

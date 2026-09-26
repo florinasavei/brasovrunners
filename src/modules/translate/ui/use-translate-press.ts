@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import type { TranslateItemInput } from "../service";
-import { fillBox, isEmptyValue, readBox, romanianBoxOf } from "./form-fields";
+import { type BoxValue, fillBox, isEmptyValue, labelOfBox, readBox, romanianBoxOf } from "./form-fields";
 import { useTranslateAction } from "./TranslateProvider";
 
 export type PressMessage = { tone: "done" | "refused"; text: string };
@@ -17,6 +17,7 @@ export type PressMessage = { tone: "done" | "refused"; text: string };
  */
 export function useTranslatePress() {
   const t = useTranslations("Translate");
+  const locale = useLocale();
   const action = useTranslateAction();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<PressMessage | null>(null);
@@ -43,12 +44,20 @@ export function useTranslatePress() {
       if (!outcome.ok) {
         setMessage({
           tone: "refused",
-          text: outcome.reason === "budget" ? t("refusal.budget", { remaining: outcome.remainingToday ?? 0 }) : t(`refusal.${outcome.reason}`),
+          text:
+            outcome.reason === "budget"
+              ? t("refusal.budget", { remaining: new Intl.NumberFormat(locale).format(outcome.remainingToday ?? 0) })
+              : t(`refusal.${outcome.reason}`),
         });
         return;
       }
-      for (const item of outcome.items) fillBox(form, item.field, item.kind === "text" ? { kind: "text", text: item.text } : { kind: "rich", doc: item.doc });
-      setMessage({ tone: "done", text: items.length === 1 ? t("done") : t("doneAll", { count: items.length }) });
+      const cut: string[] = [];
+      for (const item of outcome.items) {
+        const value: BoxValue = item.kind === "text" ? { kind: "text", text: item.text } : { kind: "rich", doc: item.doc };
+        if (fillBox(form, item.field, value)) cut.push(labelOfBox(form, item.field));
+      }
+      const done = items.length === 1 ? t("done") : t("doneAll", { count: items.length });
+      setMessage({ tone: "done", text: cut.length === 0 ? done : `${done} ${t("cut", { fields: cut.join(", ") })}` });
     } catch {
       setMessage({ tone: "refused", text: t("refusal.failed") });
     } finally {

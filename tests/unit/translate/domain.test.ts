@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { budgetAllows, DEFAULT_TRANSLATION_BUDGET, readTranslationBudgetValue, translationBudgetSchema } from "@/modules/translate/domain/budget";
 import { isRichTextField, isTranslatableEnglishField, romanianTwinCandidates } from "@/modules/translate/domain/fields";
 import { CLUB_GLOSSARY, glossaryContext } from "@/modules/translate/domain/glossary";
+import { protectPlaceholders, restorePlaceholders } from "@/modules/translate/domain/placeholders";
 import { canTranslateTexts, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
@@ -114,5 +115,23 @@ describe("§NNN the daily budget", () => {
 describe("§NNN who may press (BR-REQ-060-01)", () => {
   it("is whoever writes the club's words: Redactor, Organizer, Administrator, Superadministrator", () => {
     expect(STAFF_ROLES.filter(canTranslateTexts)).toEqual(["COPYWRITER", "MODERATOR", "ADMIN", "SUPERADMIN"]);
+  });
+});
+
+describe("§NNN placeholders never reach the provider as words", () => {
+  it("swaps each {name} for a numbered marker and puts the original back byte for byte", () => {
+    const source = "Salut {participantName}, {eventTitle} e mâine; {participantName} ia frontala.";
+    const guarded = protectPlaceholders(source);
+    expect(guarded.text).toBe("Salut {0}, {1} e mâine; {2} ia frontala.");
+    expect(guarded.tokens).toEqual(["{participantName}", "{eventTitle}", "{participantName}"]);
+    expect(restorePlaceholders(guarded.text, guarded.tokens)).toBe(source);
+  });
+
+  it("finds a marker the provider spaced, and leaves text without placeholders untouched", () => {
+    expect(restorePlaceholders("Hi { 0 }, see you at {1 }.", ["{participantName}", "{eventTitle}"])).toBe(
+      "Hi {participantName}, see you at {eventTitle}.",
+    );
+    expect(protectPlaceholders("Tura de luni")).toEqual({ text: "Tura de luni", tokens: [] });
+    expect(restorePlaceholders("Pace {0}", [])).toBe("Pace {0}");
   });
 });

@@ -65,6 +65,7 @@ import {
   TABLE_HEADER_FILLS,
   type BlockAlignment,
   type ImageCrop,
+  type RichTextDoc,
   type TableBorderColour,
   type TableBorders,
   type TableHeaderFill,
@@ -1871,15 +1872,21 @@ function countWords(text: string): number {
  * After a refused submit the body comes back as it was typed (`DECISIONS.md` §315): the
  * recalled JSON is the document, keyed on the answer so Tiptap re-mounts from it rather than
  * keep what it held before the press. With nothing recalled this is the island as it was.
+ *
+ * `override` is a document that arrived after the refusal and wins over the recalled one — a
+ * translation filled into a fold that was still shut (`LazyRichTextEditor`, §NNN). Without it the
+ * fold would open on the recalled English, and its hidden value would post that old text.
  */
-export default function RichTextEditor(props: ComponentProps<typeof RichTextEditorIsland>) {
+export default function RichTextEditor({
+  override,
+  ...props
+}: ComponentProps<typeof RichTextEditorIsland> & { override?: RichTextDoc | null }) {
   const recall = useRecall();
   const recalled = recall.value(props.name);
-  return (
-    <RichTextEditorIsland
-      key={recall.generation}
-      {...props}
-      initialBody={recalled === undefined ? props.initialBody : recalledJson(recalled, props.initialBody)}
-    />
-  );
+  const initialBody = override
+    ? override
+    : recalled === undefined
+      ? props.initialBody
+      : recalledJson(recalled, props.initialBody);
+  return <RichTextEditorIsland key={recall.generation} {...props} initialBody={initialBody} />;
 }

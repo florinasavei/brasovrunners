@@ -90,7 +90,7 @@ describe("§NNN «Tradu din română»", () => {
     const audit = await db.select().from(auditLogs);
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({ action: "content.translated", entityType: "content", actorStaffUserId: copywriter.id });
-    expect(audit[0]?.metadataJson).toEqual({ fields: ["translations.en.title", "translations.en.body"], characters: outcome.characters, provider: "deepl" });
+    expect(audit[0]?.metadataJson).toEqual({ fields: ["translations.en.title", "translations.en.body"], characters: outcome.characters, provider: "deepl", outcome: "ok" });
     expect(JSON.stringify(audit[0]?.metadataJson)).not.toContain("Tura de luni");
     expect(await charactersTranslatedToday(db, NOW)).toBe(outcome.characters);
   });
@@ -172,6 +172,61 @@ describe("§NNN «Tradu din română»", () => {
       ).toEqual({ ok: false, reason: failure });
     }
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "content.translated"))).toHaveLength(0);
+  });
+
+  it("meters what the provider billed when its second request fails — the plain words sent, the press refused", async () => {
+    const admin = await staff("ADMIN");
+    let calls = 0;
+    const translator: Translator = {
+      provider: "deepl",
+      async translate(request) {
+        calls += 1;
+        if (calls > 1) throw new TranslatorError("unavailable", "fake");
+        return request.texts.map((text) => `EN:${text}`);
+      },
+    };
+    const outcome = await translateClubTexts(
+      db,
+      admin,
+      {
+        items: [
+          { field: "translations.en.title", kind: "text", text: "Tura de luni" },
+          { field: "translations.en.body", kind: "rich", doc: RICH },
+        ],
+      },
+      { translator, now: NOW },
+    );
+    expect(outcome).toEqual({ ok: false, reason: "unavailable" });
+    // The first request carried the plain words, the title and the picture's alt text; the
+    // paragraph's HTML was the second, refused one.
+    const billed = "Tura de luni".length + "Harta".length;
+    const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, "content.translated"));
+    expect(row?.metadataJson).toMatchObject({ characters: billed, outcome: "unavailable" });
+    expect(await charactersTranslatedToday(db, NOW)).toBe(billed);
+  });
+
+  it("gives the participant message's {placeholders} back byte for byte, whatever the provider did to its markers", async () => {
+    const moderator = await staff("MODERATOR");
+    const sent: string[] = [];
+    const translator: Translator = {
+      provider: "deepl",
+      // A provider that spaces the braces and translates every word it can see.
+      async translate(request) {
+        sent.push(...request.texts);
+        return request.texts.map((text) => text.replace(/\{(\d+)\}/g, "{ $1 }").replace("Salut", "Hello").replace("la", "at"));
+      },
+    };
+    const outcome = await translateClubTexts(
+      db,
+      moderator,
+      { items: [{ field: "bodyEn", kind: "text", text: "Salut {participantName}, ne vedem la {eventTitle} ({eventDateFormatted})." }] },
+      { translator, now: NOW },
+    );
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.items[0]).toEqual({ field: "bodyEn", kind: "text", text: "Hello {participantName}, ne vedem at {eventTitle} ({eventDateFormatted})." });
+    // The names themselves never reached the provider.
+    expect(sent.join(" ")).not.toContain("participantName");
   });
 
   it("lets only the Administrator change the budget, audited from and to", async () => {

@@ -10,6 +10,7 @@ import { charactersTranslatedToday, readTranslationBudget } from "./budget";
 import { budgetAllows } from "./domain/budget";
 import { isRichTextField, isTranslatableEnglishField } from "./domain/fields";
 import { glossaryContext } from "./domain/glossary";
+import { protectPlaceholders, restorePlaceholders } from "./domain/placeholders";
 import { type RichTextSegment, richTextSegments, segmentCharacters, withTranslatedSegments } from "./domain/rich-text-html";
 
 /**
@@ -93,13 +94,16 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
   const items = prepare(raw);
   if (!items) return { ok: false, reason: "invalid" };
 
-  const pieces: Piece[] = items.flatMap((item, index) =>
-    item.kind === "text"
-      ? item.text.trim() === ""
-        ? []
-        : [{ item: index, segment: { format: "text" as const, text: item.text } }]
-      : richTextSegments(item.doc).map((segment) => ({ item: index, segment })),
-  );
+  // A plain box's `{placeholders}` travel as numbered markers and come back byte for byte
+  // (`domain/placeholders.ts`): the participant message's `{participantName}` stays one.
+  const tokens = new Map<number, string[]>();
+  const pieces: Piece[] = items.flatMap((item, index) => {
+    if (item.kind === "rich") return richTextSegments(item.doc).map((segment) => ({ item: index, segment }));
+    if (item.text.trim() === "") return [];
+    const guarded = protectPlaceholders(item.text);
+    tokens.set(index, guarded.tokens);
+    return [{ item: index, segment: { format: "text" as const, text: guarded.text } }];
+  });
   if (pieces.length === 0) return { ok: false, reason: "nothing" };
   const characters = pieces.reduce((sum, piece) => sum + segmentCharacters(piece.segment), 0);
 
@@ -114,41 +118,54 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
   // pieces' own order, so every answer goes back to the place it came from.
   const translated = new Map<Piece, string>();
   const context = glossaryContext();
+  const translator = deps.translator;
+  /*
+    One audit row per press that the provider billed — also when it then failed: a second request
+    refused after the first was answered, or an answer that is no longer a storable document. The
+    row is the day's meter, so characters the provider counted are counted here too (§NNN, review).
+  */
+  const audit = (billed: number, outcome: "ok" | TranslatorFailure) =>
+    recordAuditEvent(db, {
+      actorStaffUserId: actor.id,
+      action: "content.translated",
+      entityType: "content",
+      entityId: null,
+      metadata: { fields: items.map((item) => item.field), characters: billed, provider: translator.provider, outcome },
+      now: deps.now,
+    });
   try {
     for (const format of ["text", "html"] as const) {
       const batch = pieces.filter((piece) => piece.segment.format === format);
       if (batch.length === 0) continue;
       const texts = batch.map((piece) => (piece.segment.format === "html" ? piece.segment.html : piece.segment.text));
-      const answers = await deps.translator.translate({ from: "ro", to: "en", format, texts, context });
+      const answers = await translator.translate({ from: "ro", to: "en", format, texts, context });
       batch.forEach((piece, index) => translated.set(piece, answers[index] ?? ""));
     }
   } catch (error) {
-    if (isTranslatorError(error)) return { ok: false, reason: error.failure };
-    throw error;
+    if (!isTranslatorError(error)) throw error;
+    const billed = [...translated.keys()].reduce((sum, piece) => sum + segmentCharacters(piece.segment), 0);
+    if (billed > 0) await audit(billed, error.failure);
+    return { ok: false, reason: error.failure };
   }
 
   const result: TranslatedItem[] = [];
   for (const [index, item] of items.entries()) {
     const answers = pieces.filter((piece) => piece.item === index).map((piece) => translated.get(piece) ?? "");
     if (item.kind === "text") {
-      result.push({ field: item.field, kind: "text", text: (answers[0] ?? "").trim() });
+      result.push({ field: item.field, kind: "text", text: restorePlaceholders((answers[0] ?? "").trim(), tokens.get(index) ?? []) });
       continue;
     }
     // The rebuilt document goes through the allowlist once more: what the provider answered
     // must still be a document the site would store.
     const doc = richTextSchema.safeParse(withTranslatedSegments(item.doc, answers));
-    if (!doc.success) return { ok: false, reason: "unavailable" };
+    if (!doc.success) {
+      await audit(characters, "unavailable");
+      return { ok: false, reason: "unavailable" };
+    }
     result.push({ field: item.field, kind: "rich", doc: doc.data });
   }
 
-  await recordAuditEvent(db, {
-    actorStaffUserId: actor.id,
-    action: "content.translated",
-    entityType: "content",
-    entityId: null,
-    metadata: { fields: items.map((item) => item.field), characters, provider: deps.translator.provider },
-    now: deps.now,
-  });
+  await audit(characters, "ok");
 
   return { ok: true, items: result, characters, remainingToday: Math.max(0, verdict.remaining - characters) };
 }

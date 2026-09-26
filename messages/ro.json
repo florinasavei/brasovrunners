@@ -4568,6 +4568,7 @@
     "allHelp": "Înlocuiește fiecare câmp în engleză care are text în română cu traducerea lui, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
     "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
     "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
+    "cut": "Scurtat la limita câmpului, verifică finalul: {fields}.",
     "confirm": {
       "title": "Înlocuiești textul în engleză?",
       "body": "Câmpul în engleză are deja text. Traducerea din română îl înlocuiește; nimic nu se salvează până nu apeși Salvează.",
@@ -4582,7 +4583,7 @@
       "invalid": "Câmpul acesta nu se poate traduce automat.",
       "nothing": "Câmpul în română e gol: nu e nimic de tradus.",
       "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
-      "budget": "S-a terminat bugetul de traduceri de azi (mai sunt {remaining} caractere). Se reia mâine; un Administrator îl poate mări din Sarcini → Costuri.",
+      "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
       "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",
       "refused": "DeepL a refuzat cheia. Un Administrator trebuie să verifice DEEPL_API_KEY (Sarcini).",
       "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",

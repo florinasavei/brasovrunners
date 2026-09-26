@@ -4568,6 +4568,7 @@
     "allHelp": "Replaces every English box that has Romanian text with its translation, with the same layout. Nothing is saved until you press Save.",
     "done": "Translated. Read it, correct it if needed, then save.",
     "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
+    "cut": "Cut to the box's limit, check the ending: {fields}.",
     "confirm": {
       "title": "Replace the English text?",
       "body": "The English box already has text. The translation from Romanian replaces it; nothing is saved until you press Save.",
@@ -4582,7 +4583,7 @@
       "invalid": "This box cannot be translated automatically.",
       "nothing": "The Romanian box is empty: there is nothing to translate.",
       "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
-      "budget": "Today's translation budget is spent ({remaining} characters left). It resets tomorrow; an Administrator can raise it under Tasks → Costs.",
+      "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
       "quota": "DeepL has used this month's free characters. Translation comes back next month.",
       "refused": "DeepL refused the key. An Administrator needs to check DEEPL_API_KEY (Tasks).",
       "unavailable": "DeepL did not answer. Try again in a minute.",
