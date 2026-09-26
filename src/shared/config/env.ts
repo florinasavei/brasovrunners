@@ -150,11 +150,36 @@ export const envSchema = z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
+    /**
+     * `playwright.config.ts`'s `webServer` alone: under `APP_ENV=test` — CI's end-to-end job — the
+     * request that queues a message does not drain the outbox after its response
+     * (`notifications/drain.ts`), so nothing reached the capture `/devs` shows and every message
+     * stayed pending, which no laptop run (`local`, which drains) ever saw. With this flag the
+     * suite's server drains as every other environment does. Only ever consulted under `test`.
+     */
+    E2E_DRAIN_OUTBOX: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
     // project id is under the Vercel project's Settings → General; the team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),
     VERCEL_PROJECT_ID: z.string().min(1).optional(),
     VERCEL_TEAM_ID: z.string().min(1).optional(),
+
+    /**
+     * The club's domain's renewal reminder (§435): the day it was registered, `YYYY-MM-DD`, and
+     * how many years have been paid from that day **in total** — renewing for three more years
+     * after the first is `4`. Their sum is the expiry `/admin/tasks` counts down to (amber at 90
+     * days, red at 30) and `/api/health` warns about at 30. Not secrets and not the domain's
+     * name: the name is `APP_BASE_URL`'s, so a change of domain changes these two and nothing
+     * else. Unset, the row says the date is not known.
+     */
+    DOMAIN_REGISTERED_ON: z.preprocess((value) => (value === "" ? undefined : value), z.iso.date().optional()),
+    DOMAIN_RENEWAL_YEARS: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.coerce.number().int().min(1).max(10).default(1),
+    ),
 
     /**
      * The club's real site, for the "this is not the real site" banner to link to (§7.5).

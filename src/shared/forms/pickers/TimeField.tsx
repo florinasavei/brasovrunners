@@ -6,9 +6,10 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useTranslations } from "next-intl";
+import type { KeyboardEvent } from "react";
 import { useRef } from "react";
 import { useRecall } from "@/shared/forms/recall";
-import { TIME_PATTERN } from "./wall-values";
+import { normalizeTypedTime, TIME_PATTERN } from "./wall-values";
 
 export type TimeFieldProps = {
   /** What the form posts, unchanged: `event.startsAtTime`, `event.schedule[0].time`… */
@@ -28,21 +29,33 @@ export type TimeFieldProps = {
   clearable?: boolean;
 };
 
+/** Tell the form's own listeners (the series sentence, §371's scheduler) that the box moved. */
+function announce(input: HTMLInputElement) {
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
 /**
- * A time of day in the backoffice: the platform's own `<input type="time">`, always *posting*
- * `HH:mm` on the 24-hour clock (`DECISIONS.md` §345, amended by §400; the owner, 2026-09-25, of
- * the MUI wheel picker: "I simply hate this time picker"). The browser may *show* a 12-hour
- * clock face with its own AM/PM in some locales, exactly as §303 found before the pickers went
- * in, but the value this box carries and posts never changes shape, and a phone gets its own OS
- * wheel, which every runner already knows how to use, rather than MUI's.
+ * A time of day in the backoffice, on the 24-hour clock — **shown** that way as well as posted
+ * (`DECISIONS.md` §439, amending §400; the owner, 2026-09-26: "iar ai făcut ora cu AM și PM… am
+ * zis că vreau 24H format!").
  *
- * **What it posts has not changed:** `HH:mm` under the same name — `type="time"`'s own value,
- * with `step={60}` so no browser offers seconds. §345's date half is untouched (`DateField`
- * still runs the picker); only the time half drops the library.
+ * **Why a text box and not the browser's time input (`type=time`).** §400 swapped MUI's wheel picker for the
+ * browser's own time control and accepted, in writing, that the browser draws it in *its* locale:
+ * on an English-language Chrome or Edge that is "07:00 PM", whatever the page's `lang` says — no
+ * attribute, no CSS and no `step` changes it. The owner's rule is the stronger one, so the box is
+ * a plain MUI `TextField` that shows exactly the characters it posts: `19:00`.
  *
- * No island, no hydration swap: the native control is typeable on a desktop and the OS wheel on
- * a phone from the very first paint, server-rendered and client-rendered alike, so there is
- * nothing left for `PickerProvider` or `useIslandRunning` to do for a time box.
+ * **Typing it.** A numeric keypad on a phone (`inputMode="numeric"`), at most five characters,
+ * and no keystroke is ever rewritten — no colon added as the hour is typed, so «19:00» typed by
+ * hand is «19:00». On leaving the box or pressing Enter in it, `normalizeTypedTime` reads the
+ * usual shapes — "1900", "19.00", "930", "9:30", "7" — as
+ * `HH:mm`; what it cannot read stays as typed for `pattern` (with JavaScript or without) and the
+ * server (`isTimeValue`) to refuse. No AM/PM is ever read or shown.
+ *
+ * **What it posts has not changed:** `HH:mm` under the same name, the same value the native box
+ * posted, so nothing below the form moved. §345's date half is untouched (`DateField` still runs
+ * the picker, day-first); the time needs no island and no `PickerProvider`.
  */
 export default function TimeField({ name, label, defaultValue = "", required = false, helperText, size, sx, clearable = !required }: TimeFieldProps) {
   const recall = useRecall();
@@ -57,8 +70,23 @@ export default function TimeField({ name, label, defaultValue = "", required = f
     const input = field.current;
     if (!input) return;
     input.value = "";
-    input.dispatchEvent(new Event("change", { bubbles: true }));
+    announce(input);
     input.focus();
+  }
+
+  function normalize() {
+    const input = field.current;
+    if (!input) return;
+    const normal = normalizeTypedTime(input.value);
+    if (normal === input.value) return;
+    input.value = normal;
+    announce(input);
+  }
+
+  // Enter submits the form without leaving the box: normalise first, so «1900» + Enter posts
+  // 19:00 instead of meeting `pattern`'s refusal. The keydown runs before the implicit submit.
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" && event.target === field.current) normalize();
   }
 
   return (
@@ -66,7 +94,7 @@ export default function TimeField({ name, label, defaultValue = "", required = f
       key={recall.generation}
       id={id}
       name={name}
-      type="time"
+      type="text"
       inputRef={field}
       label={label}
       defaultValue={initial}
@@ -75,15 +103,20 @@ export default function TimeField({ name, label, defaultValue = "", required = f
       helperText={help}
       size={size}
       sx={sx}
+      onBlur={normalize}
+      onKeyDown={onKeyDown}
       slotProps={{
         inputLabel: { shrink: true },
-        // `pattern` is inert on `type="time"` in every shipping browser — kept only for the
-        // scriptless render (`pickers-js-off.test.ts`) and as documentation of the shape.
-        htmlInput: { step: 60, pattern: TIME_PATTERN, title: t("pickers.timeTyped") },
+        // `pattern` holds the box to `HH:mm` on submit, with JavaScript and without.
+        htmlInput: {
+          inputMode: "numeric",
+          autoComplete: "off",
+          maxLength: 5,
+          pattern: TIME_PATTERN,
+          placeholder: t("pickers.timePlaceholder"),
+          title: t("pickers.timeTyped"),
+        },
         input: {
-          // Chromium and Edge draw their own clock icon inside `type="time"`; clicking it opens
-          // that browser's own time popup (Chrome 83+), so it stays visible and untouched — an
-          // `AccessTimeIcon` start adornment would only sit beside it as a second, dead clock.
           endAdornment: clearable ? (
             <InputAdornment position="end">
               <IconButton aria-label={t("pickers.clearTime")} onClick={clear} sx={{ minWidth: 44, minHeight: 44 }} size="small">

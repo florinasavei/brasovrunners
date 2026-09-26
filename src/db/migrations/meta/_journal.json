@@ -575,6 +575,34 @@
       "when": 1790369923669,
       "tag": "0081_terms_acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1790397970728,
+      "tag": "0082_newsletter",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1790419530876,
+      "tag": "0083_bib_spare_band",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1790427009906,
+      "tag": "0084_pending_family_entries",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1790427010906,
+      "tag": "0088_email_transport",
+      "breakpoints": true
     }
   ]
 }

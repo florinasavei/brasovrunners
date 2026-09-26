@@ -4,6 +4,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
@@ -27,7 +28,8 @@ import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domai
 import { costUrlHost } from "@/modules/events/domain/cost";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
-import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { registrationEventWithLastGood } from "@/modules/resilience/event-copy";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { countryOptions } from "@/modules/registrations/countries";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
@@ -49,7 +51,6 @@ import {
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
-import ShownForMinor from "@/modules/registrations/ui/ShownForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
@@ -58,10 +59,6 @@ import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
-import { readAddressCap } from "@/modules/registrations/address-cap";
-import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
-import { readAnotherPersonLink } from "@/modules/registrations/token-actions";
-import { countForm } from "@/i18n/count-form";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -131,13 +128,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const event = await findPublishedEventBySlug(getDb(), locale, slug);
-  if (!event) notFound();
-
   const now = new Date();
+  /*
+    The event, with its last good copy behind it (§447). While the database is away — an outage,
+    or Neon refusing on the month's quota — the page is served from that copy: the resting notice
+    says so, the form is drawn disabled so nothing can be sent, and what a person typed before a
+    refused press comes back from the draft cookie. Every read below that needs the database is
+    skipped then; the ones the public cache answers are tried and may say nothing.
+  */
+  const eventRead = await registrationEventWithLastGood(locale, slug, now);
+  const event = eventRead.value;
+  if (!event) notFound();
+  const resting = eventRead.freshness === "stale";
+
   // Read once: the widget is drawn when both keys are set *and* the club has not switched the
-  // check off (§254). The honeypot and the timing check stand either way (§19.4).
-  const siteKey = await activeBotCheckSiteKey(getDb(), now);
+  // check off (§254). The honeypot and the timing check stand either way (§19.4). None while
+  // resting: the form cannot be sent, so there is no token to ask for.
+  const siteKey = resting ? undefined : await activeBotCheckSiteKey(getDb(), now);
   const state = registrationState(
     {
       registrationMode: event.registrationMode,
@@ -153,16 +160,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another } = await searchParams;
   /*
-    The form for another person on a registered address (§389), opened from the link emailed to it.
-    Read, never spent — a GET changes nothing (§12.8), and a mail scanner opening the link leaves it
-    working; the submission spends it. A link that works puts the form in its family shape: the
-    address fixed and shown, the telephone optional. One that does not — spent, lapsed, for another
-    event — says so in one sentence above the ordinary form, and nothing else.
+    A link from an email sent before §446, which opened this form for another person on the address
+    (§389). Retired: the email now carries one confirmation of the person the form named
+    (`/registrations/family/[token]`), so this is the ordinary form, and one sentence above it says
+    what to do instead. Nothing is read, and nothing is spent.
   */
-  const anotherSecret = !submitted && typeof another === "string" && another !== "" ? another : undefined;
-  const anotherLink = anotherSecret ? await readAnotherPersonLink(anotherSecret, event.id, now) : null;
-  const family = anotherLink?.ok ? { secret: anotherSecret as string, email: anotherLink.email } : null;
-  const anotherLinkGone = Boolean(anotherSecret) && !family;
+  const anotherLinkGone = !submitted && typeof another === "string" && another !== "";
   // Only meaningful on the screen that follows a successful submit (§224): the inbox to open
   // and the first name to greet, from the form just posted, never from the registrations table.
   const submittedFacts = submitted ? await readSubmittedFacts() : null;
@@ -199,6 +202,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const throttled = (fields ?? "").split(",").includes("throttled");
   /**
+   * The database was away when the form was sent (§447): a compute that could not start, or Neon
+   * refusing on its monthly quota. About nothing the person typed, like the three above; the
+   * draft cookie brought their answers back, and nothing was registered or sent.
+   */
+  const databaseAway = (fields ?? "").split(",").includes("databaseAway");
+  /**
    * The emergency contact was the runner's own number (§228). A marker rather than a field,
    * like the two above, so the summary can still link the field while the sentence beneath it
    * says which of the two rules refused it — "that number is not valid" is untrue and was what
@@ -224,24 +233,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       ? WAITLIST_FULL
       : null;
   /*
-    The three refusals of the form behind the emailed link (§389), each a marker matched against its
-    one literal. The first two only ever reach a page that holds the link — whoever reads them has
-    read the address's inbox, so they may say what they are about (§39); the third is the link
-    itself no longer working, said on the plain form it sends the person back to. The limit is the
-    club's setting, read now, in words that agree with the number.
-  */
-  const alreadyOnAddress = refusedMarkers.includes(ALREADY_ON_ADDRESS);
-  const addressAtCap = refusedMarkers.includes(ADDRESS_AT_CAP);
-  const anotherLinkRefused = refusedMarkers.includes(ANOTHER_LINK_INVALID);
-  const capCount = addressAtCap || family ? (await readAddressCap(getDb())).cap.registrationsPerAddress : null;
-  /*
     The same, said before anybody types (§348): somebody who reached this form by its address —
     the event page offers no button then — reads why it would refuse, above the first field. The
     form stays, so a slot that opens a minute later is still one press away, and so a refusal can
     keep what was typed. The cached read the event page makes; optional, so a failure says nothing.
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null = null;
-  if (!submitted && !error) {
+  if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
       if (places?.available === 0) {
@@ -277,7 +275,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     page's list makes; optional, so a failure leaves the box as it always read.
   */
   let listStatesOn = false;
-  if (event.participantListVisibility === "NAMES") {
+  if (event.participantListVisibility === "NAMES" && !resting) {
     try {
       listStatesOn = await cachedListStatesDisclosed(now);
     } catch (failure) {
@@ -290,10 +288,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     again when the form is sent and records the version it finds. None approved: the form says
     registrations cannot be taken, and the service refuses them.
   */
-  const termsVersion = (await cachedCurrentApprovedDocument("TERMS", locale, now))?.version ?? null;
+  let termsVersion: number | null = null;
+  try {
+    termsVersion = (await cachedCurrentApprovedDocument("TERMS", locale, now))?.version ?? null;
+  } catch (failure) {
+    // Only while resting may it go unread: the form cannot be sent then, and the tick says "—".
+    unstable_rethrow(failure);
+    if (!resting) throw failure;
+  }
   const t = await getTranslations("Registration");
-  // "4 persoane" / "4 people": the club's limit per address, in words that agree with it (§389, §341).
-  const people = capCount !== null ? t(`another.people.${countForm(capCount, locale)}`, { count: capCount }) : "";
   // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
   const legal = await getTranslations("Legal");
@@ -314,7 +317,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * message is announced with the field instead of having to be hunted for.
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
-  const draft = error ? await readFormDraft() : null;
+  // While resting too (§447): a press the database refused left the answers in the draft cookie.
+  const draft = error || resting ? await readFormDraft() : null;
   /*
   What was typed before a rejected submission (§142), by field name.
 
@@ -445,6 +449,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         on production, where the mode is `live` (`delivery-notice.ts`). Above the journey strip
         so it is the first thing read on the form and on the check-your-email screen alike.
       */}
+      {/* Served from the last good copy (§447): when, and — on a month Neon has paused — until when. */}
+      <LastGoodNotice read={eventRead} />
+
       <EmailDeliveryNotice />
 
       {/* Where they are in the journey, and what happens next — the same component every page
@@ -491,7 +498,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             Each rejected field is a link to its own anchor, which is the one pattern that needs
             no JavaScript: following it moves focus to the input itself.
           */}
-          {error && (
+          {/* The form cannot be sent while resting (§447); what was typed stays in the boxes below. */}
+          {resting && !submitted && (
+            <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-resting">
+              {t("restingForm")}
+            </Alert>
+          )}
+          {/* The refusal a press met while the database was away is what the notice above says. */}
+          {error && !(resting && databaseAway) && (
             <Alert
               /*
                 Quieter for the anti-bot refusal (§282; the owner, of the red panel: "trebuie sa
@@ -511,7 +525,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               sx={{ mb: 2 }}
             >
               <AlertTitle>
-                {throttled ? t("errors.throttledTitle") : tooFast ? t("errors.tooFastTitle") : t("errors.title")}
+                {databaseAway
+                  ? t("errors.databaseAwayTitle")
+                  : throttled
+                    ? t("errors.throttledTitle")
+                    : tooFast
+                      ? t("errors.tooFastTitle")
+                      : t("errors.title")}
               </AlertTitle>
               {/*
                 The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
@@ -525,16 +545,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 the one rejection that is about nothing they typed, so it is said first and on
                 its own, and the catalogue already had the sentence for it.
               */}
-              {alreadyOnAddress ? (
-                // Behind the emailed link (§389): this runner is on the address already, and the
-                // link still works for somebody else.
-                t("another.alreadyOnAddress")
-              ) : addressAtCap ? (
-                // Behind the emailed link (§389): the address has the club's limit; nothing was registered.
-                t("another.atCap", { people })
-              ) : anotherLinkRefused ? (
-                // The link is spent, lapsed or for another event: the plain form, and how to get a new one.
-                t("another.linkGone")
+              {databaseAway ? (
+                t("errors.databaseAway")
               ) : waitlistRefusal ? (
                 /*
                   No place and nothing to join (§348): the event page's own sentence, and that
@@ -593,14 +605,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          {/* The form for another person on the address (§389): whose address, and what happens next. */}
-          {family && (
-            <Alert severity="info" sx={{ mb: 2 }} data-testid="another-person-notice">
-              <AlertTitle>{t("another.title")}</AlertTitle>
-              {t("another.intro", { email: family.email, people })}
-            </Alert>
-          )}
-          {/* A link that no longer works, opened (§389): one sentence, then the ordinary form. */}
+          {/* A link from an older email for another person (§389), opened: one sentence, then the ordinary form (§446). */}
           {anotherLinkGone && !error && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="another-person-link-gone">
               {t("another.linkGone")}
@@ -608,7 +613,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           )}
 
           {/* No terms approved (§421): there is nothing to accept, and the service would refuse. */}
-          {termsVersion === null && (
+          {termsVersion === null && !resting && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-terms-missing">
               {t("terms.missing")}
             </Alert>
@@ -672,7 +677,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               before it answers would buy the refusal it is meant to get past. Held, then sent
               when the token lands — never dropped.
             */}
-            {tooFast && (
+            {tooFast && !resting && (
               <Box sx={{ display: "flex", mb: 2 }}>
                 <SubmitButton
                   label={t("errors.tooFastResend")}
@@ -685,6 +690,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Box>
             )}
+            {/*
+              Disabled as one while resting (§447): a disabled fieldset turns off every control inside
+              it — nothing can be typed, pressed or sent — and still shows what the draft brought back.
+            */}
+            <Box component="fieldset" disabled={resting} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="slug" value={slug} />
@@ -698,8 +708,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
               />
               <input type="hidden" name="renderedAt" value={now.toISOString()} />
-              {/* The link's secret, back to the action that spends it (§389) — never kept in the draft. */}
-              {family && <input type="hidden" name={ANOTHER_PERSON_PARAM} value={family.secret} />}
 
               {/*
                 Two columns from `md` up, one below (BR-REQ-041-01 is phone-first and the phone
@@ -827,6 +835,39 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     </Box>
                   </MenuItem>
                 </TextField>
+                {/*
+                  Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
+                  "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
+                  are, so a Romanian runner just leaves it. It was optional in the fold on the
+                  right (§322); the server now refuses a public form without it.
+                */}
+                <TextField
+                  {...field("nationality")}
+                  label={t("nationality")}
+                  select
+                  required
+                  fullWidth
+                  // A blank from an older draft comes back as Romania too, never an empty select.
+                  defaultValue={prefill("nationality") || "RO"}
+                  sx={SELECT_WITH_GLYPHS_SX}
+                >
+                  {/*
+                    The flag before the name (§171), from the set `scripts/sync-flags.mjs` copies
+                    into `public/flags/`, normalised to 4:3 — not the regional-indicator emoji,
+                    which Windows draws as two boxed capitals.
+                  */}
+                  {countries.map((country) => (
+                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                      {/* The fixed box keeps the flag on the name's line and every name at one x. */}
+                      <Box component="span" sx={OPTION_GLYPH_SX}>
+                        <Flag code={country.code} width={20} />
+                      </Box>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {country.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Stack>
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
@@ -841,41 +882,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 messages to "…@gmail.con": one letter, and the confirmation link goes nowhere
                 while the screen says to check the inbox.
               */}
-              {family ? (
-                /*
-                  The address the link was sent to, fixed (§389): shown so the person knows where
-                  the next message goes, read-only, and never posted — the action takes the address
-                  from the token, so nothing typed here could move a registration to another inbox.
-                */
-                <TextField
-                  id={fieldId("email")}
-                  label={t("email")}
-                  value={family.email}
-                  helperText={t("another.emailFixed")}
-                  fullWidth
-                  slotProps={{ htmlInput: { readOnly: true, "aria-readonly": true, "data-testid": "another-person-email" } }}
-                />
-              ) : (
-                <EmailTwice
-                  name="email"
-                  confirmName="emailConfirm"
-                  fieldId={fieldId("email")}
-                  confirmFieldId={fieldId("emailConfirm")}
-                  label={t("email")}
-                  confirmLabel={t("emailConfirm")}
-                  mismatchLabel={t("emailMismatch")}
-                  noPasteLabel={t("emailNoPaste")}
-                  allowPasteLabel={t("emailAllowPaste")}
-                  invalidLabel={t("emailInvalid")}
-                  suggestionLabel={t.raw("emailSuggestion") as string}
-                  useSuggestionLabel={t("emailUseSuggestion")}
-                  help={t("emailHelp")}
-                  defaultValue={prefill("email")}
-                  defaultConfirmValue={prefill("emailConfirm")}
-                  error={invalid.has("email") || invalid.has("emailConfirm")}
-                  helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
-                />
-              )}
+              <EmailTwice
+                name="email"
+                confirmName="emailConfirm"
+                fieldId={fieldId("email")}
+                confirmFieldId={fieldId("emailConfirm")}
+                label={t("email")}
+                confirmLabel={t("emailConfirm")}
+                mismatchLabel={t("emailMismatch")}
+                noPasteLabel={t("emailNoPaste")}
+                allowPasteLabel={t("emailAllowPaste")}
+                invalidLabel={t("emailInvalid")}
+                suggestionLabel={t.raw("emailSuggestion") as string}
+                useSuggestionLabel={t("emailUseSuggestion")}
+                help={t("emailHelp")}
+                defaultValue={prefill("email")}
+                defaultConfirmValue={prefill("emailConfirm")}
+                error={invalid.has("email") || invalid.has("emailConfirm")}
+                helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
+              />
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 invalidLabel={t("phoneInvalid")}
@@ -888,12 +913,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
                 countryNames={phoneNames}
-                // Optional for another person on the address (§389): often a child with no phone of
-                // their own; the emergency contact below is still asked.
-                required={!family}
+                required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
-                helperText={invalid.has("phone") ? t("errors.phone") : family ? t("another.phoneOptional") : t("phoneHelp")}
+                helperText={invalid.has("phone") ? t("errors.phone") : t("phoneHelp")}
               />
 
               {/*
@@ -1033,11 +1056,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
 
               {/*
-                Where the runner is from (§322): optional, and on this side of the form for that
-                reason. It was required on the left, and the privacy notice could not say why —
-                nothing the club does with a registration reads either answer. What it is for is
-                said above the two fields, and the country starts unanswered rather than on
-                Romania: a pre-chosen answer is an answer nobody gave.
+                The runner's city (§322): optional, and on this side of the form for that reason.
+                Citizenship left this fold for the required half beside the birth date (§432).
               */}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
@@ -1047,44 +1067,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Typography variant="body2" color="text.secondary">
                     {t("originHelp")}
                   </Typography>
-                  <TextField
-                    {...field("nationality")}
-                    label={t("nationality")}
-                    select
-                    fullWidth
-                    defaultValue={prefill("nationality", "")}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-                    sx={SELECT_WITH_GLYPHS_SX}
-                  >
-                    <MenuItem value="" sx={OPTION_ROW_SX}>
-                      <Box component="span" sx={OPTION_LABEL_SX}>
-                        {t("nationalityNone")}
-                      </Box>
-                    </MenuItem>
-                    {/*
-                      The flag before the name (§171), from the set `scripts/sync-flags.mjs`
-                      already copies into `public/flags/` — which that script's own comment
-                      anticipated for exactly this ("will show many when a participant can state
-                      their country"). Normalised to 4:3, so a column of two hundred names does
-                      not wobble between Romania's 2:3 and the United Kingdom's 1:2.
-
-                      Not the regional-indicator emoji, which Windows draws as two boxed capitals
-                      — and Windows is what the club's own laptop runs.
-                    */}
-                    {countries.map((country) => (
-                      <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
-                        {/* The flag is `display: block` and 20×15; the fixed box is what stops it
-                            taking a line of its own in the closed field and what keeps every
-                            country name starting at the same x. */}
-                        <Box component="span" sx={OPTION_GLYPH_SX}>
-                          <Flag code={country.code} width={20} />
-                        </Box>
-                        <Box component="span" sx={OPTION_LABEL_SX}>
-                          {country.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </TextField>
                   <TextField {...field("city")} label={t("city")} autoComplete="address-level2" />
                 </Stack>
               </Box>
@@ -1124,9 +1106,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   (§323): gone once the birth date says under eighteen — disabled as well as
                   hidden, so neither box is validated or posted — and never stored for a minor
                   whatever is posted. A rejection naming either box shows it whatever the date.
-                  Never on the family form (§421): a minor keeps none, and another adult's
-                  socials are that adult's to give — the service drops them whatever is posted. */}
-              {!family && (
+                  Another adult's, sent from an address registered already (§421, §446), are that
+                  adult's to give: the service keeps none of them for the confirmation. */}
               <HiddenForMinor
                 birthDateId={fieldId("birthDate")}
                 forceOpen={invalid.has("stravaUrl") || invalid.has("instagramHandle")}
@@ -1158,7 +1139,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
               </HiddenForMinor>
-              )}
 
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
@@ -1174,8 +1154,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 consents; this is the optional note for the person who wants the medical team
                 to know something, and it says so.
 
-                On the family form, only for a minor (§421): the parent consents for the child;
-                another adult's health note is art. 9 data only that adult can consent to.
+                For another adult sent from an address registered already (§421, §446), the health
+                note is art. 9 data only that adult can consent to: the service keeps none of it.
               */}
               {(() => {
                 const healthBlock = (
@@ -1201,13 +1181,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
                 );
-                return family ? (
-                  <ShownForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("healthConsent") || invalid.has("healthNotes")}>
-                    {healthBlock}
-                  </ShownForMinor>
-                ) : (
-                  healthBlock
-                );
+                return healthBlock;
               })()}
 
               </Stack>
@@ -1297,30 +1271,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   ),
                 })}
               </CheckboxField>
-              {/*
-                The fitness statement. On the family form (§389, §421) it is the parent's to make
-                for a minor, as on the ordinary form, and nobody's to make for another adult: then
-                the address holder acknowledges that the person makes it in the declaration they
-                sign. The birth date decides which one is shown; the server decides which one is owed.
-              */}
-              {family ? (
-                <>
-                  <ShownForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("fitnessDeclared")}>
-                    <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
-                      {t("fitnessDeclared")}
-                    </CheckboxField>
-                  </ShownForMinor>
-                  <HiddenForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("fitnessAcknowledged")}>
-                    <CheckboxField id={fieldId("fitnessAcknowledged")} name="fitnessAcknowledged" required defaultChecked={prefill("fitnessAcknowledged") === "on"}>
-                      {t("another.fitnessAcknowledged")}
-                    </CheckboxField>
-                  </HiddenForMinor>
-                </>
-              ) : (
-                <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
-                  {t("fitnessDeclared")}
-                </CheckboxField>
-              )}
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
+                {t("fitnessDeclared")}
+              </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required defaultChecked={prefill("privacyAcknowledged") === "on"}>
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
@@ -1355,8 +1308,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                       )}
                     </>
                   );
-                  // On the family form, a minor's only (§421): another adult consents to the list themselves.
-                  return family ? <ShownForMinor birthDateId={fieldId("birthDate")}>{listQuestion}</ShownForMinor> : listQuestion;
+                  return listQuestion;
                 })()}
 
               {/*
@@ -1411,6 +1363,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 button that sends the form from where the browser lands — so a second panel
                 repeating it above the submit button is the same words twice on one screen.
               */}
+              {resting ? (
+                <Button variant="contained" size="large" fullWidth disabled data-testid="registration-submit-resting">
+                  {t("submit")}
+                </Button>
+              ) : (
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
@@ -1444,7 +1401,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 size="large"
                 fullWidth
               />
+              )}
             </Stack>
+            </Box>
           </form>
         </>
       )}

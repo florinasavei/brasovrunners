@@ -13,10 +13,12 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
+import { savedDurationMinutes } from "../../duration";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
-import GroupRunDeclarationField from "../GroupRunDeclarationField";
 import NightEventField from "../NightEventField";
+import OnlyForType from "../OnlyForType";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
@@ -24,8 +26,9 @@ import { LanguageTabs } from "./TextBoxes";
 
 /**
  * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
- * route's pills in the facts, then the declaration offer under them (§393) and, further down, the
- * route section under `#route` (§387). It was card 1.2 inside "Ce fel de eveniment" (§358) and
+ * route's pills in the facts and, further down, the route section under `#route` (§387). The
+ * group run's declaration offer (§393) was here; since §448 it is under «Regulamentul», with the
+ * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
@@ -42,7 +45,6 @@ import { LanguageTabs } from "./TextBoxes";
 export default async function CourseBox({
   event,
   mayEditSettings,
-  groupRunDeclarations,
   languages,
   heading,
   inSeries = false,
@@ -56,7 +58,7 @@ export default async function CourseBox({
   const wall = toWallTimeInput(event?.startsAt ?? null, zone);
   // The span's end for the first paint, by the server's rule (§394): «Durata» (the saved end), else
   // the programme's rows on the event's clock — the island reads both from the form after.
-  const savedMinutes = event?.endsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : null;
+  const savedMinutes = savedDurationMinutes(event?.startsAt, event?.endsAt);
   const savedProgramme = readScheduleItems(event?.scheduleItems).map((row) => {
     const from = toWallTimeInput(new Date(row.startsAt), zone);
     return { date: from.slice(0, 10), time: from.slice(11, 16), endTime: row.endsAt ? toWallTimeInput(new Date(row.endsAt), zone).slice(11, 16) : "" };
@@ -176,24 +178,23 @@ export default async function CourseBox({
           />
           <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
-        {/* "Declarație opțională pe propria răspundere" (§393): a group run on asphalt or trail may
-            offer its surface's self-declaration — on by default for trail, the mountain rescue asks
-            for it on the Tâmpa run. An island: it follows the type and surface selects above. */}
-        <GroupRunDeclarationField
-          initialType={event?.type ?? "GROUP_RUN"}
-          initialSurface={event?.surface ?? ""}
-          initialChecked={event?.offersGroupRunDeclaration ?? false}
-          approved={groupRunDeclarations ?? { ASPHALT: false, TRAIL: false }}
-          words={{
-            label: t("editor.groupRunDeclaration.label"),
-            help: t("editor.groupRunDeclaration.help"),
-            notGroupSurface: t("editor.groupRunDeclaration.notGroupSurface"),
-            missing: {
-              ASPHALT: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_ASPHALT") }),
-              TRAIL: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_TRAIL") }),
-            },
-          }}
-        />
+        {/* The group run's optional self-declaration (§393) is under «Regulamentul» since §448
+            (`DeclarationCard`): it still follows the surface chosen here. */}
+        {/* The group run's minimum age (§329, §440), beside the declaration it is stated in: the
+            event's own `min_age`, which the registration card holds for a race and hides for a group
+            run (§111). Its own name, so the hidden race box cannot answer for it — the reader picks
+            this one for a group run (`admin/actions.ts`). */}
+        <OnlyForType type="GROUP_RUN" selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+          <RecallField
+            name="event.groupRunMinAge"
+            label={t("editor.minAge")}
+            helperText={t("editor.groupRunDeclaration.minAgeHelp")}
+            defaultValue={event?.minAge ?? MIN_PARTICIPANT_AGE}
+            {...textFieldConstraints(eventInputConstraints("minAge"), { inputMode: "numeric" })}
+            sx={{ width: { sm: 220 } }}
+            data-testid="group-run-min-age"
+          />
+        </OnlyForType>
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}

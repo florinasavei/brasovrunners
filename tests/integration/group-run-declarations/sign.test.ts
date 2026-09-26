@@ -133,6 +133,8 @@ async function input(eventId: string, overrides: Partial<GroupRunSigningInput> =
     accepted: true,
     typedName: "Ana Popescu",
     idDocument: ID,
+    // The run's minimum age is asked at the door since §440 (the column's default fourteen).
+    birthDate: "1990-05-17",
     email: "ana@example.ro",
     locale: "ro",
     ...overrides,
@@ -430,5 +432,69 @@ describe("§393 retention: the declaration goes seven days after the run", () =>
     expect(left.map((row) => row.eventId)).toEqual([recent.id]);
     const outbox = await db.select().from(emailOutbox);
     expect(outbox.map((row) => row.recipientEmail)).toEqual(["ion@example.ro"]);
+  });
+});
+
+/**
+ * §440 (amending §393) — the run's own minimum age: the event's `min_age` (§329), stated in the
+ * declaration through `{{minimumAge}}` and asked at the signing page's door by the race's rule
+ * (`isUnderMinimumAge`), on the run's day in the run's zone. The run starts on 7 October 2026.
+ */
+describe("§440 a group run's minimum age at the signing door", () => {
+  it("refuses a signer who turns twenty-one the day after the run, naming the birth date and the age, and writes nothing", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ minAge: 21 });
+    await expect(signGroupRunDeclaration(db, await input(event.id, { birthDate: "2005-10-08" }), NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["birthDate", "tooYoung"],
+    });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+    expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+
+  it("names a missing birth date while the run has a minimum, with the other wrong boxes", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ minAge: 21 });
+    await expect(signGroupRunDeclaration(db, await input(event.id, { birthDate: undefined, accepted: false }), NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["birthDate", "accepted"],
+    });
+  });
+
+  it("takes a signer who turns twenty-one on the day of the run, and states the minimum in the PDF", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ minAge: 21 });
+    expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: "2005-10-07" }), NOW)).outcome).toBe("signed");
+    const [signed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
+    await renderOutboxMessage(claimed(signed), db, NOW);
+    const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
+    expect(drawn.entries[0].values?.minimumAge).toBe("21 de ani");
+    expect(JSON.stringify(drawn.entries[0].body)).toContain("Declar că am cel puțin {{minimumAge}}.");
+  });
+
+  it("counts the day in the run's zone: a start at 01:30 in Brașov is the 7th, the 6th in UTC", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ minAge: 21, startsAt: new Date("2026-10-06T22:30:00.000Z"), timezone: "Europe/Bucharest" });
+    expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: "2005-10-07" }), NOW)).outcome).toBe("signed");
+  });
+
+  it("asks nothing of a run whose minimum is eighteen or less, and leaves the sentence out: the text already says eighteen", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ minAge: 14 });
+    expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: undefined }), NOW)).outcome).toBe("signed");
+    const [signed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
+    await renderOutboxMessage(claimed(signed), db, NOW);
+    const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
+    expect(drawn.entries[0].values?.minimumAge).toBe("");
+  });
+
+  it("asks nothing of a run with no minimum, and leaves the sentence out (the value is empty)", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ minAge: 0 });
+    expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: undefined }), NOW)).outcome).toBe("signed");
+    const [signed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
+    await renderOutboxMessage(claimed(signed), db, NOW);
+    const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
+    expect(drawn.entries[0].values?.minimumAge).toBe("");
   });
 });

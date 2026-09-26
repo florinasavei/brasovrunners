@@ -38,7 +38,7 @@ async function writeRouteDescription(page: Page, locale: "ro" | "en", text: stri
   await editor.locator('input[type="file"]').setInputFiles({ name: `harta-${locale}.jpg`, mimeType: "image/jpeg", buffer: map });
   await expect(editor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 20_000 });
   // What it became, under the toolbar (§414): nobody chose, so the recommended quality.
-  await expect(editor.getByTestId("rich-text-image-stored")).toContainText("calitate normală");
+  await expect(editor.getByTestId("rich-text-image-stored")).toContainText("calitate medie");
   // The picture's own panel opens on it (§73): say what it shows, then close it.
   const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
   await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill(locale === "ro" ? "Harta traseului" : "The route map");

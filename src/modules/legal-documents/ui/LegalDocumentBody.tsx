@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { Fragment } from "react";
 import { isLegalDocumentBody } from "../domain/content-hash";
 import { parseInline } from "../domain/inline";
-import { mergeTextSegments, type MergeValues } from "../domain/merge-fields";
+import { dropsParagraph, mergeTextSegments, type MergeValues } from "../domain/merge-fields";
 
 /**
  * Renders a legal document's stored body — headings and paragraphs, and inside a paragraph
@@ -83,6 +83,8 @@ export default function LegalDocumentBody({
             </Typography>
           )}
           {section.paragraphs.map((paragraph, paragraphIndex) => {
+            // A sentence about a value the event does not have — no minimum age (§440) — is left out.
+            if (values && dropsParagraph(paragraph, values)) return null;
             const parts = parseInline(paragraph);
             const onlyPicture = parts.length === 1 && parts[0].kind === "image";
             if (onlyPicture && parts[0].kind === "image") {

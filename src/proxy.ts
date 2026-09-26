@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
+import { REQUEST_PATH_HEADER } from "@/modules/resilience/domain/resting-page";
 import { isPrivatePath } from "@/shared/security/private-paths";
 
 // Next.js 16 renamed middleware.ts to proxy.ts; the runtime is Node.js only.
@@ -52,6 +53,17 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(target, 308);
   }
 
+  /*
+    The visited address, handed to the page as a request header (§447): a public page that has
+    nothing to show while the month's budget is red sends its reader to the short resting page,
+    and this is how that page knows where to bring them back. Always overwritten here, so a caller
+    cannot choose it; and only ever read as a path on this site (`safeBackPath`).
+  */
+  try {
+    request.headers.set(REQUEST_PATH_HEADER, `${url.pathname}${url.search}`);
+  } catch {
+    // Headers the runtime keeps read-only: the resting page then brings the reader to the root.
+  }
   const response = intlProxy(request);
 
   /**

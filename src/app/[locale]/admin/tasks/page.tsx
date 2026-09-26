@@ -18,7 +18,7 @@ import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
-import { findCurrentApprovedDocument, noticeDescribesListStates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesListStates, noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
 import {
   countTasks,
   filterTasks,
@@ -30,7 +30,11 @@ import {
   TASK_OWNERS,
   type TaskState,
 } from "@/modules/diagnostics/owner-tasks";
-import { opsTaskPanels, resolveTaskPanel, type TaskPanel } from "@/modules/diagnostics/domain/task-panels";
+import { defaultTaskPanel, resolveTaskPanel, type TaskPanel, visibleTaskPanels } from "@/modules/diagnostics/domain/task-panels";
+import { readClubTodo } from "@/modules/club-todo/club-todo";
+import { canEditClubTodo, openClubTodoCount, resolveClubTodoOwner } from "@/modules/club-todo/domain/club-todo";
+import ClubTodoPanel from "@/modules/club-todo/ui/ClubTodoPanel";
+import { dayIn } from "@/modules/registrations/domain/age";
 import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
@@ -59,6 +63,9 @@ import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
+import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
 import { readJobCadence } from "@/modules/jobs/cadence";
@@ -72,7 +79,7 @@ import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
@@ -104,16 +111,20 @@ export const maxDuration = 60;
  *
  * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
  * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
- * every service on the way. Four panels:
+ * every service on the way. Five panels:
  *
- * - `todo` — what is still owed, with its filters, and the decisions still open.
+ * - `club` — «Club»: what is still owed, read from the system, with its filters, and the
+ *   decisions still open. It was `todo`, «De făcut», until §438, and it is still where a bare
+ *   `/admin/tasks` lands for the Administrator and the Superadministrator.
+ * - `todo` — «De făcut»: the club's own checklist, typed and ticked by hand (§438,
+ *   `modules/club-todo`), for every role from the Redactor up.
  * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
  *   club must be able to switch it off on the day it refuses real people.
  * - `costs` — what the club pays today and what the next thing to cost anything would cost.
  * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §397).
  *
- * A query parameter, not four routes: each panel needs the same session and the same reading of
- * the system (`describeTasks`), so four routes would be four copies of this page's head.
+ * A query parameter, not five routes: each panel needs the same session and the same reading of
+ * the system (`describeTasks`), so five routes would be five copies of this page's head.
  */
 
 /** The colour is the whole message for somebody scanning: red stops a registration today. */
@@ -184,7 +195,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   const actor = await requireStaff();
   const isOps = canManageRegistrations(actor.role);
-  const canApp = canSeeDiagnostics(actor.role);
 
   // Strings, because that is what the sub-nav takes (§265), and `getPathname` is a server
   // function so this is the only side of the boundary that can build them.
@@ -200,25 +210,64 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * `notFound()` thrown from here is exactly the 200-with-not-found-body that guard exists to
    * avoid — so a mismatch here lands on that role's own default panel instead.
    */
+  // «Club» is the bare address (the owner, 2026-09-26: "by default I need to be on the «Club»
+  // tab"); every other panel names itself, so a link to one keeps working as it always did.
+  const panelHref = (name: TaskPanel) => (name === "club" ? tasksPath : `${tasksPath}?panel=${name}`);
+  const landing = defaultTaskPanel(actor.role);
+  // `layout.tsx` has already refused a role with no panel here; this is the type's own guard.
+  if (landing === null) notFound();
   const requestedPanel = resolveTaskPanel(actor.role, panelRaw);
-  const panel: TaskPanel = requestedPanel ?? (isOps ? "todo" : "app");
+  const panel: TaskPanel = requestedPanel ?? landing;
   if (panelRaw !== undefined && requestedPanel === null) {
-    redirect(isOps ? tasksPath : `${tasksPath}?panel=app`);
+    redirect(panelHref(landing));
   }
 
   const t = await getTranslations("Admin.tasks");
-  // «Aplicația» / «The app» sits after «Sistem» (§397; the owner asked for one more tab, not a
-  // rearrangement of the others). `opsTaskPanels` is empty for a Tehnic, who never sees the
-  // club's worklist or its money.
-  const subNavItems = [
-    ...opsTaskPanels(actor.role).map((name) => ({
-      href: name === "todo" ? tasksPath : `${tasksPath}?panel=${name}`,
-      label: t(`panel.${name}`),
+  /*
+    The club's checklist (§438), read on every panel: its open count is in the «De făcut» tab's
+    label, which every panel's sub-navigation carries — one small row, the list itself.
+  */
+  const clubTodo = await readClubTodo(getDb());
+  const openTodo = openClubTodoCount(clubTodo.items);
+  // «Club», «De făcut», «Anti-robot», «Costuri», then «Sistem» (the link to `/devs`) and
+  // «Aplicația» after it (§397). Each role sees the panels its own gates open (`task-panels.ts`).
+  const subNavItems = visibleTaskPanels(actor.role).flatMap((name) => [
+    ...(name === "app" ? [{ href: devsPath, label: t("panel.system") }] : []),
+    {
+      href: panelHref(name),
+      label: name === "todo" && openTodo > 0 ? t("panel.todoCount", { count: openTodo }) : t(`panel.${name}`),
       active: panel === name,
-    })),
-    ...(canApp ? [{ href: devsPath, label: t("panel.system") }] : []),
-    ...(canApp ? [{ href: `${tasksPath}?panel=app`, label: t("panel.app"), active: panel === "app" }] : []),
-  ];
+    },
+  ]);
+
+  /**
+   * «De făcut»: the club's own checklist (§438). Like «Aplicația», it needs none of the system
+   * reading below, so it answers on its own — the whole of this page for a Redactor or an
+   * Organizer, who may open nothing else here.
+   */
+  if (panel === "todo") {
+    const tErrors = await getTranslations("Admin.errors");
+    const errorCode = first(query.error);
+    const errorKnown = typeof errorCode === "string" && /^[A-Z_]{1,64}$/.test(errorCode) && tErrors.has(errorCode);
+    return (
+      <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
+        <Box>
+          <Typography variant="h1" sx={{ fontSize: "1.5rem" }} gutterBottom>
+            {t("title")}
+          </Typography>
+        </Box>
+        <SubNav label={t("title")} items={subNavItems} />
+        <ClubTodoPanel
+          locale={locale}
+          items={clubTodo.items}
+          mayEdit={canEditClubTodo(actor.role)}
+          owner={resolveClubTodoOwner(clubTodo.items, first(query.for))}
+          today={dayIn(new Date(), CLUB_TIME_ZONE)}
+          error={errorKnown ? tErrors(errorCode) : undefined}
+        />
+      </Stack>
+    );
+  }
 
   /**
    * The app tab: `docs/QUEUE.md`, rendered read-only through the same renderer `/devs/docs`
@@ -269,9 +318,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // health half) — cached fifteen minutes, same as `/api/health`.
   const botCheckHealth = await probeTurnstileSecret();
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
+  // The month's budget as the governor reads it (§447) — Neon's API through the shared reading,
+  // never the database — for the health checks' thresholds and the "Bugetul lunii" card.
+  const budget = await readNeonBudget(now);
   const jobs = await Promise.all([
-    checkJobHealth(db, "email-outbox", now),
-    checkJobHealth(db, "registration-maintenance", now),
+    checkJobHealth(db, "email-outbox", now, budget.effects.jobFloorMinutes),
+    checkJobHealth(db, "registration-maintenance", now, budget.effects.jobFloorMinutes),
   ]);
   // The listing's own query, so "published" here means exactly what a visitor sees.
   const published = await listPublishedEvents(db, locale);
@@ -311,7 +363,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const raceDaySheetsDue = [...new Set(shredderRows.map((row) => row.title ?? row.eventId))];
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
-  const email = await checkEmailHealth(db, now);
+  const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
   const contactRecipients = await readContactRecipients(db);
   // The plan the club says it is on (§100): its price is a row on the cost table below.
@@ -334,12 +386,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * "Not a provider hostname" was the obvious test and it was wrong on the machine every
    * developer runs this on: `localhost` is not `*.vercel.app`, so the domain read as bound on
    * every laptop. A development hostname is not a bound domain, and saying so is one condition
-   * rather than two. The `.ro` test is the same hostname's suffix (`DECISIONS.md` §55).
+   * rather than two.
    */
   const hostname = new URL(env.APP_BASE_URL).hostname;
   const clubDomainBound =
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
-  const roDomainBound = clubDomainBound && /\.ro$/i.test(hostname);
+  // When the domain expires (§435): the two dates from the environment, the arithmetic pure.
+  const domain = domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now);
 
   /**
    * The values the step-by-step instructions under each task need, read from this deployment
@@ -359,6 +412,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     maintenanceUrl: `${env.APP_BASE_URL}/api/internal/jobs/registration-maintenance`,
     webhookUrl: `${env.APP_BASE_URL}/api/webhooks/mailgun`,
     baseUrl: env.APP_BASE_URL,
+    // The renewal row's sentence (§435): the expiry as a day a person reads, and the years paid.
+    domainExpiresOn:
+      domain.status === "unknown" ? "" : formatCalendarDay(domain.expiresOn, { locale, style: "long", position: "inline" }),
+    renewalYears: String(env.DOMAIN_RENEWAL_YEARS),
   };
   /** `t.raw` returns the catalogue's array untouched, so the values are filled in here. */
   const fill = (step: string) =>
@@ -384,6 +441,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
       // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
+      // §445: the same switch for the newsletter's pop-up on the contact page.
+      newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.
@@ -396,7 +455,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,
       raceDaySheetsDue,
-      roDomainBound,
+      domainRenewal: domain,
       storageConfigured: isStorageConfigured(),
       // Configured *and* switched on (§254): a row that said "done" while the check was off
       // would be the task board lying about a defence.
@@ -422,7 +481,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     The older pictures' button (§430), on the list of what is owed while anything is left to
     convert — one count, only for this panel, and nothing where there is no store to convert in.
   */
-  const olderPictures = panel === "todo" && isStorageConfigured() ? await countOlderPictures(db) : 0;
+  const olderPictures = panel === "club" && isStorageConfigured() ? await countOlderPictures(db) : 0;
   /*
     How many the press just made failed, from the address the action lands on — said on the card
     with what to do, not only in the toast that fades (§430). A number and nothing else; any other
@@ -590,6 +649,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
         {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
+        {query.saved === "budgetThresholds" && <Alert severity="success">{t("budgetThresholds.saved")}</Alert>}
         {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
         {query.saved === "neonLimitsSame" && <Alert severity="info">{t("neonLimits.savedSame")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
@@ -612,7 +672,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         </>
       )}
 
-      {panel === "todo" && (
+      {panel === "club" && (
         <>
         {/* A thing owed once (§430): the pictures from before §414 get their phone sizes. Gone at zero. */}
         {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
@@ -702,7 +762,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
             >
               <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                <Chip size="small" color={STATE_COLOR[task.state]} label={t(`state.${task.state}`)} />
+                <Chip size="small" color={STATE_COLOR[task.state]} label={task.label ? t(`stateLabel.${task.label}`) : t(`state.${task.state}`)}
+                />
                 {/* Who it is waiting on, because that is the difference between a list somebody
                     acts on and a list they scroll past. */}
                 <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />
@@ -773,6 +834,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
           door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
         */}
+        {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against. */}
+        <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManageRegistrations(actor.role)} />
+
         {neonLimits && (
           <NeonLimitsPanel
             locale={locale}
@@ -966,7 +1030,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         </>
       )}
 
-      {panel === "todo" && (
+      {panel === "club" && (
         <>
         {/*
           A fact is something to read; a decision is a question with somebody's name on it. Only

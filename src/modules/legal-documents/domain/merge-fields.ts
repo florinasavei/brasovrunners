@@ -1,5 +1,6 @@
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
@@ -90,6 +91,52 @@ export function deadlineMergeValues(
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
+ * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
+ * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
+ * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
+ * cel puțin {{minimumAge}}." — filled from the event at signing and in the PDF.
+ *
+ * **An event with no minimum (zero) has no such sentence.** The field is then given "", and a
+ * paragraph naming a field of `PARAGRAPH_MERGE_FIELDS` given "" is left out whole
+ * (`dropsParagraph`): "Declar că am cel puțin ." is no sentence, and "cel puțin 0 ani" is a
+ * statement about nothing. The registry had no conditional form, only `OMITTABLE_MERGE_FIELDS`,
+ * which drops the field's words and keeps the sentence around them; this is the paragraph's
+ * version of it. Given no value at all, the paragraph stays with its dotted blank, like every
+ * field on a text previewed without an event.
+ */
+export const MINIMUM_AGE_MERGE_FIELD = "minimumAge";
+
+/**
+ * `{{minimumAge}}`'s value: the event's minimum in words with its unit, or "" for none — the
+ * answer that drops the sentence naming it (`dropsParagraph`), never "0 ani".
+ */
+export function minimumAgeMergeValue(minAge: number, locale: string): string {
+  return minAge > 0 ? yearsPhrase(minAge, locale) : "";
+}
+
+/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`). */
+export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD]);
+
+/** Whether a paragraph is left out of a merged text: it names a paragraph field answered with "". */
+export function dropsParagraph(paragraph: string, values: MergeValues): boolean {
+  for (const match of paragraph.matchAll(FIELD_PATTERN)) {
+    const name = match[1];
+    if (PARAGRAPH_MERGE_FIELDS.has(name) && isMergeField(name) && values[name] === "") return true;
+  }
+  return false;
+}
+
+/**
+ * The privacy notice's marker for the newsletter (§445), the same two-in-one as the list's states
+ * above: filled, when the notice is shown, with the topics a subscriber may choose — the pop-up's
+ * own words, from the same catalogue (`newsletter/topic-words.ts`) — and the switch. The contact
+ * page offers the newsletter only while the notice in force, in every language, names it
+ * (`describesNewsletter`): an address is personal data taken under consent, and nothing is
+ * collected before the notice the club approved describes what happens to it (§146's rule).
+ */
+export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -123,8 +170,10 @@ export const MERGE_FIELDS = [
   "eventDate",
   "eventLocation",
   "signedAt",
+  MINIMUM_AGE_MERGE_FIELD,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
+  NEWSLETTER_MERGE_FIELD,
 ] as const;
 
 /**
@@ -201,7 +250,7 @@ export function mergeLegalBody(body: unknown, values: MergeValues): LegalDocumen
   return {
     sections: sections.map((section) => ({
       ...(section.heading !== undefined ? { heading: mergeText(section.heading, values) } : {}),
-      paragraphs: section.paragraphs.map((paragraph) => mergeText(paragraph, values)),
+      paragraphs: section.paragraphs.filter((paragraph) => !dropsParagraph(paragraph, values)).map((paragraph) => mergeText(paragraph, values)),
     })),
   };
 }
@@ -256,6 +305,15 @@ export function asksForMinorSignature(body: unknown): boolean {
  */
 export function describesListStates(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_STATES_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the newsletter (§445): it names `{{newsletterTopics}}`. The
+ * gate for the contact page's pop-up and for every subscription the service takes — the club's
+ * approval of such a text is the switch, as for the list's states (§396).
+ */
+export function describesNewsletter(body: unknown): boolean {
+  return mergeFieldsIn(body).has(NEWSLETTER_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {

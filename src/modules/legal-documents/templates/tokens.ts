@@ -1,7 +1,15 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
-import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD } from "../domain/merge-fields";
+import { yearsPhrase } from "@/modules/registrations/domain/age";
+import {
+  DEADLINE_MERGE_FIELDS,
+  deadlineMergeValues,
+  LIST_STATES_MERGE_FIELD,
+  MINIMUM_AGE_MERGE_FIELD,
+  NEWSLETTER_MERGE_FIELD,
+} from "../domain/merge-fields";
+import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -77,6 +85,12 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
       formatDay(TOKEN_EXAMPLE_SIGNED_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
     ),
   },
+  // The event's own minimum age (§329, §440), with its unit; a run with none leaves its sentence out.
+  {
+    token: `{{${MINIMUM_AGE_MERGE_FIELD}}}`,
+    messageKey: MINIMUM_AGE_MERGE_FIELD,
+    example: inBoth((locale) => yearsPhrase(16, locale)),
+  },
   // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
   // Each language's example in its own words, as the text in that language is filled (§369).
@@ -91,6 +105,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_STATES_MERGE_FIELD}}}`,
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
+  },
+  // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
+  // switch that lets the contact page offer it (`describesNewsletter`).
+  {
+    token: `{{${NEWSLETTER_MERGE_FIELD}}}`,
+    messageKey: NEWSLETTER_MERGE_FIELD,
+    example: inBoth((locale) => newsletterMergeValues(locale).newsletterTopics),
   },
 ];
 

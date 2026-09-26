@@ -15,6 +15,7 @@ import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-error
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 
 function text(form: FormData, name: string): string {
   const value = form.get(name);
@@ -32,6 +33,19 @@ export async function signGroupRunDeclarationAction(form: FormData): Promise<voi
   const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
   const slug = text(form, "slug");
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/declaration", params: { slug } } });
+  try {
+    await signOrRefuse(form, locale, path);
+  } catch (error) {
+    // The database is away (§447): nothing was signed; the boxes come back filled, and one
+    // sentence says to try again. `redirect()` throws too, and is not an away-error.
+    if (!isDatabaseAwayError(error)) throw error;
+    console.error("[declaration] the database is away; the form goes back with its answers", error);
+    await stashDraftValues(groupRunDraftOf(form), path);
+    redirect(`${path}?away=1`);
+  }
+}
+
+async function signOrRefuse(form: FormData, locale: Locale, path: string): Promise<void> {
   const refuse = async (fields: readonly string[]): Promise<never> => {
     await stashDraftValues(groupRunDraftOf(form), path);
     redirect(`${path}?invalid=${fields.join(",")}#${DECLARATION_ERROR_SUMMARY_ID}`);
@@ -63,6 +77,8 @@ export async function signGroupRunDeclarationAction(form: FormData): Promise<voi
         accepted: form.get("accepted") === "on",
         typedName: text(form, "typedName"),
         idDocument,
+        // Counted against the run's minimum age and dropped (§440); absent when the run has none.
+        birthDate: text(form, "birthDate") || undefined,
         email: text(form, "email"),
         locale: signingLocale,
         honeypot: text(form, "honeypot") || undefined,

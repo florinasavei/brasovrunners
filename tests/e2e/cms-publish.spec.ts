@@ -114,11 +114,14 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
     await expect(readOnly).toBeVisible();
     await expect(readOnly).toHaveCount(1);
-    // The status, the cost, the links and the public list are boxes of their own since §406, where
-    // the page draws them — or apart, the status — and for this reader each is its heading and its
-    // line, nothing to open, the sentence said once above (§358). The course keeps a fold: its route
-    // description is words, and the words are theirs (§387).
-    for (const card of ["Starea evenimentului", "Cost", "Linkuri și fișiere", "Lista publică a participanților"]) {
+    // The cost, the links and the public list are boxes of their own since §406, where the page
+    // draws them, and for this reader each is its heading and its line, nothing to open, the
+    // sentence said once above (§358). The status is not a card for this reader: the first box's
+    // line says it beside the type (§448). The course keeps a fold: its route description is words,
+    // and the words are theirs (§387).
+    await expect(kind.locator(":scope > summary")).toContainText("·");
+    await expect(page.locator("#box-status")).toHaveCount(0);
+    for (const card of ["Cost", "Linkuri și fișiere", "Lista publică a participanților"]) {
       const heading = page.getByRole("heading", { level: 2, name: new RegExp(`^(?:\\d+ · )?${card}`) });
       await expect(heading).toBeVisible();
       await expect(page.locator("section").filter({ has: heading })).toHaveCount(1);
@@ -440,6 +443,75 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
     expect((await page.goto(`/ro/evenimente/${slug}`))?.status()).toBe(200);
 
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+  });
+});
+
+/*
+  §448 — the owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". The
+  create page's status card is the editor's select: "Anulat" asks why in both languages and has no
+  "tell them" box (nobody is registered), and the event goes live saying it is cancelled.
+*/
+test.describe("§448 an event created already cancelled", () => {
+  test("creates and publishes it as Anulat, with its reason, and the page says it is cancelled", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `deja-anulat-${suffix}`;
+    const englishSlug = `already-cancelled-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+
+    await fillDateField(page, "Începutul evenimentului", "2027-05-09");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Deja anulat ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await summary("ro", "Anulat de organizator înainte să-l trecem pe site.");
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Already cancelled ${suffix}`);
+    await languageTab(page, "address", "en").click();
+    await field("translations.en.slug").fill(englishSlug);
+    await summary("en", "Called off by the organizer before we listed it.");
+
+    // The status: "Anulat", and the reason's two boxes — never a "tell them" box on a create.
+    const status = await openEditorBox(page, "Starea evenimentului");
+    await status.getByRole("combobox", { name: "Starea evenimentului" }).click();
+    await page.getByRole("option", { name: "Anulat" }).click();
+    const cancel = page.getByTestId("cancel-fields");
+    await expect(cancel).toBeVisible();
+    await expect(cancel).toContainText("Nu pleacă niciun email");
+    await expect(cancel.getByRole("checkbox")).toHaveCount(0);
+    await field("cancel.reasonRo").fill("Organizatorul a anulat cursa.");
+    await field("cancel.reasonEn").fill("The organizer called the race off.");
+
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    const editorUrl = page.url();
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
+    // The editor's own first box says it on its closed line; cancelled already, no reason asked again.
+    await expect(editorBox(page, "Ce fel de eveniment").locator(":scope > summary")).toContainText("Anulat");
+    await expect(page.getByTestId("cancel-fields")).toHaveCount(0);
+
+    // Live, and saying it is cancelled, in both languages.
+    await page.goto(`/ro/evenimente/${slug}`);
+    await expect(page.getByText("Acest eveniment a fost anulat.").first()).toBeVisible();
+    expect((await page.goto(`/en/events/${englishSlug}`))?.status()).toBe(200);
+
+    // Off the site again, so the listing other specs count is not one card longer.
     await page.goto(editorUrl);
     await hydrated(page);
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
@@ -834,10 +906,9 @@ test.describe("BR-REQ-050-02 a saved programme row reaches the public page and t
   unnamed input carries as its value ("30.09.2027") beside the hidden one the form posts
   ("2027-09-30").
 
-  The time box no longer has a format of its own to assert display-wise: a native
-  `<input type="time">` shows whatever the browser's own locale draws (§400 amending §345,
-  documented trade-off), so what this proves for the time is only what it has ever guaranteed —
-  the *posted* value stays `HH:mm` on the 24-hour clock, never AM/PM, whatever the box shows.
+  The time box is a typed text box since §439 (the browser's own time control of §400 drew
+  "07:00 PM" on an English-language browser), so what it shows is its value: asserting the value
+  "19:00" on a text box asserts the display and the post at once.
 */
 async function expectPickerShows(group: Locator, sections: string[], shown: string) {
   await expect(group.getByRole("spinbutton")).toHaveText(sections);
@@ -856,6 +927,20 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
 
     await fillDateField(page, "Începutul evenimentului", "2027-09-30");
     await fillTimeField(page, "Ora", "19:00");
+    // Typed by hand, key by key, the box keeps every keystroke as typed — no colon of its own
+    // (the review of §439: an auto-colon made «19:00» into «19::0») — and reads «1930» as 19:30
+    // on leaving it.
+    const timeBox = field("event.startsAtTime");
+    await timeBox.fill("");
+    await timeBox.pressSequentially("19:00");
+    await expect(timeBox).toHaveValue("19:00");
+    await timeBox.fill("");
+    await timeBox.pressSequentially("1930");
+    await expect(timeBox).toHaveValue("1930");
+    await timeBox.blur();
+    await expect(timeBox).toHaveValue("19:30");
+    await timeBox.fill("");
+    await timeBox.pressSequentially("19:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Ceas 24h ${suffix}`);
@@ -874,6 +959,8 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
       // What the form posts is still the service's shape, untouched by what either box shows.
       await expect(field("event.startsAtDate")).toHaveValue("2027-09-30");
       await expect(field("event.startsAtTime")).toHaveValue("19:00");
+      // A text box shows exactly its value: 19:00, never the browser's "07:00 PM" (§439).
+      await expect(field("event.startsAtTime")).toHaveAttribute("type", "text");
     };
 
     await readsTheClubsWay();

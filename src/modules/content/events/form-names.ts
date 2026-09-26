@@ -60,6 +60,8 @@ export function eventFormFieldName(path: string): string {
   const link = /^links\.(\d+)\.(\w+)$/.exec(path);
   if (link) return `event.links[${link[1]}].${link[2]}`;
   if (path === "links") return "event.links";
+  // «Durata» is two boxes, hours and minutes (§433); the hours are the one the summary points at.
+  if (path === "durationMinutes") return "event.durationHours";
   // A wall-clock instant is two boxes; the date is the one the summary points at.
   if (path.endsWith("WallTime")) return `event.${path.slice(0, -"WallTime".length)}Date`;
   if (/^(startsAt|endsAt|raceStartsAt|registrationOpensAt|registrationClosesAt)$/.test(path)) return `event.${path}Date`;

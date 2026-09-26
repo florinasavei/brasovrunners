@@ -38,11 +38,19 @@ import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
-import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
+import {
+  birthDateText,
+  findFamilyEntryById,
+  linkFamilyEntryToken,
+  personOfEntry,
+  registeredOnAddress,
+} from "@/modules/registrations/family-entries";
+import type { PendingFamilyEntry } from "@/db/schema/family-entries";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { weatherForEvent } from "@/modules/weather/source";
+import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
-import type { EmailEventFacts } from "./domain/event-facts";
+import { emailEventFacts } from "./event-facts-row";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
 /**
@@ -72,15 +80,16 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
-  // The form for another person on the same address (§389) — only while the address has room; at
-  // the club's limit the message carries no link, and nothing is minted for it.
+  // Another person on the same address, confirmed from the inbox (§389, §446) — only while the
+  // address has room and the posted form is still kept; at the club's limit the message carries no
+  // link, and nothing is minted for it.
   REGISTER_ANOTHER_PERSON: "REGISTER_ANOTHER_PERSON",
 };
 
 /**
- * Where each purpose's link opens: a page of its own, the secret in its path — except the form for
- * another person on one address (§389), which is the event's own registration form with the secret
- * in `?another=` (`ANOTHER_PERSON_PARAM`), built below with the event's slug.
+ * Where each purpose's link opens: a page of its own, the secret in its path. Another person on one
+ * address (§389, §446) opens `/registrations/family/[token]`, built below once the kept form is
+ * found — it is minted only then.
  */
 const ROUTE_BY_PURPOSE: Record<
   Exclude<EmailActionTokenPurpose, "REGISTER_ANOTHER_PERSON">,
@@ -124,8 +133,12 @@ export type EventRowsReader = (db: RendererDb, eventId: string) => Promise<reado
  * (`AGENTS.md` §16.1, `processOutboxBatch`).
  *
  * `readEventRows` is the seam a test counts reads through; the send path passes nothing.
+ *
+ * `replyTo` is the Reply-To the sender sets (§442, «Adresa de contact afișată»), so the line
+ * "or reply to this email" is there exactly when a reply reaches somebody. Absent, `EMAIL_REPLY_TO`.
  */
-export function createOutboxRenderer(options: { readEventRows?: EventRowsReader } = {}): EmailRenderer {
+export function createOutboxRenderer(options: { readEventRows?: EventRowsReader; replyTo?: string } = {}): EmailRenderer {
+  const replyTo = options.replyTo ?? env.EMAIL_REPLY_TO ?? undefined;
   const read: EventRowsReader = options.readEventRows ?? ((db, eventId) => findEventNotificationRows(db, eventId));
   const byEvent = new Map<string, Promise<readonly EventNotificationRow[]>>();
   const eventRows = (db: RendererDb, eventId: string) => {
@@ -137,7 +150,7 @@ export function createOutboxRenderer(options: { readEventRows?: EventRowsReader 
     }
     return rows;
   };
-  return (row, db, now) => renderRow(row, db, now, eventRows);
+  return (row, db, now) => renderRow(row, db, now, eventRows, replyTo);
 }
 
 /** One message on its own — a renderer whose batch is this one row (tests, one-off callers). */
@@ -148,12 +161,17 @@ async function renderRow(
   db: RendererDb,
   now: Date,
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+  replyTo: string | undefined,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
 
   // A group run's self-declaration (§393) is about no registration: its own, shorter path.
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
-    return renderGroupRunDeclarationRow(row, db, now, eventRows);
+    return renderGroupRunDeclarationRow(row, db, now, eventRows, replyTo);
+  }
+  // The newsletter (§445) is about a subscriber, never a registration: its own path too.
+  if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
+    return renderNewsletterRow(row, db, now, eventRows, replyTo);
   }
 
   /*
@@ -238,8 +256,8 @@ async function renderRow(
     // The other language's own words, for the bilingual message's second half — never the first
     // half's language repeated under the other language's sentence (§373, email follow-up).
     currentStatusOther: registration ? registrationStatusWords(registration.status, otherLocale(locale)) : undefined,
-    // The footer line is there whenever somebody can answer (§81).
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    // The footer line is there whenever somebody can answer (§81) — the Reply-To in force (§442).
+    replyTo,
     // The event's own page, for the deep link every message carries (§96).
     eventUrl: eventDetails?.slug
       ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
@@ -503,6 +521,11 @@ async function renderRow(
   if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
     data.alreadyRegistered = true;
   }
+  // …re-sent for a slip (§446): the name or the birth date matched a registration, not both — so the
+  // message says how to register somebody else. Never on a club copy: it is advice to the address.
+  if ((row.payloadJson as { anotherPersonHint?: unknown } | null)?.anotherPersonHint === true && !clubCopy) {
+    data.anotherPersonHint = true;
+  }
   // The staff invitation (§141): everything it says is in the payload — there is no
   // participant and no token; the action is the sign-in page, which asserts who they are.
   if (row.messageType === "STAFF_INVITATION") {
@@ -565,16 +588,31 @@ async function renderRow(
   }
 
   /*
-    The link for another person on one address (§389): what the submission decided, from the row —
-    the club's limit as it stood then, and whether the address had reached it. At the limit the
-    message is the sentence that says so, and no token is minted for a link it does not carry.
+    Another person on one address (§389, §446): what the submission decided, from the row — the
+    club's limit as it stood then, whether the address had reached it, and the kept form by its id.
+    At the limit the message is the sentence that says so, and no token is minted for a link it does
+    not carry. Otherwise the message names who the address holds here now — its own active
+    registrations, first name and initial, never anybody else's — and the person the form named,
+    read from the kept form at send time; with the form gone (confirmed, or lapsed and purged) there
+    is nothing to confirm, and no link either.
   */
-  let anotherPersonLink = false;
+  let familyEntry: PendingFamilyEntry | undefined;
   if (row.messageType === "REGISTER_ANOTHER_PERSON") {
-    const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown };
+    const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown; familyEntryId?: unknown };
     data.addressAtCap = payload.atCap === true;
     if (typeof payload.registrationsPerAddress === "number") data.addressCap = payload.registrationsPerAddress;
-    anotherPersonLink = !data.addressAtCap && Boolean(eventDetails?.slug);
+    const kept = !data.addressAtCap && typeof payload.familyEntryId === "string" ? await findFamilyEntryById(db, payload.familyEntryId) : undefined;
+    if (kept && kept.expiresAt.getTime() > now.getTime()) {
+      familyEntry = kept;
+      const person = personOfEntry(kept);
+      data.familyPersonName = person.legalName;
+      data.familyPersonBirthDate = birthDateText(person.birthDate);
+      data.familyRegistered = await registeredOnAddress(db, kept.eventId, kept.participantId);
+    } else if (!data.addressAtCap) {
+      // Confirmed, or lapsed and purged — deferred past the window (§40) or sent again after the
+      // press: the lapsed shape, which promises no button (§446).
+      data.familyEntryGone = true;
+    }
   }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
@@ -583,26 +621,24 @@ async function renderRow(
   // one rule to check rather than a list of which actions are safe to copy (§320).
   let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
   if (purpose === "REGISTER_ANOTHER_PERSON") {
-    if (anotherPersonLink && eventDetails && row.participantId && row.registrationId && !clubCopy) {
+    if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
       /*
         Single use, hashed at rest, minted here at send time like every link (§12.8, §14.5), and
-        alive for the club's email-link window ("Termene", §377) — the same hours the other person's
-        own confirmation link will get. Scoped to the registration the address already holds here,
-        which names the event and the participant; opening the page reads it, only the submission
-        spends it. The form is the event's own, in the language its slug belongs to.
+        alive exactly as long as the kept form — the club's email-link window ("Termene", §377) from
+        the submission. Scoped to the registration the address already holds here, which names the
+        event and the participant, and tied to the kept form by the token's id, so it confirms this
+        one person and nobody else. Opening the page reads it; only the press spends it.
       */
       const issued = await issueActionToken(db, {
         participantId: row.participantId,
         registrationId: row.registrationId,
         purpose,
-        expiresAt: emailLinkExpiresAt(now, settings),
+        expiresAt: familyEntry.expiresAt,
         now,
       });
-      const formPath = getPathname({
-        locale: eventDetails.locale,
-        href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } },
-      });
-      actionUrl = `${env.APP_BASE_URL}${formPath}?${ANOTHER_PERSON_PARAM}=${issued.secret}`;
+      await linkFamilyEntryToken(db, familyEntry.id, issued.token.id);
+      const path = getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token: issued.secret } } });
+      actionUrl = `${env.APP_BASE_URL}${path}`;
     }
   } else if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];
@@ -793,6 +829,7 @@ async function renderGroupRunDeclarationRow(
   db: RendererDb,
   now: Date,
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+  replyTo: string | undefined,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
   const archive = row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE";
@@ -815,7 +852,7 @@ async function renderGroupRunDeclarationRow(
     eventStartsAtFormattedOther: formatEventStart(eventDetails, otherLocale(locale)),
     signedAtFormatted: formatInSentence(signed.acceptedAt, zone, locale),
     signedAtFormattedOther: formatInSentence(signed.acceptedAt, zone, otherLocale(locale)),
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    replyTo,
     eventUrl: eventDetails?.slug
       ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
       : undefined,
@@ -870,47 +907,6 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
-}
-
-/**
- * One language's row of the event as the facts block reads it (§392): the anchors of that
- * language's page by the page's own rules — `#route` only with a route description in that
- * language (§387), `#links` only when the page's own split leaves "Linkuri și fișiere" something
- * to show (`partitionEventLinks`, the rule `EventLinks` draws by).
- */
-function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
-  const routeSection = hasRouteDescription(row.routeDescriptionJson);
-  return {
-    startsAt: row.startsAt,
-    raceStartsAt: row.raceStartsAt,
-    timezone: row.timezone,
-    locationToBeAnnounced: row.locationToBeAnnounced,
-    locationName: row.locationName,
-    locationAddress: row.locationAddress,
-    mapUrl: row.mapUrl,
-    latitude: row.latitude,
-    longitude: row.longitude,
-    scheduleItems: row.scheduleItems,
-    surface: row.surface,
-    difficulty: row.difficulty,
-    distanceMeters: row.distanceMeters,
-    elevationGainMeters: row.elevationGainMeters,
-    type: row.type,
-    endsAt: row.endsAt,
-    nightOverride: row.nightOverride,
-    registrationMode: row.registrationMode,
-    routeUrl: row.routeUrl,
-    stravaEventUrl: row.stravaEventUrl,
-    facebookEventUrl: row.facebookEventUrl,
-    costType: row.costType,
-    costAmount: row.costAmount,
-    costUrl: row.costUrl,
-    pageUrl,
-    hasRules: row.hasRules === true,
-    hasSchedule: row.hasSchedule === true,
-    hasRouteDescription: routeSection,
-    hasOtherLinks: partitionEventLinks(row.links, routeSection).other.length > 0,
-  };
 }
 
 function otherLocale(locale: Locale): Locale {

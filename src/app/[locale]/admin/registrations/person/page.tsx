@@ -17,6 +17,7 @@ import { openPersonLookup, PERSON_LOOKUP_MINUTES, viewPersonData } from "@/modul
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { lookUpPersonAction } from "./actions";
+import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -96,7 +97,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
           <Typography variant="body2" color="text.secondary">
             {t("person.intro")}
           </Typography>
-          <form action={lookUpPersonAction}>
+          <form action={lookUpPersonAction} data-action-key={actionKeyOf(lookUpPersonAction)}>
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
               <TextField name="email" type="email" label={t("person.email")} required autoComplete="off" sx={{ flex: 1 }} />

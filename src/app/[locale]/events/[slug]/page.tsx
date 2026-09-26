@@ -50,6 +50,7 @@ import { forecastForEvent } from "@/modules/weather/source";
 import { env } from "@/shared/config/env";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import JsonLd from "@/shared/ui/JsonLd";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -90,7 +91,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
 
-  const event = await cachedPublishedEventBySlug(locale, slug);
+  // The head says nothing rather than failing the page while the database is away (§447): the
+  // body's own read decides between its last good copy and the resting page.
+  const event = await readOrWhileAway(() => cachedPublishedEventBySlug(locale, slug), undefined);
   if (!event) return {};
 
   return {
@@ -107,7 +110,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     */
     alternates: pageAlternates(
       locale,
-      slugRouteUrls(env.APP_BASE_URL, "/events/[slug]", await cachedPublishedTranslations(event.id)),
+      slugRouteUrls(env.APP_BASE_URL, "/events/[slug]", await readOrWhileAway(() => cachedPublishedTranslations(event.id), [])),
     ),
     openGraph: {
       title: event.seoTitle ?? event.title,
