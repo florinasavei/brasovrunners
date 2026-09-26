@@ -37,6 +37,8 @@ export type WeatherWords = {
   temperature: string | null;
   /** The chance of rain alone, «20%» — an hour of the block; null when the hour has none. */
   rainShort: string | null;
+  /** «ploaie probabilă» / "rain likely" — the words a card, the hero and the event page add to the spoken text when `rainLikely` holds (§NNN). */
+  rainLikely: string;
 };
 
 export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): WeatherWords {
@@ -49,9 +51,10 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
   };
   const summary = t(`codes.${reading.kind}`);
   const temperature = reading.temperatureC !== null ? t("temperature", { degrees: whole(reading.temperatureC) }) : null;
+  const rain = reading.precipitationProbability !== null ? t("rain", { percent: whole(reading.precipitationProbability) }) : null;
   const details = [
     ...(temperature !== null ? [temperature] : []),
-    ...(reading.precipitationProbability !== null ? [t("rain", { percent: whole(reading.precipitationProbability) })] : []),
+    ...(rain !== null ? [rain] : []),
     ...(reading.windKmh !== null ? [t("wind", { speed: whole(reading.windKmh) })] : []),
   ];
   // Rain under a tenth of a millimetre and a UV index that rounds to 0 are nothing to read.
@@ -72,6 +75,7 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     extras,
     temperature,
     rainShort: reading.precipitationProbability !== null ? t("rainShort", { percent: whole(reading.precipitationProbability) }) : null,
+    rainLikely: t("rainLikely"),
   };
 }
 
@@ -91,8 +95,9 @@ export function forecastPlaceWords(source: ForecastPlaceSource, locale: "ro" | "
 
 /**
  * The words that belong to no one hour: the block's list name, «Pe ore, de la start»; a card pill's
- * spoken prefix, «Vremea la start»; and the credit, «Prognoză: Open-Meteo», for the listing's one
- * line under its cards.
+ * spoken prefix, «Vremea la start»; and the credit, «Prognoză: Open-Meteo», for the site footer's
+ * «Despre club» fold (`SiteFooter`, §NNN) — the event page and the featured hero say theirs beside
+ * the forecast, through `weatherWords`.
  */
 export function weatherListWords(locale: "ro" | "en"): { hours: string; atStart: string; credit: string } {
   const t = weatherCatalogue(locale);

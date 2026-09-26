@@ -4283,6 +4283,7 @@
     "label": "Vremea",
     "temperature": "{degrees} °C",
     "rain": "{percent}% șanse de ploaie",
+    "rainLikely": "ploaie probabilă",
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",

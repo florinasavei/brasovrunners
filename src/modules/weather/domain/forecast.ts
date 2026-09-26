@@ -210,6 +210,41 @@ export function pickHours(forecast: HourlyForecast, startAt: Date, count: number
 }
 
 /**
+ * The chance of rain, in percent, from which a listing card's weather pill wears the umbrella
+ * (§NNN; the owner, 2026-09-26: "an umbrella when rain is likely"). Fifty: "likely" is more likely
+ * than not, the one threshold a runner reads without a legend — below it the sky's own glyph, at
+ * or above it the umbrella, whatever the sky's word at the hour.
+ */
+export const RAIN_LIKELY_PERCENT = 50;
+
+/**
+ * The glyphs the umbrella never replaces: snow, frost and the storm say something a runner needs
+ * more than "take an umbrella" — what to wear on the feet, or whether to go out on a ridge at all.
+ * Open-Meteo's chance is of any precipitation, so a snowy hour's 80% is snow, not rain.
+ */
+const STRONGER_THAN_UMBRELLA: ReadonlySet<WeatherGlyphName> = new Set(["snow", "snowShowers", "ice", "thunder"]);
+
+/**
+ * Below the chance threshold, a forecast amount already falling in the hour: 0.5 mm or more of
+ * rain is worth an umbrella even at a lower chance (a showery hour of 45% with 2 mm), the fix
+ * round's own reading of Open-Meteo's `precipitationMm` (§NNN).
+ */
+const RAIN_LIKELY_MM = 0.5;
+
+/**
+ * Whether a card says "rain is likely" at the start (§NNN): the chance of rain at the hour is at
+ * least `RAIN_LIKELY_PERCENT`, or the forecast amount is already `RAIN_LIKELY_MM` or more — and
+ * either way the hour's own glyph is not one that says more (snow, frost, the storm). A missing
+ * chance and a missing amount are neither a likely one.
+ */
+export function rainLikely(reading: Pick<WeatherReading, "precipitationProbability" | "glyph" | "precipitationMm">): boolean {
+  if (STRONGER_THAN_UMBRELLA.has(reading.glyph)) return false;
+  const byChance = reading.precipitationProbability !== null && reading.precipitationProbability >= RAIN_LIKELY_PERCENT;
+  const byAmount = reading.precipitationMm !== null && reading.precipitationMm >= RAIN_LIKELY_MM;
+  return byChance || byAmount;
+}
+
+/**
  * The instant a forecast is read for: a race's gun time when it has one apart from the gathering
  * (§71) — the hour the runner is out on the course — otherwise the start.
  */

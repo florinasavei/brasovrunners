@@ -5,6 +5,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import UmbrellaIcon from "@mui/icons-material/Umbrella";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
@@ -13,7 +14,8 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import type { EventForecast } from "@/modules/weather/domain/forecast";
+import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
+import CardWeather from "@/modules/weather/ui/CardWeather";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
 import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
@@ -173,6 +175,7 @@ export default async function EventFacts({
   stacked = false,
   whenLead,
   weather = null,
+  cardWeather = null,
 }: {
   event: PublicEvent;
   now: Date;
@@ -183,9 +186,15 @@ export default async function EventFacts({
    * did not answer. The event page and its preview (`stacked`) draw the start hour with its details
    * and the hours after it; the listing's featured hero (the default form) one line of it (§416 —
    * the owner: "aș vrea să văd vremea și pe cardul principal"). The compact card never reads it:
-   * its glyph and degrees are the card's own chip (`CardWeather`).
+   * it takes `cardWeather`, the start's hour alone.
    */
   weather?: EventForecast | null;
+  /**
+   * The compact form's weather (§416, moved by §NNN): the start's reading, drawn as the last pill of
+   * the route's row (`CardWeather`) — the umbrella when rain is likely. Read by the listing for every
+   * card at once; null outside the seven days or on any failure, and then the row is the route's alone.
+   */
+  cardWeather?: WeatherReading | null;
   /**
    * The card's words in front of the date, on the date's own line: a series card's "Următoarea:"
    * (§113, §366), so "Următoarea: Luni, 28 sept. 2026 · 18:30" is one line rather than a label on a
@@ -506,6 +515,25 @@ export default async function EventFacts({
   );
 
   /*
+    A forecast's summary pieces, the umbrella spliced in right after the rain phrase rather than
+    appended after the wind (review finding, §NNN): «Parțial noros, 14 °C, 60% șanse de ploaie,
+    ☂ ploaie probabilă, vânt 11 km/h», never «…, vânt 11 km/h, ☂ ploaie probabilă»; with no chance
+    but an amount already falling, right after the temperature. Shared by the hero and
+    the page, the only two places that draw this line — the card's own pill (`CardWeather`) never
+    shows the rain phrase at all. `words.details` is built in this fixed order (temperature, rain,
+    wind, each only when the hour has it), so the umbrella's place is the count of whichever of
+    the first two are actually there.
+  */
+  const forecastSummaryPieces = (words: ReturnType<typeof weatherWords>, reading: WeatherReading, umbrella: ReactNode): ReactNode[] => {
+    const pieces: ReactNode[] = [words.summary, ...words.details];
+    if (rainLikely(reading)) {
+      const afterRain = 1 + (reading.temperatureC !== null ? 1 : 0) + (reading.precipitationProbability !== null ? 1 : 0);
+      pieces.splice(afterRain, 0, umbrella);
+    }
+    return pieces;
+  };
+
+  /*
     The route's numbers as pills — surface, difficulty, distance, elevation, in that order (§366,
     amended §375 — the owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this
     should be: terrain type, difficulty, distance, elevation") — each with its glyph (§112), a pill
@@ -558,6 +586,10 @@ export default async function EventFacts({
     // screen-reader-only organizer suffix on an `EXTERNAL`-registration `PAID` event — built in
     // that one place, so the card and the backoffice list cannot read it differently.
     const cardPills: Pill[] = buildRoutePills(event, t, format);
+    // The weather at the start, the row's last pill after the cost (§NNN, amending §416's place for
+    // it among the marks above the title): what the day will be like, beside what the route is.
+    const weatherPill = cardWeather ? <CardWeather reading={cardWeather} locale={locale} /> : null;
+    const pillsRow = cardPills.length > 0 || weatherPill !== null;
 
     /*
       Where: the place — the map link when the club pasted one, tight like the page's (§356) so
@@ -571,7 +603,7 @@ export default async function EventFacts({
       would take the bottom of the link, since what comes later paints over it (§366). There it
       gives back only the ten above, and keeps the ten below inside the facts, where nothing sits.
     */
-    const reach = cardPills.length > 0 ? true : "above";
+    const reach = pillsRow ? true : "above";
     const place = event.locationToBeAnnounced
       ? t("locationToBeAnnounced")
       : event.locationName
@@ -613,9 +645,9 @@ export default async function EventFacts({
         {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort), tight: !!event.raceStartsAt }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
-        {cardPills.length > 0 && (
+        {pillsRow && (
           <Box data-fact="pills" sx={{ mt: GROUP_GAP - LINE_GAP }}>
-            <RoutePills pills={cardPills} />
+            <RoutePills pills={cardPills} trailing={weatherPill} />
           </Box>
         )}
         {/* The state of registration, last, where BR-REQ-011-01 criterion 18 reads it — and on a
@@ -773,10 +805,19 @@ export default async function EventFacts({
     */
     if (weather) {
       const words = weatherWords(weather.start, locale);
+      // No `mr` on this glyph (review finding, §NNN): the wrapping `Box` already gives it a
+      // 0.5 gap from the word beside it, and `HERO_GLYPH_SX`'s own `mr` doubled that space —
+      // the one glyph on the hero not seated beside a label, where the margin belongs instead.
+      const umbrella = rainLikely(weather.start) ? (
+        <Box key="rain-likely" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+          <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+          {words.rainLikely}
+        </Box>
+      ) : null;
       lines.push({
         label: words.label,
         icon: WEATHER_GLYPH[weather.start.glyph],
-        value: [words.summary, ...words.details, links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit],
+        value: [...forecastSummaryPieces(words, weather.start, umbrella), links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit],
         testId: "hero-weather",
       });
     }
@@ -1009,13 +1050,19 @@ export default async function EventFacts({
     const words = weatherWords(weather.start, locale);
     const list = weatherListWords(locale);
     const hours = weather.hours.map((hour) => ({ hour, words: weatherWords(hour, locale) }));
+    const umbrella = rainLikely(weather.start) ? (
+      <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+        <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+        {words.rainLikely}
+      </Box>
+    ) : null;
     rows.push({
       key: "weather",
       label: words.label,
       icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow([words.summary, ...words.details])}
+          {flow(forecastSummaryPieces(words, weather.start, umbrella))}
           {words.extras.length > 0 && (
             <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-details">
               {flow(words.extras)}

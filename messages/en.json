@@ -4283,6 +4283,7 @@
     "label": "Weather",
     "temperature": "{degrees} °C",
     "rain": "{percent}% chance of rain",
+    "rainLikely": "rain likely",
     "wind": "wind {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
