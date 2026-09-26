@@ -490,6 +490,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canEditEventFields: /*    */ [false, false, true, true, true, true],
     canCreateEvent: /*        */ [false, false, false, false, true, true],
     canCreatePage: /*         */ [false, true, false, false, true, true],
+    canEditTeamPage: /*       */ [false, true, false, false, true, true],
+    canShowTeamMember: /*     */ [false, false, false, false, true, true],
     canDeleteEvent: /*        */ [false, false, false, false, true, true],
     canHardDeleteEvent: /*    */ [false, false, false, false, true, true],
     canReadRegistrations: /*  */ [false, false, true, false, true, true],

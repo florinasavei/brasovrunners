@@ -23,6 +23,7 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
+import { teamMembers } from "@/db/schema/team";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 
@@ -98,6 +99,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(pendingFamilyEntries);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
+  // «Echipa»'s cards (§NNN) reference a photo: before the assets.
+  await db.delete(teamMembers);
   // The gallery: items, then albums (which the cover references), then the assets.
   await db.delete(galleryItems);
   await db.delete(galleryAlbumTranslations);

@@ -4,6 +4,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { atBrasov, nextWeekday, todayInBrasov } from "./sample-dates";
 import { seedSampleLegalDocuments } from "./sample-legal-documents";
+import { seedSampleTeam } from "./sample-team";
 
 /**
  * Pilot seed: the club's events, published in both languages.
@@ -41,6 +42,12 @@ async function seed() {
    * site never reaches it there either, because the whole seed refused above.
    */
   await seedSampleLegalDocuments();
+
+  /*
+    «Echipa»'s two hidden placeholder cards (§NNN), only into an empty table: the screen and the
+    page can be walked on QA with nobody's real name. Production never reaches this line.
+  */
+  await seedSampleTeam();
 
   /**
    * Clearing the events is destructive, and once an environment has registrations it is

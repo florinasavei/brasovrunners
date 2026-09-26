@@ -10,6 +10,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/repository";
+import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -113,6 +114,9 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
+      {/* The club's own pages and «Echipa», the platform's team page (§NNN). */}
+      <PagesSubNav locale={locale} active="pages" />
+
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {saved && <Alert severity="success">{t("saved")}</Alert>}
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}

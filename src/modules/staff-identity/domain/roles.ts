@@ -276,6 +276,24 @@ export function canCreatePage(role: StaffRole): boolean {
 }
 
 /**
+ * **«Echipa» — the team page's cards (§NNN).** A card is words and a photograph, so it is the
+ * Redactor's and the Administrator's, like a page's text: adding one, writing it, putting its
+ * photo, moving it, and deleting one that is not on the site. A new card starts hidden.
+ */
+export function canEditTeamPage(role: StaffRole): boolean {
+  return canEditTexts(role);
+}
+
+/**
+ * Showing a card on the site, or taking one off it — and deleting one that is on it — is the act
+ * of crossing public view, which is the Administrator's since §201: the same threshold as
+ * publishing a page, so nothing the Redactor writes goes up on its own.
+ */
+export function canShowTeamMember(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
  * Deleting is the one editorial action that destroys rather than moves, so it starts at ADMIN.
  * Archiving is what an event that happened gets; deletion is for a row that should never have
  * existed. An event with any registration against it is refused outright by the service,

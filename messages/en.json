@@ -26,6 +26,7 @@
       "events": "Events",
       "calendar": "Calendar",
       "gallery": "Gallery",
+      "team": "Team",
       "more": "Menu",
       "contact": "Contact"
     },
@@ -1978,7 +1979,8 @@
         "minimumAge": "The event's minimum age, with its unit (“16 years”). On an event with no minimum age — on a group run, one of 18 or less — the sentence naming it is left out of the declaration",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
-        "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept."
+        "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept.",
+        "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2366,6 +2368,16 @@
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
             "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
+          ]
+        },
+        "teamPageNotice": {
+          "title": "Privacy notice: the team page",
+          "todo": "The notice in force does not yet describe the team page, which shows the names and photographs of the club's team and volunteers. Approve a new notice before publishing the page.",
+          "done": "The notice in force describes the team page: what it shows, on what basis, and how a card is taken down.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 4 describes the team page.",
+            "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
+            "Only then publish the page, from /admin/pages/team → “Publish the page”."
           ]
         }
       },
@@ -2774,7 +2786,9 @@
         "seoDescription": "SEO description"
       },
       "seoHelp": "Optional, for search engines — in both languages or neither.",
-      "bothOrNeither": "write it in both languages or neither"
+      "bothOrNeither": "write it in both languages or neither",
+      "tabPages": "The club's pages",
+      "tabTeam": "The team page"
     },
     "pictures": {
       "title": "Pictures",
@@ -2797,7 +2811,8 @@
       "deleteBody": "“{name}” is deleted for good, from the library and from storage. This cannot be undone.",
       "tableCaption": "Uploaded pictures, newest first",
       "total": "{count, plural, one {# picture} other {# pictures}} · {size} MB stored",
-      "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes."
+      "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes.",
+      "usedInTeam": "On the team page: {title}"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -4454,6 +4469,71 @@
       "previewEn": "Preview in English",
       "previewLoading": "Preparing the preview…",
       "previewUnavailable": "The preview is not available right now. The message can still be sent."
+    },
+    "team": {
+      "title": "The «Team» page",
+      "intro": "The club's people, one card each: a photograph, a name, what they do for the club, a few words and, if they want, a link. The page is the platform's, like the contact page: here you publish it and write its introduction and cards. A new card stays hidden until an Administrator puts it on the site. Ask the person's consent before putting their name and photograph on the site.",
+      "shownCount": "On the site: {count} of {total} cards.",
+      "noneShown": "No card is on the site, so the page does not appear in the site's menu.",
+      "viewPublic": "View the page",
+      "readOnly": "You can read the cards; the Copywriter or the Administrator writes them.",
+      "showIsAdmin": "You write and prepare the cards; the Administrator puts them on the site.",
+      "noStorage": "Picture storage is not configured here, so no photo can be added.",
+      "add": "Add a person",
+      "create": "Add the card",
+      "empty": "There are no cards yet.",
+      "listLabel": "The team's cards, in the page's order",
+      "visible": "On the site",
+      "hidden": "Hidden",
+      "noPhoto": "No photo",
+      "oneLanguage": "Text in one language only",
+      "moveUpNamed": "Move up: {name}",
+      "moveDownNamed": "Move down: {name}",
+      "show": "Put on the site",
+      "hide": "Take off the site",
+      "showTitle": "Put “{name}” on the site?",
+      "showBody": "The card appears on the team page while the page is published. Do you have the person's consent for the name and photograph?",
+      "hideTitle": "Take “{name}” off the site?",
+      "hideBody": "The card stays here, hidden; you can put it back at any time.",
+      "delete": "Delete the card",
+      "deleteTitle": "Delete the card “{name}”?",
+      "deleteBody": "The card is gone for good. The photo stays in Pictures for a week and is then deleted on its own, if nothing uses it any more.",
+      "edit": "Edit the card",
+      "name": "Name",
+      "nameHelp": "As the person wants to appear: first and last name, or the first name only.",
+      "roleRo": "What they do for the club (Română)",
+      "roleEn": "What they do for the club (English)",
+      "roleHelp": "For example “Antrenor” and “Coach”. Optional.",
+      "bioRo": "A few words (Română)",
+      "bioEn": "A few words (English)",
+      "bioHelp": "Optional, at most {max} characters.",
+      "bothOrNeither": "Write it in both languages or in neither.",
+      "photo": "Photo",
+      "photoChoose": "Choose a photo",
+      "photoReplace": "Change the photo",
+      "photoRemove": "Remove the photo",
+      "photoUploading": "Uploading…",
+      "photoFailed": "The photo did not upload. Try again or choose another file (JPEG, PNG or WebP).",
+      "photoNone": "No photo",
+      "photoHelp": "A square or portrait photo looks best: the site crops it square, keeping the face near the top. It is kept when you save the card.",
+      "pageHeading": "The page",
+      "pagePublished": "Published",
+      "pageDraft": "Draft",
+      "pagePublishedHelp": "The page is on the site in both languages: {ro} and {en}. It appears in the menu while it has at least one card on the site.",
+      "pageDraftHelp": "The page is not on the site: its address answers \"not found\" and the menu does not show it. Prepare the cards, then publish the page.",
+      "noticeMissing": "The privacy notice in force does not yet describe the team page, which shows names and photographs. First approve a new notice in /admin/legal (\"start from the platform's text\"), then publish the page.",
+      "publish": "Publish the page",
+      "unpublish": "Take the page down",
+      "publishTitle": "Publish the team page?",
+      "publishBody": "The page goes on the site in both languages at once, at {ro} and {en}, with every card that is on the site. Do you have the consent of every person on the cards?",
+      "unpublishTitle": "Take the team page down?",
+      "unpublishBody": "The page leaves the site in both languages and disappears from the menu. The cards stay here; you can publish it again at any time.",
+      "introFold": "The page's introduction",
+      "introRo": "Introduction (Română)",
+      "introEn": "Introduction (English)",
+      "introHelp": "Optional, at most {max} characters. Empty, the page uses the platform's text.",
+      "link": "Link (optional)",
+      "linkHelp": "One https:// address, for example a Strava or Instagram profile. The same in both languages."
     }
   },
   "NotFound": {
@@ -5608,7 +5688,16 @@
       },
       "newsletterDuplicate": "This newsletter had already been sent.",
       "newsletterWithdrawn": "The address was removed from the newsletter.",
-      "newsletterNotFound": "The address was not on the newsletter."
+      "newsletterNotFound": "The address was not on the newsletter.",
+      "teamMemberCreated": "The card was added, hidden until it is put on the site.",
+      "teamMemberSaved": "The card was saved.",
+      "teamMemberShown": "The card is on the site.",
+      "teamMemberHidden": "The card was taken off the site.",
+      "teamMemberMoved": "The order of the cards was changed.",
+      "teamMemberDeleted": "The card was deleted.",
+      "teamPageIntroSaved": "The team page's introduction was saved.",
+      "teamPagePublished": "The team page is on the site, in both languages.",
+      "teamPageUnpublished": "The team page was taken off the site."
     }
   },
   "Network": {
@@ -5746,5 +5835,12 @@
       "goneBody": "We deleted your address from the news list. You can come back at any time from the contact page.",
       "invalidBody": "It has expired or the subscription no longer exists. Every new email from us carries a new link; you can also subscribe again from the contact page."
     }
+  },
+  "Team": {
+    "title": "The team",
+    "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
+    "empty": "The club's team will be introduced here soon.",
+    "listLabel": "The team's people",
+    "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>."
   }
 }

@@ -1,8 +1,9 @@
-import { and, desc, eq, lt, not, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import { staffUsers } from "@/db/schema/staff-users";
+import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { canEditEventFields, type StaffRole } from "@/modules/staff-identity/domain/roles";
@@ -79,6 +80,9 @@ const referencedSomewhere = sql`(
   -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
   -- the same substring check every other body uses.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${names(sql`${events.videoPosterUrl}`)})
+  -- A card of «Echipa» (§NNN): its photo, by id, hidden cards included — a card being prepared
+  -- is a card somebody is about to show.
+  OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -145,7 +149,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-export type MediaReference = { kind: "album" | "page" | "event"; id: string; title: string | null };
+export type MediaReference = { kind: "album" | "page" | "event" | "team"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -225,6 +229,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(mediaAssets)
     .innerJoin(eventTranslations, inEventTranslation);
 
+  const inTeam = await db
+    .select({ assetId: teamMembers.photoMediaAssetId, id: teamMembers.id, title: teamMembers.name })
+    .from(teamMembers)
+    .where(isNotNull(teamMembers.photoMediaAssetId));
+
   const references = new Map<string, MediaReference[]>();
   const add = (assetId: string, reference: MediaReference) => {
     const list = references.get(assetId) ?? [];
@@ -245,6 +254,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of [...inEvents].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "event", id: row.id, title: row.title });
   }
+  for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });
 
   return assets.map((asset) => ({
     ...asset,

@@ -12,7 +12,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { asksForMinorSignature, describesListStates, describesNewsletter } from "./domain/merge-fields";
+import { asksForMinorSignature, describesListStates, describesNewsletter, describesTeamPage } from "./domain/merge-fields";
 
 /**
  * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
@@ -156,6 +156,15 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 export async function noticeDescribesNewsletter<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes «Echipa» (§NNN) — in every language, like
+ * `noticeDescribesListStates`. For `/admin/tasks` and the team page's backoffice screen.
+ */
+export async function noticeDescribesTeamPage<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesTeamPage(notice.body));
 }
 
 /**

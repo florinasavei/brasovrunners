@@ -123,6 +123,13 @@ export const routing = defineRouting({
     "/newsletter/confirm/[token]": { ro: "/noutati/confirmare/[token]", en: "/newsletter/confirm/[token]" },
     "/newsletter/manage/[token]": { ro: "/noutati/abonament/[token]", en: "/newsletter/manage/[token]" },
 
+    /**
+     * «Echipa» / "The team" (§NNN): the people who run the club, a card each. A platform page like
+     * the contact form — not one of the club's standing pages under `/pagini/` — so a page the
+     * club once wrote and called `echipa` keeps its own address.
+     */
+    "/team": { ro: "/echipa", en: "/team" },
+
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
     "/legal/terms": { ro: "/termeni", en: "/terms" },
@@ -201,6 +208,8 @@ export const routing = defineRouting({
     "/admin/legal/[id]/delete": "/admin/legal/[id]/delete",
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
+    /** The cards of «Echipa» (§NNN): beside the club's own pages, never one of them. */
+    "/admin/pages/team": "/admin/pages/team",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",

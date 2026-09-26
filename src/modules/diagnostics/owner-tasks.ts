@@ -56,6 +56,7 @@ export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
   | "newsletterNotice"
+  | "teamPageNotice"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -79,6 +80,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
   newsletterNotice: "text",
+  teamPageNotice: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -149,6 +151,11 @@ export type OwnerTaskInputs = {
    * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
    */
   newsletterDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe «Echipa» (§NNN, `noticeDescribesTeamPage`)?
+   * The page shows staff and volunteers' names and photographs; the notice has to say so.
+   */
+  teamPageDescribed: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -285,6 +292,19 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("newsletterNotice", {
       owner: "club",
       state: input.newsletterDescribed ? "done" : "open",
+    });
+  }
+
+  /*
+    «Echipa» (§NNN): the team page publishes names and photographs, so the notice in force should
+    describe it before the page goes up. Open, never blocking — the page is the club's to publish
+    and nobody's registration waits on it; it closes by itself once a notice naming `{{teamPage}}`
+    takes effect.
+  */
+  if (input.hasApprovedPrivacyNotice) {
+    push("teamPageNotice", {
+      owner: "club",
+      state: input.teamPageDescribed ? "done" : "open",
     });
   }
 

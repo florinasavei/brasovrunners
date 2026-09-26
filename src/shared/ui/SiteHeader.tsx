@@ -3,11 +3,13 @@ import Container from "@mui/material/Container";
 import { getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
+import { teamPageOnSite } from "@/modules/content/team/repository";
 import {
   cachedContactFormReaches,
   cachedShownContactAddresses,
   cachedPublishedAlbums,
   cachedPublishedPages,
+  cachedTeamPage,
 } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
@@ -71,6 +73,15 @@ async function hasPublishedAlbum(locale: Locale) {
   }
 }
 
+/** Whether «Echipa» is offered (§NNN): the page published with a card on it, or nothing — the gallery's rule. */
+async function hasVisibleTeam(locale: Locale) {
+  try {
+    return (await readWithLastGood(`nav:team:${locale}`, async () => teamPageOnSite(await cachedTeamPage(locale)))).value;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
@@ -106,6 +117,7 @@ export default async function SiteHeader() {
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
   const showGallery = await hasPublishedAlbum(locale as Locale);
+  const showTeam = await hasVisibleTeam(locale as Locale);
   /**
    * "Contact" leads to the form, or to the club's address; a deployment with neither has no
    * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
@@ -248,6 +260,7 @@ export default async function SiteHeader() {
           <SiteNav
             pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
             showGallery={showGallery}
+            showTeam={showTeam}
             showContact={showContact}
           />
         </Box>

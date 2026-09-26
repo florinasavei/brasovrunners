@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
-import { cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages } from "@/modules/public-cache/reads";
+import { cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
+import { teamPageOnSite } from "@/modules/content/team/repository";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 
@@ -101,6 +102,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "yearly",
         priority: 0.4,
         alternates: { languages: hreflangLanguages(urls) },
+      });
+    }
+  }
+
+  /*
+    «Echipa» (§NNN), once per locale — only while the page is published and a card is on it. A
+    DRAFT page is a 404; a published one with nobody shown answers a sentence and tells crawlers
+    not to index it (`team/page.tsx`), so the sitemap and the page agree.
+  */
+  if ((await readWithLastGood("sitemap:team", async () => teamPageOnSite(await cachedTeamPage(routing.defaultLocale)), now)).value) {
+    for (const locale of routing.locales) {
+      entries.push({
+        url: staticRouteUrl(env.APP_BASE_URL, "/team", locale),
+        alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/team")) },
+        changeFrequency: "monthly",
+        priority: 0.3,
       });
     }
   }
