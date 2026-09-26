@@ -4486,15 +4486,18 @@
     }
   },
   "Network": {
-    "fallback": "The office network blocked the save request; it went through the simple path. If a save fails, try from your phone or another network — what you typed stays here.",
+    "fallback": "The office network blocked the save request, so we tried the simple path. The save went through only if you also see the confirmation message; if it does not appear, check the page and try from your phone or another network.",
     "check": "Check the network",
     "close": "Close",
-    "replaying": "The network blocked the request; sending it again the simple way…",
     "retry": "Try again",
     "blocked": {
-      "title": "The save did not reach the site",
-      "kept": "The network you are on blocked the request, and the simple path could not be used either. Nothing was saved; what you typed is still in the form. Try from your phone or another network.",
-      "notKept": "The network you are on blocked the request, and the simple path could not be used either. Nothing was saved. Try from your phone or another network."
+      "title": "The network blocked the save",
+      "kept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. What you typed is still in the form. The form can also go the simple way — as an ordinary form, which office networks let through.",
+      "notKept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. The form can go again the simple way — as an ordinary form, which office networks let through — with what it held when you pressed.",
+      "already": "If you already got the message that it saved, do not press — check the page.",
+      "send": "Send the simple way",
+      "sending": "Sending…",
+      "failed": "The simple path could not be used either; nothing was sent. Try from your phone or another network."
     },
     "page": {
       "title": "Network check",

@@ -10,7 +10,9 @@ const isActionName = (value: string | null | undefined) => (value ?? "").startsW
  * Remembers the last press of a backoffice form that is not an `ActionForm` (§NNN), for the admin
  * error boundary: a plain `<form action={…}>` or a button with its own Server Action has no island
  * of its own, so its failure is thrown to the boundary — after React has taken the form off the
- * page. The boundary then sends this press again as a plain POST (`replayNatively`).
+ * page. The boundary then offers this press back — sent as a plain POST (`replayNatively`) only
+ * when the person presses «Trimite pe calea simplă», and only while the press is recent
+ * (`RECENT_PRESS_MS`).
  *
  * A listener on the document in the capture phase, so it reads the form before anything else runs;
  * an `ActionForm` is skipped (it keeps its own), unless the pressed button has an action of its own,

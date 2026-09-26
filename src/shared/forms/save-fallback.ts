@@ -14,18 +14,32 @@
  * (or without) JavaScript — a plain `multipart/form-data` POST to the page, which Next decodes and
  * answers with a 303 to the page the action redirects to, or with the page itself carrying a
  * refusal. That is the request a proxy passes, because it is what every web form sends. So when the
- * scripted call fails *in transport*, the form is sent again that way, with the values as they
- * stand, and the flash cookie (§384) still carries the toast to the page it lands on.
+ * scripted call fails *in transport*, the person is OFFERED to send the form again that way — one
+ * button, «Trimite pe calea simplă» — with the values as they stand, and the flash cookie (§384)
+ * still carries the toast to the page it lands on.
+ *
+ * **Offered, never sent on its own.** A transport failure does not prove the server did not run
+ * the action: Next reports E394 for any answer that is not a Server Action's — a Vercel 504 or 413
+ * in `text/plain`, or a proxy that replaced the answer after the server had done the work — and a
+ * fetch can reject on a connection reset after the request arrived. The version check (§36) turns
+ * a second save of an edited record into a conflict, but cancelling, erasing, «Trimite acum» or an
+ * organizer's message have no version to check: sent twice, they happen twice. So the second send
+ * is the person's decision, beside the sentence that tells them when not to make it.
  *
  * What this module decides and does, in the browser only:
- * - `transportFailureOf` — which failures are the network's: the fetch rejected (`TypeError`), or
- *   the answer was not a Server Action's (Next's "An unexpected response was received from the
- *   server.", error `E394` — an HTML block page, a 403). Never a refusal (that is a returned state,
- *   not an error), never a redirect or a 404 (Next's own signals, with a `digest`), never a server
- *   error (a `digest` too), and never "Server Action not found" (a new deployment: a plain post
- *   would fail the same way).
+ * - `transportFailureOf` — which failures are the network's, and so when the button is offered:
+ *   the fetch rejected with the browser's own words for it («Failed to fetch», «NetworkError…»,
+ *   «Load failed» — never any other `TypeError`, which is a bug in the page), or the answer was not
+ *   a Server Action's (Next's "An unexpected response was received from the server.", error
+ *   `E394` — an HTML block page, a 403). Never a refusal (that is a returned state, not an error),
+ *   never a redirect or a 404 (Next's own signals, with a `digest`), never a server error (a
+ *   `digest` too), and never "Server Action not found" (a new deployment: a plain post would fail
+ *   the same way).
+ * - `boundaryFailureOf` — the same, for the admin error boundary, which also sees every render
+ *   error: only right after a press the guard remembered (`RECENT_PRESS_MS`).
  * - `describeSubmission` — the form, the button that sent it and the values, read once.
- * - `replayNatively` — the plain POST, built as a detached `<form>` so React has no say in it.
+ * - `replayNatively` — the plain POST, built as a detached `<form>` so React has no say in it; run
+ *   only from the button.
  *   The `$ACTION_…` fields come from the form itself when the server drew it; when the browser drew
  *   it (after a client-side navigation the page is rendered from the RSC payload, and React writes
  *   no such fields there) they come from the same form in the page's own HTML, fetched with a plain
@@ -35,7 +49,10 @@
  *   not sent at all, because a guessed action could be a different verb.
  */
 
-/** The cookie the replay sets before it leaves, read by the admin layout on the page it lands on. */
+/**
+ * The cookie the button sets as the plain POST leaves, read by the admin layout on the page it
+ * lands on. It says the simple path was *tried*; only the §384 toast says the save landed.
+ */
 export const SAVE_FALLBACK_COOKIE = "br-save-path";
 export const SAVE_FALLBACK_MAX_AGE_SECONDS = 60;
 
@@ -54,6 +71,13 @@ export const ACTION_FORM_ATTRIBUTE = "data-action-form";
 export type TransportFailure = "network" | "unexpected";
 
 /**
+ * The words each browser gives a `fetch` that got no answer: Chromium «Failed to fetch», Firefox
+ * «NetworkError when attempting to fetch resource.», Safari «Load failed». Any other `TypeError` —
+ * «Cannot read properties of null», «x is not a function» — is a bug in the page, not the network.
+ */
+const FETCH_FAILURE_WORDS = /^(Failed to fetch|NetworkError\b|Load failed)/;
+
+/**
  * Whether an error thrown by a Server Action call is the network's (see above), and which kind.
  * `null` for everything else, which then goes where it always went.
  */
@@ -61,7 +85,7 @@ export function transportFailureOf(error: unknown): TransportFailure | null {
   if (!error || typeof error !== "object") return null;
   // Next's own signals — a redirect, a 404, a server error — all carry a digest.
   if ("digest" in error && (error as { digest?: unknown }).digest !== undefined) return null;
-  if (error instanceof TypeError) return "network";
+  if (error instanceof TypeError) return FETCH_FAILURE_WORDS.test(error.message) ? "network" : null;
   if (!(error instanceof Error)) return null;
   const code = (error as { __NEXT_ERROR_CODE?: unknown }).__NEXT_ERROR_CODE;
   if (code === UNEXPECTED_RESPONSE_CODE || error.message === UNEXPECTED_RESPONSE_MESSAGE) return "unexpected";
@@ -250,8 +274,10 @@ function detachedForm(url: string, entries: Array<[string, FormDataEntryValue]>)
 }
 
 /**
- * Send one press again as a plain browser POST. `true` when it left — the page is on its way to the
- * answer and nothing more should be drawn; `false` when it could not be sent, and nothing was.
+ * Send one press again as a plain browser POST — only ever from the person's own click on «Trimite
+ * pe calea simplă» (see above). `true` when it left — the page is on its way to the answer and
+ * nothing more should be drawn; `false` when it could not be sent, and nothing was. The cookie is
+ * set here, so it exists only when the button was pressed and the POST is leaving.
  */
 export async function replayNatively(submission: Submission): Promise<boolean> {
   try {
@@ -282,14 +308,38 @@ export async function replayNatively(submission: Submission): Promise<boolean> {
 */
 let lastPress: Submission | null = null;
 
+/**
+ * How recent a press must be for the boundary to take an error as its failure. A fetch that got
+ * no answer rejects within the browser's own timeouts, and a proxy's block page arrives in a second
+ * or two; ten seconds covers a slow network without pairing an old press with a later error.
+ */
+export const RECENT_PRESS_MS = 10_000;
+
 export function rememberSubmission(submission: Submission): void {
   lastPress = submission;
 }
 
-/** The press the failure belongs to: recent, and handed out once. */
-export function takeSubmission(now = Date.now(), maxAgeMs = 120_000): Submission | null {
+/** The press a failure may belong to — only while it is recent. Read, not taken: the button takes it. */
+export function recentSubmission(now = Date.now(), maxAgeMs = RECENT_PRESS_MS): Submission | null {
   const press = lastPress;
-  lastPress = null;
-  if (!press || now - press.at > maxAgeMs) return null;
+  if (!press || now - press.at > maxAgeMs || press.at > now) return null;
   return press;
+}
+
+/** Forget the press — once its button sent it, it is never offered again. */
+export function forgetSubmission(): void {
+  lastPress = null;
+}
+
+/**
+ * Whether the admin boundary takes an error for a blocked save (§NNN, the review's second
+ * finding). The boundary sees every client render error in the backoffice, so the error alone is
+ * not enough: there must be a press the guard remembered within `RECENT_PRESS_MS`, and the error
+ * must be one of the transport's own (`transportFailureOf` — the browser's fetch-failure words or
+ * Next's E394). A plain `TypeError` thrown by a render — a null read — is never one, press or not,
+ * and goes on to the backoffice's own boundary with its reference number (§52).
+ */
+export function boundaryFailureOf(error: unknown, press: Submission | null, now = Date.now()): TransportFailure | null {
+  if (!press || now - press.at > RECENT_PRESS_MS || press.at > now) return null;
+  return transportFailureOf(error);
 }

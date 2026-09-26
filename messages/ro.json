@@ -4486,15 +4486,18 @@
     }
   },
   "Network": {
-    "fallback": "Rețeaua de la birou a blocat cererea de salvare; am trimis-o pe calea simplă. Dacă salvarea nu reușește, încearcă de pe telefon sau de pe altă rețea — datele completate rămân aici.",
+    "fallback": "Rețeaua de la birou a blocat cererea de salvare, așa că am încercat calea simplă. Salvarea a ajuns doar dacă vezi și mesajul de confirmare; dacă nu apare, verifică pagina și încearcă de pe telefon sau de pe altă rețea.",
     "check": "Verifică rețeaua",
     "close": "Închide",
-    "replaying": "Rețeaua a blocat cererea; o trimitem din nou pe calea simplă…",
     "retry": "Încearcă din nou",
     "blocked": {
-      "title": "Salvarea nu a ajuns la site",
-      "kept": "Rețeaua pe care ești a blocat cererea, iar calea simplă nu a putut fi folosită. Nu s-a salvat nimic; ce ai completat a rămas în formular. Încearcă de pe telefon sau de pe altă rețea.",
-      "notKept": "Rețeaua pe care ești a blocat cererea, iar calea simplă nu a putut fi folosită. Nu s-a salvat nimic. Încearcă de pe telefon sau de pe altă rețea."
+      "title": "Rețeaua a blocat salvarea",
+      "kept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Ce ai completat a rămas în formular. Formularul poate pleca și pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă.",
+      "notKept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Formularul poate pleca din nou pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă — cu ce era completat când ai apăsat.",
+      "already": "Dacă ai primit deja mesajul că s-a salvat, nu apăsa — verifică pagina.",
+      "send": "Trimite pe calea simplă",
+      "sending": "Se trimite…",
+      "failed": "Nici calea simplă nu a putut fi folosită; nu s-a trimis nimic. Încearcă de pe telefon sau de pe altă rețea."
     },
     "page": {
       "title": "Verificarea rețelei",

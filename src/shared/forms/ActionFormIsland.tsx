@@ -101,13 +101,14 @@ function sentenceFor(template: string, values: Readonly<Record<string, string>> 
  * On the server this renders the Server Action itself, so React writes the hidden fields of the
  * no-JavaScript form. In the browser the action is wrapped: a failure of the *transport* — the call
  * never got an answer, or the answer was a proxy's block page rather than the action's
- * (`transportFailureOf`) — sends the same form again as a plain browser POST (`replayNatively`),
- * with the boxes as they stand and the button that was pressed, and the button keeps saying "Se
- * salvează…" until the page it lands on replaces this one. When even that cannot be sent, nothing
- * is thrown: the boxes keep what was typed and `SaveBlockedNotice` says what happened and where to
- * check the network. Anything else — a refusal (a returned state), a redirect, a server error —
- * goes exactly where it went before. `actionKey` is what the server wrapper (`ActionForm.tsx`)
- * stamps so the page's HTML can be searched for this form (`action-key.ts`).
+ * (`transportFailureOf`) — is caught and nothing is thrown: the boxes keep what was typed and
+ * `SaveBlockedNotice` offers ONE button, «Trimite pe calea simplă», which sends the same form as a
+ * plain browser POST (`replayNatively`) with the boxes as they stand and the button that was
+ * pressed. Nothing is sent again on its own: a transport failure does not prove the server did not
+ * run the action, and a cancel, an erase or a message sent twice happens twice (`save-fallback.ts`).
+ * Anything else — a refusal (a returned state), a redirect, a server error — goes exactly where it
+ * went before. `actionKey` is what the server wrapper (`ActionForm.tsx`) stamps so the page's HTML
+ * can be searched for this form (`action-key.ts`).
  */
 export default function ActionFormIsland({
   action,
@@ -143,28 +144,32 @@ export default function ActionFormIsland({
   "data-testid"?: string;
 }) {
   const form = useRef<HTMLFormElement>(null);
-  // The button behind the last submit: the replay sends it again with the form (§NNN).
+  // The button behind the last submit: «Trimite pe calea simplă» sends it again with the form (§NNN).
   const lastSubmitter = useRef<HTMLElement | null>(null);
-  // The network refused the save and the plain POST could not be sent either (§NNN).
+  // The network refused the save; the simple way is offered, never taken on its own (§NNN).
   const [blocked, setBlocked] = useState(false);
 
   /*
     The action as the browser runs it (§NNN). A transport failure is caught here, before React
     would throw it into the error boundary and take the form — and everything typed in it — off the
-    page. While the plain POST is on its way the promise never settles, so the button stays on "Se
-    salvează…" until the next page replaces this one.
+    page. It sends nothing: it returns the state as it was and draws the notice, whose button is the
+    person's decision to send the form again (`sendSimple`).
   */
   const guardedAction: ActionFormAction = async (previous, data) => {
     try {
       return await action(previous, data);
     } catch (error) {
-      const element = form.current;
-      if (!transportFailureOf(error) || !element) throw error;
-      setBlocked(false);
-      if (await replayNatively(describeSubmission(element, lastSubmitter.current))) return new Promise<never>(() => {});
+      if (!transportFailureOf(error) || !form.current) throw error;
       setBlocked(true);
       return previous;
     }
+  };
+
+  // The notice's button: the form as it stands now, with the button that was pressed.
+  const sendSimple = async (): Promise<boolean> => {
+    const element = form.current;
+    if (!element) return false;
+    return replayNatively(describeSubmission(element, lastSubmitter.current));
   };
   // The server renders the Server Action itself: that is what writes the no-JavaScript fields.
   const [state, formAction] = useActionState(typeof window === "undefined" ? action : guardedAction, null);
@@ -177,6 +182,8 @@ export default function ActionFormIsland({
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     lastSubmitter.current = ((event.nativeEvent as SubmitEvent).submitter ?? null) as HTMLElement | null;
+    // A new press answers the old notice: it will be offered again if this one is blocked too.
+    setBlocked(false);
     if (!confirm) return;
     if (confirmed.current) {
       confirmed.current = false;
@@ -286,7 +293,7 @@ export default function ActionFormIsland({
     // `data-action-key` and `data-action-form` are `ACTION_KEY_ATTRIBUTE` and `ACTION_FORM_ATTRIBUTE` (§NNN).
     <form ref={form} action={formAction} {...formProps} data-action-key={actionKey} data-action-form="" onInvalidCapture={onInvalidCapture} onSubmit={onSubmit}>
       <RecallProvider value={recall}>
-        {blocked && <SaveBlockedNotice />}
+        {blocked && <SaveBlockedNotice onSend={sendSimple} />}
         {state?.error && (
           <Alert
             ref={summary}
