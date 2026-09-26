@@ -151,18 +151,27 @@ describe("BR-REQ-060-01 criterion 34 the guide quotes the screen's own words", (
   });
 
   /*
-    A job only a Superadministrator can do — every legal-text write (`legal/actions.ts`,
-    `requireStaffRole("SUPERADMIN")`) and «Echipa» (`canManageStaff`) — says so in its first line,
-    so an Administrator knows to ask for the role before walking the steps into a missing button.
+    A job only a Superadministrator can do — the platform settings that can stop the service
+    (`canManagePlatform`, §NNN: the jobs' interval, the database's limits, the month's budget
+    thresholds, the anti-bot check) — says so in its first line, so an Administrator knows to ask
+    before walking the steps into a missing button. The legal texts (`canWriteLegalTexts`) and
+    «Echipa» (`canManageStaff`) are the Administrator's since §NNN, so their jobs carry no such line.
   */
-  it("a job that needs a Superadministrator says so in its first line", () => {
-    const marks = { ro: ["→ «Versiune nouă»", "«Echipa» → «Adaugă o persoană»"], en: ["→ «New version»", "«Staff» → «Add someone»"] };
+  it("a job that needs a Superadministrator says so in its first line, and only such a job", () => {
+    const platform = {
+      ro: ["«Sarcini» → «Costuri» → «Cât de des verifică platforma»", "«Sarcini» → «Costuri» → «Limitele bazei de date»", "«Sarcini» → «Costuri» → «Bugetul lunii»", "«Sarcini» → «Anti-robot»"],
+      en: ["«Tasks» → «Costs» → «How often the platform checks»", "«Tasks» → «Costs» → «The database's limits»", "«Tasks» → «Costs» → «This month's budget»", "«Tasks» → «Anti-bot»"],
+    };
+    const club = { ro: ["→ «Versiune nouă»", "«Echipa» → «Adaugă o persoană»"], en: ["→ «New version»", "«Staff» → «Add someone»"] };
     const lead = { ro: "Rol necesar: Superadministrator.", en: "Role needed: Superadministrator." };
     for (const [locale, catalogue] of Object.entries(locales) as ["ro" | "en", Catalogue][]) {
-      const jobs = guideOf(catalogue).sections.flatMap((section) => section.tasks)
-        .filter((task) => task.steps.some((step) => marks[locale].some((mark) => step.includes(mark))));
-      expect(jobs.length, locale).toBeGreaterThanOrEqual(2);
-      for (const job of jobs) expect(job.steps[0].startsWith(lead[locale]), `${locale}: ${job.title}`).toBe(true);
+      const tasks = guideOf(catalogue).sections.flatMap((section) => section.tasks);
+      const platformJobs = tasks.filter((task) => task.steps.some((step) => platform[locale].some((mark) => step.startsWith(mark))));
+      expect(platformJobs.length, locale).toBeGreaterThanOrEqual(4);
+      for (const job of platformJobs) expect(job.steps[0].startsWith(lead[locale]), `${locale}: ${job.title}`).toBe(true);
+      const clubJobs = tasks.filter((task) => task.steps.some((step) => club[locale].some((mark) => step.includes(mark))));
+      expect(clubJobs.length, locale).toBeGreaterThanOrEqual(2);
+      for (const job of clubJobs) expect(job.steps[0].startsWith(lead[locale]), `${locale}: ${job.title}`).toBe(false);
     }
   });
 

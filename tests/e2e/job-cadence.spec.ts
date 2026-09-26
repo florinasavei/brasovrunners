@@ -16,9 +16,10 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });
 
-  test("an Administrator slows the jobs to thirty minutes, reads the effect, and sets it back", async ({ page }) => {
+  test("a Superadministrator slows the jobs to thirty minutes, reads the effect, and sets it back", async ({ page }) => {
     test.slow();
-    await signIn(page, "Dev Administrator");
+    // The throttle is a platform setting, the Superadministrator's since §NNN.
+    await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/tasks?panel=costs");
     const main = page.locator("#main");
     const card = main.getByTestId("job-cadence");
@@ -51,5 +52,14 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await main.getByTestId("job-cadence").getByRole("button", { name: "Salvează intervalul" }).click();
     await confirmDialog(page);
     await expect(main.getByTestId("job-cadence-in-force")).toContainText(/^Setarea în vigoare: la nevoie/);
+  });
+
+  test("an Administrator reads the card and is offered no form (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/tasks?panel=costs");
+    const card = page.locator("#main").getByTestId("job-cadence");
+    await expect(card.getByTestId("job-cadence-in-force")).toBeVisible();
+    await expect(card.getByText(/Intervalul îl schimbă Superadministratorul/)).toBeVisible();
+    await expect(card.getByRole("button", { name: "Salvează intervalul" })).toHaveCount(0);
   });
 });

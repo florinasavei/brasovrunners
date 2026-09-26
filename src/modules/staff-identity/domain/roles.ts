@@ -18,8 +18,11 @@
  *     CONTRIBUTOR  proposes; edits their own drafts and submits them for approval
  *     MODERATOR    configures any event, and reads the registrations, the export and the bibs
  *     DEV          the above, plus the configuration report
- *     ADMIN        the above, plus *changing* a registration, and publication
- *     SUPERADMIN   the above, plus staff administration: who is here and what they may do
+ *     ADMIN        runs the club: *changing* a registration, publication, the legal texts, the
+ *                  team (every role but the top one), the plans and the club's settings (§NNN)
+ *     SUPERADMIN   the above, plus the platform settings that can stop the service — the jobs'
+ *                  throttle, the database's limits, when email leaves — and the only role that
+ *                  makes, changes or removes another Superadministrator (§NNN)
  *
  * **DEV is the one that is not obvious, so it is written down.** It exists so somebody helping
  * with the platform can read `/devs`, reproduce a problem and fix an event. It sits above
@@ -47,7 +50,7 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
 /**
  * The hierarchy itself, and the only place it is written.
  *
- * `session.ts` used to keep a second copy of this to answer `requireStaffRole`, which is one
+ * `session.ts` used to keep a second copy of this to answer the old `requireStaffRole`, which is one
  * rule in two places and exactly what §1.5 forbids. It imports this now.
  */
 const RANK: Record<StaffRole, number> = {
@@ -292,10 +295,10 @@ export function canDeleteEvent(role: StaffRole): boolean {
  * ever moved, this moves with it instead of quietly keeping the old one.
  *
  * **Why not SUPERADMIN.** The tempting answer is "the most destructive verb belongs to the
- * highest role", and it is the wrong one. SUPERADMIN is defined by exactly one capability —
- * deciding who is on the staff and what they may do — and it is deliberately *not* a general
- * "dangerous things" tier; the hierarchy's real line is personal data, and that line is ADMIN
- * (see the header of this file). An Administrator may already erase every registration on an
+ * highest role", and it is the wrong one. SUPERADMIN is defined by the platform — the settings
+ * that can stop the service for everybody (`canManagePlatform`, §NNN) — and by who may join it;
+ * it is deliberately *not* a tier for everything that destroys club data. The club's own data is
+ * the Administrator's to run, and that line is ADMIN (see the header of this file). An Administrator may already erase every registration on an
  * event, one at a time, and then delete the event: gating the single-step version behind a
  * higher role would not protect one row, it would only make the safe path slower than the
  * unsafe one. What actually protects the data is the confirmation the service demands — the
@@ -385,8 +388,8 @@ export function canSendNewsletter(role: StaffRole): boolean {
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.
  *
  * Split out from `canManageStaff`, which every one of these screens used to call. They are two
- * different powers: reading who registered is an Administrator's job, and deciding who is on
- * the staff is not.
+ * different powers, and they are kept apart although both are the Administrator's since §NNN:
+ * changing a registration and deciding who is on the staff may move apart again.
  */
 export function canManageRegistrations(role: StaffRole): boolean {
   return atLeast(role, "ADMIN");
@@ -429,14 +432,107 @@ export function canSeeDiagnostics(role: StaffRole): boolean {
 }
 
 /**
- * Staff administration — who is here, and what they may do — is the Superadministrator's alone.
+ * **The team is the Administrator's (§NNN).** Who is here, and as what: adding a colleague,
+ * changing a role, resending an invitation, a password link, switching an account off, taking
+ * access away.
  *
- * The top of the hierarchy is defined by this one capability, and it has to be: a role that can
- * grant itself a higher one makes every rule above it decorative. An Administrator can read the
- * whole participant list and still cannot make themselves able to change who else can.
+ * The owner: "I will make Amalia superadministrator but later administrators should manage
+ * everything; superadministrator is more like administrator + platform configs that can break
+ * stuff (throttling, etc)". It had been the Superadministrator's alone, on the reasoning that a
+ * role able to grant itself a higher one makes every rule above it decorative. That reasoning
+ * still holds, and it is kept where it bites: `canAssignRole` and `canManageMember` below. An
+ * Administrator manages every colleague *up to their own rank* — never makes a
+ * Superadministrator, never changes or removes one — and the service refuses their own row, so
+ * an Administrator promotes nobody above their own rank and cannot promote themselves.
  */
 export function canManageStaff(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
+ * Whether `actor` may give somebody `role` — on an invitation or a role change (§NNN).
+ *
+ * Everything but the top of the ladder is an Administrator's to give; the Superadministrator is
+ * made only by another Superadministrator, because it is the one role whose settings can stop
+ * the service, and the one role an Administrator could otherwise hand themselves through a
+ * colleague's account.
+ */
+export function canAssignRole(actor: StaffRole, role: StaffRole): boolean {
+  if (!canManageStaff(actor)) return false;
+  return isSuperadmin(role) ? isSuperadmin(actor) : true;
+}
+
+/**
+ * Whether `actor` may act on a colleague who currently holds `target` — change their role,
+ * resend their invitation, send a password link, switch the account off, take access away
+ * (§NNN). A Superadministrator's row is a Superadministrator's to touch: an Administrator who
+ * could switch off the owner's account could lock the platform's settings away from everybody.
+ */
+export function canManageMember(actor: StaffRole, target: StaffRole): boolean {
+  if (!canManageStaff(actor)) return false;
+  return isSuperadmin(target) ? isSuperadmin(actor) : true;
+}
+
+/**
+ * Whether `role` is the top of the ladder — the one a team page protects, and the one the
+ * service counts so the last of them is never demoted or removed (§NNN). Named here so no call
+ * site compares a role to a string of its own (`tests/unit/staff/no-raw-role-checks.test.ts`).
+ */
+export function isSuperadmin(role: StaffRole): boolean {
+  return role === "SUPERADMIN";
+}
+
+/** The roles `actor` may give, in rank order — what the team page's selects offer (§NNN). */
+export function assignableRoles(actor: StaffRole): StaffRole[] {
+  return STAFF_ROLES.filter((role) => canAssignRole(actor, role));
+}
+
+/**
+ * **The club's legal texts are the Administrator's (§NNN)** — writing a version, approving it,
+ * the one-press approval of the platform's texts, withdrawing and deleting one.
+ *
+ * They had been the Superadministrator's, riding on `canManageStaff` ("only the role that already
+ * administers staff may write the club's legal text"). The Administrator runs the club, and the
+ * texts are the club's own commitments, not a platform setting: an approved text is still never
+ * rewritten, approval is still one-way, and deleting an approved version still asks for the typed
+ * phrase and a reason — those guards are in `legal-documents/service.ts`, not in a rank.
+ */
+export function canWriteLegalTexts(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
+ * **The platform settings that can stop the service — the Superadministrator's (§NNN).**
+ *
+ * What makes a Superadministrator more than an Administrator: a setting whose wrong value takes
+ * the site down or holds every message back, for every participant at once —
+ *
+ *     "Cât de des verifică platforma"   the jobs' throttle (§334): a long interval delays every
+ *                                       hand-over of a place and every email the jobs send
+ *     "Limitele bazei de date"          Neon's size ceiling and monthly quota (§335): a quota
+ *                                       reached suspends the database, and the site with it
+ *     the email delivery timing         (§221) every message waits for the scheduler
+ *     the anti-robot check              (§254, §282) the Turnstile switch: on with a broken key
+ *                                       it refuses every registration; off, the form is open
+ *                                       to bots — either way every participant at once
+ *
+ * The club's own settings — the Mailgun and Neon plans (§100, §280), the deadlines (§377), who
+ * receives the club's copies — are `canManageClubSettings`, the Administrator's: each changes
+ * what the club promises or pays, not whether the platform runs.
+ */
+export function canManagePlatform(role: StaffRole): boolean {
   return atLeast(role, "SUPERADMIN");
+}
+
+/**
+ * **The club's own settings — the Administrator's (§NNN).** The email and database plans
+ * (§100, §280), the deadlines and the per-address limit ("Termene", §377), the club's notices and
+ * email texts, who receives the contact form and the club's copies, "Trimite acum" within the
+ * allowance (§80), giving older pictures their sizes (§414). Each changes what the club promises,
+ * says or pays; none of them can stop the platform — those are `canManagePlatform`.
+ */
+export function canManageClubSettings(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
 }
 
 /**
@@ -467,13 +563,16 @@ export function canManageStaff(role: StaffRole): boolean {
  *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
  *                                             «Club», «Anti-robot», «Costuri» canManageRegistrations,
  *                                             «Aplicația» canSeeDiagnostics (§397), «De făcut»
- *                                             canReadClubTodo (§438)
- *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
+ *                                             canReadClubTodo (§438); the forms on them ask
+ *                                             `canManageClubSettings` or `canManagePlatform` (§NNN)
+ *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
+ *                                             `canWriteLegalTexts` (§NNN)
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
  *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
  *                                             composer (§445); withdrawing an address asks
  *                                             `canManageRegistrations` for itself
- *     staff          canManageStaff           `admin/staff/page.tsx`
+ *     staff          canManageStaff           `admin/staff/page.tsx` — the Administrator's since
+ *                                             §NNN; a Superadministrator's row is not (canManageMember)
  *     devs           canSeeDiagnostics        `devs/page.tsx`
  *
  * The hierarchy makes one property testable and worth stating: a higher role is offered every

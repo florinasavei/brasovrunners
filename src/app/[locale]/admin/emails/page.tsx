@@ -46,7 +46,7 @@ import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmails
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
 import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { canEditTexts, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, canManageClubSettings, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { countForm } from "@/i18n/count-form";
@@ -129,7 +129,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     drawn for an Organizer who could only be told FORBIDDEN.
   */
   const maySeeQueue = canReadRegistrations(staff.role);
-  const mayEditEmail = canManageRegistrations(staff.role);
+  // One predicate per verb, the one its action asserts: the settings forms ask
+  // `canManageClubSettings` (emails/actions.ts); "send now" asks what the registrations list's
+  // own button asks, `canManageRegistrations` (`sendOutboxNow`, §80).
+  const mayEditEmail = canManageClubSettings(staff.role);
+  const maySendNow = canManageRegistrations(staff.role);
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
@@ -293,7 +297,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           locale={locale}
           queue={queue}
           volume={volume}
-          mayEdit={mayEditEmail}
+          mayEdit={maySendNow}
           openWhen={{ saved: saved === "outboxSent", refused: Boolean(error) }}
         />
       )}

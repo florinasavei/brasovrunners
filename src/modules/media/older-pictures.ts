@@ -7,7 +7,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { ladderFromStoredMaster } from "./images";
 import { FORMER_KEY_PREFIX_PATTERN, LADDER_WIDTHS, ladderKeyPrefixOf } from "./ladder";
@@ -117,7 +117,7 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
   actor: Pick<StaffUser, "id" | "role">,
   options: { now?: Date; perPress?: number; budgetMs?: number; clock?: () => number } = {},
 ): Promise<OlderPicturesPress> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not convert the stored pictures`);
   }
   if (!isStorageConfigured()) throw new DomainError("VALIDATION_ERROR", "photo storage is not configured for this environment");

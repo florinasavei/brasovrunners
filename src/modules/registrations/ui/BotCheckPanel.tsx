@@ -23,16 +23,24 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
  * The warning is not decoration either. Turning it off is the right move on the day the widget
  * is refusing real people (§216, §205: "trebuie să lăsăm oamenii să se înscrie cu orice preț"),
  * and it is a defence removed — so the panel says which defences remain.
+ *
+ * **The Superadministrator's since §NNN** (`canManagePlatform`): off, every form is open to
+ * robots; on with a broken key, it can refuse every real person at once. An Administrator reads
+ * the state and the date and gets a sentence instead of the two buttons; `updateBotCheck`
+ * asserts the same capability again.
  */
 export default async function BotCheckPanel({
   locale,
   state,
   keysPresent,
+  mayEdit,
 }: {
   locale: Locale;
   state: BotCheckState;
   /** Both Turnstile keys on this deployment (§97). Without them there is nothing to run. */
   keysPresent: boolean;
+  /** `canManagePlatform` for the reader; without it the panel reads and offers no form (§NNN). */
+  mayEdit: boolean;
 }) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
@@ -67,6 +75,7 @@ export default async function BotCheckPanel({
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {t(`botCheck.honeypot.${state.honeypot ? "on" : "off"}`)}
         </Typography>
+        {mayEdit && (
         <ActionForm
           action={updateBotCheckAction}
           confirm={
@@ -87,9 +96,16 @@ export default async function BotCheckPanel({
             variant={state.honeypot ? "outlined" : "contained"}
           />
         </ActionForm>
+        )}
       </Stack>
 
-      {keysPresent && (
+      {!mayEdit && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }} data-testid="bot-check-read-only">
+          {t("botCheck.readOnly")}
+        </Typography>
+      )}
+
+      {mayEdit && keysPresent && (
         <Stack spacing={1.5} sx={{ mt: 1.5 }}>
           {running && <Alert severity="warning" sx={{ py: 0.5 }}>{t("botCheck.warning")}</Alert>}
           <ActionForm

@@ -4,13 +4,14 @@ import { redirect } from "next/navigation";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { canonicalLookupOf, sealPersonLookup } from "@/modules/registrations/person-data";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
  * The lookup's form (§322): the address arrives in the body of a POST, is canonicalized here, and
  * leaves only sealed — the page's URL carries ciphertext, never the address (`person-data.ts`).
- * `requireStaffRole("ADMIN")` first, so an Organizer's replayed POST learns nothing; the page and
+ * `requireStaffCapability(canManageRegistrations)` first, so an Organizer's replayed POST learns nothing; the page and
  * the service assert the same role again.
  */
 export async function lookUpPersonAction(form: FormData): Promise<void> {
@@ -20,7 +21,7 @@ export async function lookUpPersonAction(form: FormData): Promise<void> {
 
   let sealed: string | null = null;
   try {
-    await requireStaffRole("ADMIN");
+    await requireStaffCapability(canManageRegistrations);
     sealed = sealPersonLookup(canonicalLookupOf(typed), new Date());
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?error=${error.code}#admin-alert`);

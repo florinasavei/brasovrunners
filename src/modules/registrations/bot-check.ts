@@ -4,7 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { turnstileSiteKey } from "./turnstile";
 
@@ -144,7 +144,9 @@ export async function updateBotCheck<T extends Record<string, unknown>>(
   change: { enabled?: boolean; honeypot?: boolean },
   now: Date,
 ): Promise<BotCheckState> {
-  if (!canManageRegistrations(actor.role)) {
+  // The Superadministrator's since §NNN: off opens every form to robots, on with a broken key
+  // can refuse every real person — a platform setting, not a club one (`canManagePlatform`).
+  if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not switch the anti-bot check`);
   }
   const before = await readBotCheck(db);

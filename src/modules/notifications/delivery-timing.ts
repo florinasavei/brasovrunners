@@ -4,7 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   DEFAULT_DELIVERY_TIMING,
@@ -51,7 +51,9 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<DeliveryTimingState> {
-  if (!canManageStaff(actor.role)) {
+  // A platform setting that can hold every message back (§NNN) — no longer tied to who manages
+  // the team, which the Administrator does since the same decision.
+  if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change when email is sent`);
   }
   const parsed = deliveryTimingSettingSchema.safeParse(rawInput);

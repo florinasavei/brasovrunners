@@ -19,7 +19,8 @@ import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
-import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
+import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -49,7 +50,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
   };
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateEmailPlan(
       getDb(),
       actor,
@@ -88,7 +89,7 @@ export async function updateEmailTransportAction(_previous: FormOutcome | null, 
   };
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateEmailTransport(
       getDb(),
       actor,
@@ -128,7 +129,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
   const list = (name: string): string[] => parseAddressList(typeof form.get(name) === "string" ? String(form.get(name)) : "");
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc") }, new Date());
   } catch (error) {
     return refused(error, form);
@@ -151,7 +152,7 @@ export async function updateShownContactAddressAction(_previous: FormOutcome | n
   const gmail = form.get("gmail");
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateShownContactAddress(
       getDb(),
       actor,
@@ -178,7 +179,8 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
 
   let outcome: string;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    // The registrations list's own verb (§80): the same predicate here, there and in the service.
+    const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     outcome = `saved=outboxSent&sent=${result.sent}`;
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
@@ -205,7 +207,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
   const list = (name: string): string[] => parseAddressList(posted(name));
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateClubNotices(
       getDb(),
       actor,
@@ -239,7 +241,7 @@ export async function updateDeadlinesAction(_previous: FormOutcome | null, form:
   const path = getPathname({ locale, href: "/admin/emails" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateDeadlines(
       getDb(),
       actor,
@@ -266,7 +268,7 @@ export async function updateAddressCapAction(_previous: FormOutcome | null, form
   const path = getPathname({ locale, href: "/admin/emails" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     const raw = form.get("registrationsPerAddress");
     await updateAddressCap(getDb(), actor, { registrationsPerAddress: typeof raw === "string" ? raw.trim() : "" }, new Date());
   } catch (error) {

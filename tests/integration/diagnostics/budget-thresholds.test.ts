@@ -7,7 +7,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * §447 — the two shares of the Neon quota that turn the month's budget amber and red: the
- * Administrator's, asserted on the server, audited from and to, a value this code cannot read
+ * Superadministrator's since §NNN (a platform setting, `canManagePlatform`), asserted on the server, audited from and to, a value this code cannot read
  * falling back to the defaults (60 and 85), and red always after amber.
  */
 const NOW = new Date("2026-10-01T10:00:00.000Z");
@@ -28,7 +28,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-async function staff(role: "ADMIN" | "MODERATOR" | "DEV") {
+async function staff(role: "SUPERADMIN" | "ADMIN" | "MODERATOR" | "DEV") {
   const [row] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}@example.ro`, displayName: role, role }).returning();
   return row;
 }
@@ -50,8 +50,8 @@ describe("§447 the budget thresholds", () => {
     expect(await readBudgetThresholds(db)).toMatchObject({ amberPercent: 60, redPercent: 85 });
   });
 
-  it("are set by an Administrator and audited from and to", async () => {
-    const admin = await staff("ADMIN");
+  it("are set by a Superadministrator and audited from and to", async () => {
+    const admin = await staff("SUPERADMIN");
     expect(await updateBudgetThresholds(db, admin, { amberPercent: "50", redPercent: "80" }, NOW)).toEqual({
       amberPercent: 50,
       redPercent: 80,
@@ -63,11 +63,11 @@ describe("§447 the budget thresholds", () => {
     expect(audit.metadataJson).toEqual({ from: { amberPercent: 60, redPercent: 85 }, to: { amberPercent: 50, redPercent: 80 } });
   });
 
-  it("refuse anybody but an Administrator, and red at or before amber", async () => {
-    for (const role of ["MODERATOR", "DEV"] as const) {
+  it("refuse anybody but a Superadministrator (§NNN), and red at or before amber", async () => {
+    for (const role of ["ADMIN", "MODERATOR", "DEV"] as const) {
       expect(await refusal(updateBudgetThresholds(db, await staff(role), { amberPercent: 50, redPercent: 80 }, NOW))).toBe("FORBIDDEN");
     }
-    const admin = await staff("ADMIN");
+    const admin = await staff("SUPERADMIN");
     expect(await refusal(updateBudgetThresholds(db, admin, { amberPercent: 80, redPercent: 80 }, NOW))).toBe("VALIDATION_ERROR");
     expect(await refusal(updateBudgetThresholds(db, admin, { amberPercent: 5, redPercent: 80 }, NOW))).toBe("VALIDATION_ERROR");
     expect(await db.select().from(auditLogs)).toHaveLength(0);

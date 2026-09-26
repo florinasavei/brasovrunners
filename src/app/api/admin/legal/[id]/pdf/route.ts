@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import { isLegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { renderLegalDocumentPdf } from "@/modules/legal-documents/pdf";
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
-import { atLeast } from "@/modules/staff-identity/domain/roles";
+import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -33,7 +33,7 @@ export async function GET(
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!atLeast(actor.role, "ADMIN")) {
+  if (!canWriteLegalTexts(actor.role)) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
   }
 

@@ -14,7 +14,8 @@ import { signIn } from "./support/featured-event";
  */
 test.describe("§447 the month's budget", () => {
   test("Costuri says the budget is unknown and the platform does nothing extra", async ({ page }) => {
-    await signIn(page, "Dev Administrator");
+    // The thresholds' form is a platform setting, the Superadministrator's since §NNN.
+    await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/tasks?panel=costs");
     // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93).
     const card = page.locator("#main").getByTestId("neon-budget");
@@ -26,7 +27,7 @@ test.describe("§447 the month's budget", () => {
     // No reading, so no figures and no source line: nothing is invented.
     await expect(card.getByTestId("neon-budget-spent")).toHaveCount(0);
     await expect(card.getByTestId("neon-budget-source")).toHaveCount(0);
-    // The Administrator's two thresholds, at their defaults.
+    // The Superadministrator's two thresholds, at their defaults.
     await expect(card.getByLabel("Galben de la (%)")).toHaveValue("60");
     await expect(card.getByLabel("Roșu de la (%)")).toHaveValue("85");
   });

@@ -3,7 +3,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   DEFAULT_EMAIL_PLAN,
@@ -51,7 +51,7 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<EmailPlanState> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the email plan`);
   }
   const parsed = emailPlanSettingSchema.safeParse(rawInput);

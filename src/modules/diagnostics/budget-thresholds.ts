@@ -5,7 +5,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import { buildInfo } from "@/shared/config/build-info";
 import { DomainError } from "@/shared/errors/domain-error";
 import { type BudgetThresholds, DEFAULT_BUDGET_THRESHOLDS } from "./domain/neon-budget";
@@ -13,7 +13,9 @@ import { forgetNeonBudget } from "./neon-budget";
 
 /**
  * The two shares of the Neon quota that turn the month's budget amber and red (§447) — the
- * Administrator's to move on `/admin/tasks` → Costuri, built like §334's interval beside it: one
+ * Superadministrator's to move on `/admin/tasks` → Costuri since §NNN (`canManagePlatform`: a
+ * threshold set wrong brakes the platform for nothing or lets the quota suspend the site), built
+ * like §334's interval beside it: one
  * `platform_settings` row, a strict schema, the role asserted here and not only by the hidden
  * form, and an audit row naming who changed them from what to what. No migration: a new key in
  * the existing table.
@@ -22,7 +24,7 @@ import { forgetNeonBudget } from "./neon-budget";
  * public read, and it must not wake the compute to learn how careful to be about waking the
  * compute. So the row is kept in Next's data cache under the deployment's build, with no time
  * limit: it is read once per deployment (a release has already woken the database) and again
- * after the Administrator saves, which expires it. When the read fails — the database is away —
+ * after a Superadministrator saves, which expires it. When the read fails — the database is away —
  * the defaults answer and nothing is cached, so the next read tries again after the budget's
  * one-minute memo, never in a loop.
  */
@@ -78,7 +80,7 @@ export async function updateBudgetThresholds<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<BudgetThresholdsState> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the budget thresholds`);
   }
   const parsed = budgetThresholdsSchema.safeParse(rawInput);

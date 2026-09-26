@@ -432,7 +432,8 @@
         "turnOn": "Pornește honeypot-ul"
       },
       "savedHoneypotOn": "Honeypot-ul este pornit.",
-      "savedHoneypotOff": "Honeypot-ul este oprit."
+      "savedHoneypotOff": "Honeypot-ul este oprit.",
+      "readOnly": "Verificarea anti-robot o schimbă Superadministratorul: oprită, formularul e deschis roboților; pornită greșit, poate refuza oameni reali. Starea de mai sus e la zi și pentru tine."
     },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
@@ -1781,8 +1782,8 @@
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
-        "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
-        "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
+        "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
+        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date, verificarea anti-robot) și numirea altui Superadministrator."
       },
       "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
@@ -1802,7 +1803,8 @@
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
       "inviting": "Se adaugă…",
       "inviteAsideSends": "contul și invitația, într-un pas",
-      "inviteAsideManual": "lista și invitația; contul, din consola Zitadel"
+      "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
+      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator."
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -2094,7 +2096,7 @@
         "defaultsUnset": "Proiectul nu are o mărime implicită pentru un calcul nou; la salvare o primește pe cea aleasă mai jos.",
         "manyComputes": "Proiectul are {count} calcule read-write: se arată cea mai mare mărime, iar salvarea le schimbă pe toate.",
         "quotaActive": "Limită activă: {hours} ore-CU, din care {used} consumate. Când e atinsă, Neon oprește baza de date până pe {end}.",
-        "readOnly": "Limitele le schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "readOnly": "Limitele le schimbă Superadministratorul: una greșită poate opri site-ul. Cifrele de mai sus sunt la zi și pentru tine.",
         "maxCu": "Mărimea maximă a bazei de date",
         "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare. Minimul rămâne {min} CU. Lângă fiecare mărime, cel mai rău caz la tariful Launch: o oră trează la acea mărime și o lună întreagă trează.",
         "choose": "— alege o mărime —",
@@ -2202,7 +2204,7 @@
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
           "done": "Echipa are conturi.",
           "how": [
-            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele), Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină) sau Superadministrator (și setările platformei; rolul îl dă doar alt Superadministrator).",
             "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
@@ -2540,7 +2542,7 @@
         "lastPingRan": "ultimul ping: {when}, a rulat",
         "lastPingSkipped": "ultimul ping: {when}, sărit fără bază de date",
         "updatedAt": "Setat {when}.",
-        "readOnly": "Intervalul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "readOnly": "Intervalul îl schimbă Superadministratorul: unul greșit întârzie toate joburile. Cifrele de mai sus sunt la zi și pentru tine.",
         "field": "Cel mult o dată la",
         "fieldHelp": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut. „La nevoie” înseamnă doar regula „când e ceva de făcut” și verificarea de siguranță de {cap} min.",
         "option": {
@@ -3473,7 +3475,7 @@
     },
     "guide": {
       "title": "Ghid de utilizare",
-      "intro": "Fiecare treabă are pașii ei, numerotați. Ce e scris «așa», îngroșat, este exact ce scrie pe buton sau pe ecran — caută acele cuvinte. Secțiunile rolului tău sunt primele și deschise; apasă pe o treabă ca să-i vezi pașii. Dacă un buton lipsește, nu ai rolul pentru el: cere-l unui Superadministrator sau roagă pe cineva cu rolul acela.",
+      "intro": "Fiecare treabă are pașii ei, numerotați. Ce e scris «așa», îngroșat, este exact ce scrie pe buton sau pe ecran — caută acele cuvinte. Secțiunile rolului tău sunt primele și deschise; apasă pe o treabă ca să-i vezi pașii. Dacă un buton lipsește, nu ai rolul pentru el: cere-l unui Administrator sau roagă pe cineva cu rolul acela.",
       "sections": [
         {
           "title": "Primii pași",
@@ -3493,7 +3495,7 @@
                 "Prima dată: deschide emailul de invitație primit de la club și alege-ți parola din el.",
                 "Deschide site-ul clubului și scrie la sfârșitul adresei /ro/admin.",
                 "Pe pagina «Autentificare echipă» apasă «Autentificare» și intră cu adresa de email la care ai primit invitația și parola ta.",
-                "Sus scrie «Autentificat ca» cu numele și rolul tău. Dacă rolul nu e cel așteptat, spune-i unui Superadministrator.",
+                "Sus scrie «Autentificat ca» cu numele și rolul tău. Dacă rolul nu e cel așteptat, spune-i unui Administrator.",
                 "Pe un calculator care nu e al tău, la final apasă «Ieși din cont»."
               ]
             },
@@ -3526,8 +3528,8 @@
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
                 "Organizatorul: vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților. Nu scrie textele, nu publică, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
                 "Rolul Tehnic: pagina de configurație a platformei, ca să depaneze; poate corecta setările unui eveniment. Nu vede înscrierile.",
-                "Administratorul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene» și planul Mailgun. Citește documentele legale, dar nu le scrie și nu le aprobă, și nu vede «Echipa».",
-                "Superadministratorul: tot ce face Administratorul, plus documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul). O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă sau să ți-l dea."
+                "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
+                "Superadministratorul: tot ce face Administratorul, plus setările platformei care pot opri serviciul — «Cât de des verifică platforma», «Limitele bazei de date», pragurile din «Bugetul lunii» și «Anti-robot» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
               ]
             },
             {
@@ -3777,7 +3779,7 @@
                 "Tipărește numerele (vezi mai sus).",
                 "«Evenimente» → «Editează» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
-                "Voluntarii: roagă un Superadministrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
+                "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
               ]
             },
@@ -3972,13 +3974,13 @@
               "title": "Ce mai are clubul de făcut",
               "steps": [
                 "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
-                "«Costuri»: ce plătește clubul și limitele bazei de date."
+                "«Costuri»: ce plătește clubul și limitele bazei de date. Frânele platformei de acolo le schimbă un Superadministrator (secțiunea lui din ghid)."
               ]
             },
             {
-              "title": "Conturi pentru voluntari și colegi (Superadministrator)",
+              "title": "Conturi pentru voluntari și colegi",
               "steps": [
-                "Rol necesar: Superadministrator. «Echipa» apare doar pentru el; un Administrator nu o vede și îi cere lui.",
+                "«Echipa» e a Administratorului și a Superadministratorului. Rolul Superadministrator și rândul unui Superadministrator le schimbă doar un Superadministrator.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
@@ -3988,8 +3990,57 @@
           ]
         },
         {
+          "title": "Superadministrator — setările platformei",
+          "who": "Rol: Superadministrator. Tot ce face Administratorul, plus setările care pot opri serviciul.",
+          "roles": [
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Frâna joburilor programate",
+              "steps": [
+                "Rol necesar: Superadministrator. Un Administrator vede cifrele la zi, dar nu schimbă intervalul.",
+                "«Sarcini» → «Costuri» → «Cât de des verifică platforma».",
+                "„La nevoie” e implicit — platforma trezește baza de date doar când are ceva de făcut. Un interval mai lung scade factura Neon, dar întârzie fiecare predare a unui loc de pe lista de așteptare și fiecare email trimis de joburi."
+              ]
+            },
+            {
+              "title": "Limitele bazei de date",
+              "steps": [
+                "Rol necesar: Superadministrator. O limită greșită poate opri site-ul; un Administrator o vede, dar nu o schimbă.",
+                "«Sarcini» → «Costuri» → «Limitele bazei de date».",
+                "Frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu, cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă."
+              ]
+            },
+            {
+              "title": "Pragurile bugetului lunii",
+              "steps": [
+                "Rol necesar: Superadministrator. Un Administrator vede bugetul și ce face platforma, dar nu schimbă pragurile.",
+                "«Sarcini» → «Costuri» → «Bugetul lunii» → «Salvează pragurile».",
+                "Pragurile spun de la ce parte din limita lunară platforma trece pe galben și pe roșu și se frânează singură. Unul prea jos o frânează degeaba; unul prea sus o lasă să ajungă la limită, iar atunci Neon oprește baza de date."
+              ]
+            },
+            {
+              "title": "Verificarea anti-robot",
+              "steps": [
+                "Rol necesar: Superadministrator. Un Administrator vede starea, dar nu o schimbă.",
+                "«Sarcini» → «Anti-robot»: verificarea Cloudflare Turnstile și capcana ascunsă (honeypot).",
+                "Oprită, formularul e deschis roboților; pornită cu o cheie greșită, poate refuza oameni reali. Se oprește în ziua în care caseta refuză oameni și se pornește la loc după."
+              ]
+            },
+            {
+              "title": "Un alt Superadministrator",
+              "steps": [
+                "Rol necesar: Superadministrator.",
+                "«Echipa»: doar un Superadministrator face pe altcineva Superadministrator, îi schimbă rolul unui Superadministrator sau îi retrage accesul.",
+                "Ultimul Superadministrator nu poate fi retrogradat sau scos — cine preia platforma trebuie numit întâi."
+              ]
+            }
+          ]
+        },
+        {
           "title": "Documente legale și date personale (GDPR)",
-          "who": "Rol: Administrator citește; scrierea, aprobarea, retragerea și ștergerea textelor cer Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
+          "who": "Rol: Administrator sau Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3998,7 +4049,6 @@
             {
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
-                "Rol necesar: Superadministrator. Doar el vede «Versiune nouă» și aprobă; un Administrator citește textele și PDF-urile, dar nu scrie, nu aprobă și nu retrage o versiune.",
                 "«Documente legale» → «Versiune nouă».",
                 "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
@@ -4011,7 +4061,7 @@
             {
               "title": "Cele cinci texte, înainte de publicarea cursei",
               "steps": [
-                "Rol necesar: Superadministrator. Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
+                "Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
                 "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
               ]
@@ -5010,8 +5060,8 @@
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
       "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
-      "ADMIN": "plus înscrieri, participanți, export, texte legale, ștergerea unui eveniment",
-      "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
+      "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
+      "SUPERADMIN": "plus setările platformei care pot opri serviciul și numirea altui Superadministrator"
     },
     "settings": "Setări",
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",

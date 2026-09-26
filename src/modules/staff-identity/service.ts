@@ -3,7 +3,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { DomainError } from "@/shared/errors/domain-error";
-import { canManageStaff, STAFF_ROLES, type StaffRole } from "./domain/roles";
+import { canAssignRole, canManageMember, canManageStaff, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
   countSuperadministrators,
@@ -42,13 +42,46 @@ export const staffInviteSchema = z.object({
 
 export type StaffInvite = z.infer<typeof staffInviteSchema>;
 
-function assertAdministrator(actor: StaffUser): void {
+function assertAdministrator(actor: Pick<StaffUser, "role">): void {
   if (!canManageStaff(actor.role)) {
-    throw new DomainError(
-      "FORBIDDEN",
-      `role ${actor.role} may not administer staff; AGENTS.md §10.2 reserves roles to SUPERADMIN`,
-    );
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not administer staff; the team is the Administrator's (§NNN)`);
   }
+}
+
+/** Giving `role` — an invitation or a role change: a Superadministrator only by another (§NNN). */
+function assertMayAssign(actor: Pick<StaffUser, "role">, role: StaffRole): void {
+  if (!canAssignRole(actor.role, role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give the role ${role}; only a Superadministrator makes another (§NNN)`);
+  }
+}
+
+/** Acting on a colleague's row: a Superadministrator's row is a Superadministrator's (§NNN). */
+function assertMayManage(actor: Pick<StaffUser, "role">, target: Pick<StaffUser, "role">): void {
+  if (!canManageMember(actor.role, target.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not act on a ${target.role}'s access; only a Superadministrator does (§NNN)`);
+  }
+}
+
+/**
+ * The account verbs at the provider — the password link and switching an account off or on
+ * (§171) — asked of the team's own row first (§NNN).
+ *
+ * They reach Zitadel, not `staff_users`, and used to ask only for a role at the door: the page
+ * offered them on the team's rows, and the action took whatever address the form posted. Now the
+ * address must be a colleague on the list, and one the actor may manage — an Administrator
+ * cannot switch a Superadministrator's account off, which would lock the platform's settings
+ * away from everybody while the row still said they were staff.
+ */
+export async function assertMayManageAccount<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "role">,
+  email: string,
+): Promise<StaffUser> {
+  assertAdministrator(actor);
+  const member = await findStaffUserByEmail(db, email);
+  if (!member) throw new DomainError("NOT_FOUND", "no such staff user");
+  assertMayManage(actor, member);
+  return member;
 }
 
 export async function listStaff<T extends Record<string, unknown>>(
@@ -75,6 +108,8 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
       [...new Set(parsed.error.issues.map((i) => i.path.join(".")).filter((path) => path !== ""))],
     );
   }
+  // Before the address is looked up: whether this actor may give this role at all (§NNN).
+  assertMayAssign(actor, parsed.data.role);
 
   // Checked before inserting so the Administrator gets "this person is already staff" rather
   // than a unique-violation stack. The database constraint stays the authority: two requests
@@ -102,6 +137,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
   assertAdministrator(actor);
   const member = await findStaffUserByEmail(db, email);
   if (!member) throw new DomainError("NOT_FOUND", "no such staff user");
+  assertMayManage(actor, member);
   if (member.firstSignedInAt) throw new DomainError("CONFLICT", "this person has signed in already; there is nothing to invite them to");
   await db.transaction((tx) => enqueueStaffInvitation(tx, actor, member, now, true));
   return member;
@@ -144,14 +180,19 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
    *
    * An Administrator cannot change their own role: the usual way this goes wrong is someone
    * "tidying up" their own account to MODERATOR and discovering nobody can undo it. And the last
-   * Administrator cannot be demoted, because staff administration is the only door back in.
+   * Superadministrator cannot be demoted, because only a Superadministrator makes another (§NNN)
+   * and the platform's settings would have nobody left who may change them.
    */
   if (target.id === actor.id) {
     throw new DomainError("FORBIDDEN", "an administrator cannot change their own role");
   }
+  // A Superadministrator's row, and the Superadministrator's role, are a Superadministrator's
+  // to touch (§NNN): an Administrator neither demotes the owner nor promotes a colleague to it.
+  assertMayManage(actor, target);
+  assertMayAssign(actor, role);
   if (
-    target.role === "SUPERADMIN" &&
-    role !== "SUPERADMIN" &&
+    isSuperadmin(target.role) &&
+    !isSuperadmin(role) &&
     (await countSuperadministrators(db)) <= 1
   ) {
     throw new DomainError("CONFLICT", "the last superadministrator cannot be demoted");
@@ -183,7 +224,8 @@ export async function revokeStaffUser<T extends Record<string, unknown>>(
   if (target.id === actor.id) {
     throw new DomainError("FORBIDDEN", "an administrator cannot remove their own access");
   }
-  if (target.role === "SUPERADMIN" && (await countSuperadministrators(db)) <= 1) {
+  assertMayManage(actor, target);
+  if (isSuperadmin(target.role) && (await countSuperadministrators(db)) <= 1) {
     throw new DomainError("CONFLICT", "the last superadministrator cannot be removed");
   }
 

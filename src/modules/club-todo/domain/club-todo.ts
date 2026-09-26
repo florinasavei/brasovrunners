@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { atLeast, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canReadContent, type StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
  * «De făcut» / "To do" — the club's own checklist on `/admin/tasks` (§438; the owner, 2026-09-26:
@@ -42,7 +42,7 @@ export const CLUB_TODO_MAX_ITEMS = 300;
  * backoffice stays the desk and the guide (§103): they get no tab and a 404 on the route.
  */
 export function canReadClubTodo(role: StaffRole): boolean {
-  return atLeast(role, "COPYWRITER");
+  return canReadContent(role);
 }
 
 /**

@@ -17,7 +17,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { canManageStaff, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { assignableRoles, canManageMember, canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
@@ -69,6 +69,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
   // them the staff list is there and refused invites a second attempt. The refusal that
   // matters is in the actions and in `listStaff` below, which assert the role again.
   if (!canManageStaff(actor.role)) notFound();
+  /*
+    The roles this reader may give (§NNN): every one for a Superadministrator, every one but the
+    Superadministrator for an Administrator. The service refuses the rest whatever a form posts;
+    this is so the select never offers a choice that ends in a refusal.
+  */
+  const offered = assignableRoles(actor.role);
 
   const current = await searchParams;
   const { error, saved, invite, reason, account } = current;
@@ -229,7 +235,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
               required={staffInviteConstraints("role").required}
               helperText={t("staff.roleHelp")}
             >
-              {STAFF_ROLES.map((role) => (
+              {offered.map((role) => (
                 <MenuItem key={role} value={role}>
                   {STAFF_ROLE_LABEL[role]} — {t(`staff.roles.${role}`)}
                 </MenuItem>
@@ -313,7 +319,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
           /* Neither control is offered for the acting Administrator: changing your own role or
              removing your own access is refused by the service, and the usual way a club ends
              up locked out is somebody tidying up their own account. */
-          member.id === actor.id ? null : (
+          member.id === actor.id ? null : !canManageMember(actor.role, member.role) ? (
+            /* A Superadministrator's row, read by an Administrator (§NNN): no verb, and a line that
+               says whose it is — a row with no controls and no reason reads as a broken page. */
+            <Typography variant="body2" color="text.secondary" data-testid="staff-superadmin-row">
+              {t("staff.superadminRow")}
+            </Typography>
+          ) : (
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={1}
@@ -334,7 +346,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     size="small"
                     sx={{ minWidth: 150 }}
                   >
-                    {STAFF_ROLES.map((role) => (
+                    {offered.map((role) => (
                       <MenuItem key={role} value={role}>
                         {STAFF_ROLE_LABEL[role]}
                       </MenuItem>

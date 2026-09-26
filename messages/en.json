@@ -432,7 +432,8 @@
         "turnOn": "Turn the honeypot on"
       },
       "savedHoneypotOn": "The honeypot is on.",
-      "savedHoneypotOff": "The honeypot is off."
+      "savedHoneypotOff": "The honeypot is off.",
+      "readOnly": "The anti-bot check is changed by the Superadministrator: off, the form is open to robots; switched on wrongly, it can refuse real people. The state above is up to date for you too."
     },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
@@ -1781,8 +1782,8 @@
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
         "DEV": "plus the technical page /devs. No participant data.",
-        "ADMIN": "plus registrations, the export, the legal texts, the emails, the tasks.",
-        "SUPERADMIN": "plus the team: who has access and with which role."
+        "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
+        "SUPERADMIN": "plus the platform settings that can stop the service (how often the platform checks, the database's limits, the anti-bot check) and naming another Superadministrator."
       },
       "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
@@ -1802,7 +1803,8 @@
       "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
-      "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console"
+      "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
+      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access."
     },
     "queue": {
       "title": "The registration queue",
@@ -2094,7 +2096,7 @@
         "defaultsUnset": "The project has no default size for a new compute; saving gives it the one chosen below.",
         "manyComputes": "The project has {count} read-write computes: the largest size is shown, and saving changes them all.",
         "quotaActive": "Limit in force: {hours} CU-hours, of which {used} spent. When it is reached, Neon stops the database until {end}.",
-        "readOnly": "The Administrator changes the limits. The figures above are current for you too.",
+        "readOnly": "The Superadministrator changes the limits: a wrong one can stop the site. The figures above are current for you too.",
         "maxCu": "The database's maximum size",
         "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load. The minimum stays {min} CU. Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
         "choose": "— choose a size —",
@@ -2202,7 +2204,7 @@
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
           "done": "The team has accounts.",
           "how": [
-            "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
+            "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events), Administrator (runs the club: registrations, legal texts, the team, this page) or Superadministrator (the platform settings too; only another Superadministrator can give this role).",
             "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
@@ -2540,7 +2542,7 @@
         "lastPingRan": "last ping: {when}, ran",
         "lastPingSkipped": "last ping: {when}, skipped without the database",
         "updatedAt": "Set on {when}.",
-        "readOnly": "The Administrator changes the interval. The figures above are current for you too.",
+        "readOnly": "The Superadministrator changes the interval: a wrong one delays every job. The figures above are current for you too.",
         "field": "At most once every",
         "fieldHelp": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do. \"On demand\" means only the \"when something is due\" rule and the {cap}-minute safety check.",
         "option": {
@@ -3473,7 +3475,7 @@
     },
     "guide": {
       "title": "How to use the platform",
-      "intro": "Every task has its own numbered steps. What is written «like this», in bold, is exactly what the button or the screen says — look for those words. Your role's sections come first and open; press a task to see its steps. If a button is missing, you do not have the role for it: ask a superadministrator for it, or ask someone who has that role.",
+      "intro": "Every task has its own numbered steps. What is written «like this», in bold, is exactly what the button or the screen says — look for those words. Your role's sections come first and open; press a task to see its steps. If a button is missing, you do not have the role for it: ask an administrator for it, or ask someone who has that role.",
       "sections": [
         {
           "title": "First steps",
@@ -3493,7 +3495,7 @@
                 "The first time: open the invitation email the club sent you and choose your password from it.",
                 "Open the club's site and add /en/admin at the end of the address.",
                 "On the «Staff sign-in» page press «Sign in» and use the email address the invitation came to and your password.",
-                "The top says «Signed in as» with your name and role. If the role is not the one you expected, tell a superadministrator.",
+                "The top says «Signed in as» with your name and role. If the role is not the one you expected, tell an administrator.",
                 "On a computer that is not yours, press «Sign out» when you finish."
               ]
             },
@@ -3526,8 +3528,8 @@
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
                 "The Organizer: reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants. Does not write the texts, publish, cancel or erase a registration, resend emails or assign numbers.",
                 "The Tehnic role: the platform's configuration page, for troubleshooting; may correct an event's settings. Does not see the registrations.",
-                "The Administrator: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines» and the Mailgun plan. Reads the legal documents but does not write or approve them, and does not see «Staff».",
-                "The Superadministrator: everything the Administrator does, plus the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access). A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it or to give it to you."
+                "The Administrator runs the club: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
+                "The Superadministrator: everything the Administrator does, plus the platform settings that can stop the service — «How often the platform checks», «The database's limits», the thresholds in «This month's budget» and «Anti-bot» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
               ]
             },
             {
@@ -3777,7 +3779,7 @@
                 "Print the numbers (see above).",
                 "«Events» → «Edit» → «Registrations received»: print a few «Paper declaration form (PDF)» and, if it is there, «Paper declaration form for a minor (PDF)».",
                 "There too, «Emergency sheet»: the phones and emergency contacts of everyone confirmed, on one page. Take it to the race and destroy it afterwards.",
-                "Volunteers: ask a superadministrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
+                "Volunteers: ask an administrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
                 "On race day: «Race day» in the top bar."
               ]
             },
@@ -3972,13 +3974,13 @@
               "title": "What the club still has to do",
               "steps": [
                 "«Tasks» → the «Club» tab: every row is read from the system, with the steps under it. A green row is done.",
-                "«Costs»: what the club pays and the database's limits."
+                "«Costs»: what the club pays and the database's limits. The platform's brakes there are a Superadministrator's to change (their section of this guide)."
               ]
             },
             {
-              "title": "Accounts for volunteers and colleagues (Superadministrator)",
+              "title": "Accounts for volunteers and colleagues",
               "steps": [
-                "Role needed: Superadministrator. «Staff» shows only for one; an Administrator does not see it and asks them.",
+                "«Staff» is the Administrator's and the Superadministrator's. The Superadministrator role and a Superadministrator's row are changed only by a Superadministrator.",
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
                 "It never arrived: on their row, «Resend the invitation».",
@@ -3988,8 +3990,57 @@
           ]
         },
         {
+          "title": "Superadministrator — the platform settings",
+          "who": "Role: Superadministrator. Everything the Administrator does, plus the settings that can stop the service.",
+          "roles": [
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "The brake on the scheduled jobs",
+              "steps": [
+                "Role needed: Superadministrator. An Administrator sees the current figures but does not change the interval.",
+                "«Tasks» → «Costs» → «How often the platform checks».",
+                "“On demand” is the default — the platform wakes the database only when it has something to do. A longer interval lowers the Neon bill, but delays every hand-over of a waiting-list place and every email the jobs send."
+              ]
+            },
+            {
+              "title": "The database's limits",
+              "steps": [
+                "Role needed: Superadministrator. A wrong limit can stop the site; an Administrator sees it but does not change it.",
+                "«Tasks» → «Costs» → «The database's limits».",
+                "The brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment, with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box."
+              ]
+            },
+            {
+              "title": "This month's budget thresholds",
+              "steps": [
+                "Role needed: Superadministrator. An Administrator sees the budget and what the platform is doing, but does not change the thresholds.",
+                "«Tasks» → «Costs» → «This month's budget» → «Save the thresholds».",
+                "The thresholds say at what share of the monthly limit the platform turns amber and red and brakes itself. One set too low brakes it for nothing; one set too high lets it reach the limit, and then Neon stops the database."
+              ]
+            },
+            {
+              "title": "The anti-bot check",
+              "steps": [
+                "Role needed: Superadministrator. An Administrator sees its state but does not change it.",
+                "«Tasks» → «Anti-bot»: the Cloudflare Turnstile check and the hidden honeypot trap.",
+                "Off, the form is open to robots; on with a wrong key, it can refuse real people. Switch it off on the day the box refuses people, and back on afterwards."
+              ]
+            },
+            {
+              "title": "Another Superadministrator",
+              "steps": [
+                "Role needed: Superadministrator.",
+                "«Staff»: only a Superadministrator makes somebody else a Superadministrator, changes a Superadministrator's role or takes their access away.",
+                "The last Superadministrator cannot be demoted or removed — whoever takes the platform over is named first."
+              ]
+            }
+          ]
+        },
+        {
           "title": "Legal documents and personal data (GDPR)",
-          "who": "Role: an Administrator reads; writing, approving, withdrawing and deleting the texts need a Superadministrator. Read once, before the first race with registrations.",
+          "who": "Role: Administrator or Superadministrator. Read once, before the first race with registrations.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3998,7 +4049,6 @@
             {
               "title": "Approve a new version of a legal text",
               "steps": [
-                "Role needed: Superadministrator. Only they see «New version» and approve; an Administrator reads the texts and the PDFs but does not write, approve or withdraw a version.",
                 "«Legal documents» → «New version».",
                 "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
@@ -4011,7 +4061,7 @@
             {
               "title": "The five texts, before the race is published",
               "steps": [
-                "Role needed: Superadministrator. In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
+                "In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
                 "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
                 "Until you approve the new notice, the public participant list shows the confirmed only."
               ]
@@ -5010,8 +5060,8 @@
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
       "MODERATOR": "creates and configures events, publishes, the gallery",
       "DEV": "plus the configuration page. No participant data",
-      "ADMIN": "plus registrations, participants, export, legal texts, deleting an event",
-      "SUPERADMIN": "plus team administration: who has access and what they can do"
+      "ADMIN": "runs the club: plus registrations, participants, export, legal texts, the team, deleting an event",
+      "SUPERADMIN": "plus the platform settings that can stop the service, and naming another Superadministrator"
     },
     "settings": "Settings",
     "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",

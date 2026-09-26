@@ -20,7 +20,8 @@ import {
   updateDraftVersion,
   withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
@@ -78,7 +79,7 @@ export async function createLegalVersionAction(_previous: FormOutcome | null, fo
 
   let created: string;
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     created = await createDraftVersion(getDb(), actor, { key, translations: translationsFrom(form) }, new Date());
   } catch (error) {
     return refused(error, form);
@@ -94,7 +95,7 @@ export async function updateLegalVersionAction(_previous: FormOutcome | null, fo
   const versionId = text(form, "versionId");
 
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     await updateDraftVersion(getDb(), actor, versionId, translationsFrom(form), new Date());
   } catch (error) {
     return refused(error, form);
@@ -106,13 +107,13 @@ export async function updateLegalVersionAction(_previous: FormOutcome | null, fo
   );
 }
 
-/** The three platform texts, with the club's facts, approved in one press (§132). Superadministrator. */
+/** The three platform texts, with the club's facts, approved in one press (§132). Administrator (§NNN). */
 export async function approvePlatformTemplatesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
   let outcome: { error?: string; saved?: string; approved?: string };
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     const db = getDb();
     // The contact address as the club chose to show it (§442).
     const result = await approvePlatformTemplates(db, actor, clubFactsFromEnv(env, await shownContactAddresses(db)), new Date());
@@ -130,7 +131,7 @@ export async function approveLegalVersionAction(_previous: FormOutcome | null, f
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     await approveVersion(getDb(), actor, versionId, new Date());
     outcome = { saved: "legalVersionApproved" };
   } catch (error) {
@@ -155,7 +156,7 @@ export async function deleteLegalVersionAction(_previous: FormOutcome | null, fo
   const listPath = getPathname({ locale, href: "/admin/legal" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     await deleteDraftVersion(getDb(), actor, text(form, "versionId"));
   } catch (error) {
     return backTo(listPath, outcomeOf(error));
@@ -167,7 +168,7 @@ export async function deleteLegalVersionAction(_previous: FormOutcome | null, fo
 /**
  * Withdraw an approved version nothing relied on (BR-REQ-053-02, `DECISIONS.md` §46, §53).
  *
- * The role is asserted twice and that is not belt-and-braces: `requireStaffRole` answers "is
+ * The role is asserted twice and that is not belt-and-braces: `requireStaffCapability` answers "is
  * this request from an Administrator", and `assertMayEdit` inside the service answers "may this
  * actor write the club's legal text" — the second is the one that would still be there if this
  * verb were ever called from anywhere but a form (BR-REQ-060-01).
@@ -181,7 +182,7 @@ export async function withdrawLegalVersionAction(_previous: FormOutcome | null, 
   const listPath = getPathname({ locale, href: "/admin/legal" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     await withdrawApprovedVersion(getDb(), actor, text(form, "versionId"), new Date());
   } catch (error) {
     return backTo(listPath, outcomeOf(error));
@@ -193,8 +194,8 @@ export async function withdrawLegalVersionAction(_previous: FormOutcome | null, 
 /**
  * Delete an approved version outright, number and all (`DECISIONS.md` §151).
  *
- * **Superadministrator here as well as in the service**, and the two are not the same
- * assertion: `requireStaffRole` answers "is this request from somebody with that role", and
+ * **Administrator here as well as in the service** (§NNN; it was the Superadministrator's), and the two are not the same
+ * assertion: `requireStaffCapability` answers "is this request from somebody with that role", and
  * `assertMayEdit` inside `deleteApprovedVersion` answers "may this actor write the club's legal
  * text" — the second is the one that would still be there if this verb were ever reached from
  * anywhere but this form (BR-REQ-060-01). It is the same gate `createLegalVersionAction` uses,
@@ -218,7 +219,7 @@ export async function deleteApprovedLegalVersionAction(_previous: FormOutcome | 
 
   let deleted: { key: LegalDocumentKey; version: number };
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canWriteLegalTexts);
     deleted = await deleteApprovedVersion(getDb(), actor, {
       versionId,
       typedConfirmation: text(form, "typedConfirmation"),

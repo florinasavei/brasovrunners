@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   type ContactRecipients,
@@ -78,7 +78,7 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
   rawInput: unknown,
   now: Date,
 ): Promise<ContactRecipientsState> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the contact recipients`);
   }
   const parsed = contactRecipientsSchema.safeParse(rawInput);

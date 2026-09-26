@@ -30,7 +30,7 @@ import {
   isReliedOn,
 } from "@/modules/legal-documents/domain/deletability";
 import { readDeletionFacts } from "@/modules/legal-documents/service";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
@@ -113,23 +113,22 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   */
   const actor = await requireStaff();
   if (!canReadContent(actor.role)) notFound();
-  // Creating a version is a Superadministrator's act (BR-REQ-053-02); an Administrator reads.
-  // Offered here rather than only from an existing version's page, because an environment with
-  // no version yet — production, by design — has no such page to start from, and the create
-  // route was reachable by typing its address and no other way (found on production,
-  // 2026-09-17: "I still can't create documents").
-  const mayCreate = actor.role === "SUPERADMIN";
+  // Creating a version is an Administrator's act since §NNN (BR-REQ-053-02); an Organizer and a
+  // Redactor read. Offered here rather than only from an existing version's page, because an
+  // environment with no version yet — production, by design — has no such page to start from,
+  // and the create route was reachable by typing its address and no other way (found on
+  // production, 2026-09-17: "I still can't create documents").
+  const mayCreate = canWriteLegalTexts(actor.role);
   /*
-    Deleting a version outright is the same gate as writing one (`canManageStaff`), because the
-    role that publishes the club's word is the role that unpublishes it (§151). Written as the
-    capability rather than as another `role === "SUPERADMIN"`, so it moves if the rule does.
+    Deleting a version outright is the same gate as writing one (`canWriteLegalTexts`), because
+    the role that publishes the club's word is the role that unpublishes it (§151).
 
-    The link is hidden from an Administrator rather than the row saying nothing: the sentence
-    below it — what deletion would mean — is shown to everybody who can read this screen, so an
-    Administrator learns that the version *can* go and who can do it, instead of finding a
-    control that answers 404. The page and the service refuse regardless (BR-REQ-060-01).
+    The link is hidden from a reader rather than the row saying nothing: the sentence below it —
+    what deletion would mean — is shown to everybody who can read this screen, so a reader learns
+    that the version *can* go and who can do it, instead of finding a control that answers 404.
+    The page and the service refuse regardless (BR-REQ-060-01).
   */
-  const mayDestroy = canManageStaff(actor.role);
+  const mayDestroy = canWriteLegalTexts(actor.role);
 
   const current = await searchParams;
   const { saved, error } = current;
@@ -515,7 +514,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                       }),
                     )
                   ) : !mayDestroy ? (
-                    // Withdrawing is the Superadministrator's, like deleting beside it (§222): the
+                    // Withdrawing is the Administrator's, like deleting beside it (§222, §NNN): the
                     // service asserts it, so a reader is shown no button — and the sentence
                     // below already says what deleting would mean, once.
                     null

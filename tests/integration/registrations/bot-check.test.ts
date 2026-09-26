@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * It has been behind two environment keys since §97, so turning it off needed a deployment —
  * on the very day it is refusing real people (§216), which is the day it must be quickest to
- * turn off. What must stay true: the default is **on**, only an Administrator may move it, the
+ * turn off. What must stay true: the default is **on**, only a Superadministrator may move it (§NNN), the
  * trail records who did and in which direction, and the two forms that carry the challenge
  * both consult it.
  */
@@ -28,6 +28,7 @@ describe("§254 the anti-bot switch", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
+  let administrator: StaffUser;
   let organizer: StaffUser;
 
   beforeAll(async () => {
@@ -37,7 +38,9 @@ describe("§254 the anti-bot switch", () => {
   beforeEach(async () => {
     await resetTables(db);
     forgetCachedBotCheck();
-    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
+    // `admin` is the Superadministrator: the switch is a platform setting since §NNN.
+    [admin] = await db.insert(staffUsers).values({ email: "superadmin@dev.test", displayName: "Superadmin", role: "SUPERADMIN" }).returning();
+    [administrator] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
     [organizer] = await db
       .insert(staffUsers)
       .values({ email: "moderator@dev.test", displayName: "Organizer", role: "MODERATOR" })
@@ -60,10 +63,13 @@ describe("§254 the anti-bot switch", () => {
     expect(await botCheckIsOn(db, NOW)).toBe(true);
   });
 
-  it("is an Administrator's decision", async () => {
-    // The same gate as every other setting that changes what a participant meets (§100, §244).
+  it("is a Superadministrator's decision (§NNN): an Administrator and an Organizer are refused", async () => {
+    // Off opens every form to robots; on with a broken key refuses every real person — a setting
+    // that can stop the service, so `canManagePlatform`, like the jobs' throttle and Neon's limits.
     await expect(updateBotCheck(db, organizer, { enabled: false }, NOW)).rejects.toThrow();
-    expect((await readBotCheck(db)).enabled).toBe(true);
+    await expect(updateBotCheck(db, administrator, { enabled: false }, NOW)).rejects.toThrow(/anti-bot/);
+    await expect(updateBotCheck(db, administrator, { honeypot: false }, NOW)).rejects.toThrow(/anti-bot/);
+    expect(await readBotCheck(db)).toMatchObject({ enabled: true, honeypot: true });
   });
 
   it("records who switched it and which way", async () => {

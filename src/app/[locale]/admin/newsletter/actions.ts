@@ -7,7 +7,8 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { type NewsletterPreview, previewNewsletter } from "@/modules/newsletter/preview";
 import { sendNewsletter, withdrawNewsletterAddress } from "@/modules/newsletter/service";
-import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -94,7 +95,7 @@ export async function withdrawNewsletterAddressAction(_previous: FormOutcome | n
   const path = getPathname({ locale, href: "/admin/newsletter" });
   let removed: boolean;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     removed = await withdrawNewsletterAddress(getDb(), actor, typeof form.get("email") === "string" ? String(form.get("email")) : "", new Date());
   } catch (error) {
     return refused(error, form);

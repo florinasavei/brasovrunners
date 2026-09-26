@@ -4,7 +4,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { JOB_CADENCE_CHOICES, type JobCadenceMinutes } from "./schedule";
 import { forgetJobSchedules } from "./schedule-cache";
@@ -13,9 +13,9 @@ import { forgetJobSchedules } from "./schedule-cache";
  * How often the platform may look at the database for its scheduled work, at most — the owner's
  * throttle (§334; 2026-09-23: "I want toggles in my admin area, so I can throttle myself when
  * needed"). Set on `/admin/tasks` → Costuri beside the Neon plan, and the same shape as it
- * (`diagnostics/neon-plan.ts`): one `platform_settings` row, a strict schema, the Administrator's
- * role asserted here and not only by the hidden button, and an audit row naming who changed it
- * from what to what.
+ * (`diagnostics/neon-plan.ts`): one `platform_settings` row, a strict schema, the role asserted
+ * here and not only by the hidden button — the Superadministrator's since §NNN, where the plan
+ * stays the Administrator's — and an audit row naming who changed it from what to what.
  *
  * The value is the **minimum** number of minutes between two real runs of each job, whatever the
  * pinger does; zero — "la nevoie", the default — is the next-due rule alone (`schedule.ts`). A
@@ -67,7 +67,9 @@ export async function updateJobCadence<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<JobCadenceState> {
-  if (!canManageRegistrations(actor.role)) {
+  // The Superadministrator's since §NNN: a long interval delays every hand-over of a place and
+  // every message the jobs send, for everybody at once — a platform setting, not a club one.
+  if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change how often the platform checks`);
   }
   const parsed = jobCadenceSettingSchema.safeParse(rawInput);

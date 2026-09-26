@@ -3,7 +3,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { type ClubNotices, clubNoticesSchema, DEFAULT_CLUB_NOTICES } from "./domain/club-notices";
 
@@ -15,7 +15,7 @@ import { type ClubNotices, clubNoticesSchema, DEFAULT_CLUB_NOTICES } from "./dom
  * changed it and from what. Addresses, never a credential — the Mailgun key stays in the
  * environment (`db/schema/platform-settings.ts`, `AGENTS.md` §14.5).
  *
- * The gate is `canManageRegistrations`, not merely "staff": these lists decide who receives a
+ * The gate is `canManageClubSettings`, not merely "staff": these lists decide who receives a
  * participant's signed declaration, which is the most sensitive document this platform holds
  * (§15.11). The action asserts the role at the door and this asserts it again.
  */
@@ -56,7 +56,7 @@ export async function updateClubNotices<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<ClubNoticesState> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change who receives the club's copies`);
   }
   const parsed = clubNoticesSchema.safeParse(rawInput);

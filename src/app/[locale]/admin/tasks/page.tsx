@@ -79,7 +79,7 @@ import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings, canManagePlatform, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
@@ -667,15 +667,16 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       {panel === "botCheck" && (
         <>
         {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
-            which the club must be able to switch off on the day it refuses real people. */}
-        <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} />
+            which the club must be able to switch off on the day it refuses real people. The
+            Superadministrator's to switch since §NNN; an Administrator reads it. */}
+        <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} mayEdit={canManagePlatform(actor.role)} />
         </>
       )}
 
       {panel === "club" && (
         <>
         {/* A thing owed once (§430): the pictures from before §414 get their phone sizes. Gone at zero. */}
-        {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
+        {olderPictures > 0 && canManageClubSettings(actor.role) && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
 
         {/* Who and what kind — two rows of links, no client code, each keeping the other's
             choice (§150). The link is 44 px tall; the chip inside it is small. */}
@@ -813,36 +814,38 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {/*
           The one setting on this panel (§280's follow-up): which Neon plan the account is on.
           Above the figures that follow it, so a plan set wrong shows here before it shows on
-          the invoice. This page is the Administrator's already (`canManageRegistrations` at the
-          door), so `mayEdit` is true for every reader who gets this far; the prop stays for the
-          same reason the Mailgun panel carries it (§291).
+          the invoice. A club setting (`canManageClubSettings`, the Administrator's); the prop
+          stays for the same reason the Mailgun panel carries it (§291).
         */}
-        <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+        <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageClubSettings(actor.role)} />
 
         {/* How often the platform may wake the database for its scheduled work (§334) — the
-            throttle the owner asked for, beside the plan that bills each wake. */}
+            throttle the owner asked for, beside the plan that bills each wake. The
+            Superadministrator's since §NNN; an Administrator reads the figures and no form. */}
         <JobCadencePanel
           locale={locale}
           cadence={jobCadence}
           jobs={jobOverviews}
-          mayEdit={canManageRegistrations(actor.role)}
+          mayEdit={canManagePlatform(actor.role)}
           emailTiming={deliveryTiming.timing}
         />
 
         {/*
           The database's brakes (§335), beside the plan they are priced against: the compute's size
           ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
-          door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
+          door as the plan, and a higher `mayEdit` since §NNN — a quota reached suspends the site,
+          so writing it is the Superadministrator's; `updateNeonLimits` asserts the role again.
         */}
-        {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against. */}
-        <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManageRegistrations(actor.role)} />
+        {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.
+            Its thresholds are a platform setting since §NNN, the Superadministrator's like the brakes. */}
+        <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} />
 
         {neonLimits && (
           <NeonLimitsPanel
             locale={locale}
             reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
             appEnv={env.APP_ENV}
-            mayEdit={canManageRegistrations(actor.role)}
+            mayEdit={canManagePlatform(actor.role)}
           />
         )}
 
