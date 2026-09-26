@@ -109,6 +109,7 @@ function registrationForm(firstName: string, email: string): FormData {
     phoneCountry: "RO",
     emergencyContactName: "Ion Vecinul",
     emergencyContactPhone: "0722222222",
+    nationality: "RO",
     emergencyContactPhoneCountry: "RO",
     fitnessDeclared: "on",
     termsAccepted: "on",

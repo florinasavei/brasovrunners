@@ -104,7 +104,10 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
     // The public-results consent is not asked (§322): there are no results to consent to.
     await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
-    // Where the runner is from is optional and on the optional side, open (§322).
+    // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§NNN).
+    await expect(page.locator('input[name="nationality"]')).toHaveValue("RO");
+    await expect(page.locator('input[name="nationality"]')).toHaveAttribute("required", "");
+    // The city is optional and on the optional side, open (§322).
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).not.toHaveAttribute("required", "");
     // "I want to appear on the participant list" is asked only on an event whose list is switched

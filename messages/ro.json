@@ -3558,7 +3558,6 @@
     "nationality": "Cetățenie",
     "city": "Oraș",
     "originHelp": "Opțional. Ne arată de unde vin participanții evenimentelor clubului.",
-    "nationalityNone": "Nu spun",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
@@ -3672,7 +3671,7 @@
     },
     "disclosure": {
       "race": "Membru {club}, club și tricou — opțional",
-      "origin": "De unde ești — opțional",
+      "origin": "Orașul tău — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"

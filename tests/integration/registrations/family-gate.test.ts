@@ -66,6 +66,7 @@ const submission = (firstName: string, at: Date = NOW) => ({
   phone: "+40711111111",
   emergencyContactName: "Ion Vecinul",
   emergencyContactPhone: "+40722222222",
+  nationality: "RO",
   email: EMAIL,
   locale: "ro",
   privacyAcknowledged: true,
