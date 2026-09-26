@@ -44,10 +44,15 @@ function candidates(srcset: string): { url: string; width: number }[] {
 }
 
 test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four levels §437)", () => {
-  test("a picture and a film's poster go up at «Înaltă», say what they became, and the page offers their widths", async ({ page, browser }) => {
-    test.setTimeout(180_000);
+  // Two parts, each with its own budget (§NNN): the first creates the page with its picture, the
+  // second adds the film's poster to it, publishes, and reads what the page offers.
+  let editorUrl = "";
+  let slug = "";
+
+  test("a picture goes up at «Mare» and says what it became", async ({ page }) => {
+    test.setTimeout(120_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
-    const slug = `afis-${suffix}`;
+    slug = `afis-${suffix}`;
 
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/pages/new");
@@ -86,7 +91,30 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill("Afișul crosului");
     await pictureWords.getByRole("button", { name: "Gata" }).click();
 
-    // A film, and the club's own poster for it — at the same remembered choice.
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`The race poster ${suffix}`);
+    await field("translations.en.slug").fill(`poster-${suffix}`);
+    await page.locator('[data-rich-text="translations.en.body"]').locator("[data-field]").click();
+    await page.keyboard.type("The race poster, with the rules.");
+    await page.getByRole("tab", { name: /Română/ }).click();
+
+    await page.getByRole("button", { name: "Pagină nouă" }).click();
+    await expect(page).toHaveURL(/\/admin\/pages\/[0-9a-f-]{36}/);
+    editorUrl = new URL(page.url()).pathname;
+  });
+
+  test("a film's poster goes up at «Mare», and the published page offers every width", async ({ page, browser }) => {
+    test.setTimeout(120_000);
+    expect(editorUrl, "the first part created the page").not.toBe("");
+    await signIn(page, "Dev Administrator");
+    await page.goto(editorUrl);
+    const roEditor = page.locator('[data-rich-text="translations.ro.body"]');
+    // The caret in the words, never on the picture: a film inserted on a selected picture replaces it.
+    await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(1);
+    await roEditor.getByText("Afișul crosului, cu regulamentul.").click();
+    await page.keyboard.press("End");
+
+    // A film, and the club's own poster for it, at «Mare».
     await roEditor.getByRole("button", { name: "Adaugă un film de pe YouTube" }).click();
     await roEditor.getByLabel("Adresa filmului (YouTube)").fill("https://youtu.be/dQw4w9WgXcQ");
     await roEditor.getByRole("button", { name: "Adaugă filmul" }).click();
@@ -97,22 +125,18 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     // it is clicked only when the panel is not already there.
     await filmPanel.waitFor({ timeout: 5_000 }).catch(() => film.click());
     await expect(filmPanel).toBeVisible();
-    await expect(filmPanel.getByRole("radio", { name: "Mare", exact: true })).toBeChecked();
+    // A fresh load in a fresh context: the remembered choice is not carried over, so choose it.
+    await filmPanel.getByRole("radio", { name: "Mare", exact: true }).check();
     await chooseFile(page, () => filmPanel.getByRole("button", { name: "Alege un thumbnail" }).click(), "poster.png", await poster(1280, 720));
     await expect(filmPanel.getByTestId("rich-text-poster-stored")).toContainText("1280 × 720 px, calitate mare", { timeout: 30_000 });
     await expect(filmPanel.getByTestId("rich-text-poster-chosen")).toContainText("Fișierul ales: poster.png, 1280 × 720 px");
     await expect(film.locator("img")).toHaveAttribute("src", /\/api\/media\/.+\/web\.webp$/);
     await filmPanel.getByRole("button", { name: "Gata" }).click();
+    // The picture and the film's poster, side by side: nothing replaced.
+    await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(2);
 
-    await page.getByRole("tab", { name: /English/ }).click();
-    await field("translations.en.title").fill(`The race poster ${suffix}`);
-    await field("translations.en.slug").fill(`poster-${suffix}`);
-    await page.locator('[data-rich-text="translations.en.body"]').locator("[data-field]").click();
-    await page.keyboard.type("The race poster, with the rules.");
-    await page.getByRole("tab", { name: /Română/ }).click();
-
-    await page.getByRole("button", { name: "Pagină nouă" }).click();
-    await expect(page).toHaveURL(/\/admin\/pages\/[0-9a-f-]{36}/);
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/saved=/);
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
