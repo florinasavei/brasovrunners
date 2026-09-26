@@ -23,17 +23,25 @@ export const TAP_TARGET = { minHeight: 44 } as const;
  * apart from the others (measured at 360 px: a four-line notice 124 pixels tall instead of 96).
  *
  * Here the link is still 44 tall — its words' line plus padding above — and gives the padding
- * back as an equal negative margin, so the line is as tall as its words (the §366 "tight" shape,
- * in `lh` units so it fits `body1` and `body2` alike). The reach is all **above** the words: a
- * line of the paragraph painted later would take any press on pixels the link shared with it
- * (§366), and the line after is painted later, the line before is not. Where `lh` is unknown the
- * two declarations are dropped together and the link is its words' height.
+ * back as an equal negative margin, so the line is as tall as its words (the §366 "tight" shape).
+ * The reach is all **above** the words: a line of the paragraph painted later would take any
+ * press on pixels the link shared with it (§366), and the line after is painted later, the line
+ * before is not.
+ *
+ * The reach is `44px - 1.4em`, not `44px - 1lh`: `lh` is unknown to Safari before 16.4 and Firefox
+ * before 120, where both declarations would be dropped and the link fall to its words' height,
+ * under criterion 6. `em` is known everywhere, and 1.4 is under every line height it is used at —
+ * `body2`'s 1.43 (the link 44.4 tall, 24.4 of reach) and `body1`'s 1.5 (45.6, 21.6 of reach) — so
+ * the link is never under 44. The padding and the margin are the same length whatever it is, so
+ * the line is never stretched. A paragraph holding such a link needs that reach free above its
+ * first line (the contact page's address has 24 pixels over it, §NNN), and a second such link must not sit on
+ * the line under the first — the contact page gives a second address `TAP_TARGET`'s own shape.
  */
 export const INLINE_TAP_TARGET = {
   display: "inline-flex",
   alignItems: "center",
-  paddingTop: "calc(44px - 1lh)",
-  marginTop: "calc(1lh - 44px)",
+  paddingTop: "calc(44px - 1.4em)",
+  marginTop: "calc(1.4em - 44px)",
 } as const;
 
 /**

@@ -426,7 +426,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     }
   });
 
-  it("draws the build stamp as a small outlined chip in both places, the name and the title on its 44px box", async () => {
+  it("draws the build stamp as a small outlined chip in both places, the name and the title on its box", async () => {
     // §385, the owner, 2026-09-25: "Version must be within a chip."
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -451,9 +451,12 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
       expect(chipRules).toMatch(/color:rgba\(0, 0, 0, 0\.6\);/);
       expect(chipRules).toMatch(/height:auto;/);
       expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
-      // The 44px box a long press is aimed at (BR-REQ-041-01 criterion 6).
+      // The box a long press is aimed at: 44px on the bar's corner (BR-REQ-041-01 criterion 6);
+      // in the fold, the bar's own target on a phone like every other link there, 44 from `sm`
+      // (§NNN, the 360-px density pass, amending §385).
       const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
-      expect(box).toMatch(/min-height:44px;/);
+      if (testId === "footer-build-badge-pinned") expect(box).toMatch(/(^|[;{])min-height:44px;/);
+      else expectBarTarget(box, ["min-height"], "the fold's stamp");
     }
   });
 

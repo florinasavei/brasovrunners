@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import { formatBuildDate, formatVersion } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 import BuildBadgeLink from "./BuildBadgeLink";
+import { footerTargetSx } from "./footer-target";
 
 /**
  * When this site was built — and, for the club's own people, the way in.
@@ -33,7 +34,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
  * A Server Component either way: the values are inlined at build time and never change while
  * the page is open. Only the interactive half is a client island, and only where it is real.
  */
-export default async function BuildBadge() {
+export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?: boolean } = {}) {
   const locale = await getLocale();
   const t = await getTranslations("Site");
 
@@ -61,12 +62,18 @@ export default async function BuildBadge() {
    * and 44 pixels tall, like everything else in the panel below `md`, because a long press is
    * aimed at it (BR-REQ-041-01 criterion 6). The chip is the 24 pixels you see; this box is the
    * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§385).
+   *
+   * `phoneTarget` — the fold's copy (§NNN, the 360-px density pass, amending §385): on a phone
+   * every other link in the fold is the bar's own target (`footer-target.ts`, §372), 24 pixels
+   * below 360 and 28 up to `sm`, and a 44-pixel box here was the one line the fold could not
+   * lose. The box is then the bar's target too — never smaller than the 24-pixel chip it holds —
+   * and 44 from `sm`. The pinned copy on the bar's corner from `md` keeps its 44.
    */
   const sx = {
     alignSelf: "flex-start",
     display: "flex",
     alignItems: "center",
-    minHeight: 44,
+    ...(phoneTarget ? footerTargetSx(["minHeight"]) : { minHeight: 44 }),
     maxWidth: "100%",
     m: 0,
     pointerEvents: "none",

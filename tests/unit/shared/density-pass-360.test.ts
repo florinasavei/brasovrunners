@@ -37,8 +37,16 @@ describe("§NNN a public fold is the 44 pixels it claims", () => {
 describe("§NNN a link inside a sentence keeps 44 pixels without stretching its line", () => {
   it("reaches above its words and gives the reach back as a negative margin", () => {
     expect(INLINE_TAP_TARGET.display).toBe("inline-flex");
-    expect(INLINE_TAP_TARGET.paddingTop).toBe("calc(44px - 1lh)");
-    expect(INLINE_TAP_TARGET.marginTop).toBe("calc(1lh - 44px)");
+    // In `em`, which every browser knows — `lh` is unknown to Safari before 16.4 and Firefox
+    // before 120, where the link would drop under 44 — and 1.4 is under body2's 1.43 and body1's
+    // 1.5 line heights, so the link is at least 44 at both.
+    expect(INLINE_TAP_TARGET.paddingTop).toBe("calc(44px - 1.4em)");
+    expect(INLINE_TAP_TARGET.marginTop).toBe("calc(1.4em - 44px)");
+    expect(JSON.stringify(INLINE_TAP_TARGET)).not.toMatch(/lh\b/);
+    for (const [variant, fontSize, lineHeight] of [["body2", 14, 1.43], ["body1", 16, 1.5]] as const) {
+      const reach = 44 - 1.4 * fontSize;
+      expect(reach + lineHeight * fontSize, `${variant}: the link's height`).toBeGreaterThanOrEqual(44);
+    }
     // All of the reach above: the line after is painted later and would take a press there.
     expect("paddingBottom" in INLINE_TAP_TARGET).toBe(false);
     expect("marginBottom" in INLINE_TAP_TARGET).toBe(false);
@@ -51,6 +59,17 @@ describe("§NNN a link inside a sentence keeps 44 pixels without stretching its 
     const contact = source("src/app/[locale]/contact/page.tsx");
     expect(contact).toContain("const inlineLink = INLINE_TAP_TARGET;");
     expect(contact).not.toMatch(/minHeight: TAP_TARGET\.minHeight/);
+  });
+
+  it("never lets one inline link's reach cover another's", () => {
+    const contact = source("src/app/[locale]/contact/page.tsx");
+    // A second club address («a sau b») may wrap under the first: it is 44 in its own line
+    // instead of reaching over the first address's lower half.
+    expect(contact).toContain("sx={index === 0 ? inlineLink : stretchedLink}");
+    expect(contact).toMatch(/const stretchedLink = \{ display: "inline-flex", alignItems: "center", \.\.\.TAP_TARGET \}/);
+    // The address line keeps 24 pixels over it at every width, room for the first address's
+    // 21.6-pixel reach above its words, clear of the send button.
+    expect(contact).toMatch(/<Typography variant="body1" sx=\{\{ mt: 3 \}\}>\s*\{t\("direct"\)\}/);
   });
 });
 

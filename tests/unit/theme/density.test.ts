@@ -128,7 +128,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // gallery, «Echipa» and the two legal texts, each onto the step its neighbours already use.
   { file: "src/app/[locale]/contact/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/contact/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
-  { file: "src/app/[locale]/contact/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
+  // Not the address line's `mt: 3`: it stays 24 at every width, room for its link's reach (§NNN).
   { file: "src/app/[locale]/gallery/page.tsx", prop: "mb", step: "sectionGap", sm: 4, xsBefore: 4 },
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },

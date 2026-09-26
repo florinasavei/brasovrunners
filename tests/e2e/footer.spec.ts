@@ -331,25 +331,31 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
 
             // Condensed (§385), then compact (§NNN, amending §385): every link is the bar's own
             // target (§372) — 24px below 360, 28px to `sm`, 44px from `sm` — no two overlapping,
-            // and the stamp its 44px box; "Scrie-ne" once.
+            // and so is the stamp's box, never shorter than its chip; "Scrie-ne" once.
+            const target = width >= SM ? 44 : width >= 360 ? 28 : 24;
+            const gap = width >= SM ? 0 : width >= 360 ? 6 : 4;
             const panelLinks = panelContent(fold).locator("a");
             const tops: number[] = [];
             for (let i = 0; i < (await panelLinks.count()); i++) {
               const link = panelLinks.nth(i);
               const box = await boxOf(link, `the panel's link ${i}`);
-              const target = width >= SM ? 44 : width >= 360 ? 28 : 24;
               expect(box.height, `the panel's link ${i} is a ${target}px target at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
               expect(await link.evaluate((el) => getComputedStyle(el, "::before").content), `no pseudo-element hit area on link ${i}`).toMatch(/^(none|normal)$/);
               tops.push(Math.round(box.y));
             }
-            const stamp = await boxOf(panelContent(fold).getByTestId("footer-build-badge-panel"), "the stamp");
-            expect(stamp.height, `the stamp's long-press box is 44px at ${width}px`).toBeGreaterThanOrEqual(43.5);
+            const stampBox = panelContent(fold).getByTestId("footer-build-badge-panel");
+            const stamp = await boxOf(stampBox, "the stamp");
+            const chip = await boxOf(stampBox.getByTestId("build-badge-chip"), "the stamp's chip");
+            expect(stamp.height, `the stamp's long-press box is a ${target}px target at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+            expect(stamp.height, `the stamp's box is no taller than its target or its chip at ${width}px`).toBeLessThanOrEqual(Math.max(target, chip.height) + 0.5);
             // The terms and "my registrations" share the first line.
             expect(Math.abs(tops[0]! - tops[1]!), `the first two links share a line at ${width}px`).toBeLessThanOrEqual(1);
-            // Link lines of the phone's target, the phone's gap apart, and the credit's line with
-            // the 44px stamp — four lines (a wrapped address) at most at 28 + 6.
-            if (width < SM) expect(panel.height, `the compact panel's height at ${width}px`).toBeLessThanOrEqual(3 * 34 + 44 + 1);
-            else expect(panel.height, `the panel's height at ${width}px`).toBeLessThan(188);
+            // Four lines on a phone, the phone's gap apart: the two links, "Scrie-ne" with the
+            // address, the weather credit, the stamp (the credit and the stamp never fit side by
+            // side below `sm`) — 130px at 360, 108px at 320 with a one-line chip.
+            if (width < SM) {
+              expect(panel.height, `the compact panel's height at ${width}px`).toBeLessThanOrEqual(3 * (target + gap) + stamp.height + 1);
+            } else expect(panel.height, `the panel's height at ${width}px`).toBeLessThan(188);
             const panelText = await panelContent(fold).evaluate((el) => el.textContent ?? "");
             expect(panelText.match(/Scrie-ne|Write to us/g), `"Scrie-ne" once at ${width}px`).toHaveLength(1);
             // The stamp, a chip, is the panel's last item.

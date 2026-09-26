@@ -36,7 +36,7 @@ import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
-import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
+import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { submitContactAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -126,10 +126,15 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const formAvailable = await cachedContactFormReaches();
   // A thumb's 44 pixels that do not stretch the sentence's line (§NNN, the 360-px density pass).
   const inlineLink = INLINE_TAP_TARGET;
+  // The first address reaches above its words; a second one («a sau b») may wrap to the line under
+  // the first, where that reach would cover the first's lower half and win its press (it is painted
+  // later). So a later address takes `TAP_TARGET`'s own shape — 44 tall in its line, the line a
+  // little taller — and no two addresses share a pixel.
+  const stretchedLink = { display: "inline-flex", alignItems: "center", ...TAP_TARGET } as const;
   const addressLinks = writeTo.map((address, index) => (
     <span key={address}>
       {index > 0 && ` ${t("off.or")} `}
-      <MuiLink href={`mailto:${address}`} sx={inlineLink}>
+      <MuiLink href={`mailto:${address}`} sx={index === 0 ? inlineLink : stretchedLink}>
         {address}
       </MuiLink>
     </span>
@@ -303,7 +308,10 @@ export default async function ContactPage({ params, searchParams }: Props) {
           {/* The club's address beside the form, always (§449): a visitor who prefers their own
               mail client, or whose message the form cannot carry, writes straight to the club. */}
           {writeTo.length > 0 && error !== "DELIVERY" && (
-            <Typography variant="body1" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+            // 24 pixels over it at every width, not the phone's 16: the first address's reach
+            // (21.6 pixels above its words, `INLINE_TAP_TARGET`) must stay in the gap, never over
+            // the send button's lower edge (§NNN).
+            <Typography variant="body1" sx={{ mt: 3 }}>
               {t("direct")} {addressLinks}
             </Typography>
           )}
