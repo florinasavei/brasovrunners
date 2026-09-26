@@ -205,6 +205,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/legal/new",
       // The network check (§NNN): what a staff member's network lets through, written by hand.
       "/admin/network",
+      // The newsletter's own backoffice entry (§NNN): the subscribers and the composer, by hand.
+      "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
       "/admin/pages/new",
@@ -230,6 +232,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/gallery/[slug]",
       "/legal/privacy",
       "/legal/terms",
+      // The newsletter's two link pages (§NNN): the confirmation and the subscriber's own page.
+      "/newsletter/confirm/[token]",
+      "/newsletter/manage/[token]",
       "/pages/[slug]",
       "/preview/events/[id]",
       "/registrations/confirm/[token]",

@@ -54,7 +54,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
       .filter((type) => EMAIL_GROUP_OF[type] === group && !neverQueued.has(type))
       .map((type) => t(`emails.types.${type}`))
       .join(", ");
-  // The newsletter group has no message yet: its help says so instead of an empty list.
+  // A group with no message queued on this deployment says nothing rather than an empty list.
   const listOf = (group: (typeof EMAIL_GROUPS)[number]) => {
     const names = namesOf(group);
     return names ? ` ${t("emails.transport.messages", { names })}` : "";

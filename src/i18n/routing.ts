@@ -106,6 +106,13 @@ export const routing = defineRouting({
      * standing pages, so a page the club calls `contact` keeps its address at `/pagini/contact`.
      */
     "/contact": "/contact",
+    /**
+     * The newsletter's two link pages (§NNN): the double opt-in's confirmation, and the subscriber's
+     * own page — the topics and "unsubscribe" — that every newsletter links to. The secret in the
+     * path, like every emailed link; nothing about the person.
+     */
+    "/newsletter/confirm/[token]": { ro: "/noutati/confirmare/[token]", en: "/newsletter/confirm/[token]" },
+    "/newsletter/manage/[token]": { ro: "/noutati/abonament/[token]", en: "/newsletter/manage/[token]" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
@@ -165,6 +172,12 @@ export const routing = defineRouting({
     "/admin/network": "/admin/network",
     /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91). */
     "/admin/emails": "/admin/emails",
+    /**
+     * «Newsletter» (§NNN): the subscribers as numbers and the composer that writes to them — the
+     * backoffice's own entry, after «Emailuri» (the owner, 2026-09-26: "un meniu suplimentar în
+     * backoffice cu «Newsletter»"). One spelling in both locales, a backoffice address.
+     */
+    "/admin/newsletter": "/admin/newsletter",
     "/admin/checkin": "/admin/checkin",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

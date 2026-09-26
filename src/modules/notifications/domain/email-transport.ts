@@ -32,8 +32,9 @@ export type EmailTransport = (typeof EMAIL_TRANSPORTS)[number];
  *   cancelled, an offer that lapsed, a number given, the signed copy.
  * - **club** (D) — mail to the club's own mailboxes: the club's copies, the declaration archive,
  *   "somebody confirmed", a colleague's invitation. To people who know the sender: Gmail's case.
- * - **newsletter** (E) — nothing yet: the newsletter's own menu is being built on its own branch;
- *   the group is here so its road is decided before its first message is queued.
+ * - **newsletter** (E) — the newsletter's own mail (§NNN): the subscription's confirmation link,
+ *   a newsletter the club writes on `/admin/newsletter`, and the new-event alert — to people who
+ *   asked for the club's news, never about a registration.
  */
 export const EMAIL_GROUPS = ["links", "confirmations", "reminders", "announcements", "club", "newsletter"] as const;
 export type EmailGroup = (typeof EMAIL_GROUPS)[number];
@@ -67,6 +68,9 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   GROUP_RUN_DECLARATION_ARCHIVE: "club",
   CLUB_CONFIRMATION_NOTICE: "club",
   STAFF_INVITATION: "club",
+  NEWSLETTER_CONFIRM: "newsletter",
+  NEWSLETTER: "newsletter",
+  NEW_EVENT_ALERT: "newsletter",
 };
 
 /**
@@ -126,7 +130,7 @@ export const emailTransportSettingSchema = z
 export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
 
 /**
- * The club's own mail and the (future) newsletter through Gmail; everything a participant gets
+ * The club's own mail and the newsletter through Gmail; everything a participant gets
  * through Mailgun, until the privacy notice names Gmail as a road for it.
  *
  * - **club, newsletter → Gmail**: copies, archive, notices and invitations are the largest share of

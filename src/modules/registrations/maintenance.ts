@@ -9,6 +9,7 @@ import { registrationHasClosed } from "@/modules/events/domain/registration-wind
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { settleBibNumbers, type SettledBib } from "./bibs";
+import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { queueRegistrationOpenedMessages } from "./interest";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
@@ -215,6 +216,16 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     errorCount += 1;
     retryableErrorCount += 1;
   }
+  // "A new event is on the calendar" (§NNN): once per event first published within the window, to
+  // the newsletter's subscribers of its topics. A publication wakes this job (§334), so the alert
+  // goes minutes after the press; a failure is a late alert, not a failed run.
+  let eventAlertsQueued = 0;
+  try {
+    eventAlertsQueued = await queueNewEventAlerts(db, now);
+  } catch {
+    errorCount += 1;
+    retryableErrorCount += 1;
+  }
 
   /**
    * The retention sweep, last and in its own try/catch.
@@ -285,7 +296,15 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     jobRunId,
     {
       itemsProcessed:
-        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued + interestsNotified + occurrencesCreated,
+        eventIds.length +
+        lapsedEmailConfirmations +
+        prunedRows +
+        orphanPicturesDeleted +
+        remindersQueued +
+        confirmationsQueued +
+        interestsNotified +
+        eventAlertsQueued +
+        occurrencesCreated,
       errorCount,
       // The retention steps that failed, by name (§322) — the one error this run writes down,
       // because it is the one `/api/health` is asked to turn into an alarm.

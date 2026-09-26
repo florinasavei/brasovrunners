@@ -579,12 +579,19 @@
     {
       "idx": 82,
       "version": "7",
+      "when": 1790397970728,
+      "tag": "0082_newsletter",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
       "when": 1790419530876,
       "tag": "0083_bib_spare_band",
       "breakpoints": true
     },
     {
-      "idx": 83,
+      "idx": 84,
       "version": "7",
       "when": 1790421823820,
       "tag": "0088_email_transport",

@@ -119,6 +119,9 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "neonLimitsSame",
   // «Salvează» on a club to-do line whose words, owner and day were already these (§NNN).
   "clubTodoUnchanged",
+  // The newsletter (§NNN): the same form pressed twice, and an address that was not on the list.
+  "newsletterDuplicate",
+  "newsletterNotFound",
 ]);
 
 /**

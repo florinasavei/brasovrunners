@@ -1,11 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
-import { getPathname } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual } from "@/modules/notifications/templates";
@@ -44,7 +45,7 @@ import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmails
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
 import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { countForm } from "@/i18n/count-form";
@@ -65,7 +66,8 @@ const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
  * it and no sample-value warning over it.
  */
 function perSend(messageType: EmailMessageType): boolean {
-  return messageType === "ORGANIZER_MESSAGE";
+  // The newsletter too (§NNN): written in its own composer, on the backoffice's «Newsletter» page.
+  return messageType === "ORGANIZER_MESSAGE" || messageType === "NEWSLETTER";
 }
 
 /**
@@ -317,6 +319,19 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         mayEdit={mayEditEmail}
         openWhen={{ saved: saved === "shownContactAddress" }}
       />
+      {/*
+        The newsletter (§NNN) has its own page in the menu since the owner's 2026-09-26 "un meniu
+        suplimentar în backoffice cu «Newsletter»": one line here pointing at it, for the roles that
+        may open it — the page answers 404 to anybody else, so nobody is offered a door that refuses.
+      */}
+      {canSendNewsletter(staff.role) && (
+        <Typography variant="body2" data-testid="newsletter-link">
+          <Link href="/admin/newsletter">{t("emails.newsletterLink")}</Link>{" "}
+          <Typography component="span" variant="body2" color="text.secondary">
+            {t("emails.newsletterLinkHelp")}
+          </Typography>
+        </Typography>
+      )}
 
       {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
       <DeadlinesPanel
@@ -378,7 +393,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             // organizer's message has none to keep: it is written per send, on the event's page (§364).
             editor: perSend(messageType) ? (
               <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
-                {t("emails.perSend")}
+                {messageType === "NEWSLETTER" ? t("emails.perSendNewsletter") : t("emails.perSend")}
               </Alert>
             ) : mayWrite ? (
               <EmailCopyEditor

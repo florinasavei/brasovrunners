@@ -139,7 +139,17 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
   });
 
   it("copies every message to a participant and none of the club's, the staff's or the interest list's", () => {
-    const excluded = ["DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION", "REGISTRATION_OPENED"];
+    const excluded = [
+      "DECLARATION_ARCHIVE",
+      "GROUP_RUN_DECLARATION_ARCHIVE",
+      "CLUB_CONFIRMATION_NOTICE",
+      "STAFF_INVITATION",
+      "REGISTRATION_OPENED",
+      // The newsletter's three (§NNN): to a subscriber, never about a registration.
+      "NEWSLETTER_CONFIRM",
+      "NEWSLETTER",
+      "NEW_EVENT_ALERT",
+    ];
     for (const type of emailMessageType.enumValues) {
       expect(isParticipantMessage(type), type).toBe(!excluded.includes(type));
     }

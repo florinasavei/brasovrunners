@@ -33,7 +33,7 @@ import {
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
-import { describesListStates } from "@/modules/legal-documents/domain/merge-fields";
+import { describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -302,6 +302,17 @@ export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
 export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
+}
+
+/**
+ * Whether the contact page offers the newsletter (§NNN): the privacy notice in force describes it
+ * (`describesNewsletter`), in every language — the same reading as the list's states above, so an
+ * approval opens the pop-up the moment the notice itself changes. `noticeDescribesNewsletter` is
+ * the uncached twin the service asks again at every subscription.
+ */
+export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
 }
 
 // --- Legal texts ------------------------------------------------------------------------------

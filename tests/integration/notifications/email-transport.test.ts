@@ -25,6 +25,7 @@ import {
 } from "@/modules/notifications/email-transport";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { type OutboxRoads, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
+import { nextAllowanceResetAt } from "@/modules/notifications/domain/retry";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -284,6 +285,33 @@ describe("§NNN email transport setting and the outbox's road", () => {
     ]);
     const pending = await db.select().from(emailOutbox).where(eq(emailOutbox.status, "PENDING"));
     expect(pending).toHaveLength(21);
+  });
+
+  it("holds a newsletter to Mailgun's reserve only on Mailgun's road: by Gmail it goes, by Mailgun it waits for the reset (§NNN)", async () => {
+    // Free's hundred a day, sixty spent by Mailgun: forty left, under the reserve of fifty, so no
+    // newsletter may take Mailgun today. Gmail's own rows are not in that count.
+    await db.insert(emailOutbox).values([
+      ...Array.from({ length: 60 }, (_, i) =>
+        row(400 + i, { idempotencyKey: `spent:${i}`, status: "SENT", sentAt: new Date(NOW.getTime() - HOUR), transport: "mailgun" }),
+      ),
+      ...Array.from({ length: 30 }, (_, i) =>
+        row(500 + i, { idempotencyKey: `gmail-spent:${i}`, status: "SENT", sentAt: new Date(NOW.getTime() - HOUR), transport: "gmail" }),
+      ),
+      row(600, { messageType: "NEWSLETTER", recipientEmail: "sub@example.com", idempotencyKey: "newsletter:sub" }),
+    ]);
+    const newsletterRow = async () => (await db.select().from(emailOutbox).where(eq(emailOutbox.idempotencyKey, "newsletter:sub")))[0];
+
+    // Mailgun alone (no roads): the reserve holds it, untouched, until the allowance comes back.
+    const mailgunOnly = roadSender();
+    expect(await processOutboxBatch(db, { sender: mailgunOnly, render, now: NOW })).toMatchObject({ claimed: 0 });
+    expect(await newsletterRow()).toMatchObject({ status: "PENDING", attemptCount: 0, nextAttemptAt: nextAllowanceResetAt(NOW) });
+
+    // The club's setting sends the newsletter group by Gmail: Mailgun's reserve is not Gmail's, so it goes.
+    await db.update(emailOutbox).set({ nextAttemptAt: null }).where(eq(emailOutbox.idempotencyKey, "newsletter:sub"));
+    const sender = roadSender();
+    expect(await processOutboxBatch(db, { sender, render, now: NOW, route: defaultRoute, roads: defaultRoads() })).toMatchObject({ claimed: 1, sent: 1 });
+    expect(sender.calls.map((call) => [call.to, call.transport])).toEqual([["sub@example.com", "gmail"]]);
+    expect(await newsletterRow()).toMatchObject({ status: "SENT", transport: "gmail" });
   });
 
   /** A Gmail road over this database's ledger, with an adapter that notes when it was handed each message. */

@@ -40,6 +40,8 @@ const TAP = { display: "inline-flex", alignItems: "center", minHeight: 44 } as c
  * its own in the coming days, sorted by the moment it becomes due — the event (a link to its
  * editor), the moment with its weekday in the event's own zone (§349), the message (a link to its
  * preview card further down this page) and how many runners the job would pick if it ran now.
+ * Last, the subscribers' sends already queued (§NNN): a newsletter by its subject, an alert by its
+ * event, when the reserve lets them go and how many subscribers they reach.
  *
  * A Server Component and a closed fold (§336), directly above "Emailurile trimise participanților",
  * the cards it links to. Under the list, the club-copy line: whether the club gets a copy of each
@@ -76,11 +78,11 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
               ? t("emails.forecast.untitledOther", { title: otherTitle, locale: other.toUpperCase() })
               : t("emails.forecast.untitled"));
             const moment = formatDay(row.at, { locale, timeZone: row.zone, style: "short", withTime: true });
-            const editor = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: row.eventId } } });
+            const editor = row.eventId ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: row.eventId } } }) : null;
             return (
               <Box
                 component="li"
-                key={`${row.eventId}-${row.send}-${row.at.getTime()}`}
+                key={`${row.eventId ?? row.sendId}-${row.send}-${row.at.getTime()}`}
                 data-testid="upcoming-email"
                 data-type={row.type}
                 data-send={row.send}
@@ -90,11 +92,20 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
                   {moment}
                   {row.zone !== CLUB_TIME_ZONE && ` (${t("emails.forecast.zone", { zone: row.zone })})`}
                   {row.overdue && ` · ${t("emails.forecast.nextRun")}`}
+                  {/* Held back by the reserve for registrations (`domain/bulk.ts`): it goes when the allowance comes back. */}
+                  {row.held && ` · ${t("emails.forecast.held")}`}
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2, alignItems: "center" }}>
-                  <Link href={editor} sx={TAP} data-testid="upcoming-email-event">
-                    {title}
-                  </Link>
+                  {editor ? (
+                    <Link href={editor} sx={TAP} data-testid="upcoming-email-event">
+                      {title}
+                    </Link>
+                  ) : (
+                    // A newsletter is about no event: its subject, in the reader's language.
+                    <Typography component="span" variant="body2" sx={{ ...TAP, fontWeight: 600 }} data-testid="upcoming-email-subject">
+                      {row.subject?.[locale] ?? t("emails.forecast.newsletterUntitled")}
+                    </Typography>
+                  )}
                   {/*
                     Labelled by what actually triggers it (`sends.*`), not by the message type: a
                     type such as BIB_ASSIGNED covers more than this one automatic send (it also

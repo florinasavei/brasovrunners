@@ -368,6 +368,18 @@ export function canMessageParticipants(role: StaffRole): boolean {
 }
 
 /**
+ * **Sending the newsletter (§NNN)** — a message the club writes to every subscriber of one topic.
+ * The same people who may write to an event's participants (§364): the Organizer, the
+ * Administrator and the Superadministrator — it is the club speaking to people who asked to hear
+ * from it, the organizer's own kind of act. Nobody reads an address on the way: the page shows
+ * counts. Removing an address by hand (the notice's "or by writing to us") is the Administrator's,
+ * as the "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
+ */
+export function canSendNewsletter(role: StaffRole): boolean {
+  return canMessageParticipants(role);
+}
+
+/**
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.
@@ -458,6 +470,9 @@ export function canManageStaff(role: StaffRole): boolean {
  *                                             canReadClubTodo (§NNN)
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
+ *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
+ *                                             composer (§NNN); withdrawing an address asks
+ *                                             `canManageRegistrations` for itself
  *     staff          canManageStaff           `admin/staff/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
  *
@@ -475,6 +490,7 @@ export const ADMIN_SECTIONS = [
   "tasks",
   "legal",
   "emails",
+  "newsletter",
   "staff",
   "devs",
 ] as const;
@@ -546,6 +562,13 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
       from nowhere else (the owner: "I am missing the email templates config … in this navbar").
     */
     ...(canReadContent(role) ? (["emails"] as const) : []),
+    /*
+      «Newsletter» (§NNN; the owner, 2026-09-26: "pentru newsletter o să fie un meniu suplimentar
+      în backoffice cu «Newsletter»"): the subscribers as numbers and the composer, for whoever may
+      write to them — the Organizer, the Administrator and the Superadministrator. Not the Tehnic,
+      who writes to nobody (§38), which is the ladder's second deliberate hole beside the list.
+    */
+    ...(canSendNewsletter(role) ? (["newsletter"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
   ];

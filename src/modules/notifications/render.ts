@@ -41,8 +41,9 @@ import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain
 import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { weatherForEvent } from "@/modules/weather/source";
+import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
-import type { EmailEventFacts } from "./domain/event-facts";
+import { emailEventFacts } from "./event-facts-row";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
 /**
@@ -159,6 +160,10 @@ async function renderRow(
   // A group run's self-declaration (§393) is about no registration: its own, shorter path.
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
     return renderGroupRunDeclarationRow(row, db, now, eventRows, replyTo);
+  }
+  // The newsletter (§NNN) is about a subscriber, never a registration: its own path too.
+  if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
+    return renderNewsletterRow(row, db, now, eventRows, replyTo);
   }
 
   /*
@@ -876,47 +881,6 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
-}
-
-/**
- * One language's row of the event as the facts block reads it (§392): the anchors of that
- * language's page by the page's own rules — `#route` only with a route description in that
- * language (§387), `#links` only when the page's own split leaves "Linkuri și fișiere" something
- * to show (`partitionEventLinks`, the rule `EventLinks` draws by).
- */
-function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): EmailEventFacts {
-  const routeSection = hasRouteDescription(row.routeDescriptionJson);
-  return {
-    startsAt: row.startsAt,
-    raceStartsAt: row.raceStartsAt,
-    timezone: row.timezone,
-    locationToBeAnnounced: row.locationToBeAnnounced,
-    locationName: row.locationName,
-    locationAddress: row.locationAddress,
-    mapUrl: row.mapUrl,
-    latitude: row.latitude,
-    longitude: row.longitude,
-    scheduleItems: row.scheduleItems,
-    surface: row.surface,
-    difficulty: row.difficulty,
-    distanceMeters: row.distanceMeters,
-    elevationGainMeters: row.elevationGainMeters,
-    type: row.type,
-    endsAt: row.endsAt,
-    nightOverride: row.nightOverride,
-    registrationMode: row.registrationMode,
-    routeUrl: row.routeUrl,
-    stravaEventUrl: row.stravaEventUrl,
-    facebookEventUrl: row.facebookEventUrl,
-    costType: row.costType,
-    costAmount: row.costAmount,
-    costUrl: row.costUrl,
-    pageUrl,
-    hasRules: row.hasRules === true,
-    hasSchedule: row.hasSchedule === true,
-    hasRouteDescription: routeSection,
-    hasOtherLinks: partitionEventLinks(row.links, routeSection).other.length > 0,
-  };
 }
 
 function otherLocale(locale: Locale): Locale {

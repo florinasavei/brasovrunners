@@ -67,6 +67,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   reserveSpareBibsAction: ["sparesAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],
+  // The newsletter (§NNN): the send asks per topic, naming how many receive it; removing an
+  // address at someone's request asks too, and cannot be undone.
+  sendNewsletterAction: [],
+  withdrawNewsletterAddressAction: [],
   // Asks only when the press faces outward: the notice ticked, the status set to cancelled.
   saveEventAndTranslationsAction: [],
   // Asks only for the publish submitter (`then=publish`); the plain create is a draft nobody sees.
@@ -151,6 +155,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
   previewParticipantMessageAction: "a preview; sends nothing",
+  previewNewsletterAction: "the newsletter composer's preview (§NNN); sends nothing, stores nothing",
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",

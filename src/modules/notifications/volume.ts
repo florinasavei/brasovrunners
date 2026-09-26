@@ -4,6 +4,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
 import { readClubNotices } from "./club-notices";
+import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
@@ -118,6 +119,12 @@ export type EmailVolumeToday = {
   /** Rows not yet delivered — pending or mid-flight — whatever day they were queued. */
   waitingMessages: number;
   /**
+   * Of those, the newsletters and new-event alerts (§NNN), the club's copies of them included:
+   * last in line, and only in what the reserve leaves (`domain/bulk.ts`), so they may wait a day or
+   * a month. Counted apart, so "in the queue" is not read as registrations' mail.
+   */
+  bulkWaitingMessages: number;
+  /**
    * Outbox rows Mailgun transmitted today. What the allowance has actually paid for — the rows the
    * club's Gmail carried (§NNN) are not in it: they cost Mailgun nothing.
    */
@@ -203,7 +210,13 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`, carriedByMailgun));
 
   const [waiting] = await db
-    .select({ value: count() })
+    .select({
+      value: count(),
+      bulk: count(sql`CASE WHEN ${emailOutbox.messageType} IN (${sql.join(
+        BULK_MESSAGE_TYPES.map((type) => sql`${type}`),
+        sql`, `,
+      )}) THEN 1 END`),
+    })
     .from(emailOutbox)
     .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
 
@@ -253,6 +266,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     gmailFailedLastDay: gmailLastFailure !== null && now.getTime() - gmailLastFailure.at.getTime() < GMAIL_WINDOW_MS,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
+    bulkWaitingMessages: waiting?.bulk ?? 0,
     sentMessages,
     sentThisMonth,
     plan: setting.plan,

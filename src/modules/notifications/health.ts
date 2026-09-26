@@ -1,5 +1,6 @@
-import { and, count, desc, eq, gt, isNotNull, lt, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { checkGmailHealth, type GmailHealth } from "./email-transport";
@@ -88,7 +89,12 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const overdueBefore = new Date(now.getTime() - overdueAfterMs);
   const failedSince = new Date(now.getTime() - FAILED_WINDOW_MS);
 
-  const pending = eq(emailOutbox.status, "PENDING");
+  /*
+    A newsletter or a new-event alert waiting for the allowance to come back is the reserve doing
+    its job (§NNN, `domain/bulk.ts`), not a stalled outbox: it is neither deferred nor overdue here.
+    It still counts as waiting, and a transactional message that stalls still says so.
+  */
+  const pending = and(eq(emailOutbox.status, "PENDING"), not(inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES])));
   const deferredWhere = and(pending, gt(emailOutbox.nextAttemptAt, deferredFrom));
   // A row the worker never touched has no `next_attempt_at`; its turn was its creation.
   const overdueWhere = and(

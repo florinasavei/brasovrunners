@@ -140,6 +140,9 @@ export type EmailSampleValues = {
    */
   organizerSubject: string;
   organizerBody: string;
+  /** A sample newsletter (§NNN), written per send like the organizer's message, so its card previews one. */
+  newsletterSubject: string;
+  newsletterBody: string;
 };
 
 export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
@@ -166,6 +169,11 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
       "Prognoza anunță furtună până la 9:00, așa că mutăm startul la 10:00. Masa de înscrieri se deschide la 9:15, în același loc.",
       "Aduceți o haină de ploaie.",
     ].join("\n\n"),
+    newsletterSubject: "Cod de reducere la încălțăminte de alergare",
+    newsletterBody: [
+      "Partenerul nostru oferă abonaților 15% reducere la încălțăminte de alergare până la sfârșitul lunii.",
+      "Codul: EXEMPLU15\nSe folosește o singură dată, în magazin sau online.",
+    ].join("\n\n"),
   },
   en: {
     participantName: "Ana Popescu",
@@ -189,6 +197,11 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
       "Hi, {participantName}!",
       "The forecast says storms until 9:00, so we are moving the start to 10:00. The registration desk opens at 9:15, in the same place.",
       "Bring a rain jacket.",
+    ].join("\n\n"),
+    newsletterSubject: "A discount code for running shoes",
+    newsletterBody: [
+      "Our partner offers subscribers 15% off running shoes until the end of the month.",
+      "The code: EXEMPLU15\nIt can be used once, in the shop or online.",
     ].join("\n\n"),
   },
 };

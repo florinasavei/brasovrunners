@@ -309,6 +309,10 @@ export function renderBilingual(
     // The organizer's message (§364): its own subject and body in the second half's language.
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
+    // The newsletter's own words and topics in the second half's language (§NNN).
+    ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
+    ...(data.newsletterBodyOther ? { newsletterBody: data.newsletterBodyOther } : {}),
+    ...(data.newsletterTopicsOther ? { newsletterTopics: data.newsletterTopicsOther } : {}),
     // The organizer's message reads the same `eventTitleOther`/`eventChecklistOther` fields above
     // (§364) — every message's second half does now (§373, email follow-up), so no separate gate
     // is needed for this one.
@@ -610,6 +614,21 @@ export type TemplateData = {
    * for one, and the address it goes to was never confirmed. The message says so.
    */
   idDocumentMasked?: boolean;
+  /**
+   * The newsletter (§NNN). The topics this subscriber chose, as a phrase in this half's language —
+   * "„Evenimente mari” și „Coduri de reducere”" — and in the other half's.
+   */
+  newsletterTopics?: string;
+  newsletterTopicsOther?: string;
+  /** The confirmation message went to an address already subscribed: its action is the subscriber's own page. */
+  newsletterAlready?: boolean;
+  /** The subscriber's own page — the topics and "unsubscribe" — on every newsletter message; never on anything else. */
+  newsletterManageUrl?: string;
+  /** A newsletter's own words (§NNN): this half's subject and body, and the other half's. */
+  newsletterSubject?: string;
+  newsletterSubjectOther?: string;
+  newsletterBody?: string;
+  newsletterBodyOther?: string;
 };
 
 /**
@@ -1017,6 +1036,48 @@ const T = {
             ],
       action: "Înscrie altă persoană",
     },
+    /**
+     * The newsletter's one message to an address left in the contact page's pop-up (§NNN): the
+     * double opt-in's link, or — for an address already subscribed — the link to its own page, and
+     * nothing changed. To an address, not a person: the greeting names nobody.
+     */
+    newsletterConfirm: {
+      subject: (d: TemplateData) => (d.newsletterAlready ? `Abonamentul tău la noutățile ${CLUB_NAME}` : `Confirmă abonarea la noutățile ${CLUB_NAME}`),
+      greeting: () => "Salut,",
+      body: (d: TemplateData) =>
+        d.newsletterAlready
+          ? [
+              "Cineva — probabil tu — a cerut din nou, pe pagina noastră de contact, noutățile clubului pe această adresă. Ești deja abonat(ă), așa că nu s-a schimbat nimic.",
+              "Cu butonul de mai jos vezi temele alese; acolo le poți schimba sau te poți dezabona.",
+            ]
+          : [
+              "Ai cerut, pe pagina noastră de contact, să primești noutățile clubului pe această adresă.",
+              "Confirmă abonarea cu butonul de mai jos. Până nu confirmi nu îți trimitem nimic altceva, iar dacă nu confirmi, adresa se șterge.",
+            ],
+      action: (d: TemplateData) => (d.newsletterAlready ? "Vezi abonamentul" : "Confirmă abonarea"),
+    },
+    /** A newsletter the club wrote (§NNN): its own subject and body, the link to choose topics or unsubscribe. */
+    newsletter: {
+      subject: (d: TemplateData) => d.newsletterSubject ?? `Noutăți de la ${CLUB_NAME}`,
+      greeting: () => "Salut,",
+      body: () => [],
+    },
+    /** "A new event is on the calendar" (§NNN), from the maintenance job, to the subscribers of its topics. */
+    newEventAlert: {
+      subject: (d: TemplateData) => (d.eventTitle ? `Eveniment nou în calendar: ${d.eventTitle}` : "Un eveniment nou în calendarul clubului"),
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `${d.eventTitle ?? "Un eveniment nou"} e acum în calendarul clubului. Tot ce ține de el — programul, traseul și, unde e cazul, înscrierea — e pe pagina lui.`,
+      ],
+      action: "Vezi evenimentul",
+    },
+    /** The newsletter's own lines (§NNN), which the platform adds whoever wrote the words above them. */
+    newsletterWords: {
+      topics: (topics: string) => `Primești noutățile clubului despre: ${topics}.`,
+      link: (lifetime: string) => `Linkul este valabil ${lifetime} și se poate folosi o singură dată. Dacă nu tu ai cerut, ignoră acest mesaj.`,
+      manage: "Alege ce primești sau dezabonează-te",
+    },
     /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
@@ -1073,6 +1134,9 @@ const T = {
       /** A bulk send's one copy (§419): how many received it, and nobody's name. */
       bulkNote: (count: number) =>
         `Copie pentru club a mesajului trimis la ${participantsPhrase("ro", count)}, fiecăruia în limba înscrierii lui. Numele destinatarilor nu apar aici, iar legăturile personale au fost scoase.`,
+      /** A newsletter's or a new-event alert's one copy (§NNN): how many subscribers, and no address. */
+      subscribersNote: (count: number) =>
+        `Copie pentru club a mesajului trimis la ${subscribersPhrase("ro", count)} la noutăți, fiecăruia în limba aleasă. Adresele destinatarilor nu apar aici, iar linkul personal de dezabonare a fost scos.`,
     },
     /** The greeting of a message addressed to nobody by name — a bulk send's club copy (§419). */
     hello: "Salut,",
@@ -1098,6 +1162,9 @@ const T = {
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
+    /** The same for the newsletter (§NNN): a consent the person gave, withdrawn from the link above. */
+    privacyFooterNewsletter: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ai cerut noutățile clubului pe această adresă. Te dezabonezi oricând din linkul de mai sus. Cum folosim datele tale:`,
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -1361,6 +1428,48 @@ const T = {
             ],
       action: "Register another person",
     },
+    /**
+     * The newsletter's one message to an address left in the contact page's pop-up (§NNN): the
+     * double opt-in's link, or — for an address already subscribed — the link to its own page, and
+     * nothing changed. To an address, not a person: the greeting names nobody.
+     */
+    newsletterConfirm: {
+      subject: (d: TemplateData) => (d.newsletterAlready ? `Your subscription to ${CLUB_NAME}'s news` : `Confirm your subscription to ${CLUB_NAME}'s news`),
+      greeting: () => "Hello,",
+      body: (d: TemplateData) =>
+        d.newsletterAlready
+          ? [
+              "Someone — probably you — asked again, on our contact page, for the club's news at this address. You are already subscribed, so nothing has changed.",
+              "The button below shows the topics you chose; you can change them there or unsubscribe.",
+            ]
+          : [
+              "You asked, on our contact page, to receive the club's news at this address.",
+              "Confirm your subscription with the button below. Until you do we send you nothing else, and if you do not, the address is deleted.",
+            ],
+      action: (d: TemplateData) => (d.newsletterAlready ? "See my subscription" : "Confirm my subscription"),
+    },
+    /** A newsletter the club wrote (§NNN): its own subject and body, the link to choose topics or unsubscribe. */
+    newsletter: {
+      subject: (d: TemplateData) => d.newsletterSubject ?? `News from ${CLUB_NAME}`,
+      greeting: () => "Hello,",
+      body: () => [],
+    },
+    /** "A new event is on the calendar" (§NNN), from the maintenance job, to the subscribers of its topics. */
+    newEventAlert: {
+      subject: (d: TemplateData) => (d.eventTitle ? `New on the calendar: ${d.eventTitle}` : "A new event on the club's calendar"),
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `${d.eventTitle ?? "A new event"} is now on the club's calendar. Everything about it — the programme, the route and, where there is one, the registration — is on its page.`,
+      ],
+      action: "See the event",
+    },
+    /** The newsletter's own lines (§NNN), which the platform adds whoever wrote the words above them. */
+    newsletterWords: {
+      topics: (topics: string) => `You receive the club's news about: ${topics}.`,
+      link: (lifetime: string) => `The link is valid for ${lifetime} and can be used once. If you did not ask for this, ignore this message.`,
+      manage: "Choose what you receive, or unsubscribe",
+    },
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
       time: (d: TemplateData) =>
@@ -1399,6 +1508,9 @@ const T = {
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
       bulkNote: (count: number) =>
         `Club copy of the message sent to ${participantsPhrase("en", count)}, each in the language of their registration. The recipients' names are not included, and the personal links have been removed.`,
+      /** A newsletter's or a new-event alert's one copy (§NNN): how many subscribers, and no address. */
+      subscribersNote: (count: number) =>
+        `Club copy of the message sent to ${subscribersPhrase("en", count)} to the news, each in the language they chose. The recipients' addresses are not included, and the personal unsubscribe link has been removed.`,
     },
     hello: "Hello,",
     guardianIntro: (participant: string) => `This message is about the registration you made, as parent or guardian, for ${participant}.`,
@@ -1412,6 +1524,8 @@ const T = {
     privacyFooter: (club: string) => `You are receiving this message from ${club} about a registration made with this email address. How we use the data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
+    privacyFooterNewsletter: (club: string) =>
+      `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
   },
 } as const;
 
@@ -1440,7 +1554,42 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   GROUP_RUN_DECLARATION_SIGNED: "groupRunDeclarationSigned",
   GROUP_RUN_DECLARATION_ARCHIVE: "groupRunDeclarationArchive",
   REGISTER_ANOTHER_PERSON: "registerAnotherPerson",
+  NEWSLETTER_CONFIRM: "newsletterConfirm",
+  NEWSLETTER: "newsletter",
+  NEW_EVENT_ALERT: "newEventAlert",
 };
+
+/** The newsletter's three messages (§NNN): to an address, never about a registration. */
+const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT"]);
+
+/**
+ * A newsletter's own words (§NNN), as the organizer's message's are (§364): the body as typed, a
+ * blank line starting a paragraph and a single break kept, escaped, no emphasis read inside it. No
+ * placeholder is filled — the service refuses any.
+ */
+function newsletterParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
+  if (messageType !== "NEWSLETTER" || !data.newsletterBody) return [];
+  const paragraphs = organizerParagraphs(data.newsletterBody);
+  return paragraphs.map((lines, index) => ({
+    html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${lines.map(escapeHtml).join("<br>")}</p>`,
+    text: index < paragraphs.length - 1 ? [...lines, ""] : lines,
+  }));
+}
+
+/**
+ * The lines the platform adds to a newsletter message whoever wrote its words (§NNN): what the
+ * subscriber chose, on the confirmation and on an alert; how long the confirmation link lives. The
+ * link to choose topics or unsubscribe is under the button, on every one of them.
+ */
+function newsletterLines(messageType: EmailMessageType, locale: EmailLocale, data: TemplateData): string[] {
+  if (!NEWSLETTER_MESSAGES.has(messageType)) return [];
+  const words = T[locale].newsletterWords;
+  const confirming = messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready !== true;
+  return [
+    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT") ? [words.topics(data.newsletterTopics)] : []),
+    ...(confirming ? [words.link(data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours))] : []),
+  ];
+}
 
 /**
  * "4 persoane", "o persoană" / "4 people", "one person" (§389): how many runners one address may
@@ -1460,6 +1609,13 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
   return form === "one" ? "one participant" : `${count} participants`;
+}
+
+/** "12 abonați", "un abonat" / "12 subscribers", "one subscriber" — a newsletter copy's count (§NNN). */
+function subscribersPhrase(locale: EmailLocale, count: number): string {
+  const form = countForm(count, locale);
+  if (locale === "ro") return form === "one" ? "un abonat" : form === "few" ? `${count} abonați` : `${count} de abonați`;
+  return form === "one" ? "one subscriber" : `${count} subscribers`;
 }
 
 /**
@@ -1551,7 +1707,7 @@ export function buildTemplateContent(
     body: (d: TemplateData) => string[];
     /** The archive copy greets the club, not the participant whose name is in the subject. */
     greeting?: (d: TemplateData) => string;
-    action?: string;
+    action?: string | ((d: TemplateData) => string);
     facts?: (d: TemplateData) => TemplateContent["facts"];
     image?: (d: TemplateData) => TemplateContent["image"];
     links?: (d: TemplateData) => TemplateContent["links"];
@@ -1583,7 +1739,13 @@ export function buildTemplateContent(
     (ai la dispoziție …)": a statement about the offer's state, like the address's limit above.
   */
   const lapsedOffer = messageType === "WAITLIST_SPOT_OFFER" && !data.holdExpiresAtFormatted;
-  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap || lapsedOffer ? null : copyFor(overrides, messageType, locale);
+  /*
+    The newsletter (§NNN) is written per send, like the organizer's message; and the confirmation
+    that went to an address already subscribed is the platform's sentence alone — a statement about
+    the address's state, like the limit above: the club's words for this message ask to confirm.
+  */
+  const newsletterState = messageType === "NEWSLETTER" || (messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready === true);
+  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap || lapsedOffer || newsletterState ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
@@ -1654,7 +1816,15 @@ export function buildTemplateContent(
     */
     paragraphs: [
       // What this is, before anything else is read (§320) — for a bulk send, to how many (§419).
-      ...(clubCopy ? [bulkCopy ? copy.clubCopy.bulkNote(data.clubCopyRecipients ?? 0) : copy.clubCopy.note] : []),
+      ...(clubCopy
+        ? [
+            bulkCopy
+              ? NEWSLETTER_MESSAGES.has(messageType)
+                ? copy.clubCopy.subscribersNote(data.clubCopyRecipients ?? 0)
+                : copy.clubCopy.bulkNote(data.clubCopyRecipients ?? 0)
+              : copy.clubCopy.note,
+          ]
+        : []),
       // Whose registration this is, under the parent's greeting (§419).
       ...(guardianName ? [copy.guardianIntro(data.participantName)] : []),
       // The number when the message carries one: a settled number, or the provisional one the
@@ -1713,6 +1883,9 @@ export function buildTemplateContent(
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
       ...organizerMessageParts(messageType, data, locale, bulkCopy),
+      // A newsletter's own words, and what the platform says around every newsletter message (§NNN).
+      ...newsletterParts(messageType, data),
+      ...newsletterLines(messageType, locale, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
@@ -1724,11 +1897,17 @@ export function buildTemplateContent(
         ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],
-    action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
+    action: entry.action && actionUrl ? { label: typeof entry.action === "function" ? entry.action(data) : entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
     eventFacts: factsBlock,
     links: (() => {
-      const own = entry.links?.(linkData) ?? [];
+      const own = [
+        ...(entry.links?.(linkData) ?? []),
+        // Every newsletter message's way out (§NNN; Legea 506/2004 art. 12(2)): the subscriber's own page.
+        ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl
+          ? [{ label: copy.newsletterWords.manage, url: data.newsletterManageUrl }]
+          : []),
+      ];
       // The club's archive copy and the staff invitation are not a participant's message.
       if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
         return own.length > 0 ? own : undefined;
@@ -1743,11 +1922,15 @@ export function buildTemplateContent(
     privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
       ? undefined
       : {
-          text: (messageType === "REGISTRATION_OPENED"
+          // The confirmation answers a request, as "registration is open" does; the newsletter
+          // itself and its alerts name the way out that sits under their button (§NNN).
+          text: (messageType === "REGISTRATION_OPENED" || messageType === "NEWSLETTER_CONFIRM"
             ? copy.privacyFooterInterest
             : messageType === "GROUP_RUN_DECLARATION_SIGNED"
               ? copy.privacyFooterDeclaration
-              : copy.privacyFooter)(controllerName()),
+              : NEWSLETTER_MESSAGES.has(messageType)
+                ? copy.privacyFooterNewsletter
+                : copy.privacyFooter)(controllerName()),
           url: privacyUrl,
         },
   };
@@ -1800,9 +1983,11 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
 /**
  * The messages that carry the event's facts block (§392): the confirmation, the reminder, and the
  * declaration request — which, for a race with a participation window, is the participation
- * confirmation itself (§104), sent at once and again when the window opens.
+ * confirmation itself (§104), sent at once and again when the window opens. And the newsletter's
+ * new-event alert (§NNN): a subscriber deciding whether to come reads the same when, where,
+ * programme, route, cost and links as a runner who registered, from the same function.
  */
-const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION"]);
+const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION", "NEW_EVENT_ALERT"]);
 
 /**
  * The messages that are not to a participant about their own data (§323), and so carry no
