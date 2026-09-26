@@ -99,8 +99,10 @@ describe("§459 the team page's cards", () => {
 
     const [ro] = await listVisibleTeamMembers(db, "ro");
     const [en] = await listVisibleTeamMembers(db, "en");
-    expect(ro).toMatchObject({ name: "Ana Popescu", role: "Antrenoare", bio: "Aleargă pe Tâmpa de zece ani.", photo: null });
-    expect(en).toMatchObject({ name: "Ana Popescu", role: "Coach", bio: "Has run up Tâmpa for ten years." });
+    // Plain words from a caller without the editor read as a paragraph of the document (§474).
+    const paragraph = (words: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: words }] }] });
+    expect(ro).toMatchObject({ name: "Ana Popescu", role: "Antrenoare", bio: paragraph("Aleargă pe Tâmpa de zece ani."), photo: null });
+    expect(en).toMatchObject({ name: "Ana Popescu", role: "Coach", bio: paragraph("Has run up Tâmpa for ten years.") });
   });
 
   it("refuses a pair written in one language, naming the empty box, and accepts both empty", async () => {
@@ -238,7 +240,7 @@ describe("§459 the team page's cards", () => {
     const card = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ link: " https://instagram.com/ana.popescu " }) });
     expect(card.link).toBe("https://instagram.com/ana.popescu");
     await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
-    expect((await listVisibleTeamMembers(db, "en"))[0]?.link).toBe("https://instagram.com/ana.popescu");
+    expect((await listVisibleTeamMembers(db, "en"))[0]?.links).toEqual([{ kind: "INSTAGRAM", url: "https://instagram.com/ana.popescu", label: null }]);
   });
 
   it("shows nobody while the page is a draft, and the page once an Administrator publishes it", async () => {
@@ -246,7 +248,7 @@ describe("§459 the team page's cards", () => {
     await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
 
     const draft = await readPublicTeamPage(db, "ro");
-    expect(draft).toEqual({ published: false, intro: null, members: [] });
+    expect(draft).toEqual({ published: false, intro: null, introText: null, members: [] });
     expect(teamPageOnSite(draft)).toBe(false);
 
     expect(await refusal(setTeamPagePublished(db, { actor: actor("COPYWRITER"), published: true }))).toMatchObject({ code: "FORBIDDEN" });
@@ -288,11 +290,130 @@ describe("§459 the team page's cards", () => {
     // Writing the introduction publishes nothing.
     expect((await readPublicTeamPage(db, "ro")).published).toBe(false);
     await setTeamPagePublished(db, { actor: actor("ADMIN"), published: true });
-    expect((await readPublicTeamPage(db, "ro")).intro).toBe("Cine suntem.");
-    expect((await readPublicTeamPage(db, "en")).intro).toBe("Who we are.");
+    expect((await readPublicTeamPage(db, "ro")).introText).toBe("Cine suntem.");
+    expect((await readPublicTeamPage(db, "en")).introText).toBe("Who we are.");
     // Publishing keeps the words; emptying both returns the page to the platform's sentence.
     await saveTeamPageIntro(db, { actor: actor("ADMIN"), fields: { introRo: "", introEn: "" } });
-    expect(await readTeamPageSettings(db)).toEqual({ status: "PUBLISHED", introRo: null, introEn: null });
+    expect(await readTeamPageSettings(db)).toEqual({ status: "PUBLISHED", introRo: null, introEn: null, introRoJson: null, introEnJson: null });
     expect((await readPublicTeamPage(db, "en")).intro).toBeNull();
+  });
+
+  describe("§474 rich text and several links", () => {
+    const doc = (...paragraphs: string[]) => ({
+      type: "doc" as const,
+      content: paragraphs.map((words) => ({ type: "paragraph" as const, content: [{ type: "text" as const, text: words }] })),
+    });
+    const pictureDoc = (src: string, alt: string) => ({ type: "doc" as const, content: [{ type: "image" as const, attrs: { src, alt, width: 800, height: 800 } }] });
+    const row = (kind: string, url: string, labelRo = "", labelEn = "") => ({ kind, url, labelRo, labelEn });
+
+    it("keeps the words about a person as documents, and a card's links in order, labels per language", async () => {
+      const card = await createTeamMember(db, {
+        actor: actor("COPYWRITER"),
+        fields: {
+          ...fields(),
+          bioRoBody: JSON.stringify(doc("Aleargă pe Tâmpa.", "De zece ani.")),
+          bioEnBody: JSON.stringify(doc("Runs up Tâmpa.", "For ten years.")),
+          links: [
+            row("STRAVA", "https://www.strava.com/athletes/1"),
+            row("WEBSITE", "https://ana-alearga.example", "Blogul meu", "My blog"),
+            row("OTHER", ""),
+          ],
+        },
+      });
+      // §459's columns keep the words and the first link, for the code serving during a rollout.
+      expect(card).toMatchObject({ bioRo: "Aleargă pe Tâmpa.\nDe zece ani.", link: "https://www.strava.com/athletes/1" });
+      await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
+
+      const [ro] = await listVisibleTeamMembers(db, "ro");
+      const [en] = await listVisibleTeamMembers(db, "en");
+      expect(ro.bio).toEqual(doc("Aleargă pe Tâmpa.", "De zece ani."));
+      expect(en.bio).toEqual(doc("Runs up Tâmpa.", "For ten years."));
+      expect(ro.links).toEqual([
+        { kind: "STRAVA", url: "https://www.strava.com/athletes/1", label: null },
+        { kind: "WEBSITE", url: "https://ana-alearga.example", label: "Blogul meu" },
+      ]);
+      expect(en.links[1]).toMatchObject({ label: "My blog" });
+
+      // Removing every link saves "no links", not the one §459 column left behind.
+      const [admin] = await listTeamMembersForAdmin(db);
+      const saved = await saveTeamMember(db, {
+        actor: actor("COPYWRITER"),
+        memberId: card.id,
+        expectedVersion: admin.version,
+        fields: { ...fields(), links: [] },
+      });
+      expect(saved).toMatchObject({ links: null, link: null });
+      expect((await listVisibleTeamMembers(db, "ro"))[0]?.links).toEqual([]);
+    });
+
+    it("reads a card written before the editor: its plain words as paragraphs, its one link by its guessed kind", async () => {
+      await db.insert(teamMembers).values({
+        name: "Elena Marin",
+        bioRo: "Unu.\n\nDoi.",
+        bioEn: "One.\n\nTwo.",
+        link: "https://instagram.com/elena",
+        position: 1,
+        visible: true,
+      });
+      const [ro] = await listVisibleTeamMembers(db, "ro");
+      expect(ro.bio).toEqual(doc("Unu.", "Doi."));
+      expect(ro.links).toEqual([{ kind: "INSTAGRAM", url: "https://instagram.com/elena", label: null }]);
+      const [admin] = await listTeamMembersForAdmin(db);
+      expect(admin.bioEn).toEqual(doc("One.", "Two."));
+      expect(admin.links).toEqual([{ kind: "INSTAGRAM", url: "https://instagram.com/elena", labelRo: null, labelEn: null }]);
+    });
+
+    it("refuses a stored link that is not https, or a seventh, at the database too", async () => {
+      await expect(
+        db.insert(teamMembers).values({ name: "X", position: 1, links: [{ kind: "OTHER", url: "http://example.org" }] }),
+      ).rejects.toThrow();
+      const seven = Array.from({ length: 7 }, (_, index) => ({ kind: "OTHER", url: `https://example.org/${index}` }));
+      await expect(db.insert(teamMembers).values({ name: "X", position: 1, links: seven })).rejects.toThrow();
+      await expect(db.insert(teamMembers).values({ name: "X", position: 1, links: { url: "https://example.org" } })).rejects.toThrow();
+    });
+
+    it("takes the introduction as rich text, both languages or neither, and reads it with its words", async () => {
+      expect(
+        await refusal(saveTeamPageIntro(db, { actor: actor("COPYWRITER"), fields: { introRoBody: JSON.stringify(doc("Cine suntem.")), introEnBody: "" } })),
+      ).toEqual({ code: "VALIDATION_ERROR", fields: ["introEnBody"] });
+      await saveTeamPageIntro(db, {
+        actor: actor("COPYWRITER"),
+        fields: { introRoBody: JSON.stringify(doc("Cine suntem.", "Ce facem.")), introEnBody: JSON.stringify(doc("Who we are.", "What we do.")) },
+      });
+      await setTeamPagePublished(db, { actor: actor("ADMIN"), published: true });
+      const ro = await readPublicTeamPage(db, "ro");
+      expect(ro.intro).toEqual(doc("Cine suntem.", "Ce facem."));
+      expect(ro.introText).toBe("Cine suntem. Ce facem.");
+      expect((await readTeamPageSettings(db)).introEn).toBe("Who we are.\nWhat we do.");
+    });
+
+    it("keeps a picture in a bio or in the introduction from the sweep, and names where it is used", async () => {
+      const image = await sharp({ create: { width: 800, height: 800, channels: 3, background: "#33aa55" } }).jpeg().toBuffer();
+      const inBio = await uploadBodyImage(db, { actorId: actor("ADMIN").id, file: image, originalFilename: "bio.jpg", now: T0 });
+      const inIntro = await uploadBodyImage(db, { actorId: actor("ADMIN").id, file: image, originalFilename: "intro.jpg", now: T0 });
+
+      const card = await createTeamMember(db, {
+        actor: actor("ADMIN"),
+        fields: { ...fields(), bioRoBody: JSON.stringify(pictureDoc(inBio.src, "Ana")), bioEnBody: JSON.stringify(pictureDoc(inBio.src, "Ana")) },
+        now: T0,
+      });
+      await saveTeamPageIntro(db, {
+        actor: actor("ADMIN"),
+        fields: { introRoBody: JSON.stringify(pictureDoc(inIntro.src, "Echipa")), introEnBody: JSON.stringify(pictureDoc(inIntro.src, "The team")) },
+        now: T0,
+      });
+
+      expect(await sweepOrphanAssets(db, daysLater(ORPHAN_ASSET_DAYS * 3))).toBe(0);
+      const listed = await listMediaAssetsForAdmin(db, "ro");
+      expect(listed.find((row) => row.id === inBio.assetId)?.references).toEqual([{ kind: "team", id: card.id, title: "Ana Popescu" }]);
+      expect(listed.find((row) => row.id === inIntro.assetId)?.references).toEqual([{ kind: "teamIntro", id: "teamPage", title: null }]);
+      expect(await refusal(deleteMediaAsset(db, { actor: actor("ADMIN"), assetId: inIntro.assetId }))).toMatchObject({ code: "VALIDATION_ERROR" });
+
+      // Emptying both leaves the two pictures to the sweep, a week after nothing uses them.
+      await deleteTeamMember(db, { actor: actor("ADMIN"), memberId: card.id });
+      await saveTeamPageIntro(db, { actor: actor("ADMIN"), fields: { introRoBody: "", introEnBody: "" } });
+      await sweepOrphanAssets(db, daysLater(ORPHAN_ASSET_DAYS * 3));
+      expect(await sweepOrphanAssets(db, daysLater(ORPHAN_ASSET_DAYS * 5))).toBe(2);
+    });
   });
 });

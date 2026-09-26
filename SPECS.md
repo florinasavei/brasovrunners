@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.05-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.06-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.05-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.06-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -283,6 +283,11 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 103. Each row in the country picker is at least 44 pixels high, and after a telephone country is chosen the focus moves to the digits (2026-09-26, `DECISIONS.md` §463).
 104. The event page's back-to-events link shows a left arrow and is at least 44 px tall. The staff edit button shows a pencil glyph.
 105. The featured card's frame takes no layout room: its border box and content width equal every other listing card's at every breakpoint (asserted within 1px in the browser).
+106. The event page's weather row ends in a discreet help glyph. Its tooltip and accessible name say, in the reader's language, that the forecast may vary and that the data comes from Open-Meteo. The glyph is absent when there is no forecast.
+107. On the public «Echipa» card every link is its own row, at least 44 pixels tall, with the network's mark. The row shows the club's label in the reader's language; without one it shows the network's name, or the host for a site or anything else. Every link opens in a new tab with rel="noopener noreferrer". Tested in tests/unit/content/team-page-render.test.ts.
+108. On a touch screen, a sideways drag across the calendar goes to the next period (drag to the left) or the previous one (drag to the right). The drag must be at least a fifth of the calendar's width (48 px minimum) or a flick of at least 30 px at 0.4 px/ms or faster, and its horizontal travel at least 1.5 times its vertical. The swipe goes to exactly the addresses the header's arrows link to, keeping the filters and the layout. A mouse drag never changes the period, and vertical scrolling is left to the page. Proven by tests/unit/events/calendar-swipe.test.ts.
+109. The «Înscrieri» tab's figure is the sum of a per-event split of active, real registrations on upcoming events that are not cancelled, memoized a minute per language, and absent (never a 500) when the database is away (2026-09-27, `DECISIONS.md` §476).
+110. The figure's tooltip, in the reader's language, names the rule, then each upcoming event by start with its count, the first five, then "+N more"; an event with no title in that language shows a dash, never the other language's title (2026-09-27, `DECISIONS.md` §476).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -1638,6 +1643,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 32. A card's optional link is an https URL, opened with rel=noopener noreferrer.
 33. A card's photo counts as a media reference for the orphan sweep and the delete guard.
 34. The platform's privacy-notice template describes the page through {{teamPage}}; /admin/tasks shows an open row until a notice naming it is in force.
+35. Criterion 22 is checked end-to-end on both the mobile and the desktop project.
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 
@@ -2092,6 +2098,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 52. A translation request naming any box outside the club's own content allowlist (a legal text, a slug, a participant's field, a Romanian box) is refused whole, and nothing is sent.
 53. A translation never saves: the answer fills the English boxes as a draft, and each press the provider billed writes one audit row with the actor, the boxes, the characters, the provider and the outcome, never the words. The club's daily character budget is the sum of those rows since the club's midnight.
 54. A {placeholder} in a translated participant message comes back byte-identical to the Romanian source's.
+55. The team page's introduction and each person's words are written in the rich-text editor and are validated on the server against the rich-text allowlist. Each is Romanian and English or neither; the refusal names the empty side's box, and a text that is only a picture counts as written. A bio holding a table, a node the renderer does not know, or more than 1500 characters of words is refused (the introduction's limit is 3000). Tested in tests/unit/content/team-rich-text-and-links.test.ts and tests/integration/cms/team.test.ts.
+56. A team card carries at most six links. Each has a kind from STRAVA, INSTAGRAM, FACEBOOK, WEBSITE and OTHER, an https address, and a label in both languages or neither. A refused row is named by its position on screen (links[i].url), the spare line is dropped, and the database refuses a stored list that is not an array of at most six https links. Tested in tests/unit/content/team-rich-text-and-links.test.ts and tests/integration/cms/team.test.ts.
+57. The badge criterion numbered in §255 gains: the tooltip splits the figure per upcoming event (the first five, then «+N altele»), reachable by keyboard and touch.
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

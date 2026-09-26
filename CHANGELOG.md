@@ -8,6 +8,13 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.06-2026-09-27
+
+- **A discreet «?» after the event page's weather line**: its tooltip says the forecast may vary and that the data comes from Open-Meteo, in both languages. §473.
+- **«Echipa»: rich text and several links** — the page's introduction and each person's words are written in the site's rich-text editor (paragraphs, lists, links, pictures; no tables in a card), both languages or neither, and each person can have up to six links (Strava, Instagram, Facebook, a site of their own, anything else) shown with the network's mark; migration `0091`. §474.
+- **Swipe the calendar to change month on a phone**: a sideways drag across the month goes to the next month (to the left) or the previous one (to the right), like Google Calendar; the year view steps a year; the arrows are unchanged. §475.
+- **The «Înscrieri» badge says what it counts**: its tooltip names the rule and each upcoming event with its number, and the badge is the sum of those numbers. §476.
+- **The image-quality end-to-end spec runs on phone and desktop again**: lighter fixtures (a 2700-px picture, a 1280-px poster) replace the desktop-only skip. §477.
 ## BR-V2.05-2026-09-27
 
 - **The phone prefix and the citizenship are found by typing.** On the registration form, a tap on the phone's flag opens a search box: type part of a name, the ISO code or the dialling code, with or without accents. Citizenship is a box you type into, the flag shown before the chosen country. Without JavaScript the phone's own list still works. §463.

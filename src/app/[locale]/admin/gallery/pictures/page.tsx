@@ -89,6 +89,9 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       case "team":
         // A card of «Echipa» (§459): the screen that holds every card, at this one.
         return <Link href={{ pathname: "/admin/pages/team", hash: `team-${reference.id}` }}>{t("pictures.usedInTeam", { title })}</Link>;
+      case "teamIntro":
+        // The team page's introduction (§474): the screen, at the page's own card.
+        return <Link href={{ pathname: "/admin/pages/team", hash: "team-page" }}>{t("pictures.usedInTeamIntro")}</Link>;
     }
   };
 
