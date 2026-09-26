@@ -252,7 +252,7 @@ export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
 export const EMAIL_SAMPLE_FAMILY = {
   registered: ["Ana P."],
   personName: "Mihai Popescu",
-  personBirthDate: "12.03.2012",
+  personBirthDate: "2012-03-12",
 } as const;
 
 /**

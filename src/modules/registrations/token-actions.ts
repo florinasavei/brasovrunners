@@ -30,7 +30,14 @@ import {
 } from "./service";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { findRegistrationById } from "./repository";
-import { confirmFamilyEntry, type FamilyConfirmation, type FamilyEntryLink, readFamilyEntryLink } from "./family-confirm";
+import {
+  confirmFamilyEntry,
+  declineFamilyEntry,
+  type FamilyConfirmation,
+  type FamilyDecline,
+  type FamilyEntryLink,
+  readFamilyEntryLink,
+} from "./family-confirm";
 
 /**
  * Wiring the email-token boundary (§13.2) to the registration lifecycle (§15).
@@ -261,6 +268,11 @@ export async function consumeAndConfirmFamilyEntry(
   now: Date,
 ): Promise<FamilyConfirmation> {
   return confirmFamilyEntry(getDb(), secret, input, now);
+}
+
+/** «Nu înscriu această persoană» (§NNN): the token spent, the kept form deleted, nobody registered. */
+export async function consumeAndDeclineFamilyEntry(secret: string, now: Date): Promise<FamilyDecline> {
+  return declineFamilyEntry(getDb(), secret, now);
 }
 
 /**

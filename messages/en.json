@@ -5083,6 +5083,13 @@
       "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address. This link still works if a place on the address frees up.",
       "fitnessMissing": "First tick that the person declares their own health when they sign.",
       "refused": "We could not register the person with the details sent (the terms may have changed in the meantime, or the age is not allowed, for instance). Send the registration form again; this link was not used.",
+      "decline": "I am not registering this person",
+      "declinePending": "Deleting…",
+      "declineTitle": "Not registering this person?",
+      "declineIntro": "The registration form for {event} was sent again from the address {email}, for the person below. If you do not want to register them, press the button: the details sent for them are deleted now, nobody is registered, and the link in the email can no longer be used.",
+      "declineBack": "I want to register them after all",
+      "declinedTitle": "The person was not registered",
+      "declined": "Done — we registered nobody; the details sent have been deleted.",
       "people": {
         "one": "one person",
         "few": "{count} people",
