@@ -1,0 +1,97 @@
+name: e2e-dev-nightly
+
+# The `next dev` walk of every page (`yarn test:e2e:dev`, §370), once a night, on `qa` (§NNN).
+#
+# A page can work built and fail under `next dev` — every backoffice list did on 2026-09-24 — and
+# the routine suite runs the production build, so it cannot see that. The walk takes minutes (every
+# route compiles on its first request), which is why it is not in `docs-check`: a pull request does
+# not wait on it. Once a night it costs nobody a wait, and a red run is an email to whoever last
+# changed this file's schedule (GitHub's own notification for a failed scheduled workflow) — the
+# morning after the merge that broke it, rather than the day somebody opens the page under `yarn dev`.
+#
+# GitHub runs a schedule from the default branch's copy of this file, so it starts the night after
+# the release that carries it reaches `main`; it tests `qa` because that is where the next release
+# is assembled. The Actions minutes are free: the repository is public.
+#
+# Named `e2e-dev-nightly.yml`, not the brief's `e2e-dev.yml`, so it reads apart from `docs-check.yml`'s
+# `e2e` job in a workflow listing — and at 01:37, not 01:30, so it never lands on the hour, when
+# GitHub's own scheduler is busiest and a run can be delayed.
+
+on:
+  schedule:
+    # 01:37 UTC — 04:37 in Brașov in summer, 03:37 in winter: after the evening's merges, before
+    # anybody's morning, and off the top of the hour, when GitHub's scheduler is busiest.
+    - cron: "37 1 * * *"
+  # To run it by hand — after a change to the walk, or before a release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-dev-nightly
+  # A hand-dispatched run queues behind a nightly already in progress rather than killing it.
+  cancel-in-progress: false
+
+jobs:
+  e2e-dev:
+    runs-on: ubuntu-latest
+    # The walk's own ceiling is thirty minutes per test (tests/e2e/dev-routes.spec.ts), two tests.
+    timeout-minutes: 75
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_DB: brasov_runners
+          POSTGRES_USER: brasov_runners
+          POSTGRES_PASSWORD: local_only_not_a_secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U brasov_runners -d brasov_runners"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgres://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+
+      # The same Chromium cache as docs-check's e2e job (§276).
+      - name: Playwright's version, for the cache key
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - run: yarn playwright install --with-deps chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+      - run: yarn playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+
+      # The seed gives the walk its ids — an event, its registrations, a page — so a route behind
+      # an `[id]` is requested rather than reported as not reached.
+      - run: yarn db:migrate
+      - run: yarn db:seed
+
+      # No retry: a page that fails once under `next dev` and passes on the second try is the defect
+      # the walk exists for (it requests every address twice for that reason), not a flake to hide.
+      - run: yarn test:e2e:dev --retries=0
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-dev-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

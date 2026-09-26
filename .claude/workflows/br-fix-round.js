@@ -30,7 +30,7 @@ const FIX_SCHEMA = {
     filesTouched: { type: 'array', items: { type: 'string' } },
     summary: { type: 'string' },
     decisionsAddendum: { type: 'string', description: 'paragraphs the § needs for what changed in this round, or empty' },
-    changelogLine: { type: 'string', description: 'the whole changelog bullet as it should now read, ending "§NNN."' },
+    changelogLine: { type: 'string', description: 'a proposal only: the whole bullet as it should now read, ending "§NNN." — yarn docs:land lands the implementer\'s and prints this for the dispatcher' },
     specsCriteria: { type: 'array', items: { type: 'object', properties: { requirement: { type: 'string' }, text: { type: 'string' } }, required: ['requirement', 'text'] } },
     checks: { type: 'object', properties: { typecheck: { type: 'string' }, lint: { type: 'string' }, tests: { type: 'string' }, e2e: { type: 'string' }, notes: { type: 'string' } }, required: ['typecheck', 'lint', 'tests', 'e2e', 'notes'] },
     blockers: { type: 'array', items: { type: 'string' } },
@@ -71,7 +71,7 @@ VERIFY: \`yarn typecheck\`, \`yarn lint\`, \`yarn docs:check\`, the touched vite
 
 COMMIT on the branch: \`git add -A && git commit --no-verify -F <a message file of your own>\`, Conventional Commits, body naming each finding answered, the last line the Co-Authored-By line your session's instructions give.
 
-RETURN: decisionsAddendum for what changed now; changelogLine = the whole bullet as it should read now; specsCriteria = the full final list, each ending with "(<today's date>, \`DECISIONS.md\` §NNN)."`
+RETURN: summary = what you fixed and what you did not, and why (never empty: \`yarn docs:land\` refuses a blank report); decisionsAddendum = only the paragraphs the § gains from this round, or empty — never a note such as "carried forward" or "no DECISIONS.md edit was made" (\`yarn docs:land\` drops those); changelogLine = the whole bullet as it should read now, a proposal the dispatcher decides on (the implementer's is what lands); specsCriteria = the full final list, each ending with "(<today's date>, \`DECISIONS.md\` §NNN)."`
 
 const reviewPrompt = (fixed) => `Review ONE branch of the Brașov Runners repository, read-only, from the main checkout (no worktree, no checkout, no edits).
 

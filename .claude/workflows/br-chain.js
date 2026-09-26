@@ -137,7 +137,7 @@ ${review.intentMet ? '' : `\nIntent NOT fully met per the reviewer: ${review.not
 
 Same rules as the implementer (public repository; no DECISIONS/CHANGELOG/SPECS/baseline edits; both message files; no t-helper; icons by name across the boundary; Write/Edit tools; cite §NNN). Verify: typecheck, lint, docs:check, the touched vitest files, the touched e2e specs. Commit on the branch (--no-verify, Conventional Commits, body naming the findings answered, the Co-Authored-By line your session's instructions give). Do NOT push.
 
-Return the implementer's structured shape; carry the § text, changelog line, SPECS criteria and docsNotes forward unless a finding changed the story; say in summary which findings you fixed and which you did not, and why.`
+Return the implementer's structured shape: decisionsTitle and decisionsSection as the whole text (the implementer's, amended where a finding changed the story — never a note such as "carried forward" or "no DECISIONS.md edit was made"; \`yarn docs:land\` drops those); the SPECS criteria and docsNotes likewise. The CHANGELOG bullet that lands is the implementer's, never yours: put a better one in changelogLine only if a finding changed what a person sees, and the dispatcher decides. Say in summary which findings you fixed and which you did not, and why.`
 
 phase('Implement')
 const impl = await agent(PREAMBLE, { label: `impl:${TAG}`, phase: 'Implement', schema: IMPL_SCHEMA, isolation: 'worktree', ...opts('impl') })
