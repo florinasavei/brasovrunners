@@ -26,7 +26,7 @@ import { normalizeTeamText } from "./fields";
 
 export const TEAM_PAGE_SETTING_KEY = "teamPage";
 /** `audit_logs.entity_id` for this setting, one fixed id per key, never reused (§164's rule). */
-export const TEAM_PAGE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00a";
+export const TEAM_PAGE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00c";
 
 export const TEAM_INTRO_MAX = 600;
 

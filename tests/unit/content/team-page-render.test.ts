@@ -82,7 +82,7 @@ describe("§NNN the team page and its menu entry", () => {
   });
 
   it("draws the cards two to a row on a phone, with the club's introduction and the person's link", async () => {
-    page = { published: true, intro: "Cine suntem.", members: [member("Amalia", "https://www.strava.com/athletes/1"), member("Dani")] };
+    page = { published: true, intro: "Cine suntem.", members: [member("Ana Popescu", "https://www.strava.com/athletes/1"), member("Mihai Ionescu")] };
     const markup = await html((await TeamPage({ params })) as ReactElement);
     expect(markup).toContain('data-testid="team-grid"');
     expect(markup).toContain("Cine suntem.");

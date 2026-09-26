@@ -54,7 +54,7 @@ describe("§NNN the team page's cards", () => {
 
   const actor = (role: StaffRole) => staff[role] as StaffUser;
   const fields = (overrides: Record<string, string> = {}) => ({
-    name: "Amalia",
+    name: "Ana Popescu",
     roleRo: "Antrenoare",
     roleEn: "Coach",
     bioRo: "Aleargă pe Tâmpa de zece ani.",
@@ -75,11 +75,11 @@ describe("§NNN the team page's cards", () => {
 
   it("adds a card at the end, hidden, and the public page does not show it", async () => {
     const first = await createTeamMember(db, { actor: actor("COPYWRITER"), fields: fields() });
-    const second = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ name: "Dani" }) });
+    const second = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ name: "Mihai Ionescu" }) });
     expect(first.visible).toBe(false);
     expect([first.position, second.position]).toEqual([1, 2]);
     expect(await listVisibleTeamMembers(db, "ro")).toEqual([]);
-    expect((await listTeamMembersForAdmin(db)).map((row) => row.name)).toEqual(["Amalia", "Dani"]);
+    expect((await listTeamMembersForAdmin(db)).map((row) => row.name)).toEqual(["Ana Popescu", "Mihai Ionescu"]);
   });
 
   it("refuses the Organizer and the volunteer any write, and the Redactor putting a card on the site", async () => {
@@ -99,8 +99,8 @@ describe("§NNN the team page's cards", () => {
 
     const [ro] = await listVisibleTeamMembers(db, "ro");
     const [en] = await listVisibleTeamMembers(db, "en");
-    expect(ro).toMatchObject({ name: "Amalia", role: "Antrenoare", bio: "Aleargă pe Tâmpa de zece ani.", photo: null });
-    expect(en).toMatchObject({ name: "Amalia", role: "Coach", bio: "Has run up Tâmpa for ten years." });
+    expect(ro).toMatchObject({ name: "Ana Popescu", role: "Antrenoare", bio: "Aleargă pe Tâmpa de zece ani.", photo: null });
+    expect(en).toMatchObject({ name: "Ana Popescu", role: "Coach", bio: "Has run up Tâmpa for ten years." });
   });
 
   it("refuses a pair written in one language, naming the empty box, and accepts both empty", async () => {
@@ -117,7 +117,7 @@ describe("§NNN the team page's cards", () => {
   });
 
   it("reads a half pair stored by hand as none on both pages, never the other language", async () => {
-    await db.insert(teamMembers).values({ name: "Ioana", roleRo: "Voluntară", roleEn: null, position: 1, visible: true });
+    await db.insert(teamMembers).values({ name: "Elena Marin", roleRo: "Voluntară", roleEn: null, position: 1, visible: true });
     const [ro] = await listVisibleTeamMembers(db, "ro");
     const [en] = await listVisibleTeamMembers(db, "en");
     expect(ro.role).toBeNull();
@@ -126,7 +126,7 @@ describe("§NNN the team page's cards", () => {
 
   it("refuses a stale version rather than overwriting a colleague's save", async () => {
     const card = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields() });
-    await saveTeamMember(db, { actor: actor("COPYWRITER"), memberId: card.id, expectedVersion: card.version, fields: fields({ name: "Amalia P." }) });
+    await saveTeamMember(db, { actor: actor("COPYWRITER"), memberId: card.id, expectedVersion: card.version, fields: fields({ name: "Ana P." }) });
     expect(
       await refusal(saveTeamMember(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, fields: fields() })),
     ).toMatchObject({ code: "CONFLICT" });
@@ -159,7 +159,7 @@ describe("§NNN the team page's cards", () => {
 
   it("keeps the photo as a reference: listed, never swept, never deletable, and refused when it is not stored", async () => {
     const picture = await sharp({ create: { width: 800, height: 800, channels: 3, background: "#3355ff" } }).jpeg().toBuffer();
-    const uploaded = await uploadBodyImage(db, { actorId: actor("ADMIN").id, file: picture, originalFilename: "amalia.jpg", now: T0 });
+    const uploaded = await uploadBodyImage(db, { actorId: actor("ADMIN").id, file: picture, originalFilename: "ana.jpg", now: T0 });
 
     expect(
       await refusal(createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ photoAssetId: "00000000-0000-4000-8000-000000000000" }) })),
@@ -173,7 +173,7 @@ describe("§NNN the team page's cards", () => {
     expect(shown.photo?.webUrl).toContain("web.webp");
 
     const [row] = await listMediaAssetsForAdmin(db, "ro");
-    expect(row.references).toEqual([{ kind: "team", id: card.id, title: "Amalia" }]);
+    expect(row.references).toEqual([{ kind: "team", id: card.id, title: "Ana Popescu" }]);
     expect(await refusal(deleteMediaAsset(db, { actor: actor("ADMIN"), assetId: uploaded.assetId }))).toMatchObject({
       code: "VALIDATION_ERROR",
     });
@@ -216,7 +216,7 @@ describe("§NNN the team page's cards", () => {
     ]);
     expect(rows.every((row) => row.entityType === "team_member")).toBe(true);
     // The shape of the change, never the name or the words (§12.12).
-    expect(JSON.stringify(rows.map((row) => row.metadata))).not.toContain("Amalia");
+    expect(JSON.stringify(rows.map((row) => row.metadata))).not.toContain("Ana Popescu");
   });
 
   it("writes no audit row for a refused show, so the trail never claims what did not happen", async () => {
@@ -235,10 +235,10 @@ describe("§NNN the team page's cards", () => {
       code: "VALIDATION_ERROR",
       fields: ["link"],
     });
-    const card = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ link: " https://instagram.com/amalia " }) });
-    expect(card.link).toBe("https://instagram.com/amalia");
+    const card = await createTeamMember(db, { actor: actor("ADMIN"), fields: fields({ link: " https://instagram.com/ana.popescu " }) });
+    expect(card.link).toBe("https://instagram.com/ana.popescu");
     await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
-    expect((await listVisibleTeamMembers(db, "en"))[0]?.link).toBe("https://instagram.com/amalia");
+    expect((await listVisibleTeamMembers(db, "en"))[0]?.link).toBe("https://instagram.com/ana.popescu");
   });
 
   it("shows nobody while the page is a draft, and the page once an Administrator publishes it", async () => {

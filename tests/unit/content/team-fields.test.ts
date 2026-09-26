@@ -5,7 +5,7 @@ import { canEditTeamPage, canShowTeamMember, STAFF_ROLES } from "@/modules/staff
 
 /** §NNN — what a card of «Echipa» accepts, and who may write one or put it on the site. */
 describe("§NNN a team card's fields", () => {
-  const base = { name: "Dani", roleRo: "", roleEn: "", bioRo: "", bioEn: "", photoAssetId: "" };
+  const base = { name: "Mihai Ionescu", roleRo: "", roleEn: "", bioRo: "", bioEn: "", photoAssetId: "" };
   const issuesOf = (value: unknown) => {
     const parsed = teamMemberFieldsSchema.safeParse(value);
     return parsed.success ? [] : parsed.error.issues.map((issue) => issue.path.join("."));
@@ -14,7 +14,7 @@ describe("§NNN a team card's fields", () => {
   it("needs a name on one line, and nothing else", () => {
     expect(issuesOf(base)).toEqual([]);
     expect(issuesOf({ ...base, name: "   " })).toEqual(["name"]);
-    expect(issuesOf({ ...base, name: "Dani\nPopescu" })).toEqual(["name"]);
+    expect(issuesOf({ ...base, name: "Mihai Ionescu\nPopescu" })).toEqual(["name"]);
   });
 
   it("refuses each pair written in one language, on the empty side", () => {
