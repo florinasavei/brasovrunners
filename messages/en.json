@@ -910,7 +910,6 @@
       "honeypotOffTitle": "Turn the honeypot off?",
       "honeypotOffBody": "The field stays and is logged, but refuses nobody any more.",
       "deadlinesTitle": "Save the deadlines?",
-      "deadlinesRecommendedTitle": "Set every deadline to its recommended value?",
       "deadlinesBody": "Every hold, offer and link given from now on takes the new numbers, and the emails and pages say them. Nothing already given changes: a link, a held place or an offer keeps the deadline it got.",
       "addressCapTitle": "Save the limit per address?",
       "addressCapBody": "From now on, at every event, one email address may register at most this many people, and the email offering to register someone else says the new number. Registrations already made all stay.",
@@ -3138,7 +3137,7 @@
         "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
-        "bounds": "Between {min} and {max}; {default} recommended.",
+        "bounds": "Recommended: {recommended}. Between {min} and {max}.",
         "fields": {
           "confirmationHours": "The address confirmation link is valid for (hours)",
           "holdMinutes": "A place is held for signing the declaration (minutes)",
@@ -3164,10 +3163,8 @@
         "save": "Save the deadlines",
         "saving": "Saving…",
         "saved": "The deadlines were saved; they apply from now on.",
-        "recommendedShort": "({value} recommended)",
-        "recommendedIntro": "The recommended values are the ones the platform starts with, chosen for a small club: link {confirmation}, held place {hold}, offer {offer}, reminder {reminder}. One button sets them all.",
-        "recommendedInForce": "Every deadline has its recommended value.",
-        "applyRecommended": "Set the recommended values",
+        "differs": "differs from recommended",
+        "fillRecommended": "Fill in the recommended values",
         "readOnly": "The Administrator changes the deadlines; you see the values in force."
       },
       "forecast": {

@@ -1,62 +1,78 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — "Termene" shows the recommended value of every deadline (the default of `DEADLINE_RULES`,
- * never a number in the catalogue) and offers the Administrator one press that posts them all to
- * the same save; nothing to press when every deadline already has it, and no form for a reader.
+ * §431 (amending §377) — "Termene" advises a value per deadline: `RECOMMENDED`, the platform's
+ * defaults; each box's help says it in both languages; a chip marks a stored value that differs;
+ * «Completează valorile recomandate» fills the boxes and never saves.
  */
+const lang = vi.hoisted(() => ({ current: "ro" as "ro" | "en" }));
+const save = vi.hoisted(() => vi.fn(async () => null));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const all = { ro: (await import("../../../messages/ro.json")).default, en: (await import("../../../messages/en.json")).default };
   return {
-    getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Admin" }),
-    getLocale: async () => "ro",
+    getTranslations: async (namespace: string) =>
+      createTranslator({ locale: lang.current, messages: all[lang.current], namespace: namespace as "Admin" }),
+    getLocale: async () => lang.current,
   };
 });
-vi.mock("@/app/[locale]/admin/emails/actions", () => ({ updateDeadlinesAction: async () => null, updateAddressCapAction: async () => null }));
+vi.mock("@/app/[locale]/admin/emails/actions", () => ({ updateDeadlinesAction: save, updateAddressCapAction: async () => null }));
 
 const { default: DeadlinesPanel } = await import("@/modules/deadlines/ui/DeadlinesPanel");
-const { DEADLINE_KEYS, DEFAULT_DEADLINES } = await import("@/modules/deadlines/domain/deadlines");
+const { fillRecommended } = await import("@/modules/deadlines/ui/FillRecommendedButton");
+const { DEADLINE_KEYS, DEFAULT_DEADLINES, RECOMMENDED } = await import("@/modules/deadlines/domain/deadlines");
 
-async function render(mayEdit: boolean, deadlines = DEFAULT_DEADLINES): Promise<string> {
+async function render(locale: "ro" | "en", deadlines = DEFAULT_DEADLINES, mayEdit = true): Promise<string> {
+  lang.current = locale;
   const html = renderToStaticMarkup(
-    (await DeadlinesPanel({ locale: "ro", state: { deadlines, updatedAt: null }, mayEdit })) as ReactElement,
+    (await DeadlinesPanel({ locale, state: { deadlines, updatedAt: null }, mayEdit })) as ReactElement,
   );
   return html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the recommended deadlines", () => {
-  it("posts every default in one form when a deadline differs", async () => {
-    const html = await render(true, { ...DEFAULT_DEADLINES, holdMinutes: 60 });
-    const form = html.match(/<form[^>]*data-testid="deadlines-recommended-form"[\s\S]*?<\/form>/)?.[0] ?? "";
-    for (const key of DEADLINE_KEYS) {
-      expect(form, key).toMatch(new RegExp(`<input[^>]*type="hidden"[^>]*name="${key}"[^>]*value="${DEFAULT_DEADLINES[key]}"`));
+beforeEach(() => save.mockClear());
+
+describe("§431 the recommended deadlines", () => {
+  it("recommends exactly the platform's defaults", () => {
+    expect(RECOMMENDED).toEqual(DEFAULT_DEADLINES);
+  });
+
+  it("says each recommended number in the help, in both languages", async () => {
+    for (const [locale, prefix] of [["ro", "Recomandat: "], ["en", "Recommended: "]] as const) {
+      const html = await render(locale);
+      for (const key of DEADLINE_KEYS) expect(html, `${locale} ${key}`).toContain(`${prefix}${RECOMMENDED[key]}.`);
     }
-    expect(form).toContain(ro.Admin.emails.deadlines.applyRecommended);
-    expect(html).toContain("recomandat " + DEFAULT_DEADLINES.holdMinutes);
   });
 
-  it("offers nothing to press when every deadline is recommended", async () => {
-    const html = await render(true);
-    expect(html).not.toContain("deadlines-recommended-form");
-    expect(html).toContain(ro.Admin.emails.deadlines.recommendedInForce);
+  it("marks only the deadline that differs", async () => {
+    const html = await render("ro", { ...DEFAULT_DEADLINES, holdMinutes: DEFAULT_DEADLINES.holdMinutes + 1 });
+    expect(html).toContain('data-testid="deadline-holdMinutes-differs"');
+    expect(html.match(/-differs"/g)).toHaveLength(1);
+    expect(html).toContain(ro.Admin.emails.deadlines.differs);
+    expect(await render("en")).not.toContain("-differs");
   });
 
-  it("shows a reader the recommended value beside each one, and no form", async () => {
-    const html = await render(false, { ...DEFAULT_DEADLINES, offerHours: 12 });
-    expect(html).not.toContain("deadlines-recommended-form");
-    expect(html).toContain(`(recomandat ${DEFAULT_DEADLINES.offerHours})`);
+  it("offers the fill as a plain button inside the one save form, never a second form", async () => {
+    const html = await render("en", { ...DEFAULT_DEADLINES, offerHours: 12 });
+    expect(html.match(/<form/g)).toHaveLength(1);
+    expect(html).toMatch(/<button[^>]*type="button"[^>]*data-testid="deadlines-fill-recommended"/);
+    expect(html).toContain(en.Admin.emails.deadlines.fillRecommended);
   });
 
-  it("keeps the numbers out of the catalogues, in both languages", () => {
+  it("fills the boxes without calling the save", () => {
+    const boxes: Record<string, { value: string }> = Object.fromEntries(DEADLINE_KEYS.map((k) => [k, { value: "1" }]));
+    fillRecommended({ namedItem: (name) => boxes[name] ?? null }, RECOMMENDED);
+    for (const key of DEADLINE_KEYS) expect(boxes[key]!.value).toBe(String(RECOMMENDED[key]));
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("keeps the numbers out of the catalogues", () => {
     for (const words of [ro.Admin.emails.deadlines, en.Admin.emails.deadlines]) {
-      for (const key of ["recommendedShort", "recommendedIntro", "recommendedInForce", "applyRecommended"] as const) {
-        expect(words[key], key).not.toMatch(/\d/);
-      }
+      for (const key of ["differs", "fillRecommended", "bounds"] as const) expect(words[key], key).not.toMatch(/\d/);
     }
   });
 });
