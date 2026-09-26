@@ -35,6 +35,22 @@ describe("§195 the read gate", () => {
     expect(hasReachedEnd({ scrollTop: 1200, clientHeight: 400, scrollHeight: 2000 })).toBe(false);
   });
 
+  it("reads fractional measurements at a scaled or zoomed screen (§422)", () => {
+    // At 125 % or a 90 % zoom each of the three numbers is fractional.
+    expect(hasReachedEnd({ scrollTop: 1599.4, clientHeight: 400.2, scrollHeight: 2000 })).toBe(true);
+    // The end of the tolerance falls inside a fraction: rounded up, it is the end.
+    // 1591.4 + 400.2 = 1991.6, a fraction short of 2000 − 8 = 1992.
+    expect(hasReachedEnd({ scrollTop: 1591.4, clientHeight: 400.2, scrollHeight: 2000 })).toBe(true);
+    expect(hasReachedEnd({ scrollTop: 1591.4 - 1, clientHeight: 400.2, scrollHeight: 2000 })).toBe(false);
+    // Still a page short at a fraction is still a page short.
+    expect(hasReachedEnd({ scrollTop: 1199.6, clientHeight: 400.2, scrollHeight: 2000.4 })).toBe(false);
+  });
+
+  it("opens a short text with fractional boxes at once (§422)", () => {
+    expect(hasReachedEnd({ scrollTop: 0, clientHeight: 399.8, scrollHeight: 400.6 })).toBe(true);
+    expect(hasReachedEnd({ scrollTop: 0, clientHeight: 312.5, scrollHeight: 318.75 })).toBe(true);
+  });
+
   it("waits when nothing has been measured yet", () => {
     expect(hasReachedEnd(null)).toBe(false);
   });
