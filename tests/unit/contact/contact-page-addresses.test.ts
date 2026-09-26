@@ -13,6 +13,8 @@ import { describe, expect, it, vi } from "vitest";
 const MAILBOX = "contact@mail.example.test";
 const GMAIL = "club@gmail.example.test";
 
+let formReaches = false;
+
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const messages = (await import("../../../messages/ro.json")).default;
@@ -38,7 +40,7 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedBotCheckSiteKey: async () => null,
   // The form has no way out on this deployment: the page shows the addresses instead.
-  cachedContactFormReaches: async () => false,
+  cachedContactFormReaches: async () => formReaches,
   cachedShownContactAddresses: async () => [GMAIL, MAILBOX],
   cachedPublishedEventBySlug: async () => null,
 }));
@@ -67,5 +69,19 @@ describe("§442 the contact page shows the addresses in force", () => {
     expect(gmailAt, "the Gmail's mailto link").toBeGreaterThan(-1);
     expect(mailboxAt, "the mailbox's mailto link").toBeGreaterThan(gmailAt);
     expect(html.slice(gmailAt, mailboxAt)).toContain(" sau ");
+  });
+
+  it("§NNN shows the addresses beside the form too, when the form works", async () => {
+    formReaches = true;
+    try {
+      const html = await renderContactPage();
+      expect(html).toContain("<form");
+      expect(html).toContain("Sau scrie-ne direct la");
+      const gmailAt = html.indexOf(`href="mailto:${GMAIL}"`);
+      expect(gmailAt).toBeGreaterThan(html.indexOf("<form"));
+      expect(html.indexOf(`href="mailto:${MAILBOX}"`)).toBeGreaterThan(gmailAt);
+    } finally {
+      formReaches = false;
+    }
   });
 });

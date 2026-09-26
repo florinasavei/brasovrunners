@@ -5199,6 +5199,7 @@
       "bodyTo": "Îți răspundem pe {email}.",
       "body": "Îți răspundem pe adresa ta de e-mail."
     },
+    "direct": "Sau scrie-ne direct la",
     "off": {
       "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
