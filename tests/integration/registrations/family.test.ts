@@ -222,13 +222,13 @@ describe("§446 the form sent again from a registered address for a different pe
     expect(subject).toContain("Înscrii încă o persoană la Crosul familiei?");
     expect(subject).toContain("Registering one more person for The family cross?");
     expect(text).toContain("Înscriși deja cu această adresă: Ana P.");
-    expect(text).toContain("Persoana din formular: Maria Pop, data nașterii 11.07.1990.");
+    expect(text).toContain("Persoana din formular: Maria Pop, născută pe 11 iulie 1990");
     expect(text).toContain("Already registered with this address: Ana P.");
-    expect(text).toContain("The person in the form: Maria Pop, born on 11.07.1990.");
+    expect(text).toContain("The person in the form: Maria Pop, born on 11 July 1990");
     expect(text).not.toContain("Vecina");
     expect(text).toContain("Confirm că înscriu altă persoană");
-    expect(text).toContain("Pe o adresă de email se pot înscrie cel mult 4 persoane la un eveniment.");
-    expect(text).toContain("Linkul este valabil 48 de ore");
+    expect(text).toContain("Limita: cel mult 4 persoane pe o adresă, la un eveniment");
+    expect(text).toContain("Termen: linkul e valabil 48 de ore");
     expect(url).toContain("/ro/inregistrari/familie/");
     expect(secret).not.toBeNull();
 
@@ -630,10 +630,21 @@ describe("§NNN the family email's facts in bold, and «Nu înscriu această per
 
     // One box per half, the values bold (the owner: "trebuie să avem bold pe chestiile importante").
     expect(message.html.match(/data-email-part="family-facts"/g)).toHaveLength(2);
-    expect(message.html).toContain("<strong style=\"font-size:16px\">Maria Pop, data nașterii 11.07.1990.</strong>");
-    expect(message.html).toContain("<strong style=\"font-size:16px\">Ana P.</strong>");
+    // The name and the birth date each bold, the date in words in each language (never 11.07.1990).
+    const bold = (text: string) => `<strong style="font-size:16px">${text}</strong>`;
+    expect(message.html).toContain(`${bold("Maria Pop")}, născută pe ${bold("11 iulie 1990")}`);
+    expect(message.html).toContain(`${bold("Maria Pop")}, born on ${bold("11 July 1990")}`);
+    expect(message.html).not.toContain("11.07.1990");
+    expect(message.html).toContain(bold("Ana P."));
     expect(message.text).toMatch(/Evenimentul: Crosul familiei, /);
     expect(message.text).toMatch(/The event: The family cross, /);
+    // What the press does, the link's life from «Termene» in bold, the club's limit per address.
+    expect(message.text).toContain("Ce se întâmplă dacă apeși: primește propriul loc");
+    expect(message.text).toContain("What happens if you press: they get their own place");
+    expect(message.html).toContain(`linkul e valabil ${bold("48 de ore")} și se folosește o singură dată`);
+    expect(message.html).toContain(`the link is valid for ${bold("48 hours")} and can be used once`);
+    expect(message.text).toMatch(/Limita: cel mult \S+ .* pe o adresă, la un eveniment/);
+    expect(message.text).toMatch(/The limit: at most .* per address, for an event/);
 
     // The second button: the same token, the page's "no" shape.
     const confirm = /https?:\/\/[^\s"]+\/inregistrari\/familie\/([A-Za-z0-9_-]+)/.exec(message.text)!;
@@ -649,8 +660,19 @@ describe("§NNN the family email's facts in bold, and «Nu înscriu această per
     await submitRegistration(db, event, submission("Ana"), NOW);
     const secret = await offer(event, "Maria", 5);
 
+    // Reading the link (the page's GET, decline=1 included) changes nothing: the form kept, the token unspent.
+    expect((await readFamilyEntryLink(db, secret, "ro", at(6))).ok).toBe(true);
+    expect(await entries()).toHaveLength(1);
+    const [unspent] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
+    expect(unspent.usedAt).toBeNull();
+
     expect(await declineFamilyEntry(db, secret, at(7))).toEqual({ ok: true });
     expect(await entries()).toHaveLength(0);
+    // The audit row: the event, the address holder by the link, never the name the form carried.
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.family_entry_declined"));
+    expect(audit).toMatchObject({ actorStaffUserId: null, entityType: "event", entityId: event.id, metadataJson: { by: "family_link" } });
+    expect(audit.participantId).toBe((await rowsOf(event.id))[0].participantId);
+    expect(JSON.stringify(audit)).not.toContain("Maria");
     expect((await rowsOf(event.id)).map((row) => row.registeredName)).toEqual(["Ana Pop"]);
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
     expect(token.usedAt).not.toBeNull();

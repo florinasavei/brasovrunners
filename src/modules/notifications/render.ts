@@ -39,7 +39,6 @@ import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import {
-  birthDateText,
   findFamilyEntryById,
   linkFamilyEntryToken,
   personOfEntry,
@@ -606,7 +605,7 @@ async function renderRow(
       familyEntry = kept;
       const person = personOfEntry(kept);
       data.familyPersonName = person.legalName;
-      data.familyPersonBirthDate = birthDateText(person.birthDate);
+      data.familyPersonBirthDate = person.birthDate?.slice(0, 10) ?? "";
       data.familyRegistered = await registeredOnAddress(db, kept.eventId, kept.participantId);
     } else if (!data.addressAtCap) {
       // Confirmed, or lapsed and purged — deferred past the window (§40) or sent again after the

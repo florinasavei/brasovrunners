@@ -4895,7 +4895,7 @@
       "declineIntro": "The registration form for {event} was sent again from the address {email}, for the person below. If you do not want to register them, press the button: the details sent for them are deleted now, nobody is registered, and the link in the email can no longer be used.",
       "declineBack": "I want to register them after all",
       "declinedTitle": "The person was not registered",
-      "declined": "Done. We registered nobody, and the details sent for this person have been deleted. The registrations on your address are as they were.",
+      "declined": "Done — we registered nobody; the details sent have been deleted.",
       "people": {
         "one": "one person",
         "few": "{count} people",

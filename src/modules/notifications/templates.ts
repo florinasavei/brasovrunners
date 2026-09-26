@@ -7,7 +7,7 @@ import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./d
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { CLUB_NAME, COLOR } from "@/theme/brand";
-import { capitalizeFirst } from "@/i18n/dates";
+import { capitalizeFirst, formatBirthDate } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
@@ -96,9 +96,24 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
-/** What the family link's facts box states (§446, §NNN): the event, who the address holds, the person the form named. */
-type FamilyFactsInput = { event?: string; when?: string; registered: readonly string[]; name: string; birthDate: string };
-type FamilyFact = { label: string; value: string };
+/**
+ * What the family link's facts box states (§446, §NNN): the event, who the address holds, the person
+ * the form named, what the button does, how long the link lives and the club's limit per address.
+ */
+type FamilyFactsInput = {
+  event?: string;
+  when?: string;
+  registered: readonly string[];
+  name: string;
+  /** `YYYY-MM-DD`, written in words per language. */
+  birthDate: string;
+  /** The link's life in words ("48 de ore"), from «Termene». */
+  hours: string;
+  /** The club's limit of registrations per address, from «Termene»; absent, no line. */
+  cap?: number;
+};
+/** A fact's value as parts, the important ones bold — each on its own, never the joining words. */
+type FamilyFact = { label: string; value: ReadonlyArray<{ text: string; bold?: boolean }> };
 
 /**
  * The family link's facts as one outlined box (§NNN, the §392 box's look): each label on its own
@@ -109,12 +124,15 @@ function familyFactsPart(facts: readonly FamilyFact[]): EmailBodyPart {
   const body = facts
     .map((fact, index) => {
       const margin = index === facts.length - 1 ? "0" : "0 0 10px";
-      return `<p style="margin:${margin};font-size:15px;line-height:1.5">${escapeHtml(fact.label)}<br><strong style="font-size:16px">${escapeHtml(fact.value)}</strong></p>`;
+      const value = fact.value
+        .map((part) => (part.bold ? `<strong style="font-size:16px">${escapeHtml(part.text)}</strong>` : escapeHtml(part.text)))
+        .join("");
+      return `<p style="margin:${margin};font-size:15px;line-height:1.5">${escapeHtml(fact.label)}<br>${value}</p>`;
     })
     .join("");
   return {
     html: `<div data-email-part="family-facts" style="margin:0 0 18px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">${body}</div>`,
-    text: [...facts.map((fact) => `${fact.label}: ${fact.value}`), ""],
+    text: [...facts.map((fact) => `${fact.label}: ${fact.value.map((part) => part.text).join("")}`), ""],
   };
 }
 
@@ -631,7 +649,7 @@ export type TemplateData = {
   /**
    * Another person on the address, confirmed from the inbox (§446): who the address holds at the
    * event now, as "Ana P." — its own active registrations, never anybody else's — and the person
-   * the form named, in full, with the birth date as "12.03.2012". Read from the kept form at send
+   * the form named, in full, with the birth date as "2012-03-12", written in words per language (§NNN). Read from the kept form at send
    * time; absent at the limit or once the form is gone, and then there is no button either.
    */
   familyRegistered?: string[];
@@ -1098,11 +1116,9 @@ const T = {
                 "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
               ]
             : [
-              `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă, pentru o altă persoană. Nu am înscris-o încă: dacă tu ai trimis formularul și vrei să o înscrii, apasă butonul de mai jos și confirmă pe pagina care se deschide.`,
-              "După confirmare persoana are propriul loc și primește pe această adresă propriul email cu declarația de semnat, apoi propriul cod QR.",
-              // The other person's agreement, and that they are told how their data is used (§419; GDPR art. 14).
-              "Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim: nota de confidențialitate e la linkul de la sfârșitul acestui mesaj. Mesajele despre înscrierea lui vor veni la această adresă.",
-              `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)} și se poate folosi o singură dată. Dacă nu vrei să înscrii această persoană, apasă „Nu înscriu această persoană”: datele trimise se șterg imediat. Dacă nu tu ai trimis formularul, poți și să ignori acest mesaj: nu se înscrie nimeni, iar datele trimise se șterg singure.`,
+              // One line to open, the facts in the box above (§NNN); the consent line keeps the privacy link (§419; GDPR art. 14).
+              "Formularul a fost trimis din nou cu această adresă, pentru o altă persoană — nu am înscris-o încă: confirmă cu primul buton sau renunță cu al doilea.",
+              "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
             ],
       action: "Confirm că înscriu altă persoană",
     },
@@ -1201,9 +1217,20 @@ const T = {
      * event, and who the form named — facts of this send, whoever wrote the words around them.
      */
     familyFacts: (f: FamilyFactsInput): FamilyFact[] => [
-      ...(f.event ? [{ label: "Evenimentul", value: f.when ? `${f.event}, ${f.when}` : f.event }] : []),
-      { label: "Înscriși deja cu această adresă", value: f.registered.length > 0 ? endSentence(f.registered.join(", ")) : "nimeni în acest moment." },
-      { label: "Persoana din formular", value: `${f.name}${f.birthDate ? `, data nașterii ${f.birthDate}` : ""}.` },
+      ...(f.event ? [{ label: "Evenimentul", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
+      { label: "Înscriși deja cu această adresă", value: [{ text: f.registered.length > 0 ? f.registered.join(", ") : "nimeni în acest moment", bold: true }] },
+      {
+        label: "Persoana din formular",
+        value: [
+          { text: f.name, bold: true },
+          ...(formatBirthDate(f.birthDate, "ro") ? [{ text: ", născută pe " }, { text: formatBirthDate(f.birthDate, "ro"), bold: true }] : []),
+        ],
+      },
+      { label: "Ce se întâmplă dacă apeși", value: [{ text: "primește propriul loc, propriul email cu declarația și propriul cod QR, pe această adresă" }] },
+      { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
+      ...(f.cap !== undefined
+        ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
+        : []),
     ],
     /** The family link's second button (§NNN): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
@@ -1512,10 +1539,8 @@ const T = {
                 "If you did not send the form, you can ignore this message: nothing has changed.",
               ]
             : [
-              `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address, for another person. We have not registered them yet: if you sent the form and want to register them, press the button below and confirm on the page it opens.`,
-              "Once confirmed, the person has their own place and receives, at this address, their own email with the declaration to sign, then their own QR code.",
-              "Register someone only with their agreement, and tell them that their details come to us and how we use them: the privacy notice is at the link at the end of this message. The messages about their registration will come to this address.",
-              `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)} and can be used once. If you do not want to register this person, press “I am not registering this person”: the details sent are deleted at once. If you did not send the form, you can also ignore this message: nobody is registered, and the details sent are deleted by themselves.`,
+              "The form was sent again with this address, for another person — we have not registered them yet: confirm with the first button or decline with the second.",
+              "Register someone only with their agreement, and tell them how we use their details: the privacy notice is at the link at the end of this message.",
             ],
       action: "I confirm I am registering another person",
     },
@@ -1594,9 +1619,20 @@ const T = {
     },
     addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     familyFacts: (f: FamilyFactsInput): FamilyFact[] => [
-      ...(f.event ? [{ label: "The event", value: f.when ? `${f.event}, ${f.when}` : f.event }] : []),
-      { label: "Already registered with this address", value: f.registered.length > 0 ? endSentence(f.registered.join(", ")) : "nobody at the moment." },
-      { label: "The person in the form", value: `${f.name}${f.birthDate ? `, born on ${f.birthDate}` : ""}.` },
+      ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
+      { label: "Already registered with this address", value: [{ text: f.registered.length > 0 ? f.registered.join(", ") : "nobody at the moment", bold: true }] },
+      {
+        label: "The person in the form",
+        value: [
+          { text: f.name, bold: true },
+          ...(formatBirthDate(f.birthDate, "en") ? [{ text: ", born on " }, { text: formatBirthDate(f.birthDate, "en"), bold: true }] : []),
+        ],
+      },
+      { label: "What happens if you press", value: [{ text: "they get their own place, their own email with the declaration and their own QR code, at this address" }] },
+      { label: "Deadline", value: [{ text: "the link is valid for " }, { text: f.hours, bold: true }, { text: " and can be used once" }] },
+      ...(f.cap !== undefined
+        ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
+        : []),
     ],
     familyDecline: "I am not registering this person",
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
@@ -1714,11 +1750,6 @@ function subscribersPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un abonat" : form === "few" ? `${count} abonați` : `${count} de abonați`;
   return form === "one" ? "one subscriber" : `${count} subscribers`;
-}
-
-/** A sentence that already ends in a full stop — "Ana P." — takes no second one (§446). */
-function endSentence(text: string): string {
-  return text.endsWith(".") ? text : `${text}.`;
 }
 
 /**
@@ -1956,6 +1987,8 @@ export function buildTemplateContent(
                 registered: data.familyRegistered ?? [],
                 name: data.familyPersonName,
                 birthDate: data.familyPersonBirthDate ?? "",
+                hours: data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours),
+                cap: data.addressCap,
               }),
             ),
           ]
@@ -2023,7 +2056,8 @@ export function buildTemplateContent(
         : []),
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
-      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && data.addressCap !== undefined
+      // In the facts box instead when the kept form is in hand (§NNN).
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && !data.familyPersonName && data.addressCap !== undefined
         ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],

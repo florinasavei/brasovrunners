@@ -108,8 +108,8 @@ describe("BR-REQ-080-01 §419 an offer capped under an hour says its minutes", (
 describe("BR-REQ-080-01 §419 the words the counsel asked for", () => {
   it("asks for the other person's agreement on the family link, and not at the address's limit", () => {
     const link = render("REGISTER_ANOTHER_PERSON", { ...DATA, participantName: "" });
-    expect(link.text).toContain("Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim");
-    expect(link.text).toContain("Register someone only with their agreement, and tell them that their details come to us and how we use them");
+    expect(link.text).toContain("Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele");
+    expect(link.text).toContain("Register someone only with their agreement, and tell them how we use their details");
     expect(render("REGISTER_ANOTHER_PERSON", { ...DATA, participantName: "", addressAtCap: true, addressCap: 4 }).text).not.toContain("doar cu acordul lui");
   });
 

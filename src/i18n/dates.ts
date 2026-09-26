@@ -139,6 +139,18 @@ export function formatCalendarDay(date: string | Date, options: Omit<DayOptions,
   return compose(new Date(`${iso}T12:00:00Z`), "UTC", options, false);
 }
 
+/**
+ * A birth date in words, as a person reads it (§NNN, amending §446): "3 iunie 1974" / "3 June 1974" —
+ * never "03.06.1974". A `YYYY-MM-DD`, read as the calendar day it names; "" for anything else.
+ */
+export function formatBirthDate(ymd: string, locale: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd);
+  if (!match) return "";
+  return formatter(intlLocale(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${match[1]}-${match[2]}-${match[3]}T12:00:00Z`),
+  );
+}
+
 /** "09:30", always 24-hour, in the zone the caller names. */
 export function formatTime(date: Date, options: { locale: string; timeZone: string }): string {
   return formatter(intlLocale(options.locale), { ...DATE_FORMATS.time, timeZone: options.timeZone }).format(date);

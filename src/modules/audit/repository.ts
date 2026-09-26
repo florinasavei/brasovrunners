@@ -75,6 +75,13 @@ export type AuditAction =
    */
   | "registration.resubmitted"
   /**
+   * «Nu înscriu această persoană» pressed on the family link (§NNN, amending §446): the kept form
+   * of another person on one address deleted, nobody registered. No staff actor — the address
+   * holder answered from their inbox; the participant is the address's own, the entity the event,
+   * the metadata `{ by: "family_link" }` — never the name or birth date the form carried.
+   */
+  | "event.family_entry_declined"
+  /**
    * Somebody at the club read a registration's emergency details — the phone, the emergency
    * contact and the health note (§322). Written each time the section is opened, with the
    * reader as the actor and no value in the metadata: Article 9 data is read by name, and the

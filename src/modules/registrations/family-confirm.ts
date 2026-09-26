@@ -11,6 +11,7 @@ import { findParticipantById } from "@/modules/participants/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { readAddressCap } from "./address-cap";
 import { ANOTHER_LINK_INVALID } from "./domain/family";
+import { recordAuditEvent } from "@/modules/audit/repository";
 import { birthDateText, deleteFamilyEntry, findFamilyEntryByToken, personOfEntry, registeredOnAddress } from "./family-entries";
 import { familyRegistrationOpen } from "./family-gate";
 import { publicFormEvent } from "./public-form-event";
@@ -166,6 +167,16 @@ export async function declineFamilyEntry<T extends Record<string, unknown>>(db: 
     if (!entry) return { ok: false as const };
     // Deleted even at its last instant: what the address asked is what the job would do anyway.
     await deleteFamilyEntry(tx, entry.id);
+    // Who answered and where, never whom the form named: the address holder, by the link.
+    await recordAuditEvent(tx, {
+      actorStaffUserId: null,
+      participantId: entry.participantId,
+      action: "event.family_entry_declined",
+      entityType: "event",
+      entityId: entry.eventId,
+      metadata: { by: "family_link" },
+      now,
+    });
     return { ok: true as const };
   });
 }

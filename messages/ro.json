@@ -4895,7 +4895,7 @@
       "declineIntro": "Formularul de înscriere la {event} a fost trimis din nou de pe adresa {email}, pentru persoana de mai jos. Dacă nu vrei să o înscrii, apasă butonul: datele trimise pentru ea se șterg acum, nu se înscrie nimeni, iar linkul din email nu se mai poate folosi.",
       "declineBack": "Vreau totuși să o înscriu",
       "declinedTitle": "Persoana nu a fost înscrisă",
-      "declined": "Gata. Nu am înscris pe nimeni, iar datele trimise pentru această persoană s-au șters. Înscrierile de pe adresa ta au rămas cum erau.",
+      "declined": "Gata — nu am înscris pe nimeni; datele trimise au fost șterse.",
       "people": {
         "one": "o persoană",
         "few": "{count} persoane",
