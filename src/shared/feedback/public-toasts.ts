@@ -16,9 +16,23 @@
  * where the page's slot accepts it — a flash some other action left (a staff member's, in the same
  * browser) is not the public page's to show, and stays for the page it was written for.
  */
-export const PUBLIC_TOAST_KEYS = ["contactSent", "unregistered", "declarationConfirmed", "declarationWaitlisted"] as const;
+export const PUBLIC_TOAST_KEYS = [
+  "contactSent",
+  "unregistered",
+  "declarationConfirmed",
+  "declarationWaitlisted",
+  "familySignNothingLeft",
+  "familySignOneLeft",
+] as const;
 
 export type PublicToastKey = (typeof PUBLIC_TOAST_KEYS)[number];
+
+/**
+ * The public toasts that say why nothing happened rather than what did (§471, nit found in review):
+ * «Semnează declarațiile» on «Înscrierile mele» refused because the address no longer has two
+ * declarations waiting at the event. Drawn as information, never as a success.
+ */
+export const PUBLIC_INFO_TOAST_KEYS: readonly PublicToastKey[] = ["familySignNothingLeft", "familySignOneLeft"];
 
 /** A public key, checked — the cookie is the browser's to rewrite. */
 export function isPublicToastKey(key: string): key is PublicToastKey {

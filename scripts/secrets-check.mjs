@@ -27,9 +27,10 @@ const PATTERNS = [
   ["Cloudflare Turnstile key", /\b0x4AAAAAA[A-Za-z0-9_-]{10,}\b/],
   ["Vercel token", /\bvcp_[A-Za-z0-9]{20,}\b/],
   ["GitHub token", /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b/],
+  ["DeepL API key", /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:fx\b/],
   ["private key block", /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/],
   ["Zitadel client secret", /\bAUTH_ZITADEL_CLIENT_SECRET\s*[=:]\s*["']?[A-Za-z0-9]{20,}/],
-  ["a secret with a value", /\b(?:JOB_SECRET|AUTH_SECRET|MAILGUN_API_KEY|MAILGUN_WEBHOOK_SIGNING_KEY|TURNSTILE_SECRET_KEY|R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|NEON_API_KEY|VERCEL_API_TOKEN|DATABASE_URL_(?:QA|PRODUCTION))\s*=\s*["']?[A-Za-z0-9+/=_-]{16,}/],
+  ["a secret with a value", /\b(?:JOB_SECRET|AUTH_SECRET|MAILGUN_API_KEY|MAILGUN_WEBHOOK_SIGNING_KEY|TURNSTILE_SECRET_KEY|R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|NEON_API_KEY|VERCEL_API_TOKEN|DEEPL_API_KEY|DATABASE_URL_(?:QA|PRODUCTION))\s*=\s*["']?[A-Za-z0-9+/=_-]{16,}/],
 ];
 
 /** Text files only; anything with a NUL byte in its first 8 KB is binary and skipped. */

@@ -89,15 +89,16 @@ describe("§406 the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 14 in that order, and gives the automatic share links none", () => {
+  it("numbers the cards 1 to 13 in that order, and gives the automatic share links and the nested cost none (§466)", () => {
     const numbered = numberedPageSections();
-    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 14 }, (_, index) => index + 1));
+    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 13 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
+    expect(numbered.find((section) => section.id === "cost")).toMatchObject({ card: "box-cost", nestedIn: "kind", number: null });
     expect(pageSectionNumber("kind")).toBe(1);
-    expect(pageSectionNumber("cost")).toBe(7);
-    expect(pageSectionNumber("registration")).toBe(8);
-    expect(pageSectionNumber("links")).toBe(10);
-    expect(pageSectionNumber("startList")).toBe(14);
+    expect(pageSectionNumber("cost")).toBe(null);
+    expect(pageSectionNumber("registration")).toBe(7);
+    expect(pageSectionNumber("links")).toBe(9);
+    expect(pageSectionNumber("startList")).toBe(13);
   });
 
   it("gives every card section the id of the card the editor draws for it", () => {
@@ -119,7 +120,6 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<WhenBox ", "when"],
   ["<PlaceBox ", "place"],
   ["<CourseBox ", "course"],
-  ["<CostBox ", "cost"],
   ["<RegistrationBox", "registration"],
   ["<CoHostsBox ", "coHosts"],
   ["<AutomaticSection ", "share"],
@@ -142,7 +142,10 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
         expect(source.split(needle).length - 1, `${name}: ${needle} once`).toBe(1);
         return { index, id };
       });
-      expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids);
+      // The cost's card is inside the first box since §466: the page still draws it seventh.
+      expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => id !== "cost"));
+      expect(source).not.toContain("<CostBox");
+      expect(source).not.toContain("flow.headings.cost");
       for (const [needle, id] of EDITOR_CARDS) {
         if (id === "share") continue;
         const start = source.indexOf(needle);

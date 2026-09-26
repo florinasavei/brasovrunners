@@ -61,7 +61,6 @@ describe("the create page is the editor's page", () => {
       "<WhenBox",
       "<PlaceBox",
       "<CourseBox",
-      "<CostBox",
       "<RegistrationBox",
       "<CoHostsBox",
       "<LinksBox",
@@ -89,7 +88,7 @@ describe("the create page is the editor's page", () => {
     // SCHEDULED any more: the card's own select posts.
     expect(CREATE).not.toContain('name="event.eventStatus"');
     // The card is there, inside the first box (§448), so the two pages look the same (§358).
-    expect(CREATE).toContain("<KindBox {...box} heading={flow.headings.kind} />");
+    expect(CREATE).toContain("<KindBox {...box} heading={flow.headings.kind} languages={languages} />");
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event: null })");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     // Keyed on the create page alone: a saved event always comes with its notice, by type, so it

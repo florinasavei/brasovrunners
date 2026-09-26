@@ -10,7 +10,16 @@ import type { Locale } from "@/i18n/routing";
 import { EVENT_TYPES, type EventType, hasProgramme } from "@/modules/events/domain/event-type";
 import { type TranslationFieldName, translationInputConstraints } from "../constraints";
 import type { EditableTranslation } from "../repository";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import OnlyForType from "./OnlyForType";
+
+/**
+ * «Tradu din română» under an English box (§464): drawn for the English language only, and by the
+ * button itself only where the page offers translation.
+ */
+function translateButton(translation: { locale: Locale }, name: string) {
+  return translation.locale === "en" ? <TranslateFieldButton en={name} /> : null;
+}
 
 /**
  * The rich-text editor's control names, read once here for the four text boxes that mount it: the
@@ -160,6 +169,7 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
   return (
     <Stack spacing={2}>
       <RecallField name={name("title")} label={t("editor.fields.title")} defaultValue={translation.title} {...box("title")} />
+      {translateButton(translation, name("title"))}
       {/* In the same editor as everything else (§73): a sentence or two and, if the organizer
           wants one, a picture. */}
       <LazyRichTextEditor
@@ -173,6 +183,7 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
         cardPictures
         labels={await editorLabels()}
       />
+      {translateButton(translation, name("excerptBody"))}
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.excerptHelp")}
       </Typography>
@@ -207,6 +218,7 @@ export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
         accessibleSuffix={translation.locale.toUpperCase()}
         labels={await editorLabels()}
       />
+      {translateButton(translation, name("body"))}
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.bodyHelp")}
       </Typography>
@@ -243,6 +255,7 @@ export async function ProgrammeTextFields({ translation, mayEdit, eventType }: P
           accessibleSuffix={translation.locale.toUpperCase()}
           labels={await editorLabels()}
         />
+        {translateButton(translation, name("schedule"))}
       </OnlyForType>
       <RecallField
         name={name("checklist")}
@@ -251,6 +264,7 @@ export async function ProgrammeTextFields({ translation, mayEdit, eventType }: P
         defaultValue={translation.checklist ?? ""}
         {...box("checklist")}
       />
+      {translateButton(translation, name("checklist"))}
     </Stack>
   );
 }
@@ -281,6 +295,7 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
         accessibleSuffix={translation.locale.toUpperCase()}
         labels={await editorLabels()}
       />
+      {translateButton(translation, name("rules"))}
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.rulesHelp")}
       </Typography>
@@ -316,6 +331,7 @@ export async function RouteDescriptionFields({ translation, mayEdit }: PieceProp
         accessibleSuffix={translation.locale.toUpperCase()}
         labels={await editorLabels()}
       />
+      {translateButton(translation, name("routeDescription"))}
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.routeDescriptionHelp")}
       </Typography>
@@ -353,6 +369,7 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
         {...(slugLocked ? {} : box("slug"))}
       />
       <RecallField name={name("seoTitle")} label={t("editor.fields.seoTitle")} defaultValue={translation.seoTitle ?? ""} {...box("seoTitle")} />
+      {translateButton(translation, name("seoTitle"))}
       <RecallField
         name={name("seoDescription")}
         label={t("editor.fields.seoDescription")}
@@ -361,6 +378,7 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
         minRows={2}
         {...box("seoDescription")}
       />
+      {translateButton(translation, name("seoDescription"))}
     </Stack>
   );
 }
@@ -378,12 +396,15 @@ export async function DiscountNoteFields({ translation, mayEdit }: PieceProps) {
     return <ReadOnlyLine label={t("editor.discountNote")} value={translation.discountNote || t("editor.boxes.summary.empty")} />;
   }
   return (
-    <RecallField
-      name={name("discountNote")}
-      label={t("editor.discountNote")}
-      helperText={t("editor.discountNoteHelp")}
-      defaultValue={translation.discountNote ?? ""}
-      {...box("discountNote")}
-    />
+    <>
+      <RecallField
+        name={name("discountNote")}
+        label={t("editor.discountNote")}
+        helperText={t("editor.discountNoteHelp")}
+        defaultValue={translation.discountNote ?? ""}
+        {...box("discountNote")}
+      />
+      {translateButton(translation, name("discountNote"))}
+    </>
   );
 }

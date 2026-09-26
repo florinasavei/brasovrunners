@@ -179,16 +179,18 @@ describe("the event page's weather block wears the umbrella when rain is likely 
     expect(html).not.toContain('data-testid="weather-rain-likely"');
   });
 
-  it("draws the umbrella beside the rain percentage and says «ploaie probabilă» when rain is likely", async () => {
+  it("draws the umbrella after the degrees and says «ploaie probabilă» when rain is likely — no percentage, no wind (§469)", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(
         await EventFacts({ event: event(), now: NOW, stacked: true, weather: forecast(reading({ precipitationProbability: 60 })) }),
       ),
     );
     expect(html).toContain('data-testid="weather-rain-likely"');
-    expect(text(html)).toContain("60% șanse de ploaie");
-    expect(text(html)).toContain("ploaie probabilă");
-    expectUmbrellaBetweenRainAndWind(eventWeatherSummary(html));
+    const line = eventWeatherSummary(html);
+    expect(line).toContain("ploaie probabilă");
+    expect(line).not.toContain("șanse de ploaie");
+    expect(line).not.toContain("km/h");
+    expect(line.indexOf("ploaie probabilă"), line).toBeGreaterThan(line.indexOf("12 °C"));
   });
 
   it("with no chance but an amount already falling, the umbrella follows the temperature", async () => {
@@ -207,7 +209,7 @@ describe("the event page's weather block wears the umbrella when rain is likely 
     const at = line.indexOf("ploaie probabilă");
     expect(line.indexOf("12 °C"), line).toBeGreaterThanOrEqual(0);
     expect(at, line).toBeGreaterThan(line.indexOf("12 °C"));
-    expect(at, line).toBeLessThan(line.indexOf("vânt"));
+    expect(line).not.toContain("vânt");
   });
 
   it("in English: \"rain likely\"", async () => {

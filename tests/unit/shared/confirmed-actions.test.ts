@@ -138,6 +138,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateAddressCapAction: [],
   // A line of the club's checklist deleted (§438): gone for the whole team, with no undo.
   deleteClubTodoAction: [],
+  // «Tradu din română»'s daily character budget (§464): what the club may spend from now on.
+  updateTranslationBudgetAction: [],
 };
 
 /**
@@ -174,6 +176,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   editClubTodoAction: "an editorial save of a checklist line, like a page's; its delete asks",
   setClubTodoDoneAction: "a tick on the club's checklist, undone by the same box — a dialog per tick would double the taps",
   moveClubTodoAction: "reorders the checklist, undone by moving back",
+  translateFieldAction:
+    "fills English boxes in the browser and saves nothing; replacing a box that already has words asks in the button itself (§464)",
 };
 
 type Site = { file: string; line: number; expression: string; verdict: "asks" | "bare"; why: string };

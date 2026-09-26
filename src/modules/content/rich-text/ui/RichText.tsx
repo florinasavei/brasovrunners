@@ -48,7 +48,6 @@ export default function RichText({
   body,
   links = true,
   pictures = "page",
-  framed = pictures === "card",
 }: {
   body: unknown;
   links?: boolean;
@@ -56,14 +55,13 @@ export default function RichText({
    * The column the body is drawn in (§414, `media/ladder.ts`): the event page's wide one by
    * default, a standing page's measure, or a listing card. It becomes each picture's `sizes`,
    * which is how the browser picks the smallest stored width that is still sharp there.
+   *
+   * On a listing card every picture is also in the one 16∶9 frame at its focal point (§454) rather
+   * than its natural ratio or the organizer's crop — the featured event's card too, since §470 made
+   * it a card (the hero's summary asked for the frame on its own until then). The event page never
+   * frames.
    */
   pictures?: PictureColumn;
-  /**
-   * Every picture in the one 16∶9 frame at its focal point (§454) rather than its natural ratio or
-   * the organizer's crop: always on a listing card, and on the featured hero's summary, which is a
-   * card of its own above the listing. The event page never frames.
-   */
-  framed?: boolean;
 }) {
   const doc = readRichText(body);
   const blocks = doc.content ?? [];
@@ -78,7 +76,7 @@ export default function RichText({
   return (
     <>
       {blocks.map((block, index) => (
-        <Fragment key={index}>{renderBlock(block, floats, links, pictures, framed)}</Fragment>
+        <Fragment key={index}>{renderBlock(block, floats, links, pictures)}</Fragment>
       ))}
       {floats && <Box sx={{ clear: "both" }} />}
     </>
@@ -95,7 +93,6 @@ function renderBlock(
   floats = false,
   links = true,
   pictures: PictureColumn = "page",
-  framed = pictures === "card",
 ): ReactNode {
   switch (block.type) {
     case "youtube":
@@ -125,14 +122,14 @@ function renderBlock(
       // A picture the organizer cropped (§241) is the same <img> inside a window that shows the
       // rectangle they drew. The window is emitted only when there is a crop, so every picture
       // written before today renders the markup it rendered yesterday, byte for byte.
-      if (framed) return renderFramedPicture(block, pictures, floats);
+      if (pictures === "card") return renderFramedPicture(block);
       const crop = cropGeometry(block.attrs.crop, block.attrs);
       /*
         The ladder (§414): a picture stored since then names its smaller siblings, and `sizes`
         says how wide it is drawn here — the column's share of the screen, magnified by the crop
         when there is one, because a cropped photograph is drawn `1 / crop.w` times its window.
         A picture from before has no siblings, gets no `srcset`, and renders the markup it
-        rendered yesterday. A card's or the hero's picture is drawn by `renderFramedPicture` instead.
+        rendered yesterday. A card's picture is drawn by `renderFramedPicture` instead.
       */
       const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
       const sizes = srcSet
@@ -288,7 +285,7 @@ function renderBlock(
                       rowSpan={cell.attrs?.rowspan}
                     >
                       {cell.content.map((inner, innerIndex) => (
-                        <Fragment key={innerIndex}>{renderBlock(inner, false, links, pictures, framed)}</Fragment>
+                        <Fragment key={innerIndex}>{renderBlock(inner, false, links, pictures)}</Fragment>
                       ))}
                     </Box>
                   ))}
@@ -303,23 +300,17 @@ function renderBlock(
 }
 
 /**
- * A picture on a listing card or the featured hero (§454): the same 16∶9 frame on every card, over
- * the organizer's crop, centred on the focal point the club picked (`cardFrameGeometry`). On a card
- * the figure's column share and side are overridden by the card's own rules (`CARD_EXCERPT_SX`); on
- * the hero, which is the page's width, they are the organizer's as on the event page, and only the
- * shape is the frame's. The caption stays under it.
+ * A picture on a listing card (§454), the featured event's included since §470: the same 16∶9 frame
+ * on every card, over the organizer's crop, centred on the focal point the club picked
+ * (`cardFrameGeometry`). The figure's column share and side are overridden by the card's own rules
+ * (`CARD_EXCERPT_SX`): the whole card width, never floated. The caption stays under it.
  */
-function renderFramedPicture(
-  block: Extract<RichTextBlock, { type: "image" }>,
-  pictures: PictureColumn,
-  floats: boolean,
-): ReactNode {
-  const card = pictures === "card";
+function renderFramedPicture(block: Extract<RichTextBlock, { type: "image" }>): ReactNode {
   const frame = cardFrameGeometry(block.attrs);
   const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
-  const sizes = srcSet ? pictureSizes(pictures, card ? 100 : block.attrs.widthPercent, frame?.magnify ?? 1) : undefined;
+  const sizes = srcSet ? pictureSizes("card", 100, frame?.magnify ?? 1) : undefined;
   return (
-    <Box component="figure" sx={imageFigureSx(block.attrs, card ? false : floats)}>
+    <Box component="figure" sx={imageFigureSx(block.attrs, false)}>
       <Box className="rt-card-frame" data-testid="card-picture" sx={CARD_FRAME_SX}>
         <Box
           component="img"

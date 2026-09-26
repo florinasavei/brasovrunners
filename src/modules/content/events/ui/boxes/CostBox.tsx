@@ -18,7 +18,30 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * "Cost" (§343, §356, §394, §398, §406): its own card, where the page draws its own row — after the
+ * The cost's closed line — «Cu taxă, 50 lei, cu reducere», «Gratuit», «Nestabilit» — the card's own
+ * and, since §466, part of card 1's line (`KindBox`), which the card sits inside.
+ */
+export async function costLine(event: BoxProps["event"], languages: readonly LanguageEntry[]): Promise<string> {
+  const t = await getTranslations("Admin");
+  // `initialCostType` rather than `event?.costType` so the create page's own "Gratuit" default reads here too.
+  const initialCostType = initialCostTypeOf(event);
+  // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind that has one (§343).
+  const costAmount = initialCostType === "PAID" || initialCostType === "DONATION" ? (event?.costAmount ?? "").trim() : "";
+  // "cu reducere" (§394): the club's discount on an `EXTERNAL` + `PAID` event with a note in some language.
+  const hasDiscountNote = languages.some((entry) => isWrittenText(entry.translation.discountNote));
+  const discounted = event ? costPaidToExternalOrganizer(event) && hasDiscountNote : false;
+  return initialCostType
+    ? `${t(`editor.costValues.${initialCostType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
+    : t("editor.notStated");
+}
+
+/**
+ * "Cost" (§343, §356, §394, §398, §406, §466): a named card inside the first box, «Ce fel de
+ * eveniment» (`KindBox`), since §466 (the owner, 2026-09-26: "cardul 7. Cost poate fi inclus în
+ * cardul 1. la ce fel de eveniment"). It keeps its id, `box-cost`, so a deep link opens the first
+ * box and this card inside it (`openFoldsAround`), but not a page number: its title is plain «Cost»,
+ * the cards after it renumber and the map has no Cost chip, while the page still draws the row after
+ * the course. Before §466 it was its own card, where the page draws its own row — after the
  * course, before who may enter and the button (`page-sections.ts`). It was the top of "Participare
  * și înscrieri" and moved whole: the same select, the same names, the same `CostFields`, the same
  * discount-note strip. The owner, 2026-09-25: "am nevoie de mai multe căsuțe la editor ca să văd
@@ -51,20 +74,10 @@ export default async function CostBox({
   const initialMode = event?.registrationMode ?? "NONE";
   // A new event starts on "Gratuit" (§398, `initialCostTypeOf`); an existing one keeps what it has.
   const initialCostType = initialCostTypeOf(event);
-  // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind
-  // that has one (§343) — what the page will say, on the card's closed line. `initialCostType`
-  // rather than `event?.costType` so the create page's own "Gratuit" default reads here too.
-  const costAmount = initialCostType === "PAID" || initialCostType === "DONATION" ? (event?.costAmount ?? "").trim() : "";
-  // "cu reducere" (§394): the closed line names the club's discount when the event is `EXTERNAL` +
-  // `PAID` and at least one language carries a note — read off the strip's own rows.
-  const hasDiscountNote = languages.some((entry) => isWrittenText(entry.translation.discountNote));
-  const discounted = event ? costPaidToExternalOrganizer(event) && hasDiscountNote : false;
   // Whether the note may be typed by a reader without the settings (§394): the stored mode and cost.
   const discountNoteApplies = event !== null && costPaidToExternalOrganizer(event);
-  const costLabel = initialCostType
-    ? `${t(`editor.costValues.${initialCostType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
-    : null;
-  const card = { id: "box-cost", title: heading ?? t("editor.boxes.cost.title"), aside: costLabel ?? t("editor.notStated") } as const;
+  const costLabel = await costLine(event, languages);
+  const card = { id: "box-cost", level: 3, title: heading ?? t("editor.boxes.cost.title"), aside: costLabel } as const;
 
   // One strip, used inside `CostFields` for a settings editor and on its own for a words-only reader.
   const discountNotePanels = (

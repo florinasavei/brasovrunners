@@ -393,9 +393,9 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
     expect(hero).toContain('data-testid="hero-weather"');
   });
 
-  it("says the surface once on the hero, as the first pill, never also a chip beside the type — as the cards (§366)", () => {
-    const hero = readFileSync("src/modules/events/ui/FeaturedEventHero.tsx", "utf8");
-    expect(hero).toMatch(/<EventKindChips\b[^>]*\bsurface=\{null\}[^>]*\/>/);
+  it("says the surface once on the featured card, as the first pill, never also a chip beside the type — it is a card since §470 (§366)", () => {
+    const card = readFileSync("src/modules/events/ui/EventCard.tsx", "utf8");
+    expect(card).toMatch(/<EventKindChips\b[^>]*\bsurface=\{null\}[^>]*\/>/);
   });
 
   it("makes no «Traseu» row at all for an event that states no route and no cost", async () => {

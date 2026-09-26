@@ -108,6 +108,7 @@ function form(firstName: string, birthDate?: string): FormData {
     emergencyContactName: "Ion Vecinul",
     emergencyContactPhone: "0722222222",
     nationality: "RO",
+    city: "Brașov",
     emergencyContactPhoneCountry: "RO",
     fitnessDeclared: "on",
     rulesAcknowledged: "on",

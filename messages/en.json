@@ -43,13 +43,8 @@
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
     "pastNotice": "This event has already taken place.",
     "featured": "Featured event",
-    "featuredCallToAction": "See the race details",
-    "others": "Other events",
-    "othersCount": "All events ({count})",
-    "othersCountFiltered": "Matching events ({count})",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
     "pastCountFiltered": "Past, filtered ({count})",
-    "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
       "label": "Event filters",
       "button": "Filters",
@@ -275,11 +270,12 @@
       "opensSoon": "Registration opens soon.",
       "opensSoonShort": "Registration opens soon",
       "openUntilShort": "Registration open until {date}",
-      "freeOf": {
-        "one": "{count} place left out of {places}",
-        "few": "{count} places left out of {places}",
-        "other": "{count} places left out of {places}"
+      "freeCount": {
+        "one": "{count} place left",
+        "few": "{count} places left",
+        "other": "{count} places left"
       },
+      "freeOfCard": "{free} out of {places}",
       "cardWaitlist": "Waiting list",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
@@ -935,7 +931,9 @@
       "olderPicturesTitle": "Make the phone sizes?",
       "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving.",
       "shownAddressTitle": "Change the contact address shown?",
-      "shownAddressBody": "The site (the footer, the contact page, the race numbers) shows the chosen address from now on, and every email the platform sends takes replies there. Legal texts already approved keep the address they were approved with."
+      "shownAddressBody": "The site (the footer, the contact page, the race numbers) shows the chosen address from now on, and every email the platform sends takes replies there. Legal texts already approved keep the address they were approved with.",
+      "translationBudgetTitle": "Save the translation budget?",
+      "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -2379,6 +2377,17 @@
             "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
             "Only then publish the page, from /admin/pages/team → “Publish the page”."
           ]
+        },
+        "translation": {
+          "title": "Automatic translation from Romanian (DeepL, free)",
+          "todo": "Built: beside every English box in the editors there is \"Translate from Romanian\", and \"Translate everything from Romanian\" at the top. It starts once DeepL's free key is on the server; until then the English boxes are written by hand, as now.",
+          "done": "Automatic translation is on: the editors have the \"Translate from Romanian\" buttons.",
+          "how": [
+            "Create a DeepL API Free account (the \"DeepL API\" page on DeepL's site → the Free plan): 500,000 characters a month, free. DeepL may ask for a card for verification only; the Free plan is not charged.",
+            "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
+            "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
+            "Open an event: under the English boxes there is \"Translate from Romanian\". This row turns green. The daily budget is chosen under Tasks → Costs."
+          ]
         }
       },
       "freeVerdict": {
@@ -2579,6 +2588,24 @@
       },
       "budgetThresholds": {
         "saved": "The thresholds are saved; the month's budget is read by them from now on."
+      },
+      "translationBudget": {
+        "title": "Automatic translation (DeepL)",
+        "intro": "The editors' \"Translate from Romanian\" and \"Translate everything from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
+        "inForce": {
+          "off": "In force: off (0 characters a day) — the buttons refuse every translation.",
+          "daily": "In force: at most {count} characters a day."
+        },
+        "today": "Today {used} of {budget} characters were sent.",
+        "configured": "The DeepL key is set on this server: the buttons show for the Copywriter, the Organizer and the Administrator.",
+        "notConfigured": "The DeepL key is not set on this server: the buttons do not show (see the row in Tasks).",
+        "privacy": "Only the club's own texts from the content boxes go to DeepL (EU) — never a participant's data and never the legal texts. The privacy notice does not change.",
+        "updatedAt": "Last changed: {when}.",
+        "readOnly": "Only an Administrator can change the budget.",
+        "field": "Characters a day",
+        "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters.",
+        "save": "Save the budget",
+        "saving": "Saving…"
       }
     },
     "clubTodo": {
@@ -4639,6 +4666,7 @@
     "birthDate": "Date of birth",
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
+    "birthDateEcho": "{date} · {age} on the event day",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
       "minimumOnly": "Minimum age: {age}.",
@@ -4653,7 +4681,7 @@
     "sexHelp": "For category rankings; you may choose “Prefer not to say”.",
     "nationality": "Citizenship",
     "city": "City",
-    "originHelp": "Optional. Tells the club where its events' participants come from.",
+    "originHelp": "Tells the club where its events' participants come from.",
     "preferredLocale": "The language for your emails and the declaration",
     "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
     "preferredLocaleOptions": {
@@ -4662,6 +4690,12 @@
     },
     "phone": "Phone",
     "phoneCountry": "Country",
+    "countrySearch": {
+      "search": "Search for a country (name, code or prefix)",
+      "noMatch": "No country matches",
+      "open": "Open the list of countries",
+      "close": "Close the list of countries"
+    },
     "phoneHelp": "The number without the country code — for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",
@@ -4767,7 +4801,6 @@
     },
     "disclosure": {
       "race": "{club} member, club and t-shirt — optional",
-      "origin": "Your city — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"
@@ -4851,6 +4884,35 @@
     "declare": {
       "title": "Event declaration",
       "accept": "I have read and accept the declaration above, including, expressly, the limitation of the organiser's liability to the extent the law allows.",
+      "family": {
+        "stepsLabel": "The declarations on this address",
+        "stepTitle": "Declaration {step} of {total} — {name}",
+        "intro": "Several people are registered for this event on this address. The declarations are signed here, one after the other: one person per step, each with their own name and identity document (a parent for a minor). After each signature the page moves on to the next person, and each receives their own confirmation and the PDF of their declaration by email.",
+        "lastSigned": "The declaration for {name} is signed. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
+        "lastWaitlisted": "The place for {name} was no longer free: {name} is now on the waiting list.",
+        "doneTitle": "The declarations on this address",
+        "doneAll": "No declaration is left to sign on this address. Every confirmed person receives their own confirmation by email, with the QR code and the PDF of the declaration.",
+        "state": {
+          "signed": "signed",
+          "waitlisted": "on the waiting list",
+          "current": "now",
+          "next": "next",
+          "closed": "no longer waiting for a signature",
+          "later": "later"
+        },
+        "nextAction": "Sign and go to the next one",
+        "skipAction": "I'll sign later",
+        "skipHelp": "Nothing changes in this person's registration: their declaration can also be signed from the link emailed for them, until the deadline.",
+        "doneLater": "A declaration left for later is signed from the link emailed for that person, until the deadline.",
+        "doneAction": "Done",
+        "ownLinksStillWork": "This address still has declarations to sign for this event: each person can sign theirs from the link emailed for them.",
+        "what": {
+          "confirmed": "Confirmed. The code for the registration desk: {code}. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
+          "waitlisted": "On the waiting list: an email comes if a place frees up.",
+          "later": "Later: sign from the link emailed for this person.",
+          "closed": "No longer waiting for a signature."
+        }
+      },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",
@@ -4974,7 +5036,11 @@
       "eventCancelledChip": "Event cancelled",
       "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
       "runner": "Registered: {name}",
-      "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day."
+      "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day.",
+      "familySign": {
+        "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
+        "action": "Sign the declarations"
+      }
     },
     "manage": {
       "title": "Manage your registration",
@@ -5047,6 +5113,13 @@
       "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address. This link still works if a place on the address frees up.",
       "fitnessMissing": "First tick that the person declares their own health when they sign.",
       "refused": "We could not register the person with the details sent (the terms may have changed in the meantime, or the age is not allowed, for instance). Send the registration form again; this link was not used.",
+      "decline": "I am not registering this person",
+      "declinePending": "Deleting…",
+      "declineTitle": "Not registering this person?",
+      "declineIntro": "The registration form for {event} was sent again from the address {email}, for the person below. If you do not want to register them, press the button: the details sent for them are deleted now, nobody is registered, and the link in the email can no longer be used.",
+      "declineBack": "I want to register them after all",
+      "declinedTitle": "The person was not registered",
+      "declined": "Done — we registered nobody; the details sent have been deleted.",
       "people": {
         "one": "one person",
         "few": "{count} people",
@@ -5449,6 +5522,7 @@
     "temperature": "{degrees} °C",
     "rain": "{percent}% chance of rain",
     "rainLikely": "rain likely",
+    "rainLikelyChance": "rain likely {percent}%",
     "wind": "wind {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
@@ -5458,12 +5532,7 @@
     "humidity": "humidity {percent}%",
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
-    "hours": "Hour by hour, from the start",
     "atStart": "Weather at the start",
-    "place": {
-      "event": "For the event's place",
-      "club": "For {place}"
-    },
     "codes": {
       "clear": "Clear",
       "mainlyClear": "Mostly clear",
@@ -5488,7 +5557,9 @@
       "contactSent": "Message sent to the club.",
       "unregistered": "Done: your registration is cancelled.",
       "declarationConfirmed": "Declaration signed: your registration is confirmed.",
-      "declarationWaitlisted": "Declaration signed: you are on the waiting list."
+      "declarationWaitlisted": "Declaration signed: you are on the waiting list.",
+      "familySignNothingLeft": "No declaration is left to sign for this event: the list below shows where each registration stands.",
+      "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person."
     },
     "toast": {
       "saved": "Saved.",
@@ -5699,7 +5770,8 @@
       "teamMemberDeleted": "The card was deleted.",
       "teamPageIntroSaved": "The team page's introduction was saved.",
       "teamPagePublished": "The team page is on the site, in both languages.",
-      "teamPageUnpublished": "The team page was taken off the site."
+      "teamPageUnpublished": "The team page was taken off the site.",
+      "translationBudget": "The translation budget was saved."
     }
   },
   "Network": {
@@ -5844,5 +5916,34 @@
     "empty": "The club's team will be introduced here soon.",
     "listLabel": "The team's people",
     "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>."
+  },
+  "Translate": {
+    "button": "Translate from Romanian",
+    "pending": "Translating…",
+    "all": "Translate everything from Romanian",
+    "allHelp": "Replaces every English box that has Romanian text with its translation, with the same layout. Nothing is saved until you press Save.",
+    "done": "Translated. Read it, correct it if needed, then save.",
+    "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
+    "cut": "Cut to the box's limit, check the ending: {fields}.",
+    "confirm": {
+      "title": "Replace the English text?",
+      "body": "The English box already has text. The translation from Romanian replaces it; nothing is saved until you press Save.",
+      "allTitle": "Translate everything from Romanian?",
+      "allBody": "{count} English boxes are replaced with the translation of the Romanian ones, with the same layout (headings, lists, tables, pictures, links). Nothing is saved until you press Save. The boxes: {fields}",
+      "go": "Translate",
+      "cancel": "Cancel"
+    },
+    "refusal": {
+      "forbidden": "Your role cannot use automatic translation.",
+      "notConfigured": "Automatic translation is not set up on this server (the DeepL key is missing).",
+      "invalid": "This box cannot be translated automatically.",
+      "nothing": "The Romanian box is empty: there is nothing to translate.",
+      "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
+      "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
+      "quota": "DeepL has used this month's free characters. Translation comes back next month.",
+      "refused": "DeepL refused the key. An Administrator needs to check DEEPL_API_KEY (Tasks).",
+      "unavailable": "DeepL did not answer. Try again in a minute.",
+      "failed": "The translation did not start. Check the connection and try again."
+    }
   }
 }

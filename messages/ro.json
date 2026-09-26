@@ -43,13 +43,8 @@
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
     "pastNotice": "Acest eveniment a avut deja loc.",
     "featured": "Evenimentul principal",
-    "featuredCallToAction": "Vezi detaliile cursei",
-    "others": "Alte evenimente",
-    "othersCount": "Toate evenimentele ({count})",
-    "othersCountFiltered": "Evenimentele alese ({count})",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
     "pastCountFiltered": "Din trecut, după filtre ({count})",
-    "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
       "label": "Filtrele evenimentelor",
       "button": "Filtre",
@@ -275,11 +270,12 @@
       "opensSoon": "Înscrierile se deschid în curând.",
       "opensSoonShort": "Înscrierile se deschid în curând",
       "openUntilShort": "Înscrieri deschise până {date}",
-      "freeOf": {
-        "one": "{count} loc liber din {places}",
-        "few": "{count} locuri libere din {places}",
-        "other": "{count} de locuri libere din {places}"
+      "freeCount": {
+        "one": "{count} loc liber",
+        "few": "{count} locuri libere",
+        "other": "{count} de locuri libere"
       },
+      "freeOfCard": "{free} din {places}",
       "cardWaitlist": "Lista de așteptare",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
@@ -935,7 +931,9 @@
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
       "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva.",
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
-      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate."
+      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate.",
+      "translationBudgetTitle": "Salvezi bugetul de traduceri?",
+      "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -2379,6 +2377,17 @@
             "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
             "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”."
           ]
+        },
+        "translation": {
+          "title": "Traducerea automată din română (DeepL, gratuit)",
+          "todo": "Construit: lângă fiecare câmp în engleză din editoare apare „Tradu din română”, iar sus „Tradu tot din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci câmpurile în engleză se scriu de mână, ca acum.",
+          "done": "Traducerea automată e pornită: editoarele au butoanele „Tradu din română”.",
+          "how": [
+            "Fă-ți un cont DeepL API Free (pagina „DeepL API” de pe site-ul DeepL → planul Free): 500.000 de caractere pe lună, gratuit. DeepL poate cere un card doar pentru verificare; planul Free nu se taxează.",
+            "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
+            "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
+            "Deschide un eveniment: sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+          ]
         }
       },
       "freeVerdict": {
@@ -2579,6 +2588,24 @@
       },
       "budgetThresholds": {
         "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
+      },
+      "translationBudget": {
+        "title": "Traducerea automată (DeepL)",
+        "intro": "Butoanele „Tradu din română” și „Tradu tot din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "inForce": {
+          "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
+          "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
+        },
+        "today": "Azi s-au trimis {used} din {budget} caractere.",
+        "configured": "Cheia DeepL e pusă pe acest server: butoanele apar pentru Redactor, Organizator și Administrator.",
+        "notConfigured": "Cheia DeepL nu e pusă pe acest server: butoanele nu apar (vezi rândul din Sarcini).",
+        "privacy": "Pleacă la DeepL (UE) doar textele clubului din câmpurile de conținut — niciodată datele unui participant și niciodată textele legale. Nota de confidențialitate nu se schimbă.",
+        "updatedAt": "Ultima schimbare: {when}.",
+        "readOnly": "Doar un Administrator poate schimba bugetul.",
+        "field": "Caractere pe zi",
+        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
+        "save": "Salvează bugetul",
+        "saving": "Se salvează…"
       }
     },
     "clubTodo": {
@@ -4639,6 +4666,7 @@
     "birthDate": "Data nașterii",
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
+    "birthDateEcho": "{date} · {age} în ziua evenimentului",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumOnly": "Vârsta minimă: {age}.",
@@ -4653,7 +4681,7 @@
     "sexHelp": "Pentru clasamentele pe categorii; poți alege „Prefer să nu spun”.",
     "nationality": "Cetățenie",
     "city": "Oraș",
-    "originHelp": "Opțional. Ne arată de unde vin participanții evenimentelor clubului.",
+    "originHelp": "Ne arată de unde vin participanții evenimentelor clubului.",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
@@ -4662,6 +4690,12 @@
     },
     "phone": "Telefon",
     "phoneCountry": "Țara",
+    "countrySearch": {
+      "search": "Caută țara (nume, cod sau prefix)",
+      "noMatch": "Nicio țară nu se potrivește",
+      "open": "Deschide lista țărilor",
+      "close": "Închide lista țărilor"
+    },
     "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",
@@ -4767,7 +4801,6 @@
     },
     "disclosure": {
       "race": "Membru {club}, club și tricou — opțional",
-      "origin": "Orașul tău — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"
@@ -4917,6 +4950,35 @@
         "PASSPORT": "Pașaport",
         "RESIDENCE_PERMIT": "Permis de ședere",
         "OTHER": "Alt act"
+      },
+      "family": {
+        "stepsLabel": "Declarațiile de pe această adresă",
+        "stepTitle": "Declarația {step} din {total} — {name}",
+        "intro": "Pe această adresă sunt mai multe persoane înscrise la eveniment. Declarațiile se semnează aici, pe rând: câte o persoană la fiecare pas, fiecare cu numele și actul ei (pentru un minor, părintele). După fiecare semnătură pagina trece la următoarea persoană, iar fiecare primește pe email confirmarea și PDF-ul declarației ei.",
+        "lastSigned": "Declarația pentru {name} a fost semnată. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
+        "lastWaitlisted": "Locul pentru {name} nu mai era disponibil: {name} este acum pe lista de așteptare.",
+        "doneTitle": "Declarațiile de pe această adresă",
+        "doneAll": "Nu mai rămâne nicio declarație de semnat pe această adresă. Fiecare persoană confirmată primește pe email confirmarea ei, cu codul QR și PDF-ul declarației.",
+        "state": {
+          "signed": "semnată",
+          "waitlisted": "pe lista de așteptare",
+          "current": "acum",
+          "next": "urmează",
+          "closed": "nu mai așteaptă semnătura",
+          "later": "mai târziu"
+        },
+        "nextAction": "Semnează și treci la următoarea",
+        "skipAction": "Semnez mai târziu",
+        "skipHelp": "Nimic nu se schimbă la înscrierea acestei persoane: declarația ei se poate semna și din linkul primit pe email pentru ea, până la termen.",
+        "doneLater": "O declarație lăsată pentru mai târziu se semnează din linkul primit pe email pentru acea persoană, până la termen.",
+        "doneAction": "Gata",
+        "ownLinksStillWork": "Pe această adresă mai sunt declarații de semnat la acest eveniment: fiecare persoană o poate semna din linkul primit pe email pentru ea.",
+        "what": {
+          "confirmed": "Confirmat. Codul pentru masa de înscrieri: {code}. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
+          "waitlisted": "Pe lista de așteptare: primește un email dacă se eliberează un loc.",
+          "later": "Mai târziu: semnează din linkul primit pe email pentru această persoană.",
+          "closed": "Nu mai așteaptă semnătura."
+        }
       }
     },
     "list": {
@@ -4974,7 +5036,11 @@
       "eventCancelledChip": "Eveniment anulat",
       "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
       "runner": "Înscris: {name}",
-      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
+      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei.",
+      "familySign": {
+        "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
+        "action": "Semnează declarațiile"
+      }
     },
     "manage": {
       "title": "Gestionează înscrierea",
@@ -5047,6 +5113,13 @@
       "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email. Linkul rămâne valabil dacă se eliberează un loc pe adresă.",
       "fitnessMissing": "Bifează mai întâi că persoana își declară singură, la semnare, starea de sănătate.",
       "refused": "Nu am putut înscrie persoana cu datele trimise (de exemplu, termenii s-au schimbat între timp sau vârsta nu este permisă). Trimite din nou formularul de înscriere; linkul acesta nu s-a folosit.",
+      "decline": "Nu înscriu această persoană",
+      "declinePending": "Se șterge…",
+      "declineTitle": "Nu înscrii această persoană?",
+      "declineIntro": "Formularul de înscriere la {event} a fost trimis din nou de pe adresa {email}, pentru persoana de mai jos. Dacă nu vrei să o înscrii, apasă butonul: datele trimise pentru ea se șterg acum, nu se înscrie nimeni, iar linkul din email nu se mai poate folosi.",
+      "declineBack": "Vreau totuși să o înscriu",
+      "declinedTitle": "Persoana nu a fost înscrisă",
+      "declined": "Gata — nu am înscris pe nimeni; datele trimise au fost șterse.",
       "people": {
         "one": "o persoană",
         "few": "{count} persoane",
@@ -5449,6 +5522,7 @@
     "temperature": "{degrees} °C",
     "rain": "{percent}% șanse de ploaie",
     "rainLikely": "ploaie probabilă",
+    "rainLikelyChance": "ploaie probabilă {percent} %",
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
@@ -5458,12 +5532,7 @@
     "humidity": "umiditate {percent}%",
     "uv": "indice UV {index}",
     "rainShort": "{percent}% ploaie",
-    "hours": "Pe ore, de la start",
     "atStart": "Vremea la start",
-    "place": {
-      "event": "Pentru locul evenimentului",
-      "club": "Pentru {place}"
-    },
     "codes": {
       "clear": "Senin",
       "mainlyClear": "Predominant senin",
@@ -5488,7 +5557,9 @@
       "contactSent": "Mesaj trimis clubului.",
       "unregistered": "Gata: înscrierea ta e anulată.",
       "declarationConfirmed": "Declarație semnată: înscrierea ta e confirmată.",
-      "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare."
+      "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare.",
+      "familySignNothingLeft": "Nu mai este nicio declarație de semnat la acest eveniment: lista de mai jos arată unde este fiecare înscriere.",
+      "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană."
     },
     "toast": {
       "saved": "Salvat.",
@@ -5699,7 +5770,8 @@
       "teamMemberDeleted": "Cardul a fost șters.",
       "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
       "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
-      "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site."
+      "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site.",
+      "translationBudget": "Bugetul de traduceri a fost salvat."
     }
   },
   "Network": {
@@ -5844,5 +5916,34 @@
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
     "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
+  },
+  "Translate": {
+    "button": "Tradu din română",
+    "pending": "Se traduce…",
+    "all": "Tradu tot din română",
+    "allHelp": "Înlocuiește fiecare câmp în engleză care are text în română cu traducerea lui, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
+    "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
+    "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
+    "cut": "Scurtat la limita câmpului, verifică finalul: {fields}.",
+    "confirm": {
+      "title": "Înlocuiești textul în engleză?",
+      "body": "Câmpul în engleză are deja text. Traducerea din română îl înlocuiește; nimic nu se salvează până nu apeși Salvează.",
+      "allTitle": "Traduci totul din română?",
+      "allBody": "Se înlocuiesc {count} câmpuri în engleză cu traducerea celor în română, cu aceeași așezare (titluri, liste, tabele, poze, linkuri). Nimic nu se salvează până nu apeși Salvează. Câmpurile: {fields}",
+      "go": "Tradu",
+      "cancel": "Renunță"
+    },
+    "refusal": {
+      "forbidden": "Rolul tău nu poate folosi traducerea automată.",
+      "notConfigured": "Traducerea automată nu e configurată pe acest server (lipsește cheia DeepL).",
+      "invalid": "Câmpul acesta nu se poate traduce automat.",
+      "nothing": "Câmpul în română e gol: nu e nimic de tradus.",
+      "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
+      "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
+      "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",
+      "refused": "DeepL a refuzat cheia. Un Administrator trebuie să verifice DEEPL_API_KEY (Sarcini).",
+      "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",
+      "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă."
+    }
   }
 }

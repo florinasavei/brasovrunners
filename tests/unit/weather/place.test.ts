@@ -10,7 +10,7 @@ import {
   typedCoordinates,
 } from "@/modules/weather/domain/place";
 import { placeKey, placesReadWithinHour, readClubForecast, readForecast } from "@/modules/weather/source";
-import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
+import { weatherListWords, weatherWords } from "@/modules/weather/words";
 import { eventFieldsSchema } from "@/modules/content/events/fields";
 
 /**
@@ -247,12 +247,8 @@ describe("§416 the details, in words, in both languages", () => {
     expect(weatherWords({ ...reading, temperatureC: null, precipitationProbability: null }, "en")).toMatchObject({ temperature: null, rainShort: null });
   });
 
-  it("says which place the forecast is for, and names the block and the card's pill", () => {
-    expect(forecastPlaceWords("map", "ro")).toBe("Pentru locul evenimentului");
-    expect(forecastPlaceWords("typed", "en")).toBe("For the event's place");
-    expect(forecastPlaceWords("club", "ro")).toBe("Pentru Brașov");
-    expect(forecastPlaceWords("club", "en")).toBe("For Brașov");
-    expect(weatherListWords("ro")).toEqual({ hours: "Pe ore, de la start", atStart: "Vremea la start", credit: "Prognoză: Open-Meteo" });
-    expect(weatherListWords("en")).toEqual({ hours: "Hour by hour, from the start", atStart: "Weather at the start", credit: "Forecast: Open-Meteo" });
+  it("names the card's pill and the footer's credit", () => {
+    expect(weatherListWords("ro")).toEqual({ atStart: "Vremea la start", credit: "Prognoză: Open-Meteo" });
+    expect(weatherListWords("en")).toEqual({ atStart: "Weather at the start", credit: "Forecast: Open-Meteo" });
   });
 });
