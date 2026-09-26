@@ -15,7 +15,11 @@ import { signIn } from "./support/featured-event";
  * else, and it is its own fixture — created here, published, never shared with another spec.
  */
 
-/** A poster: a flat field and lettering, 3600 pixels wide — above «Normală»'s 2400. */
+/**
+ * A poster: a flat field and lettering. The picture is 2700 pixels wide — above «Medie»'s 2400 and
+ * wide enough to keep the 2400 rung (under 0.9 of the master) — and the film's is 1280: light enough
+ * to encode and fetch on the mobile shard as well as the desktop one (§NNN).
+ */
 async function poster(width: number, height: number): Promise<Buffer> {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
     <rect width="${width}" height="${height}" fill="#0b3d91"/>
@@ -42,9 +46,6 @@ function candidates(srcset: string): { url: string; width: number }[] {
 test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four levels §437)", () => {
   test("a picture and a film's poster go up at «Înaltă», say what they became, and the page offers their widths", async ({ page, browser }) => {
     test.setTimeout(180_000);
-    // The quality rules do not depend on the viewport, and the 3600-pixel upload plus the film run past the
-    // budget on a shared mobile shard (the V2.04 release run, twice): desktop only, like the newsletter spec.
-    test.skip(test.info().project.name !== "desktop", "the quality pipeline is viewport-independent; the mobile shard runs out of time");
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `afis-${suffix}`;
 
@@ -72,16 +73,16 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     await expect(bar).toContainText("1280 px");
     await expect(bar).toContainText("până la 6000 px");
     await bar.getByRole("radio", { name: "Mare", exact: true }).check();
-    await chooseFile(page, () => bar.getByRole("button", { name: "Alege imaginea" }).click(), "afis.png", await poster(3600, 2400));
+    await chooseFile(page, () => bar.getByRole("button", { name: "Alege imaginea" }).click(), "afis.png", await poster(2700, 1800));
     await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 30_000 });
-    // 3600 pixels kept, not 2400: «Înaltă» is more pixels, not only another encoder.
-    await expect(roEditor.getByTestId("rich-text-image-stored")).toContainText("3600 × 2400 px, calitate mare", { timeout: 30_000 });
+    // 2700 pixels kept, not 2400: «Înaltă» is more pixels, not only another encoder.
+    await expect(roEditor.getByTestId("rich-text-image-stored")).toContainText("2700 × 1800 px, calitate mare", { timeout: 30_000 });
     // What was chosen, said as soon as it was read (§437): sent as it is at «Mare», so no second sentence.
-    await expect(roEditor.getByTestId("rich-text-image-chosen")).toHaveText(/^Fișierul ales: afis\.png, 3600 × 2400 px, \d+(,\d)? (KB|MB)\.$/);
+    await expect(roEditor.getByTestId("rich-text-image-chosen")).toHaveText(/^Fișierul ales: afis\.png, 2700 × 1800 px, \d+(,\d)? (KB|MB)\.$/);
     // The picture's own panel opened on it (§73); say what it shows and close it.
     const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
     // The selected picture's stored size, in its panel (§437).
-    await expect(pictureWords.getByTestId("rich-text-image-pixels")).toHaveText("Imaginea stocată: 3600 × 2400 px.");
+    await expect(pictureWords.getByTestId("rich-text-image-pixels")).toHaveText("Imaginea stocată: 2700 × 1800 px.");
     await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill("Afișul crosului");
     await pictureWords.getByRole("button", { name: "Gata" }).click();
 
@@ -91,13 +92,15 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     await roEditor.getByRole("button", { name: "Adaugă filmul" }).click();
     const film = roEditor.locator('[data-youtube="dQw4w9WgXcQ"]');
     await expect(film).toBeVisible();
-    await film.click();
     const filmPanel = page.getByTestId("rich-text-youtube-panel");
+    // The panel opens on the film it just inserted; on a 320-pixel phone it covers the film, so
+    // it is clicked only when the panel is not already there.
+    await filmPanel.waitFor({ timeout: 5_000 }).catch(() => film.click());
     await expect(filmPanel).toBeVisible();
     await expect(filmPanel.getByRole("radio", { name: "Mare", exact: true })).toBeChecked();
-    await chooseFile(page, () => filmPanel.getByRole("button", { name: "Alege un thumbnail" }).click(), "poster.png", await poster(1920, 1080));
-    await expect(filmPanel.getByTestId("rich-text-poster-stored")).toContainText("1920 × 1080 px, calitate mare", { timeout: 30_000 });
-    await expect(filmPanel.getByTestId("rich-text-poster-chosen")).toContainText("Fișierul ales: poster.png, 1920 × 1080 px");
+    await chooseFile(page, () => filmPanel.getByRole("button", { name: "Alege un thumbnail" }).click(), "poster.png", await poster(1280, 720));
+    await expect(filmPanel.getByTestId("rich-text-poster-stored")).toContainText("1280 × 720 px, calitate mare", { timeout: 30_000 });
+    await expect(filmPanel.getByTestId("rich-text-poster-chosen")).toContainText("Fișierul ales: poster.png, 1280 × 720 px");
     await expect(film.locator("img")).toHaveAttribute("src", /\/api\/media\/.+\/web\.webp$/);
     await filmPanel.getByRole("button", { name: "Gata" }).click();
 
@@ -116,12 +119,12 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
-    // The page: the picture names its rungs, the 2400 one among them, and then its 3600 master.
+    // The page: the picture names its rungs, the 2400 one among them, and then its 2700 master.
     await page.goto(`/ro/pagini/${slug}`);
     const picture = page.getByRole("img", { name: "Afișul crosului" });
     await expect(picture).toBeVisible();
     const pictureSet = (await picture.getAttribute("srcset")) as string;
-    expect(pictureSet).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 3600w$/);
+    expect(pictureSet).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 2700w$/);
     for (const candidate of candidates(pictureSet)) {
       const answer = await page.request.get(candidate.url);
       expect(answer.status(), candidate.url).toBe(200);
@@ -131,11 +134,11 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     // The poster, before the click: the club's upload, drawn from its ladder like any picture.
     const posterImage = page.getByRole("button", { name: "Redă filmul" }).locator("img");
     const posterSet = (await posterImage.getAttribute("srcset")) as string;
-    expect(posterSet).toMatch(/\/480w\.webp 480w, .*\/1600w\.webp 1600w, \S+\/web\.webp 1920w$/);
+    expect(posterSet).toMatch(/\/480w\.webp 480w, \S+\/640w\.webp 640w, \S+\/960w\.webp 960w, \S+\/web\.webp 1280w$/);
     expect(await posterImage.getAttribute("sizes")).toMatch(/calc\(100vw - 32px\)$/);
 
     // Measured on a 390-pixel phone at 3×: the column is 358 CSS pixels, 1074 physical, and the
-    // browser takes the 1280 rung — not the 3600-pixel master the page names last.
+    // browser takes the 1280 rung — not the 2700-pixel master the page names last.
     const phone = await browser.newContext({
       baseURL: test.info().project.use.baseURL,
       viewport: { width: 390, height: 844 },
