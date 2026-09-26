@@ -7,7 +7,7 @@ import { getStorage, objectKey } from "@/modules/media/storage";
 import { readTeamPageSettings, teamIntroFor } from "./page-settings";
 
 /**
- * Reads for «Echipa» (§NNN), public and backoffice.
+ * Reads for «Echipa» (§459), public and backoffice.
  *
  * The public read names its columns (BR-REQ-070-01), reads only the cards shown on the site, and
  * gives each card the words of the page's own language alone: what the person does and the words

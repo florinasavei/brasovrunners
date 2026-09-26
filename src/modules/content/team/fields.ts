@@ -3,7 +3,7 @@ import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
 
 /**
- * What the club types for one card of «Echipa» (§NNN).
+ * What the club types for one card of «Echipa» (§459).
  *
  * A name, required. What the person does for the club, and a few words about them — each
  * Romanian **and** English, or neither (§352): one side written and the other empty is refused

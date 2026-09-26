@@ -60,7 +60,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  // The Administrator writes the club's legal texts since §NNN (`canWriteLegalTexts`).
+  // The Administrator writes the club's legal texts since §450 (`canWriteLegalTexts`).
   await requireStaffCapability(canWriteLegalTexts);
 
   const { error, from, template } = await searchParams;

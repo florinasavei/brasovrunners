@@ -111,7 +111,7 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
       await expect(details).toContainText("umiditate 72%");
       await expect(details).toContainText("indice UV 3");
 
-      // Where it was read; Open-Meteo is credited in the footer only (§NNN).
+      // Where it was read; Open-Meteo is credited in the footer only (§455).
       const credit = weather.getByTestId("weather-credit");
       await expect(credit).toContainText("Pentru locul evenimentului");
       await expect(credit).not.toContainText("Open-Meteo");

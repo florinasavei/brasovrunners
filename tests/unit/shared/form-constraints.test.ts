@@ -44,7 +44,7 @@ const NOT_A_BOX = new Set([
   "links",
   "locationAddress",
   "locationToBeAnnounced",
-  // «Înscrierile se deschid în curând» (§NNN): a tick in the registration window's card.
+  // «Înscrierile se deschid în curând» (§451): a tick in the registration window's card.
   "registrationOpensSoon",
 ]);
 

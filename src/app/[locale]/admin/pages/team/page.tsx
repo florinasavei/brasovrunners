@@ -47,14 +47,14 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Echipa» in the backoffice (§NNN): every card of the team page, one under the other in the
+ * «Echipa» in the backoffice (§459): every card of the team page, one under the other in the
  * page's own order, each with what it says, whether it is on the site, and its verbs.
  *
  * Read by whoever reads the club's content (§208); every control is offered only to the role its
  * action asserts, and the action asserts it again (BR-REQ-060-01): writing a card is the
  * Redactor's and the Administrator's, showing one on the site the Administrator's alone (§201).
  *
- * The page itself comes first (§NNN): DRAFT until an Administrator publishes it — both languages at
+ * The page itself comes first (§459): DRAFT until an Administrator publishes it — both languages at
  * once, asked first (§384) — and an optional introduction in both languages or neither (§352).
  * While the privacy notice in force does not describe the page (`{{teamPage}}`), a warning says so
  * beside the switch; `/admin/tasks` carries the same row.

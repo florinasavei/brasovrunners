@@ -19,7 +19,7 @@ import AppTheme from "@/theme/AppTheme";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * Every face is a file in the repository, never a download at build (§NNN). `next/font/google`
+ * Every face is a file in the repository, never a download at build (§460). `next/font/google`
  * fetched these from Google on every build without a warm cache, and a runner that could not
  * reach Google failed the build with "cannot resolve …/font/google/font" — nothing wrong with
  * the code, a red pull request all the same, again and again. The files in `src/theme/fonts/`

@@ -19,7 +19,7 @@ import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import { CARD_FRAME_SX, cardCoverSx, cardFrameGeometry } from "@/modules/content/rich-text/ui/image-layout";
 
 /**
- * BR-REQ-041-01, BR-REQ-050-03, `DECISIONS.md` §NNN — every listing card draws its picture in the
+ * BR-REQ-041-01, BR-REQ-050-03, `DECISIONS.md` §454 — every listing card draws its picture in the
  * same 16∶9 frame around a focal point the club picks, and the crop box and the upload offer fixed
  * shapes. The owner, 2026-09-26, of a card whose portrait photograph stood twice as tall as its
  * neighbours': "this card looks different than the others… I need some predefined crops and sizes
@@ -38,7 +38,7 @@ const ratioOf = (crop: ImageCrop, intrinsic: { width: number; height: number }) 
 const inside = (crop: ImageCrop) =>
   crop.x >= 0 && crop.y >= 0 && crop.x + crop.w <= 1.0001 && crop.y + crop.h <= 1.0001;
 
-describe("§NNN the shapes the crop box and the upload offer", () => {
+describe("§454 the shapes the crop box and the upload offer", () => {
   it("draws the largest rectangle of the shape, centred, inside the photograph", () => {
     // 4000 × 3000 at 16∶9 keeps the whole width and 2250 of the 3000 pixels of height.
     expect(presetCrop("16:9", LANDSCAPE)).toEqual({ x: 0, y: 0.125, w: 1, h: 0.75 });
@@ -99,7 +99,7 @@ describe("§NNN the shapes the crop box and the upload offer", () => {
   });
 });
 
-describe("§NNN the listing card's frame", () => {
+describe("§454 the listing card's frame", () => {
   it("is the same 16∶9 on every card, whatever the photograph", () => {
     for (const picture of [LANDSCAPE, PORTRAIT, WIDE]) {
       const frame = frameCrop(null, null, picture);
@@ -157,7 +157,7 @@ describe("§NNN the listing card's frame", () => {
   });
 });
 
-describe("§NNN the focal point in the document", () => {
+describe("§454 the focal point in the document", () => {
   const image = (focus: unknown) => ({
     type: "doc",
     content: [
@@ -187,7 +187,7 @@ describe("§NNN the focal point in the document", () => {
   });
 });
 
-describe("§NNN the card draws the frame, the page does not", () => {
+describe("§454 the card draws the frame, the page does not", () => {
   const doc = {
     type: "doc",
     content: [

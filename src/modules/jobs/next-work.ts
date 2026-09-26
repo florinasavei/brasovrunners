@@ -215,7 +215,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     .innerJoin(events, eq(events.id, registrationInterests.eventId))
     .where(sql`coalesce(${events.registrationClosesAt}, ${events.startsAt}) > ${nowIso}::timestamptz`);
   const interestInstants = interested.flatMap((event) => {
-    // «Se deschid în curând» (§NNN) has no instant to wait for: the save that opens it wakes the job.
+    // «Se deschid în curând» (§451) has no instant to wait for: the save that opens it wakes the job.
     const opensAt = event.registrationOpensSoon === true ? null : (toDate(event.registrationOpensAt) ?? toDate(event.publishedAt));
     const closesAt = toDate(event.registrationClosesAt) ?? toDate(event.startsAt);
     return [opensAt && opensAt > now ? opensAt : null, closesAt && closesAt > now ? closesAt : null];

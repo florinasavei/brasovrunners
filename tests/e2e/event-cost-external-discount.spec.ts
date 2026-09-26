@@ -216,7 +216,7 @@ async function runFeaturedHeroCase(page: Page): Promise<void> {
     // Unlike the event page's own cost row, the hero has no row of its own for the cost: under
     // "Traseu" (route) the «Cu taxă» pill sits among the route's pills, and «Cu taxă, la
     // organizator: …» plus the discount note sit on the route-extras line under them
-    // (`data-fact="route-extras"`, §NNN) — a "Cost" `dt` the way the stacked page has one would
+    // (`data-fact="route-extras"`, §449) — a "Cost" `dt` the way the stacked page has one would
     // never be found here.
     await page.goto("/ro/evenimente");
     const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();

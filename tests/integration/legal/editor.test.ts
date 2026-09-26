@@ -62,7 +62,7 @@ describe("BR-REQ-053-02 legal document editing", () => {
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      // An Organizer: the Administrator writes the club's legal texts since §NNN.
+      // An Organizer: the Administrator writes the club's legal texts since §450.
       .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
   });
@@ -214,9 +214,9 @@ describe("BR-REQ-053-02 legal document editing", () => {
     ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "FORBIDDEN");
   });
 
-  it("lets an Administrator write and approve a version (§NNN)", async () => {
+  it("lets an Administrator write and approve a version (§450)", async () => {
     // The Administrator runs the club, and its legal texts are the club's; they were the
-    // Superadministrator's until §NNN.
+    // Superadministrator's until §450.
     const [administrator] = await db
       .insert(staffUsers)
       .values({ email: "admin@dev.test", displayName: "Administrator", role: "ADMIN" })

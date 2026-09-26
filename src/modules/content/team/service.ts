@@ -10,7 +10,7 @@ import { type TeamMemberFields, teamMemberFieldsSchema } from "./fields";
 import { mediaAssetExists } from "./repository";
 
 /**
- * «Echipa» — the team page's cards (§NNN): add, write, show or hide, move, delete.
+ * «Echipa» — the team page's cards (§459): add, write, show or hide, move, delete.
  *
  * The page is the platform's, like the contact form: its title and its introduction are in the
  * catalogue, and what the club keeps is the list of people. Every write is asserted here, on the

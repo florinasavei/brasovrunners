@@ -23,7 +23,7 @@ export type { EventForecast } from "./domain/forecast";
  *
  * **Why Open-Meteo.** Free, keyless and without an account: nothing to sign up for, no secret on
  * Vercel, no row on the task board, and nothing to rotate. Its data is CC BY 4.0, so the site
- * footer's fold credits it (§NNN; never the event page inline) and the reminder email names the
+ * footer's fold credits it (§455; never the event page inline) and the reminder email names the
  * source in plain text. Its free tier is for
  * non-commercial use under 10 000 calls a day; the club makes about 24 (one an hour, below).
  *

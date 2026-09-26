@@ -443,7 +443,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listStatesDescribed: await noticeDescribesListStates(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
-      // §NNN: the team page's names and photographs, described by the notice in force.
+      // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
@@ -670,7 +670,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         <>
         {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
             which the club must be able to switch off on the day it refuses real people. The
-            Superadministrator's to switch since §NNN; an Administrator reads it. */}
+            Superadministrator's to switch since §450; an Administrator reads it. */}
         <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} mayEdit={canManagePlatform(actor.role)} />
         </>
       )}
@@ -823,7 +823,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
         {/* How often the platform may wake the database for its scheduled work (§334) — the
             throttle the owner asked for, beside the plan that bills each wake. The
-            Superadministrator's since §NNN; an Administrator reads the figures and no form. */}
+            Superadministrator's since §450; an Administrator reads the figures and no form. */}
         <JobCadencePanel
           locale={locale}
           cadence={jobCadence}
@@ -835,7 +835,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {/*
           The database's brakes (§335), beside the plan they are priced against: the compute's size
           ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
-          door as the plan, and a higher `mayEdit` since §NNN — a quota reached suspends the site,
+          door as the plan, and a higher `mayEdit` since §450 — a quota reached suspends the site,
           so writing it is the Superadministrator's; `updateNeonLimits` asserts the role again.
         */}
         {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.

@@ -27,7 +27,7 @@ const SECTIONS = [
   // grid of squares belongs a press away rather than above the next run.
   { segment: "calendar", href: "/calendar" },
   { segment: "gallery", href: "/gallery" },
-  // «Echipa» (§NNN): a page this application ships, like the gallery, so it sits with the
+  // «Echipa» (§459): a page this application ships, like the gallery, so it sits with the
   // sections and not with the club's pages — offered while a card is on the site (`showTeam`).
   { segment: "team", href: "/team" },
   { segment: "contact", href: "/contact" },

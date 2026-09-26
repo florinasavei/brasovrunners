@@ -342,7 +342,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 });
 
-describe("BR-REQ-041-01 the hero's route is the listing card's pills (§NNN), its other rows one line (§169, §356)", () => {
+describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), its other rows one line (§169, §356)", () => {
   it("the featured hero: the card's own pills under «Traseu», the cost's closed-set word among them, the amount in words under them", async () => {
     // The owner, 2026-09-26, of the hero's «Traseu» line above the cards: "astea de sus trebuie
     // sa fie tot pills ca si in cardurile de mai jos".
@@ -377,7 +377,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§NNN), it
     }
   });
 
-  it("with a forecast: the card's weather is its last pill; the hero keeps the same route pills and says the weather in its own «Vremea» row, never as a pill (§NNN, §416, §429)", async () => {
+  it("with a forecast: the card's weather is its last pill; the hero keeps the same route pills and says the weather in its own «Vremea» row, never as a pill (§449, §416, §429)", async () => {
     const reading = {
       hourAt: NOW.getTime(), code: 3, kind: "overcast", glyph: "cloud", temperatureC: 12.4, precipitationProbability: 70, windKmh: 14,
       feelsLikeC: null, precipitationMm: null, gustKmh: null, humidity: null, uvIndex: null,

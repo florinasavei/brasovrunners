@@ -115,7 +115,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: NEWSLETTER_MERGE_FIELD,
     example: inBoth((locale) => newsletterMergeValues(locale).newsletterTopics),
   },
-  // The privacy notice's marker for «Echipa» (§NNN): the page's name, and what `/admin/tasks` reads.
+  // The privacy notice's marker for «Echipa» (§459): the page's name, and what `/admin/tasks` reads.
   {
     token: `{{${TEAM_PAGE_MERGE_FIELD}}}`,
     messageKey: TEAM_PAGE_MERGE_FIELD,

@@ -8,7 +8,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — a date that carries its weekday takes no «pe» in front of it, and the hour inside a
+ * §452 — a date that carries its weekday takes no «pe» in front of it, and the hour inside a
  * sentence takes «la» / «at». The owner, 2026-09-26, on «Înscrierile se deschid pe sâmbătă, 26
  * sept. 2026, 17:00.»: not grammatical. It reads «Înscrierile se deschid sâmbătă, 26 sept. 2026,
  * la 17:00.» One rule in the helper (`src/i18n/dates.ts`) for the hour, and every sentence of both
@@ -49,7 +49,7 @@ const MONTHLY_DAY = "Event.series.monthly";
 /** The placeholders a caller fills with a date from the helper; the hour inside one already has its word. */
 const DATE_PLACEHOLDERS = "date|when|day|until|deadline|due|last|first|end|resumesAt|checked|checkedOn|opens";
 
-describe("§NNN the hour inside a sentence takes «la» / «at»", () => {
+describe("§452 the hour inside a sentence takes «la» / «at»", () => {
   it("writes the owner's sentence the grammatical way", () => {
     const date = formatDay(OPENS, { locale: "ro", timeZone: ZONE, style: "long", withTime: true, position: "inline" });
     expect(date).toBe("sâmbătă, 26 sept. 2026, la 17:00");
@@ -93,7 +93,7 @@ const RANGE_UNTIL_WITHOUT_TIME = new Set<string>([
   "Admin.editor.scope.countRange",
 ]);
 
-describe("§NNN no catalogue sentence puts a preposition before a date the helper wrote", () => {
+describe("§452 no catalogue sentence puts a preposition before a date the helper wrote", () => {
   it("never writes «pe» before a date in Romanian", () => {
     const offending = sentences(ro as unknown as Tree).flatMap(([key, text]) =>
       [...text.matchAll(/(?<![\p{L}])pe \{(\w+)\}/gu)]
@@ -122,7 +122,7 @@ describe("§NNN no catalogue sentence puts a preposition before a date the helpe
   });
 });
 
-describe("§NNN the platform's own sentences in src/ (emails, the PDFs) say no «pe» before a date", () => {
+describe("§452 the platform's own sentences in src/ (emails, the PDFs) say no «pe» before a date", () => {
   const SRC = join(process.cwd(), "src");
   const files = (dir: string): string[] =>
     readdirSync(dir).flatMap((name) => {
@@ -142,7 +142,7 @@ describe("§NNN the platform's own sentences in src/ (emails, the PDFs) say no �
   });
 });
 
-describe("§NNN the other sentences that carry a date, rendered in both languages", () => {
+describe("§452 the other sentences that carry a date, rendered in both languages", () => {
   const date = (locale: "ro" | "en", at: Date) =>
     formatDay(at, { locale, timeZone: ZONE, style: "short", withTime: true, position: "inline" });
   const race = new Date("2026-11-21T07:00:00Z");

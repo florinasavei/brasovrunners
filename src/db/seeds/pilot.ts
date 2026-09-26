@@ -44,7 +44,7 @@ async function seed() {
   await seedSampleLegalDocuments();
 
   /*
-    «Echipa»'s two hidden placeholder cards (§NNN), only into an empty table: the screen and the
+    «Echipa»'s two hidden placeholder cards (§459), only into an empty table: the screen and the
     page can be walked on QA with nobody's real name. Production never reaches this line.
   */
   await seedSampleTeam();

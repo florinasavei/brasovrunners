@@ -59,7 +59,7 @@ export default function RichText({
    */
   pictures?: PictureColumn;
   /**
-   * Every picture in the one 16∶9 frame at its focal point (§NNN) rather than its natural ratio or
+   * Every picture in the one 16∶9 frame at its focal point (§454) rather than its natural ratio or
    * the organizer's crop: always on a listing card, and on the featured hero's summary, which is a
    * card of its own above the listing. The event page never frames.
    */
@@ -303,7 +303,7 @@ function renderBlock(
 }
 
 /**
- * A picture on a listing card or the featured hero (§NNN): the same 16∶9 frame on every card, over
+ * A picture on a listing card or the featured hero (§454): the same 16∶9 frame on every card, over
  * the organizer's crop, centred on the focal point the club picked (`cardFrameGeometry`). On a card
  * the figure's column share and side are overridden by the card's own rules (`CARD_EXCERPT_SX`); on
  * the hero, which is the page's width, they are the organizer's as on the event page, and only the

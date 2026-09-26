@@ -405,7 +405,7 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
   it("refuses every role below the one that may write the club's legal text", async () => {
     /*
       The same gate as `createDraftVersion` — the role that publishes the club's word is the role
-      that unpublishes it — and that is the Administrator since §NNN. An Organizer is refused.
+      that unpublishes it — and that is the Administrator since §450. An Organizer is refused.
     */
     const { first } = await twoApproved("PRIVACY_NOTICE");
 

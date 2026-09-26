@@ -113,7 +113,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   */
   const actor = await requireStaff();
   if (!canReadContent(actor.role)) notFound();
-  // Creating a version is an Administrator's act since §NNN (BR-REQ-053-02); an Organizer and a
+  // Creating a version is an Administrator's act since §450 (BR-REQ-053-02); an Organizer and a
   // Redactor read. Offered here rather than only from an existing version's page, because an
   // environment with no version yet — production, by design — has no such page to start from,
   // and the create route was reachable by typing its address and no other way (found on
@@ -514,7 +514,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                       }),
                     )
                   ) : !mayDestroy ? (
-                    // Withdrawing is the Administrator's, like deleting beside it (§222, §NNN): the
+                    // Withdrawing is the Administrator's, like deleting beside it (§222, §450): the
                     // service asserts it, so a reader is shown no button — and the sentence
                     // below already says what deleting would mean, once.
                     null

@@ -109,7 +109,7 @@ type Props<Row> = {
 };
 
 /**
- * A visible line between two rows (§NNN): MUI's own cell border is the divider lightened
+ * A visible line between two rows (§453): MUI's own cell border is the divider lightened
  * almost to nothing, and a list of events with pills and a series' dates read as one block.
  * The theme's `divider` token, so the dark scheme (§93) gets its own; none under the last row,
  * where the frame's border already is. Each body row says which it wears in

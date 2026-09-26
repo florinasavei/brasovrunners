@@ -13,7 +13,7 @@ import { LINE_GAP } from "./card-layout";
 /**
  * Where the short description is read: the event page and the hero give it the column, a
  * listing card gives it a card's worth of room. The hero is the page's column too, but its
- * pictures are the listing's 16∶9 frame at their focal point (§NNN): it is the first card of the
+ * pictures are the listing's 16∶9 frame at their focal point (§454): it is the first card of the
  * listing, and a portrait poster in it stood as tall as the screen.
  */
 export type ExcerptPlace = "page" | "hero" | "card";
@@ -42,7 +42,7 @@ export const PAGE_EXCERPT_SX = {
  *   of the excerpt would reach into the date and the place beneath it. The card puts every
  *   picture back in the flow.
  *
- * **The shape is one of them again, and this time it is chosen where it is seen (§NNN).** §260
+ * **The shape is one of them again, and this time it is chosen where it is seen (§454).** §260
  * removed the 180-pixel band every card's picture was cut to from the centre — a crop nobody
  * asked for and nobody could see ("practic pe card au o înălțime fixă, ceea ce e cam greșit") —
  * and §275 capped a tall one at 420 pixels instead. A row of cards was then as uneven as its
@@ -92,7 +92,7 @@ export const CARD_EXCERPT_SX = {
   // chosen side — both media queries from `sm` up — are overridden without `!important`.
   "& figure": { width: "100%", my: 1, float: "none", marginLeft: "auto", marginRight: "auto" },
   /*
-    Every picture on a card is the same 16∶9 frame (§NNN), drawn by `RichText`'s card reading
+    Every picture on a card is the same 16∶9 frame (§454), drawn by `RichText`'s card reading
     (`CARD_FRAME_SX`, `cardFrameGeometry`) around the focal point the club picked — which is what
     replaced §275's 420-pixel ceiling: a portrait photograph scaled to the ceiling was still a card
     twice as tall as its neighbours ("this card looks different than the others"). So there is no

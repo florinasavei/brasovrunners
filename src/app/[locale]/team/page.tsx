@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * «Echipa» / "The team" (§NNN): the people who run the club, one card each — a photograph, the
+ * «Echipa» / "The team" (§459): the people who run the club, one card each — a photograph, the
  * name, what they do, a few words, and one link if they want it.
  *
  * A platform page, like the contact form: its address and title are the platform's. The club keeps

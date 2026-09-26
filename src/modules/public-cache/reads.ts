@@ -351,7 +351,7 @@ export async function cachedPublishedPageTranslations(pageId: string) {
 }
 
 /**
- * `readPublicTeamPage`: «Echipa» (§NNN) — the page's state, its introduction and its shown cards,
+ * `readPublicTeamPage`: «Echipa» (§459) — the page's state, its introduction and its shown cards,
  * for the page, the "Echipa" entry in the navigation and the sitemap. Filed under `pages`: it is a
  * standing page and sits in the navigation, and every write to a card or to the page's setting
  * expires that kind (`content/team/service.ts`, `page-settings.ts`).

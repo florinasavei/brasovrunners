@@ -26,11 +26,11 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Echipa»: the team page's cards and the page itself. Who may write one and who may put it on the site, both
+ * §459 — «Echipa»: the team page's cards and the page itself. Who may write one and who may put it on the site, both
  * languages or neither, the page's own language only, the order, the version guard, and the photo
  * counted as a reference by the orphan sweep.
  */
-describe("§NNN the team page's cards", () => {
+describe("§459 the team page's cards", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Partial<Record<StaffRole, StaffUser>> = {};

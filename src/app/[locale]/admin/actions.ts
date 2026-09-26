@@ -284,7 +284,7 @@ function eventFieldsFrom(form: FormData) {
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),
-    // «Înscrierile se deschid în curând» (§NNN): a checkbox, read only when the form carried its
+    // «Înscrierile se deschid în curând» (§451): a checkbox, read only when the form carried its
     // marker — an unticked box posts nothing, and a form without the box must read as "not
     // editing it" rather than as "open", which would open a door the organizer holds shut.
     registrationOpensSoon: form.get("event.registrationOpensSoon.present") === "1" ? form.get("event.registrationOpensSoon") === "on" : undefined,
@@ -1079,7 +1079,7 @@ export async function sendStaffPasswordResetAction(_previous: FormOutcome | null
   try {
     const actor = await requireStaffCapability(canManageStaff);
     // A colleague on the list, and one this actor may manage — never a Superadministrator's
-    // account for an Administrator (§NNN); the provider is asked for the row's own address.
+    // account for an Administrator (§450); the provider is asked for the row's own address.
     const member = await assertMayManageAccount(getDb(), actor, text(form, "email"));
     const result =
       env.STAFF_AUTH_MODE === "provider"
@@ -1106,7 +1106,7 @@ export async function setStaffAccountActiveAction(_previous: FormOutcome | null,
   try {
     const actor = await requireStaffCapability(canManageStaff);
     const active = form.get("active") === "1";
-    // The same question as the password link (§NNN): an Administrator who could switch the
+    // The same question as the password link (§450): an Administrator who could switch the
     // owner's account off could lock the platform's settings away from everybody.
     const member = await assertMayManageAccount(getDb(), actor, text(form, "email"));
     const result =

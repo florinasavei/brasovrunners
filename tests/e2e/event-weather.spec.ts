@@ -39,7 +39,7 @@ test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
     await expect(weather).toContainText("20% șanse de ploaie");
     await expect(weather).toContainText("vânt 11 km/h");
 
-    // The credit the data's licence asks for is the footer fold's alone (§NNN), never the row's.
+    // The credit the data's licence asks for is the footer fold's alone (§455), never the row's.
     await expect(page.locator("#main").getByText("Open-Meteo")).toHaveCount(0);
     const footerCredit = page.getByTestId("footer-weather-credit");
     await page.getByTestId("footer-about-fold").locator("summary").click();

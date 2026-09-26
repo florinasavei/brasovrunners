@@ -135,7 +135,7 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(odd).toMatch(/<option value="" selected="">/);
   });
 
-  it("is read-only below the Superadministrator (§NNN)", async () => {
+  it("is read-only below the Superadministrator (§450)", async () => {
     const html = await render({ locale: "ro", reading: { ok: true, limits: LIMITS }, appEnv: "qa", mayEdit: false });
     expect(html).not.toContain("<form");
     expect(text(html)).toContain("Limitele le schimbă Superadministratorul");

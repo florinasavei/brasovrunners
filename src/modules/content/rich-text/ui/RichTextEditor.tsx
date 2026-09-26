@@ -201,7 +201,7 @@ function RichTextEditorIsland({
   features?: { media?: boolean; tables?: boolean };
   /**
    * The body is an event's short description, whose pictures every listing card draws in one
-   * 16∶9 frame (§NNN): the picture's panel then shows that frame and offers the card's centre.
+   * 16∶9 frame (§454): the picture's panel then shows that frame and offers the card's centre.
    */
   cardPictures?: boolean;
   /** Translated control names. Passed in, because a client island cannot read the catalogue. */
@@ -268,12 +268,12 @@ function RichTextEditorIsland({
     imageCropReset: string;
     imageCropPosition: string;
     /**
-     * The shapes, the card's centre and its preview (§NNN), in the crop box's own shape; the
+     * The shapes, the card's centre and its preview (§454), in the crop box's own shape; the
      * upload bar's shape choice (`imageUploadShapeHelp`) reuses the shapes' names.
      */
     imageShapes: Omit<ImageCropLabels, "title" | "help" | "reset" | "position">;
     imageUploadShapeHelp: string;
-    /** After the stored facts, the shape the upload went in with (§NNN); raw, `{shape}` substituted here. */
+    /** After the stored facts, the shape the upload went in with (§454); raw, `{shape}` substituted here. */
     imageUploadCropped: string;
     imageRemove: string;
     imageDone: string;
@@ -328,10 +328,10 @@ function RichTextEditorIsland({
   const [imageBarOpen, setImageBarOpen] = useState(false);
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
-  /** The shape the last upload went in with, said after its stored facts (§NNN). */
+  /** The shape the last upload went in with, said after its stored facts (§454). */
   const [storedShape, setStoredShape] = useState<CropPreset>("free");
   /**
-   * The shape a new upload starts in (§NNN): «Liber», the whole photograph as before, or one of
+   * The shape a new upload starts in (§454): «Liber», the whole photograph as before, or one of
    * the presets, stored as §241's crop and changeable afterwards in the picture's panel. Mirrored
    * in a ref, because a paste or a drop calls the `insertImage` Tiptap kept from the first render.
    */
@@ -499,7 +499,7 @@ function RichTextEditorIsland({
              * `renderHTML` below turns them into the window the page uses.
              */
             crop: { default: null, renderHTML: () => ({}) },
-            /** The listing card's centre (§NNN): drawn by the card alone, never by this editor. */
+            /** The listing card's centre (§454): drawn by the card alone, never by this editor. */
             focus: { default: null, renderHTML: () => ({}) },
           };
         },
@@ -587,7 +587,7 @@ function RichTextEditorIsland({
     try {
       const uploaded = await uploadPicture(file, setChosen);
       setStored(uploaded.stored ?? null);
-      // The shape chosen in the bar, as a crop of the stored photograph (§NNN); «Liber» is none.
+      // The shape chosen in the bar, as a crop of the stored photograph (§454); «Liber» is none.
       const shape = uploadShapeRef.current;
       const crop = shape === "free" ? null : presetCrop(shape, { width: uploaded.width, height: uploaded.height });
       setStoredShape(crop ? shape : "free");
@@ -986,7 +986,7 @@ function RichTextEditorIsland({
             data-testid="rich-text-image-bar"
           >
             <ImageQualityChoice value={imageQuality} onChange={setImageQuality} labels={labels.imageQuality} />
-            {/* The shape it goes in with (§NNN): a crop of the stored photograph, never its pixels. */}
+            {/* The shape it goes in with (§454): a crop of the stored photograph, never its pixels. */}
             <Box data-testid="rich-text-upload-shape">
               <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 600, mb: 0.5 }}>
                 {labels.imageShapes.presets}
@@ -1036,7 +1036,7 @@ function RichTextEditorIsland({
         {imageState === "idle" && stored && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-stored">
             {describeStoredImage(stored, labels.imageStored, document.documentElement.lang || "ro")}
-            {/* The file is the whole photograph; the shape is a crop over it, and the line says so (§NNN). */}
+            {/* The file is the whole photograph; the shape is a crop over it, and the line says so (§454). */}
             {storedShape !== "free" && ` · ${labels.imageUploadCropped.replace("{shape}", labels.imageShapes.preset[storedShape])}`}
           </Typography>
         )}

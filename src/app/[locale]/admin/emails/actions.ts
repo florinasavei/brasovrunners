@@ -133,7 +133,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
     const actor = await requireStaffCapability(canManageClubSettings);
     await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc") }, new Date());
   } catch (error) {
-    // Which entry is not an address, or which list is too long, in the sentence (§NNN).
+    // Which entry is not an address, or which list is too long, in the sentence (§457).
     const outcome = refused(error, form);
     if (outcome.error !== "VALIDATION_ERROR") return outcome;
     return { ...outcome, ...addressListRefusal([list("to"), list("cc"), list("bcc")], CONTACT_RECIPIENTS_MAX) };
@@ -210,7 +210,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
     /*
       "Declarațiile semnate merg la" holds one address (§244). Two typed there were refused as one
       invalid entry, which reads as a typo; the refusal says instead that the box takes one and
-      where the others go (§NNN). Asked after the role, so nobody else learns anything from it.
+      where the others go (§457). Asked after the role, so nobody else learns anything from it.
     */
     if (list("declarationsTo").length > 1) {
       return { error: "ONE_ADDRESS_ONLY", fields: ["declarationsTo"], values: keptValuesOf(form) };
@@ -231,7 +231,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
     );
   } catch (error) {
     /*
-      The refusal names the boxes and says why (§NNN): the service's list paths mapped to the
+      The refusal names the boxes and says why (§457): the service's list paths mapped to the
       form's names, and the entries that are not addresses — or the list over the ceiling — in
       the sentence. The owner met "Verifică datele introduse" linking to nothing, and a Bcc that
       would not save.

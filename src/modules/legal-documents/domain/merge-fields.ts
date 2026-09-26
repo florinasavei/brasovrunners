@@ -137,7 +137,7 @@ export function dropsParagraph(paragraph: string, values: MergeValues): boolean 
 export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
 
 /**
- * The privacy notice's marker for «Echipa» (§NNN): the team page shows staff and volunteers' names
+ * The privacy notice's marker for «Echipa» (§459): the team page shows staff and volunteers' names
  * and photographs, which is personal data, so the notice says so. Filled with the page's name in
  * the reader's language, quoted, from the catalogue the page reads (`content/team/notice-words.ts`);
  * and `/admin/tasks` and `/admin/pages/team` ask whether the notice in force names it
@@ -326,7 +326,7 @@ export function describesNewsletter(body: unknown): boolean {
   return mergeFieldsIn(body).has(NEWSLETTER_MERGE_FIELD);
 }
 
-/** Whether a privacy notice describes the team page (§NNN): it names `{{teamPage}}`. Pure. */
+/** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */
 export function describesTeamPage(body: unknown): boolean {
   return mergeFieldsIn(body).has(TEAM_PAGE_MERGE_FIELD);
 }

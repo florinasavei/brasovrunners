@@ -159,7 +159,7 @@ export const SURFACE_GRADIENT = {
  * unbranded site and an unreadable one.
  *
  * Both currently resolve to Roboto, which the locale layout loads through `next/font/local` from
- * `src/theme/fonts/` — never from Google at build (§NNN) — one WOFF2 per weight carrying the
+ * `src/theme/fonts/` — never from Google at build (§460) — one WOFF2 per weight carrying the
  * `latin-ext` characters, required for ș, ț, ă, â and î. When the club font arrives:
  *
  *   1. put the files in `src/theme/fonts/` (WOFF2; convert OTF/TTF first),

@@ -229,7 +229,7 @@ function signedEntry(
   audience: DeclarationAudience,
 ): DeclarationEntry | undefined {
   if (!event) return undefined;
-  // Inside a sentence ("Semnat electronic sâmbătă, …, la 17:00", §NNN) and under the "Data" label, where it
+  // Inside a sentence ("Semnat electronic sâmbătă, …, la 17:00", §452) and under the "Data" label, where it
   // starts the value and takes a capital (§349) — both in the declaration's language.
   const when = formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const whenStart = formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true });

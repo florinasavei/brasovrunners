@@ -142,7 +142,7 @@ export function cropImageCss(geometry: CropGeometry): string {
 }
 
 /**
- * A picture on a listing card (§NNN): every one in the same 16∶9 frame, so a row of cards is one
+ * A picture on a listing card (§454): every one in the same 16∶9 frame, so a row of cards is one
  * height whatever was uploaded — the owner, 2026-09-26: "this card looks different than the
  * others". It reverses §275's "a picture on a card has no crop": a portrait photograph scaled to a
  * 420-pixel ceiling was still a card twice as tall as its neighbours. What made §275 refuse a band

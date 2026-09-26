@@ -231,7 +231,7 @@ export type AuditAction =
    */
   | "legal_document.deleted"
   /**
-   * «Echipa» (§NNN): a card added, written, shown or taken off, moved, or deleted, and the page
+   * «Echipa» (§459): a card added, written, shown or taken off, moved, or deleted, and the page
    * published, taken off or its introduction saved. The card's id, never its words or the
    * person's name (§12.12): the row says who put a person's photograph on the site, and when.
    */

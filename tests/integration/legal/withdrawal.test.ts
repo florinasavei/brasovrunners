@@ -63,7 +63,7 @@ describe("BR-REQ-053-02 legal document withdrawal", () => {
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      // An Organizer: the Administrator writes the club's legal texts since §NNN.
+      // An Organizer: the Administrator writes the club's legal texts since §450.
       .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
   });

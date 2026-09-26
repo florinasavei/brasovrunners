@@ -87,7 +87,7 @@ export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], b
  * what people type, and the empty entries a trailing separator leaves are dropped rather than
  * rejected, as `env.ts`'s `allowlist` drops them.
  *
- * **Spaces and line breaks separate too (§NNN).** An address can never hold whitespace — the
+ * **Spaces and line breaks separate too (§457).** An address can never hold whitespace — the
  * canonicalizer refuses it (`FORBIDDEN` in `canonical-email.ts`) — so "a@x.ro b@y.ro" and one
  * address per line can only mean two addresses. Read as one entry, they were refused as "not a
  * valid email", and the owner's hidden copies would not save ("nu pot salva aparent").
@@ -100,7 +100,7 @@ export function parseAddressList(value: string): string[] {
 }
 
 /**
- * The typed entries no address list will accept, each once, in the order typed (§NNN) — so a
+ * The typed entries no address list will accept, each once, in the order typed (§457) — so a
  * refused save can say *which* entry, not only that "something is not valid". The same test the
  * lists' own schemas apply (the canonicalizer, and §164's 320-character ceiling), so the words
  * cannot name an entry the save would have kept, or miss one it refused.
@@ -116,7 +116,7 @@ export function invalidAddresses(entries: readonly string[]): string[] {
 }
 
 /**
- * Why a list of address boxes was refused, in words the summary can print (§NNN): the entries
+ * Why a list of address boxes was refused, in words the summary can print (§457): the entries
  * that are not addresses, or else the list that holds more than `max`. `null` when neither —
  * the refusal was something else, and the generic sentence stands. The codes are `Admin.errors`
  * keys; the values fill their `{addresses}` and `{max}` (`FormOutcome.errorValues`).

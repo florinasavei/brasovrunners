@@ -187,7 +187,7 @@ describe("BR-REQ-051-01 criterion 4 live content is content that is published", 
 });
 
 describe("BR-REQ-060-01 what each role may reach", () => {
-  it("gives the team to the Administrator and everyone above (§NNN)", () => {
+  it("gives the team to the Administrator and everyone above (§450)", () => {
     // The owner: "administrators should manage everything". Staff administration moved down one
     // rung; what a role could grant itself is held by `canAssignRole` and `canManageMember` below.
     expect(canManageStaff("SUPERADMIN")).toBe(true);
@@ -198,7 +198,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canManageStaff("CONTRIBUTOR")).toBe(false);
   });
 
-  it("lets only a Superadministrator make, change or remove a Superadministrator (§NNN)", () => {
+  it("lets only a Superadministrator make, change or remove a Superadministrator (§450)", () => {
     // An Administrator gives every role up to their own, and never the top one — so no
     // Administrator can promote a colleague (or a second account of their own) past themselves.
     expect(assignableRoles("ADMIN")).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]);
@@ -221,7 +221,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     }
   });
 
-  it("gives the club's legal texts to the Administrator (§NNN)", () => {
+  it("gives the club's legal texts to the Administrator (§450)", () => {
     expect(canWriteLegalTexts("SUPERADMIN")).toBe(true);
     expect(canWriteLegalTexts("ADMIN")).toBe(true);
     // The Organizer and the Redactor read the texts (§208) and write none of them.
@@ -231,7 +231,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canWriteLegalTexts("CONTRIBUTOR")).toBe(false);
   });
 
-  it("keeps the platform settings that can stop the service to the Superadministrator (§NNN)", () => {
+  it("keeps the platform settings that can stop the service to the Superadministrator (§450)", () => {
     // "superadministrator is more like administrator + platform configs that can break stuff
     // (throttling, etc)": the one capability that tells the top two roles apart.
     expect(canManagePlatform("SUPERADMIN")).toBe(true);
@@ -244,7 +244,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     // Both halves of it, because it is the conjunction of two powers: deleting club content
     // and destroying participant data. The interesting assertion is the SUPERADMIN one — the
     // temptation is to reserve the most destructive verb to the highest role, and that would be
-    // wrong: SUPERADMIN is defined by the platform's settings (§NNN), not by what destroys club
+    // wrong: SUPERADMIN is defined by the platform's settings (§450), not by what destroys club
     // data, and an Administrator
     // may already erase each of these registrations one at a time. The gate that protects the
     // data is the typed title, the reason and the audit rows, not a rank.
@@ -386,7 +386,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(sections).not.toContain("newsletter");
   });
 
-  it("gives ADMIN every section, the team included (§NNN)", () => {
+  it("gives ADMIN every section, the team included (§450)", () => {
     // The Administrator runs the club; what they cannot do on the team page — make or touch a
     // Superadministrator — is refused per row and in the service, not by hiding the section.
     expect(visibleAdminSections("ADMIN")).toEqual([
@@ -475,7 +475,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
 });
 
 /**
- * BR-REQ-060-01, §NNN — the whole matrix, as data. Every single-role capability `domain/roles.ts`
+ * BR-REQ-060-01, §450 — the whole matrix, as data. Every single-role capability `domain/roles.ts`
  * exports, against every role, written out as the expected answer rather than derived from the
  * ladder: a change to any one cell has to be made here too, on purpose. The first test refuses a
  * capability exported without a row, so the table cannot fall behind the module.

@@ -114,7 +114,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* The club's own pages and «Echipa», the platform's team page (§NNN). */}
+      {/* The club's own pages and «Echipa», the platform's team page (§459). */}
       <PagesSubNav locale={locale} active="pages" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>

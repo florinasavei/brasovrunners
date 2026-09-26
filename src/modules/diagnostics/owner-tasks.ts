@@ -152,7 +152,7 @@ export type OwnerTaskInputs = {
    */
   newsletterDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe «Echipa» (§NNN, `noticeDescribesTeamPage`)?
+   * Does the notice in force, in every language, describe «Echipa» (§459, `noticeDescribesTeamPage`)?
    * The page shows staff and volunteers' names and photographs; the notice has to say so.
    */
   teamPageDescribed: boolean;
@@ -296,7 +296,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   }
 
   /*
-    «Echipa» (§NNN): the team page publishes names and photographs, so the notice in force should
+    «Echipa» (§459): the team page publishes names and photographs, so the notice in force should
     describe it before the page goes up. Open, never blocking — the page is the club's to publish
     and nobody's registration waits on it; it closes by itself once a notice naming `{{teamPage}}`
     takes effect.

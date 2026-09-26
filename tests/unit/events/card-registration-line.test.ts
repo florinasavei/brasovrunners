@@ -84,7 +84,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(closed).toEqual({ lead: "Înscrierile s-au închis", detail: null, bold: false, button: null });
   });
 
-  it("says «soon», bold and with no button, when the opening has no date yet (§NNN)", () => {
+  it("says «soon», bold and with no button, when the opening has no date yet (§451)", () => {
     const ro = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "NOT_YET_OPEN", opensAt: null }));
     expect(ro).toEqual({ lead: "Înscrierile se deschid în curând", detail: null, bold: true, button: null });
     const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "NOT_YET_OPEN", opensAt: null }));

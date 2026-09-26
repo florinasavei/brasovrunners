@@ -107,7 +107,7 @@ export async function updateLegalVersionAction(_previous: FormOutcome | null, fo
   );
 }
 
-/** The three platform texts, with the club's facts, approved in one press (§132). Administrator (§NNN). */
+/** The three platform texts, with the club's facts, approved in one press (§132). Administrator (§450). */
 export async function approvePlatformTemplatesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
@@ -194,7 +194,7 @@ export async function withdrawLegalVersionAction(_previous: FormOutcome | null, 
 /**
  * Delete an approved version outright, number and all (`DECISIONS.md` §151).
  *
- * **Administrator here as well as in the service** (§NNN; it was the Superadministrator's), and the two are not the same
+ * **Administrator here as well as in the service** (§450; it was the Superadministrator's), and the two are not the same
  * assertion: `requireStaffCapability` answers "is this request from somebody with that role", and
  * `assertMayEdit` inside `deleteApprovedVersion` answers "may this actor write the club's legal
  * text" — the second is the one that would still be there if this verb were ever reached from

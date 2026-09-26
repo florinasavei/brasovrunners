@@ -144,7 +144,7 @@ export async function updateBotCheck<T extends Record<string, unknown>>(
   change: { enabled?: boolean; honeypot?: boolean },
   now: Date,
 ): Promise<BotCheckState> {
-  // The Superadministrator's since §NNN: off opens every form to robots, on with a broken key
+  // The Superadministrator's since §450: off opens every form to robots, on with a broken key
   // can refuse every real person — a platform setting, not a club one (`canManagePlatform`).
   if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not switch the anti-bot check`);

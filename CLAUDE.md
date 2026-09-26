@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.03-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.04-2026-09-26 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.03-2026-09-26`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.04-2026-09-26`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -116,11 +116,11 @@ sections and in `CHANGELOG.md`.
   calendar entry each (§117). A repeated event is **one line** on the listing and in the
   backoffice (§113); glyphs on type, surface, difficulty and cost (§112); the calendar picks
   a month or a year (§116); a group run takes no registration and has no programme (§111).
-- The listing: featured event, a «Filtre» button with checkbox groups (§413, replacing §133's chips), a month view (grid from `sm`, agenda on a phone)
+- The listing: featured event (its route as the cards' pills, §449), a «Filtre» button with checkbox groups (§413, replacing §133's chips; quieter and closer to the cards §458), a month view (grid from `sm`, agenda on a phone), every card's picture in one 16∶9 frame around the club's point (§454)
   (§89); Open Graph cards drawn from the event, a square one for Instagram, share links (§90);
   **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
   feed of every published event (§107). Race week: countdown, "come to the desk with the QR"
-  (§76–§79). Gallery on R2, "Galerie" in the nav while an album is published (BR-REQ-054-01, §66).
+  (§76–§79). Gallery on R2, "Galerie" in the nav while an album is published (BR-REQ-054-01, §66); «Echipa», the club's people as cards, in the nav while a card is on the site (§459).
   A place may be **"to be announced"** — withheld in SQL from every public surface and email until
   the switch goes off (§328); **"Linkuri și fișiere"**, up to twelve labelled links per event (a GPX on
   Drive, a PDF, an album) under `#links` (§332).
@@ -155,7 +155,7 @@ sections and in `CHANGELOG.md`.
   before**: for an event further away than its participation window (per event — 0 as the second number means the place never expires before the start (§407) — default asked
   7 days before, due 2 days before), the place is held until the deadline and the declaration —
   the confirmation — is asked at once and again when the window opens; inside the window and
-  on a weekly run, the thirty-minute hold (§104). **Every such deadline is the club's "Termene" setting** on `/admin/emails` since `BR-V1.86` (§377; 30 min / 24 h / 48 h by default), the reminder per event or the club's.
+  on a weekly run, the thirty-minute hold (§104). **Every such deadline is the club's "Termene" setting** on `/admin/emails` since `BR-V1.86` (§377, the recommended values and the one-press fill §456; 30 min / 24 h / 48 h by default), the reminder per event or the club's.
 - The lifecycle (audited 2026-09-25, §420: no dead offer after the close, a number only for a confirmed address, every family link live, the desk race refused), one allocator for the click and the job, proven under real concurrency
   (`tests/concurrency/capacity.test.ts`); the 30-minute hold, the waiting list and its
   24-hour offers, self-unregistration, the maintenance job (`AGENTS.md` §10.5–§10.6, §40, §68). Test registrations
@@ -204,7 +204,7 @@ sections and in `CHANGELOG.md`.
 
 **Backoffice**
 
-- Six roles the club can name — Voluntar (the desk only), Redactor (the words), Organizator,
+- Six roles the club can name (the Administrator runs the club, the Superadministrator the platform: §450) — Voluntar (the desk only), Redactor (the words), Organizator,
   Tehnic, Administrator, Superadministrator — asserted on the server (§103, BR-REQ-060-01);
   Zitadel sign-in (§26); `STAFF_AUTH_MODE`: `provider` deployed, `dev-switcher` locally and in
   tests, `disabled` answers 404 to every staff route (`AGENTS.md` §13.1). `/admin/guide` opens the reader's
@@ -323,6 +323,7 @@ sections and in `CHANGELOG.md`.
 - **Hotfix (2026-09-26, `BR-V2.01`):** the registration form's race-rules box sits inside the read button and is required, a live «Mai lipsesc:» list above the send button names every missing thing with a link to it, the read-to-the-end gate re-measures itself, one asterisk on the repeat-email label — the owner's QA morning, 2026-09-26 (§422).
 - **Batch 25 (2026-09-26, `BR-V2.02`):** «Publică» on a draft's own editor in one press, as «Creează și publică» does (§423) · the «Filtre» button and its boxes are small 24-px chips inside their 44-px tap targets (§424) · the registration's page and the export say which terms version was accepted and when; a staff entry says «pe hârtie» (§425) · `yarn ship` judges settled checks, `docs:land` refuses blanks and a fixer's housekeeping, dropped indexes and constraints are contracts, the `next dev` walk runs nightly on qa (§426) · the contact form, self-unregistration and the signed declaration say their outcome in a toast through §384's flash, mounted only where a flow lands (§427) · the night pill says «Noapte» with a crescent, the sunset proven to the minute against reference times (§428) · the card's weather pill sits last among the route pills, with an umbrella when rain is likely (§429) · an Administrator button gives the pictures uploaded before §414 their ladder, in batches, idempotent (§430) · the register form’s round-two follow-ups over the hotfix — the «open and read» words only for an event with rules, the no-JavaScript render test.
 - **Batch 26 (2026-09-26, `BR-V2.03`):** chore/ci-e2e-sharded (§431) · citizenship is required on the form, «Română» by default (§432) · the backoffice asks a duration as hours and minutes (§433) · albums outside events and a public gallery page (§434) · a `.com` renewal row on `/admin/tasks` (§435) · a backoffice save blocked by a corporate proxy falls back to a plain form post and says so; `/admin/network` names what IT must allow (§436) · the picture upload offers Minimă / Medie / Mare / Originală and shows the picture's dimensions and weight (§437) · `/admin/tasks` lands on «Club» and gains «De făcut», the club's shared checklist pre-filled with Amalia's and Dani's lists (§438) · every time reads 24-hour in both languages through the one date helper (§439) · the group-run self-declaration has a minimum age (§440) · the backoffice guide rewritten per role as numbered steps with the exact button words (§441) · the contact page shows the club's address(es) by a setting (§442) · every email picks Mailgun or the club's Gmail by a setting per message group, Gmail's daily cap and pace as settings; migration `0088` (§443) · spare bibs for on-the-spot entries: pre-printed numbers from a range reserved for the desk, an empty name line, the desk suggests the next spare (§444) · the newsletter with opt-in topics and new-event alerts: a pop-up on the contact page, double opt-in, a manage/unsubscribe link on every message, a composer on `/admin/emails`, a notice paragraph, migration `0082` (§445) · registering another person on the same address is one confirmation from the inbox — the second form with a different name AND birth date is kept as a pending entry and the email lists the address's registrations with «Confirm că înscriu altă persoană»; migration `0084` (§446) · the compute figures read what Neon meters; a budget governor throttles jobs and public reads as the month runs ahead; a suspended database is served from the saved copy with a banner (§447) · the event's status lives in the editor's first card and the declaration selector under «Regulament» (§448).
+- **Batch 27 (2026-09-26, `BR-V2.04`):** the featured hero's route row is the listing card's pills — surface, difficulty, distance, climb, night, cost — with the amount and the route's links under them (§449) · the Administrator runs the club — the team (every role but the top one), the legal texts, the plans and the club's settings — and the Superadministrator keeps the platform limits and the Superadministrator grant (§450) · «Înscrierile se deschid în curând»: a tick in the registration window keeps registration shut and says "soon" on the page, the card and the calendar, «Anunță-mă» still taking addresses; migration `0089` (§451) · dates read as Romanian is spoken — no «pe» before a weekday-led date, «la» / «at» before the hour inside a sentence (§452) · a visible separator under every backoffice table row, in both schemes (§453) · every listing card shows its picture in one 16∶9 frame around a point the club picks («Centrul pe card»); the crop box and the upload offer fixed shapes — Liber, 16:9, 4:3, 1:1, 4:5 (§454) · Open-Meteo credited once, in the footer (§455) · «Termene» names each deadline's recommended value and sets them all in one confirmed press (§456) · the club's copies (Bcc) on `/admin/emails` save and are shown back, a refused save naming the entry that is not an address (§457) · the filters panel drops its explanatory sentence and sits closer to the cards (§458) · «Echipa» / "The team", a page like Contact with person cards in both languages kept in Pagini → «Pagina Echipa», in the menu only while a card is on the site; migration `0090` (§459) · the four typefaces are the repository's own files through `next/font/local`, nothing fetched from Google at build — the CI shards' font flake is gone (§460) · the contact page always shows the club's address as a mail link beside the form (§461) · Reply-To defaults to the club's own mailbox and the newsletter goes through Mailgun, both as settings (§462).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -336,7 +337,7 @@ sections and in `CHANGELOG.md`.
   project; releases are the `qa → main` PR; the gated migration workflow (§31) and the build
   that waits for it (§62); `/api/health` and `yarn smoke` (§31, §98). Monitors on cron-job.org,
   fifteen minutes by day and hourly at night, because idle compute is billed on Neon Launch (§280).
-  Mailgun live on `mail.<domain>`; `contact@` forwards to the club's Gmail (`SETUP.md` §35).
+  Mailgun live on `mail.<domain>`; `contact@` forwards to the club's Gmail (`SETUP.md` §35); since `BR-V2.04` every email's Reply-To and the address the site shows default to the Gmail in `CONTACT_SMTP_USER` until the club saves «Adresa de contact afișată», and the newsletter group leaves by Mailgun (§462, amending §442 and §443).
 - Guards: token validation keyed on the hash, throttled job endpoints, the resend oracle rule
   (§39, `AGENTS.md` §19.4); the pool's `statement_timeout` and
   `idle_in_transaction_session_timeout` (`docs/PLATFORM.md` § Connections are not the ceiling). The repository is public: `yarn secrets:check` in `yarn check`, GitHub
@@ -379,7 +380,7 @@ it is the authority, this is the summary):
 7. ~~The anti-bot check~~ — done 2026-09-19: the widget `brasovrunners-site`, both keys on
    both Vercel projects, the box shows on the QA form (`SETUP.md` §36). The row turns green
    on each project's next deployment.
-8. **The five legal texts** approved on production — since `BR-V2.00` (§418) from the counsel-reviewed templates, all five in one sitting, BEFORE the race is published — from the platform's templates — **again, since
+8. **The five legal texts** approved on production — since `BR-V2.00` (§418) from the counsel-reviewed templates, all five in one sitting, BEFORE the race is published — from the platform's templates — **again, since Since `BR-V2.04` (§450) an Administrator approves them; the Superadministrator role is no longer needed for it.
    2026-09-24**: the templates now carry the GDPR rewrite (§322–§324), the per-event minimum age
    (§329) and the minor's own signature (§330); the texts in effect say none of it until the club
    approves new versions, and the minor's second signature stays off until it does (§330). Approved

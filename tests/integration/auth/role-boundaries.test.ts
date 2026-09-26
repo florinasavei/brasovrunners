@@ -216,12 +216,12 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
   });
 
   /*
-    §NNN — the owner: "administrators should manage everything; superadministrator is more like
+    §450 — the owner: "administrators should manage everything; superadministrator is more like
     administrator + platform configs that can break stuff". An Administrator runs the team, up to
     their own rank; the Superadministrator's role and a Superadministrator's row stay with the
     Superadministrator, so no Administrator can make one or take one away.
   */
-  describe("an Administrator runs the team, and a Superadministrator's row is a Superadministrator's (§NNN)", () => {
+  describe("an Administrator runs the team, and a Superadministrator's row is a Superadministrator's (§450)", () => {
     let administrator: StaffUser;
 
     beforeEach(async () => {

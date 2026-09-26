@@ -57,7 +57,7 @@ describe("BR-REQ-011-01 registration window defaults", () => {
   });
 });
 
-describe("BR-REQ-011-01 «Înscrierile se deschid în curând» (§NNN)", () => {
+describe("BR-REQ-011-01 «Înscrierile se deschid în curând» (§451)", () => {
   it("keeps an internal window ahead whatever the clock says, until the close", () => {
     const soon = event({ registrationOpensSoon: true });
     expect(registrationState(soon, new Date(PUBLISHED.getTime() + 1000))).toBe("NOT_YET_OPEN");

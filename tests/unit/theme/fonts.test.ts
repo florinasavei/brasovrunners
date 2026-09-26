@@ -4,7 +4,7 @@ import { brotliDecompressSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN (2026-09-26) — every face is a file in the repository; the build never asks Google.
+ * §460 (2026-09-26) — every face is a file in the repository; the build never asks Google.
  *
  * `next/font/google` downloaded Roboto, Inter, Caveat and Nunito at build time, and a runner that
  * could not reach Google failed the build ("cannot resolve …/font/google/font") with nothing
@@ -127,7 +127,7 @@ function cmapHas(cmap: Buffer, codePoint: number): boolean {
 /** The letters a Romanian page cannot do without, and the punctuation the club's texts use. */
 const ROMANIAN = "șțăâîȘȚĂÂÎ„”«»–—€…’";
 
-describe("the fonts are files in the repository, never a download at build (§NNN)", () => {
+describe("the fonts are files in the repository, never a download at build (§460)", () => {
   it("nothing under src/ imports next/font/google or links Google's font service", () => {
     const offenders = sourceFiles().filter((file) =>
       /["']next\/font\/google["']|fonts\.googleapis\.com|fonts\.gstatic\.com/.test(readFileSync(file, "utf8")),

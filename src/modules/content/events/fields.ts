@@ -793,7 +793,7 @@ export const eventFieldsSchema = z
     reminderHoursBefore: optionalWholeNumber({ min: 0, max: EVENT_REMINDER_MAX_HOURS }).optional(),
     registrationOpensAtWallTime: z.string().trim(),
     /**
-     * «Înscrierile se deschid în curând» (§NNN): the event is announced, the opening is not dated.
+     * «Înscrierile se deschid în curând» (§451): the event is announced, the opening is not dated.
      * Optional, and absent means "this caller is not editing it" — the service then writes nothing,
      * the discipline `waitlistCapacity` follows, so no older caller opens a door held shut.
      */

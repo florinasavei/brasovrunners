@@ -44,7 +44,7 @@ const DECISIONS: readonly Decision[] = [
     { value: EMAIL_SAMPLE[locale].eventChecklist, placeholder: "eventChecklist", everywhere: true },
     { value: EMAIL_SAMPLE[locale].holdExpiresAtFormatted, placeholder: "holdExpiresAtFormatted", everywhere: true },
     { value: EMAIL_SAMPLE[locale].signedAtFormatted, placeholder: "signedAtFormatted", everywhere: true },
-    // The two moments as they read before "la" / "at" came before the hour (§NNN).
+    // The two moments as they read before "la" / "at" came before the hour (§452).
     { value: FORMER_BARE_HOUR[locale].hold, placeholder: "holdExpiresAtFormatted", everywhere: true },
     { value: FORMER_BARE_HOUR[locale].signed, placeholder: "signedAtFormatted", everywhere: true },
     { value: EMAIL_SAMPLE[locale].staffRole, placeholder: "staffRole", everywhere: false },

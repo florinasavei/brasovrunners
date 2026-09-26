@@ -3,8 +3,8 @@ import { normalizeTeamText, TEAM_BIO_MAX, teamMemberFieldsSchema } from "@/modul
 import { pairFor } from "@/modules/content/team/repository";
 import { canEditTeamPage, canShowTeamMember, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
-/** §NNN — what a card of «Echipa» accepts, and who may write one or put it on the site. */
-describe("§NNN a team card's fields", () => {
+/** §459 — what a card of «Echipa» accepts, and who may write one or put it on the site. */
+describe("§459 a team card's fields", () => {
   const base = { name: "Mihai Ionescu", roleRo: "", roleEn: "", bioRo: "", bioEn: "", photoAssetId: "" };
   const issuesOf = (value: unknown) => {
     const parsed = teamMemberFieldsSchema.safeParse(value);
@@ -52,7 +52,7 @@ describe("§NNN a team card's fields", () => {
   });
 });
 
-describe("§NNN who writes the cards and who puts them on the site", () => {
+describe("§459 who writes the cards and who puts them on the site", () => {
   it("gives the words to the Redactor and above but not the Organizer, the site to the Administrator", () => {
     const writes = STAFF_ROLES.filter(canEditTeamPage);
     const shows = STAFF_ROLES.filter(canShowTeamMember);

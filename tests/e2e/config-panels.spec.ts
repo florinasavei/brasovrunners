@@ -30,7 +30,7 @@ test.describe("§265 the configuration panels", () => {
     await expect(page).toHaveURL(/panel=botCheck/);
     await expect(main.getByRole("heading", { name: /anti-bot/i })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Cât costă" })).toHaveCount(0);
-    // A platform setting since §NNN: the Administrator reads the state and gets a sentence, no button.
+    // A platform setting since §450: the Administrator reads the state and gets a sentence, no button.
     await expect(main.getByTestId("bot-check-read-only")).toBeVisible();
     await expect(main.getByTestId("honeypot-form")).toHaveCount(0);
     await expect(main.getByTestId("bot-check-form")).toHaveCount(0);
@@ -45,7 +45,7 @@ test.describe("§265 the configuration panels", () => {
     await expect(main.getByRole("navigation").getByRole("link", { name: "Club", exact: true })).toHaveAttribute("aria-current", "page");
   });
 
-  test("the anti-bot switch is the Superadministrator's to press (§NNN)", async ({ page }) => {
+  test("the anti-bot switch is the Superadministrator's to press (§450)", async ({ page }) => {
     await signIn(page, "Dev Superadministrator");
     const main = page.locator("#main");
     await page.goto("/ro/admin/tasks?panel=botCheck");

@@ -4,7 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01, §NNN — what an Administrator and a Superadministrator see on `/admin/staff`.
+ * BR-REQ-060-01, §450 — what an Administrator and a Superadministrator see on `/admin/staff`.
  *
  * The service refuses an Administrator who reaches for a Superadministrator; this is the other
  * half, the page: a Superadministrator's row carries a line saying whose it is and no verb, and
@@ -100,7 +100,7 @@ function roleOptions(tree: ReactElement<Props>[]): string[][] {
 
 const superadminLine = (tree: ReactElement<Props>[]) => tree.filter((element) => element.props["data-testid"] === "staff-superadmin-row");
 
-describe("BR-REQ-060-01 the team page, read by an Administrator (§NNN)", () => {
+describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => {
   let page: Awaited<ReturnType<typeof render>>;
   beforeEach(async () => {
     page = await render("ADMIN");
@@ -131,7 +131,7 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§NNN)", () => 
   });
 });
 
-describe("BR-REQ-060-01 the team page, read by a Superadministrator (§NNN)", () => {
+describe("BR-REQ-060-01 the team page, read by a Superadministrator (§450)", () => {
   let page: Awaited<ReturnType<typeof render>>;
   beforeEach(async () => {
     page = await render("SUPERADMIN");

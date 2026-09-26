@@ -159,7 +159,7 @@ export async function noticeDescribesNewsletter<T extends Record<string, unknown
 }
 
 /**
- * Whether the privacy notice in force describes «Echipa» (§NNN) — in every language, like
+ * Whether the privacy notice in force describes «Echipa» (§459) — in every language, like
  * `noticeDescribesListStates`. For `/admin/tasks` and the team page's backoffice screen.
  */
 export async function noticeDescribesTeamPage<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {

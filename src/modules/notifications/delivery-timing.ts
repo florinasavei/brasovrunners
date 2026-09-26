@@ -51,7 +51,7 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<DeliveryTimingState> {
-  // A platform setting that can hold every message back (§NNN) — no longer tied to who manages
+  // A platform setting that can hold every message back (§450) — no longer tied to who manages
   // the team, which the Administrator does since the same decision.
   if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change when email is sent`);

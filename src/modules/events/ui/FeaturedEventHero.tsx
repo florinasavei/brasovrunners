@@ -83,7 +83,7 @@ export default async function FeaturedEventHero({
             then it says both — "the one we are leading with" and "not an ordinary one". */}
         {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
         {/* The type alone: the surface is the first of the route's pills under «Traseu», as on
-            every listing card (§366, §NNN) — said once, never a chip here and a pill below. */}
+            every listing card (§366, §449) — said once, never a chip here and a pill below. */}
         <EventKindChips type={event.type} surface={null} />
         {/* Held with a partner (§367), as on every listing card. */}
         <PartnerChip event={event} />

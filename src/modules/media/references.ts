@@ -80,7 +80,7 @@ const referencedSomewhere = sql`(
   -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
   -- the same substring check every other body uses.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${names(sql`${events.videoPosterUrl}`)})
-  -- A card of «Echipa» (§NNN): its photo, by id, hidden cards included — a card being prepared
+  -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
   -- is a card somebody is about to show.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})
 )`;

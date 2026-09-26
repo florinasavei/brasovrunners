@@ -54,10 +54,10 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
   /*
     The declaration's Cc and Bcc are kept while nothing sends them: a copy needs an address it is
     *for* (§244, `resolveDeclarationCopies`), and "Nicio adresă" alone read as a Bcc that had not
-    saved (§NNN). Said in words next to the lists, with the addresses.
+    saved (§457). Said in words next to the lists, with the addresses.
   */
   const idleDeclarationCopies = declarations.to === null && declarations.cc.length + declarations.bcc.length > 0;
-  // A list box grows with what it holds, so every address typed into it is in view (§NNN).
+  // A list box grows with what it holds, so every address typed into it is in view (§457).
   const listBox = { multiline: true, minRows: 1, maxRows: 6 } as const;
 
   return (
@@ -65,7 +65,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
       title={t("emails.clubNotices.title")}
       intro={t("emails.clubNotices.intro")}
       /*
-        The closed fold names the mailboxes, not only how many (§NNN; the owner: "trebuie să pot
+        The closed fold names the mailboxes, not only how many (§457; the owner: "trebuie să pot
         vedea pe cine am pus în BCC"): the club's own addresses, read by the roles this panel is
         drawn for (`maySeeQueue`), so the summary may carry them.
       */
@@ -95,7 +95,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           })}
         </Alert>
       )}
-      {/* Every list in force is named, the confirmation notices too, so nothing saved is only in a box (§NNN). */}
+      {/* Every list in force is named, the confirmation notices too, so nothing saved is only in a box (§457). */}
       <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
         {t("emails.clubNotices.confirmationsInForce", {
           to: formatAddressList(notices.confirmations.to) || "—",

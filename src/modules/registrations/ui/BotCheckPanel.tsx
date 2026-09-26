@@ -24,7 +24,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
  * is refusing real people (§216, §205: "trebuie să lăsăm oamenii să se înscrie cu orice preț"),
  * and it is a defence removed — so the panel says which defences remain.
  *
- * **The Superadministrator's since §NNN** (`canManagePlatform`): off, every form is open to
+ * **The Superadministrator's since §450** (`canManagePlatform`): off, every form is open to
  * robots; on with a broken key, it can refuse every real person at once. An Administrator reads
  * the state and the date and gets a sentence instead of the two buttons; `updateBotCheck`
  * asserts the same capability again.
@@ -39,7 +39,7 @@ export default async function BotCheckPanel({
   state: BotCheckState;
   /** Both Turnstile keys on this deployment (§97). Without them there is nothing to run. */
   keysPresent: boolean;
-  /** `canManagePlatform` for the reader; without it the panel reads and offers no form (§NNN). */
+  /** `canManagePlatform` for the reader; without it the panel reads and offers no form (§450). */
   mayEdit: boolean;
 }) {
   const t = await getTranslations("Admin");

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublicTeamPage } from "@/modules/content/team/repository";
 
 /**
- * §NNN — «Echipa» as the server sends it: the menu offers the page only when the header says so
+ * §459 — «Echipa» as the server sends it: the menu offers the page only when the header says so
  * (`showTeam`, which `SiteHeader` sets from a published page with a card on it), the page is a
  * 404 while a DRAFT, a published page with nobody on it answers a sentence and asks not to be
  * indexed, and a page with cards draws them two to a row on a phone, with the person's link.
@@ -55,7 +55,7 @@ async function html(element: ReactElement): Promise<string> {
 const params = Promise.resolve({ locale: "ro" });
 const member = (name: string, link: string | null = null) => ({ id: name, name, role: "Antrenor", bio: null, link, photo: null });
 
-describe("§NNN the team page and its menu entry", () => {
+describe("§459 the team page and its menu entry", () => {
   beforeEach(() => {
     page = { published: false, intro: null, members: [] };
   });

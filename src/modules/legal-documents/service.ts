@@ -57,7 +57,7 @@ import { REGISTRATION_LEGAL_KEYS } from "./domain/keys";
  * to approved text is a new version, which is what versioning is for.
  */
 
-/** The Administrator writes the club's legal text, and everyone above them (§NNN). */
+/** The Administrator writes the club's legal text, and everyone above them (§450). */
 function assertMayEdit(actor: Pick<StaffUser, "role">): void {
   if (!canWriteLegalTexts(actor.role)) {
     throw new DomainError(
@@ -656,7 +656,7 @@ export type DeleteApprovedVersionInput = {
  * **In production as well.** §30 keeps *test registrations* out of production because a
  * synthetic row corrupts the club's real counts; nothing follows from it about the club tidying
  * its own documents, and production is where the five junk versions actually are. A verb that
- * worked only on QA would be a verb that never worked. What guards this is an Administrator (§NNN),
+ * worked only on QA would be a verb that never worked. What guards this is an Administrator (§450),
  * a phrase typed by hand, a reason, an audit row written first, and the impossibility of
  * touching anything a person has relied on.
  *
@@ -676,7 +676,7 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
     The role first, before the screen's own fields are looked at: somebody who may not do this
     is told that, rather than being told their confirmation was mistyped (BR-REQ-060-01).
 
-    `assertMayEdit` — `canWriteLegalTexts`, the Administrator since §NNN — and deliberately the
+    `assertMayEdit` — `canWriteLegalTexts`, the Administrator since §450 — and deliberately the
     same gate as `createDraftVersion`: it is the club's own published word, and the role that
     may write it is the role that may unwrite it. Gating destruction lower than creation would be
     the odd choice to have to defend; what guards it beyond the role is the typed phrase, the
@@ -793,7 +793,7 @@ async function assertDeletable<T extends Record<string, unknown>>(
  * (`DECISIONS.md` §132): what "New version → start from the platform's text → read → save →
  * approve, three times" did, as one press by the person who takes responsibility for them.
  *
- * The same rules as the long way, because it is the long way: an Administrator's act (§NNN)
+ * The same rules as the long way, because it is the long way: an Administrator's act (§450)
  * (`assertMayEdit`), a version number derived and never chosen, the hash computed from what is
  * stored, `effective_at` the moment of approval, the approver on the row. Two refusals of its
  * own: a text whose facts are not all known is not approved — a `<PLACEHOLDER>` on a privacy

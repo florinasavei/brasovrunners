@@ -70,7 +70,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   // matters is in the actions and in `listStaff` below, which assert the role again.
   if (!canManageStaff(actor.role)) notFound();
   /*
-    The roles this reader may give (§NNN): every one for a Superadministrator, every one but the
+    The roles this reader may give (§450): every one for a Superadministrator, every one but the
     Superadministrator for an Administrator. The service refuses the rest whatever a form posts;
     this is so the select never offers a choice that ends in a refusal.
   */
@@ -320,7 +320,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
              removing your own access is refused by the service, and the usual way a club ends
              up locked out is somebody tidying up their own account. */
           member.id === actor.id ? null : !canManageMember(actor.role, member.role) ? (
-            /* A Superadministrator's row, read by an Administrator (§NNN): no verb, and a line that
+            /* A Superadministrator's row, read by an Administrator (§450): no verb, and a line that
                says whose it is — a row with no controls and no reason reads as a broken page. */
             <Typography variant="body2" color="text.secondary" data-testid="staff-superadmin-row">
               {t("staff.superadminRow")}

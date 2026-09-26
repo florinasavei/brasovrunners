@@ -276,7 +276,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
       ["raceStartsAt"],
     );
   }
-  // «Se deschid în curând» says there is no date yet (§NNN): a date beside it is two answers to one
+  // «Se deschid în curând» says there is no date yet (§451): a date beside it is two answers to one
   // question, and the organizer is asked which one they mean rather than one being dropped.
   if (fields.registrationOpensSoon === true && registrationOpensAt) {
     throw new DomainError(
@@ -486,7 +486,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // the select writes nothing, so a save that never mentioned it keeps what the organizer chose.
     ...(fields.reminderHoursBefore === undefined ? {} : { reminderHoursBefore: fields.reminderHoursBefore }),
     registrationOpensAt: times.registrationOpensAt,
-    // «Se deschid în curând» (§NNN), by the partners' discipline: a caller that did not post the
+    // «Se deschid în curând» (§451), by the partners' discipline: a caller that did not post the
     // switch writes nothing, so no script opens a registration the organizer holds shut by not
     // mentioning it. The editor and the create form always post it.
     ...(fields.registrationOpensSoon === undefined ? {} : { registrationOpensSoon: fields.registrationOpensSoon }),
@@ -559,7 +559,7 @@ const INTERNAL_ONLY_FIELDS = {
   waitlistCapacity: null,
   declarationDocumentId: null,
   participantListVisibility: "HIDDEN",
-  // «Se deschid în curând» (§NNN) holds the site's own door shut; there is no such door elsewhere.
+  // «Se deschid în curând» (§451) holds the site's own door shut; there is no such door elsewhere.
   registrationOpensSoon: false,
 } as const;
 const EXTERNAL_ONLY_FIELDS = { externalProvider: null, externalRegistrationUrl: null } as const;
@@ -1630,7 +1630,7 @@ const SERIES_COLUMNS = [
   // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
   "registrationMode",
-  // «Se deschid în curând» (§NNN) travels with the opening date it stands in for, which the
+  // «Se deschid în curând» (§451) travels with the opening date it stands in for, which the
   // series carries as a time column below.
   "registrationOpensSoon",
   "capacity",

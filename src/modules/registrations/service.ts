@@ -94,7 +94,7 @@ export type EventForRegistration = {
   startsAt: Date;
   registrationOpensAt: Date | null;
   /**
-   * «Se deschid în curând» (§NNN): while true nobody registers outside the desk. Every caller that
+   * «Se deschid în curând» (§451): while true nobody registers outside the desk. Every caller that
    * reads the row passes it; absent on a partial row (a fixture) is the column's default, false.
    */
   registrationOpensSoon?: boolean;

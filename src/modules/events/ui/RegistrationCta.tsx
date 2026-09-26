@@ -126,7 +126,7 @@ export default async function RegistrationCta({
           ? t("cta.closedRaceWeek")
           : t("cta.closed")
         : cta.opensAt === null
-          ? // Announced with no date (§NNN): the same big blue line, saying "soon".
+          ? // Announced with no date (§451): the same big blue line, saying "soon".
             t("cta.opensSoon")
           : t("cta.opensOn", {
             // The event's own timezone, like every other time on the page: registration for a

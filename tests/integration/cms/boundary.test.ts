@@ -210,7 +210,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/pages",
       "/admin/pages/[id]",
       "/admin/pages/new",
-      // «Echipa»'s cards (§NNN): one screen, written here by hand.
+      // «Echipa»'s cards (§459): one screen, written here by hand.
       "/admin/pages/team",
       "/admin/registrations",
       "/admin/registrations/[id]",
@@ -250,7 +250,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/registrations/mine/[token]",
       "/registrations/resend",
       "/sign-in",
-      // «Echipa» (§NNN): a platform page like the contact form, never one the CMS makes.
+      // «Echipa» (§459): a platform page like the contact form, never one the CMS makes.
       "/team",
     ]);
   });

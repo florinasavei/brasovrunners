@@ -48,7 +48,7 @@ const ResetGlyph = ACTION_ICONS.reset;
  * underneath says in words where it is and how big — because a control that only answers a
  * pointer is a control a keyboard cannot use (`AGENTS.md` §18).
  *
- * ## Shapes and the card's centre (§NNN)
+ * ## Shapes and the card's centre (§454)
  *
  * The owner, 2026-09-26: "I need some predefined crops and sizes for aspect ratios". A row of
  * buttons above the photograph — «Liber», 16∶9, 4∶3, 1∶1, 4∶5 (`picture-frame.ts`): a shape draws
@@ -121,7 +121,7 @@ export default function ImageCropBox({
   /** What is stored: `null` is the whole photograph. */
   crop: ImageCrop | null;
   onChange: (crop: ImageCrop | null) => void;
-  /** The card's centre, when the club picked one (§NNN). */
+  /** The card's centre, when the club picked one (§454). */
   focus?: ImageFocus | null;
   onFocusChange?: (focus: ImageFocus | null) => void;
   /** A picture in the short description, which the listing card draws in its 16∶9 frame. */
@@ -208,7 +208,7 @@ export default function ImageCropBox({
       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         {labels.title}
       </Typography>
-      {/* The shapes (§NNN). 44 pixels tall: a thumb presses these on a phone (BR-REQ-041-01 criterion 6). */}
+      {/* The shapes (§454). 44 pixels tall: a thumb presses these on a phone (BR-REQ-041-01 criterion 6). */}
       <ToggleButtonGroup
         exclusive
         size="small"
@@ -352,7 +352,7 @@ export default function ImageCropBox({
             "&:focus-visible": { outline: 2, outlineColor: "secondary.main", outlineOffset: 2 },
           }}
         />
-        {/* The card's 16∶9 frame inside the crop, dashed: what every listing card shows (§NNN). */}
+        {/* The card's 16∶9 frame inside the crop, dashed: what every listing card shows (§454). */}
         {frame && (
           <Box
             aria-hidden

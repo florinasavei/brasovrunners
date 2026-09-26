@@ -26,7 +26,7 @@
  * weekday names are capitalised either way. "continues" is the language's own case outside a
  * sentence — the second half of a span, "Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59".
  *
- * **No «pe» before a weekday, «la» before the hour** (§NNN, reversing §349's «pe»; the owner,
+ * **No «pe» before a weekday, «la» before the hour** (§452, reversing §349's «pe»; the owner,
  * 2026-09-26: «Înscrierile se deschid pe sâmbătă, 26 sept. 2026, 17:00» is not grammatical).
  * Romanian puts no preposition before a weekday that names the day something happens — "se
  * deschid sâmbătă, 26 sept. 2026" — so no catalogue sentence puts «pe» before a date ("până pe" is
@@ -95,7 +95,7 @@ export type DayOptions = {
   year?: boolean;
   /**
    * "start" capitalises the first letter (the default); "inline" keeps Romanian's lower case
-   * and, inside the sentence, says "la" / "at" before the hour (§NNN); "continues" keeps the lower
+   * and, inside the sentence, says "la" / "at" before the hour (§452); "continues" keeps the lower
    * case with the bare hour — a span's second half, not a sentence.
    */
   position?: Position;
@@ -134,13 +134,13 @@ function compose(instant: Date, timeZone: string, options: Omit<DayOptions, "tim
   const position = options.position ?? "start";
   const time = withTime ? formatTime(instant, { locale: options.locale, timeZone }) : null;
   // Inside a sentence the hour takes its preposition — "sâmbătă, 26 sept. 2026, la 17:00" /
-  // "Saturday, 26 Sept 2026, at 17:00" (§NNN); a label, a cell or a heading keeps the bare hour.
+  // "Saturday, 26 Sept 2026, at 17:00" (§452); a label, a cell or a heading keeps the bare hour.
   const clock = time === null ? "" : position === "inline" ? `, ${hourPreposition(options.locale)} ${time}` : `, ${time}`;
   const text = `${weekday}, ${day}${clock}`;
   return position === "start" ? capitalizeFirst(text, options.locale) : text;
 }
 
-/** "la" / "at": the word before an hour inside a sentence (§NNN). */
+/** "la" / "at": the word before an hour inside a sentence (§452). */
 function hourPreposition(locale: string): "la" | "at" {
   return intlLocale(locale) === "ro-RO" ? "la" : "at";
 }
@@ -213,7 +213,7 @@ export function composeCalendarDay(ymd: string, words: CalendarDayWords): string
 /**
  * Two days as one span: "Sâm., 16 ian. 2027 – dum., 17 ian. 2027". The second day continues the
  * first, so it keeps the language's own case; the first follows `position`, and the hour's "la"
- * belongs to both halves or neither (§NNN).
+ * belongs to both halves or neither (§452).
  */
 export function formatDayRange(from: Date, until: Date, options: DayOptions): string {
   const second: Position = options.position === "inline" ? "inline" : "continues";

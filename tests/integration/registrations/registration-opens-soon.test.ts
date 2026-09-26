@@ -16,7 +16,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-011-01 (§NNN) — «Înscrierile se deschid în curând», an opening announced with no date.
+ * BR-REQ-011-01 (§451) — «Înscrierile se deschid în curând», an opening announced with no date.
  *
  * The owner, 2026-09-26: "vreau să scriu și că «înscrierile se deschid în curând» fără să pun o
  * dată anume". What is protected: the switch is saved from the editor and refused beside a date;
@@ -135,7 +135,7 @@ async function refusalOf(operation: Promise<unknown>): Promise<{ code: string; f
   }
 }
 
-describe("BR-REQ-011-01 «Înscrierile se deschid în curând» (§NNN)", () => {
+describe("BR-REQ-011-01 «Înscrierile se deschid în curând» (§451)", () => {
   it("saves the switch from the editor and refuses it beside an opening date, naming the date's box", async () => {
     const event = await createPublished();
     await save(event.id, event.version, { ...FIELDS(), registrationOpensSoon: true });

@@ -677,7 +677,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       await expect(picture).toHaveCount(1);
       await expect(words.locator("figure")).toHaveCount(0);
       await expect(picture).toBeVisible();
-      // In the card's own 16∶9 frame (§NNN), which is the only box allowed to cut the photograph.
+      // In the card's own 16∶9 frame (§454), which is the only box allowed to cut the photograph.
       const frame = summary.getByTestId("card-picture");
       await expect(frame).toHaveCount(1);
       const frameBox = await frame.boundingBox();
@@ -704,7 +704,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       });
       expect(lines).toBeLessThanOrEqual(3);
       // Under the words, where it was written — the frame, since the photograph inside it may be
-      // pulled up past the frame's top to centre the chosen point (§NNN).
+      // pulled up past the frame's top to centre the chosen point (§454).
       const wordsBox = await words.boundingBox();
       expect(frameBox?.y ?? 0).toBeGreaterThanOrEqual((wordsBox?.y ?? 0) + (wordsBox?.height ?? 0));
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

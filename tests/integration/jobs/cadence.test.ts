@@ -8,7 +8,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * BR-REQ-090-07 criterion 7 (§334) — the owner's throttle: `platform_settings.jobCadence`, the
  * minimum minutes between two real runs of each job. Built like the Neon plan beside it, and a
- * rung higher: the Superadministrator's since §NNN, asserted on the server, audited from and to, a value this code cannot read
+ * rung higher: the Superadministrator's since §450, asserted on the server, audited from and to, a value this code cannot read
  * falling back to the default — and on save every cached schedule is forgotten, so the next ping
  * of each job plans under the new interval.
  */
@@ -73,9 +73,9 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
     );
   });
 
-  it("is refused on the server for anybody but a Superadministrator, and leaves no trace (§NNN)", async () => {
+  it("is refused on the server for anybody but a Superadministrator, and leaves no trace (§450)", async () => {
     // The Administrator first — the platform's throttle is the one thing that tells the top two
-    // roles apart (§NNN) — then Organizator and Tehnic.
+    // roles apart (§450) — then Organizator and Tehnic.
     for (const role of ["ADMIN", "MODERATOR", "DEV"] as const) {
       expect(await refusal(updateJobCadence(db, await staff(role), { minutes: 15 }, NOW))).toBe("FORBIDDEN");
     }
@@ -93,11 +93,11 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
 });
 
 /*
-  BR-REQ-060-01 (§NNN) — the email delivery timing (§221) is the other platform setting beside the
+  BR-REQ-060-01 (§450) — the email delivery timing (§221) is the other platform setting beside the
   throttle: "scheduled" holds every message for the pinger. It rode on `canManageStaff`, which
   the Administrator now holds for the team, so it asks `canManagePlatform` of its own.
 */
-describe("BR-REQ-060-01 the email delivery timing is a Superadministrator's (§NNN)", () => {
+describe("BR-REQ-060-01 the email delivery timing is a Superadministrator's (§450)", () => {
   it("refuses an Administrator and lets a Superadministrator set it", async () => {
     const { readDeliveryTiming, updateDeliveryTiming } = await import("@/modules/notifications/delivery-timing");
     expect(await refusal(updateDeliveryTiming(db, await staff("ADMIN"), { timing: "scheduled" }, NOW))).toBe("FORBIDDEN");

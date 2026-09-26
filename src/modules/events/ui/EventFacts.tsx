@@ -156,7 +156,7 @@ const SR_ONLY_SX = {
  * - **the listing's featured hero** (the default): the `<dl>`, each row one line of short
  *   pieces separated by a middle dot — a summary above the fold, with a button to reach — except
  *   the route, which is the listing card's own row of pills, its cost details and links on a line
- *   under them (§NNN);
+ *   under them (§449);
  * - **the event page and its preview** (`stacked`): the `<dl>` grouped again and restyled
  *   (§356) — "când" one line, the place with its address under it, the route as one row of
  *   pills, the cost its own row with its own pill, and every row's glyph the same.
@@ -663,7 +663,7 @@ export default async function EventFacts({
       The listing's featured hero: one line per question, the pieces separated by middle dots,
       and its partners as one sentence (`coHostSentence`, below) — a summary above the fold with
       a button to reach, so never a column of every partner's links (§169, §356). The route alone
-      is the card's row of pills (§NNN), the one shape the owner reads the route in on the listing.
+      is the card's row of pills (§449), the one shape the owner reads the route in on the listing.
 
       Its pieces are built here, in its own branch, because nothing else draws them (§366): the
       card and the page draw the place, the route and the cost in shapes of their own, and neither
@@ -684,7 +684,7 @@ export default async function EventFacts({
       where.push(outLink(event.mapUrl, t("openMap")));
     }
 
-    /* The route as the listing card's own pills (§NNN; the owner, 2026-09-26, of the hero's
+    /* The route as the listing card's own pills (§449; the owner, 2026-09-26, of the hero's
        «Traseu» line above the cards: "astea de sus trebuie sa fie tot pills ca si in cardurile de
        mai jos"): `buildRoutePills`, the one function the card and the backoffice's list call
        (§388), so the hero cannot read the route in another order, another set or other words —
@@ -760,7 +760,7 @@ export default async function EventFacts({
 
     // The clock in the hero's own glyph size, like the calendar and the pin beside it (§366).
     // `value` is a line of pieces, middle dots between them; `node` is an answer drawn in its own
-    // shape — the route's pills with its words under them (§NNN).
+    // shape — the route's pills with its words under them (§449).
     const lines: Array<{ label: string; icon: Glyph; value: ReactNode[]; node?: ReactNode; testId?: string }> = [
       { label: t("when"), icon: CalendarMonthIcon, value: whenPieces(HERO_GLYPH_SX) },
     ];
@@ -793,9 +793,9 @@ export default async function EventFacts({
       The weather at the start, on the hero too (§416; the owner, 2026-09-25: "aș vrea să văd vremea
       și pe cardul principal"): «Vremea» with the forecast's own glyph, then the pieces the page's
       first line says — the word, the degrees, the chance of rain, the wind. Open-Meteo's credit is
-      said once, in the footer's fold (§NNN; the owner, 2026-09-26), never here. The start
+      said once, in the footer's fold (§455; the owner, 2026-09-26), never here. The start
       hour's details and the hours after it stay the page's: the hero is a summary with a button.
-      Deliberately not the cards' weather pill (§NNN): the hero's pills are the card's route and
+      Deliberately not the cards' weather pill (§449): the hero's pills are the card's route and
       cost pills and nothing else, and the weather keeps this «Vremea» row, because the owner asked
       for its details — the chance of rain and the wind — on the main card (§416), which a pill
       (§429: the glyph and the degrees) cannot hold. One forecast, said once, in its fuller shape.
@@ -1031,7 +1031,7 @@ export default async function EventFacts({
     The weather at the start (§402; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
     pe ceva API"): «Vremea» with the forecast's own glyph in the row glyph's place — the sun, a
     cloud, a raindrop — then its word, the temperature, the chance of rain and the wind, as one
-    flowing line like «Când». Open-Meteo's credit is the footer's alone since §NNN. Only when the
+    flowing line like «Când». Open-Meteo's credit is the footer's alone since §455. Only when the
     page read a forecast: within seven days of the start and when the service answered; otherwise the row is not there at all, never a sentence saying it is missing. After
     the short facts and before the partners, whose cards stay last (§356).
 

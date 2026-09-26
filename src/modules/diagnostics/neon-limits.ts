@@ -9,12 +9,12 @@ import { type NeonDeps, type NeonFailure, readNeonLimits, writeNeonLimits } from
 
 /**
  * The database's brakes, changed by a Superadministrator from `/admin/tasks` → Costuri (§335,
- * §NNN): the compute's size ceiling and the period's CU-hour limit, both held by Neon rather than
+ * §450): the compute's size ceiling and the period's CU-hour limit, both held by Neon rather than
  * by this application — so there is no settings row here, only Neon's answer before, the change,
  * Neon's answer after, and the audit row between them.
  *
  * `canManagePlatform`, asserted here, where the change is made, whatever the page showed. It was
- * the Neon plan's gate, the Administrator's, until §NNN: a quota reached suspends the database and
+ * the Neon plan's gate, the Administrator's, until §450: a quota reached suspends the database and
  * the site with it, which is a setting that can stop the service, not a fact the club reports. The rules the form states —
  * one of six ceilings, a new or changed limit above what is spent plus a margin, a ticked
  * confirmation for a new, changed or removed limit on production — are checked against a fresh read,

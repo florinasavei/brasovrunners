@@ -71,7 +71,7 @@ export function cardRegistrationLine(say: Say, locale: string, event: PublicEven
     case "FULL_NO_WAITLIST":
       return { lead: say("cta.fullNoWaitlist"), detail: null, bold: true, button: null };
     case "NOT_YET_OPEN":
-      // The opening date rather than "not yet" (§146) — or "soon" when there is none yet (§NNN).
+      // The opening date rather than "not yet" (§146) — or "soon" when there is none yet (§451).
       return {
         lead: cta.opensAt === null ? say("cta.opensSoonShort") : say("cta.opensOnShort", { date: shortDate(cta.opensAt) }),
         detail: null,

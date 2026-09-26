@@ -147,7 +147,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     expect(weather?.dt).toMatch(/^<svg\b/);
   });
 
-  it("carries no Open-Meteo credit in the facts — the site footer's fold credits it (§NNN; tests/unit/shared/site-footer.test.ts)", async () => {
+  it("carries no Open-Meteo credit in the facts — the site footer's fold credits it (§455; tests/unit/shared/site-footer.test.ts)", async () => {
     const html = withoutStyles(await page());
     expect(html).not.toContain(`href="${OPEN_METEO_SITE}"`);
     expect(text(html)).not.toContain("Open-Meteo");
@@ -177,7 +177,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     expect(text(html)).not.toContain("Open-Meteo");
   });
 
-  it("is on the hero as one line without a credit (the footer's since §NNN), and never inside the compact card's facts (§416)", async () => {
+  it("is on the hero as one line without a credit (the footer's since §455), and never inside the compact card's facts (§416)", async () => {
     const weather = await forecastForEvent(event(), NOW, { fetch: openMeteo(), source: "open-meteo" });
     const hero = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "full", weather })));
     expect(text(hero)).toContain("Furtună");

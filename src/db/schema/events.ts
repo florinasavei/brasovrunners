@@ -549,7 +549,7 @@ export const events = pgTable(
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
     /**
-     * «Înscrierile se deschid în curând» — announced, with no date yet (§NNN). While true, an
+     * «Înscrierile se deschid în curând» — announced, with no date yet (§451). While true, an
      * internal registration stays `NOT_YET_OPEN` whatever the clock says, and every surface says
      * "soon" instead of a date; the organizer opens it by switching this off (at once, or with a
      * date typed then). The editor refuses it together with `registrationOpensAt`; a row another

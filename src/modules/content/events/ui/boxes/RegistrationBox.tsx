@@ -259,7 +259,7 @@ export default async function RegistrationBox({
                   {/* 8.1 — from when until when. */}
                   <Panel collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
-                      {/* «Se deschid în curând» (§NNN): announced, with no date. The marker says the
+                      {/* «Se deschid în curând» (§451): announced, with no date. The marker says the
                           form carried the box, so an unticked one reads as "off", not "not edited". */}
                       <input type="hidden" name="event.registrationOpensSoon.present" value="1" />
                       <CheckboxField name="event.registrationOpensSoon" defaultChecked={event?.registrationOpensSoon ?? false}>

@@ -123,7 +123,7 @@ export const DEFAULT_CLUB_NOTICES: ClubNotices = {
 };
 
 /**
- * The form's box for each list the service validates (§NNN): the service names a refusal by the
+ * The form's box for each list the service validates (§457): the service names a refusal by the
  * setting's own path (`participants.bcc`), the panel posts `participantsBcc`. One table, so the
  * refusal summary links to the box and the box turns red — before this the refusal named
  * `participants`, which is no box, and the save failed without saying where.

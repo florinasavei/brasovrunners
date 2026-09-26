@@ -44,27 +44,27 @@ export type StaffInvite = z.infer<typeof staffInviteSchema>;
 
 function assertAdministrator(actor: Pick<StaffUser, "role">): void {
   if (!canManageStaff(actor.role)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not administer staff; the team is the Administrator's (§NNN)`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not administer staff; the team is the Administrator's (§450)`);
   }
 }
 
-/** Giving `role` — an invitation or a role change: a Superadministrator only by another (§NNN). */
+/** Giving `role` — an invitation or a role change: a Superadministrator only by another (§450). */
 function assertMayAssign(actor: Pick<StaffUser, "role">, role: StaffRole): void {
   if (!canAssignRole(actor.role, role)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give the role ${role}; only a Superadministrator makes another (§NNN)`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give the role ${role}; only a Superadministrator makes another (§450)`);
   }
 }
 
-/** Acting on a colleague's row: a Superadministrator's row is a Superadministrator's (§NNN). */
+/** Acting on a colleague's row: a Superadministrator's row is a Superadministrator's (§450). */
 function assertMayManage(actor: Pick<StaffUser, "role">, target: Pick<StaffUser, "role">): void {
   if (!canManageMember(actor.role, target.role)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not act on a ${target.role}'s access; only a Superadministrator does (§NNN)`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not act on a ${target.role}'s access; only a Superadministrator does (§450)`);
   }
 }
 
 /**
  * The account verbs at the provider — the password link and switching an account off or on
- * (§171) — asked of the team's own row first (§NNN).
+ * (§171) — asked of the team's own row first (§450).
  *
  * They reach Zitadel, not `staff_users`, and used to ask only for a role at the door: the page
  * offered them on the team's rows, and the action took whatever address the form posted. Now the
@@ -108,7 +108,7 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
       [...new Set(parsed.error.issues.map((i) => i.path.join(".")).filter((path) => path !== ""))],
     );
   }
-  // Before the address is looked up: whether this actor may give this role at all (§NNN).
+  // Before the address is looked up: whether this actor may give this role at all (§450).
   assertMayAssign(actor, parsed.data.role);
 
   // Checked before inserting so the Administrator gets "this person is already staff" rather
@@ -180,14 +180,14 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
    *
    * An Administrator cannot change their own role: the usual way this goes wrong is someone
    * "tidying up" their own account to MODERATOR and discovering nobody can undo it. And the last
-   * Superadministrator cannot be demoted, because only a Superadministrator makes another (§NNN)
+   * Superadministrator cannot be demoted, because only a Superadministrator makes another (§450)
    * and the platform's settings would have nobody left who may change them.
    */
   if (target.id === actor.id) {
     throw new DomainError("FORBIDDEN", "an administrator cannot change their own role");
   }
   // A Superadministrator's row, and the Superadministrator's role, are a Superadministrator's
-  // to touch (§NNN): an Administrator neither demotes the owner nor promotes a colleague to it.
+  // to touch (§450): an Administrator neither demotes the owner nor promotes a colleague to it.
   assertMayManage(actor, target);
   assertMayAssign(actor, role);
   if (

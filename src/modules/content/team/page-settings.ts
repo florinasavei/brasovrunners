@@ -11,7 +11,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { normalizeTeamText } from "./fields";
 
 /**
- * «Echipa» as a page (§NNN): whether it is on the site at all, and the club's own introduction.
+ * «Echipa» as a page (§459): whether it is on the site at all, and the club's own introduction.
  *
  * One `platform_settings` row (§100's shape), because the page is one thing and not a table of
  * things: `status` is DRAFT until an Administrator publishes it — both languages at once, as an

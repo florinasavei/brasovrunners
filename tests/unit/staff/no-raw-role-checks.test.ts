@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01, §NNN — every door names a capability, never a rank.
+ * BR-REQ-060-01, §450 — every door names a capability, never a rank.
  *
  * The Administrator runs the club and the Superadministrator the platform: which of the two may
  * do a thing is a named predicate in `domain/roles.ts` (`canWriteLegalTexts`, `canManageStaff`,
@@ -65,7 +65,7 @@ function offenders(): string[] {
   return found;
 }
 
-describe("§NNN no raw role checks outside roles.ts and the door", () => {
+describe("§450 no raw role checks outside roles.ts and the door", () => {
   it("no source file asks a bare rank or compares a role to a string", () => {
     expect(offenders()).toEqual([]);
   });

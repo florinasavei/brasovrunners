@@ -18,7 +18,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The writes of «Echipa» (§NNN), the pages actions' shape: every outcome is a redirect to the
+ * The writes of «Echipa» (§459), the pages actions' shape: every outcome is a redirect to the
  * screen carrying a language-neutral code, except a refused add or save, which returns so every
  * box comes back as typed (§315). Every one asserts its own role in the service (BR-REQ-060-01).
  */

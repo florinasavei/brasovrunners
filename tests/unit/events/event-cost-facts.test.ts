@@ -197,7 +197,7 @@ describe("an EXTERNAL-registration PAID event's cost row (§394)", () => {
   });
 });
 
-describe("the cost facts, featured hero (§343; the EXTERNAL + PAID wording since §394; the card's pills since §NNN)", () => {
+describe("the cost facts, featured hero (§343; the EXTERNAL + PAID wording since §394; the card's pills since §449)", () => {
   it("wears the card's «Cu taxă» pill, then «Taxă: 50 lei» and «plata pe {host}» as words under the pills", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }), now: NOW }),

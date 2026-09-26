@@ -522,7 +522,7 @@ function sampleSentencesOf(messageType: EmailMessageType, locale: EmailLocale): 
  * §349 changed its form on the same day as this, and the inviter's former name (§359). The hold's
  * deadline and the time of signing have one since the email follow-up (§373) — no old starting
  * text carried them, and a text written since that holds the sample's is found all the same. All
- * three moments also read with a bare hour until §NNN put "la" / "at" before it.
+ * three moments also read with a bare hour until §452 put "la" / "at" before it.
  */
 function sampleValuesEver(name: EmailCopyPlaceholder, locale: EmailLocale): string[] {
   const today = emailSampleValueOf(name, locale);

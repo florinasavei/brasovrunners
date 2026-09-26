@@ -107,7 +107,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   /*
-    «Echipa» (§NNN), once per locale — only while the page is published and a card is on it. A
+    «Echipa» (§459), once per locale — only while the page is published and a card is on it. A
     DRAFT page is a 404; a published one with nobody shown answers a sentence and tells crawlers
     not to index it (`team/page.tsx`), so the sitemap and the page agree.
   */

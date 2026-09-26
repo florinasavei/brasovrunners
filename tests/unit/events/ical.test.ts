@@ -389,7 +389,7 @@ describe("the calendar file", () => {
       url: "https://o.example.test",
     });
     expect(calendarRegistration({ ...base, registrationMode: "NONE" }, register, new Date("2026-09-20T00:00:00.000Z"))).toBeNull();
-    // «Se deschid în curând» (§NNN): ahead with no date, whatever the clock or a stray date says.
+    // «Se deschid în curând» (§451): ahead with no date, whatever the clock or a stray date says.
     const soon = { ...base, registrationOpensSoon: true };
     expect(calendarRegistration(soon, register, new Date("2026-10-05T00:00:00.000Z"))).toEqual({ kind: "NOT_YET_OPEN", opensAt: null, url: register });
     const soonLine = calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "NOT_YET_OPEN", opensAt: null, url: register } }, labelsRo);

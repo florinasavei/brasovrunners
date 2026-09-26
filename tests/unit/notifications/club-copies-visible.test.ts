@@ -18,7 +18,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — the club's copies (Bcc) on `/admin/emails` are shown back and can be
+ * `DECISIONS.md` §457 — the club's copies (Bcc) on `/admin/emails` are shown back and can be
  * saved, with a visible reason when refused. The owner, 2026-09-26: "trebuie să pot vedea pe
  * cine am pus în BCC, nu pot salva aparent...".
  *
@@ -30,7 +30,7 @@ import ro from "../../../messages/ro.json";
 const ROOT = process.cwd();
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 
-describe("§NNN the club's copies are shown back and can be saved", () => {
+describe("§457 the club's copies are shown back and can be saved", () => {
   it("reads spaces and line breaks as separators, since no address can hold one", () => {
     expect(parseAddressList("arhiva@example.ro presedinte@example.ro")).toEqual(["arhiva@example.ro", "presedinte@example.ro"]);
     expect(parseAddressList("arhiva@example.ro\r\npresedinte@example.ro\n\n")).toEqual(["arhiva@example.ro", "presedinte@example.ro"]);

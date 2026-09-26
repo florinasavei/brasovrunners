@@ -14,7 +14,7 @@ export type RegistrationWindowInput = {
   startsAt: Date;
   registrationOpensAt: Date | null;
   /**
-   * «Înscrierile se deschid în curând» (§NNN): announced with no date. While true an internal
+   * «Înscrierile se deschid în curând» (§451): announced with no date. While true an internal
    * registration is `NOT_YET_OPEN` whatever `registrationOpensAt` and the clock say.
    */
   registrationOpensSoon: boolean;
@@ -43,7 +43,7 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
   if (event.registrationMode === "NONE") return "NOT_APPLICABLE";
   if (event.registrationMode === "EXTERNAL") return "EXTERNAL";
 
-  // «Se deschid în curând» (§NNN): the organizer has announced the event and not the opening.
+  // «Se deschid în curând» (§451): the organizer has announced the event and not the opening.
   // Nothing opens it but the organizer switching this off; no date is involved, so no clock can.
   // The close still closes it: a window that never opened is over once its closing has passed,
   // so an event that started while "soon" says closed, and its "Anunță-mă" list is dropped.
@@ -92,7 +92,7 @@ export function registrationClosingInstant(event: Pick<RegistrationWindowInput, 
  * When registration opens, while that is still ahead (§146): the date the hero and the card
  * show, and the one the "tell me" box waits for (the calendar reads the window through
  * `calendarRegistration`, §159). Null once the window has opened, and for every event that
- * has no window to open — and for one that opens "soon" (§NNN), which has no date to show
+ * has no window to open — and for one that opens "soon" (§451), which has no date to show
  * (`registrationCta` says that one as `opensAt: null`).
  */
 export function upcomingRegistrationOpening(event: RegistrationWindowInput, now: Date): Date | null {

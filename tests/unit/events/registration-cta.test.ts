@@ -116,7 +116,7 @@ describe("BR-REQ-011-01 the window, stated to a visitor", () => {
     });
   });
 
-  it("says «soon» with no date while the organizer has announced the opening without one (§NNN)", () => {
+  it("says «soon» with no date while the organizer has announced the opening without one (§451)", () => {
     // After publication, before the start: the window would be open but for the switch.
     expect(registrationCta(event({ registrationOpensSoon: true }), DURING)).toEqual({ kind: "NOT_YET_OPEN", opensAt: null });
     // The switch outranks a stray date too — the stricter of the two answers wins.

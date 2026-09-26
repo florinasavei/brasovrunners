@@ -39,7 +39,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_SX["& figcaption"].textAlign).toBe("center");
   });
 
-  it("puts no rule on the picture itself: its shape is the card's 16∶9 frame, drawn by RichText (§NNN)", () => {
+  it("puts no rule on the picture itself: its shape is the card's 16∶9 frame, drawn by RichText (§454)", () => {
     /*
       §275's 420-pixel ceiling scaled a tall photograph down whole, and a row of cards was still
       as uneven as its photographs — the owner, 2026-09-26: "this card looks different than the
@@ -66,7 +66,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
       picture cannot be wider than the card it is in, and `vw` — which on a page with a
       scrollbar is wider than the page — appears nowhere.
 
-      §275's height ceiling went with the 16∶9 frame (§NNN), which is a ratio, not a measurement.
+      §275's height ceiling went with the 16∶9 frame (§454), which is a ratio, not a measurement.
     */
     const values = JSON.stringify([CARD_EXCERPT_SX, CARD_EXCERPT_WORDS_SX]);
     expect(values).not.toMatch(/vw"/);

@@ -376,7 +376,7 @@ type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClos
 
 /**
  * Sub-card 8.1: `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, or `De la publicare – până
- * la start`, or `Se deschid în curând – până la start` while the opening has no date (§NNN). The
+ * la start`, or `Se deschid în curând – până la start` while the opening has no date (§451). The
  * second date continues the first, so it keeps the language's own case, as `formatDayRange`
  * writes a span.
  */

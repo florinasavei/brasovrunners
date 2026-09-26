@@ -1,7 +1,7 @@
 import type { ImageCrop, ImageFocus } from "./schema";
 
 /**
- * The shapes a picture is drawn in, as fractions of the stored photograph (§NNN; the owner,
+ * The shapes a picture is drawn in, as fractions of the stored photograph (§454; the owner,
  * 2026-09-26, of a listing card whose portrait photograph stood twice as tall as its neighbours':
  * "this card looks different than the others… I need some predefined crops and sizes for aspect
  * ratios").

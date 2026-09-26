@@ -2,7 +2,7 @@ import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 
 /**
- * What the privacy notice's `{{teamPage}}` becomes (§NNN): the team page's own title in that
+ * What the privacy notice's `{{teamPage}}` becomes (§459): the team page's own title in that
  * language, quoted — „Echipa” / “The team” — read from the catalogue the page itself reads, so the
  * approved sentence and the page's heading cannot name different things. Outside a request, like
  * `registrations/list-state-words.ts`.

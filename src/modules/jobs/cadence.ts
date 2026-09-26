@@ -14,7 +14,7 @@ import { forgetJobSchedules } from "./schedule-cache";
  * throttle (§334; 2026-09-23: "I want toggles in my admin area, so I can throttle myself when
  * needed"). Set on `/admin/tasks` → Costuri beside the Neon plan, and the same shape as it
  * (`diagnostics/neon-plan.ts`): one `platform_settings` row, a strict schema, the role asserted
- * here and not only by the hidden button — the Superadministrator's since §NNN, where the plan
+ * here and not only by the hidden button — the Superadministrator's since §450, where the plan
  * stays the Administrator's — and an audit row naming who changed it from what to what.
  *
  * The value is the **minimum** number of minutes between two real runs of each job, whatever the
@@ -67,7 +67,7 @@ export async function updateJobCadence<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<JobCadenceState> {
-  // The Superadministrator's since §NNN: a long interval delays every hand-over of a place and
+  // The Superadministrator's since §450: a long interval delays every hand-over of a place and
   // every message the jobs send, for everybody at once — a platform setting, not a club one.
   if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change how often the platform checks`);

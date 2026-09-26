@@ -4,7 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import SubNav from "@/shared/ui/SubNav";
 
 /**
- * The two halves of the Pagini tab (§NNN): the pages the club writes from nothing, and «Echipa»,
+ * The two halves of the Pagini tab (§459): the pages the club writes from nothing, and «Echipa»,
  * the platform's team page whose cards the club keeps. The owner: "pagina de echipa nu e o
  * pagina custom" — so it is not a row in the pages list, and it is one press away from it.
  *

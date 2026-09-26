@@ -91,7 +91,7 @@ export async function registerInterest<T extends Record<string, unknown>>(
     })
     .onConflictDoNothing({ target: [registrationInterests.eventId, registrationInterests.canonicalEmail] });
   // The announcement is due when the window opens; the job is told if that is soon (§334). An
-  // opening "soon" with no date (§NNN) has nothing to wake for: the save that opens it wakes the job.
+  // opening "soon" with no date (§451) has nothing to wake for: the save that opens it wakes the job.
   if (!event.registrationOpensSoon) wakeJobs("registration-maintenance", event.registrationOpensAt ?? event.publishedAt ?? now, now);
 }
 

@@ -87,7 +87,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
           </Link>
         );
       case "team":
-        // A card of «Echipa» (§NNN): the screen that holds every card, at this one.
+        // A card of «Echipa» (§459): the screen that holds every card, at this one.
         return <Link href={{ pathname: "/admin/pages/team", hash: `team-${reference.id}` }}>{t("pictures.usedInTeam", { title })}</Link>;
     }
   };

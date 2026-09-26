@@ -73,7 +73,7 @@ async function hasPublishedAlbum(locale: Locale) {
   }
 }
 
-/** Whether «Echipa» is offered (§NNN): the page published with a card on it, or nothing — the gallery's rule. */
+/** Whether «Echipa» is offered (§459): the page published with a card on it, or nothing — the gallery's rule. */
 async function hasVisibleTeam(locale: Locale) {
   try {
     return (await readWithLastGood(`nav:team:${locale}`, async () => teamPageOnSite(await cachedTeamPage(locale)))).value;

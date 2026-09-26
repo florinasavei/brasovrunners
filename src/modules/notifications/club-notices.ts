@@ -66,7 +66,7 @@ export async function updateClubNotices<T extends Record<string, unknown>>(
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
       /*
         The *list* each refusal is about — `participants.bcc`, never the index of the entry in it
-        and never just `participants` (§NNN). The first segment alone named no box on the form, so
+        and never just `participants` (§457). The first segment alone named no box on the form, so
         the summary linked to nothing and no box turned red: a Bcc the club could not save and
         could not see why. The action maps each list to its box (`CLUB_NOTICE_BOXES`).
       */

@@ -4,7 +4,7 @@ import { mediaAssets } from "./gallery";
 import { staffUsers } from "./staff-users";
 
 /**
- * «Echipa» / "The team" (§NNN): the people who run the club, one card each, on a page of its own
+ * «Echipa» / "The team" (§459): the people who run the club, one card each, on a page of its own
  * — a platform page like the contact form, not a standing page the club writes from nothing.
  *
  * A card is a name, what the person does for the club, a few words about them and a photograph.

@@ -18,7 +18,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
 
   test("a Superadministrator slows the jobs to thirty minutes, reads the effect, and sets it back", async ({ page }) => {
     test.slow();
-    // The throttle is a platform setting, the Superadministrator's since §NNN.
+    // The throttle is a platform setting, the Superadministrator's since §450.
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/tasks?panel=costs");
     const main = page.locator("#main");
@@ -54,7 +54,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await expect(main.getByTestId("job-cadence-in-force")).toContainText(/^Setarea în vigoare: la nevoie/);
   });
 
-  test("an Administrator reads the card and is offered no form (§NNN)", async ({ page }) => {
+  test("an Administrator reads the card and is offered no form (§450)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/tasks?panel=costs");
     const card = page.locator("#main").getByTestId("job-cadence");

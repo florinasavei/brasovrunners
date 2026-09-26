@@ -214,7 +214,7 @@ describe("§350 each box's summary, empty and filled", () => {
 
   it("the registration box's cards", () => {
     expect(registrationWindowSummary(words, null, "ro")).toBe("De la publicare – până la start");
-    // §NNN: an opening announced with no date says so, in place of the publication fallback.
+    // §451: an opening announced with no date says so, in place of the publication fallback.
     expect(
       registrationWindowSummary(words, { registrationOpensAt: null, registrationOpensSoon: true, registrationClosesAt: null, timezone: ZONE }, "ro"),
     ).toBe("Se deschid în curând – până la start");

@@ -118,7 +118,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageCropReset: rt("imageCropReset"),
     // Raw, with its four placeholders: the island substitutes the percentages itself.
     imageCropPosition: rt.raw("imageCropPosition") as string,
-    // The shapes and the card's centre (§NNN).
+    // The shapes and the card's centre (§454).
     imageShapes: {
       presets: rt("imageShapes"),
       preset: {

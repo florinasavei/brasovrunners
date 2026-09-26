@@ -45,7 +45,7 @@
  * its archive copy is named; the processors' locations are no longer overstated; §7 is brought in
  * line with all of it, with an incident hold; §8 has the art. 12(3) extension and restriction.
  *
- * `{{teamPage}}` in section 4 (§NNN) is the team page's name in the reader's language and the
+ * `{{teamPage}}` in section 4 (§459) is the team page's name in the reader's language and the
  * marker `/admin/tasks` reads: a notice that names it describes the page's cards and photographs.
  *
  * `{{publicListPeriod}}` (§4, §7) is the public list's ceiling after the event, filled like the

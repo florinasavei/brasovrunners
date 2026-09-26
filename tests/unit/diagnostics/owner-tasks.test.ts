@@ -83,7 +83,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the team page's names and photographs wait on the club's notice; open, never blocking. */
+  /** §459 — the team page's names and photographs wait on the club's notice; open, never blocking. */
   it("keeps the team-page notice row open while the notice in force does not describe the page", () => {
     expect(stateOf({ ...LAUNCHED, teamPageDescribed: false }, "teamPageNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "teamPageNotice")).toBe("done");

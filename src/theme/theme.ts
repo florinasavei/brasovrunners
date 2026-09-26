@@ -58,7 +58,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     },
   },
   typography: {
-    // Provided by next/font/local in the locale layout, from `src/theme/fonts/` (§NNN): each
+    // Provided by next/font/local in the locale layout, from `src/theme/fonts/` (§460): each
     // file carries latin and latin-ext together, which covers ș, ț, ă, â, î.
     fontFamily: `${options.body}, ${FONT.fallback}`,
     // Headings take the display role, so an arriving club typeface changes these and leaves

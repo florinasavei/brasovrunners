@@ -104,7 +104,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deletePictureAction: [],
   transitionPageAction: [],
   deletePageAction: [],
-  // «Echipa» (§NNN): a card put on the site or taken off it, and a card deleted.
+  // «Echipa» (§459): a card put on the site or taken off it, and a card deleted.
   setTeamMemberVisibleAction: [],
   deleteTeamMemberAction: [],
   setTeamPagePublishedAction: [],

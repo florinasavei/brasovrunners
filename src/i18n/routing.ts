@@ -124,7 +124,7 @@ export const routing = defineRouting({
     "/newsletter/manage/[token]": { ro: "/noutati/abonament/[token]", en: "/newsletter/manage/[token]" },
 
     /**
-     * «Echipa» / "The team" (§NNN): the people who run the club, a card each. A platform page like
+     * «Echipa» / "The team" (§459): the people who run the club, a card each. A platform page like
      * the contact form — not one of the club's standing pages under `/pagini/` — so a page the
      * club once wrote and called `echipa` keeps its own address.
      */
@@ -208,7 +208,7 @@ export const routing = defineRouting({
     "/admin/legal/[id]/delete": "/admin/legal/[id]/delete",
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
-    /** The cards of «Echipa» (§NNN): beside the club's own pages, never one of them. */
+    /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",

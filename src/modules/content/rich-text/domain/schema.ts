@@ -370,7 +370,7 @@ export function meaningfulCrop(crop: ImageCrop | null | undefined): ImageCrop | 
 }
 
 /**
- * `focus` is the point a listing card's 16∶9 frame is centred on (§NNN, `picture-frame.ts`): two
+ * `focus` is the point a listing card's 16∶9 frame is centred on (§454, `picture-frame.ts`): two
  * fractions of the stored photograph, `x` from the left and `y` from the top. The card draws every
  * picture in the same frame, and this is how the club keeps a face in it rather than a chest.
  * Absent — every picture written before, and one nobody pointed at — the card centres on the

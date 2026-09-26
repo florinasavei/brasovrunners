@@ -52,7 +52,7 @@ function qaMarked(value: string): string {
 /** Where registration stands for the calendar's reader, decided by `calendarRegistration`. */
 export type CalendarRegistration =
   | { kind: "OPEN"; url: string }
-  /** `opensAt` is null for an opening announced "soon" with no date (§NNN). */
+  /** `opensAt` is null for an opening announced "soon" with no date (§451). */
   | { kind: "NOT_YET_OPEN"; opensAt: Date | null; url: string }
   | { kind: "CLOSED" }
   | { kind: "EXTERNAL"; url: string | null };
@@ -289,7 +289,7 @@ export function calendarRegistration(
     case "OPEN":
       return { kind: "OPEN", url: registerUrl };
     case "NOT_YET_OPEN": {
-      // «Se deschid în curând» (§NNN): the fact without a date.
+      // «Se deschid în curând» (§451): the fact without a date.
       if (event.registrationOpensSoon) return { kind: "NOT_YET_OPEN", opensAt: null, url: registerUrl };
       const opensAt = event.registrationOpensAt ?? event.publishedAt;
       return opensAt ? { kind: "NOT_YET_OPEN", opensAt, url: registerUrl } : null;
@@ -313,7 +313,7 @@ export function calendarRegistration(
 export function calendarStamp(event: RegistrationWindowInput & { updatedAt: Date | null }, now: Date): Date | null {
   const boundaries =
     event.registrationMode === "INTERNAL" && event.eventStatus === "SCHEDULED"
-      ? // An opening "soon" (§NNN) has no boundary; the save that opens it moves `updatedAt`.
+      ? // An opening "soon" (§451) has no boundary; the save that opens it moves `updatedAt`.
         [event.registrationOpensSoon ? null : (event.registrationOpensAt ?? event.publishedAt), event.registrationClosesAt ?? event.startsAt]
       : [];
   return boundaries.reduce<Date | null>((latest, at) => (at && at <= now && (!latest || at > latest) ? at : latest), event.updatedAt);

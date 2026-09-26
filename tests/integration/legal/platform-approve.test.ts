@@ -79,12 +79,12 @@ describe("the platform's texts approved in one act", () => {
     expect(await db.select().from(legalDocuments)).toHaveLength(0);
   });
 
-  it("is an Administrator's act, and refused below it (§NNN)", async () => {
+  it("is an Administrator's act, and refused below it (§450)", async () => {
     const [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" }).returning();
     expect(await codeOf(approvePlatformTemplates(db, organizer, FACTS, NOW))).toBe("FORBIDDEN");
     expect(await db.select().from(legalDocuments)).toHaveLength(0);
 
-    // The Administrator runs the club's legal texts since §NNN — the one press included.
+    // The Administrator runs the club's legal texts since §450 — the one press included.
     const result = await approvePlatformTemplates(db, admin, FACTS, NOW);
     expect(result.approved.length).toBeGreaterThan(0);
   });

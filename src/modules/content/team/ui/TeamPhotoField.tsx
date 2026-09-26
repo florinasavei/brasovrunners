@@ -33,7 +33,7 @@ type Props = {
 };
 
 /**
- * A card's photograph (§NNN): choose a file, it is shrunk in the browser only if it must be and
+ * A card's photograph (§459): choose a file, it is shrunk in the browser only if it must be and
  * stored exactly as a picture in a page is (`/api/admin/media`, §72, §414), and the card keeps
  * the stored picture's id in a hidden field the save posts. Nothing is saved on the card until
  * the form is — the picture waits in the store and is swept after a week if the card never keeps

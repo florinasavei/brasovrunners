@@ -218,7 +218,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "registrations.clubMemberLabel": 1,
       "pages.intro": 1,
       "page.report.heading": 1,
-      // «Echipa» (§NNN): the page and its description for search engines.
+      // «Echipa» (§459): the page and its description for search engines.
       lead: 2,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
