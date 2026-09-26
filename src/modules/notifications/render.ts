@@ -598,6 +598,10 @@ async function renderRow(
       data.familyPersonName = person.legalName;
       data.familyPersonBirthDate = birthDateText(person.birthDate);
       data.familyRegistered = await registeredOnAddress(db, kept.eventId, kept.participantId);
+    } else if (!data.addressAtCap) {
+      // Confirmed, or lapsed and purged — deferred past the window (§40) or sent again after the
+      // press: the lapsed shape, which promises no button (§NNN).
+      data.familyEntryGone = true;
     }
   }
 

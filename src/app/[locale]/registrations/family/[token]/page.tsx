@@ -1,5 +1,4 @@
 import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -16,7 +15,7 @@ import { readFamilyEntryLinkPage } from "@/modules/registrations/token-actions";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
 import { confirmFamilyEntryAction } from "./actions";
 
@@ -162,9 +161,14 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
                 {t("family.fitnessAcknowledged")}
               </CheckboxField>
             )}
-            <Button type="submit" variant="contained" sx={TAP_TARGET} data-testid="family-confirm">
-              {t("family.action")}
-            </Button>
+            {/*
+              The shared send button (§371): it paints "Se înscrie…" at once and holds a second
+              press, which would otherwise find the token spent and land on "this link no longer
+              works" after the first press had registered the person.
+            */}
+            <div data-testid="family-confirm">
+              <SubmitButton label={t("family.action")} pendingLabel={t("family.actionPending")} runner size="medium" />
+            </div>
           </Stack>
         </form>
 

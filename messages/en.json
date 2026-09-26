@@ -3942,6 +3942,7 @@
       "adultNote": "For an adult we keep none of the health information, the public-list choice or the Strava and Instagram from the form: these need the person's own consent.",
       "fitnessAcknowledged": "I know that the person I am registering declares themselves, when they sign their declaration, that their health allows the effort.",
       "action": "I confirm I am registering another person",
+      "actionPending": "Registering…",
       "wrongData": "Are the details wrong? Do not confirm: send the form again with the correct full name and birth date. This link expires by itself, and the details sent are deleted.",
       "doneTitle": "The person is registered",
       "done": "Done. The email with the declaration to sign for this person comes to your address: each person signs their own declaration and gets their own QR code.",

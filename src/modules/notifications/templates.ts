@@ -604,6 +604,12 @@ export type TemplateData = {
    */
   anotherPersonHint?: boolean;
   /**
+   * The kept form behind the message is gone (§NNN): confirmed already, or lapsed and purged —
+   * a row the outbox deferred past the window (§40), or sent again after the press. There is no
+   * button and no person to name, so the message says the request lapsed and how to start again.
+   */
+  familyEntryGone?: boolean;
+  /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
    * message greets them and says whose registration it is about (§419) — the address is theirs.
    */
@@ -1015,7 +1021,9 @@ const T = {
       subject: (d: TemplateData) =>
         d.addressAtCap
           ? `Adresa ta are deja numărul maxim de înscrieri la ${d.eventTitle ?? "eveniment"}`
-          : `Înscrii încă o persoană la ${d.eventTitle ?? "eveniment"}?`,
+          : d.familyEntryGone
+            ? `Cererea de a înscrie încă o persoană la ${d.eventTitle ?? "eveniment"} nu mai este valabilă`
+            : `Înscrii încă o persoană la ${d.eventTitle ?? "eveniment"}?`,
       greeting: () => "Salut,",
       body: (d: TemplateData) =>
         d.addressAtCap
@@ -1024,7 +1032,13 @@ const T = {
               "Pentru încă o persoană, folosește adresa ei de email. Dacă cineva de pe adresa ta nu mai vine, îi anulezi înscrierea din linkul primit la confirmare sau din „Înscrierile mele”, și locul de pe adresă se eliberează.",
               "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
             ]
-          : [
+          : d.familyEntryGone
+            ? [
+                `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă, pentru o altă persoană, dar cererea nu mai este valabilă: a fost deja confirmată sau a expirat, iar datele trimise s-au șters.`,
+                "Dacă persoana nu este încă înscrisă, trimite din nou formularul cu numele ei complet și data nașterii: primești un email nou, cu un buton de confirmare.",
+                "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
+              ]
+            : [
               `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă, pentru o altă persoană. Nu am înscris-o încă: dacă tu ai trimis formularul și vrei să o înscrii, apasă butonul de mai jos și confirmă pe pagina care se deschide.`,
               "După confirmare persoana are propriul loc și primește pe această adresă propriul email cu declarația de semnat, apoi propriul cod QR.",
               // The other person's agreement, and that they are told how their data is used (§419; GDPR art. 14).
@@ -1370,7 +1384,9 @@ const T = {
       subject: (d: TemplateData) =>
         d.addressAtCap
           ? `Your address already has the most registrations allowed for ${d.eventTitle ?? "the event"}`
-          : `Registering one more person for ${d.eventTitle ?? "the event"}?`,
+          : d.familyEntryGone
+            ? `The request to register one more person for ${d.eventTitle ?? "the event"} has lapsed`
+            : `Registering one more person for ${d.eventTitle ?? "the event"}?`,
       greeting: () => "Hello,",
       body: (d: TemplateData) =>
         d.addressAtCap
@@ -1379,7 +1395,13 @@ const T = {
               "For one more person, use their own email address. If someone on your address is no longer coming, cancel their registration from the link in their confirmation or from “My registrations”, and the place on the address is freed.",
               "If you did not send the form, you can ignore this message: nothing has changed.",
             ]
-          : [
+          : d.familyEntryGone
+            ? [
+                `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address, for another person, but the request has lapsed: it was already confirmed or it expired, and the details sent have been deleted.`,
+                "If the person is not registered yet, send the form again with their full name and birth date: you will get a new email with a button to confirm.",
+                "If you did not send the form, you can ignore this message: nothing has changed.",
+              ]
+            : [
               `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address, for another person. We have not registered them yet: if you sent the form and want to register them, press the button below and confirm on the page it opens.`,
               "Once confirmed, the person has their own place and receives, at this address, their own email with the declaration to sign, then their own QR code.",
               "Register someone only with their agreement, and tell them that their details come to us and how we use them: the privacy notice is at the link at the end of this message. The messages about their registration will come to this address.",
@@ -1613,13 +1635,18 @@ export function buildTemplateContent(
   */
   const atAddressCap = messageType === "REGISTER_ANOTHER_PERSON" && data.addressAtCap === true;
   /*
+    …and so is the one whose kept form is gone (§NNN): the club's words promise a button this send
+    cannot carry, so the platform's lapsed shape says what happened and how to start again.
+  */
+  const familyGone = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyEntryGone === true;
+  /*
     The freed place's offer with no deadline ahead (§419) — a resend after it lapsed — is the
     platform's sentence alone, which states the offer's length instead of a moment. The club's words
     name the moment (`{holdExpiresAtFormatted}`), and a sentence missing it would read "până la
     (ai la dispoziție …)": a statement about the offer's state, like the address's limit above.
   */
   const lapsedOffer = messageType === "WAITLIST_SPOT_OFFER" && !data.holdExpiresAtFormatted;
-  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap || lapsedOffer ? null : copyFor(overrides, messageType, locale);
+  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || lapsedOffer ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
@@ -1766,7 +1793,7 @@ export function buildTemplateContent(
         : []),
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
-      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.addressCap !== undefined
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && data.addressCap !== undefined
         ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],

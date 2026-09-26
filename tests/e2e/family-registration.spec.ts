@@ -141,7 +141,8 @@ test.describe("§389 §NNN a family on one address", () => {
     expect(await registrationsByEmail(email)).toHaveLength(1);
     // The page never scrolls sideways at 320 pixels, and the button is a thumb's target.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    const confirm = page.getByTestId("family-confirm");
+    // The shared send button inside its wrapper (§371): the press is held while the first is in flight.
+    const confirm = page.getByTestId("family-confirm").getByRole("button");
     expect((await confirm.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
     // Another adult: the address holder acknowledges that the person declares their own fitness (§421).

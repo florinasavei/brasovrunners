@@ -3942,6 +3942,7 @@
       "adultNote": "Pentru un adult nu păstrăm informațiile medicale, alegerea pentru lista publică sau Strava și Instagram din formular: acestea țin de acordul persoanei însăși.",
       "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul.",
       "action": "Confirm că înscriu altă persoană",
+      "actionPending": "Se înscrie…",
       "wrongData": "Datele nu sunt bune? Nu confirma: trimite din nou formularul, cu numele complet și data nașterii corecte. Linkul acesta expiră singur, iar datele trimise se șterg.",
       "doneTitle": "Persoana este înscrisă",
       "done": "Gata. Emailul cu declarația de semnat pentru această persoană vine pe adresa ta: fiecare persoană își semnează singură declarația și primește propriul cod QR.",

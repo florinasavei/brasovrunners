@@ -406,6 +406,29 @@ describe("§NNN the confirmation registers the person, and everybody signs alone
     expect(await entries()).toHaveLength(0);
   });
 
+  it("a message sent after its kept form lapsed says so and promises no button (review finding)", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    await submitRegistration(db, event, submission("Maria", at(5)), at(5));
+    // The outbox deferred it past the window (§40): the form is gone when it is finally rendered.
+    const lapsed = new Date(at(5).getTime() + HOURS_48 + 60_000);
+    await runRegistrationMaintenance(db, lapsed);
+    expect(await entries()).toHaveLength(0);
+
+    const { subject, text, secret } = await linkFromLatestOffer(lapsed);
+    expect(secret).toBeNull();
+    expect(subject).toContain("Cererea de a înscrie încă o persoană la Crosul familiei nu mai este valabilă");
+    expect(subject).toContain("The request to register one more person for The family cross has lapsed");
+    expect(text).toContain("trimite din nou formularul cu numele ei complet și data nașterii");
+    expect(text).toContain("send the form again with their full name and birth date");
+    expect(text).not.toContain("apasă butonul de mai jos");
+    expect(text).not.toContain("press the button below");
+    expect(text).not.toContain("Confirm că înscriu altă persoană");
+    expect(text).not.toContain("Persoana din formular");
+    const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
+    expect(tokens).toHaveLength(0);
+  });
+
   it("the address fixed by the token wins over anything kept or posted", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
