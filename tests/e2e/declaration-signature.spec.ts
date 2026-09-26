@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { latestAcceptance, mintActionLink, registrationByEmail, registrationStatus, type RegistrationRow } from "./support/action-link";
+import { latestAcceptance, mintActionLink, mintProfileLink, registrationByEmail, registrationStatus, type RegistrationRow } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -181,6 +181,19 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     } finally {
       await context.close();
     }
+
+    /*
+      §NNN: cancelling from «Înscrierile mele» (§77, BR-REQ-036-04) says so in a toast too, once —
+      and gives the place back, so this case leaves the sample race as it found it.
+    */
+    await page.goto(`/ro/inscrieri/ale-mele/${await mintProfileLink(registration.participantId)}`);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Renunț la această înscriere" }).click();
+    await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
+    await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");
+    expect(await registrationStatus(registration.id)).toBe("CANCELLED");
+    await page.reload();
+    await expect(page.getByTestId("toast-live")).toHaveCount(0);
   });
 
   /**
