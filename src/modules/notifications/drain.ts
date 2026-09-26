@@ -21,12 +21,15 @@ import { env } from "@/shared/config/env";
  * (`FOR UPDATE SKIP LOCKED` in `claimOutboxBatch`).
  *
  * Silent outside a request (the tests call `enqueueEmail` directly) and in `test`, where a
- * drain would send through the fake adapter behind a test's back. The outbox and renderer are
- * imported inside the callback: `enqueueEmail` calls this, so a static import here would be a
- * cycle.
+ * drain would send through the fake adapter behind a test's back — except on the end-to-end
+ * suite's own server (`E2E_DRAIN_OUTBOX`, set by `playwright.config.ts` alone): CI runs it under
+ * `test`, and a spec that reads a sent message where the server captured it (`/devs` → «Emailuri»)
+ * or waits for one to leave the outbox found nothing there, while the same spec passed on a
+ * laptop, where `local` drains. The outbox and renderer are imported inside the callback:
+ * `enqueueEmail` calls this, so a static import here would be a cycle.
  */
 export function drainOutboxAfterResponse(): void {
-  if (env.APP_ENV === "test") return;
+  if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
   try {
     after(async () => {
       try {
