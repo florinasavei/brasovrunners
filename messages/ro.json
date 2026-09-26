@@ -910,6 +910,7 @@
       "honeypotOffTitle": "Oprești honeypot-ul?",
       "honeypotOffBody": "Câmpul rămâne și se notează în jurnal, dar nu mai refuză pe nimeni.",
       "deadlinesTitle": "Salvezi termenele?",
+      "deadlinesRecommendedTitle": "Pui toate termenele la valorile recomandate?",
       "deadlinesBody": "Fiecare loc ținut, ofertă și link dat de acum înainte primește numerele noi, iar emailurile și paginile le spun. Nimic din ce s-a dat deja nu se schimbă: un link, un loc ținut sau o ofertă își păstrează termenul primit.",
       "addressCapTitle": "Salvezi limita pe adresă?",
       "addressCapBody": "De acum, la fiecare eveniment, o adresă de email poate înscrie cel mult atâtea persoane, iar emailul care oferă înscrierea altcuiva spune numărul nou. Înscrierile făcute deja rămân toate.",
@@ -3137,7 +3138,7 @@
         "intro": "Cât durează fiecare termen pe care platforma îl dă unui participant. Se aplică de la salvare înainte: un link, un loc ținut sau o ofertă deja date își păstrează termenul primit. Numerele apar singure oriunde sunt scrise — în emailuri, pe formular și în cei cinci pași, în ghid, pe această pagină și în textele legale aprobate din șablonul nou.",
         "aside": "Link {confirmation} · loc ținut {hold} · ofertă {offer} · reminder {reminder}",
         "reminderOff": "fără",
-        "bounds": "Între {min} și {max}; implicit {default}.",
+        "bounds": "Între {min} și {max}; recomandat {default}.",
         "fields": {
           "confirmationHours": "Linkul de confirmare a adresei e valabil (ore)",
           "holdMinutes": "Locul e ținut pentru semnarea declarației (minute)",
@@ -3163,6 +3164,10 @@
         "save": "Salvează termenele",
         "saving": "Se salvează…",
         "saved": "Termenele au fost salvate; se aplică de acum înainte.",
+        "recommendedShort": "(recomandat {value})",
+        "recommendedIntro": "Valorile recomandate sunt cele cu care pornește platforma, alese pentru un club mic: link {confirmation}, loc ținut {hold}, ofertă {offer}, reminder {reminder}. Un singur buton le pune pe toate.",
+        "recommendedInForce": "Toate termenele au valorile recomandate.",
+        "applyRecommended": "Pune valorile recomandate",
         "readOnly": "Termenele le schimbă Administratorul; tu vezi valorile în vigoare."
       },
       "forecast": {

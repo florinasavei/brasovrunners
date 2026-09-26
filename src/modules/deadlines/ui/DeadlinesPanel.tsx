@@ -16,7 +16,7 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import type { DeadlinesState } from "../deadlines";
-import { DEADLINE_KEYS, DEADLINE_RULES } from "../domain/deadlines";
+import { DEADLINE_KEYS, DEADLINE_RULES, DEFAULT_DEADLINES } from "../domain/deadlines";
 import { deadlineWords } from "../domain/duration-words";
 
 type Props = {
@@ -50,6 +50,9 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
   const confirmText = await confirmWords();
   const { deadlines, updatedAt } = state;
   const words = deadlineWords(locale, deadlines);
+  // §NNN: the recommended value of each deadline is its default in the one table (`DEADLINE_RULES`).
+  const recommendedWords = deadlineWords(locale, DEFAULT_DEADLINES);
+  const atRecommended = DEADLINE_KEYS.every((key) => deadlines[key] === DEFAULT_DEADLINES[key]);
   const labels = Object.fromEntries(DEADLINE_KEYS.map((key) => [key, t(`emails.deadlines.fields.${key}`)]));
 
   return (
@@ -87,6 +90,9 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
               </Typography>
               <Typography component="dd" variant="body2" sx={{ m: 0, fontWeight: 600 }} data-testid={`deadline-${key}`}>
                 {deadlines[key]}
+              </Typography>
+              <Typography component="span" variant="body2" color="text.secondary" data-testid={`deadline-${key}-recommended`}>
+                {t("emails.deadlines.recommendedShort", { value: DEFAULT_DEADLINES[key] })}
               </Typography>
             </Box>
           ))}
@@ -127,6 +133,41 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
             </Box>
           </Stack>
         </ActionForm>
+      )}
+
+      {mayEdit && (
+        /*
+         * §NNN: every deadline back to its recommended value in one press — the same action and the
+         * same server gate as the save above (`requireStaffRole("ADMIN")` there and in the service),
+         * posting the defaults of `DEADLINE_RULES`; asks first like the save (§384).
+         */
+        <Box sx={{ mt: 2 }} data-testid="deadlines-recommended">
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {atRecommended
+              ? t("emails.deadlines.recommendedInForce")
+              : t("emails.deadlines.recommendedIntro", {
+                  confirmation: recommendedWords.confirmation,
+                  hold: recommendedWords.hold,
+                  offer: recommendedWords.offer,
+                  reminder: recommendedWords.reminder ?? t("emails.deadlines.reminderOff"),
+                })}
+          </Typography>
+          {!atRecommended && (
+            <ActionForm
+              action={updateDeadlinesAction}
+              messages={await refusalMessages(labels)}
+              confirm={{ title: t("confirm.deadlinesRecommendedTitle"), body: t("confirm.deadlinesBody"), confirmLabel: t("emails.deadlines.applyRecommended"), cancelLabel: confirmText.cancel }}
+              scope="deadlines-recommended"
+              data-testid="deadlines-recommended-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              {DEADLINE_KEYS.map((key) => (
+                <input key={key} type="hidden" name={key} value={DEFAULT_DEADLINES[key]} />
+              ))}
+              <GlyphSubmitButton label={t("emails.deadlines.applyRecommended")} pendingLabel={t("emails.deadlines.saving")} icon="reset" />
+            </ActionForm>
+          )}
+        </Box>
       )}
 
       {addressCap && (
