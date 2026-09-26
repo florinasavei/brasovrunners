@@ -516,8 +516,9 @@ export default async function EventFacts({
 
   /*
     A forecast's summary pieces, the umbrella spliced in right after the rain phrase rather than
-    appended after the wind (review finding, §NNN): «Parțial noros, 14 °C, [☂] 60% șanse de
-    ploaie, vânt 11 km/h», never «…, vânt 11 km/h, [☂] 60% șanse de ploaie». Shared by the hero and
+    appended after the wind (review finding, §NNN): «Parțial noros, 14 °C, 60% șanse de ploaie,
+    ☂ ploaie probabilă, vânt 11 km/h», never «…, vânt 11 km/h, ☂ ploaie probabilă»; with no chance
+    but an amount already falling, right after the temperature. Shared by the hero and
     the page, the only two places that draw this line — the card's own pill (`CardWeather`) never
     shows the rain phrase at all. `words.details` is built in this fixed order (temperature, rain,
     wind, each only when the hour has it), so the umbrella's place is the count of whichever of

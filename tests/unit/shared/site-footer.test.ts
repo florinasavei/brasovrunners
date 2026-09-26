@@ -446,4 +446,23 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     // attribute too, and it comes first in the markup, inside the fold, ahead of the bar's marks).
     expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Facebook"')), ["width", "height"], "a mark");
   });
+
+  it("carries Open-Meteo's credit in the fold: its site, a new tab that hands it nothing (§NNN)", async () => {
+    const { OPEN_METEO_SITE } = await import("@/modules/weather/domain/credit");
+    const markup = markupOnly(await renderFooter());
+    const anchor = /<a\b[^>]*data-testid="footer-weather-credit"[^>]*>([\s\S]*?)<\/a>/.exec(markup);
+    expect(anchor, "the footer's Open-Meteo credit").not.toBeNull();
+    const tag = anchor?.[0].slice(0, anchor[0].indexOf(">") + 1) ?? "";
+    expect(tag).toContain(`href="${OPEN_METEO_SITE}"`);
+    expect(tag).toContain('rel="noopener noreferrer"');
+    expect(tag).toContain('target="_blank"');
+    expect(anchor?.[1].replace(/<[^>]+>/g, "")).toBe("Prognoză: Open-Meteo");
+    // Inside the "Despre club" fold, not on the always-visible bar.
+    const fold = markup.indexOf("<details");
+    const foldEnd = markup.indexOf("</details>", fold);
+    const at = markup.indexOf('data-testid="footer-weather-credit"');
+    expect(fold).toBeGreaterThanOrEqual(0);
+    expect(at).toBeGreaterThan(fold);
+    expect(at).toBeLessThan(foldEnd);
+  });
 });

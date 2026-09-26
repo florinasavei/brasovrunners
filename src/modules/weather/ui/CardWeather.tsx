@@ -24,7 +24,8 @@ import { WEATHER_GLYPH } from "./glyphs";
  * component as an element (§370): the pill is a plain `<span>`, not MUI's `Chip`, whose `icon` prop
  * would be exactly that. A screen reader hears «Vremea la start: Parțial noros, 14 °C»; the eye
  * gets the glyph and the number. The word, the rain, the wind, the details and the credit are the
- * page's — the listing credits Open-Meteo once, under its cards.
+ * page's. Open-Meteo's credit is never on a card: it lives in the site footer's «Despre club»
+ * fold (`SiteFooter`), and beside the forecast on the event page and the featured hero (§NNN).
  */
 export default function CardWeather({ reading, locale }: { reading: WeatherReading; locale: "ro" | "en" }) {
   const words = weatherWords(reading, locale);

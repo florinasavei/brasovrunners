@@ -437,7 +437,8 @@ async function ListingBody({
     each at its own place, one request per rounded place and none outside the seven days
     (`forecastsForEvents`). Open-Meteo's credit is not repeated here any more (the owner, 2026-09-26:
     "nu vreau footer cu open-weather pe main page") — it lives in the site footer's fold instead
-    (`SiteFooter`), said once for the whole site, and the event page keeps its own (`EventFacts`).
+    (`SiteFooter`); the featured hero above the cards keeps its own on its «Vremea» line, and the
+    event page its own beside the forecast (`EventFacts`).
   */
   const forecasts = await forecastsForEvents(
     cards.map((series) => series.members[0]),

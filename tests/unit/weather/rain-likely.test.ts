@@ -53,6 +53,7 @@ describe("BR-REQ-041-01 rain is likely at the start (§NNN)", () => {
     // `WeatherWords` carries it — `rainShort` is the number alone, `rainLikely` the fixed phrase.
     expect(weatherWords(reading, "ro").details[1]).toBe("60% șanse de ploaie");
     expect(weatherWords(reading, "en").details[1]).toBe("60% chance of rain");
-    expect(weatherWords({ ...reading, precipitationProbability: null }, "ro").details).not.toContain("șanse de ploaie");
+    // Without a chance the phrase is simply gone: the temperature and the wind, nothing between.
+    expect(weatherWords({ ...reading, precipitationProbability: null }, "ro").details).toEqual(["14 °C", "vânt 11 km/h"]);
   });
 });

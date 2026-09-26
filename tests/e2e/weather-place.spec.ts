@@ -171,8 +171,9 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     await page.goto("/ro/evenimente");
     const main = page.locator("#main");
     await expect(main.locator("ul > li h2").first()).toBeAttached();
-    // A phone folds a long list (§78): open every fold before measuring.
-    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
+    // A phone folds a long list (§78): open every fold of the listing before measuring — only
+    // `#main`'s, so the footer's own fold stays closed until the summary click below opens it.
+    await page.evaluate(() => document.querySelectorAll("#main details").forEach((details) => ((details as HTMLDetailsElement).open = true)));
 
     const pills = main.locator('ul > li [data-testid="card-weather"]');
     expect(await pills.count()).toBeGreaterThanOrEqual(1);
@@ -198,10 +199,17 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
 
     // No credit strip under the listing's cards any more (the owner, 2026-09-26: "nu vreau footer
     // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead.
-    await expect(main.getByTestId("listing-weather-credit")).toHaveCount(0);
+    // The only Open-Meteo link left in `#main` is the featured hero's own, on its «Vremea» line
+    // (BR-REQ-041-01 c.83) — none when the hero has no forecast, exactly one when it has.
+    const heroCredits = await main.getByTestId("hero-weather").locator('a[href*="open-meteo"]').count();
+    expect(heroCredits).toBeLessThanOrEqual(1);
+    await expect(main.locator('a[href*="open-meteo"]')).toHaveCount(heroCredits);
     const footerCredit = page.getByTestId("footer-weather-credit");
+    await expect(footerCredit).toBeHidden();
     await page.getByTestId("footer-about-fold").locator("summary").click();
+    await expect(footerCredit).toBeVisible();
     await expect(footerCredit).toHaveText("Prognoză: Open-Meteo");
+    await expect(footerCredit).toHaveAttribute("href", /open-meteo/);
     await noSidewaysScroll(page);
   });
 

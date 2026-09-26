@@ -94,6 +94,21 @@ const forecast = (start: WeatherReading): EventForecast => ({ start, hours: [sta
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 
+/** The umbrella's phrase follows the rain phrase and comes before the wind (§NNN), never after it. */
+function expectUmbrellaBetweenRainAndWind(line: string, rain = "60% șanse de ploaie", likely = "ploaie probabilă", wind = "vânt") {
+  const at = line.indexOf(likely);
+  expect(line.indexOf(rain), line).toBeGreaterThanOrEqual(0);
+  expect(at, line).toBeGreaterThan(line.indexOf(rain));
+  expect(at, line).toBeLessThan(line.indexOf(wind));
+}
+
+/** The event page's weather block up to its details line: the summary pieces alone. */
+const eventWeatherSummary = (html: string) => {
+  const block = html.slice(html.indexOf('data-testid="event-weather"'));
+  const end = block.search(/data-testid="(weather-details|weather-hours|weather-credit)"/);
+  return text(end >= 0 ? block.slice(0, end) : block);
+};
+
 describe("the hero's «Vremea» line wears the umbrella when rain is likely (§NNN)", () => {
   it("adds no umbrella below the rain-likely threshold", async () => {
     const html = withoutStyles(
@@ -116,6 +131,26 @@ describe("the hero's «Vremea» line wears the umbrella when rain is likely (§N
     expect(dd).toContain('data-testid="UmbrellaIcon"');
     expect(text(dd)).toContain("60% șanse de ploaie");
     expect(text(dd)).toContain("ploaie probabilă");
+    expectUmbrellaBetweenRainAndWind(text(dd));
+  });
+
+  it("with no chance but an amount already falling, the umbrella follows the temperature", async () => {
+    const html = withoutStyles(
+      renderToStaticMarkup(
+        await EventFacts({
+          event: event(),
+          now: NOW,
+          stacked: false,
+          weather: forecast(reading({ precipitationProbability: null, precipitationMm: 0.5 })),
+        }),
+      ),
+    );
+    const line = text(/data-testid="hero-weather">([\s\S]*?)<\/dd>/.exec(html)?.[1] ?? "");
+    expect(line).not.toContain("șanse de ploaie");
+    const at = line.indexOf("ploaie probabilă");
+    expect(at, line).toBeGreaterThan(line.indexOf("12 °C"));
+    expect(line.indexOf("12 °C"), line).toBeGreaterThanOrEqual(0);
+    expect(at, line).toBeLessThan(line.indexOf("vânt"));
   });
 
   it("never draws it on a snowy hour, whatever the chance", async () => {
@@ -153,6 +188,26 @@ describe("the event page's weather block wears the umbrella when rain is likely 
     expect(html).toContain('data-testid="weather-rain-likely"');
     expect(text(html)).toContain("60% șanse de ploaie");
     expect(text(html)).toContain("ploaie probabilă");
+    expectUmbrellaBetweenRainAndWind(eventWeatherSummary(html));
+  });
+
+  it("with no chance but an amount already falling, the umbrella follows the temperature", async () => {
+    const html = withoutStyles(
+      renderToStaticMarkup(
+        await EventFacts({
+          event: event(),
+          now: NOW,
+          stacked: true,
+          weather: forecast(reading({ precipitationProbability: null, precipitationMm: 0.5 })),
+        }),
+      ),
+    );
+    const line = eventWeatherSummary(html);
+    expect(line).not.toContain("șanse de ploaie");
+    const at = line.indexOf("ploaie probabilă");
+    expect(line.indexOf("12 °C"), line).toBeGreaterThanOrEqual(0);
+    expect(at, line).toBeGreaterThan(line.indexOf("12 °C"));
+    expect(at, line).toBeLessThan(line.indexOf("vânt"));
   });
 
   it("in English: \"rain likely\"", async () => {

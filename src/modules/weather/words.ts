@@ -95,8 +95,9 @@ export function forecastPlaceWords(source: ForecastPlaceSource, locale: "ro" | "
 
 /**
  * The words that belong to no one hour: the block's list name, «Pe ore, de la start»; a card pill's
- * spoken prefix, «Vremea la start»; and the credit, «Prognoză: Open-Meteo», for the listing's one
- * line under its cards.
+ * spoken prefix, «Vremea la start»; and the credit, «Prognoză: Open-Meteo», for the site footer's
+ * «Despre club» fold (`SiteFooter`, §NNN) — the event page and the featured hero say theirs beside
+ * the forecast, through `weatherWords`.
  */
 export function weatherListWords(locale: "ro" | "en"): { hours: string; atStart: string; credit: string } {
   const t = weatherCatalogue(locale);
