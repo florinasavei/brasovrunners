@@ -935,7 +935,9 @@
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
       "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva.",
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
-      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate."
+      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate.",
+      "translationBudgetTitle": "Salvezi bugetul de traduceri?",
+      "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -2379,6 +2381,17 @@
             "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
             "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”."
           ]
+        },
+        "translation": {
+          "title": "Traducerea automată din română (DeepL, gratuit)",
+          "todo": "Construit: lângă fiecare câmp în engleză din editoare apare „Tradu din română”, iar sus „Tradu tot din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci câmpurile în engleză se scriu de mână, ca acum.",
+          "done": "Traducerea automată e pornită: editoarele au butoanele „Tradu din română”.",
+          "how": [
+            "Fă-ți un cont DeepL API Free (pagina „DeepL API” de pe site-ul DeepL → planul Free): 500.000 de caractere pe lună, gratuit. DeepL poate cere un card doar pentru verificare; planul Free nu se taxează.",
+            "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
+            "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
+            "Deschide un eveniment: sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+          ]
         }
       },
       "freeVerdict": {
@@ -2579,6 +2592,24 @@
       },
       "budgetThresholds": {
         "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
+      },
+      "translationBudget": {
+        "title": "Traducerea automată (DeepL)",
+        "intro": "Butoanele „Tradu din română” și „Tradu tot din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "inForce": {
+          "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
+          "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
+        },
+        "today": "Azi s-au trimis {used} din {budget} caractere.",
+        "configured": "Cheia DeepL e pusă pe acest server: butoanele apar pentru Redactor, Organizator și Administrator.",
+        "notConfigured": "Cheia DeepL nu e pusă pe acest server: butoanele nu apar (vezi rândul din Sarcini).",
+        "privacy": "Pleacă la DeepL (UE) doar textele clubului din câmpurile de conținut — niciodată datele unui participant și niciodată textele legale. Nota de confidențialitate nu se schimbă.",
+        "updatedAt": "Ultima schimbare: {when}.",
+        "readOnly": "Doar un Administrator poate schimba bugetul.",
+        "field": "Caractere pe zi",
+        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
+        "save": "Salvează bugetul",
+        "saving": "Se salvează…"
       }
     },
     "clubTodo": {
@@ -5705,7 +5736,8 @@
       "teamMemberDeleted": "Cardul a fost șters.",
       "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
       "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
-      "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site."
+      "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site.",
+      "translationBudget": "Bugetul de traduceri a fost salvat."
     }
   },
   "Network": {
@@ -5850,5 +5882,34 @@
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
     "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
+  },
+  "Translate": {
+    "button": "Tradu din română",
+    "pending": "Se traduce…",
+    "all": "Tradu tot din română",
+    "allHelp": "Înlocuiește fiecare câmp în engleză care are text în română cu traducerea lui, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
+    "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
+    "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
+    "cut": "Scurtat la limita câmpului, verifică finalul: {fields}.",
+    "confirm": {
+      "title": "Înlocuiești textul în engleză?",
+      "body": "Câmpul în engleză are deja text. Traducerea din română îl înlocuiește; nimic nu se salvează până nu apeși Salvează.",
+      "allTitle": "Traduci totul din română?",
+      "allBody": "Se înlocuiesc {count} câmpuri în engleză cu traducerea celor în română, cu aceeași așezare (titluri, liste, tabele, poze, linkuri). Nimic nu se salvează până nu apeși Salvează. Câmpurile: {fields}",
+      "go": "Tradu",
+      "cancel": "Renunță"
+    },
+    "refusal": {
+      "forbidden": "Rolul tău nu poate folosi traducerea automată.",
+      "notConfigured": "Traducerea automată nu e configurată pe acest server (lipsește cheia DeepL).",
+      "invalid": "Câmpul acesta nu se poate traduce automat.",
+      "nothing": "Câmpul în română e gol: nu e nimic de tradus.",
+      "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
+      "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
+      "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",
+      "refused": "DeepL a refuzat cheia. Un Administrator trebuie să verifice DEEPL_API_KEY (Sarcini).",
+      "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",
+      "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă."
+    }
   }
 }

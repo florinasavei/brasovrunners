@@ -43,6 +43,7 @@ import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { createEventAction } from "../../actions";
@@ -224,6 +225,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             <Stack spacing={2}>
               {/* "Creează și publică" pressed while something publication needs is empty (§406). */}
               <PublishGapsSummary id="publish-gaps" title={t("editor.publishGaps.title")} intro={t("editor.publishGaps.intro")} labels={gapLabels} />
+              {/* «Tradu tot din română» (§NNN), as on the editor: write the Romanian, then fill the English. */}
+              <TranslateAllButton />
               {/* The page, top to bottom (§406): the editor's same cards, in the same order. */}
               <EditorGroup label={t("editor.groups.page")} />
               <KindBox {...box} heading={flow.headings.kind} />

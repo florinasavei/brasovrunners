@@ -15,6 +15,7 @@ import { DEFAULT_EVENT_LINK_KIND, EVENT_LINK_KINDS, type EventLinkKind, MAX_EVEN
 import { LINK_GLYPH } from "@/modules/events/ui/link-glyphs";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
 import { useRecall } from "@/shared/forms/recall";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 
 export type LinkRowValue = { kind: string; url: string; labelRo: string; labelEn: string };
 
@@ -179,6 +180,8 @@ function LinkRowsEditorIsland({
                 slotProps={{ htmlInput: { ...constraints.label } }}
               />
             </Stack>
+            {/* «Tradu din română» (§NNN): the English label from the Romanian one. */}
+            <TranslateFieldButton en={name("labelEn")} />
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
               <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>
                 <ArrowUpwardIcon fontSize="small" />

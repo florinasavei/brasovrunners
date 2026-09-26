@@ -14,6 +14,7 @@ import { giveOlderPicturesTheirLadder } from "@/modules/media/older-pictures";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings, canManagePlatform } from "@/modules/staff-identity/domain/roles";
+import { updateTranslationBudget } from "@/modules/translate/budget";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -110,6 +111,26 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   }
   await flashOutcome({ saved: "jobCadence" });
   redirect(`${path}?panel=costs&saved=jobCadence#admin-alert`);
+}
+
+/**
+ * «Tradu din română»'s daily allowance of characters (§NNN), beside the other brakes on what the
+ * club pays. A club setting (§450): it caps what the club spends and cannot stop the platform, so
+ * the Administrator's door; the service asserts the capability again, refuses a number out of
+ * range and writes the audit row; a save that changes nothing writes nothing.
+ */
+export async function updateTranslationBudgetAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/tasks" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateTranslationBudget(getDb(), actor, { dailyCharacters: form.get("dailyCharacters") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  await flashOutcome({ saved: "translationBudget" });
+  redirect(`${path}?panel=costs&saved=translationBudget#admin-alert`);
 }
 
 /**

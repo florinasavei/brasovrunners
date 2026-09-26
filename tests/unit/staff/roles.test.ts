@@ -497,6 +497,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canReadRegistrations: /*  */ [false, false, true, false, true, true],
     canMessageParticipants: /**/ [false, false, true, false, true, true],
     canSendNewsletter: /*     */ [false, false, true, false, true, true],
+    canTranslateTexts: /*     */ [false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, true, true],
     canWorkTheDesk: /*        */ [true, true, true, true, true, true],
     canManageTestRegistrations: [false, false, false, false, true, true],

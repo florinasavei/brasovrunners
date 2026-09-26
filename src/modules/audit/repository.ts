@@ -243,7 +243,14 @@ export type AuditAction =
   | "team_member.deleted"
   | "team_page.published"
   | "team_page.unpublished"
-  | "team_page.intro_saved";
+  | "team_page.intro_saved"
+  /**
+   * «Tradu din română» (§NNN): one row per press — who, which boxes by name, how many characters
+   * went to which provider. Never the words, in either language. Also the day's meter: the
+   * translation budget sums these rows' `characters` since the club's midnight.
+   */
+  | "content.translated"
+  | "translationBudget.changed";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
@@ -255,6 +262,7 @@ export type RecordAuditInput = {
   // across all their registrations (§322).
   // `newsletter` for a send (its id) or a subscription removed by hand (no id: the row is gone).
   // `team_member` for a card of «Echipa» (§459).
+  // `content` for a translation press, about boxes in a form rather than a stored row (§NNN).
   entityType:
     | "registration"
     | "event"
@@ -264,7 +272,8 @@ export type RecordAuditInput = {
     | "participant"
     | "media_asset"
     | "newsletter"
-    | "team_member";
+    | "team_member"
+    | "content";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

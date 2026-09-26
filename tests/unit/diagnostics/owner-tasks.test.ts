@@ -41,6 +41,7 @@ const LAUNCHED: OwnerTaskInputs = {
   botCheckHealth: "ok",
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
+  translationConfigured: true,
   contactFormConfigured: true,
   // Production's own numbers set on Neon the evening of 2026-09-23: a 100 CU-hour quota, well
   // under a fifth spent.
@@ -248,10 +249,26 @@ describe("owner tasks", () => {
       "botCheck",
       "declarationArchiveMail",
       "vercelUsage",
+      "translation",
       "contactForm",
       "domainRenewal",
       "neonLimits",
     ]);
+  });
+
+  // «Tradu din română» (§NNN): built, open until DeepL's key is on the deployment, never blocking.
+  it("asks for the DeepL key in its own row, open until it is set, with its steps in both languages", () => {
+    expect(stateOf({ ...LAUNCHED, translationConfigured: false }, "translation")).toBe("open");
+    expect(stateOf(LAUNCHED, "translation")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, translationConfigured: false }).find((task) => task.id === "translation")).toMatchObject({
+      owner: "club",
+      kind: "account",
+    });
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.translation;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("DEEPL_API_KEY");
+    }
   });
 
   it("orders blocking first, then broken, then open, then done", () => {

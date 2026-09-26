@@ -2,12 +2,13 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ValidityProxy from "@/shared/forms/ValidityProxy";
 import { useTwinFold } from "@/shared/ui/LocaleTabPanels";
-import { isRichTextEmpty, readRichText } from "../domain/schema";
+import { isRichTextEmpty, readRichText, type RichTextDoc } from "../domain/schema";
+import { RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
 import RichTextEditor from "./RichTextEditor";
 
 /**
@@ -65,7 +66,28 @@ function LazyRichTextEditorIsland({
   const [mounted, setMounted] = useState(false);
   if (!mounted && fold.open && fold.shown) setMounted(true);
   const recall = useRecall();
-  const stored = readRichText(editor.initialBody);
+  /*
+    A translation that arrived while the fold was still shut (§NNN): posted by the hidden box in
+    place of the stored document, and the document the editor mounts from when the fold opens.
+    Once the editor is mounted it takes the event itself (`RichTextEditor`), so this stops
+    listening.
+  */
+  const [filled, setFilled] = useState<RichTextDoc | null>(null);
+  const hidden = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (mounted) return;
+    const onFill = (event: Event) => {
+      const detail = (event as CustomEvent<RichTextFillDetail>).detail;
+      if (detail?.name === editor.name) setFilled(detail.doc);
+    };
+    window.addEventListener(RICH_TEXT_FILL_EVENT, onFill);
+    return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
+  }, [mounted, editor.name]);
+  // The form hears the change as it hears typing (§350's tab marks re-read the form on `input`).
+  useEffect(() => {
+    if (filled) hidden.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [filled]);
+  const stored = filled ?? readRichText(editor.initialBody);
 
   return (
     <Box
@@ -92,7 +114,13 @@ function LazyRichTextEditorIsland({
         )}
       </Typography>
       <Box>
-        {mounted ? <RichTextEditor {...editor} /> : <input type="hidden" name={editor.name} value={JSON.stringify(stored)} readOnly />}
+        {mounted ? (
+          // `override`, not `initialBody`: after a refusal the editor would otherwise mount from the
+          // recalled document and drop the translation that arrived while the fold was shut.
+          <RichTextEditor {...editor} override={filled} />
+        ) : (
+          <input ref={hidden} type="hidden" name={editor.name} value={JSON.stringify(stored)} readOnly />
+        )}
       </Box>
     </Box>
   );

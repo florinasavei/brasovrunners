@@ -74,6 +74,7 @@ import {
   type BlockAlignment,
   type ImageCrop,
   type ImageFocus,
+  type RichTextDoc,
   type TableBorderColour,
   type TableBorders,
   type TableHeaderFill,
@@ -81,6 +82,7 @@ import {
 } from "../domain/schema";
 import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-frame";
 import { editorLook, sameEditorLook } from "./editor-look";
+import { RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
 import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
@@ -574,6 +576,22 @@ function RichTextEditorIsland({
     a tenth of a second on a phone, for a screen that did not change.
   */
   useEditorState({ editor, selector: ({ editor: current }) => editorLook(current?.state), equalityFn: sameEditorLook });
+
+  /*
+    «Tradu din română» (§NNN): a translated document arrives as a window event naming this box,
+    and replaces the document the way a paste of the whole would — through the editor, so the
+    hidden value, the word count and the tab marks follow as they do for typing. Nothing is saved.
+  */
+  useEffect(() => {
+    if (!editor) return;
+    const onFill = (event: Event) => {
+      const detail = (event as CustomEvent<RichTextFillDetail>).detail;
+      if (detail?.name !== name) return;
+      editor.commands.setContent(detail.doc);
+    };
+    window.addEventListener(RICH_TEXT_FILL_EVENT, onFill);
+    return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
+  }, [editor, name]);
 
   /**
    * Shrink in the browser, post to `/api/admin/media`, insert the answer as an image node.
@@ -1966,15 +1984,21 @@ function countWords(text: string): number {
  * After a refused submit the body comes back as it was typed (`DECISIONS.md` §315): the
  * recalled JSON is the document, keyed on the answer so Tiptap re-mounts from it rather than
  * keep what it held before the press. With nothing recalled this is the island as it was.
+ *
+ * `override` is a document that arrived after the refusal and wins over the recalled one — a
+ * translation filled into a fold that was still shut (`LazyRichTextEditor`, §NNN). Without it the
+ * fold would open on the recalled English, and its hidden value would post that old text.
  */
-export default function RichTextEditor(props: ComponentProps<typeof RichTextEditorIsland>) {
+export default function RichTextEditor({
+  override,
+  ...props
+}: ComponentProps<typeof RichTextEditorIsland> & { override?: RichTextDoc | null }) {
   const recall = useRecall();
   const recalled = recall.value(props.name);
-  return (
-    <RichTextEditorIsland
-      key={recall.generation}
-      {...props}
-      initialBody={recalled === undefined ? props.initialBody : recalledJson(recalled, props.initialBody)}
-    />
-  );
+  const initialBody = override
+    ? override
+    : recalled === undefined
+      ? props.initialBody
+      : recalledJson(recalled, props.initialBody);
+  return <RichTextEditorIsland key={recall.generation} {...props} initialBody={initialBody} />;
 }
