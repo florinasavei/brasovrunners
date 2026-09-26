@@ -16,7 +16,6 @@ import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age"
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
-import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
 import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
@@ -799,8 +798,8 @@ export default async function EventFacts({
     /*
       The weather at the start, on the hero too (§416; the owner, 2026-09-25: "aș vrea să văd vremea
       și pe cardul principal"): «Vremea» with the forecast's own glyph, then the pieces the page's
-      first line says — the word, the degrees, the chance of rain, the wind — and the credit
-      Open-Meteo's licence asks for as the last piece, a link like the others here. The start
+      first line says — the word, the degrees, the chance of rain, the wind. Open-Meteo's credit is
+      said once, in the footer's fold (§NNN; the owner, 2026-09-26), never here. The start
       hour's details and the hours after it stay the page's: the hero is a summary with a button.
     */
     if (weather) {
@@ -817,7 +816,7 @@ export default async function EventFacts({
       lines.push({
         label: words.label,
         icon: WEATHER_GLYPH[weather.start.glyph],
-        value: [...forecastSummaryPieces(words, weather.start, umbrella), links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit],
+        value: forecastSummaryPieces(words, weather.start, umbrella),
         testId: "hero-weather",
       });
     }
@@ -1032,8 +1031,7 @@ export default async function EventFacts({
     The weather at the start (§402; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
     pe ceva API"): «Vremea» with the forecast's own glyph in the row glyph's place — the sun, a
     cloud, a raindrop — then its word, the temperature, the chance of rain and the wind, as one
-    flowing line like «Când», and under it the credit Open-Meteo's licence asks for, a link of its
-    own. Only when the page read a forecast: within seven days of the start and when the service
+    flowing line like «Când». Open-Meteo's credit is the footer's alone since §NNN. Only when the page read a forecast: within seven days of the start and when the service
     answered; otherwise the row is not there at all, never a sentence saying it is missing. After
     the short facts and before the partners, whose cards stay last (§356).
 
@@ -1044,7 +1042,7 @@ export default async function EventFacts({
     - the hours from the start, three of them (`WEATHER_BLOCK_HOURS`), as a row of small outlined
       cells — the hour on the event's clock, its glyph (its word for a screen reader), the degrees
       and the chance of rain — an ordered list, so a screen reader hears "list, 3 items";
-    - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», before the credit.
+    - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», the row's last line.
   */
   if (weather) {
     const words = weatherWords(weather.start, locale);
@@ -1098,7 +1096,7 @@ export default async function EventFacts({
           )}
           <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-credit">
             {/* The ten pixels above given back, the ten below kept: the next row's label may sit nearer than that (§366). */}
-            {flow([forecastPlaceWords(weather.place, locale), links ? outLink(OPEN_METEO_SITE, words.credit, undefined, "above") : words.credit])}
+            {forecastPlaceWords(weather.place, locale)}
           </Typography>
         </Box>
       ),

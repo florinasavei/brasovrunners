@@ -149,7 +149,7 @@ export default async function ListingFilterPanel({
             // Tighter on a phone (§424, amending §380's scale — the owner: "Butonul de filtre e
             // mult prea mare"): the open panel is a compact block rather than the same box a
             // tablet gets, `p` and `gap` on the density scale like every other public site; one step
-            // tighter again in §431 (the owner: "prea mult padding"), gap already on the lowest step.
+            // tighter again in §NNN (the owner: "prea mult padding"), gap already on the lowest step.
             p: { xs: DENSITY.gapXs, sm: 1 },
             border: 1,
             borderColor: "divider",
