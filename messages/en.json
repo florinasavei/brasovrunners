@@ -4662,6 +4662,12 @@
     },
     "phone": "Phone",
     "phoneCountry": "Country",
+    "countrySearch": {
+      "search": "Search for a country (name, code or prefix)",
+      "noMatch": "No country matches",
+      "open": "Open the list of countries",
+      "close": "Close the list of countries"
+    },
     "phoneHelp": "The number without the country code — for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",

@@ -53,9 +53,9 @@ import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
-import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import NationalityField from "@/modules/registrations/ui/NationalityField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
@@ -308,6 +308,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  // The two country pickers' search words (§NNN), as plain strings for the islands (§353).
+  const countrySearchWords = {
+    search: t("countrySearch.search"),
+    noMatch: t("countrySearch.noMatch"),
+    open: t("countrySearch.open"),
+    close: t("countrySearch.close"),
+  };
 
   /**
    * The props every text field shares: its anchor, its name, whether it was rejected, and the
@@ -840,35 +847,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
                   "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
                   are, so a Romanian runner just leaves it. It was optional in the fold on the
-                  right (§322); the server now refuses a public form without it.
+                  right (§322); the server now refuses a public form without it. A native select the
+                  server draws and the form posts, searchable once the island runs (§NNN): the
+                  owner, "vreau searchbox să pot găsi țara".
                 */}
-                <TextField
+                <NationalityField
                   {...field("nationality")}
                   label={t("nationality")}
-                  select
-                  required
-                  fullWidth
                   // A blank from an older draft comes back as Romania too, never an empty select.
                   defaultValue={prefill("nationality") || "RO"}
-                  sx={SELECT_WITH_GLYPHS_SX}
-                >
-                  {/*
-                    The flag before the name (§171), from the set `scripts/sync-flags.mjs` copies
-                    into `public/flags/`, normalised to 4:3 — not the regional-indicator emoji,
-                    which Windows draws as two boxed capitals.
-                  */}
-                  {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
-                      {/* The fixed box keeps the flag on the name's line and every name at one x. */}
-                      <Box component="span" sx={OPTION_GLYPH_SX}>
-                        <Flag code={country.code} width={20} />
-                      </Box>
-                      <Box component="span" sx={OPTION_LABEL_SX}>
-                        {country.label}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </TextField>
+                  countries={countries}
+                  words={countrySearchWords}
+                />
               </Stack>
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
@@ -914,6 +904,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
                 countryNames={phoneNames}
+                searchWords={countrySearchWords}
                 required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
@@ -946,6 +937,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   countryLabel={t("phoneCountry")}
                   countryOrder={phoneOrder}
                   countryNames={phoneNames}
+                  searchWords={countrySearchWords}
                   required
                   autoComplete="off"
                   /* The contact must be somebody else (§228), said as it is typed and refused

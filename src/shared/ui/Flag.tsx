@@ -17,11 +17,14 @@ export default function Flag({
   code,
   width = 16,
   className,
+  loading,
 }: {
   /** ISO 3166-1 alpha-2, in either case: `RO`, `gb`. */
   code: string;
   width?: number;
   className?: string;
+  /** `lazy` in a long list, so only the flags scrolled to are fetched (§NNN). */
+  loading?: "lazy" | "eager";
 }) {
   return (
     // An SVG has nothing for an image optimizer to do, and next/image would need
@@ -34,6 +37,7 @@ export default function Flag({
       width={width}
       height={Math.round((width * 3) / 4)}
       className={className}
+      loading={loading}
       style={{ display: "block", borderRadius: 2 }}
     />
   );

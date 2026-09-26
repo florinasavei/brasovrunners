@@ -8,6 +8,7 @@ import { useRecall } from "@/shared/forms/recall";
 import Flag from "@/shared/ui/Flag";
 import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "../phone";
 import { formatNationalNumber, phoneMaxLength, phonePlaceholder, reformatPhoneInput } from "../phone-format";
+import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_SX } from "./CountryPicker";
 
 /**
  * A telephone number as one box: the country's flag at its start, the digits after it, grouped
@@ -21,6 +22,13 @@ import { formatNationalNumber, phoneMaxLength, phonePlaceholder, reformatPhoneIn
  * select is no longer what is *drawn*: it lies, invisible, over the flag and the caret at the
  * start of the box, so a tap on the flag opens the phone's own picker, and what the eye reads is
  * one outlined field with a real flag in it.
+ *
+ * **And, once the island runs, a search** (§NNN; the owner: "vreau searchbox să pot găsi țara").
+ * Two hundred options *without* a search box were the scroll; with one they are a list that
+ * shrinks to "Germania" after four letters, which a native select cannot do — its options start
+ * with a flag, so it cannot even jump to a letter. A button then lies over the select and opens a
+ * popover with the search; the select is still what posts, and still the control before
+ * hydration and without JavaScript.
  *
  * ## Why this became a client island
  *
@@ -135,9 +143,17 @@ const COUNTRY_ADORNMENT_SX = {
     cursor: "pointer",
     fontSize: 16,
   },
-  "&:has(> select:focus-visible)": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: "-3px" },
+  // The search's button (§NNN), laid over the select once the island runs: the tap opens the
+  // popover with a search box rather than the phone's own list. Same box, same 44-pixel target.
+  "& > button": PICKER_BUTTON_SX,
+  "&:has(> select:focus-visible), &:has(> button:focus-visible)": {
+    outline: "2px solid",
+    outlineColor: "primary.main",
+    outlineOffset: "-3px",
+  },
   "@media (scripting: none)": {
     "& > span": { display: "none" },
+    "& > button": { display: "none" },
     "& > select": {
       position: "static",
       opacity: 1,
@@ -173,6 +189,7 @@ function PhoneFieldIsland({
   mustDifferLabel,
   tooShortLabel,
   validLabel,
+  searchWords,
 }: {
   name: string;
   label: string;
@@ -218,6 +235,11 @@ function PhoneFieldIsland({
   tooShortLabel?: string;
   /** What precedes the composed number once it is valid: "we will ring". */
   validLabel?: string;
+  /**
+   * The search's words (§NNN). Given, the flag opens a popover with a search box once the island
+   * runs; left out, the flag opens the native select as it always did.
+   */
+  searchWords?: CountrySearchWords;
 }) {
   const split = splitPhone(value ?? null);
   const initialCountry =
@@ -383,6 +405,30 @@ function PhoneFieldIsland({
     .filter((code) => code in DIALING_CODES)
     .map((code) => ({ code, label: `${flagEmoji(code)} ${countryNames[code] ?? code} (+${DIALING_CODES[code]})` }));
 
+  /*
+    The search (§NNN; the owner: "vreau searchbox să pot găsi țara"). The native select stays —
+    it is what posts, what works before hydration and without JavaScript, and what the other
+    number's island listens to — but once this island runs, a button lies over it and opens a
+    popover whose search box filters the countries by name, code or dialling code. A choice is
+    written to the select and announced with a real `change` event, so the select's own
+    `onChange` below reformats the digits and `mustDifferFromName` on the other field hears it,
+    exactly as if the phone's own list had been used.
+  */
+  const searchable = hydrated && searchWords !== undefined;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [searchAnchor, setSearchAnchor] = useState<HTMLElement | null>(null);
+  const [searching, setSearching] = useState(false);
+  /** Where focus goes once the popover has gone: the digits after a choice, the flag otherwise. */
+  const focusAfterSearch = useRef<"digits" | "flag">("flag");
+  const searchOptions = countryOrder
+    .filter((code) => code in DIALING_CODES)
+    .map((code) => ({ code, label: countryNames[code] ?? code, dialingCode: DIALING_CODES[code] }));
+  const chooseCountry = (code: string) => {
+    chooseInSelect(selectRef.current, code);
+    focusAfterSearch.current = "digits";
+    setSearching(false);
+  };
+
   const adornment = (
     <Box sx={COUNTRY_ADORNMENT_SX}>
       <span aria-hidden>
@@ -393,6 +439,9 @@ function PhoneFieldIsland({
         ref={selectRef}
         name={`${name}Country`}
         aria-label={countryLabel}
+        // Under the search's button once it is there: one control in the tab order, not two.
+        tabIndex={searchable ? -1 : undefined}
+        aria-hidden={searchable ? true : undefined}
         defaultValue={initialCountry}
         onChange={(event) => {
           const next = event.target.value;
@@ -417,6 +466,41 @@ function PhoneFieldIsland({
           </option>
         ))}
       </select>
+      {searchable && (
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-label={`${countryLabel}: ${countryNames[country] ?? country} (+${DIALING_CODES[country] ?? ""})`}
+          aria-haspopup="dialog"
+          aria-expanded={searching}
+          onClick={(event) => {
+            focusAfterSearch.current = "flag";
+            setSearchAnchor(event.currentTarget);
+            setSearching(true);
+          }}
+        />
+      )}
+      {/* Mounted while it closes too, so the transition ends and `onExited` places focus. */}
+      {searchable && searchAnchor && (
+        <CountryPicker
+          mode="dialling"
+          open={searching}
+          anchorEl={searchAnchor}
+          countries={searchOptions}
+          value={country}
+          label={countryLabel}
+          words={searchWords}
+          onChoose={chooseCountry}
+          onDismiss={() => {
+            focusAfterSearch.current = "flag";
+            setSearching(false);
+          }}
+          onExited={() => {
+            if (focusAfterSearch.current === "digits") inputRef.current?.focus();
+            else buttonRef.current?.focus();
+          }}
+        />
+      )}
     </Box>
   );
 
