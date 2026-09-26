@@ -50,10 +50,10 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { groupRunDeclarationsInForce, declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
-  allowedTransitions,
   canCreateEvent,
   canDeleteEvent,
   canEditEventFields,
+  eventEditorTransitions,
   canEditTranslation,
   canManageRegistrations,
   canMessageParticipants,
@@ -206,7 +206,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The language endonyms are shared with the public switcher.
   const tSite = await getTranslations("Site");
 
-  const transitions = allowedTransitions(
+  // The table's verbs, and «Publică» on a draft for a role that may publish (§423): one press,
+  // as «Creează și publică» on the create page, whatever the event's type or series.
+  const transitions = eventEditorTransitions(
     staffUser.role,
     event.editorialStatus,
     translations.some((translation) => translation.authorStaffUserId === staffUser.id),

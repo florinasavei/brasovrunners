@@ -160,6 +160,12 @@ export type AuditAction =
   /** How many registrations one address may carry at one event (§389), from and to. */
   | "registrationsPerAddress.changed"
   /**
+   * One press of the one-off button that gives the pictures stored before §414 their ladder
+   * (§430): how many it converted, how many it could not read from the store, how many are left.
+   * About no single row — a press is a batch — so `entity_id` is null.
+   */
+  | "media.ladder_given"
+  /**
    * The database's brakes changed from `/admin/tasks` (§335): the compute's size ceiling and the
    * period's CU-hour limit, from and to as Neon stated them before and after — never the request —
    * with what was asked, the environment, and whether all of it was applied.
@@ -207,7 +213,7 @@ export type RecordAuditInput = {
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
   // that is about a version of the club's own text; `participant` for the one about a person
   // across all their registrations (§322).
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant";
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant" | "media_asset";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

@@ -167,6 +167,8 @@ export async function GET(request: Request): Promise<Response> {
         provisionalBibNumber: row.provisionalBibNumber,
         checkedInAt: row.checkedInAt,
         emailBounced: row.emailRejectedReason !== null,
+        termsVersion: row.termsVersion,
+        termsAcceptedAt: row.termsAcceptedAt,
       })),
       eventTitle ?? "Participants",
     );
@@ -204,6 +206,9 @@ export async function GET(request: Request): Promise<Response> {
       provisionalBibNumber: row.provisionalBibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
       emailBounced: row.emailRejectedReason !== null,
+      // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
+      termsVersion: row.termsVersion,
+      termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",
     })),
   );
 

@@ -546,22 +546,78 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     uvIndex: 1,
   } as const;
 
-  it("shows the glyph and the degrees among the card's marks, the word for a screen reader alone", async () => {
+  const pillOf = (html: string) => /<span\b[^>]*data-testid="card-weather"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[0] ?? "";
+  /** The glyph's path data, which names the Material icon it is. */
+  const pathOf = (fragment: string) => /<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/.exec(fragment)?.[1] ?? "";
+  /** Every glyph's path data, in order — the sky's own glyph first, the umbrella after it when it wears one. */
+  const pathsOf = (fragment: string) => [...fragment.matchAll(/<svg\b[^>]*>[\s\S]*?<path\b[^>]*\bd="([^"]+)"/g)].map((m) => m[1]);
+
+  it("shows the glyph and the degrees as the last pill of the route's row, the word for a screen reader alone", async () => {
     const html = withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading })));
-    const pill = /<span\b[^>]*data-testid="card-weather"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[0] ?? "";
+    const pill = pillOf(html);
     expect(pill).toMatch(/<svg\b[^>]*aria-hidden="true"/);
     expect(pill).toContain('<span aria-hidden="true">12 °C</span>');
     expect(text(pill)).toContain("Vremea la start: Înnorat, 12 °C");
-    // The rain, the wind and the details are the page's, never the card's.
+    // The rain, the wind and the details are the page's, never the card's — below the umbrella's 50%.
     expect(text(html)).not.toContain("șanse de ploaie");
     expect(text(html)).not.toContain("rafale");
-    // Before the title: in the marks row, not a line of its own under the facts.
-    expect(html.indexOf('data-testid="card-weather"')).toBeLessThan(html.indexOf("<h2"));
+    expect(pill).not.toContain("data-rain-likely");
+    // Not among the marks above the title any more (§429, amending §416): in the route's row, after
+    // every route pill and the cost — the row's last.
+    expect(html.indexOf('data-testid="card-weather"')).toBeGreaterThan(html.indexOf("<h2"));
+    const row = fact(html, "pills");
+    expect(row).toContain('data-testid="card-weather"');
+    expect(chipLabels(row)).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    const weatherAt = row.indexOf('data-testid="card-weather"');
+    expect(row.lastIndexOf("MuiChip-root")).toBeLessThan(weatherAt);
+    // The marks row holds what the event is, and nothing of the day's weather.
+    expect(chipLabels(html.slice(0, html.indexOf("<h2")))).toEqual(["Alergare de grup", "Colaborare"]);
   });
 
-  it("is on the series card for its next date, and on neither card without a forecast", async () => {
+  it("stands alone in the row on a card with no route pill", async () => {
+    const bare = trailToRoad({ surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, costType: null });
+    const html = withoutStyles(await markup(createElement(EventCard, { event: bare, index: 0, now: NOW, weather: reading })));
+    const row = fact(html, "pills");
+    expect(row).toContain('data-testid="card-weather"');
+    expect(chipLabels(row)).toEqual([]);
+    // And no row at all with neither.
+    expect(withoutStyles(await markup(createElement(EventCard, { event: bare, index: 0, now: NOW })))).not.toContain('data-fact="pills"');
+  });
+
+  it("wears the umbrella when rain is likely, and a screen reader hears the chance", async () => {
+    const calm = pillOf(withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: reading }))));
+    const wet = pillOf(
+      withoutStyles(await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, precipitationProbability: 60 } }))),
+    );
+    expect(wet).toContain('data-rain-likely="true"');
+    // The sky's own glyph stays: the umbrella sits beside it, never replacing it.
+    expect(pathsOf(wet)[0]).toBe(pathOf(calm));
+    // A second glyph, the umbrella, joins it only when rain is likely.
+    expect(pathsOf(wet)).toHaveLength(2);
+    expect(pathsOf(calm)).toHaveLength(1);
+    // And it is not the showers' own glyph (`weather/ui/glyphs.ts`) — a showers hour still reads as
+    // showers, distinct from a partly-cloudy hour that also happens to be wet.
+    const showers = pillOf(
+      withoutStyles(
+        await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 80, kind: "showers", glyph: "showers", precipitationProbability: 10 } })),
+      ),
+    );
+    expect(pathsOf(showers)).toHaveLength(1);
+    expect(text(wet)).toContain("Vremea la start: Înnorat, 12 °C, ploaie probabilă");
+    expect(wet).toContain('<span aria-hidden="true">12 °C</span>');
+    // Snow keeps its own glyph, whatever the chance: Open-Meteo's chance is of any precipitation.
+    const snow = pillOf(
+      withoutStyles(
+        await markup(createElement(EventCard, { event: trailToRoad(), index: 0, now: NOW, weather: { ...reading, code: 73, kind: "snow", glyph: "snow", precipitationProbability: 90 } })),
+      ),
+    );
+    expect(snow).not.toContain("data-rain-likely");
+  });
+
+  it("is on the series card for its next date, in its route's row, and on neither card without a forecast", async () => {
     const withWeather = withoutStyles(await markup(createElement(SeriesCard, { members: series(), index: 0, now: NOW, weather: reading })));
-    expect(withWeather).toContain('data-testid="card-weather"');
+    expect(fact(withWeather, "pills")).toContain('data-testid="card-weather"');
+    expect(withWeather.indexOf('data-testid="card-weather"')).toBeGreaterThan(withWeather.indexOf("<h2"));
     expect(withoutStyles(await single())).not.toContain('data-testid="card-weather"');
     expect(withoutStyles(await repeated())).not.toContain('data-testid="card-weather"');
   });

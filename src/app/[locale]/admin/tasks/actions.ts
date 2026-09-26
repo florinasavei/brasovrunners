@@ -8,6 +8,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { NeonLimitsRefusal, updateNeonLimits } from "@/modules/diagnostics/neon-limits";
 import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { updateJobCadence } from "@/modules/jobs/cadence";
+import { giveOlderPicturesTheirLadder } from "@/modules/media/older-pictures";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -105,6 +106,34 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   }
   await flashOutcome({ saved: "jobCadence" });
   redirect(`${path}?panel=costs&saved=jobCadence#admin-alert`);
+}
+
+/**
+ * One press of "Fă mărimile" (§430): the next batch of the pictures stored before §414 gets its
+ * ladder. Administrator at the door, the service asserting the role again and writing the audit
+ * row; lands back on the card, which says how many are left and goes once none are. The toast
+ * carries the numbers only — how many converted, failed and left (§384).
+ */
+export async function giveOlderPicturesLadderAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/tasks" });
+
+  let result: { converted: number; failed: number; left: number };
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    result = await giveOlderPicturesTheirLadder(getDb(), actor, { now: new Date() });
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  const numbers = `count=${result.converted}&left=${result.left}&failed=${result.failed}`;
+  await flashOutcome({
+    saved: result.failed > 0 ? "picturesLadderedFailed" : "picturesLaddered",
+    count: result.converted,
+    left: result.left,
+    failed: result.failed,
+  });
+  redirect(`${path}?saved=${result.failed > 0 ? "picturesLadderedFailed" : "picturesLaddered"}&${numbers}#admin-alert`);
 }
 
 /**

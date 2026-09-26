@@ -73,6 +73,18 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await expect(page.getByText("Mesajul a plecat.")).toBeVisible();
     // The address is said back from the draft cookie, never from the URL (§14.5).
     await expect(page.getByText(`Îți răspundem pe ${email}.`)).toBeVisible();
+
+    // §427: and in a toast, inside the live region, with a close button a thumb can hit.
+    const toast = page.getByTestId("toast");
+    await expect(toast).toHaveText("Mesaj trimis clubului.");
+    await expect(page.getByTestId("toast-live")).toHaveAttribute("role", "status");
+    const close = toast.getByRole("button", { name: "Închide" });
+    // Measured once the Snackbar's grow has finished: mid-transition it is scaled below its size.
+    await expect.poll(async () => Math.round(((await close.boundingBox())?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
+    // Once: a refresh keeps the page's own sentence and repeats no toast.
+    await page.reload();
+    await expect(page.getByText("Mesajul a plecat.")).toBeVisible();
+    await expect(page.getByTestId("toast-live")).toHaveCount(0);
   });
 
   test("lands a rejection on a focusable summary that names the box", async ({ page }) => {

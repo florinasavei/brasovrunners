@@ -17,6 +17,7 @@ import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { env } from "@/shared/config/env";
+import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   cancelRegistrationAction,
@@ -63,6 +64,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           {t("manage.doneTitle")}
         </Typography>
         <Alert severity="success">{t("manage.done")}</Alert>
+        {/* The toast the cancel flashed (§427), on this outcome only. */}
+        <PublicFlash accept={["unregistered"]} />
       </Container>
     );
   }

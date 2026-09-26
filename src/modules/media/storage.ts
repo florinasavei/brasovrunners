@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/shared/config/env";
-import { isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
+import { formerKeyPrefixOf, isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 
 /**
  * Where a photo's bytes live, behind the four-method adapter of AGENTS.md §17 — three of
@@ -67,7 +67,16 @@ export function objectKey(keyPrefix: string, variant: StoredVariant): string {
  */
 export function assetObjectKeys(keyPrefix: string): string[] {
   const keys = [objectKey(keyPrefix, "web"), objectKey(keyPrefix, "thumb")];
-  if (isLadderKeyPrefix(keyPrefix)) keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
+  if (isLadderKeyPrefix(keyPrefix)) {
+    keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
+    /*
+      A picture that got its ladder from the one-off button (§430) kept its two old files at its
+      old address, because an address may have been copied out of the site; they go when the
+      picture goes. For a picture uploaded with its ladder these two keys were never written.
+    */
+    const former = formerKeyPrefixOf(keyPrefix);
+    keys.push(objectKey(former, "web"), objectKey(former, "thumb"));
+  }
   return keys;
 }
 
@@ -116,12 +125,28 @@ const fakeObjects: Map<string, { body: Buffer; contentType: string }> = ((
   globalThis as { __brFakeMedia?: Map<string, { body: Buffer; contentType: string }> }
 ).__brFakeMedia ??= new Map());
 
+/**
+ * A miss in the fake store, read from `.media/` on the disk when the end-to-end server says so
+ * (`E2E_FAKE_MEDIA_FROM_DISK`, §430) — a spec's fixture of a picture no upload makes any more.
+ * Read-only: a put or a delete touches only the Map, so the disk holds what the spec wrote.
+ */
+async function fakeObject(key: string): Promise<{ body: Buffer; contentType: string } | null> {
+  const stored = fakeObjects.get(key);
+  if (stored) return stored;
+  if (!env.E2E_FAKE_MEDIA_FROM_DISK) return null;
+  try {
+    return { body: await readFile(safeLocalPath(key)), contentType: "image/webp" };
+  } catch {
+    return null;
+  }
+}
+
 const fakeStorage: Storage = {
   async put(key, body, contentType) {
     fakeObjects.set(key, { body, contentType });
   },
   async get(key) {
-    return fakeObjects.get(key)?.body ?? null;
+    return (await fakeObject(key))?.body ?? null;
   },
   async delete(key) {
     fakeObjects.delete(key);
@@ -133,7 +158,7 @@ const fakeStorage: Storage = {
 
 /** What `/api/media/[...key]` serves in `local` and `fake` mode. Null when nothing is there. */
 export async function readLocalObject(key: string): Promise<{ body: Buffer; contentType: string } | null> {
-  if (env.STORAGE_MODE === "fake") return fakeObjects.get(key) ?? null;
+  if (env.STORAGE_MODE === "fake") return fakeObject(key);
   if (env.STORAGE_MODE === "local") {
     try {
       return { body: await readFile(safeLocalPath(key)), contentType: "image/webp" };

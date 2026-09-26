@@ -1,8 +1,10 @@
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
+import { weatherListWords } from "@/modules/weather/words";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
@@ -101,7 +103,9 @@ const BAR_HEIGHT = 44;
  * it was 208 in both languages (the address's paragraph took two lines), from 360 188 in Romanian, and 144 in
  * English from 390, where "Write to us" fitted beside the other two. After: 136 at 320, 360, 390
  * and 412 in both languages — three 44-pixel lines (the two links; "Scrie-ne: <address>"; the
- * stamp) and 4 pixels of padding under them.
+ * stamp) and 4 pixels of padding under them. Open-Meteo's credit was added to the panel after this
+ * measurement (§429), a fourth item before the stamp: the panel is expected around 180 pixels on a
+ * phone now, not remeasured; `footer.spec.ts` holds it under 188.
  *
  * ## The fold's panel is inside the fold, under the row
  *
@@ -150,10 +154,23 @@ const BAR_HEIGHT = 44;
  *
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
  * reads (§8) — and the marks only when configured. Nothing here invents an address.
+ *
+ * ## Open-Meteo's credit, once for the whole site (§429)
+ *
+ * The listing used to repeat it under its own cards (§416); the owner, 2026-09-26: "nu vreau
+ * footer cu open-weather pe main page" — no such strip on the listing. Its licence (CC BY) still
+ * asks for the credit somewhere on the site, so it moved here, into the fold's panel, regardless
+ * of how many cards on the page happen to carry a forecast. It is not the only one: the event page
+ * keeps its own next to the forecast it shows, and so does the featured hero on the listing, on its
+ * «Vremea» line (`EventFacts`, BR-REQ-041-01) — on the listing with a featured forecast the credit
+ * is said twice, the hero's and this one; the owner objected to the strip under the cards, not to
+ * the hero's line.
  */
 export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
   const footer = await getTranslations("Footer");
+  const locale = (await getLocale()) as "ro" | "en";
+  const weatherCredit = weatherListWords(locale).credit;
   const contact = env.EMAIL_REPLY_TO;
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
@@ -326,6 +343,12 @@ export default async function SiteFooter() {
                   </Box>
                 )}
               </Box>
+              {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
+                  cards (§429); the event page and the featured hero keep their own beside the
+                  forecast. */}
+              <MuiLink href={OPEN_METEO_SITE} target="_blank" rel="noopener noreferrer" data-testid="footer-weather-credit">
+                {weatherCredit}
+              </MuiLink>
               {/* The build stamp and the staff entrance (§34), a chip since §385: below `md` this
                   is the only place it shows, opened on purpose, and the panel's last item. From
                   `md` a second copy is pinned to the bar's own corner (below), so this one steps

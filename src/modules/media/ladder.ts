@@ -91,6 +91,24 @@ export function ladderKeyPrefixOf(uuid: string): string {
   return `${uuid.slice(0, 14)}8${uuid.slice(15)}`;
 }
 
+/**
+ * A picture stored before §414, as PostgreSQL's `~` reads it: a version-4 UUID from
+ * `randomUUID()`, which is what every prefix was until the ladder, and nothing else — not a
+ * ladder's version 8, and not a film poster's `yt-<id>`, which keeps YouTube's one small file on
+ * purpose (§403, §414). What the one-off button of §430 converts.
+ */
+export const FORMER_KEY_PREFIX_PATTERN = "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
+
+/**
+ * The prefix a laddered picture had before §430 gave it its ladder: the same UUID with its version
+ * digit back at 4 — `ladderKeyPrefixOf`'s inverse. A converted picture moves to
+ * `ladderKeyPrefixOf(old)`, so its old address is always derivable from its new one and needs no
+ * column; for a picture uploaded with a ladder it names a directory that never existed.
+ */
+export function formerKeyPrefixOf(ladderKeyPrefix: string): string {
+  return `${ladderKeyPrefix.slice(0, 14)}4${ladderKeyPrefix.slice(15)}`;
+}
+
 const MASTER_SUFFIX = /\/([0-9a-f-]{36})\/web\.webp$/;
 
 /** The address of one rung, from the master's: the same directory, `<width>w.webp`. */

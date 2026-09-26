@@ -7,7 +7,7 @@ import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
-import { clubNightEvent } from "@/modules/events/night-event";
+import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -145,7 +145,9 @@ export default async function CourseBox({
           <NightEventField
             name="event.nightOverride"
             defaultChoice={nightChoiceOf(event?.nightOverride)}
-            place={env.CLUB_COORDINATES}
+            // The saved event's own place (§428, §416's rule), the club's on the create page. A map
+            // link or a pair typed in «Locul» in this sitting is read at the next save.
+            place={event ? nightPlace(event) : env.CLUB_COORDINATES}
             zone={zone}
             start={{ date: wall.slice(0, 10), time: wall.slice(11, 16) }}
             durationMinutes={savedMinutes && savedMinutes > 0 ? savedMinutes : null}

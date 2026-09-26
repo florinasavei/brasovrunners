@@ -54,6 +54,9 @@ export type EmailEventFacts = Pick<
   | "facebookEventUrl"
   | "raceStartsAt"
   | "locationToBeAnnounced"
+  // The typed «Coordonate» (§416): with the map link, where the night pill's sun is read (§428).
+  | "latitude"
+  | "longitude"
 > & {
   startsAt: Date;
   timezone: string;
@@ -129,7 +132,12 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
 
   // Traseu: the page's pills as words, in the page's order; under them the route's own links.
   const format = { number: (value: number, options?: { maximumFractionDigits?: number }) => new Intl.NumberFormat(intlLocale(locale), options).format(value) };
-  const pills = orderRoutePills(routePillParts(details, t, format)).map((pill) => ({ text: pill.label }));
+  // The night pill's sunset sentence rides on `tooltip` on the page and the card, where hovering
+  // or focusing the chip opens it; an email has no chip to hover, so it goes in parentheses right
+  // after the word instead — the same sentence, never a second one written here.
+  const pills = orderRoutePills(routePillParts(details, t, format)).map((pill) => ({
+    text: pill.tooltip ? `${pill.label} (${pill.tooltip})` : pill.label,
+  }));
   const routeLinks: Piece[] = [
     // With a route description the route link lives in the page's "Traseul" section (§387), which the Linkuri row points at.
     ...(details.routeUrl && !(details.hasRouteDescription && details.pageUrl) ? [{ text: t("openRoute"), url: details.routeUrl }] : []),

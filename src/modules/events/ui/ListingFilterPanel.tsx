@@ -20,7 +20,9 @@ import {
 } from "@/modules/events/domain/listing-filter";
 import ChipLink from "@/shared/ui/ChipLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { DENSITY } from "@/theme/density";
 import FilterAutoApply from "./FilterAutoApply";
+import { FILTER_BUTTON_SX, FILTER_OPTION_SX } from "./filter-chip-sx";
 import { GLYPHS, type GlyphName } from "./glyphs";
 
 /**
@@ -39,9 +41,13 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * boxes say the same thing.
  *
  * **A pill is a label.** Each option is a `<label>` 44 pixels tall (BR-REQ-041-01 criterion 6) around a
- * small pill that holds a real checkbox, the value's glyph (§112, drawn here — nothing crosses into a
- * client component but a name or a string) and its word; a ticked pill fills in the brand colour
- * through `:has(input:checked)`, so it changes the instant the box does, script or not.
+ * small pill (MUI's small chip, 24 pixels — §424) that holds a real checkbox, the value's glyph (§112,
+ * drawn here — nothing crosses into a client component but a name or a string) and its word; a ticked
+ * pill fills in the brand colour through `:has(input:checked)`, so it changes the instant the box
+ * does, script or not.
+ *
+ * **The button is a chip too** (§424 — the owner, 2026-09-26: "Butonul de filtre e mult prea mare"): the
+ * `<summary>` is the 44-pixel target, the outlined pill inside it the active-filter chips' own size.
  *
  * `keep` is what the address carries that is not a filter — the calendar's month or year, the list
  * layout — so neither the form nor a chip's link drops it.
@@ -96,7 +102,7 @@ export default async function ListingFilterPanel({
       case "partner":
         return "partner";
       case "night":
-        return "headlamp";
+        return "night";
       case "registration":
         return "registration";
       default:
@@ -113,10 +119,10 @@ export default async function ListingFilterPanel({
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
     const Icon = GLYPHS[glyph(group, value)];
     return (
-      <Box component="label" key={`${group}=${value}`} sx={OPTION_SX}>
+      <Box component="label" key={`${group}=${value}`} sx={FILTER_OPTION_SX}>
         <span>
           <input type="checkbox" name={group} value={value} defaultChecked={checked} />
-          <Icon aria-hidden="true" sx={{ fontSize: 18 }} />
+          <Icon aria-hidden="true" />
           {label(group, value)}
         </span>
       </Box>
@@ -126,10 +132,12 @@ export default async function ListingFilterPanel({
   return (
     <Box sx={{ "& > details[open] + [data-active-filters]": { display: "none" } }}>
       <Box component="details" data-testid="listing-filters" sx={{ "&[open] > summary .filters-caret": { transform: "rotate(180deg)" } }}>
-        <Box component="summary" sx={SUMMARY_SX}>
-          <GLYPHS.filters aria-hidden="true" sx={{ fontSize: 20 }} />
-          {count > 0 ? t("filter.buttonCount", { count }) : t("filter.button")}
-          <ExpandMoreIcon className="filters-caret" aria-hidden="true" sx={{ fontSize: 20, transition: "transform 120ms" }} />
+        <Box component="summary" sx={FILTER_BUTTON_SX}>
+          <span>
+            <GLYPHS.filters aria-hidden="true" />
+            {count > 0 ? t("filter.buttonCount", { count }) : t("filter.button")}
+            <ExpandMoreIcon className="filters-caret" aria-hidden="true" sx={{ transition: "transform 120ms" }} />
+          </span>
         </Box>
         <Box
           component="form"
@@ -138,13 +146,16 @@ export default async function ListingFilterPanel({
           aria-label={t("filter.label")}
           sx={{
             mt: 1,
-            p: 1.5,
+            // Tighter on a phone (§424, amending §380's scale — the owner: "Butonul de filtre e
+            // mult prea mare"): the open panel is a compact block rather than the same box a
+            // tablet gets, `p` and `gap` on the density scale like every other public site.
+            p: { xs: DENSITY.gapSm, sm: 1.5 },
             border: 1,
             borderColor: "divider",
             borderRadius: 2,
             bgcolor: "background.paper",
             display: "grid",
-            gap: 1,
+            gap: { xs: DENSITY.gapXs, sm: 1 },
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
             "&[data-enhanced] [data-apply]": { display: "none" },
           }}
@@ -212,50 +223,4 @@ export default async function ListingFilterPanel({
   );
 }
 
-/** The button: an outlined control a thumb can hit, its own caret turning when open — not a fold's line of text. */
-const SUMMARY_SX = {
-  ...TAP_TARGET,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 0.75,
-  px: 1.5,
-  border: 1,
-  borderColor: "divider",
-  borderRadius: 5,
-  cursor: "pointer",
-  fontWeight: 600,
-  fontSize: "0.9375rem",
-  listStyle: "none",
-  userSelect: "none",
-  "&::-webkit-details-marker": { display: "none" },
-  "&::marker": { content: '""' },
-  "&:hover": { bgcolor: "action.hover" },
-  "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: 2 },
-} as const;
-
 const FIELDSET_SX = { border: 0, p: 0, m: 0, minWidth: 0 } as const;
-
-/** A 44-pixel label around a 32-pixel pill; the pill fills in when its box is ticked. */
-const OPTION_SX = {
-  ...TAP_TARGET,
-  display: "inline-flex",
-  alignItems: "center",
-  cursor: "pointer",
-  "& > span": {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 0.5,
-    height: 32,
-    pl: 0.75,
-    pr: 1.25,
-    border: 1,
-    borderColor: "divider",
-    borderRadius: 4,
-    fontSize: "0.8125rem",
-    lineHeight: 1,
-  },
-  "& input": { m: 0, width: 16, height: 16, accentColor: "currentColor", cursor: "pointer" },
-  "&:hover > span": { bgcolor: "action.hover" },
-  "&:has(input:checked) > span": { bgcolor: "primary.main", color: "primary.contrastText", borderColor: "primary.main" },
-  "&:has(input:focus-visible) > span": { outline: 2, outlineColor: "primary.main", outlineOffset: 2 },
-} as const;

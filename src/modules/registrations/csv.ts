@@ -67,6 +67,13 @@ export type RegistrationCsvRow = {
   /** Race day and the provider's verdict, the two columns an organizer sorts by afterwards (§83). */
   checkedInAt: string;
   emailBounced: boolean;
+  /**
+   * The club's terms the form accepted expressly (§421): the version in force when it was sent,
+   * and the moment (§425). Empty for a staff or desk entry — the paper carries the terms — and for
+   * a row sent before the version was recorded; §316's window is the answer for those.
+   */
+  termsVersion?: number | null;
+  termsAcceptedAt?: string;
 };
 
 const HEADER = [
@@ -94,6 +101,9 @@ const HEADER = [
   "Number settled",
   "Checked in",
   "Email bounced",
+  // Last (§425), so a script that reads the columns by position still finds every earlier one.
+  "Terms version",
+  "Terms accepted",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -122,6 +132,8 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.settled ? "Yes" : "",
         row.checkedInAt,
         row.emailBounced ? "Yes" : "",
+        String(row.termsVersion ?? ""),
+        row.termsAcceptedAt ?? "",
       ]
         .map(csvCell)
         .join(","),

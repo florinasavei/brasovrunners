@@ -137,6 +137,19 @@ export const envSchema = z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
+    /**
+     * `playwright.config.ts`'s `webServer` alone (§430): under `APP_ENV=test` — CI's end-to-end
+     * job — the store is `fake`, a Map inside the server process a spec cannot reach, so a spec
+     * that needs a picture stored the way the site stored one *before* an upload could (the
+     * older pictures' button: a version-4 prefix no upload makes any more) had no way to put
+     * one there. With this flag a miss in the fake store reads `.media/<key>` from the disk,
+     * read-only, where the spec writes its fixture — what `local` mode reads anyway. Only ever
+     * consulted in `fake` mode, which production never is.
+     */
+    E2E_FAKE_MEDIA_FROM_DISK: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
     // project id is under the Vercel project's Settings → General; the team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),
