@@ -48,6 +48,29 @@ import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
 import { DENSITY } from "@/theme/density";
+import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard } from "@/modules/registrations/domain/family-signing";
+import {
+  type FamilySigningPass,
+  familyPassHolds,
+  listFamilySigningRows,
+  readFamilySigningPass,
+} from "@/modules/registrations/family-signing";
+import FamilySigningSteps from "@/modules/registrations/ui/FamilySigningSteps";
+
+/**
+ * The family's steps behind a pass this browser holds for this link (§NNN), or null: no pass, a
+ * lapsed one, or one that is not this spent link's. Reads only.
+ */
+async function familyStepsOfPass(token: string, pass: FamilySigningPass | null, now: Date): Promise<FamilyStep[] | null> {
+  if (!pass) return null;
+  const db = getDb();
+  if (!(await familyPassHolds(db, token, pass, now))) return null;
+  return familySigningSteps(await listFamilySigningRows(db, pass.participantId, pass.eventId), {
+    originId: pass.originId,
+    originSignable: false,
+    signedIds: pass.signedIds,
+  });
+}
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -116,7 +139,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     );
   }
 
+  const now = new Date();
+  // The family's wizard (§NNN): the pass the first signature handed this browser, if it did.
+  const pass = await readFamilySigningPass(now);
+
   if (done) {
+    // The last person of a family signed: everybody on the address, each with their state.
+    const familySteps = await familyStepsOfPass(token, pass, now);
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -126,6 +155,17 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
+        {familySteps && isFamilyWizard(familySteps) && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
+              {t("declare.family.doneTitle")}
+            </Typography>
+            <FamilySigningSteps steps={familySteps} />
+            <Typography variant="body2" color="text.secondary">
+              {t("declare.family.doneAll")}
+            </Typography>
+          </Box>
+        )}
         {/* The toast the signature flashed (§427): the one that matches this outcome, never the other. */}
         <PublicFlash accept={[done === "waitlisted" ? "declarationWaitlisted" : "declarationConfirmed"]} />
         {/* "What is next?" — asked the first time somebody got here (§86): said in three lines. */}
@@ -151,7 +191,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * was already signed. Both refusals are kept: whichever of them is `ALREADY_USED` is the
    * token's real purpose, and the other is the `PURPOSE_MISMATCH` that proves it.
    */
-  const declarationRead = await readRegistrationTokenContext(token, "COMPLETE_DECLARATION");
+  /*
+    A browser that carries the family's pass (§NNN) is not charged an attempt: the pass opened under
+    the deployment's key, so the request guesses nothing (§202), and a family walks this page once
+    per person — more than the link's ten an hour would allow.
+  */
+  const declarationRead = await readRegistrationTokenContext(token, "COMPLETE_DECLARATION", { charge: pass === null });
   const offerRead = declarationRead.ok
     ? undefined
     // The same secret, already presented in this request: it costs no further attempt (§202).
@@ -163,7 +208,20 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     offerRead && !offerRead.ok ? { purpose: "WAITLIST_OFFER" as const, reason: offerRead.reason } : null,
   ].filter((refusal) => refusal !== null);
 
-  const spent = context.ok ? null : await readSpentRegistrationLink(token, refusals, locale, new Date());
+  /*
+    The family's wizard carried on (§NNN): the link is spent — its own person signed — and this
+    browser holds the pass that signature handed it, for this link. The page is then the next
+    person's step: the first registration on the address at the event whose declaration can still
+    be signed, with the same form every declaration has. With nobody left, the list of who was
+    signed. Only the spent link and the pass together open it; either alone is the notice below.
+  */
+  const passSteps = !context.ok && refusals.some((refusal) => refusal.reason === "ALREADY_USED")
+    ? await familyStepsOfPass(token, pass, now)
+    : null;
+  const familyCurrent = passSteps ? currentFamilyStep(passSteps) : null;
+  const familyMode = passSteps !== null && isFamilyWizard(passSteps);
+
+  const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
 
   /**
    * A live token plus `invalid=1` means the press failed for a reason that is **not** the token
@@ -176,24 +234,26 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * The form is refused — the press genuinely failed — and the reason is said where the press
    * happened.
    */
-  const blocked = !context.ok;
+  const blocked = !context.ok && familyCurrent === null;
+  // A form is on the page: the opened link's own person, or the family's next one (§NNN).
+  const signing = context.ok || familyCurrent !== null;
   /*
     `invalid=name` is the signature that was not the declarant's name (§314): its own refusal,
     said beside the box with the name it wants — never the generic sentence above, which was
     written for an unticked box, and never anything that reads as a broken link.
   */
-  const nameRefused = context.ok && invalid === "name";
+  const nameRefused = signing && invalid === "name";
   /*
     `invalid=document` is an identity document the text asks for and the press left out, or typed
     as something that is not a series and number (§330, found in review) — past the browser's own
     check. Its own refusal for the same reason: the generic sentence asks for a tick.
   */
-  const documentRefused = context.ok && invalid === "document";
-  const pressFailed = context.ok && Boolean(invalid) && !nameRefused && !documentRefused;
+  const documentRefused = signing && invalid === "document";
+  const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused;
 
   const db = getDb();
-  const declaration = context.ok
-    ? await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, new Date())
+  const declaration = signing
+    ? await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now)
     : undefined;
 
   /**
@@ -210,7 +270,25 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    */
   const registration = context.ok && context.token.registrationId
     ? await findRegistrationById(db, context.token.registrationId)
-    : undefined;
+    : familyCurrent
+      ? await findRegistrationById(db, familyCurrent.id)
+      : undefined;
+  /*
+    The family's stepper (§NNN), from the opened link: everybody on the address at the event whose
+    declaration waits, this person first. One person alone gets the page they always had.
+  */
+  const linkSteps =
+    context.ok && registration
+      ? familySigningSteps(await listFamilySigningRows(db, registration.participantId, registration.eventId), {
+          originId: registration.id,
+          originSignable: true,
+          signedIds: [],
+        })
+      : null;
+  const familySteps = passSteps ?? (linkSteps && isFamilyWizard(linkSteps) ? linkSteps : null);
+  const familyPosition = familySteps ? familySteps.findIndex((step) => step.state === "current") : -1;
+  // The person the pass signed last, for the line that says so above the next one's form.
+  const lastSigned = passSteps && pass ? passSteps.find((step) => step.id === pass.signedIds.at(-1)) : undefined;
   const eventDetails = registration
     ? await findEventNotificationDetails(db, registration.eventId, locale)
     : undefined;
@@ -231,7 +309,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     ? { ...movedOn, step: stepForSpentLink(movedOn.message), eventTitle: ownLocale?.title ?? null, eventSlug: ownLocale?.slug ?? null }
     : null;
   const notice = spent ?? movedOnNotice;
-  const journeyStep = notice ? notice.step : ("declare" as const);
+  const journeyStep = familyMode && !familyCurrent ? ("done" as const) : notice ? notice.step : ("declare" as const);
 
   /**
    * An absolute local time, and deliberately no countdown.
@@ -362,7 +440,18 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep && <RegistrationJourney current={journeyStep} />}
 
-      {blocked || !declaration || movedOnNotice ? (
+      {familyMode && !familyCurrent && passSteps ? (
+        /* The family's wizard with nobody left to sign (§NNN): who was signed, and nothing to press. */
+        <Box data-testid="family-signing-done">
+          <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
+            {t("declare.family.doneTitle")}
+          </Typography>
+          <FamilySigningSteps steps={passSteps} />
+          <Typography variant="body2" color="text.secondary">
+            {t("declare.family.doneAll")}
+          </Typography>
+        </Box>
+      ) : blocked || !declaration || movedOnNotice ? (
         <ActionLinkNotice locale={locale} status={notice} />
       ) : (
         <>
@@ -376,6 +465,30 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             <Alert severity="error" sx={{ mb: 3 }}>
               {t("declare.pressFailed")}
             </Alert>
+          )}
+          {/*
+            A family on one address (§NNN, over §389): the declarations as a wizard — which person
+            this step is, everybody's place in the order, and, once the pass carries the wizard on,
+            whose declaration was signed a moment ago. Each person's form below is the form every
+            declaration has, checked against that person's own name.
+          */}
+          {familySteps && familyPosition >= 0 && registration && (
+            <Box sx={{ mb: 3 }} data-testid="family-signing">
+              {lastSigned && (
+                <Alert severity="success" role="status" sx={{ mb: 2 }}>
+                  {lastSigned.status === "WAITLISTED"
+                    ? t("declare.family.lastWaitlisted", { name: lastSigned.registeredName })
+                    : t("declare.family.lastSigned", { name: lastSigned.registeredName })}
+                </Alert>
+              )}
+              <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
+                {t("declare.family.stepTitle", { step: familyPosition + 1, total: familySteps.length, name: registration.registeredName })}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                {t("declare.family.intro")}
+              </Typography>
+              <FamilySigningSteps steps={familySteps} />
+            </Box>
           )}
           {/*
             Above the declaration body, because a person scrolling a wall of legal text must
@@ -489,6 +602,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
 
               <input type="hidden" name="token" value={token} />
+              {/* The family's next person (§NNN): signed through the pass, never through the spent link alone. */}
+              {!context.ok && familyCurrent && <input type="hidden" name="registrationId" value={familyCurrent.id} />}
               {/* The version being read, so the signature is refused against any other text
 
                   (BR-REQ-033-02 criterion 6). */}

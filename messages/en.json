@@ -4693,6 +4693,22 @@
     "declare": {
       "title": "Event declaration",
       "accept": "I have read and accept the declaration above, including, expressly, the limitation of the organiser's liability to the extent the law allows.",
+      "family": {
+        "stepsLabel": "The declarations on this address",
+        "stepTitle": "Step {step} of {total}: {name}",
+        "intro": "Several people are registered for this event on this address. The declarations are signed here, one after the other: one person per step, each with their own name and identity document (a parent for a minor). After each signature the page moves on to the next person, and each receives their own confirmation and the PDF of their declaration by email.",
+        "lastSigned": "The declaration for {name} is signed. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
+        "lastWaitlisted": "The place for {name} was no longer free: {name} is now on the waiting list.",
+        "doneTitle": "The declarations on this address",
+        "doneAll": "No declaration is left to sign on this address. Every confirmed person receives their own confirmation by email, with the QR code and the PDF of the declaration.",
+        "state": {
+          "signed": "signed",
+          "waitlisted": "on the waiting list",
+          "current": "now",
+          "next": "next",
+          "closed": "no longer waiting for a signature"
+        }
+      },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",

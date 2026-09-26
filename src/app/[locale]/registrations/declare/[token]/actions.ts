@@ -11,7 +11,10 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
-import { consumeAndSignDeclaration } from "@/modules/registrations/token-actions";
+import { consumeAndSignDeclaration, consumeAndSignFamilyDeclaration } from "@/modules/registrations/token-actions";
+import { TOKEN_NOT_FOUND } from "@/modules/action-tokens/domain/token-state";
+import { currentFamilyStep, familySigningSteps, isFamilyWizard } from "@/modules/registrations/domain/family-signing";
+import { listFamilySigningRows, readFamilySigningPass, writeFamilySigningPass } from "@/modules/registrations/family-signing";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
@@ -21,40 +24,73 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   const token = String(form.get("token") ?? "");
   const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
 
+  /*
+    The family's wizard (§NNN): a press that names a registration is the next person on the address,
+    signed through the pass the first signature handed this browser — and only with it. A press
+    without one is the opened link's own person, as always.
+  */
+  const now = new Date();
+  const familyRegistrationId = String(form.get("registrationId") ?? "");
+  const pass = await readFamilySigningPass(now);
+
   try {
     const t = await getTranslations({ locale, namespace: "Registrations" });
-    const result = await consumeAndSignDeclaration(
-      token,
-      {
-        accepted: form.get("accepted") === "on",
-        typedName: String(form.get("typedName") ?? ""),
-        /*
-          The kind and the number, as one line in the declaration (§283).
+    const input = {
+      accepted: form.get("accepted") === "on",
+      typedName: String(form.get("typedName") ?? ""),
+      /*
+        The kind and the number, as one line in the declaration (§283).
 
-          Composed here rather than stored as two columns: `{{idDocument}}` is one merge field in
-          a text the club approved, and the signed PDF has to read as a sentence — "Carte de
-          identitate BV 123456". The kind is translated at this moment, in the language the
-          person is signing in, because that is the language of the document they are signing.
-        */
-        idDocument: idDocumentFrom(form, t, "idDocument"),
-        /*
-          A minor's own signature and document (§330), posted only by the page a minor's
-          registration renders under a declaration that asks the minor to sign. A box that was on
-          the page and left empty is posted as the empty string, which the service refuses on that
-          box; a box that was never on the page is absent. Whether it was asked is not read from
-          here: the service reads the text itself.
-        */
-        minorTypedName: form.has("minorTypedName") ? String(form.get("minorTypedName") ?? "") : undefined,
-        minorIdDocument: idDocumentFrom(form, t, "minorIdDocument"),
-        documentId: String(form.get("documentId") ?? ""),
-        contentSha256: String(form.get("contentSha256") ?? ""),
-      },
-      new Date(),
-    );
+        Composed here rather than stored as two columns: `{{idDocument}}` is one merge field in
+        a text the club approved, and the signed PDF has to read as a sentence — "Carte de
+        identitate BV 123456". The kind is translated at this moment, in the language the
+        person is signing in, because that is the language of the document they are signing.
+      */
+      idDocument: idDocumentFrom(form, t, "idDocument"),
+      /*
+        A minor's own signature and document (§330), posted only by the page a minor's
+        registration renders under a declaration that asks the minor to sign. A box that was on
+        the page and left empty is posted as the empty string, which the service refuses on that
+        box; a box that was never on the page is absent. Whether it was asked is not read from
+        here: the service reads the text itself.
+      */
+      minorTypedName: form.has("minorTypedName") ? String(form.get("minorTypedName") ?? "") : undefined,
+      minorIdDocument: idDocumentFrom(form, t, "minorIdDocument"),
+      documentId: String(form.get("documentId") ?? ""),
+      contentSha256: String(form.get("contentSha256") ?? ""),
+    };
+    const result = familyRegistrationId
+      ? pass
+        ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now)
+        : TOKEN_NOT_FOUND
+      : await consumeAndSignDeclaration(token, input, now);
 
     if (!result.ok) redirect(`${path}?invalid=1`);
     // Signed: a draft kept by an earlier refused press has nothing left to fill in.
     await clearFormDraft(path);
+
+    /*
+      Another person on the address still to sign (§NNN): the pass is given — or renewed, with this
+      signature added — and the page shows the next person's step. The URL carries nothing new: the
+      pass is the wizard's memory, and the page reads the rest from the rows.
+    */
+    const signed = result.registration;
+    const nextPass = {
+      participantId: signed.participantId,
+      eventId: signed.eventId,
+      originId: pass && familyRegistrationId ? pass.originId : signed.id,
+      signedIds: [...(pass && familyRegistrationId ? pass.signedIds : []), signed.id],
+    };
+    const steps = familySigningSteps(await listFamilySigningRows(getDb(), signed.participantId, signed.eventId), {
+      originId: nextPass.originId,
+      originSignable: false,
+      signedIds: nextPass.signedIds,
+    });
+    // The pass outlives the last signature too, for the page that lists who was signed.
+    if (isFamilyWizard(steps)) await writeFamilySigningPass(nextPass, token, now);
+    // No toast here: the next step's page names the person just signed, where the toast's "your
+    // registration" would not say whose (§427's words are one runner's).
+    if (currentFamilyStep(steps)) redirect(path);
     /*
       "What is next" says when the reminder comes (§377): this event's own lead, or the club's, as
       whole hours in the address — the page has spent its token and reads nothing else. Only words

@@ -4693,6 +4693,22 @@
     "declare": {
       "title": "Declarație pe proprie răspundere",
       "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
+      "family": {
+        "stepsLabel": "Declarațiile de pe această adresă",
+        "stepTitle": "Pasul {step} din {total}: {name}",
+        "intro": "Pe această adresă sunt mai multe persoane înscrise la eveniment. Declarațiile se semnează aici, pe rând: câte o persoană la fiecare pas, fiecare cu numele și actul ei (pentru un minor, părintele). După fiecare semnătură pagina trece la următoarea persoană, iar fiecare primește pe email confirmarea și PDF-ul declarației ei.",
+        "lastSigned": "Declarația pentru {name} a fost semnată. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
+        "lastWaitlisted": "Locul pentru {name} nu mai era disponibil: {name} este acum pe lista de așteptare.",
+        "doneTitle": "Declarațiile de pe această adresă",
+        "doneAll": "Nu mai rămâne nicio declarație de semnat pe această adresă. Fiecare persoană confirmată primește pe email confirmarea ei, cu codul QR și PDF-ul declarației.",
+        "state": {
+          "signed": "semnată",
+          "waitlisted": "pe lista de așteptare",
+          "current": "acum",
+          "next": "urmează",
+          "closed": "nu mai așteaptă semnătura"
+        }
+      },
       "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
       "typedName": "Scrie numele complet ca semnătură",
       "action": "Semnează și confirmă",

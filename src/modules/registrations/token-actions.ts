@@ -31,6 +31,8 @@ import {
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { findRegistrationById } from "./repository";
 import { confirmFamilyEntry, type FamilyConfirmation, type FamilyEntryLink, readFamilyEntryLink } from "./family-confirm";
+import { familyPassHolds, type FamilySigningPass } from "./family-signing";
+import { isUuid } from "@/shared/ids";
 
 /**
  * Wiring the email-token boundary (§13.2) to the registration lifecycle (§15).
@@ -240,6 +242,50 @@ export async function consumeAndSignDeclaration(
     const updated = await signDeclaration(tx, event, registration.id, input, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
+}
+
+/**
+ * The next declaration of a family on one address, signed through the wizard's pass (§NNN).
+ *
+ * The opened link was spent by the first signature (`consumeAndSignDeclaration`); what authorizes
+ * this one is that spent secret together with the pass the first signature handed the browser
+ * (`family-signing.ts`, AGENTS.md §13.2 step 4). The registration must be another one of the
+ * pass's participant at the pass's event — never the link's own, which its own signature closed —
+ * and everything after that is `signDeclaration`, unchanged: the event's lock, the state, the
+ * approved text by id and hash, the names, the identity documents, the allocator, one acceptance
+ * and one confirmation with its own PDF.
+ *
+ * No throttle charge (§19.4 bounds guessing, §202): the pass was opened under the deployment's key
+ * (`openFamilyPass`), which nobody outside the server can forge, so a press that carries one guesses
+ * nothing — and a family of four walks the spent link's page and presses it eight or nine times in
+ * a few minutes, which the link's ten attempts an hour would not survive. A refusal of the pass or
+ * of the registration is the generic token refusal: it says nothing about which.
+ */
+export async function consumeAndSignFamilyDeclaration(
+  secret: string,
+  pass: FamilySigningPass,
+  registrationId: string,
+  input: Parameters<typeof consumeAndSignDeclaration>[1],
+  now: Date,
+) {
+  const db = getDb();
+
+  // A posted id that is not one answers like a wrong one, never as the database's parse error (§376).
+  if (!isUuid(registrationId)) return TOKEN_NOT_FOUND;
+  if (!(await familyPassHolds(db, secret, pass, now))) return TOKEN_NOT_FOUND;
+
+  const registration = await findRegistrationById(db, registrationId);
+  if (
+    !registration ||
+    registration.id === pass.originId ||
+    registration.participantId !== pass.participantId ||
+    registration.eventId !== pass.eventId
+  ) {
+    return TOKEN_NOT_FOUND;
+  }
+  const event = await loadEventForRegistration(db, registration.eventId);
+  const updated = await signDeclaration(db, event, registration.id, input, now);
+  return { ok: true as const, registration: updated };
 }
 
 /**
