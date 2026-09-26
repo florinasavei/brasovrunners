@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type { Env } from "@/shared/config/env";
 
 /**
@@ -121,4 +122,54 @@ export async function readVercelMonth(
       periodStart,
     },
   };
+}
+
+/** What Costuri's «Luna aceasta» needs of the month (§479): two numbers, which survive a cache's JSON. */
+export type VercelMonthFigures = { deployments: number; buildMinutes: number };
+
+/** An hour, like the weather's (§402): the figures move with a deploy, and nobody decides on the minute. */
+export const VERCEL_COSTS_CACHE_SECONDS = 3_600;
+
+class VercelNotRead extends Error {
+  constructor(readonly reason: string) {
+    super(reason);
+  }
+}
+
+/**
+ * The month's deployments and build minutes for Costuri, from Next's data cache for an hour (§479).
+ *
+ * `readVercelMonth` walks up to ten pages of a hundred, five seconds each, and a render of Costuri
+ * must not wait on that every time it opens; `/devs` keeps the live read, because that page is
+ * where somebody goes to see the deployment that just finished. The key names the project and the
+ * month — never the token — and a failure is never kept: it throws inside the cached function,
+ * which stores nothing, so the next open asks again. Outside a Next server (a test, a script) the
+ * cache is not there and the read is made directly, once.
+ */
+export async function readVercelMonthForCosts(
+  env: Pick<Env, "VERCEL_API_TOKEN" | "VERCEL_PROJECT_ID" | "VERCEL_TEAM_ID">,
+  now: Date,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true; month: VercelMonthFigures } | { ok: false; reason: "unconfigured" | string }> {
+  if (!env.VERCEL_API_TOKEN || !env.VERCEL_PROJECT_ID) return { ok: false, reason: "unconfigured" };
+  const monthKey = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}`;
+  const load = async (): Promise<VercelMonthFigures> => {
+    const read = await readVercelMonth(env, now, fetchImpl);
+    if (!read.ok) throw new VercelNotRead(read.reason);
+    return { deployments: read.month.deployments, buildMinutes: read.month.buildMinutes };
+  };
+  try {
+    const month = await unstable_cache(load, ["br-vercel-month", env.VERCEL_PROJECT_ID, env.VERCEL_TEAM_ID ?? "", monthKey], {
+      revalidate: VERCEL_COSTS_CACHE_SECONDS,
+    })();
+    return { ok: true, month };
+  } catch (error) {
+    if (error instanceof VercelNotRead) return { ok: false, reason: error.reason };
+    // No data cache here (outside a request): ask once, directly.
+    try {
+      return { ok: true, month: await load() };
+    } catch (again) {
+      return { ok: false, reason: again instanceof VercelNotRead ? again.reason : "unexpected answer" };
+    }
+  }
 }

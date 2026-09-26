@@ -66,6 +66,9 @@ describe("§447 /api/health reads the month's budget", () => {
     expect(response.status).toBe(200);
     expect(body.neon).toEqual({ status: "ok", percent: 50 });
     expect(body.budget).toMatchObject({ level: "amber", meteredPercent: 50, linePercent: 30 });
+    // §447: the public answer names the level, never a figure — the projection lives on Costuri (§479).
+    expect(Object.keys(body.budget).sort()).toEqual(["level", "linePercent", "meteredPercent", "note"]);
+    expect(JSON.stringify(body)).not.toMatch(/usd|cuHours|projected/i);
     expect(body.budget.note).toMatch(/hourly/);
     // `amber` holds real runs to one an hour: the checks must allow that much, or the platform's
     // own throttle would page the owner.

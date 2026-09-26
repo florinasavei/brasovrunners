@@ -59,9 +59,9 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
     expect(row.entityType).toBe("platform_setting");
     expect(row.entityId).toBe(NEON_LIMITS_ENTITY_ID);
     expect(row.metadataJson).toEqual({
-      from: { maxCu: 1, quotaCuHours: null },
-      to: { maxCu: 0.5, quotaCuHours: 50 },
-      requested: { maxCu: 0.5, quotaCuHours: 50 },
+      from: { maxCu: 1, minCu: 0.25, suspendMode: "auto", quotaCuHours: null },
+      to: { maxCu: 0.5, minCu: 0.25, suspendMode: "auto", quotaCuHours: 50 },
+      requested: { maxCu: 0.5, minCu: 0.25, suspendMode: null, quotaCuHours: 50 },
       environment: "qa",
       complete: true,
     });

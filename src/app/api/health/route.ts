@@ -298,6 +298,7 @@ export async function GET(): Promise<Response> {
       // CU-hours, for the reason §335 gives above — and a note saying what is throttled. Only
       // `red` degrades the status (it is `neon.status: near-limit`); `amber` stays `ok` with the
       // note, because the platform slowing itself down is its own business.
+      // §447: the public answer names the level, never a figure — the projection lives on Costuri (§479).
       budget: {
         level: neonQuota.level,
         meteredPercent: neonQuota.percent,

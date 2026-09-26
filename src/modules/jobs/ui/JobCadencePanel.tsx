@@ -29,6 +29,8 @@ type Props = {
    * about email is picked by it rather than stated once and false half the time.
    */
   emailTiming: DeliveryTiming;
+  /** The heading's level: 2 on its own, 3 inside Costuri's «Baza de date» card (§479). */
+  level?: 2 | 3;
 };
 
 /**
@@ -42,7 +44,7 @@ type Props = {
  * the last real run and the next one at the latest, per job, with the last ping and whether it
  * woke the database.
  */
-export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming }: Props) {
+export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming, level = 2 }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   // A platform timestamp, in the club's zone, with its weekday, inside the line after a colon
@@ -52,7 +54,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   const when = (at: Date | null) => (at ? clock(at) : "—");
 
   return (
-    <Panel title={t("tasks.jobCadence.title")} intro={t("tasks.jobCadence.intro")} data-testid="job-cadence">
+    <Panel level={level} title={t("tasks.jobCadence.title")} intro={t("tasks.jobCadence.intro")} data-testid="job-cadence">
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="job-cadence-in-force">
         {cadence.minutes === 0
           ? t("tasks.jobCadence.inForce.onDemand", { cap: NEXT_DUE_CAP_MINUTES })
