@@ -9,7 +9,8 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { webcalUrl } from "@/modules/events/ical";
 import type { PublicEvent } from "@/modules/events/repository";
-import CalendarHeader from "@/modules/events/ui/CalendarHeader";
+import CalendarHeader, { calendarStepHrefs } from "@/modules/events/ui/CalendarHeader";
+import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import InfoTip from "@/shared/ui/InfoTip";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
@@ -54,12 +55,16 @@ export default async function CalendarSection({
 }) {
   const t = await getTranslations("Events");
   const feed = `${env.APP_BASE_URL}/${locale}/events/calendar.ics`;
+  const steps = calendarStepHrefs({ view, query, locale, pathname: "/calendar" });
 
   return (
     <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
         <CalendarHeader view={view} now={now} query={query} layout={layout} />
-        <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
+        {/* A sideways swipe on a touch screen goes where the arrows go (§NNN). */}
+        <CalendarSwipe previousHref={steps.previous} nextHref={steps.next}>
+          <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
+        </CalendarSwipe>
       </Box>
 
       {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
