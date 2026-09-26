@@ -7,7 +7,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 import { usePathname } from "next/navigation";
 import type { AdminSection } from "../domain/roles";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useRef } from "react";
 import ArticleIcon from "@mui/icons-material/Article";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -168,11 +168,11 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
 
 /**
  * The figure's pill, and what it counts in the backoffice tooltip (§341, §277): the rule, then
- * one line per upcoming event. The pill is focusable and names the text through
- * `aria-describedby`, so a keyboard or a screen reader reaches it; a tap opens it on a phone.
+ * one line per upcoming event. The pill is focusable and MUI's `describeChild`
+ * makes the text its one description, so a keyboard or a screen reader reaches it; a tap opens
+ * it on a phone.
  */
 function CountBadge({ count, hint }: { count: number; hint?: string }) {
-  const id = useId();
   const pill = (
     <Box
       component="span"
@@ -192,23 +192,18 @@ function CountBadge({ count, hint }: { count: number; hint?: string }) {
   );
   if (!hint) return pill;
   return (
-    <>
-      <Tooltip
-        title={hint}
-        // The pill keeps the number as its name; the text is its description.
-        describeChild
-        enterTouchDelay={0}
-        leaveTouchDelay={readingTimeMs(hint)}
-        arrow
-        slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}
-      >
-        <Box component="span" tabIndex={0} aria-describedby={id} sx={{ display: "inline-flex" }}>
-          {pill}
-        </Box>
-      </Tooltip>
-      <Box component="span" id={id} sx={{ display: "none" }}>
-        {hint}
+    <Tooltip
+      title={hint}
+      // The pill keeps the number as its name; the text is its description.
+      describeChild
+      enterTouchDelay={0}
+      leaveTouchDelay={readingTimeMs(hint)}
+      arrow
+      slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}
+    >
+      <Box component="span" tabIndex={0} sx={{ display: "inline-flex" }}>
+        {pill}
       </Box>
-    </>
+    </Tooltip>
   );
 }

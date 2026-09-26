@@ -8,7 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getDb } from "@/db/client";
-import { BADGE_HINT_EVENTS, registeredBadgeBreakdown } from "@/modules/registrations/nav-count";
+import { registeredBadgeBreakdown, registeredBadgeHint } from "@/modules/registrations/nav-count";
 import { type AdminSection, canReadRegistrations, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
@@ -81,13 +81,11 @@ export default async function BackofficeShell({
     a reader whose list disagrees with the badge sees which event the difference is on.
   */
   const registeredHint = breakdown
-    ? [
-        t("nav.registeredHint"),
-        ...breakdown.events.slice(0, BADGE_HINT_EVENTS).map((row) => t("nav.registeredEvent", { title: row.title, count: row.count })),
-        ...(breakdown.events.length > BADGE_HINT_EVENTS
-          ? [t("nav.registeredMoreEvents", { count: breakdown.events.length - BADGE_HINT_EVENTS })]
-          : []),
-      ].join("\n")
+    ? registeredBadgeHint(breakdown.events, {
+        rule: t("nav.registeredHint"),
+        event: (title, count) => t("nav.registeredEvent", { title, count }),
+        more: (count) => t("nav.registeredMoreEvents", { count }),
+      })
     : undefined;
 
   const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({

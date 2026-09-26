@@ -53,32 +53,9 @@ export async function countRegisteredForUpcoming<T extends Record<string, unknow
 
 /** A minute: long enough to cost nothing, short enough that nobody notices it is a memo. */
 const CACHE_MS = 60_000;
-let cached: { at: number; value: number } | null = null;
-
-/**
- * The badge's number, memoized — and `null` rather than a throw when the database is away.
- *
- * The shell renders on every backoffice page, including the ones whose whole purpose is to
- * work when something is broken (`/admin/tasks`, `/devs`). A badge is not worth a 500, so a
- * failure means "no badge" and the page renders exactly as it did before this existed.
- */
-export async function registeredBadgeCount<T extends Record<string, unknown>>(
-  db: Database<T>,
-  now: Date,
-): Promise<number | null> {
-  if (cached && now.getTime() - cached.at < CACHE_MS) return cached.value;
-  try {
-    const value = await countRegisteredForUpcoming(db, now);
-    cached = { at: now.getTime(), value };
-    return value;
-  } catch {
-    return null;
-  }
-}
 
 /** Dropped when a registration is created or cancelled, so the badge does not lag a minute. */
 export function forgetRegisteredBadgeCount(): void {
-  cached = null;
   cachedBreakdown.clear();
 }
 
@@ -120,7 +97,8 @@ const cachedBreakdown = new Map<Locale, { at: number; value: RegisteredOnEvent[]
 
 /**
  * The badge's figure and its per-event split, memoized a minute per language, and `null` when
- * the database is away — exactly as `registeredBadgeCount` (the shell never 500s for a badge).
+ * the database is away: the shell renders on every backoffice page, `/admin/tasks` and `/devs`
+ * included, and a badge is not worth a 500.
  * The total is the sum of the split, so the tab and its tooltip can never disagree.
  */
 export async function registeredBadgeBreakdown<T extends Record<string, unknown>>(
@@ -145,3 +123,21 @@ export async function registeredBadgeBreakdown<T extends Record<string, unknown>
 
 /** How many events the tooltip names before it says how many more — a tooltip is not a list. */
 export const BADGE_HINT_EVENTS = 5;
+
+/** The words the hint is built from, in the reader's language — the `Admin.nav` entries. */
+export type BadgeHintWords = {
+  rule: string;
+  event: (title: string, count: number) => string;
+  more: (count: number) => string;
+};
+
+/**
+ * The tab's tooltip text (§NNN): the rule in one line, then each upcoming event with its number,
+ * the first `BADGE_HINT_EVENTS` by start and how many more after them. Pure, so both languages
+ * are tested against the catalogues.
+ */
+export function registeredBadgeHint(events: readonly RegisteredOnEvent[], words: BadgeHintWords): string {
+  const shown = events.slice(0, BADGE_HINT_EVENTS).map((row) => words.event(row.title, row.count));
+  const rest = events.length - BADGE_HINT_EVENTS;
+  return [words.rule, ...shown, ...(rest > 0 ? [words.more(rest)] : [])].join("\n");
+}

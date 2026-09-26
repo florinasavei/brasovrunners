@@ -2,7 +2,16 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
-import { countRegisteredForUpcoming, forgetRegisteredBadgeCount, registeredBadgeBreakdown, registeredBadgeCount } from "@/modules/registrations/nav-count";
+import { createTranslator } from "next-intl";
+import enMessages from "../../../messages/en.json";
+import roMessages from "../../../messages/ro.json";
+import {
+  countRegisteredForUpcoming,
+  forgetRegisteredBadgeCount,
+  registeredBadgeBreakdown,
+  registeredBadgeHint,
+  type RegisteredOnEvent,
+} from "@/modules/registrations/nav-count";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -86,20 +95,6 @@ describe("§255 how many are signed up", () => {
     expect(await countRegisteredForUpcoming(db, NOW)).toBe(1);
   });
 
-  it("answers from the memo rather than asking again", async () => {
-    await enter(upcoming, "CONFIRMED");
-    expect(await registeredBadgeCount(db, NOW)).toBe(1);
-
-    // Somebody registers a second later; the badge is allowed to be a minute stale, and the
-    // list itself is always exact.
-    await enter(upcoming, "CONFIRMED");
-    expect(await registeredBadgeCount(db, new Date(NOW.getTime() + 1_000))).toBe(1);
-    // A minute on, or the moment anything drops the memo, it is current again.
-    expect(await registeredBadgeCount(db, new Date(NOW.getTime() + 61_000))).toBe(2);
-    forgetRegisteredBadgeCount();
-    expect(await registeredBadgeCount(db, NOW)).toBe(2);
-  });
-
   it("§NNN splits the figure per upcoming event, in the reader's language, summing to the badge", async () => {
     await db.insert(eventTranslations).values({ eventId: upcoming, locale: "ro", slug: "crosul", title: "Crosul" });
     const [later] = await db
@@ -149,5 +144,37 @@ describe("§255 how many are signed up", () => {
     const split = await registeredBadgeBreakdown(db, NOW, "ro");
     expect(split?.events.map((row) => row.eventId)).toEqual([upcoming]);
     expect(split?.total).toBe(1);
+  });
+
+  it("§NNN the tooltip's words, in Romanian and in English: the rule, five events, how many more", () => {
+    const rows: RegisteredOnEvent[] = Array.from({ length: 7 }, (_, i) => ({ eventId: `e${i}`, title: `Cros ${i + 1}`, count: i + 1 }));
+    function words(locale: "ro" | "en") {
+      const t = createTranslator({ locale, messages: locale === "ro" ? roMessages : enMessages, namespace: "Admin" });
+      return {
+        rule: t("nav.registeredHint"),
+        event: (title: string, count: number) => t("nav.registeredEvent", { title, count }),
+        more: (count: number) => t("nav.registeredMoreEvents", { count }),
+      };
+    }
+    expect(registeredBadgeHint(rows, words("ro")).split("\n")).toEqual([
+      "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
+      "Cros 1: 1",
+      "Cros 2: 2",
+      "Cros 3: 3",
+      "Cros 4: 4",
+      "Cros 5: 5",
+      "+2 altele",
+    ]);
+    expect(registeredBadgeHint(rows, words("en")).split("\n")).toEqual([
+      "Active registrations (no cancelled, no tests) on the events still to come:",
+      "Cros 1: 1",
+      "Cros 2: 2",
+      "Cros 3: 3",
+      "Cros 4: 4",
+      "Cros 5: 5",
+      "+2 more",
+    ]);
+    // Five or fewer: no "more" line.
+    expect(registeredBadgeHint(rows.slice(0, 5), words("en")).split("\n")).toHaveLength(6);
   });
 });
