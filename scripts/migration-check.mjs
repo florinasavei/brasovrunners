@@ -17,6 +17,11 @@
 // saying which release removed the code's use of what it drops, so the person writing it has
 // to answer that question before CI does. Migrations up to 0023 predate the rule and are left
 // alone; 0023 is the one that taught it.
+//
+// A leading `-- expand:` or `-- contract:` line overrides the classification above it: `-- expand:`
+// forces `contracts` false (the author states there is nothing here for a later release to still
+// need), `-- contract:` forces `expands` false and doubles as the required note. Without an
+// override the two booleans come only from what the SQL does.
 
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -91,9 +96,14 @@ function contractingDrops(code, checkConstraints) {
  */
 export function auditMigration(sql, checkConstraints = new Set()) {
   const code = withoutComments(sql);
+  const override = sql.match(/^--\s*(expand|contract):\s*\S/m)?.[1]?.toLowerCase();
+  let expands = EXPAND.test(code);
+  let contracts = CONTRACT.test(code) || contractingDrops(code, checkConstraints).length > 0;
+  if (override === "expand") contracts = false;
+  if (override === "contract") expands = false;
   return {
-    expands: EXPAND.test(code),
-    contracts: CONTRACT.test(code) || contractingDrops(code, checkConstraints).length > 0,
+    expands,
+    contracts,
     hasContractNote: /^--\s*contract:\s*\S/m.test(sql),
   };
 }

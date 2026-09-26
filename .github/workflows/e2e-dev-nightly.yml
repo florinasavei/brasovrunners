@@ -12,6 +12,10 @@ name: e2e-dev-nightly
 # GitHub runs a schedule from the default branch's copy of this file, so it starts the night after
 # the release that carries it reaches `main`; it tests `qa` because that is where the next release
 # is assembled. The Actions minutes are free: the repository is public.
+#
+# Named `e2e-dev-nightly.yml`, not the brief's `e2e-dev.yml`, so it reads apart from `docs-check.yml`'s
+# `e2e` job in a workflow listing — and at 01:37, not 01:30, so it never lands on the hour, when
+# GitHub's own scheduler is busiest and a run can be delayed.
 
 on:
   schedule:
@@ -26,7 +30,8 @@ permissions:
 
 concurrency:
   group: e2e-dev-nightly
-  cancel-in-progress: true
+  # A hand-dispatched run queues behind a nightly already in progress rather than killing it.
+  cancel-in-progress: false
 
 jobs:
   e2e-dev:

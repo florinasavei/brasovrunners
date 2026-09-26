@@ -11,7 +11,10 @@
  *   1. bumps the baseline `from` → `to` in every file that carries it, except the two that keep history:
  *      DECISIONS.md moves only its marker and its title line (each shipped section keeps its own
  *      "Baseline `…`." footer) and CHANGELOG.md gets a new section above the old one;
- *   2. numbers the items in the manifest's order from the first free `§` in DECISIONS.md;
+ *   2. numbers the items in the manifest's order from the first free `§` in DECISIONS.md — first rewriting,
+ *      in every landed field, a literal `§N` above that first free number to `§NNN`, since it can only be a
+ *      guess at a number nobody assigned yet, never a citation of a decision already in the file
+ *      (`land-entry.mjs`'s `rewriteFreeSectionRefs`), and printing each one it rewrites;
  *   3. replaces every `§NNN` in tracked files with its item's number, by the commit that wrote the line
  *      (git blame against the commits `base..branch`); a line written by a merge is listed for a hand decision;
  *   4. appends each item's section to DECISIONS.md — the fixer's text if a fix round rewrote it, plus every
@@ -41,7 +44,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import process from "node:process";
-import { entryFromResults, requirementOf } from "./land-entry.mjs";
+import { entryFromResults, requirementOf, rewriteFreeSectionRefs } from "./land-entry.mjs";
 
 const [manifestPath, flag] = process.argv.slice(2);
 const APPLY = flag === "--apply";
@@ -119,6 +122,10 @@ else {
 // 2. The numbers.
 const last = Math.max(...[...read("DECISIONS.md").text.matchAll(/^## (\d+)\. /gm)].map((m) => Number(m[1])));
 const entries = manifest.items.map((item, i) => ({ n: last + 1 + i, ...itemEntry(item) }));
+// A literal §N above `last` is a guess, not a citation of an existing decision — §NNN before it is numbered.
+for (const e of entries) {
+  for (const rewrite of rewriteFreeSectionRefs(e, last)) console.log(`  ${e.branch}: rewrote a free ${rewrite}`);
+}
 for (const e of entries) console.log(`§${e.n} ← ${e.branch}: ${e.title}`);
 
 // 3. §NNN in the code, by the commit that wrote each line.

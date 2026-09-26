@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { entryFromResults, isBlankFixReport, mergeCriteria, withoutHousekeeping } from "../../../scripts/land-entry.mjs";
+import { entryFromResults, isBlankFixReport, mergeCriteria, rewriteFreeSectionRefs, withoutHousekeeping } from "../../../scripts/land-entry.mjs";
 
 /**
  * §NNN — what `yarn docs:land` lands from one item's saved results. The cases are the defects
@@ -13,6 +13,7 @@ const impl = {
 };
 const fixer = (over: Record<string, unknown> = {}) => ({
   committed: true,
+  commitSha: "abc1234",
   summary: "Fixed the two should-fix findings.",
   decisionsTitle: impl.decisionsTitle,
   decisionsSection: impl.decisionsSection,
@@ -21,7 +22,7 @@ const fixer = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 const round = (over: Record<string, unknown> = {}) => ({
-  fixed: { committed: true, summary: "Answered the re-review.", decisionsAddendum: "", changelogLine: "", specsCriteria: [], ...over },
+  fixed: { committed: true, commitSha: "def5678", summary: "Answered the re-review.", decisionsAddendum: "", changelogLine: "", specsCriteria: [], ...over },
   rereview: { verdict: "ship" },
 });
 
@@ -130,5 +131,59 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
     const later = [{ requirement: "BR-REQ-040-01", text: "7. (amended) The card and the calendar carry it (2026-09-26, `DECISIONS.md` §NNN)." }];
     expect(entryFromResults({ impl }, [round({ specsCriteria: later })]).criteria).toEqual(later);
     expect(mergeCriteria(impl.specsCriteria, later)).toEqual(later);
+  });
+
+  it("keeps a fixer's sentence that mentions the documents but is not about editing them", () => {
+    const kept = [
+      "A declined offer carries the place forward to the next person.",
+      "The gated migration run of DECISIONS.md §31 is unchanged: production still migrates only through it.",
+      "The SPECS criterion for BR-REQ-051-01 did not change the allocator.",
+    ];
+    for (const sentence of kept) expect(withoutHousekeeping(sentence), sentence).toEqual({ text: sentence, dropped: [] });
+  });
+});
+
+describe("§NNN docs:land — a committed fix report needs a commitSha", () => {
+  it("refuses the chain's fix report when committed but the commitSha is blank", () => {
+    expect(() => entryFromResults({ impl, fixed: fixer({ commitSha: "" }) }, [], {}, "feat/x")).toThrow(/feat\/x: the chain's fix report says committed with a blank commitSha/);
+  });
+
+  it("refuses a fix round's report when committed but the commitSha is blank", () => {
+    expect(() => entryFromResults({ impl }, [round({ commitSha: "" })], {}, "feat/x")).toThrow(/fix round 1's report says committed with a blank commitSha/);
+  });
+
+  it("accepts a committed report with a commitSha", () => {
+    expect(entryFromResults({ impl, fixed: fixer({ commitSha: "d249ec37" }) }).body).toBe(impl.decisionsSection);
+  });
+});
+
+describe("§NNN docs:land — a SPECS criterion needs a full BR-REQ id", () => {
+  it("drops a criterion whose requirement is not BR-REQ-NNN-NN, with a note", () => {
+    const entry = entryFromResults({ impl }, [round({ specsCriteria: [{ requirement: "CI tooling", text: "Some new rule." }, { requirement: "BR-REQ-051", text: "Missing its suffix." }] })]);
+    expect(entry.criteria).toEqual(impl.specsCriteria);
+    expect(entry.notes.some((n) => n.includes("no BR-REQ-NNN-NN id") && n.includes("CI tooling"))).toBe(true);
+    expect(entry.notes.some((n) => n.includes("no BR-REQ-NNN-NN id") && n.includes("BR-REQ-051"))).toBe(true);
+  });
+
+  it("keeps a criterion with a full id", () => {
+    const criteria = [{ requirement: "BR-REQ-051-01", text: "A real criterion." }];
+    const entry = entryFromResults({ impl }, [round({ specsCriteria: criteria })]);
+    expect(entry.criteria).toEqual([...impl.specsCriteria, ...criteria]);
+  });
+});
+
+describe("§NNN docs:land — a literal §N above the next free number becomes §NNN", () => {
+  it("rewrites a body's, a bullet's and a criterion's §999 to §NNN, above the threshold", () => {
+    const entry = { title: "A title", body: "See §999 for the rule.", changelog: "- x §999.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §999 says so." }] };
+    const rewrites = rewriteFreeSectionRefs(entry, 400);
+    expect(entry).toEqual({ title: "A title", body: "See §NNN for the rule.", changelog: "- x §NNN.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §NNN says so." }] });
+    expect(rewrites).toEqual(["§999 → §NNN", "§999 → §NNN", "§999 → §NNN"]);
+  });
+
+  it("leaves a §N at or below the threshold alone — it names a decision that already exists", () => {
+    const entry = { title: "A title", body: "The gated migration run of §31 is unchanged.", changelog: "- x §31.", criteria: [] };
+    const rewrites = rewriteFreeSectionRefs(entry, 400);
+    expect(entry.body).toBe("The gated migration run of §31 is unchanged.");
+    expect(rewrites).toEqual([]);
   });
 });

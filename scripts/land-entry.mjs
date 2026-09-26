@@ -14,7 +14,14 @@
  *     else the manifest item's `title`, or nothing lands;
  *   - a fixer's housekeeping is never landed: a section or an addendum that only says the text was
  *     "carried forward", or a sentence saying no DECISIONS.md or CHANGELOG.md edit was made, is
- *     dropped, and every dropped sentence is printed so the dry run shows it.
+ *     dropped, and every dropped sentence is printed so the dry run shows it. The match is narrow —
+ *     "carried forward from the implementer/verbatim/unchanged", or "no … DECISIONS/CHANGELOG/SPECS
+ *     … edit/change" in either order — never a bare "unchanged" or "did not change" on its own,
+ *     which belongs to the fix's substance as often as to its housekeeping;
+ *   - a committed fix report with a blank `commitSha` is refused, naming the item and the round —
+ *     "committed" with nothing to point at is the same defect as a blank summary;
+ *   - a SPECS criterion whose `requirement` is not a full `BR-REQ-\d{3}-\d{2}` id is dropped, with
+ *     a note, rather than landed under a heading `land-batch.mjs` cannot resolve.
  */
 
 export const requirementOf = (c) => (c.requirement.match(/BR-REQ-\d{3}-\d{2}/) ?? [c.requirement])[0];
@@ -34,31 +41,28 @@ export function mergeCriteria(...lists) {
   return [...byRequirement.values()].flat();
 }
 
-/** The things the landing writes, as a fixer names them when it says it did not write them. */
-const LANDING_ARTIFACT =
-  /\b(DECISIONS|CHANGELOG|SPECS)(\.md)?\b|PROJECT_BASELINE|baseline marker|\bchangelog ?line\b|\bchangelogLine\b|\bspecsCriteria\b|\bdecisions(Section|Title|Addendum)\b|§\s?(text|body|section)\b/i;
+/** The landing artifact's name, for the two housekeeping patterns below — never a bare "unchanged". */
+// "\.md" reads "_md" here — the caller replaces the dot so a filename never ends a sentence.
+const ARTIFACT = String.raw`(?:DECISIONS|CHANGELOG|SPECS)(?:[._]md)?`;
+const EDIT_WORD = String.raw`(?:edits?|changes?)`;
 /**
- * "No … edit was made", "was not edited", "did not touch", "left unchanged", "for the orchestrator
- * to place" — said of a landing artifact, these are the fixer's housekeeping. Narrow on purpose: a
- * sentence like "§372 did not say what changed" is the fix's substance and stays.
+ * "No DECISIONS.md … edit was made" or "no changes … to DECISIONS.md were needed" — the subject
+ * has to be the landing artifact itself, in either word order. Narrow on purpose: "the SPECS
+ * criterion … did not change the allocator" and "… §31 is unchanged" are the fix's substance, not
+ * housekeeping, and must not match — there is no "no"/"without" attached to the artifact there.
  */
-const NOT_WRITTEN = new RegExp(
-  [
-    String.raw`\bno\b[^.;]{0,80}\b(edits?|changes?)\b[^.;]{0,50}\b(made|needed|required)\b`,
-    String.raw`\b(not|never)\s+(been\s+)?(edited|touched|modified|changed|updated)\b`,
-    String.raw`\b(did|does|do|was|were)\s*(not|n't)\s+(edit|touch|modify|change|update)\b`,
-    String.raw`\b(unchanged|untouched|as before|as is)\b`,
-    String.raw`\bfor the (orchestrator|dispatcher)\b`,
-  ].join("|"),
+const NO_ARTIFACT_EDIT = new RegExp(
+  String.raw`\b(no|without)\b[^.;]{0,90}\b${ARTIFACT}\b[^.;]{0,90}\b${EDIT_WORD}\b` + "|" + String.raw`\b(no|without)\b[^.;]{0,90}\b${EDIT_WORD}\b[^.;]{0,90}\b${ARTIFACT}\b`,
   "i",
 );
-/** "Carried forward", "carry the § text forward". */
-const CARRIED = /\bcarr(y|ies|ied|ying)\b[^.]*\bforward\b/i;
-/** What makes a "carried forward" sentence housekeeping rather than, say, a waiting-list rule. */
-const CARRIED_FROM = /\b(implementer|verbatim|unchanged|as[- ]is|above|previous|earlier|original)\b/i;
-const isCarried = (sentence) => CARRIED.test(sentence) && (LANDING_ARTIFACT.test(sentence) || CARRIED_FROM.test(sentence) || sentence.trim().length < 80);
-/** A whole text that says nothing. */
-const EMPTY_WORDS = /^[(\s]*(none|n\/a|unchanged|no (changes?|edits?|addendum)|nothing( (new|to add))?|same( as (above|before))?|—|-+)[.)\s]*$/i;
+/**
+ * "Carried forward from the implementer", "carried forward verbatim/unchanged" — the text itself
+ * says it is a copy of something else. A sentence like "a declined offer carries the place forward
+ * to the next person" is the fix's substance (present tense, no qualifier) and must not match.
+ */
+const CARRIED_FORWARD = /\bcarried\s+forward\b[^.;]{0,30}\b(from the implementer|verbatim|unchanged)\b/i;
+/** A whole text that says nothing, including a bare "(carried forward)" with no qualifier. */
+const EMPTY_WORDS = /^[(\s]*(none|n\/a|unchanged|carried forward|no (changes?|edits?|addendum)|nothing( (new|to add))?|same( as (above|before))?|—|-+)[.)\s]*$/i;
 
 /**
  * A fixer's text without its housekeeping: the sentences that only say what was not written or
@@ -74,9 +78,9 @@ export function withoutHousekeeping(text) {
     for (let i = 0; i < parts.length; i += 2) {
       const sentence = parts[i];
       const separator = parts[i + 1] ?? "";
-      // A file name's dot ("DECISIONS.md") is not the end of a clause for NOT_WRITTEN.
+      // A file name's dot ("DECISIONS.md") is not the end of a clause for NO_ARTIFACT_EDIT.
       const plain = sentence.replace(/\.(md|mjs|js|ts)\b/g, "_$1");
-      const housekeeping = isCarried(plain) || (LANDING_ARTIFACT.test(sentence) && NOT_WRITTEN.test(plain));
+      const housekeeping = CARRIED_FORWARD.test(plain) || NO_ARTIFACT_EDIT.test(plain);
       if (housekeeping && sentence.trim()) dropped.push(sentence.trim());
       else out += sentence + separator;
     }
@@ -110,6 +114,7 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
   const impl = chain?.impl;
   if (!impl) refuse("no implementer's result (impl)");
   if (chain.fixed != null && isBlankFixReport(chain.fixed)) refuse("the chain's fix report is blank — no summary of what the fixer did");
+  if (chain.fixed?.committed && blank(chain.fixed.commitSha)) refuse("the chain's fix report says committed with a blank commitSha");
 
   const fixers = [];
   if (chain.fixed?.committed) fixers.push({ who: "the chain's fixer", report: chain.fixed, text: chain.fixed.decisionsSection });
@@ -120,6 +125,7 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
       notes.push(`fix round ${i + 1} committed nothing: its text is not landed`);
       return;
     }
+    if (blank(report.commitSha)) refuse(`fix round ${i + 1}'s report says committed with a blank commitSha`);
     fixers.push({ who: `fix round ${i + 1}`, report, text: report.decisionsAddendum, addendum: true });
   });
 
@@ -129,8 +135,8 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
     const { text: clean, dropped } = withoutHousekeeping(text);
     for (const sentence of dropped) notes.push(`dropped from ${who}: "${sentence.slice(0, 160)}"`);
     if (clean) body = addendum ? `${body}\n\n${clean}` : clean;
-    if (!addendum && !blank(report.decisionsTitle) && !EMPTY_WORDS.test(report.decisionsTitle) && !CARRIED.test(report.decisionsTitle)) title = report.decisionsTitle.trim();
-    if (!blank(report.changelogLine) && report.changelogLine.trim() !== String(impl.changelogLine ?? "").trim() && !CARRIED.test(report.changelogLine)) {
+    if (!addendum && !blank(report.decisionsTitle) && !EMPTY_WORDS.test(report.decisionsTitle) && !CARRIED_FORWARD.test(report.decisionsTitle)) title = report.decisionsTitle.trim();
+    if (!blank(report.changelogLine) && report.changelogLine.trim() !== String(impl.changelogLine ?? "").trim() && !CARRIED_FORWARD.test(report.changelogLine)) {
       notes.push(`${who} proposed another CHANGELOG bullet, not landed (set the item's "changelog" to use it): ${report.changelogLine.trim().slice(0, 160)}`);
     }
   }
@@ -141,13 +147,48 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
   const changelog = String(item.changelog ?? "").trim() || String(impl.changelogLine ?? "").trim();
   if (blank(changelog)) refuse("blank changelogLine — give the manifest item a \"changelog\"");
 
-  // An empty criterion is dropped before the merge, so it cannot replace a real one for its requirement.
+  // An empty criterion, or one whose id land-batch.mjs cannot resolve, is dropped before the merge.
+  const VALID_REQUIREMENT = /^BR-REQ-\d{3}-\d{2}$/;
   const real = (list) =>
     (list ?? []).filter((c) => {
-      const empty = blank(c.text) || EMPTY_WORDS.test(c.text.trim()) || isCarried(c.text);
-      if (empty) notes.push(`dropped an empty SPECS criterion for ${c.requirement}: "${String(c.text ?? "").slice(0, 80)}"`);
-      return !empty;
+      const empty = blank(c.text) || EMPTY_WORDS.test(c.text.trim()) || CARRIED_FORWARD.test(c.text);
+      if (empty) {
+        notes.push(`dropped an empty SPECS criterion for ${c.requirement}: "${String(c.text ?? "").slice(0, 80)}"`);
+        return false;
+      }
+      const id = requirementOf(c);
+      if (!VALID_REQUIREMENT.test(id)) {
+        notes.push(`dropped a SPECS criterion with no BR-REQ-NNN-NN id (got "${c.requirement}"): "${String(c.text ?? "").slice(0, 80)}"`);
+        return false;
+      }
+      return true;
     });
   const criteria = mergeCriteria(real(impl.specsCriteria), ...fixers.map((f) => real(f.report.specsCriteria)));
   return { title, body, changelog, criteria, notes };
+}
+
+/**
+ * A literal `§N` a fixer or implementer typed instead of the `§NNN` placeholder — guessing at a
+ * number `land-batch.mjs` has not assigned yet. Above `threshold` (the last number already in
+ * DECISIONS.md, before this batch's own numbers are handed out) it cannot be a citation of an
+ * existing decision, so it is rewritten to `§NNN` before step 4's numbering gives it the real one;
+ * `§N` at or below `threshold` is left alone, since it names a decision that already exists.
+ *
+ * Rewrites every one of `entry`'s landed fields (title, body, changelog, each criterion's text) in
+ * place and returns the sentences changed, for the dry run to print.
+ */
+export function rewriteFreeSectionRefs(entry, threshold) {
+  const tooHigh = new RegExp(String.raw`§(\d+)`, "g");
+  const rewrites = [];
+  const fix = (text) =>
+    String(text ?? "").replace(tooHigh, (whole, n) => {
+      if (Number(n) <= threshold) return whole;
+      rewrites.push(`§${n} → §NNN`);
+      return "§NNN";
+    });
+  entry.title = fix(entry.title);
+  entry.body = fix(entry.body);
+  entry.changelog = fix(entry.changelog);
+  entry.criteria = (entry.criteria ?? []).map((c) => ({ ...c, text: fix(c.text) }));
+  return rewrites;
 }

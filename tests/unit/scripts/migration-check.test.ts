@@ -119,6 +119,27 @@ ALTER TABLE "t" ADD CONSTRAINT "t_code_unique" UNIQUE("code");`;
 ALTER TABLE "events" ADD COLUMN "notes" text;`;
     expect(auditMigration(sql).contracts).toBe(false);
   });
+
+  it("lets a leading '-- expand:' note declare a drop harmless, overriding the classification", () => {
+    // A synthetic case: this drop would otherwise read as a contract (it is a bare DROP INDEX
+    // that creates nothing back), but the author states there is nothing left using it.
+    const sql = `-- expand: this index was never read by any query; dropping it removes nothing in use
+DROP INDEX "unused_idx";`;
+    expect(auditMigration(sql)).toEqual({ expands: false, contracts: false, hasContractNote: false });
+    expect(problemsFor("0090_x.sql", sql)).toEqual([]);
+  });
+
+  it("lets a leading '-- contract:' note stand in for the required one and suppress an expand reading", () => {
+    // A synthetic case: an ADD COLUMN paired with a drop in a file that also, incidentally, reads
+    // as an expand — the note says the whole file is a contract, and that wins.
+    const sql = `-- contract: BR-V2.01 stopped writing to "legacy"
+ALTER TABLE "events" DROP COLUMN "legacy";--> statement-breakpoint
+CREATE INDEX "events_legacy_idx" ON "events" ("id");`;
+    const audit = auditMigration(sql);
+    expect(audit.expands).toBe(false);
+    expect(audit.contracts).toBe(true);
+    expect(problemsFor("0091_x.sql", sql)).toEqual([]);
+  });
 });
 
 describe("AGENTS.md §7.6 wait-for-migration — the build waits for the database, never the reverse", () => {
