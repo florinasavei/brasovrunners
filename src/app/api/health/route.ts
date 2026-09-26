@@ -6,7 +6,8 @@ import { checkSchemaVersion } from "@/db/schema-version";
 import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
-import { checkNeonQuotaHealth, type NeonQuotaHealth } from "@/modules/diagnostics/neon";
+import { cachedBudgetThresholds } from "@/modules/diagnostics/budget-thresholds";
+import { checkNeonQuotaHealth, type NeonQuotaHealth, QUOTA_NOT_READ } from "@/modules/diagnostics/neon";
 import { isQuotaRefusalError } from "@/modules/resilience/domain/database-away";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { buildInfo } from "@/shared/config/build-info";
@@ -37,7 +38,7 @@ import { env } from "@/shared/config/env";
  * symptom was a broken landing page with nothing to point at (`DECISIONS.md` §31).
  *
  * It also carries the Neon project's own early warning (§335): once this billing period's
- * compute reaches 80% of the monthly quota the club set on itself, this answers `degraded` before
+ * compute turns the month's budget red (85% of the monthly quota by default, §NNN), this answers `degraded` before
  * Neon suspends the database at 100% — a suspension that is total, and the one the club cannot
  * be emailed about once it has happened. `checkNeonQuotaHealth` is cached for fifteen minutes and
  * never fails this endpoint on its own account, so a missing key or an unreachable Neon reads as
@@ -104,7 +105,7 @@ class NotStored extends Error {}
 
 /**
  * The database half of the answer, from an answer at most `minutes` old — only while the month's
- * budget is `tight` or `critical` (§NNN, `GOVERNOR_EFFECTS.healthReuseMinutes`).
+ * budget is `red` (§NNN, `GOVERNOR_EFFECTS.healthReuseMinutes`).
  *
  * The endpoint is public, and the re-measure of 2026-09-26 counted stray wakes it could not name,
  * `/api/health` from something other than the monitor among the suspects. Each one that reaches
@@ -144,11 +145,19 @@ async function reuseDatabaseHalf(
   }
 }
 
+const share = (part: number | null, whole: number | null) => (part === null || !whole ? null : Math.round((part / whole) * 100));
+
+/** What the governor is doing, in a line a monitor's log can show (§NNN). */
+const BUDGET_NOTE: Record<NeonQuotaHealth["level"], string | null> = {
+  unknown: null,
+  green: null,
+  amber: "ahead of the month's line: the jobs run at most hourly, the public cache lives twice as long",
+  red: "near the quota: the jobs run at most every two hours, health reuses a ten-minute answer",
+};
+
 /** How long the route waits for the month's budget before probing without it (§NNN). */
 const HEALTH_BUDGET_WAIT_MS = 2_500;
 
-/** The quota reading when it did not answer in time: nothing asked, as for a missing key. */
-const QUOTA_NOT_ASKED: NeonQuotaHealth = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" };
 
 function withinWait<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -179,7 +188,11 @@ export async function GET(): Promise<Response> {
   // Neon's requests in a row, and a monitor that times out on this endpoint must not be kept
   // waiting on a third party before `select 1` is even asked.
   const [neonQuota, turnstile] = await Promise.all([
-    withinWait(checkNeonQuotaHealth(env, fetch, now), HEALTH_BUDGET_WAIT_MS, QUOTA_NOT_ASKED),
+    withinWait(
+      cachedBudgetThresholds().then((thresholds) => checkNeonQuotaHealth(env, fetch, now, thresholds)),
+      HEALTH_BUDGET_WAIT_MS,
+      QUOTA_NOT_READ,
+    ),
     probeTurnstileSecret(),
   ]);
   const effects = governorEffects(neonQuota.level);
@@ -218,7 +231,7 @@ export async function GET(): Promise<Response> {
   */
   const database: "ok" | "down" | "suspended" = checks
     ? "ok"
-    : isQuotaRefusalError(probeError) || neonQuota.level === "exhausted"
+    : isQuotaRefusalError(probeError) || (neonQuota.percent ?? 0) >= 100
       ? "suspended"
       : "down";
   const schema = checks?.schema ?? null;
@@ -267,11 +280,18 @@ export async function GET(): Promise<Response> {
       // club's own billing numbers; this endpoint is public and unauthenticated, so only what
       // the 503 and a monitor need (the status and the share of the quota spent) is published
       // here. `/admin/tasks` and `/devs` are where the full figures belong.
-      // `level` is the month's budget as the governor reads it (§NNN) — a word, not a figure:
-      // `normal`, `ahead`, `tight`, `critical`, `exhausted`, or `unknown`/`unlimited`. Only
-      // `near-limit` (80%, §335) degrades the status; the levels below it are the platform
-      // slowing itself down, which is its own business and never pages anybody.
-      neon: { status: neonQuota.status, percent: neonQuota.percent, level: neonQuota.level },
+      neon: { status: neonQuota.status, percent: neonQuota.percent },
+      // The month's budget as the governor reads it (§NNN): `green`, `amber`, `red` or `unknown`,
+      // the metered spend and the pro-rated line as whole percents of the quota — shares, not
+      // CU-hours, for the reason §335 gives above — and a note saying what is throttled. Only
+      // `red` degrades the status (it is `neon.status: near-limit`); `amber` stays `ok` with the
+      // note, because the platform slowing itself down is its own business.
+      budget: {
+        level: neonQuota.level,
+        meteredPercent: neonQuota.percent,
+        linePercent: share(neonQuota.lineCuHours, neonQuota.quotaCuHours),
+        note: BUDGET_NOTE[neonQuota.level],
+      },
       // The bot check's secret, probed rather than merely read as set (§420, finding (10)): a
       // wrong `TURNSTILE_SECRET_KEY` fails registration open (§205) and used to announce itself
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
@@ -279,7 +299,7 @@ export async function GET(): Promise<Response> {
       turnstile: { status: turnstile },
       checkedAt: now.toISOString(),
       // When the database half was asked: `checkedAt` itself, or the start of the window whose
-      // answer this one reuses while the budget is tight (§NNN).
+      // answer this one reuses while the budget is red (§NNN).
       databaseCheckedAt: answer.askedAt.toISOString(),
     },
     { status: status === "ok" ? 200 : 503 },

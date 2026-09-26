@@ -188,11 +188,11 @@ async function restingSince(error: unknown, now: Date): Promise<Date | null> {
       Neon's own refusal ("exceeded the compute time quota") is resting on its own, whatever the
       level reads: with a project-scoped key the level comes from the operations log, which counts
       only the floor and stops growing once the project is suspended, so the platform may still
-      read `critical` while Neon has already cut it off. The meter's period end when there is a
+      read under 100% while Neon has already cut it off. The meter's period end when there is a
       meter, the bounded default otherwise.
     */
     if (quotaRefused) return budget.meter ? budget.meter.periodEnd : defaultRestingUntil(now);
-    return budget.effects.restingCopies && budget.meter ? budget.meter.periodEnd : null;
+    return budget.budget?.spent && budget.meter ? budget.meter.periodEnd : null;
   } catch {
     return quotaRefused ? defaultRestingUntil(now) : null;
   }

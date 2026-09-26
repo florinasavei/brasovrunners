@@ -113,6 +113,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateNeonPlanAction: [],
   updateBotCheckAction: [],
   updateJobCadenceAction: [],
+  // The month's budget thresholds (§NNN): how early the platform throttles itself.
+  updateBudgetThresholdsAction: [],
   updateNeonLimitsAction: [],
   // "Termene" (§377): every hold, offer and link given from now on takes the new numbers.
   updateDeadlinesAction: [],

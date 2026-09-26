@@ -1,47 +1,90 @@
 import type { JobCadenceMinutes } from "@/modules/jobs/schedule";
-import { NEON_QUOTA_WARNING_RATIO, neonQuotaRatio } from "./neon-limits";
+import { neonQuotaRatio } from "./neon-limits";
 
 /**
- * The month's budget, as one word, and what the platform does about each word (§NNN) — pure: no
- * request, no database, no clock of its own.
+ * The month's budget as one of three colours, and what the platform does at each (§NNN) — pure:
+ * no request, no database, no clock of its own.
  *
  * The owner capped both Neon projects (§327: production 100 CU-hours a month, QA 30) knowing that
  * a project that reaches its quota is suspended until the next billing period. The re-measure of
  * 2026-09-26 projected an October at that week's pace reaching production's 100 around the 23rd
  * — four weeks before the race — and found the only warning (§335's 80%) reading a counter that
- * had stopped. So the platform now reads what Neon meters (`neon-meter.ts`), turns it into a
- * level here, and slows itself down as the month runs ahead of the calendar, instead of running
- * at full pace into a wall.
+ * had stopped. The owner: "keep the site running even if hitting Neon limits, but start
+ * throttling earlier". So the platform reads what Neon meters (`neon-meter.ts`), compares it with
+ * the month's pro-rated line here, and slows itself down well before the wall.
  *
  * ## The levels
  *
+ * - `green` — on or under the line, and under the amber share of the quota. Nothing changes. A
+ *   project with no quota is green too: there is nothing to run into.
+ * - `amber` — ahead of the line by more than `BUDGET_AHEAD_MARGIN` (a quarter), or past the amber
+ *   share of the quota (60% by default). The platform looks less often.
+ * - `red` — past the red share of the quota (85% by default). The platform looks as rarely as it
+ *   safely can, and `/api/health` degrades so the monitor rings (§98).
  * - `unknown` — nothing could be read (no key, Neon did not answer). Nothing changes: a platform
  *   that throttled itself because a third party had a bad minute would be the governor causing
  *   the outage it exists to prevent.
- * - `unlimited` — the project has no quota. Nothing to run into; the bill is §280's business.
- * - `normal` — the pace fits: this period's spend, carried on at its own average to the period's
- *   end, stays under the quota.
- * - `ahead` — the pace does not fit: at this rate the quota runs out before the period ends. Well
- *   before any share of it is "high"; that is the point of reading the pace.
- * - `tight` — 80% spent (`NEON_QUOTA_WARNING_RATIO`, the same line `/api/health` has degraded at
- *   since §335).
- * - `critical` — 95% spent: the last few hours of compute the period has.
- * - `exhausted` — 100%: Neon has suspended the project (or is about to), and nothing that needs
- *   the database will work until the period ends.
  *
- * The pace is the period's own average, measured over at least a day (`NEON_BUDGET_MIN_PACE_HOURS`)
- * so that the first busy hour of a period — a release, a morning of testing — does not project to
- * a month of that and throttle the platform for nothing.
+ * **The line** is the quota times the share of the period gone: at noon on the 16th of a
+ * thirty-day month it is half the quota. Early in the period the share is measured over at least
+ * `NEON_BUDGET_MIN_PACE_HOURS`, so the first busy hour of a month (a release, a morning of
+ * testing) is not read as a month of that.
+ *
+ * The two shares are the Administrator's to move on `/admin/tasks` → Costuri
+ * (`diagnostics/budget-thresholds.ts`, audited, like §334's interval); the margin is not — it is
+ * what "ahead of the line" means, not a dial.
  */
 
-export const NEON_BUDGET_LEVELS = ["unknown", "unlimited", "normal", "ahead", "tight", "critical", "exhausted"] as const;
+export const NEON_BUDGET_LEVELS = ["unknown", "green", "amber", "red"] as const;
 export type NeonBudgetLevel = (typeof NEON_BUDGET_LEVELS)[number];
 
-/** The share of the quota past which only the last hours are left. */
-export const NEON_BUDGET_CRITICAL_RATIO = 0.95;
+/** How far past the pro-rated line the spend may run before the month is "ahead" — a quarter. */
+export const BUDGET_AHEAD_MARGIN = 0.25;
 
-/** The shortest stretch a pace is measured over, in hours, however early in the period it is. */
+/**
+ * The shares of the quota that turn the level amber and red, as whole percents. 60 leaves about
+ * twelve days of this week's 4.4 CU-hours a day before production's 100; 85 leaves three and a
+ * half — enough for the owner to raise the quota after the monitor rings.
+ */
+export type BudgetThresholds = { amberPercent: number; redPercent: number };
+export const DEFAULT_BUDGET_THRESHOLDS: BudgetThresholds = { amberPercent: 60, redPercent: 85 };
+
+/** The shortest stretch the line and the pace are measured over, in hours, however early in the period it is. */
 export const NEON_BUDGET_MIN_PACE_HOURS = 24;
+
+const HOUR = 3_600_000;
+
+/** The share of the period gone, 0–1, never less than `NEON_BUDGET_MIN_PACE_HOURS` of it. */
+function elapsedShare(periodStart: Date, periodEnd: Date, now: Date): { share: number; paceShare: number; totalHours: number; elapsedHours: number } {
+  const totalHours = Math.max((periodEnd.getTime() - periodStart.getTime()) / HOUR, 1);
+  const elapsedHours = Math.min(Math.max((now.getTime() - periodStart.getTime()) / HOUR, 0), totalHours);
+  return {
+    share: elapsedHours / totalHours,
+    paceShare: Math.min(Math.max(elapsedHours, NEON_BUDGET_MIN_PACE_HOURS), totalHours) / totalHours,
+    totalHours,
+    elapsedHours,
+  };
+}
+
+/**
+ * GREEN, AMBER or RED for this spend at this instant — the brief's function, the whole rule.
+ * `quota` null or zero is no limit: green.
+ */
+export function budgetLevel(
+  metered: number,
+  quota: number | null,
+  periodStart: Date,
+  periodEnd: Date,
+  now: Date,
+  thresholds: BudgetThresholds = DEFAULT_BUDGET_THRESHOLDS,
+): Exclude<NeonBudgetLevel, "unknown"> {
+  const ratio = neonQuotaRatio(metered, quota);
+  if (ratio === null) return "green";
+  if (ratio * 100 >= thresholds.redPercent) return "red";
+  if (ratio * 100 >= thresholds.amberPercent) return "amber";
+  const { paceShare } = elapsedShare(periodStart, periodEnd, now);
+  return ratio > paceShare * (1 + BUDGET_AHEAD_MARGIN) ? "amber" : "green";
+}
 
 export type NeonBudgetInput = {
   usedCuHours: number;
@@ -49,12 +92,15 @@ export type NeonBudgetInput = {
   periodStart: Date;
   periodEnd: Date;
   now: Date;
+  thresholds?: BudgetThresholds;
 };
 
 export type NeonBudget = {
-  level: NeonBudgetLevel;
+  level: Exclude<NeonBudgetLevel, "unknown">;
   /** Share of the quota spent, 0–1 and past it, or null with no quota. */
   ratio: number | null;
+  /** The pro-rated line now, in CU-hours: the quota times the share of the period gone; null with no quota. */
+  lineCuHours: number | null;
   /** Share of the period gone, 0–1. */
   elapsedRatio: number;
   /** CU-hours a day at this period's average pace. */
@@ -63,76 +109,66 @@ export type NeonBudget = {
   projectedCuHours: number | null;
   /** When the quota runs out at this pace, if that is before the period ends; otherwise null. */
   runsOutAt: Date | null;
+  /** The quota is spent: Neon has suspended the project, or is about to. */
+  spent: boolean;
 };
 
-const HOUR = 3_600_000;
-
 export function neonBudget(input: NeonBudgetInput): NeonBudget {
-  const start = input.periodStart.getTime();
-  const end = input.periodEnd.getTime();
-  const now = input.now.getTime();
-  const totalHours = Math.max((end - start) / HOUR, 1);
-  const elapsedHours = Math.min(Math.max((now - start) / HOUR, 0), totalHours);
-  const leftHours = totalHours - elapsedHours;
+  const { share, totalHours, elapsedHours } = elapsedShare(input.periodStart, input.periodEnd, input.now);
   const perHour = input.usedCuHours / Math.max(elapsedHours, NEON_BUDGET_MIN_PACE_HOURS);
   const ratio = neonQuotaRatio(input.usedCuHours, input.quotaCuHours);
-  const base = { elapsedRatio: elapsedHours / totalHours, cuHoursPerDay: perHour * 24 };
+  const level = budgetLevel(input.usedCuHours, input.quotaCuHours, input.periodStart, input.periodEnd, input.now, input.thresholds);
+  const base = { level, elapsedRatio: share, cuHoursPerDay: perHour * 24 };
 
   if (ratio === null || input.quotaCuHours === null) {
-    return { level: "unlimited", ratio: null, projectedCuHours: null, runsOutAt: null, ...base };
+    return { ...base, ratio: null, lineCuHours: null, projectedCuHours: null, runsOutAt: null, spent: false };
   }
-  const projectedCuHours = input.usedCuHours + perHour * leftHours;
+  const leftHours = totalHours - elapsedHours;
   const left = input.quotaCuHours - input.usedCuHours;
   const hoursToEmpty = perHour > 0 ? left / perHour : Number.POSITIVE_INFINITY;
-  const runsOutAt = left > 0 && hoursToEmpty < leftHours ? new Date(now + hoursToEmpty * HOUR) : null;
-
-  const level: NeonBudgetLevel =
-    ratio >= 1
-      ? "exhausted"
-      : ratio >= NEON_BUDGET_CRITICAL_RATIO
-        ? "critical"
-        : ratio >= NEON_QUOTA_WARNING_RATIO
-          ? "tight"
-          : projectedCuHours > input.quotaCuHours
-            ? "ahead"
-            : "normal";
-  return { level, ratio, projectedCuHours, runsOutAt, ...base };
+  return {
+    ...base,
+    ratio,
+    lineCuHours: input.quotaCuHours * share,
+    projectedCuHours: input.usedCuHours + perHour * leftHours,
+    runsOutAt: left > 0 && hoursToEmpty < leftHours ? new Date(input.now.getTime() + hoursToEmpty * HOUR) : null,
+    spent: ratio >= 1,
+  };
 }
 
 /**
- * What the platform does at each level — the governor's whole rulebook, in one table.
+ * What the platform does at each level — the governor's whole rulebook, in one table. Every effect
+ * is applied without the database: it is read with the metered figure, from Neon's API.
  *
  * - `jobFloorMinutes` — a minimum interval between two real runs of each scheduled job, added to
- *   the Administrator's own (`jobs/cadence.ts`; the larger wins). It rides the same floor slots
- *   §334 built, so a ping inside it answers from the cache and wakes nothing. At `ahead` the jobs
- *   look at most once an hour, which is what an idle hour already costs (§355); from `tight` once
- *   every two hours. A later reminder or hand-over is the price, never a place: the allocator
- *   expires holds and offers on every read (AGENTS.md §10.6).
- * - `jobsPaused` — at `exhausted` a ping answers without trying the database at all: it is
- *   suspended, a connection would only fail, and a job endpoint that answers 500 all day is one
- *   cron-job.org disables (§98), which would leave the scheduler off when the period resets.
- * - `healthReuseMinutes` — from `tight`, `/api/health` answers its database half from an answer
- *   up to this old, so a stray caller (the re-measure of 2026-09-26 suspected "`/api/health`
- *   called by something other than the monitor") does not wake the compute for five billed minutes each time. Only an
- *   answer that reached the database is reused; a failure is asked again every time.
- * - `restingCopies` — at `exhausted` a public page serves its last good copy however old it is
- *   (up to a billing period, `SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS`), and says why.
+ *   the Administrator's own (`jobs/cadence.ts`; the longer wins). It rides the floor slots §334
+ *   built, so a ping inside it answers from the cache and wakes nothing. Amber: once an hour,
+ *   which is what an idle hour already costs (§355). Red: once every two hours. A later reminder
+ *   or hand-over is the price, never a place: the allocator expires holds and offers on every
+ *   read (AGENTS.md §10.6).
+ * - `healthReuseMinutes` — at red, `/api/health` answers its database half from an answer up to
+ *   this old, so a stray caller (the re-measure suspected "`/api/health` called by something other
+ *   than the monitor") does not wake the compute for five billed minutes each time. Only an answer
+ *   that reached the database is reused.
+ * - `cacheCeilingFactor` — the public data cache's safety-net lifetime (§333, a day) is multiplied
+ *   by this: two at amber, four at red. A write still expires what it changed at once (§28: a
+ *   cancelled event never reads as scheduled); only the refetch nobody asked for waits longer.
+ *
+ * The outbox is not in the table: its drain after a request runs inside the wake that request
+ * already paid for (§68), so holding it for the scheduler would delay the club's mail and save
+ * nothing.
  */
 export type GovernorEffects = {
   jobFloorMinutes: JobCadenceMinutes;
-  jobsPaused: boolean;
   healthReuseMinutes: number;
-  restingCopies: boolean;
+  cacheCeilingFactor: number;
 };
 
 export const GOVERNOR_EFFECTS: Record<NeonBudgetLevel, GovernorEffects> = {
-  unknown: { jobFloorMinutes: 0, jobsPaused: false, healthReuseMinutes: 0, restingCopies: false },
-  unlimited: { jobFloorMinutes: 0, jobsPaused: false, healthReuseMinutes: 0, restingCopies: false },
-  normal: { jobFloorMinutes: 0, jobsPaused: false, healthReuseMinutes: 0, restingCopies: false },
-  ahead: { jobFloorMinutes: 60, jobsPaused: false, healthReuseMinutes: 0, restingCopies: false },
-  tight: { jobFloorMinutes: 120, jobsPaused: false, healthReuseMinutes: 10, restingCopies: false },
-  critical: { jobFloorMinutes: 120, jobsPaused: false, healthReuseMinutes: 10, restingCopies: false },
-  exhausted: { jobFloorMinutes: 120, jobsPaused: true, healthReuseMinutes: 0, restingCopies: true },
+  unknown: { jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1 },
+  green: { jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1 },
+  amber: { jobFloorMinutes: 60, healthReuseMinutes: 0, cacheCeilingFactor: 2 },
+  red: { jobFloorMinutes: 120, healthReuseMinutes: 10, cacheCeilingFactor: 4 },
 };
 
 export function governorEffects(level: NeonBudgetLevel): GovernorEffects {

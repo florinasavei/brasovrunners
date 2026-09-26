@@ -2472,6 +2472,9 @@
           "immediate": "Emails go out right after the request that queued them, whatever the interval; the scheduled queue only picks up what is left (a retry, a message deferred until the daily allowance resets).",
           "scheduled": "Emails now go out only when the scheduled queue runs (the club's sending setting is on “scheduled”), so a longer interval delays them too, by up to that many minutes."
         }
+      },
+      "budgetThresholds": {
+        "saved": "The thresholds are saved; the month's budget is read by them from now on."
       }
     },
     "richText": {
@@ -4277,23 +4280,17 @@
     "intro": "How much of the monthly limit the database has used, at what pace, and how the platform slows itself down when the month runs ahead.",
     "level": {
       "unknown": "Unknown",
-      "unlimited": "No limit",
-      "normal": "On pace",
-      "ahead": "Ahead of the calendar",
-      "tight": "Close to the limit",
-      "critical": "At the limit",
-      "exhausted": "Limit reached"
+      "green": "Green — on pace",
+      "amber": "Amber — the month is running ahead",
+      "red": "Red — close to the limit"
     },
     "meaning": {
       "unknown": "Neon could not be read just now, so the platform runs as usual, with no extra brake.",
-      "unlimited": "The project has no monthly limit, so there is nothing to slow down for; the cost is in the table below.",
-      "normal": "At the pace so far, the month ends under the limit.",
-      "ahead": "At the pace so far, the limit is reached before the month ends, so the platform checks less often.",
-      "tight": "More than {warn}% of the limit is used; /api/health raises the alarm, and the platform checks even less often.",
-      "critical": "More than {critical}% of the limit is used: only a few hours of running are left before the stop.",
-      "exhausted": "Neon has stopped the database until the period ends. The site shows its saved copies, and registration and the forms are paused."
+      "green": "The spend is on or under the month's line (the limit spread over the days gone), so the platform runs as usual.",
+      "amber": "The spend is more than {margin}% past the month's line or past {amber}% of the limit, so the platform slows itself down; /api/health stays \"ok\", with a note.",
+      "red": "More than {red}% of the limit is used: the platform slows down as far as it can, and /api/health raises the alarm so the limit can be raised in time."
     },
-    "spent": "{used} of {quota} CU-hours used ({percent}%); the period ends {end}.",
+    "spent": "{used} of {quota} CU-hours used ({percent}%); the month's line is at {line} now; the period ends {end}.",
     "spentNoLimit": "{used} CU-hours used; the period ends {end}.",
     "pace": "Pace: {perDay} CU-hours a day; at that, the period reaches {projected} CU-hours.",
     "paceNoLimit": "Pace: {perDay} CU-hours a day.",
@@ -4302,9 +4299,9 @@
     "effect": {
       "none": "nothing extra — the scheduled jobs run when they have something to do.",
       "floor": "the scheduled jobs look at the database at most once every {minutes} minutes (reminders and freed places may wait that long; no place is ever given twice).",
-      "paused": "the scheduled jobs stop trying the database until it is back; they answer the monitor without an error.",
+      "cache": "The public pages keep their data {factor} times longer; a change the club makes still shows at once.",
       "healthReuse": "The health check reuses an answer at most {minutes} minutes old, so a stray caller does not wake the database.",
-      "resting": "The public pages show their last saved copy, however old, with a polite notice saying from when and until when."
+      "monitor": "Emails still leave at once; registration and the backoffice work as usual."
     },
     "source": {
       "metered": "The figure is the one Neon bills (compute_unit_seconds).",
@@ -4313,7 +4310,17 @@
     },
     "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours; the larger of the first two is used, the old counter only when neither answered.",
     "notRead": "not read",
-    "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it."
+    "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it.",
+    "spentAll": "The limit is spent: Neon stops the database until the period ends, and the site shows its saved copies.",
+    "thresholds": {
+      "intro": "The thresholds, as percents of the monthly limit: amber from the first, red from the second (red raises the alarm on /api/health).",
+      "amber": "Amber from (%)",
+      "red": "Red from (%)",
+      "save": "Save the thresholds",
+      "saving": "Saving…",
+      "confirmTitle": "Save the thresholds?",
+      "confirmBody": "The platform brakes by the new thresholds from the budget's next reading, within a minute."
+    }
   },
   "Offline": {
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",

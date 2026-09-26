@@ -14,6 +14,9 @@ const cacheState = vi.hoisted(() => ({
   options: [] as Array<{ keyParts: string[]; tags?: string[]; revalidate?: number | false }>,
 }));
 
+const budget = vi.hoisted(() => ({ level: "unknown" as "unknown" | "green" | "amber" | "red" }));
+vi.mock("@/modules/diagnostics/neon-budget", () => ({ peekNeonBudgetLevel: () => budget.level }));
+
 vi.mock("next/cache", () => ({
   unstable_cache: vi.fn(
     (fn: () => Promise<unknown>, keyParts: string[], options: { tags?: string[]; revalidate?: number | false }) => {
@@ -112,6 +115,16 @@ describe("§333 publicRead", () => {
       // previous seed's rows.
       expect(call.keyParts[0]).toMatch(/^process:/);
       expect(call.keyParts.slice(1)).toEqual(["places.available", "event-1", "after-last"]);
+    });
+
+    it("stretches the day's ceiling as the month's budget runs ahead (§NNN): twice at amber, four times at red", async () => {
+      for (const [level, factor] of [["green", 1], ["amber", 2], ["red", 4]] as const) {
+        budget.level = level;
+        cacheState.options.length = 0;
+        await publicRead(["events.upcoming", level], ["events"], async () => []);
+        expect(cacheState.options[0].revalidate).toBe(PUBLIC_CACHE_CEILING_SECONDS * factor);
+      }
+      budget.level = "unknown";
     });
 
     it("tells two answers apart by their key alone", async () => {

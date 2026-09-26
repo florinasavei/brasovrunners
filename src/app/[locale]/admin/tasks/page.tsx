@@ -573,6 +573,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
         {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
+        {query.saved === "budgetThresholds" && <Alert severity="success">{t("budgetThresholds.saved")}</Alert>}
         {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
         {query.saved === "neonLimitsSame" && <Alert severity="info">{t("neonLimits.savedSame")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
@@ -754,7 +755,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
         */}
         {/* The month's budget and what the platform is doing about it (§NNN), above the brakes it is read against. */}
-        <NeonBudgetPanel locale={locale} reading={budget} />
+        <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManageRegistrations(actor.role)} />
 
         {neonLimits && (
           <NeonLimitsPanel

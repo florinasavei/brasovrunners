@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
+import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
 import { throughBreaker } from "@/modules/resilience/breaker";
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
 import { buildInfo } from "@/shared/config/build-info";
@@ -143,9 +145,14 @@ export async function publicRead<T>(
   // A miss asks the database through the breaker (§NNN): while this instance knows the database
   // is away, a miss fails at once and `readWithLastGood` serves the copy, instead of every page
   // view waiting on a connection that will be refused. A hit never gets this far.
+  //
+  // The month's budget stretches the day's ceiling (§NNN, `GOVERNOR_EFFECTS.cacheCeilingFactor`):
+  // twice at amber, four times at red. Read from this instance's memory without waiting — a
+  // visitor never waits on Neon's API — and a write still expires what it changed at once.
+  const factor = governorEffects(peekNeonBudgetLevel()).cacheCeilingFactor;
   const cached = unstable_cache(async () => tagDates(await throughBreaker(load)), [KEYSPACE, ...key.map(String)], {
     tags: contents.map(publicTag),
-    revalidate: PUBLIC_CACHE_CEILING_SECONDS,
+    revalidate: PUBLIC_CACHE_CEILING_SECONDS * factor,
   });
   return untagDates(await cached()) as T;
 }

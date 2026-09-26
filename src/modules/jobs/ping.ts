@@ -58,14 +58,14 @@ export async function answerJobPing(
 
   /*
     The month's budget (§NNN), from Neon's API and never the database, and only for a ping that
-    is about to run: the ones answered from the cache above never ask. At `exhausted` Neon has
-    suspended the project, so trying would only fail — and a job endpoint that answers 500 all
+    is about to run: the ones answered from the cache above never ask. Once the quota is spent Neon
+    has suspended the project, so trying would only fail — and a job endpoint that answers 500 all
     day is one cron-job.org disables (§98), which would leave the scheduler off when the period
     resets. It answers 200 with the reason instead, and records the ping so `/api/health` still
     sees a pinger that calls.
   */
   const budget = await readNeonBudget(now);
-  if (budget.effects.jobsPaused) {
+  if (budget.budget?.spent) {
     await recordPing(job, now, false);
     return NextResponse.json({ job, ran: false, reason: "budget", budgetLevel: budget.level, checkedAt: now.toISOString() });
   }
@@ -93,7 +93,7 @@ export async function answerJobPing(
     outcome = await insideJobRun(job, () => run(db, now));
   } catch (error) {
     /*
-      The database is away — Neon's quota refusal while the governor still reads `critical`, a
+      The database is away — Neon's quota refusal while the governor still reads under 100%, a
       compute that cannot start, a network that does not reach it (§NNN). Answering 500 on every
       ping of an outage is how cron-job.org switches a monitor off (§98), and the scheduler would
       then stay off after the database is back. So an away-error answers 200 with the reason and

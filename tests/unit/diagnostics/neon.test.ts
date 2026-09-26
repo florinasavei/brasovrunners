@@ -118,7 +118,7 @@ describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for
     const result = await checkNeonQuotaHealth({ NEON_API_KEY: undefined, NEON_PROJECT_ID: "p" }, () => {
       throw new Error("must not be called");
     });
-    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" });
+    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, level: "unknown" });
   });
 
   it("asks Neon's Data Cache to keep every answer for fifteen minutes, never no-store", async () => {
@@ -137,7 +137,7 @@ describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for
     }
   });
 
-  it("reads ok under 80% of the quota, and near-limit at or past it — with the level beside it", async () => {
+  it("reads ok while the budget is green or amber, and near-limit once it is red — with the level beside it", async () => {
     const answer = (usedSeconds: number, quotaSeconds: number) => async () =>
       new Response(
         JSON.stringify({
@@ -146,17 +146,21 @@ describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for
         { status: 200, headers: { "content-type": "application/json" } },
       );
 
-    // 70 of 100 by the 20th of a 31-day period: under the line, but the pace does not fit.
-    const under = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(70 * 3600, 100 * 3600), NOW);
-    expect(under).toEqual({ status: "ok", quotaCuHours: 100, usedCuHours: 70, percent: 70, level: "ahead" });
+    // 70 of 100: past the default 60% — amber, which stays `ok`.
+    const amber = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(70 * 3600, 100 * 3600), NOW);
+    expect(amber).toMatchObject({ status: "ok", quotaCuHours: 100, usedCuHours: 70, percent: 70, level: "amber" });
+    expect(amber.lineCuHours).toBeGreaterThan(0);
 
-    // 80% exactly is already "near", the same boundary `isNeonQuotaNearLimit` uses.
-    const atLine = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(80 * 3600, 100 * 3600), NOW);
-    expect(atLine).toEqual({ status: "near-limit", quotaCuHours: 100, usedCuHours: 80, percent: 80, level: "tight" });
+    // 85% exactly is red, and red is `near-limit`: the monitor rings.
+    const red = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(85 * 3600, 100 * 3600), NOW);
+    expect(red).toMatchObject({ status: "near-limit", percent: 85, level: "red" });
 
-    const past = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(82 * 3600, 100 * 3600), NOW);
-    expect(past.status).toBe("near-limit");
-    expect(past.percent).toBe(82);
+    // The Administrator's thresholds move it.
+    const moved = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(82 * 3600, 100 * 3600), NOW, {
+      amberPercent: 60,
+      redPercent: 80,
+    });
+    expect(moved).toMatchObject({ status: "near-limit", percent: 82, level: "red" });
   });
 
   it("reads ok with no percent when there is no quota to spend against", async () => {
@@ -169,11 +173,11 @@ describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for
         }),
       NOW,
     );
-    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: 12_000 / 3600, percent: null, level: "unlimited" });
+    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: 12_000 / 3600, percent: null, lineCuHours: null, level: "green" });
   });
 
   it("never fails this endpoint on its own account: a refusal, a bad answer or a network error all read ok with no figures", async () => {
-    const nothing = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" };
+    const nothing = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, level: "unknown" };
     const refused = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () => new Response("", { status: 403 }));
     expect(refused).toEqual(nothing);
 

@@ -2472,6 +2472,9 @@
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
           "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii (setarea clubului pentru trimitere e pe „programat”), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
         }
+      },
+      "budgetThresholds": {
+        "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
       }
     },
     "richText": {
@@ -4277,23 +4280,17 @@
     "intro": "Cât a folosit baza de date din limita lunară, în ce ritm, și cum se frânează platforma singură când luna o ia înainte.",
     "level": {
       "unknown": "Necunoscut",
-      "unlimited": "Fără limită",
-      "normal": "În ritm",
-      "ahead": "Înaintea calendarului",
-      "tight": "Aproape de limită",
-      "critical": "La limită",
-      "exhausted": "Limita s-a atins"
+      "green": "Verde — în ritm",
+      "amber": "Galben — luna o ia înainte",
+      "red": "Roșu — aproape de limită"
     },
     "meaning": {
       "unknown": "Neon nu a putut fi citit acum, așa că platforma merge ca de obicei, fără nicio frână în plus.",
-      "unlimited": "Proiectul nu are o limită lunară, deci nu are de ce să se frâneze; costul e cel din tabelul de mai jos.",
-      "normal": "În ritmul de până acum, luna se încheie sub limită.",
-      "ahead": "În ritmul de până acum, limita se atinge înainte de sfârșitul lunii, așa că platforma verifică mai rar.",
-      "tight": "S-au folosit peste {warn}% din limită; /api/health dă alarma, iar platforma verifică și mai rar.",
-      "critical": "S-au folosit peste {critical}% din limită: mai sunt doar câteva ore de funcționare până la oprire.",
-      "exhausted": "Neon a oprit baza de date până la sfârșitul perioadei. Site-ul arată copiile salvate, iar înscrierile și formularele sunt în pauză."
+      "green": "Consumul e pe sau sub linia lunii (limita împărțită pe zilele trecute), așa că platforma merge ca de obicei.",
+      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că platforma se frânează singură; /api/health rămâne „ok”, cu o notă.",
+      "red": "S-au folosit peste {red}% din limită: platforma se frânează cât poate, iar /api/health dă alarma ca limita să poată fi mărită la timp."
     },
-    "spent": "{used} din {quota} ore-CU folosite ({percent}%), perioada se încheie {end}.",
+    "spent": "{used} din {quota} ore-CU folosite ({percent}%); linia lunii e acum la {line}; perioada se încheie {end}.",
     "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
     "pace": "Ritmul: {perDay} ore-CU pe zi; așa, perioada ajunge la {projected} ore-CU.",
     "paceNoLimit": "Ritmul: {perDay} ore-CU pe zi.",
@@ -4302,9 +4299,9 @@
     "effect": {
       "none": "nimic în plus — lucrările programate rulează când au ceva de făcut.",
       "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
-      "paused": "lucrările programate nu mai încearcă baza de date până revine; răspund monitorului fără eroare.",
+      "cache": "Paginile publice își păstrează datele de {factor} ori mai mult; o modificare făcută de club apare tot imediat.",
       "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
-      "resting": "Paginile publice arată ultima lor copie salvată, oricât de veche, cu un mesaj politicos care spune de când e și până când."
+      "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal."
     },
     "source": {
       "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
@@ -4313,7 +4310,17 @@
     },
     "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
     "notRead": "necitit",
-    "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească."
+    "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
+    "spentAll": "Limita e consumată: Neon oprește baza de date până la sfârșitul perioadei, iar site-ul arată copiile salvate.",
+    "thresholds": {
+      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
+      "amber": "Galben de la (%)",
+      "red": "Roșu de la (%)",
+      "save": "Salvează pragurile",
+      "saving": "Se salvează…",
+      "confirmTitle": "Salvezi pragurile?",
+      "confirmBody": "Platforma se frânează după noile praguri de la următoarea citire a bugetului, în cel mult un minut."
+    }
   },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",

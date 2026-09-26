@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 /**
  * §NNN, finding (5) of the review of `feat/neon-budget-governor`: the listing and an event page,
  * under a database whose every query Neon refuses for the month, serve their last good copy and
- * say so — with the governor still reading `critical`, which is what a project-scoped key reads
+ * say so — with the governor still reading under 100%, which is what a project-scoped key reads
  * once Neon has cut the project off (the operations log stops growing).
  *
  * The pages compose two things: `readWithLastGood` under the page's own key (`events:<locale>`,
@@ -20,7 +20,7 @@ const locale = vi.hoisted(() => ({ current: "ro" as "ro" | "en" }));
 
 vi.mock("@/shared/config/env", () => ({ env: { APP_ENV: "test", STORAGE_MODE: "fake", APP_BASE_URL: "https://example.test" } }));
 vi.mock("@/modules/diagnostics/neon-budget", () => ({
-  readNeonBudget: async () => ({ level: "critical", effects: { restingCopies: false }, meter: null }),
+  readNeonBudget: async () => ({ level: "red", budget: { spent: false }, meter: null }),
 }));
 vi.mock("next-intl/server", () => ({
   getLocale: async () => locale.current,
@@ -45,8 +45,8 @@ beforeEach(() => {
 
 describe("§NNN the listing and an event page while Neon refuses the month's queries", () => {
   it.each([
-    ["ro", "events:ro", "copie salvată", "noiembrie"],
-    ["en", "events:en", "saved copy", "November"],
+    ["ro", "events:ro", "copie salvată", "1 nov. 2026"],
+    ["en", "events:en", "saved copy", "1 Nov 2026"],
   ] as const)("the listing (%s) serves its copy and the resting notice names the month's end", async (lang, key, phrase, month) => {
     locale.current = lang;
     await readWithLastGood(key, async () => ({ events: ["Crosul de toamnă"], hasUpcoming: true }), TAKEN);

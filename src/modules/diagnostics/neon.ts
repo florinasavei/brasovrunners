@@ -1,13 +1,11 @@
 import type { Env } from "@/shared/config/env";
 import {
   cuHoursToSeconds,
-  isNeonQuotaNearLimit,
   NEON_MIN_CU,
   type NeonLimitsReading,
-  neonQuotaRatio,
   secondsToCuHours,
 } from "./domain/neon-limits";
-import { type NeonBudgetLevel, neonBudget } from "./domain/neon-budget";
+import { type BudgetThresholds, DEFAULT_BUDGET_THRESHOLDS, type NeonBudgetLevel, neonBudget } from "./domain/neon-budget";
 import {
   awakeSecondsFromOperations,
   meteredCuSeconds,
@@ -437,12 +435,12 @@ export async function readNeonConsumption(
 }
 
 /**
- * `/api/health`'s early warning for a project's monthly compute-time quota (§335): once this
- * period's spend reaches 80% of it (`NEON_QUOTA_WARNING_RATIO`), health degrades before Neon
- * suspends the database at 100% — a suspension is total, every page down until the next billing
- * period, and the 503 is the one channel a monitor still reads once email is among what stopped.
- * Since §NNN the spend is the meter's, so the warning can fire at all: the counter it read before
- * stopped on 2026-09-24 and ran about 45% under the month.
+ * `/api/health`'s early warning for a project's monthly compute-time quota (§335, since §NNN the
+ * governor's level): the status is `near-limit` — health degrades, the monitor rings — once the
+ * month's budget is red (85% of the quota by default, the Administrator's to move), before Neon
+ * suspends the database at 100%. Amber stays `ok`: the platform slowing itself down is its own
+ * business and pages nobody. Since §NNN the spend is the meter's, so the warning can fire at all:
+ * the counter it read before stopped on 2026-09-24 and ran about 45% under the month.
  *
  * The shared reading (fifteen minutes in Next's data cache), never a query against the database
  * itself, so this never wakes a suspended (or merely sleeping) compute to answer it. Never fails
@@ -455,30 +453,43 @@ export type NeonQuotaHealth = {
   usedCuHours: number | null;
   /** The whole percent of the quota spent, rounded, or null with no quota or no reading. */
   percent: number | null;
+  /** The pro-rated line now, in CU-hours (`domain/neon-budget.ts`), or null with no quota or no reading. */
+  lineCuHours: number | null;
   /** The month's budget as the governor reads it (`domain/neon-budget.ts`). */
   level: NeonBudgetLevel;
+};
+
+export const QUOTA_NOT_READ: NeonQuotaHealth = {
+  status: "ok",
+  quotaCuHours: null,
+  usedCuHours: null,
+  percent: null,
+  lineCuHours: null,
+  level: "unknown",
 };
 
 export async function checkNeonQuotaHealth(
   env: NeonEnv,
   fetchImpl: typeof fetch = fetch,
   now: Date = new Date(),
+  thresholds: BudgetThresholds = DEFAULT_BUDGET_THRESHOLDS,
 ): Promise<NeonQuotaHealth> {
   const read = await readNeonMeter(env, { fetchImpl, shared: true }, now);
-  if (!read.ok) return { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" };
-  return quotaHealthOf(read.meter, now);
+  if (!read.ok) return QUOTA_NOT_READ;
+  return quotaHealthOf(read.meter, now, thresholds);
 }
 
 /** The health block from a meter already in hand — the route and the governor read one meter, not two. */
-export function quotaHealthOf(meter: NeonMeter, now: Date): NeonQuotaHealth {
+export function quotaHealthOf(meter: NeonMeter, now: Date, thresholds: BudgetThresholds = DEFAULT_BUDGET_THRESHOLDS): NeonQuotaHealth {
   const { quotaCuHours, usedCuHours } = meter;
-  const ratio = neonQuotaRatio(usedCuHours, quotaCuHours);
+  const budget = neonBudget({ usedCuHours, quotaCuHours, periodStart: meter.periodStart, periodEnd: meter.periodEnd, now, thresholds });
   return {
-    status: isNeonQuotaNearLimit(usedCuHours, quotaCuHours) ? "near-limit" : "ok",
+    status: budget.level === "red" ? "near-limit" : "ok",
     quotaCuHours,
     usedCuHours,
-    percent: ratio === null ? null : Math.round(ratio * 100),
-    level: neonBudget({ usedCuHours, quotaCuHours, periodStart: meter.periodStart, periodEnd: meter.periodEnd, now }).level,
+    percent: budget.ratio === null ? null : Math.round(budget.ratio * 100),
+    lineCuHours: budget.lineCuHours,
+    level: budget.level,
   };
 }
 

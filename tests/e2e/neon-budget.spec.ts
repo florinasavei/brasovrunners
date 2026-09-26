@@ -26,6 +26,9 @@ test.describe("§NNN the month's budget", () => {
     // No reading, so no figures and no source line: nothing is invented.
     await expect(card.getByTestId("neon-budget-spent")).toHaveCount(0);
     await expect(card.getByTestId("neon-budget-source")).toHaveCount(0);
+    // The Administrator's two thresholds, at their defaults.
+    await expect(card.getByLabel("Galben de la (%)")).toHaveValue("60");
+    await expect(card.getByLabel("Roșu de la (%)")).toHaveValue("85");
   });
 
   test("/devs carries the same card, in English too", async ({ page }) => {
@@ -38,9 +41,15 @@ test.describe("§NNN the month's budget", () => {
 
   test("the public health answer names the level, never a figure, and when the database was asked", async ({ request }) => {
     const response = await request.get("/api/health");
-    const body = (await response.json()) as { neon: Record<string, unknown>; checkedAt: string; databaseCheckedAt: string };
-    expect(body.neon).toEqual({ status: "ok", percent: null, level: "unknown" });
-    // Below `tight` the database half is always fresh.
+    const body = (await response.json()) as {
+      neon: Record<string, unknown>;
+      budget: Record<string, unknown>;
+      checkedAt: string;
+      databaseCheckedAt: string;
+    };
+    expect(body.neon).toEqual({ status: "ok", percent: null });
+    expect(body.budget).toEqual({ level: "unknown", meteredPercent: null, linePercent: null, note: null });
+    // Below `red` the database half is always fresh.
     expect(body.databaseCheckedAt).toBe(body.checkedAt);
   });
 });

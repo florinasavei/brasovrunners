@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { updateBudgetThresholds } from "@/modules/diagnostics/budget-thresholds";
 import { NeonLimitsRefusal, updateNeonLimits } from "@/modules/diagnostics/neon-limits";
 import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { updateJobCadence } from "@/modules/jobs/cadence";
@@ -105,6 +106,27 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   }
   await flashOutcome({ saved: "jobCadence" });
   redirect(`${path}?panel=costs&saved=jobCadence#admin-alert`);
+}
+
+/**
+ * The month's budget thresholds (§NNN), from "Bugetul lunii" on the costs panel: the shares of the
+ * Neon quota that turn the governor amber and red. The same door and shape as the interval above —
+ * Administrator at the door, the service asserting the role again and writing the audit row — and
+ * a refusal handed back as the form's state (§315).
+ */
+export async function updateBudgetThresholdsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/tasks" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateBudgetThresholds(getDb(), actor, { amberPercent: form.get("amberPercent"), redPercent: form.get("redPercent") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "budgetThresholds" });
+  redirect(`${path}?panel=costs&saved=budgetThresholds#admin-alert`);
 }
 
 /**

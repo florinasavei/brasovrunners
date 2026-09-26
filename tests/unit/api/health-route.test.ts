@@ -26,7 +26,11 @@ vi.mock("@/db/client", () => ({ getDb: () => ({ execute }) }));
 vi.mock("@/db/schema-version", () => ({ checkSchemaVersion: (...args: unknown[]) => checkSchemaVersion(...args) }));
 vi.mock("@/modules/jobs/health", () => ({ checkJobHealth: (...args: unknown[]) => checkJobHealth(...args) }));
 vi.mock("@/modules/notifications/health", () => ({ checkEmailHealth: (...args: unknown[]) => checkEmailHealth(...args) }));
-vi.mock("@/modules/diagnostics/neon", () => ({ checkNeonQuotaHealth: (...args: unknown[]) => checkNeonQuotaHealth(...args) }));
+vi.mock("@/modules/diagnostics/neon", () => ({
+  checkNeonQuotaHealth: (...args: unknown[]) => checkNeonQuotaHealth(...args),
+  QUOTA_NOT_READ: { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, level: "unknown" },
+}));
+vi.mock("@/modules/diagnostics/budget-thresholds", () => ({ cachedBudgetThresholds: async () => ({ amberPercent: 60, redPercent: 85 }) }));
 vi.mock("@/shared/config/build-info", () => ({
   buildInfo: { baseline: "BR-V1.43-2026-09-21", commit: "7c6ca38", committedAt: "2026-09-22T10:00:00.000Z" },
 }));
@@ -47,7 +51,7 @@ function healthy(): void {
     lastFinishedAt: "2026-09-22T09:50:00.000Z",
   }));
   checkEmailHealth.mockResolvedValue({ status: "ok" });
-  checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" });
+  checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown", lineCuHours: null });
 }
 
 beforeEach(() => {
@@ -170,8 +174,8 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
 });
 
 /**
- * The Neon project's monthly compute-time quota (§335): once this period's spend reaches 80%
- * of it, health degrades before Neon suspends the database at 100% — the club's one warning
+ * The Neon project's monthly compute-time quota (§335): once this period's spend turns the month's
+ * budget red (85% of it by default, §NNN), health degrades before Neon suspends the database at 100% — the club's one warning
  * through a channel that still works once email is among what has stopped.
  *
  * `checkNeonQuotaHealth` is mocked here (it is unit-tested on its own account against a fake
@@ -179,7 +183,7 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
  */
 describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early warning for the Neon quota", () => {
   it("carries the reading in a `neon` block and stays ok under the warning", async () => {
-    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12, level: "normal" });
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12, level: "green", lineCuHours: 40 });
 
     const response = await GET();
     const body = await response.json();
@@ -189,11 +193,12 @@ describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early
     // Status and percent only — this endpoint is public and unauthenticated, and the exact
     // quota and this period's CU-hours are the club's own billing figures (§335); the full
     // reading is `/admin/tasks` and `/devs`'s to show.
-    expect(body.neon).toEqual({ status: "ok", percent: 12, level: "normal" });
+    expect(body.neon).toEqual({ status: "ok", percent: 12 });
+    expect(body.budget).toEqual({ level: "green", meteredPercent: 12, linePercent: 40, note: null });
   });
 
   it("degrades to a 503 once the reading turns near-limit", async () => {
-    checkNeonQuotaHealth.mockResolvedValue({ status: "near-limit", quotaCuHours: 100, usedCuHours: 82, percent: 82, level: "tight" });
+    checkNeonQuotaHealth.mockResolvedValue({ status: "near-limit", quotaCuHours: 100, usedCuHours: 82, percent: 82, level: "red", lineCuHours: 90 });
 
     const response = await GET();
     const body = await response.json();
@@ -201,23 +206,24 @@ describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early
     expect(response.status).toBe(503);
     expect(body.status).toBe("degraded");
     expect(body.database).toBe("ok");
-    expect(body.neon).toEqual({ status: "near-limit", percent: 82, level: "tight" });
+    expect(body.neon).toEqual({ status: "near-limit", percent: 82 });
+    expect(body.budget).toMatchObject({ level: "red", meteredPercent: 82, linePercent: 90 });
   });
 
   it("stays ok when Neon could not be read at all — an unconfigured key is not a health failure", async () => {
-    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" });
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown", lineCuHours: null });
 
     const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.status).toBe("ok");
-    expect(body.neon).toEqual({ status: "ok", percent: null, level: "unknown" });
+    expect(body.neon).toEqual({ status: "ok", percent: null });
   });
 
   it("is asked beside the connection probe, whether or not the database answers", async () => {
     execute.mockRejectedValue(new Error("connect ECONNREFUSED"));
-    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" });
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown", lineCuHours: null });
 
     const response = await GET();
     const body = await response.json();
@@ -227,11 +233,11 @@ describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early
     expect(response.status).toBe(503);
     expect(body.database).toBe("down");
     expect(checkNeonQuotaHealth).toHaveBeenCalledTimes(1);
-    expect(body.neon).toEqual({ status: "ok", percent: null, level: "unknown" });
+    expect(body.neon).toEqual({ status: "ok", percent: null });
   });
 
   it("never publishes the exact quota or this period's CU-hours — a monitor and a 503 need only the status and the share spent", async () => {
-    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12, level: "normal" });
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12, level: "green", lineCuHours: 40 });
 
     const response = await GET();
     const body = await response.json();

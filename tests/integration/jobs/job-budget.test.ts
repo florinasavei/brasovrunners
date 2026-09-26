@@ -26,7 +26,7 @@ const SECRET = "correct-job-secret-value";
 let db: TestDatabase;
 let close: () => Promise<void>;
 const pool = vi.hoisted(() => ({ open: true, refuseWith: null as Error | null }));
-const budget = vi.hoisted(() => ({ level: "normal" as string }));
+const budget = vi.hoisted(() => ({ level: "green" as string, spent: false }));
 
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 vi.mock("@/shared/config/env", async (importOriginal) => {
@@ -57,7 +57,7 @@ vi.mock("@/modules/diagnostics/neon-budget", async () => {
     readNeonBudget: async () => ({
       level: budget.level,
       effects: effects[budget.level as NeonBudgetLevel],
-      budget: null,
+      budget: { spent: budget.spent },
       meter: null,
     }),
   };
@@ -99,7 +99,8 @@ afterAll(async () => {
 beforeEach(async () => {
   pool.open = true;
   pool.refuseWith = null;
-  budget.level = "normal";
+  budget.level = "green";
+  budget.spent = false;
   await resetTables(db);
   fakeNextCache.reset();
   vi.setSystemTime(NOW);
@@ -107,10 +108,11 @@ beforeEach(async () => {
 
 describe("§NNN a job ping under the month's budget", () => {
   it("does not try a suspended database: 200, the reason, no run, and the ping still counted", async () => {
-    budget.level = "exhausted";
+    budget.level = "red";
+    budget.spent = true;
     const answer = await pingAt(0, { database: false });
     expect(answer.status).toBe(200);
-    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: false, reason: "budget", budgetLevel: "exhausted" });
+    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: false, reason: "budget", budgetLevel: "red" });
     expect(await realRuns()).toBe(0);
     const outboxAnswer = await pingAt(1, { database: false, route: outbox });
     expect(outboxAnswer.body).toMatchObject({ job: "email-outbox", ran: false, reason: "budget" });
@@ -118,10 +120,10 @@ describe("§NNN a job ping under the month's budget", () => {
     expect(await readLastPing("registration-maintenance", at(1), 30 * MINUTE)).toMatchObject({ ran: false });
   });
 
-  it("plans a real run under the governor's hour while the month runs ahead, and holds the pings to it", async () => {
-    budget.level = "ahead";
+  it("plans a real run under the governor's hour while the month is amber, and holds the pings to it", async () => {
+    budget.level = "amber";
     const run = await pingAt(0);
-    expect(run.body).toMatchObject({ ran: true, cadenceMinutes: GOVERNOR_EFFECTS.ahead.jobFloorMinutes, budgetLevel: "ahead" });
+    expect(run.body).toMatchObject({ ran: true, cadenceMinutes: GOVERNOR_EFFECTS.amber.jobFloorMinutes, budgetLevel: "amber" });
     expect(run.body.notBefore).toBe(at(60 - PLAN_GRACE_MINUTES).toISOString());
 
     // Work turns up and forgets the cached quiet; the floor still holds the next pings back.
@@ -132,14 +134,22 @@ describe("§NNN a job ping under the month's budget", () => {
     expect(await realRuns()).toBe(2);
   });
 
-  it("plans under nothing extra while the pace fits", async () => {
+  it("plans a real run under two hours while the month is red", async () => {
+    budget.level = "red";
     const run = await pingAt(0);
-    expect(run.body).toMatchObject({ ran: true, cadenceMinutes: 0, notBefore: null, budgetLevel: "normal" });
+    expect(run.body).toMatchObject({ ran: true, cadenceMinutes: 120, budgetLevel: "red" });
+    wakeJobs("registration-maintenance");
+    expect((await pingAt(60, { database: false })).body).toMatchObject({ ran: false, reason: "cadence" });
+  });
+
+  it("plans under nothing extra while the month is green", async () => {
+    const run = await pingAt(0);
+    expect(run.body).toMatchObject({ ran: true, cadenceMinutes: 0, notBefore: null, budgetLevel: "green" });
   });
 
   it("lets the Administrator's longer interval win over the governor's shorter floor", async () => {
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
-    budget.level = "ahead";
+    budget.level = "amber";
     const run = await pingAt(0);
     expect(run.body.cadenceMinutes).toBe(120);
   });
@@ -147,14 +157,14 @@ describe("§NNN a job ping under the month's budget", () => {
   /*
     The case the governor cannot see: with a project-scoped key the level comes from the
     operations log, which stops growing once Neon suspends the project, so it may still read
-    `critical` while every query is refused. The error itself says so, and the ping answers 200.
+    under 100% while every query is refused. The error itself says so, and the ping answers 200.
   */
-  it("answers 200 with database-away when Neon refuses on its quota while the level still reads critical", async () => {
-    budget.level = "critical";
+  it("answers 200 with database-away when Neon refuses on its quota while the level still reads under 100%", async () => {
+    budget.level = "red";
     pool.refuseWith = new Error("Your project has exceeded the compute time quota. Upgrade your plan to increase limits.");
     const answer = await pingAt(0);
     expect(answer.status).toBe(200);
-    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: false, reason: "database-away", quota: true, budgetLevel: "critical" });
+    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: false, reason: "database-away", quota: true, budgetLevel: "red" });
     expect(await readLastPing("registration-maintenance", at(0), 30 * MINUTE)).toMatchObject({ ran: false });
   });
 

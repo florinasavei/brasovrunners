@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * outage §281's twelve hours still stand, and a query that is merely wrong never asks Neon.
  */
 const budget = vi.hoisted(() => ({
-  reading: { level: "unknown", effects: { restingCopies: false }, meter: null as null | { periodEnd: Date } },
+  reading: { level: "unknown", budget: null as null | { spent: boolean }, meter: null as null | { periodEnd: Date } },
   calls: 0,
 }));
 
@@ -29,13 +29,13 @@ const hoursLater = (hours: number) => new Date(TAKEN.getTime() + hours * 3_600_0
 beforeEach(() => {
   forgetLastGood();
   budget.calls = 0;
-  budget.reading = { level: "unknown", effects: { restingCopies: false }, meter: null };
+  budget.reading = { level: "unknown", budget: null, meter: null };
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("§NNN the last good copy while the database rests for the month", () => {
   it("serves a copy days old, and names the period's end, while Neon has suspended the project", async () => {
-    budget.reading = { level: "exhausted", effects: { restingCopies: true }, meter: { periodEnd: PERIOD_END } };
+    budget.reading = { level: "red", budget: { spent: true }, meter: { periodEnd: PERIOD_END } };
     await readWithLastGood("events:ro", async () => ["Crosul de toamnă"], TAKEN);
 
     const read = await readWithLastGood<string[]>("events:ro", () => Promise.reject(SUSPENDED), hoursLater(3 * 24));
@@ -46,7 +46,7 @@ describe("§NNN the last good copy while the database rests for the month", () =
   });
 
   it("still refuses a copy older than a whole period", async () => {
-    budget.reading = { level: "exhausted", effects: { restingCopies: true }, meter: { periodEnd: PERIOD_END } };
+    budget.reading = { level: "red", budget: { spent: true }, meter: { periodEnd: PERIOD_END } };
     await readWithLastGood("events:ro", async () => ["old"], TAKEN);
     await expect(
       readWithLastGood("events:ro", () => Promise.reject(SUSPENDED), hoursLater(SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS + 1)),
@@ -71,7 +71,7 @@ describe("§NNN the last good copy while the database rests for the month", () =
   });
 
   it("is live and not resting while the database answers", async () => {
-    budget.reading = { level: "exhausted", effects: { restingCopies: true }, meter: { periodEnd: PERIOD_END } };
+    budget.reading = { level: "red", budget: { spent: true }, meter: { periodEnd: PERIOD_END } };
     const read = await readWithLastGood("events:ro", async () => ["x"], TAKEN);
     expect(read).toMatchObject({ freshness: "live", restingUntil: null });
     expect(budget.calls).toBe(0);
@@ -79,11 +79,11 @@ describe("§NNN the last good copy while the database rests for the month", () =
 
   /*
     The realistic case (the review of §NNN): a project-scoped key reads the level off the
-    operations log, which stops growing once Neon suspends the project — so it may read `critical`
+    operations log, which stops growing once Neon suspends the project — so it may read under 100%
     while every query is refused. The refusal itself is what says the database rests.
   */
-  it("rests on Neon's quota refusal while the governor still reads `critical`, until the meter's period end", async () => {
-    budget.reading = { level: "critical", effects: { restingCopies: false }, meter: { periodEnd: PERIOD_END } };
+  it("rests on Neon's quota refusal while the governor still reads under 100%, until the meter's period end", async () => {
+    budget.reading = { level: "red", budget: { spent: false }, meter: { periodEnd: PERIOD_END } };
     await readWithLastGood("events:ro", async () => ["Crosul de toamnă"], TAKEN);
     const wrapped = Object.assign(new Error("Failed query: select …"), { cause: SUSPENDED });
     const read = await readWithLastGood<string[]>("events:ro", () => Promise.reject(wrapped), hoursLater(3 * 24));
