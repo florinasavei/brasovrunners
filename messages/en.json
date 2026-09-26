@@ -5523,6 +5523,7 @@
     "rainLikely": "rain likely",
     "rainLikelyChance": "rain likely {percent}%",
     "wind": "wind {speed} km/h",
+    "help": "An indicative forecast; it may change before the start. Data from {source}.",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
     "feelsLike": "feels like {degrees} °C",

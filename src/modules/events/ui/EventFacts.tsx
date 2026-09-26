@@ -17,6 +17,7 @@ import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
+import WeatherHelp from "@/modules/weather/ui/WeatherHelp";
 import { weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
@@ -1040,6 +1041,7 @@ export default async function EventFacts({
       value: (
         <Box data-testid="event-weather">
           {flow([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])])}
+          <WeatherHelp text={words.help} />
         </Box>
       ),
     });
