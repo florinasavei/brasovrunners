@@ -347,7 +347,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
   });
 
-  it("condenses the fold's panel: one wrapping row of 44px links, no margin between lines, 'Scrie-ne' once, the stamp last", async () => {
+  it("condenses the fold's panel: three lines, the bar's phone targets, gapped rows, 'Scrie-ne' once, the credit and the stamp last", async () => {
     // §385, the owner, 2026-09-25: "the info from the expanded footer must be more condensed."
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -366,13 +366,36 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const containerClass = /data-testid="footer-about-panel"[^>]*>\s*<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(markup);
     expect(containerClass, "the panel's one container").not.toBeNull();
     const container = rulesOf(css, containerClass![1]!);
-    expect(container).toMatch(/flex-wrap:wrap;/);
-    expect(container, "no margin between two lines").toMatch(/row-gap:0(px)?;/);
-    // The density scale's short step between two links on a phone (§380), 16px from `sm`.
-    expect(container).toMatch(/(^|[;{])column-gap:8px;/);
-    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
-    // Every link in it a 44px target (BR-REQ-041-01 criterion 6).
-    expect(container).toMatch(/ a\{[^}]*min-height:44px;/);
+    // §NNN, amending §385: three lines set on purpose, the bar's phone gap apart.
+    expect(container).toMatch(/flex-direction:column;/);
+    // The bar's own phone targets on every link (§372, `footer-target.ts`): 24px below 360, 28px
+    // to `sm`, 44px from `sm` (BR-REQ-041-01 criterion 6); no pseudo-element hit area overlapping a neighbour.
+    expect(container).toMatch(/ a\{[^}]*min-height:24px;/);
+    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]* a\{[^}]*min-height:28px;/);
+    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*a\{[^}]*min-height:44px;/);
+    expect(container).not.toMatch(/::before/);
+    // The lines the bar's phone gap apart: 4px, 6px from 360, none from `sm`.
+    expect(container).toMatch(/(^|[;{])row-gap:4px;/);
+    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]*\{[^}]*row-gap:6px;/);
+
+    // Line one: the terms and "my registrations", and nothing else, the density scale's short step apart.
+    const linksStart = panel.indexOf('data-testid="footer-panel-links"');
+    expect(linksStart, "the links' line").toBeGreaterThan(-1);
+    const linksLine = panel.slice(linksStart, panel.indexOf('data-testid="footer-contact"'));
+    expect(linksLine).toContain('href="/ro/legal/terms"');
+    expect(linksLine).toContain('href="/ro/registrations/mine"');
+    expect((linksLine.match(/<a /g) ?? []).length, "two links on the first line").toBe(2);
+    const linksRule = rulesOf(css, /data-testid="footer-panel-links"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-links"/.exec(markup)!.slice(1).find(Boolean)!);
+    expect(linksRule).toMatch(/(^|[;{])column-gap:8px;/);
+    expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
+    // The last line, in caption size: Open-Meteo's credit, then the stamp.
+    const metaStart = panel.indexOf('data-testid="footer-panel-meta"');
+    expect(metaStart, "the credit's line").toBeGreaterThan(panel.indexOf('data-testid="footer-contact"'));
+    const metaLine = panel.slice(metaStart);
+    expect(metaLine.indexOf('data-testid="footer-weather-credit"')).toBeGreaterThan(-1);
+    expect(metaLine.indexOf('data-testid="footer-build-badge-panel"')).toBeGreaterThan(metaLine.indexOf('data-testid="footer-weather-credit"'));
+    const metaRule = rulesOf(css, /data-testid="footer-panel-meta"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-meta"/.exec(markup)!.slice(1).find(Boolean)!);
+    expect(metaRule).toMatch(/font-size:0\.75rem;/);
     // No stacked `spacing`, no paragraph of its own for the address.
     expect(panel).not.toMatch(/<p class="MuiTypography/);
 
