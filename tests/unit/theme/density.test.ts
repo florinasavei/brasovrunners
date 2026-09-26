@@ -171,6 +171,10 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventVideo.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3, count: 6 },
   { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  // The filter panel (§NNN, a fix round on §413/§NNN's small-chip button — the owner: "Butonul
+  // de filtre e mult prea mare"): the open form's own padding and grid gap, tighter on a phone.
+  { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "p", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1 },
 ];
 
 const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;
