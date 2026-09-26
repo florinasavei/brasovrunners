@@ -23,7 +23,7 @@ import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import DeadlinesPanel from "@/modules/deadlines/ui/DeadlinesPanel";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
-import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
+import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
 import { readClubNotices } from "@/modules/notifications/club-notices";
@@ -193,6 +193,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     confirmationOpensDays: DEFAULT_CONFIRMATION_OPENS_DAYS,
   };
   const actionUrl = emailSampleActionUrl(emailLocale);
+  // The Reply-To the send sets (§NNN): the preview's "or reply to this email" line follows it, never the env alone.
+  const replyTo = replyToHeader(resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO));
   const mayWrite = canEditTexts(staff.role);
 
   const cards = types.map((messageType) => {
@@ -205,6 +207,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     const sample = emailSampleFor(messageType, emailLocale);
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
+    sample.replyTo = replyTo;
     // And the club's limit per address, on the message that states it (§389): the link's shape.
     if (messageType === "REGISTER_ANOTHER_PERSON") sample.addressCap = perAddress;
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
@@ -368,7 +371,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                 written={own}
                 /* The platform's own words with the fields in them, never the preview's sample
                    values (§359): what the box starts from while the club has written nothing. */
-                shipped={emailCopyPrefill(messageType, emailLocale)}
+                shipped={emailCopyPrefill(messageType, emailLocale, replyTo)}
                 samples={samples}
                 // The deadlines the preview above prints (§377), for the legend's four rows.
                 deadlines={deadlines.deadlines}

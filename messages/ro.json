@@ -1883,8 +1883,9 @@
           "legalName": "Denumirea juridică",
           "registrationNumber": "CIF",
           "registeredAddress": "Sediul",
-          "contactEmail": "Email de contact"
+          "contactEmail": "Email de contact (adresa de contact afișată, din /admin/emails)"
         },
+        "contactFactMissing": "EMAIL_REPLY_TO (sau Gmail-ul clubului în «Adresa de contact afișată», pe /admin/emails)",
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",

@@ -1883,8 +1883,9 @@
           "legalName": "Legal name",
           "registrationNumber": "CIF",
           "registeredAddress": "Registered seat",
-          "contactEmail": "Contact email"
+          "contactEmail": "Contact email (the contact address shown, from /admin/emails)"
         },
+        "contactFactMissing": "EMAIL_REPLY_TO (or the club's Gmail under «Contact address shown», on /admin/emails)",
         "missing": "not set",
         "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
         "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",

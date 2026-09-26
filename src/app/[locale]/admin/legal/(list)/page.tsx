@@ -192,7 +192,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       ["CLUB_LEGAL_NAME", facts.legalName],
       ["CLUB_REGISTRATION_NUMBER", facts.registrationNumber],
       ["CLUB_REGISTERED_ADDRESS", facts.registeredAddress],
-      ["EMAIL_REPLY_TO", facts.contactEmail],
+      // Not only the variable since §NNN: «Adresa de contact afișată» on /admin/emails decides it.
+      [t("legal.platform.contactFactMissing"), facts.contactEmail],
     ] as const
   )
     .filter(([, value]) => !value)

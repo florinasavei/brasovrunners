@@ -306,7 +306,8 @@ describe("§359 what goes out is what went out before", () => {
     // Per message since the email follow-up (§373): the sample minus the fields the message never carries.
     expect(page).toContain("const sample = emailSampleFor(messageType, emailLocale);");
     expect(page).toContain("renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy)");
-    expect(page).toContain("shipped={emailCopyPrefill(messageType, emailLocale)}");
+    // The Reply-To in force (§NNN), so the prefill's reply line matches the send.
+    expect(page).toContain("shipped={emailCopyPrefill(messageType, emailLocale, replyTo)}");
     expect(page).not.toMatch(/buildTemplateContent\(messageType, emailLocale, sample/);
   });
 });
