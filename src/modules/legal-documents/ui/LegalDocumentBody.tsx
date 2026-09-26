@@ -83,7 +83,7 @@ export default function LegalDocumentBody({
             </Typography>
           )}
           {section.paragraphs.map((paragraph, paragraphIndex) => {
-            // A sentence about a value the event does not have — no minimum age (§NNN) — is left out.
+            // A sentence about a value the event does not have — no minimum age (§440) — is left out.
             if (values && dropsParagraph(paragraph, values)) return null;
             const parts = parseInline(paragraph);
             const onlyPicture = parts.length === 1 && parts[0].kind === "image";

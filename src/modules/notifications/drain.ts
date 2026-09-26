@@ -60,7 +60,7 @@ export function drainOutboxAfterResponse(): void {
           return;
         }
 
-        // The club's road per group and the Reply-To it chose to show, read once for the batch (§NNN);
+        // The club's road per group and the Reply-To it chose to show, read once for the batch (§442);
         // Gmail's cap and pace from the database before each Gmail message.
         const now = new Date();
         const { sender, route, roads, replyTo } = await createOutboxSender(db);

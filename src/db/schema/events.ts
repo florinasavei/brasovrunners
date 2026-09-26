@@ -463,7 +463,7 @@ export const events = pgTable(
     bibColour: text("bib_colour"),
 
     /**
-     * The spare bibs for on-the-spot entries (§NNN): the numbers reserved for the desk, from
+     * The spare bibs for on-the-spot entries (§444): the numbers reserved for the desk, from
      * `walk_in_bib_start`, `walk_in_bib_count` of them, printed ahead with an empty name line and
      * handed to a walk-in, the name written on with a marker. Null, both of them, is no spares —
      * every event before this.
@@ -630,7 +630,7 @@ export const events = pgTable(
      */
     check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
-    // The desk's spares (§NNN): a start and a count or neither, within a five-digit bib, and at
+    // The desk's spares (§444): a start and a count or neither, within a five-digit bib, and at
     // most 500 numbers across every print. `domain/spare-bibs.ts` says the same in words; the
     // `IS NOT NULL`s are needed, since half a pair makes the rest NULL.
     check(

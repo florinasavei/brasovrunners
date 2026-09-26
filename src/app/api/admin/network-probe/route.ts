@@ -2,7 +2,7 @@ import { NETWORK_PROBE_MARKER } from "@/modules/diagnostics/network-check";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 
 /**
- * The network check's plain-form probe (§NNN): `/admin/network` posts a small
+ * The network check's plain-form probe (§436): `/admin/network` posts a small
  * `multipart/form-data` form here into a hidden frame — the same kind of request the fallback of a
  * blocked save sends — and reads the marker below out of the frame. A proxy that refuses the post,
  * or answers it with its own page, leaves no marker, and the row turns red.

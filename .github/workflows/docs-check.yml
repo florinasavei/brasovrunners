@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 # A pull request's new push makes its previous run moot: that run is cancelled rather than
-# holding four e2e runners for twenty minutes of a verdict on code nobody will merge (§NNN).
+# holding four e2e runners for twenty minutes of a verdict on code nobody will merge (§431).
 # A push to `qa` or `main` is never cancelled — `yarn ship` waits on exactly that run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
@@ -78,7 +78,7 @@ jobs:
   # Separate job because it needs a real PostgreSQL and a browser, which `docs-check` must
   # not require — that one gates every commit and has to run on a bare machine.
   #
-  # **Sharded (§NNN).** One serial runner took twenty-two minutes for the desktop project on a
+  # **Sharded (§431).** One serial runner took twenty-two minutes for the desktop project on a
   # pull request and forty-four for both on a push — and `yarn ship` waits on the push to `qa`
   # before it releases. The suite is now split with Playwright's own `--shard`: four runners on a
   # pull request (desktop, as §209 decided), eight on a push (both projects, twice the specs), so

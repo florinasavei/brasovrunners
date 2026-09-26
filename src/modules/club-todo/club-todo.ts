@@ -21,7 +21,7 @@ import {
 import { startingClubTodo } from "./domain/starting-list";
 
 /**
- * The club's checklist «De făcut» (§NNN): read by `/admin/tasks`, written one line at a time.
+ * The club's checklist «De făcut» (§438): read by `/admin/tasks`, written one line at a time.
  *
  * `platform_settings` row `clubTodo`, the §100 shape — one row, a strict schema per line, the
  * role asserted here and not only by the hidden form (BR-REQ-060-01), and one audit row per write

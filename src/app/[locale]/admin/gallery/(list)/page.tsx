@@ -31,7 +31,7 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
-/** The list's two groups, in the order they are shown (§NNN). */
+/** The list's two groups, in the order they are shown (§434). */
 const ALBUM_KINDS: readonly AlbumKind[] = ["event", "free"];
 
 /**
@@ -89,7 +89,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
   ];
 
   // The event an album is from, in its own group only; an event with no title in this language
-  // still reads as linked (§NNN).
+  // still reads as linked (§434).
   const eventColumn: AdminColumn<AlbumListRow> = {
     key: "event",
     label: t("gallery.columnEvent"),
@@ -123,7 +123,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
       {/* Read from the environment, never remembered: the five R2 variables are there or not. */}
       {!isStorageConfigured() && <Alert severity="warning">{t("gallery.storageUnconfigured")}</Alert>}
 
-      {/* Two groups, by kind (§NNN): the albums of an event, then the free ones — group photos
+      {/* Two groups, by kind (§434): the albums of an event, then the free ones — group photos
           that belong to no event. Each group is newest first; an empty group says so. */}
       {rows.length === 0 && <Typography variant="body1">{t("gallery.empty")}</Typography>}
       {rows.length > 0 && ALBUM_KINDS.map((kind) => {

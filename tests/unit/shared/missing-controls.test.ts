@@ -60,7 +60,7 @@ describe("§422 what is still missing, named", () => {
     expect(entries).toEqual([{ key: "rulesAcknowledged", label: "Condițiile concursului", id: "f-rules" }]);
   });
 
-  it("names an empty citizenship by the form's own short name (§NNN)", () => {
+  it("names an empty citizenship by the form's own short name (§432)", () => {
     // MUI's select posts through a hidden native input carrying the name and `required`.
     const names = Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, ro.Registration.fieldNames[name]]));
     expect(missingControls([control({ name: "nationality" })], names)).toEqual([{ key: "nationality", label: "Cetățenie", id: null }]);

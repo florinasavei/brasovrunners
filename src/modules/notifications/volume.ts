@@ -4,6 +4,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
 import { readClubNotices } from "./club-notices";
+import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
@@ -118,8 +119,14 @@ export type EmailVolumeToday = {
   /** Rows not yet delivered — pending or mid-flight — whatever day they were queued. */
   waitingMessages: number;
   /**
+   * Of those, the newsletters and new-event alerts (§445), the club's copies of them included:
+   * last in line, and only in what the reserve leaves (`domain/bulk.ts`), so they may wait a day or
+   * a month. Counted apart, so "in the queue" is not read as registrations' mail.
+   */
+  bulkWaitingMessages: number;
+  /**
    * Outbox rows Mailgun transmitted today. What the allowance has actually paid for — the rows the
-   * club's Gmail carried (§NNN) are not in it: they cost Mailgun nothing.
+   * club's Gmail carried (§443) are not in it: they cost Mailgun nothing.
    */
   sentMessages: number;
   /** Mailgun's since the first of the month (UTC): what a monthly plan counts against. */
@@ -139,25 +146,25 @@ export type EmailVolumeToday = {
   participantBccCount: number;
   /**
    * What one completed registration costs **Mailgun** today: `messagesPerCompletedRegistration` of
-   * the two above, less the groups the club sends through its Gmail (§NNN). The allowance is
+   * the two above, less the groups the club sends through its Gmail (§443). The allowance is
    * Mailgun's, so this is the figure every "how many more fit" divides by.
    */
   messagesPerRegistration: number;
   /** Every message one completed registration causes, whichever road it takes. */
   allMessagesPerRegistration: number;
-  /** Whether the club's Gmail is configured on this deployment, so any group can take its road (§NNN). */
+  /** Whether the club's Gmail is configured on this deployment, so any group can take its road (§443). */
   gmailConfigured: boolean;
-  /** Messages the club's Gmail carried in the last 24 hours, and the club's cap on them (§NNN). */
+  /** Messages the club's Gmail carried in the last 24 hours, and the club's cap on them (§443). */
   gmailSentLastDay: number;
   gmailDailyCap: number;
-  /** The last time Gmail refused or broke (§NNN): said on the panel, so a revoked password is seen. */
+  /** The last time Gmail refused or broke (§443): said on the panel, so a revoked password is seen. */
   gmailLastFailure: GmailFailure | null;
   /** Whether that failure is inside the last 24 hours: a warning then, history after. */
   gmailFailedLastDay: boolean;
 };
 
 /**
- * A row Mailgun carried: every sent row but the club's Gmail's (§NNN). A null `transport` is a row
+ * A row Mailgun carried: every sent row but the club's Gmail's (§443). A null `transport` is a row
  * sent before the column existed, and Mailgun carried all of those.
  */
 const carriedByMailgun = sql`(${emailOutbox.transport} IS NULL OR ${emailOutbox.transport} <> 'gmail')`;
@@ -203,7 +210,13 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`, carriedByMailgun));
 
   const [waiting] = await db
-    .select({ value: count() })
+    .select({
+      value: count(),
+      bulk: count(sql`CASE WHEN ${emailOutbox.messageType} IN (${sql.join(
+        BULK_MESSAGE_TYPES.map((type) => sql`${type}`),
+        sql`, `,
+      )}) THEN 1 END`),
+    })
     .from(emailOutbox)
     .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
 
@@ -225,7 +238,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const archiveConfigured = declarationArchiveIsConfigured(notices, env.DECLARATIONS_ARCHIVE_TO);
   const participantBccCount = participantMessageBcc(notices).length;
   const allMessagesPerRegistration = messagesPerCompletedRegistration({ archiveConfigured, participantBccCount });
-  // What of it Mailgun carries, by the club's roads (§NNN), and Gmail's own last day beside it.
+  // What of it Mailgun carries, by the club's roads (§443), and Gmail's own last day beside it.
   const [transport, gmail, gmailLastFailure] = await Promise.all([
     readEmailTransport(db),
     readGmailUsage(db, now),
@@ -253,6 +266,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     gmailFailedLastDay: gmailLastFailure !== null && now.getTime() - gmailLastFailure.at.getTime() < GMAIL_WINDOW_MS,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
+    bulkWaitingMessages: waiting?.bulk ?? 0,
     sentMessages,
     sentThisMonth,
     plan: setting.plan,

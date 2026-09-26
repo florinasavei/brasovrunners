@@ -99,7 +99,7 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
       };
     };
     expect(answer.stored).toMatchObject({ quality: "high", encoding: "nearLossless", width: 1080, height: 1350, files: 5 });
-    // The widest smaller copy is told too (§NNN): 960 under a 1080-pixel master, with its weight.
+    // The widest smaller copy is told too (§437): 960 under a 1080-pixel master, with its weight.
     expect(answer.stored.topRung?.width).toBe(960);
     expect(answer.stored.topRung?.bytes).toBeGreaterThan(0);
     expect(answer.stored.totalBytes).toBeGreaterThan(answer.stored.bytes);
@@ -113,7 +113,7 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
     expect((await sharp(rung!.body).metadata()).width).toBe(960);
   });
 
-  it("takes «Minimă» and «Originală» as the two new words, and says which was stored (§NNN)", async () => {
+  it("takes «Minimă» and «Originală» as the two new words, and says which was stored (§437)", async () => {
     for (const quality of ["low", "original"] as const) {
       const response = await uploadBodyPicture(form(await photo(), "start.jpg", quality));
       expect(response.status, quality).toBe(201);

@@ -57,7 +57,7 @@ function shortText(text: string): string {
 }
 
 /**
- * «De făcut» — the club's own checklist (§NNN). A Server Component of forms, like every other
+ * «De făcut» — the club's own checklist (§438). A Server Component of forms, like every other
  * panel on `/admin/tasks`: a tick, ↑ and ↓ are one button each in a form of their own, so the
  * list works with JavaScript off (§265), and every verb posts to a Server Action that asks
  * `changeClubTodo` — the role is decided there, never by which buttons this draws (BR-REQ-060-01).

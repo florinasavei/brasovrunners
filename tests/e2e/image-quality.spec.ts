@@ -62,7 +62,7 @@ test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", ()
     // The help says what each choice keeps, from the same numbers the server resizes to.
     await expect(bar).toContainText("până la 2400 px");
     await expect(bar).toContainText("până la 4000 px");
-    // Four levels (§NNN), and the help says what the new two keep.
+    // Four levels (§437), and the help says what the new two keep.
     for (const name of ["Minimă (fișier mic)", "Medie (recomandat)", "Mare", "Originală (fișier mare)"]) {
       await expect(bar.getByRole("radio", { name, exact: true })).toBeVisible();
     }
@@ -73,11 +73,11 @@ test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", ()
     await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 30_000 });
     // 3600 pixels kept, not 2400: «Înaltă» is more pixels, not only another encoder.
     await expect(roEditor.getByTestId("rich-text-image-stored")).toContainText("3600 × 2400 px, calitate mare", { timeout: 30_000 });
-    // What was chosen, said as soon as it was read (§NNN): sent as it is at «Mare», so no second sentence.
+    // What was chosen, said as soon as it was read (§437): sent as it is at «Mare», so no second sentence.
     await expect(roEditor.getByTestId("rich-text-image-chosen")).toHaveText(/^Fișierul ales: afis\.png, 3600 × 2400 px, \d+(,\d)? (KB|MB)\.$/);
     // The picture's own panel opened on it (§73); say what it shows and close it.
     const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
-    // The selected picture's stored size, in its panel (§NNN).
+    // The selected picture's stored size, in its panel (§437).
     await expect(pictureWords.getByTestId("rich-text-image-pixels")).toHaveText("Imaginea stocată: 3600 × 2400 px.");
     await pictureWords.getByLabel("Ce arată imaginea (text alternativ)").fill("Afișul crosului");
     await pictureWords.getByRole("button", { name: "Gata" }).click();

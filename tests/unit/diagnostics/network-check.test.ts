@@ -4,13 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 import { NETWORK_PROBE_MARKER, NETWORK_PROBES, networkReport } from "@/modules/diagnostics/network-check";
 
 /**
- * §NNN — `/admin/network`: what a staff member's network lets through, and the line for IT.
+ * §436 — `/admin/network`: what a staff member's network lets through, and the line for IT.
  *
  * The gate first (BR-REQ-060-01): the page, its do-nothing Server Action and the plain-form
  * probe's route answer staff only, each asserting it on the server. Then the report a person
  * copies — the results and the browser, nothing about them — and the rule that every host the
  * page names comes from configuration (AGENTS.md §8). The rows turning green and red in a browser
- * have no spec: the owner cut the browser run on 2026-09-26 (§NNN).
+ * have no spec: the owner cut the browser run on 2026-09-26 (§436).
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
@@ -28,7 +28,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 const { POST } = await import("@/app/api/admin/network-probe/route");
 const { probeSaveAction } = await import("@/app/[locale]/admin/network/actions");
 
-describe("§NNN the network check is staff-only, on the server", () => {
+describe("§436 the network check is staff-only, on the server", () => {
   it("the plain-form probe answers 404 to anybody signed out, and its marker to staff", async () => {
     session.staff = null;
     expect((await POST()).status).toBe(404);
@@ -62,7 +62,7 @@ describe("§NNN the network check is staff-only, on the server", () => {
   });
 });
 
-describe("§NNN the report", () => {
+describe("§436 the report", () => {
   it("lists every row, the line for IT only where one is given, the site and the browser — nothing about the person", () => {
     const text = networkReport({
       heading: "Brașov Runners — verificarea rețelei",

@@ -22,7 +22,7 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
 }
 
 /**
- * The minimum age a group run's self-declaration actually states and asks for (§NNN): the event's
+ * The minimum age a group run's self-declaration actually states and asks for (§440): the event's
  * own `min_age` (§329) only when it is above eighteen, zero otherwise. The declaration is for adults
  * (§393, §418): its opening says "am împlinit 18 ani" and the consent box repeats it, so a minimum of
  * eighteen or less binds nobody the text does not already bind. Stating it would read as a second,
@@ -36,7 +36,7 @@ export function groupRunMinimumAge(minAge: number): number {
 }
 
 /**
- * The run's minimum age at the signing page's door (§NNN, amending §393): the event's own number
+ * The run's minimum age at the signing page's door (§440, amending §393): the event's own number
  * (§329) as `groupRunMinimumAge` binds it, counted on the run's day in the run's zone by `isUnderMinimumAge` — the rule the race's
  * registration door asks (`minimumAgeRule`), never a second one. Nothing is asked of a run with no
  * minimum. A missing or unreadable date names the box; a date under the minimum names the box and

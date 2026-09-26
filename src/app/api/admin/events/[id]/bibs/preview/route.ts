@@ -74,7 +74,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   // The bib's own line, in the language it is drawn for and the event's zone (§349, §317).
   const eventDate = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
-  // The first address the club shows (§NNN): one line of small print has room for one.
+  // The first address the club shows (§442): one line of small print has room for one.
   const replyTo = (await shownContactAddresses(db))[0] ?? null;
   // The same facts the sheet's footer is made of (§180, §317), so either picture is a picture of
   // the paper; which of them print is the design's to say.
@@ -83,7 +83,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (sample) {
     const image = await renderBibImage({
       bibNumber: bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber,
-      // `blank=1` draws a desk spare (§NNN): the empty line the name is written on at the desk.
+      // `blank=1` draws a desk spare (§444): the empty line the name is written on at the desk.
       registeredName: url.searchParams.get("blank") === "1" ? null : SAMPLE_NAME,
       ...(url.searchParams.get("blank") === "1" ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
       eventTitle: event.title,

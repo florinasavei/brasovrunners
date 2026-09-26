@@ -15,7 +15,7 @@
  * acts on and a list they scroll past.
  *
  * Rewritten on 2026-09-17 to today's list (`DECISIONS.md` §61): the domain is bought and bound,
- * so "register the domain" is gone; its renewal is here instead (§NNN).
+ * so "register the domain" is gone; its renewal is here instead (§435).
  */
 
 import type { DomainRenewal } from "./domain/domain-renewal";
@@ -55,6 +55,7 @@ export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "
 export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
+  | "newsletterNotice"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -77,6 +78,7 @@ export type TaskId =
 export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
+  newsletterNotice: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -110,7 +112,7 @@ export type OwnerTask = {
   steps?: string;
   /**
    * The chip's word under `stateLabel.<label>` in place of `state.<state>`, when the state's colour
-   * is right and its word is not: a domain thirty days from expiry is red, and still works (§NNN).
+   * is right and its word is not: a domain thirty days from expiry is red, and still works (§435).
    */
   label?: "due";
 };
@@ -142,6 +144,11 @@ export type OwnerTaskInputs = {
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
    */
   listStatesDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the newsletter (§445,
+   * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
+   */
+  newsletterDescribed: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -221,7 +228,7 @@ export type OwnerTaskInputs = {
    */
   contactFormConfigured: boolean;
   /**
-   * When the club's domain expires (§NNN, `domain/domain-renewal.ts`), from `DOMAIN_REGISTERED_ON`
+   * When the club's domain expires (§435, `domain/domain-renewal.ts`), from `DOMAIN_REGISTERED_ON`
    * and `DOMAIN_RENEWAL_YEARS`. It replaced §55's `.ro` row: the owner dropped the `.ro` on
    * 2026-09-26 (one address for search engines) and asked to be reminded to renew the `.com`.
    */
@@ -269,6 +276,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listStatesNotice", {
       owner: "club",
       state: input.listStatesDescribed ? "done" : "open",
+    });
+    /*
+      The newsletter (§445), the same shape: open, never blocking — nothing is refused, the contact
+      page simply offers no subscription — and done by itself the day a notice naming
+      `{{newsletterTopics}}` takes effect.
+    */
+    push("newsletterNotice", {
+      owner: "club",
+      state: input.newsletterDescribed ? "done" : "open",
     });
   }
 
@@ -388,7 +404,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   /*
-    The domain's renewal (§NNN). Never blocking — nobody is refused a registration today — but red
+    The domain's renewal (§435). Never blocking — nobody is refused a registration today — but red
     (`broken`) from thirty days out and past the day, because a lapsed domain takes the site, every
     email link and the sending domain down at once; amber (`open`) from ninety; green before that.
     Unset dates are `open` with their own sentence: a reminder nobody configured reminds nobody.

@@ -1,5 +1,5 @@
 /**
- * The spare bibs for on-the-spot entries (`DECISIONS.md` §NNN): numbers the club prints ahead
+ * The spare bibs for on-the-spot entries (`DECISIONS.md` §444): numbers the club prints ahead
  * with an empty name line, for the desk to hand to a walk-in with the name written on in marker.
  *
  * Why numbers of their own. On race morning a number the allocator draws for a walk-in is a number
@@ -61,7 +61,7 @@ export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<numb
 }
 
 /**
- * Where the spares stand, for the desk (§NNN): `none` — the club reserved none, and the desk
+ * Where the spares stand, for the desk (§444): `none` — the club reserved none, and the desk
  * behaves as it always did; `free` — the next spare to hand; `out` — reserved, and every one
  * given, which the desk says in words rather than falling silent (a volunteer would otherwise be
  * handed a number nobody printed without being told why).
@@ -69,7 +69,7 @@ export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<numb
 export type SpareState = { kind: "none" } | { kind: "free"; next: number } | { kind: "out" };
 
 /**
- * Whether the desk's «Confirmă aici» carries a spare for this row (§NNN): a real walk-in — a
+ * Whether the desk's «Confirmă aici» carries a spare for this row (§444): a real walk-in — a
  * registration the staff entered (`source = STAFF`), or one holding no number at all — with no
  * settled number and no printed bib. Every registration draws a provisional number when it is
  * inserted (§214), a desk entry included, so "no provisional number" alone matched nobody; what
@@ -131,7 +131,7 @@ export function nextSpareCandidates(input: {
 export type SpareRefusal = "count" | "ceiling" | "size";
 
 /**
- * What a print of `count` spares reserves (§NNN), or why it cannot: the numbers to print (all of
+ * What a print of `count` spares reserves (§444), or why it cannot: the numbers to print (all of
  * them free), and the event's reservation after it — the same start on an extension, the count
  * grown to reach the last new number. Refused for a count outside 1–`SPARE_BIBS_PER_PRINT`
  * (`count`), for too few numbers left under 99 999 (`ceiling`), and for a reservation that would
@@ -153,7 +153,7 @@ export function planSpareReservation(input: {
   const total = last - start + 1;
   if (total > SPARE_BIBS_MAX) return { ok: false, reason: "size" };
   /*
-    The numbers the extension stepped over (§NNN): inside the reservation from now on, and never a
+    The numbers the extension stepped over (§444): inside the reservation from now on, and never a
     spare. Somebody held each when the print reached past it, so none is on the blank sheet; the
     print's audit row keeps them, and `bibs.ts#skippedSpareNumbers` reads them back as taken for
     good — released later (an expired hold), such a number is nobody's rather than a "free spare"
@@ -169,7 +169,7 @@ export function planSpareReservation(input: {
 }
 
 /**
- * The range the print's banner names (§NNN), from the address it redirected to: two whole numbers
+ * The range the print's banner names (§444), from the address it redirected to: two whole numbers
  * of one to five digits, the first not above the second — or null, and no banner. The query
  * string is typed by anybody, and the banner's link and sentence carry these numbers.
  */

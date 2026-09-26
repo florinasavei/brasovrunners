@@ -25,11 +25,12 @@ import {
 } from "@/modules/notifications/email-transport";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { type OutboxRoads, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
+import { nextAllowanceResetAt } from "@/modules/notifications/domain/retry";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the road each email takes is the club's setting per group, and the outbox records which
+ * §443 — the road each email takes is the club's setting per group, and the outbox records which
  * road carried it: Gmail's cap is counted from that column, and Mailgun's allowance no longer
  * counts what Gmail carried.
  */
@@ -52,7 +53,7 @@ function roadSender(answer?: (message: OutgoingEmail) => SendResult): EmailSende
   };
 }
 
-describe("§NNN email transport setting and the outbox's road", () => {
+describe("§443 email transport setting and the outbox's road", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -251,7 +252,7 @@ describe("§NNN email transport setting and the outbox's road", () => {
   const defaultRoute = (candidate: OutboxRow) =>
     preferredTransport(DEFAULT_EMAIL_TRANSPORT, candidate.messageType, isClubCopy(candidate.payloadJson));
 
-  it("claims Gmail's rows apart: 25 due club messages never keep a newer runner's link from the first drain (§NNN review)", async () => {
+  it("claims Gmail's rows apart: 25 due club messages never keep a newer runner's link from the first drain (§443 review)", async () => {
     const older = (i: number) => new Date(NOW.getTime() - (60 - i) * 60_000);
     await db.insert(emailOutbox).values([
       // The club's copies of a runner's confirmation: a participant type, the club's mail.
@@ -286,6 +287,33 @@ describe("§NNN email transport setting and the outbox's road", () => {
     expect(pending).toHaveLength(21);
   });
 
+  it("holds a newsletter to Mailgun's reserve only on Mailgun's road: by Gmail it goes, by Mailgun it waits for the reset (§445)", async () => {
+    // Free's hundred a day, sixty spent by Mailgun: forty left, under the reserve of fifty, so no
+    // newsletter may take Mailgun today. Gmail's own rows are not in that count.
+    await db.insert(emailOutbox).values([
+      ...Array.from({ length: 60 }, (_, i) =>
+        row(400 + i, { idempotencyKey: `spent:${i}`, status: "SENT", sentAt: new Date(NOW.getTime() - HOUR), transport: "mailgun" }),
+      ),
+      ...Array.from({ length: 30 }, (_, i) =>
+        row(500 + i, { idempotencyKey: `gmail-spent:${i}`, status: "SENT", sentAt: new Date(NOW.getTime() - HOUR), transport: "gmail" }),
+      ),
+      row(600, { messageType: "NEWSLETTER", recipientEmail: "sub@example.com", idempotencyKey: "newsletter:sub" }),
+    ]);
+    const newsletterRow = async () => (await db.select().from(emailOutbox).where(eq(emailOutbox.idempotencyKey, "newsletter:sub")))[0];
+
+    // Mailgun alone (no roads): the reserve holds it, untouched, until the allowance comes back.
+    const mailgunOnly = roadSender();
+    expect(await processOutboxBatch(db, { sender: mailgunOnly, render, now: NOW })).toMatchObject({ claimed: 0 });
+    expect(await newsletterRow()).toMatchObject({ status: "PENDING", attemptCount: 0, nextAttemptAt: nextAllowanceResetAt(NOW) });
+
+    // The club's setting sends the newsletter group by Gmail: Mailgun's reserve is not Gmail's, so it goes.
+    await db.update(emailOutbox).set({ nextAttemptAt: null }).where(eq(emailOutbox.idempotencyKey, "newsletter:sub"));
+    const sender = roadSender();
+    expect(await processOutboxBatch(db, { sender, render, now: NOW, route: defaultRoute, roads: defaultRoads() })).toMatchObject({ claimed: 1, sent: 1 });
+    expect(sender.calls.map((call) => [call.to, call.transport])).toEqual([["sub@example.com", "gmail"]]);
+    expect(await newsletterRow()).toMatchObject({ status: "SENT", transport: "gmail" });
+  });
+
   /** A Gmail road over this database's ledger, with an adapter that notes when it was handed each message. */
   function gmailSender(overrides: Partial<GmailRoad>, sentAt: number[]) {
     return createEmailSender({
@@ -313,7 +341,7 @@ describe("§NNN email transport setting and the outbox's road", () => {
     });
   }
 
-  it("keeps Gmail's pace between two senders taking turns on one database, and records the moment Gmail took each (§NNN review)", async () => {
+  it("keeps Gmail's pace between two senders taking turns on one database, and records the moment Gmail took each (§443 review)", async () => {
     await db.insert(emailOutbox).values(
       Array.from({ length: 4 }, (_, i) => row(i, { idempotencyKey: `club:${i}`, createdAt: new Date(NOW.getTime() - (10 - i) * 1_000) })),
     );
@@ -343,7 +371,7 @@ describe("§NNN email transport setting and the outbox's road", () => {
     expect(stored).toEqual([...sentAt].sort((x, y) => x - y));
   });
 
-  it("keeps Gmail's pace between two senders sending at the same time on one database (§NNN review)", { timeout: 20_000 }, async () => {
+  it("keeps Gmail's pace between two senders sending at the same time on one database (§443 review)", { timeout: 20_000 }, async () => {
     await db.insert(emailOutbox).values(
       Array.from({ length: 4 }, (_, i) => row(i, { idempotencyKey: `club:${i}`, createdAt: new Date(Date.now() - (10 - i) * 1_000) })),
     );

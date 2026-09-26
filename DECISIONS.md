@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.02-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.03-2026-09-26 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.02-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.03-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -17474,3 +17474,564 @@ Round 2 (561488f4) closed the re-review's findings. The cursor: the press's keys
 The older-pictures batch-ladder feature (its full write-up already stands in `src/modules/media/older-pictures.ts`'s module doc comment) is amended by this review round: the audit row recorded at each press now also carries `failedIds` — up to `perPress` ids of the pictures that failed that press, so `console.warn` and the audit trail both name which picture needs a fresh upload where a missing or unreadable master, a store refusal, or a per-picture exception failed it. The task-board copy for a failed picture no longer states flatly that a second press will not help, since a store refusal or a transient database error — both counted in the same `failed` number — would in fact clear on retry; only a missing or non-picture file, the common case, genuinely needs a re-upload.
 
 Baseline `BR-V2.02-2026-09-26`.
+
+## 431. CI runs the end-to-end suite as shards, each on its own database
+
+**Context.** The owner, watching a batch PR: "22 mins of e2e... are we insane?" The run of 2026-09-26 06:56 took 23.8 minutes for its e2e job, and 21.9 of them were Playwright on the desktop project alone (§209), running serially (§212). The push to `qa` runs both projects and took 44.3 minutes, 43.0 of them Playwright. `yarn ship` waits on that push run before it releases, so every release paid the 44 minutes too. Setup (containers, install, Chromium from cache, migrate, seed) is about a minute and a half, and the build's warm cache makes it cheap.
+
+**Decision.** *The suite is split with Playwright's own `--shard=i/n` across parallel runners.* `.github/workflows/docs-check.yml` runs the matrix job `e2e-shard`:
+- **four shards on a pull request**, desktop only, as §209 decided;
+- **eight on a push to `qa` or `main`**, both projects, which is twice the tests.
+
+Every shard carries the same 79 tests either way. `fullyParallel` makes the slice per test rather than per file, and a `describe.serial` group stays inside one slice. Together the shards run exactly the suite the single job ran. Nothing is skipped and nothing is deleted.
+
+*Why this is not what §212 and §276 refused.* They refused parallel specs because the specs share ONE database and ONE seeded event (`ensureRegistrationIsOpen`), so two workers interleave. A shard is not a second worker on that database. It is its own machine, with its own PostgreSQL service migrated and seeded from nothing, and inside it the specs still run one at a time (`workers: 1` in CI). No two shards can see each other's writes, so every interleaving §212 describes remains impossible. §209 feared that every extra container must install Chromium and migrate. §276 has since cached Chromium on the Playwright version, and migrate plus seed takes seconds, so an extra shard costs about a minute and a half of setup.
+
+*One check, `e2e`, as before.* A job named `e2e` needs every shard and runs `if: always()`. It passes only when the shards' combined result is `success`. A red or cancelled shard makes it red, never skipped, because a skipped check reads as passed. The pull-request page, `yarn ship` and any future branch-protection rule see the same name however many shards there are. `fail-fast: false` lets every shard report, and each failing shard uploads its own `playwright-report-<n>`.
+
+*`yarn test:concurrency` runs once, on shard 1.* It takes seconds, and it guards the no-overbooking rule on two real connections (BR-REQ-051-01 criterion 5).
+
+*A pull request's new push cancels its previous run* (`concurrency`, `cancel-in-progress` on pull requests only). Four runners held for a verdict on a superseded commit is waste. A push to `qa` or `main` is grouped by its own commit and is never cancelled, because ship waits on exactly that run.
+
+**Considered and refused.**
+- *A fixture per worker, so one runner can run several workers.* This is §212's honest fix, and it is still the right long-term answer. It means changing every backoffice spec's setup. Shards buy the same wall clock today with no change to a spec.
+- *One build job that uploads `.next` to the shards.* The warm `.next/cache` already makes each shard's build fast. An artifact of a few hundred megabytes, uploaded and downloaded four to eight times, would cost about what it saves, and it would mean a second way to start the suite's server.
+- *Four shards on a push as well.* That makes about 11 minutes per shard on the run ship waits for. Runners are free on a public repository, and eight keeps both kinds of run at about seven minutes.
+
+**Consequences.** The e2e verdict on a pull request should drop from about 23 minutes to about 7, which is 1.5 minutes of setup plus 5.5 of Playwright. The `qa` push run should drop from about 44 to about 7, and so should each ship. The `docs-check` job, about 9.7 minutes and mostly `yarn check`, is now the longest pole on a pull request. A run uses up to nine runners at once. GitHub's free concurrency for a public repository is twenty jobs, so two batch PRs pushed together may queue briefly. Locally nothing changes: `yarn test:e2e` is still the whole suite, and `--shard` works there too.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 432. Citizenship is required on the public form and starts on Romania
+
+The owner, 2026-09-26: «cetățenia ar trebui să fie obligatorie; by default pune Român». This reverses §322 for citizenship only. The city stays optional.
+
+- **Public form, family form included:** `nationality` is required in `submissionFields` (ISO 3166-1 alpha-2, the same model as before). The select sits in the required half next to sex and shows the asterisk. It is pre-chosen on `RO`, so a Romanian runner leaves it. The «Nu spun» option is gone. A blank value from an older draft comes back as `RO`. The server refuses a form without it, and the §47 summary and the §422 list name it «Cetățenie».
+- **Staff entry:** optional (`staffRegistrationSubmissionSchema.partial`), because a paper entry may not have it.
+- **Existing rows:** no backfill and no migration. A row without a value stays null, and the export shows it blank.
+- **The optional fold** keeps only the city, titled «Orașul tău — opțional».
+- **Privacy notice:** the template now lists nationality with the required data. The notice in force on production still says "optional" until the club approves a new version from the template. That is the same click as the other pending notice versions.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 433. «Durata» asked in hours and minutes
+
+Amends §71's single minutes box. The event editor's «Durata» used to be one box counted in minutes, so a trail race of three and a half hours had to be typed as 210. The «Data și ora» card now asks for two numbers side by side, **Ore** (hours) and **Minute** (minutes).
+
+**Nothing below the form changed.** `admin/actions.ts#eventFieldsFrom` joins the two boxes (`event.durationHours`, `event.durationMinutesPart`) into the single `durationMinutes` string that `fields.ts` has always read. It works the same way as the date and time boxes of a `WallTimeField` (§70). The service still derives `ends_at` from the start plus that many minutes. No migration.
+
+**One place for the limits:** `src/modules/content/events/duration.ts`. The same limits feed the boxes' HTML attributes and the join, so the browser refuses exactly what the server would. The minutes box is 0–59. The hours box is 0–168, which is the schema's one-week limit on the total (§71). The brief said 0–99, but 99 would stop the box from accepting a multi-day camp that the schema already accepts, so the bound stays the schema's. When the boxes hold a value their own rules refuse, the join turns it into a string the schema refuses, and the error message points at the hours box.
+
+**One formula for reading a duration:** `durationShort` in `src/i18n/dates.ts`, next to every other formatter people read (§349). It writes "3 h 30 min", "2 h" or "45 min". It needs no locale, because "h" and "min" are the unit symbols in both Romanian and English. The collapsed «Data și ora» card uses it ("… · 3 h 30 min" instead of "210 min"). The public page never shows an event's duration in words; it shows the end time. `savedDurationMinutes` is the one way to read a saved duration back from the start and the end. WhenBox, CourseBox (the night-event line's first paint, §394) and the card summary all call it.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 434. Free albums beside event albums in the gallery
+
+The owner wants group photos that belong to no event. The schema already allowed it: `gallery_albums.event_id` is nullable, and the album form's event select has an empty choice. So no migration is needed; this change makes the two kinds visible.
+
+- **Public gallery (BR-REQ-054-01):** one list, newest first by the day the photos were taken. An event album's card names its event on a bold line, only while that event is published in the reader's language (BR-REQ-040-02). A free album is named by its title and date alone. The listing's cached read is tagged with both `gallery` and `events`, because it carries event titles (§333).
+- **Backoffice list:** two groups, event albums and then free albums, each newest first. Each group says so when it is empty. The event column appears only in the first group.
+- **Form:** the select reads "Legat de un eveniment" / "Linked to an event", and its empty choice reads "Niciunul - album liber" / "None - free album".
+- **Tests:** a PGlite test covers the nullable link, the order and the grouping. A render test of `AlbumGrid` checks that only an event album's card carries the event line. The gallery e2e checks the free group.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 435. The .ro row becomes the .com renewal reminder
+
+The owner dropped the .ro on 2026-09-26: one address is better for search engines, and the .com is renewed for several years. The /admin/tasks row that pointed at the .ro is now «Reinnoirea domeniului .com». It works out the expiry from `DOMAIN_REGISTERED_ON` plus `DOMAIN_RENEWAL_YEARS`, using only the configuration and the clock (no registrar lookup):
+- green more than 90 days before the expiry;
+- amber (`open`) from 90 days;
+- red from 30 days and after the expiry.
+
+The row never blocks anything. From 30 days out, `/api/health` reports `degraded`, so the monitor's 503 reaches the owner with a month still left to renew. Unset dates are `unknown`: the row says so and the health endpoint is not affected.
+
+The red uses the colour and ranking of `broken` but not its word. While the domain still resolves, the chip reads «De reinnoit acum» / "Renew now" through an optional `label` on the task. «Nu functioneaza» appears only once the date has passed. The Costuri panel's domain row says the next step is renewing the .com for several years, and that the .ro is not bought.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 436. A backoffice save a corporate proxy blocks goes the simple way, says so, and /admin/network names what to allow
+
+**The symptom and its cause.** The owner, 2026-09-26: Amalia, on a corporate laptop behind Zscaler, could open every backoffice page but not save on some of them. The whole-site block of 2026-09-22 (SETUP.md §39, "Newly Registered and Observed Domains") had lifted. What was left was a proxy that passes ordinary page loads and HTML form posts but refuses the scripted Server Action call, or answers it with its own HTML block page. That call is a `fetch` POST to the page's own address with a `Next-Action` header, answered as a `text/x-component` stream. Next then rejects the call's promise: with a `TypeError` when the fetch never got an answer, or with "An unexpected response was received from the server." (error code `E394`) when the answer was not a Server Action's. The button went back to rest (§371) with nothing saved and nothing said (§384).
+
+**The fallback, and why the native post passes.** Every form whose action is a Server Action already carries its no-JavaScript path in the server's HTML: React writes hidden `$ACTION_…` fields into it. The same form posted as plain `multipart/form-data` is decoded by Next and answered with the redirect the action returns, or with the page carrying its refusal. That is the request every web form sends, and it is the one the proxy lets through. So when the scripted call fails in transport, the form is sent again that way (`shared/forms/save-fallback.ts`, `replayNatively`). The values go as they stand, with the pressed button, from a detached `<form>` React has no say in. The §384 toast still arrives through the flash cookie.
+
+Which failures count is decided in one function, `transportFailureOf`:
+- A fetch rejection (`TypeError`) or `E394` / its message starts the fallback.
+- A refusal never does: it is a returned state, not an error.
+- A redirect, a 404 and a server error never do: they carry a `digest`.
+- "Server Action not found" never does: it comes from a new deployment, and a plain post would fail the same way.
+
+A form the browser drew after a client-side navigation has no `$ACTION_…` fields. The fallback then fetches the page's HTML with a plain GET and takes the fields from the same form there. It matches that form by `data-action-key`, a key the server stamps from the action's `$$id` and a hash of its bound arguments (`action-key.ts`). A button with a Server Action of its own must be matched by its place among the form's buttons and by its words. Anything that cannot be matched with certainty is not sent, because a guessed action could be a different verb. `ActionForm` handles this in its island and keeps the boxes as typed when even the plain post cannot leave; `SaveBlockedNotice` then says «Salvarea nu a ajuns la site». Plain `<form action={…}>` forms and buttons with their own action throw into a new `admin/error.tsx` boundary, which replays the press `SaveFallbackGuard` remembered and rethrows every other error to the backoffice's existing boundary (§52).
+
+**The notice.** The replay sets a 60-second cookie before it leaves. The admin layout reads it on the page the post lands on, and `SaveFallbackNotice` shows one line and clears the cookie, so a refresh says nothing:
+- RO: «Rețeaua de la birou a blocat cererea de salvare; am trimis-o pe calea simplă. Dacă salvarea nu reușește, încearcă de pe telefon sau de pe altă rețea — datele completate rămân aici.»
+- EN: the same sentence in English.
+
+It links to the network check. The wording says "sent", not "saved", because the client cannot know the save landed; the toast after the redirect is what says it did.
+
+**The probes.** `/admin/network` («Verificarea rețelei») is open to every staff role, asserted on the server by the page, its do-nothing Server Action and the probe route (BR-REQ-060-01). It follows §376's 404 rules. The guide's troubleshooting line and the notice link to it; it is not in the tabs. It tries four things from the reader's browser:
+- «Salvările»: a Server Action that only answers ok.
+- «Calea simplă»: a `multipart/form-data` post into a hidden frame, to `/api/admin/network-probe`, reading a marker back.
+- «Pozele»: the newest stored thumbnail, from the store's public address (§66).
+- «Verificarea anti-robot»: Turnstile's script (§97).
+
+Each probe times out as blocked after 15 s. Each row says what it means and gives the «Permite: …» line for IT, with the host from configuration: this site's from `APP_BASE_URL`, the store's from `publicPictureHost()` (`R2_PUBLIC_BASE_URL` on R2), and Turnstile's from the island's own `TURNSTILE_SCRIPT_URL`. There is no hostname literal in `src/` (AGENTS.md §8). «Copiază raportul» copies the results, the site's host and the user agent, nothing about the person. It copies rather than sends because sending would be the very request the network blocks.
+
+**Tests.** The owner cut the browser run on 2026-09-26 at 13:40, so the two Playwright cases in the brief were dropped, not converted. Unit tests `tests/unit/shared/save-fallback.test.ts` and `tests/unit/diagnostics/network-check.test.ts` prove:
+- the fallback decision, including which failures never trigger it;
+- which presses need the page's HTML, and how the server's fields merge with the typed values;
+- the action key;
+- the words in both catalogues, with the host as a placeholder;
+- the three server-side staff gates and the report's content.
+
+The plain post landing and the notice appearing are checked by hand on QA from the blocked network. No migration, no new dependency.
+
+**Docs (docsNotes).** SETUP.md §39 «If somebody says the site is blocked at work» gains a paragraph, «When the pages open but a save does not». It covers the notice the simple path leaves (nothing to do, the save is in), the red «Salvarea nu a ajuns la site» (nothing saved), `/admin/network`, the report to copy, and the hosts IT is asked to allow: this site's (POST with `Next-Action`, and plain multipart posts), `R2_PUBLIC_BASE_URL`'s, and Turnstile's script host. Meanwhile the answer is the phone. The `/admin/guide` troubleshooting line («Verifică rețeaua») is on the page. CLAUDE.md's «Two settings that cost an afternoon» paragraph could add a third sentence: a corporate proxy that blocks saves but not pages, and /admin/network, which names what to allow.
+
+**Offered, never sent on its own (amends the section after its review, 2026-09-26).** The first version sent a blocked save again as a plain form post automatically. The review showed that can run an action twice. Next reports E394 for any answer that is not a Server Action's: a Vercel 504 or 413 in text/plain, or a proxy that replaced the answer after the server had already run the action. A fetch can also reject on a connection reset after the request arrived. The version check (§36, §315) protects most saves, because a second save of an edited record becomes a CONFLICT. It does not protect the irreversible verbs: a cancel, an erase, «Trimite acum» or an organizer's message have no version to check, so sent twice they happen twice. The second send is therefore the person's decision. On a transport failure the form keeps what was typed and the notice offers one button, «Trimite pe calea simplă» / "Send the simple way", next to «Dacă ai primit deja mesajul că s-a salvat, nu apăsa — verifică pagina.» / "If you already got the message that it saved, do not press — check the page." `transportFailureOf` decides when the button is offered; `replayNatively` runs only from the button. The 60-second cookie is set only when that press sends the form. The page it lands on says the simple way was *tried* («…așa că am încercat calea simplă»); only the §384 confirmation says the save landed. The blocked notice no longer says nothing was saved, because a transport failure cannot know that. Only a failed press of the button says nothing left.
+
+**Only the network's failures, only right after a press.** The backoffice error boundary sees every client render error, and a null read is a TypeError too. A TypeError therefore counts as the network's only in the browsers' own fetch-failure words («Failed to fetch», «NetworkError…», «Load failed»). The boundary takes an error for a blocked save only when the guard remembered a press within the last ten seconds and the error is one of those or E394. It decides once per error. Everything else goes to the boundary the backoffice always had, with its reference number (§52).
+
+**Sign-out is not covered.** Its form lives in the admin layout, and a segment's error.tsx never catches its own layout's errors, so a blocked sign-out reaches `[locale]/error.tsx` as before. The key stamp on it was dropped rather than giving the layout an island of its own: signing out again is harmless and needs no rescue.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 437. «Calitate» has four levels, and the editor says the picture's size before and after upload
+
+The owner, 2026-09-26: «minima, medie, mare si originala» and "as vrea sa afisez si dimensiunea imaginilor in editor, sa stiu ce incarc". This amends §414, which had two levels (Normală / Înaltă).
+
+**The levels** (one enum, `IMAGE_QUALITIES`, smallest first):
+- **Minimă** (`low`): a 1280-px master, WebP 78, rungs at 76. The browser sends at most 1600 px.
+- **Medie** (`normal`, recommended, the default): §414's Normală. 2400 px, 88/82.
+- **Mare** (`high`): §414's Înaltă. 4000 px, 90 or near-lossless.
+- **Originală** (`original`): the file's own pixels up to 6000, 95 or near-lossless, rungs at 90. The browser sends the file unchanged when it is at most 4 MB.
+
+`normal` and `high` keep their meaning on the wire, so a tab opened before this change stores the same thing it did. No quality column is stored and no migration is needed. Pictures are never enlarged.
+
+**The 3200 rung.** It is stored and offered only under a master wider than `HIGH_WEB_MAX` (4000), which means only under «Originală». The page builds the srcset from the master's width when it renders, and every «Mare»/«Înaltă» master of up to 4000 px stored since §414 was stored without a 3200 file. Offering the rung under those masters would make the browser request a file that does not exist, and the picture would show broken (review blocker, fixed before merge).
+
+**What the person is told:**
+- **Before upload:** the chosen file's pixels and weight («Fișierul ales: …»). If the browser re-encodes the file, the line also says what it sends: «Se trimite micșorat» when the pixels change, «Se trimite mai ușor, la aceiași pixeli» when only the weight does.
+- **After upload:** the stored master's size, quality and weight, the number of files and their total weight, and now the widest smaller copy's width and weight.
+- **In the pictures list:** each picture stored with a ladder also shows the widest smaller copy's width (`topRungWidth`).
+
+All of this appears in the rich-text editor, the film poster panel and the album uploader.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 438. §438 «Club» first; «De făcut» is the club's typed checklist.
+
+- The tab split and naming.
+- The data shape and why no migration: `platform_settings` key `clubTodo`, one JSON list, a row lock per write, fixed starting ids.
+- The role set: write for MODERATOR, ADMIN and SUPERADMIN; read from COPYWRITER up; the volunteer gets a 404.
+- The «Sarcini» section is now offered from the Redactor up, which amends the §397 gate and the §103 section table.
+- The audit actions `club_todo.*`.
+- The starting list with no address or URL, for the public repository; the Mailgun-plan-switch line among Amalia's twelve carries the due date 2026-11-01, alongside the two «după 10 octombrie» lines.
+- Links that name a tab are unchanged, and `todo` now means the checklist.
+- A no-op press (a tick on a ticked line, a move at the end, a save of unchanged words) records nothing in the audit trail and gets the same `clubTodoUnchanged` info toast on every path — tick, move and edit alike.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 439. Every time reads on the 24-hour clock, the backoffice time box included
+
+The owner, 2026-09-26: "iar ai făcut ora cu AM și PM... am zis că vreau 24H format!"
+
+**Where the AM/PM came from.** Every time the site, the emails, the .ics and the PDFs print already goes through `src/i18n/dates.ts` on the h23 cycle (§349). The AM/PM came from the backoffice's `TimeField`. §400 made it the browser's own `<input type="time">`, which the browser draws in its own locale. On an English-language Chrome or Edge it shows «07:00 PM» whatever the page's language, and no attribute, CSS or `step` changes that. §400 accepted this in writing, and the owner's rule overrides it.
+
+**Decision (amending §400).** `TimeField` is a typed MUI text box that shows exactly what it posts: `19:00`.
+- It opens a numeric keypad on a phone, takes at most five characters, and adds the colon after a valid two-digit hour as it is typed.
+- On blur or Enter, `normalizeTypedTime` reads «1900», «19.00», «930», «9:30» and «7» as `HH:mm`.
+- It reads no AM/PM at all. Anything it cannot read stays for `pattern` and the server's `isTimeValue` to refuse.
+- It posts the same `HH:mm` under the same name, so nothing below the form moved. §345's date picker stays, day-first.
+
+The live series sentence (§350) reads the start time through the same normalisation and says no time until the box holds a valid one.
+
+**The xlsx export.** Its timestamps were written from the Date's UTC fields, so 19:00 in Brașov opened as 16:00. They are now the club's wall clock, still `dd.mm.yyyy hh:mm` on the 24-hour clock.
+
+**The guard.** `tests/unit/i18n/twenty-four-hour.test.ts` walks `src/` and refuses:
+- `type="time"` and `datetime-local`;
+- `hour12: true`, a 12-hour `hourCycle` and `ampm`;
+- outside the helper, any formatter options object with an hour but without `hourCycle: "h23"` or `hour12: false`;
+- `timeStyle`, `toLocaleTimeString`, and a Date's `toLocaleString`.
+
+It also asserts 19:05 with no AM/PM, in Romanian and English, on the helper, the email facts block, the .ics description and the editor's night line.
+
+Review round, 2026-09-26: the typed time box no longer adds a colon of its own. A first version put «:» after a valid two-digit hour as it was typed («19» → «19:»). That broke the most natural way to type a time: the «:» the person typed next gave «19::», then «19::0», and the five-character limit blocked the last digit, so «19:00» could not be typed by hand. The box now keeps every keystroke exactly as typed. The only reading happens on leaving the box or pressing Enter, where `normalizeTypedTime` turns «1900», «19.00», «19h30», «930» or «7» into `HH:mm` and leaves anything else for `pattern` and the server to refuse. The five-character limit stays, since every accepted shape fits in it.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 440. A group run's minimum age in its self-declaration, binding only above eighteen
+
+Amends §393, builds on §329 and §418. The owner, 2026-09-26: a group run's minimum age is set on the event and appears in its self-declaration.
+
+- The number is the event's own `min_age` (§329); nothing new is stored. The editor's «Traseul» card shows it for a group run as its own box (`event.groupRunMinAge`); the form reader picks that box for GROUP_RUN, because the race box is hidden but still posts.
+- Both group-run templates, both languages, carry a sentence of their own: «Declar că am cel puțin {{minimumAge}}.» / "I declare that I am at least {{minimumAge}} old." `{{minimumAge}}` is a merge field with its unit ("21 de ani"), in the token legend. A field of `PARAGRAPH_MERGE_FIELDS` answered with "" drops its whole paragraph (`dropsParagraph`) on the page, in the PDF and in `mergeLegalBody`.
+- **Only a minimum above eighteen binds** (`groupRunMinimumAge`). The declaration is for adults (§393, §418): its opening says «am împlinit 18 ani» and the consent box repeats it. A minimum of 18 or less binds nobody the text does not already bind. Stating it would read as a second, contradictory age, and asking a birth date for it would collect data for no purpose (GDPR art. 5(1)(c), the reason §418 took the identity number off this text). With the column's default of 14, a run shows no sentence and asks for no birth date.
+- Above eighteen, the signing page asks for the birth date and refuses a signer under the minimum. The age is counted on the run's day in its zone by `isUnderMinimumAge`, the same function the race's registration door now uses. The date is never stored. After a refusal it rides in the sealed ten-minute draft cookie, and the privacy-notice template says so.
+- Admitting minors of 14–17 to a group-run declaration would change the opening and the consent box. That is a legal-text decision under §418, and it is not taken here.
+- The approved texts on production carry neither the sentence nor the privacy-notice clause until the club approves new versions from the platform's templates.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 441. The guide as jobs: section → task → numbered steps
+
+§441 — The guide as jobs: section → task → numbered steps. «…» marks a string the screen shows and is drawn bold, and guide-words.test.ts enforces that for both locales. The per-role order of §103 is kept (and is now also a pure `orderGuideSections` helper, unit-tested per role). Who may do what is stated as roles.ts enforces it: legal versions and Echipa are Superadministrator-only; the Organizer reads, exports, saves settings and messages, but does not publish, cancel, erase, resend or assign numbers. Race numbers go in registration order (§173). A "Când ceva nu merge" section, for every role, names /api/health, who to write to, and the phone-hotspot retry for an office-network save failure.
+
+**The guide names roles, never people, and states the code's own permissions (review round).** The repository is public, so the guide's role table names no colleague: it speaks of the Organizer and the Administrator. The table now covers all six roles as the code enforces them: `roles.ts` capabilities, `requireStaffRole` in each action, and the service gates.
+
+Every legal-text write is a Superadministrator's. That covers a new version, the platform's text, draft edits, approval, withdrawal and deletion (`legal/actions.ts` and `legal-documents/service.ts` `assertMayEdit` → `canManageStaff`). «Echipa» is also a Superadministrator's. «Termene», the per-address limit, the Mailgun plan and every verb that changes a registration are an Administrator's.
+
+A job the Administrator cannot do opens with «Rol necesar: Superadministrator.», so the reader asks for the role before walking into a missing button. A unit test holds this for the legal and team jobs.
+
+«Ce NU se poate face» lists the platform's hard limits rather than repeating the role comparison: no edit of a verified email, no merge, no staff-signed declaration, no legal text in effect without an approved version, no registration past capacity.
+
+The health step reads only the top-level first `status` word, because a degraded answer still contains nested "ok" fields. It sends any doubt to the club's owner. It does not point to «Sistem», which links to /devs and only Tehnic and above can open.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 442. The contact address shown: mailbox, Gmail or both
+
+The owner, 2026-09-26: the Mailgun mailbox on the `mail.` subdomain may hit the daily cap; the club wants to show its Gmail instead, or both.
+
+«Adresa de contact afișată» on `/admin/emails`: one `platform_settings` row (`shownContactAddress`, no migration), Administrator-only, audited (`shown_contact_address.changed`), saved behind the §384 confirmation, with a preview line «Pe site: … · Răspunde la: …». The default is `EMAIL_REPLY_TO`, so a database with no row behaves exactly as before.
+
+The resolved list — the Gmail first — is used wherever the address is shown or replied to: the footer, the header's Contact entry, the contact page's `mailto:` links («a sau b»), the declaration page's "reply to the email" sentences, the bib's small print (first address), the legal club-email placeholder in the platform-text prefill («a sau b» / "a or b"), every email's Reply-To, the renderer's "or reply to this email" line, and the email editor's previews and prefill and the organizer-message preview (so the preview never disagrees with the send). `/admin/legal` names the setting beside `EMAIL_REPLY_TO` when the contact fact is missing.
+
+The sender stays on the Mailgun domain: a Gmail From sent through Mailgun fails DMARC alignment. The contact form's own SMTP route is untouched. When this lands beside the Gmail-or-Mailgun transport, the Reply-To in force is resolved once in the outbox sender and given to both adapters.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 443. Each email group leaves by Mailgun or the club's Gmail, capped in recipients and deferred at the cap
+
+The owner, 2026-09-26: keep Mailgun's cost down, and let the club's Gmail carry as much as it safely can. It has to be a setting, because Google blocks a personal account that sends in bulk or looks automated.
+
+**The setting** is on `/admin/emails` → «Prin ce pleacă emailurile». It is Administrator-only and audited (`email_transport.changed`), stored in `platform_settings.emailTransport` and checked with a strict schema. It sets:
+- the road per group (Mailgun or Gmail);
+- Gmail's cap in recipients per rolling 24 h (at most 500);
+- the pace (0–10 s, plus a random wait of up to 2 s or half the pace);
+- what happens at the cap (`defer`, the default, or `mailgun`);
+- whether Mailgun's spent allowance spills over into Gmail.
+
+**Groups.** The brief's A–F became six groups:
+- links (A);
+- confirmations;
+- reminders (B: the reminder and the thank-you);
+- announcements (C: update notice, cancellation, organizer message, registration opened);
+- club (D: club copies, the declaration archive, the confirmation notice, staff invitations);
+- newsletter (E, empty until the newsletter menu exists).
+
+F, the contact form, already sends through Gmail (§149) and has no outbox row. A club copy of a participant message (§320) belongs to the club group.
+
+**Defaults.** Club and newsletter go through Gmail; every participant group goes through Mailgun; at the cap the default is defer; overflow is off; the pace is 6 s. This is one deviation from the brief, which sent C through Gmail. The privacy notice in force names Gmail only as the club's mailbox (section 6), not as a road to participants, and §418 made its processor list accurate. So participant mail through Google waits for a notice that says so. The panel says this, and the owner is asked.
+
+**Google's limit.** Gmail Help, "Limits for sending & getting mail" (https://support.google.com/mail/answer/22839, read 2026-09-26): more than 500 recipients in one email, or more than 500 emails a day, suspends sending. The cap therefore counts recipients (`email_outbox.recipient_count`: the address plus every copy transmitted, 0 when captured) over a rolling day. QA and production send through the same `CONTACT_SMTP_USER`, so the default is 200 on production and 50 everywhere else, which leaves room for hand-written mail and the contact form.
+
+**Sending.** The environment's capture/allowlist decision still comes first on both roads (§163, §244).
+- A Gmail group waits out the pace inside a 20 s budget per batch. Past the budget, the row is handed back without spending an attempt.
+- At the cap, with defer, the row is `throttled` until the oldest Gmail send leaves the day. The outbox defers it as in §40 and never discards it. A long deferral counts in `/api/health` exactly as a Mailgun deferral does.
+- A Gmail failure before acceptance (connection, DNS, TLS, login, envelope, or a message the server refused) falls back to Mailgun at once and stops Gmail for the rest of the batch. Delivery comes first, so a permanent SMTP refusal is not marked FAILED.
+- A timeout or socket error may have come after Gmail accepted the message. It goes back to the outbox's retry instead, so a single-use link is not sent twice.
+- Every Gmail failure is saved (`platform_settings.gmailLastFailure`, the sanitized code only). It is shown on `/admin/emails` and in `/api/health`'s `email.gmail` block, which has no status of its own; the §98 503 rule is unchanged.
+
+**Counting.** `email_outbox.transport` records the road. Mailgun's day and month counts, the "how many more registrations fit" figure and the send-now stop leave out what Gmail carried. The plan's forecast says what Gmail carries instead of counting the hidden copies twice.
+
+Migration `0088`, expand only: `transport text`, `recipient_count integer`.
+
+**Review round (2026-09-26): Gmail's rows are claimed apart, and Gmail's pace holds across senders.**
+
+The first version claimed the oldest twenty due rows whatever their road. Gmail rows wait on the pace or the cap, so once twenty or more of them were due (club copies pile up quickly on a busy day), a newer Mailgun row was never claimed. That meant a runner's link to confirm the address, or a waiting-list offer. The worker now claims per road. When the club sends anything through Gmail and the account is configured, one claim takes up to the batch of Mailgun-road rows as if Gmail's rows were not there. A second claim takes the Gmail-road rows, only as many as the pace lets one batch send in its 20 seconds of waiting: the first at once, then one per pace, which is 4 at the default 6 seconds. Both claims select with FOR UPDATE SKIP LOCKED in one transaction. The Gmail-road condition comes from the same setting as the per-row route (a club copy by the club group's road, every other row by its type's group), so the two cannot disagree. Without the Gmail account there is a single claim, oldest first, as before.
+
+Gmail's pace and cap were also held only inside one sender. It counted in memory from a snapshot read at the batch's start, and `sent_at` was the batch's start time. Two drains seconds apart, such as the drain after a response and the pinger, or two serverless instances, each sent at full pace. That is the burst pattern Google flags. Now:
+- `sent_at` on a Gmail row is the moment Gmail took the message.
+- Before every Gmail message the sender asks a ledger in the database. The ledger is one short transaction that takes a row lock on a `platform_settings` row (`gmailSlot`) and reads the rolling day's recipients and the last `sent_at` from the outbox. It decides and holds a slot: now plus the rest of the pace and the jitter. The next sender, in any instance, paces from that slot. The transaction is never open during the SMTP call, and each sender sends at its own slot.
+- An index on `(transport, sent_at)`, added to the not-yet-released migration 0088, keeps this read cheap.
+
+What the lock cannot see is a message another sender is sending that same second against the cap: at most one per sender in flight, under a cap set well below Google's 500.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 444. Spare bibs for on-the-spot entries, reserved by the print (2026-09-26, amending §173, §338, §67)
+
+The owner, 2026-09-26: "I want to be able to print empty bibs for people that register on the spot, so I can write their name with the marker". Race numbers are drawn in registration order from the event's own first number (§173) and the sheet goes to the printer when registration closes (§338). So on race morning, a number the allocator draws for a walk-in is a number nobody printed, and the desk has a runner at the table and no bib to hand over. Pre-printed spares fix that only if the allocator can never give one of those numbers to somebody who registered online. Otherwise two people wear the same number, and the rule that a number is never reused breaks.
+
+**The print reserves the numbers; nobody types a range.** On the race's bib card, «Alocare și tipărire», a section «Numere de rezervă pentru înscrierile de la fața locului» / "Spare bibs for on-the-spot entries" asks how many (1 to 50 per print) and offers «Tipărește». The press first asks for confirmation (§384), naming the first number, because it changes which numbers online runners can get. Only an Administrator may press it, like «Alocă numerele» (§289); the Organizer reads the section and reprints the free spares.
+
+- **First print:** reserves that many numbers after the highest number anybody has — settled, provisional, typed by hand, or worn by an erased registration (§311). Before anybody has one, it starts at the event's first number.
+- **Later prints:** extend the same reservation after its end, stepping over any number somebody holds. That number stays its holder's, inside the range, and is never printed blank.
+- **Stored on the event** as `walk_in_bib_start` and `walk_in_bib_count` (migration `0083`, expand only). The CHECK says both or neither, the count from 1 to 500 in all, the last number within five digits.
+- **The write** happens under the event row's lock, the same lock every draw takes, and is audited as `registration.bib_spares_reserved` with the range and never a name.
+- **A moved start is refused:** the confirmation posts the first number it named. If a registration took that number in between, the press is refused (CONFLICT) and the card names the new start.
+- **Afterwards,** the editor shows a banner with the sheet of exactly that range, and a toast.
+
+Why pre-printed numbers rather than a blank bib with no number: the number is what the timing, the results and the check-in read. A bib whose number is decided at the table has to be written twice, on paper and on screen, and the two must agree. A pre-printed number agrees by construction.
+
+**The allocator skips the reservation.** None of these draw a reserved number:
+- the provisional number at submission;
+- the recompaction at the close (§214), which closes its run around the reservation as it does around a number typed by hand;
+- a confirmation after the close;
+- «Alocă numerele»;
+- the free-number suggestions for a number chosen by hand (§105).
+
+Because the print reserves only free numbers, a provisional number can never sit inside the reservation without an owner. A provisional number is therefore always its holder's (§214). A reserved number reaches a runner only when somebody at the desk chooses it. The rule was proven in PGlite and on two real connections: a print racing online registrations leaves no reserved number on an online runner and no number on two.
+
+**The desk suggests the next spare (amending §67).** The walk-in form, «Confirmă aici» and the number given by hand all prefill the lowest spare nobody holds, so the paper in the runner's hand matches the app. The volunteer can type another free number, or empty the box and let the platform draw one.
+- A number handed with the paper becomes the runner's settled number at once, whatever the participation window says, and the provisional number goes with it.
+- A reserved number handed this way is marked printed, so the next "unprinted" sheet does not print it a second time with a name.
+- It is checked again under the event lock. If another volunteer handed the same spare a moment earlier, the walk-in stays entered but unconfirmed, and the desk is told to confirm with another spare.
+- Without the fast-track tick, the prefilled box is ignored rather than refused.
+- When every spare is given, the box suggests nothing and says so.
+- A test registration (§30) never takes a number.
+
+**The sheet (amending §338).** A spare is drawn by the one bib renderer, on the sheet and in the preview. It has the same A5-two-to-an-A4 layout, band colour, header, small print (§317), event name and date. In the name's strip there is an empty ruled line where the name is written in marker, with a small «înscris la fața locului» / "on-the-spot entry" under it, in the sheet's language. The reprint of the free spares already reserved is the sheet's own GET (`spares=1`), which reserves nothing.
+
+**What to change in the docs:**
+- In CLAUDE.md's Registration map, extend the race-numbers line («Race numbers in registration order from the event's own first number (§173, reversing §94), never reused…») with: «; spare bibs for walk-ins printed blank with a name line, reserved by the print and never drawn for an online runner, the desk suggesting the next one (§444)».
+- In the trust table's desk row, after «set a number by hand», add «— by default the next spare the club printed blank (§444) —».
+- Nothing else in the trust table changes: printing and reserving stay with the Administrator, the Organizer only reads (§289).
+
+Review round, 2026-09-26. The banner after «Tipărește» never appeared. Its range check had lost its backslashes (`/^d{1,5}$/` matches only the letter d), so the numbers were reserved but the sheet could not be reached from the banner. The address's `from`/`to` are now read by one pure parser, `spareRangeOfQuery`: two whole numbers of one to five digits, the first at least 1 and not above the second, or no banner. The banner's link and sentence carry the parsed numbers as strings, so a four-digit bib is not grouped as «1.000».
+
+The invariant for a number inside the reserved range: a number the range reached while a runner held it is that runner's for good and is never a spare. Only a second print can do this. The first print starts above every number taken; an extension continues from the range's end, and the range is one start and a count, so it can grow over provisional numbers that online runners drew just past it. At the close, the recompaction keeps such a provisional number as the runner's final number. It no longer moves the runner out of the range. Before, it left behind a "free spare" that no blank bib carries, and the desk would have suggested it. The print also writes the numbers it stepped over into its audit row (`skipped`), and `skippedSpareNumbers` reads them back as taken. So such a number, once released (an address never confirmed, a lapsed hold), belongs to nobody: every draw skips it because it is inside the range, and the desk, the card's count and the blank sheet never offer it. The other option was to start the extension after the highest number anybody holds. It was rejected because a range of one start and a count would still contain the numbers it jumped over. Like the erased numbers (§311), this is a fact about a past print, read from the audit rows, not a new column.
+
+At the desk, «Confirmă aici» suggests a spare only to a walk-in: a real runner with no number at all, settled or provisional (`handsSpareAtConfirm`). An online runner whose provisional number is shown at the head of the row gets no box and keeps that number. The confirmation adopts it (§220), and the desk no longer swaps it for a spare and releases the number the runner was told.
+
+Round 3: who is offered a spare. Round 2 offered a spare only to a row with no provisional number. But every registration draws a provisional number when it is inserted (§214), a staff entry at the desk included, so the desk offered a spare to nobody. The rule now reads: the desk hands a spare with the paper only to a walk-in, meaning a real registration the staff entered (or one holding no number at all) that has no settled number and no printed bib. An online runner keeps the provisional number they were shown, and the confirmation adopts it (§220). The desk row carries the registration's `source`, which is an origin and never an address, and `handsSpareAtConfirm` reads it. `confirmRegistrationByStaff` applies the same rule: for any other row it refuses a handed number with VALIDATION_ERROR naming the box, before anything is written. The confirmation checks it again under the event lock. This answers the reviewer's question with yes: a number handed at the desk is refused for a runner whose number was printed or who registered online.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 445. The club's newsletter: opt-in topics from the contact page, new-event alerts, a composer
+
+**The ask.** The owner, 2026-09-26: "the registration needs to be on the contact page, a button for a pop-up, and people can opt in on what to receive: every update, big events (such as the anniversary cross), discount codes, shoe testing, special events — you think of it." §80 had said what a newsletter must be before one could exist: a message type, a consent, an unsubscribe link and a privacy-notice paragraph, on the outbox and under the plan's allowance. This builds exactly that.
+
+**The subscription is on the contact page and nowhere else** (§353: the pages everyone else visits carry no new code). A section "Noutățile clubului pe email" with its own anchor, `/ro/contact#abonare`, holds a button «Abonează-te la noutăți» that opens a pop-up.
+- The pop-up is the browser's own modal `<dialog>`, drawn by the server with the whole form inside. It is not an MUI Dialog: that would put the form into a client component, and a Server Component may not hand elements to one (§370).
+- The page's one client island gives the button `showModal()` and makes «Toate noutățile» tick all.
+- Without a script the button is a link to `?newsletter=open`, and the same form opens in the page. A refusal comes back with the dialog open, every box as typed (the sealed draft, §142) and a summary naming each box (§47).
+- The defences are the public forms': honeypot and timing (§310), Turnstile when set (§97), and a throttle of three an hour per mailbox.
+- The form gives one answer whatever it finds ("check your inbox"). The mailbox gets the truth: a confirmation link for a new or unconfirmed address, or the link to its own page for an address already subscribed, which the form never changes.
+
+**Topics.** One enum, stored as an array on the subscriber, in this order: `ALL` «Toate noutățile», `BIG_EVENTS` «Evenimente mari», `DISCOUNTS` «Coduri de reducere», `GEAR_TESTING` «Testări de încălțăminte», `SPECIAL_EVENTS` «Evenimente speciale», `WEEKLY_RUNS` «Alergările săptămânale», `VOLUNTEERING` «Voluntariat», `RESULTS_PHOTOS` «Rezultate și poze».
+- At least one topic is required. «Toate noutățile» ticked means everything: the row stores `ALL` alone, so a topic added later reaches the person who asked for everything.
+- A topic is added by an expand migration and never removed.
+- Each topic is a 44-pixel checkbox row with a one-line hint, rather than a pill, because the hints say what each topic brings.
+
+**Consent.**
+- One required tick names the privacy notice: «Am citit nota de confidențialitate și sunt de acord să primesc pe email noutățile clubului despre temele bifate.»
+- The row records the version of the notice in force (GDPR art. 7(1)).
+- Nothing is collected while the notice in force, in every language, does not name `{{newsletterTopics}}` (the same gate pattern as §396). The page shows no button then, and the service refuses anyone who posts past the page.
+- The placeholder is filled, when the notice is shown, with the topics' own names from the catalogue the pop-up reads.
+- The platform's privacy template describes the newsletter in section 5 and its retention in section 7, using placeholders only (§357). The unconfirmed address's life is `{{confirmationHours}}`, never a number of the text's own.
+- `/admin/tasks` gains the row `newsletterNotice`, which turns done by itself once such a notice takes effect.
+
+**Double opt-in.**
+- `NEWSLETTER_CONFIRM` carries a single-use confirmation link: stored as a hash (AGENTS.md §12.8), minted at send time (§14.5), each new one superseding the last. The GET page shows the address and topics and changes nothing; the POST confirms.
+- An address never confirmed is sent nothing else. The retention sweep deletes it once its link has expired — the club's email-link deadline in «Termene» (`confirmationHours`, §377), counted from the last request — and only when no live confirmation link is left.
+- Identity is the versioned canonical address (AGENTS.md §10.4), UNIQUE on `canonical_email`. Two simultaneous first posts of one address resolve through the constraint, never into a 500.
+
+**The subscriber's own page.**
+- Every message to a subscriber — a newsletter or an alert — carries a fresh link to it, valid for a year.
+- The GET shows the address and the topics. Two POST forms: save the topics, or «Dezabonează-mă de la tot».
+- Either POST uses up the link (AGENTS.md §12.8). Saving the topics creates the link's replacement in the same transaction, with the same expiry and never a longer one, and the page moves to it, so the person can change again on the same visit while the link they pressed opens nothing.
+- Unsubscribing deletes the subscriber, their links (cascade) and any newsletter still waiting for them in the outbox. Nothing is kept about a person who said no.
+- An Administrator can remove an address at a person's written request. The audit row names who and when, never the address.
+
+**New-event alerts** (`NEW_EVENT_ALERT`). The maintenance job — which a publication wakes, §334 — announces an event once. The UNIQUE `newsletter_sends.event_id` is what makes it once.
+- Which events: published, scheduled, starting ahead, and first published within seven days.
+- A series is announced once, by its first event (the one carrying the repeat rule), never by the dates it creates later (§113, §341). A special edition (§168) is news of its own, a series date included.
+- Topics: a race → Evenimente mari; a group run → Alergările săptămânale; an `EXTERNAL`, partnered (§344) or special event → Evenimente speciale; a gear test → Testări de încălțăminte; anything else → «Toate noutățile» only.
+- **Never twice in a day:** at most one alert that reaches somebody per club calendar day (Europe/Bucharest). A second event waits for the next day, oldest publication first, within the seven days. An event nobody would hear of is marked seen at once, without using the day's alert.
+- **Never on cancel:** a cancelled or unpublished event is not a candidate. An alert still waiting for the allowance is withdrawn as it leaves if its event was cancelled, taken down or has started (§331: a cancelled event goes quiet), with no failure and no alarm.
+- The message carries §392's facts block, the event's page as its button, and the manage link.
+
+**The newsletter itself** (`NEWSLETTER`), on `/admin/emails` → «Abonați»:
+- The card shows counts only, never an address: confirmed and pending, per topic, and the last send.
+- «Scrie abonaților» takes one topic, and a subject and body in both languages — both or neither, plain text, no placeholders.
+- A preview shows the Romanian or the English subscriber's copy through the same template the outbox sends with.
+- It asks first, naming how many receive it (§384).
+- Organizer, Administrator and Superadministrator may send, asserted on the server (`canSendNewsletter`, the §364 rule).
+- One send row, whose id comes from the form, so a second press queues nothing. One outbox row per subscriber in their language. An audit row with the topic, the count and the subject, never an address.
+- **The club gets one copy per send** — the words and the count, with no token and no link of anybody's (§320's rule, §419's shape) — and the same for each alert.
+
+**The allowance** (§40, §80, §100). Newsletters and alerts are bulk mail. They go last in each batch and only from what exceeds a reserve kept for registrations: half of a daily allowance, a fifth of a monthly one. The rest waits for the reset without an attempt spent and without tripping `/api/health`. `volume.ts` counts what waits, and §383's forecast lists every queued newsletter and alert with its subscriber count and its release time.
+
+**Migration `0082_newsletter`** (expand only): the enums `newsletter_topic`, `newsletter_token_purpose` and `newsletter_send_kind`; the tables `newsletter_subscribers`, `newsletter_tokens` and `newsletter_sends`; the message types `NEWSLETTER_CONFIRM`, `NEWSLETTER` and `NEW_EVENT_ALERT`.
+
+**Its own backoffice page (review round, 2026-09-26).** The owner, 2026-09-26 14:05: «pentru newsletter o să fie un meniu suplimentar în backoffice cu “Newsletter”». So the newsletter is not a card on `/admin/emails`. It is a backoffice page, `/admin/newsletter`, with «Newsletter» in the menu right after «Emailuri» (a new admin section `newsletter`).
+- **Who opens it:** the roles that may send, from `canSendNewsletter`, the §364 rule: the Organizer, the Administrator and the Superadministrator. The navigation offers it to nobody else. The page checks the role on the server and answers 404 to a volunteer, the Redactor or the Tehnic (BR-REQ-060-01, §376). Each action and the service behind it check again.
+- **What it holds:** the «Abonați» card (confirmed and pending, per topic, the last send, what was sent, and the Administrator's form to remove an address someone asked, in writing, to have removed — `canManageRegistrations`) and a second card, «Scrie abonaților», with the preview and the §384 question naming how many receive it. The send and the removal land back on this page, with the banners and the toast.
+- **What `/admin/emails` keeps:** one line, «Newsletter →», for the roles that may open the page. The NEWSLETTER message card says the text is written per send on the «Newsletter» page.
+- **The Tehnic:** does not get the page. This is the second deliberate gap in the role ladder, beside the participant list (§289): the person who helps with the platform never receives the participant list and writes to nobody. `roles.test.ts` allows exactly these two sections for DEV.
+- **The guide:** it says where the newsletter is written for the Organizer and where an address is removed for the Administrator.
+
+**The alert carries the facts block.** The new-event alert now draws §392's block — Când, Unde, Program, Traseu, Cost, Linkuri — through the same function as the confirmed email, the reminder and the declaration request. Each language half is built from its own row and its own page, and the block replaces the old bold date-and-place line. The function that reads one language's row into the block (`emailEventFacts`) lives in its own module, `notifications/event-facts-row.ts`, so the participant renderer and the newsletter renderer cannot describe an event differently.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 446. Another person on one address is one confirmation from the inbox: the different-person rule, the kept form, one button
+
+**2026-09-26. Amends §389 and §390; applies §421 to the new door.** The owner: "înscrierea altei persoane trebuie să fie mai simplă: în mail să îți afișez înscrierile și să zic «confirm că înscriu altă persoană», dar trebuie să verific că numele e diferit (ignorând whitespace) și data nașterii e complet diferită — asta înseamnă că a înscris altă persoană intenționat" ("prioritizează asta ca să putem testa").
+
+**What was wrong.** Under §389 the public form, sent again from a registered address with another name, created nothing. It emailed a link that opened the form again, with the address fixed. A parent typed the whole form twice. Any other name counted as another person, so a typo in one's own name got the family email.
+
+### The rule
+
+`domain/family.ts` compares the posted person with each **active** registration on the address at the event (`comparePerson`). The name uses the runner's key (`foldName`), so whitespace, case, diacritics and the shape of an apostrophe are ignored. The birth date is compared as a calendar day. A registration without a birth date (a staff entry) differs from every posted one. There are three outcomes:
+- **different** — both differ from **every** registration (`isDifferentPerson`): another person, on purpose;
+- **same** — both match one registration: today's silent re-send (§199, §235);
+- **partial** — only one matches: a slip. Nothing is registered. The registration it resembles (by name first, then by date) is re-sent, with one sentence in the inbox only: «Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.» / "If you want to register someone else, send the form with that person's full name and birth date." (payload `anotherPersonHint`).
+
+The screen after the form is byte-for-byte the same in all three cases, and for an empty address (§39, BR-REQ-031-01 criterion 3).
+
+**A known consequence of the rule: twins.** Two people born on the same day can never both be registered from one address. The second is always a slip, and the hint sentence cannot help them. The workaround is that the second twin registers with another email address, or staff enter the registration (§67). This is the owner's rule applied literally, and it was kept.
+
+### The kept form
+
+For a different person the validated form is stored in `pending_family_entries` (`family-entries.ts`, migration `0084`, expand-only). Stored:
+- the posted fields, minus the address, the anti-bot fields and the acknowledgement;
+- for another adult, none of the consents only that adult can give — the health note, the socials, the list tick, the first-person fitness statement (`withoutAnotherAdultsConsents`, §421); a minor's parent still consents for the child;
+- the registration the address already holds (the token's scope);
+- the token's id, written by the renderer at send time;
+- `expires_at` = the club's email-link window («Termene», §377).
+
+A kept form holds no place and counts in no limit. The maintenance job deletes it with its data once lapsed (`purgeLapsedFamilyEntries`; `next-work.ts` knows the instant). The confirmation deletes it in the same transaction that registers the person. At the limit nothing is kept and nothing is minted, as before.
+
+### The email and the button
+
+REGISTER_ANOTHER_PERSON, subject «Înscrii încă o persoană la {event}?»:
+- Before the body, lines the platform adds whatever the club wrote: «Înscriși deja cu această adresă: Ana P.» (the address's own active registrations only, first name and initial) and «Persoana din formular: Maria Pop, data nașterii 11.07.1990.».
+- Then the body, with the consent sentence of §419.
+- Then one button, «Confirm că înscriu altă persoană». The token is single use, hashed at rest, minted at send time (§12.8, §14.5) and alive exactly as long as the kept form.
+
+**When the kept form is gone at send time** (confirmed already, or lapsed and purged because the outbox deferred the message past the window, §40), the message takes a lapsed version of its own (`familyEntryGone`):
+- the subject: «Cererea de a înscrie încă o persoană la {event} nu mai este valabilă»;
+- the body: the request was confirmed or expired and the data sent is deleted; send the form again with the person's full name and birth date;
+- no button, no person named, no limit line.
+
+It uses the platform's words even when the club saved its own, as at the limit: the club's text promises a button this message cannot carry.
+
+The button opens `/registrations/family/[token]`:
+- **GET** reads the token (one throttled attempt, read-only transaction; GET never mutates). It shows the same list and person, the club's limit, the consent sentence with the privacy notice, and — for an adult — the §421 acknowledgement tick.
+- **POST** spends the token and creates the registration from the kept fields through `submitRegistration`, the ordinary door, under the event's lock and the per-address limit. The anti-bot checks are skipped (the submission that kept the fields passed them) and the `registration-link-submit` bucket is used. Before creating, the confirmation asks the rule again against the address as it is now, so a person sent twice is refused.
+- **The button is the shared `SubmitButton`** (§371). It shows «Se înscrie…» and ignores a second press while the first is in flight. Without it, the second press would find the token spent and could land the parent on 'this link no longer works' after the person had been registered.
+- **The address is confirmed by the press** (`confirmEmail` in the same transaction). The new registration goes straight to PENDING_DECLARATION with its declaration email, or to the waiting list with its message. No second confirmation link is sent.
+- **Any refusal** — on the address already, at the limit, the acknowledgement missing, the waiting list full, the terms changed — rolls the spend back, so the same link still works. The page names the refusal.
+
+*Rejected:*
+- **Creating the registration at the second submission and asking only for a confirmation.** A form anybody can type an address into must not take a place (§389).
+- **Keeping the adult's consents until the press.** A third party's consent for an adult is not stored even for two days (§421).
+- **Allowing twins.** See above.
+
+### Retired
+
+The §389 family form (`?another=`) is gone: `readAnotherPersonLink`, `consumeAndRegisterAnotherPerson` and the `ShownForMinor` island. A link from an older email shows one sentence above the ordinary form («Linkul acesta pentru încă o persoană nu mai este folosit…»). The token purpose and the message type stay (enum values are never dropped).
+
+With the family form went its optional phone. A parent registering a child on the public form now types a phone number, their own, as the guardian help already says («Emailul și telefonul pot fi ale tale»). The kept form's schema still treats the phone as optional; that tolerance is harmless, because every kept form comes through the public form.
+
+`/devs` → «Emailuri» shows each captured message's text, folded, local and test only, so a journey walked by hand, or an end-to-end spec, reads the real email.
+
+Migration: `0084_pending_family_entries`, numbered after the sibling branches' 0082/0083. Its journal `when` (1790427009906) is above 0083's, because the migrator applies only entries newer than the last one applied. At integration, the journal is ordered 0082, 0083, 0084 (idx 82/83/84) and 0084's snapshot is re-chained onto 0083's.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 447. The platform reads what Neon meters, slows itself down as the month runs ahead, and keeps serving its saved copy when Neon suspends the database
+
+**The finding (the re-measure of 2026-09-26).** Costuri on `/admin/tasks`, `/devs` and §335's 80% warning on `/api/health` all read the project row's `compute_time_seconds`. Neon's documentation calls that a legacy-plan metric, and it stopped updating around noon on 2026-09-24. At the re-measure it read 9.03 CU-hours for production against 16.48 that Neon had actually metered, and 5.42 against 8.18 for QA. The screens were about 45% under the month, so the warning could never fire. At that week's pace (4.4 CU-hours a day) production would reach its 100 CU-hour quota around 23 October. Neon then suspends the project until the period ends, which would take the site down four weeks before the race. The owner: "keep the site running even if hitting Neon limits, but start throttling earlier".
+
+**One reader (`readNeonMeter`, `diagnostics/neon.ts`).** It reads the project row (the period's start and end, the quota, the legacy counter), the compute endpoints (the floor size), the operations log (time awake times the floor), and `compute_unit_seconds` from `GET /consumption_history/v2/projects` (Neon's consumption-metrics guide, checked 2026-09-26). A project-scoped key is refused by the consumption endpoint. That refusal is remembered for six hours per instance so each read does not ask again. The figure used is the largest of the live sources, and the pages say which source it came from. The legacy counter is a labelled fallback, used only when no live source answered («rândul proiectului (vechi)»). The reading is shared through Next's data cache for 15 minutes. It is an HTTP call to Neon and never a database query, so it works while the compute sleeps or is suspended. `/api/health`, `/devs`, Costuri and the «Limitele bazei de date» card (§335) all use it.
+
+**The governor.** `budgetLevel` (`diagnostics/domain/neon-budget.ts`) is pure. It compares the spend with the month's pro-rated line: the quota times the share of the period gone, measured over at least 24 hours so a busy first hour does not count as a whole month of that pace.
+- Green: on or under the line.
+- Amber: more than 25% past the line (`BUDGET_AHEAD_MARGIN`), or from 60% of the quota.
+- Red: from 85% of the quota.
+- Unknown: nothing could be read. Unknown has no effect, so a Neon outage never throttles the site.
+
+The two percentages (60 and 85) are the Administrator's to move on Costuri → «Bugetul lunii». They live in `platform_settings.neonBudgetThresholds` (amber 10–95, red 20–99 and always above amber), are audited as `neon_budget_thresholds.changed` with the old and new values, and ask for confirmation before saving (§384). The 25% margin is fixed: it defines "ahead", it is not a dial. The governor reads the thresholds from Next's data cache under the build id: one database read per deployment (a release has already woken the database) and one after a save, which expires the entry. Any failure falls back to the defaults. The level has a one-minute memo per instance.
+
+The effects all apply without the database, from one table (`GOVERNOR_EFFECTS`):
+- **Amber:** the jobs run at most once an hour (§334's floor slots; the Administrator's interval wins when it is longer), and the public cache's one-day ceiling doubles (§333).
+- **Red:** the jobs run at most every two hours, the cache ceiling is four times longer, and `/api/health` reuses a database answer up to 10 minutes old. Only an answer that reached the database is reused, never a failure.
+- **Spent** (`budget.spent`, quota ≥ 100%): a job ping answers 200 `reason: budget` without opening the pool.
+
+The health checks widen their staleness thresholds by the governor's floor, and by the interval the last real run planned under, so the platform's own throttle never makes the monitor alarm. The public cache reads the level from this instance's memory without waiting, and refreshes it in the background.
+
+**What the monitor sees.** `/api/health` carries `budget: { level, meteredPercent, linePercent, note }`. The spend and the line are whole percents of the quota rather than CU-hours, because §335 already decided that this public endpoint publishes shares, not the club's billing figures. Amber answers `ok` with a note saying what is throttled. Red is `neon.status: near-limit`, which is `degraded` and a 503, so the cron-job.org monitor alarms (§98). This replaces §335's fixed 80%: red defaults to 85, and the Administrator can set it back to 80.
+
+**Suspended mode (amending §281).** A database that is away is recognised by `isDatabaseAwayError`: network codes, PostgreSQL connection states, `pg`'s timeouts, or Neon's words "exceeded the compute time quota", "endpoint disabled" and "couldn't connect to compute node". While it is away, the behaviour is:
+- **Public pages** serve their last good copy (memory, then R2) with a polite bilingual notice. That covers the listing, the event page, the calendar, the standing pages, the gallery, both `.ics` feeds, the sitemap, the OG and share pictures, the header's menu, the deadlines and the contact switch. When Neon has refused on its quota, the copy may be up to a billing period old, and the notice gives the date the site is whole again: the meter's period end, or else the first of next month, never more than 31 days away. Neon's refusal counts as a suspension whatever the level reads, because with a project-scoped key the level can stop short of 100%.
+- **Forms.** The registration form and the family link go back with their answers and a bilingual "we could not reach our records" notice. The contact form answers UNAVAILABLE and keeps the message. The group-run declaration answers `?away=1` and keeps its boxes.
+- **Backoffice:** it has its own error boundary with the same notice.
+- **Jobs:** they answer 200 `reason: database-away` and record the ping, so cron-job.org never disables them. Any other error still fails loudly.
+- **`/api/health`:** answers 503 `degraded` with `database: suspended`.
+- **No retry storm:** a per-instance breaker in the public cache stops asking the database for 15 s, doubling up to 5 minutes.
+
+**What the brief asked for and this does not do, and why.**
+- (a) At amber, the outbox still sends right after a request. The drain runs inside the wake that request already paid for (§68), so holding the mail for the scheduler would delay the club's email and save nothing.
+- (b) At red, a public cache miss is not "served from the cache only, no read". Every write expires exactly what it changed (§333), so a cache-only miss would serve an event the organizer has just cancelled as scheduled (§28), and a page nobody had copied would show «se reîncarcă» for the rest of the month. Red instead stretches the cache ceiling four times; a miss after a write still reads the database.
+
+No migration, no new dependency, no new variable. The newsletter form named in the brief does not exist on this branch; the sibling branch that adds `0082_subscribers` has to give it the same away notice.
+
+Docs notes. In CLAUDE.md's «What wakes the database» line, add after §335: "the governor reads Neon's metered compute, `compute_unit_seconds` (§447): green / amber (25% past the month's line or 60%) / red (85%); amber runs the jobs hourly and doubles the public cache's ceiling, red runs them every two hours, reuses health for ten minutes and degrades `/api/health`; the percentages are the Administrator's on Costuri → «Bugetul lunii»; while Neon has suspended the project the public pages serve their saved copy and the forms keep their answers". In CLAUDE.md's Platform section, name the 503 `database: suspended`. SETUP.md §40: the cadence stays as it is; say that the monitor now also alarms at red (85% by default) and that the metered figure needs no new key. docs/PLATFORM.md: describe the meter's sources (metered, operations log, legacy fallback), the breaker, and the resting copy's age bound (the billing period on Neon's quota refusal, 12 h otherwise). §335's SPECS criterion 11 (80%) is amended by the criteria below.
+
+The fix round after the review (2026-09-26). Five changes.
+
+**The platform's estimate never stops a job.** A job ping used to stop every job for the rest of the period once the platform's own reading said the quota was spent. Nobody knows which counter Neon enforces, and if the estimate ran ahead of Neon, the outbox, the reminders and the maintenance would sit idle for days while the database answered. That is an email silently not sent, which §40 forbids. Now `spent` only widens red's effects (the two-hour floor). A job rests only when Neon itself refuses (the quota-refusal path): 200, reason `database-away`, the ping counted. The next ping the database answers is the probe, and it runs.
+
+**Red serves anonymous traffic from the cache only.** A new governor effect, `publicMissRefreshMinutes`: 10 at red, 0 elsewhere.
+- At red, a public read that misses the data cache never asks the database during the request.
+- It is answered from the read's last good copy. The public cache keeps one copy for every read it loads, in memory and in the object store (at most once per ten minutes per key). The key has no deployment in it, so a release does not start with nothing.
+- Nothing registrations change (free places, the start list) is ever kept or served as a copy. A stale "3 locuri libere" or a withdrawn name is not acceptable, so those reads miss honestly and their page parts say nothing (§10.6, §281).
+- With no copy, the read throws `ColdMissError`, a `DatabaseRestingError`. The page's `readWithLastGood` serves its own copy if it has one; otherwise it sends the reader to `/api/resting`.
+- `/api/resting` is «Pagina se reîncarcă în câteva minute»: both languages on one page, 200, `Retry-After: 120`, no-store, noindex, reads nothing. It returns by itself to the address the reader was on, which the proxy passes as a request header and which is accepted only as a path on this site.
+- Each miss is queued for a background refresh. At most one refresh round runs per ten minutes per server instance, since one round is one wake of the compute however many reads it covers. A write on that instance lets the next round run at once, because the write has already woken the compute.
+- A page's head (event, album, standing page) and the start list read through `readOrWhileAway`. While the database is away, or on a red miss with no copy, they say nothing rather than taking the page down.
+- The AMBER "outbox on the scheduler only" part of the brief is dropped: the drain after a request is cheap, and emails matter more than a few CU-seconds.
+
+**The registration form rests with the rest of the site.** The page reads its event live, as before, but through the breaker and with the `event-row:` copy the `.ics` file and the pictures already keep. While the database is away, the page is served from that copy:
+- the resting notice, and a line saying the form is paused;
+- every field inside a disabled fieldset, and a disabled button, so nothing can be sent;
+- no read that needs the database;
+- whatever a refused press had typed comes back from the draft cookie.
+
+With no copy, the error page stands, as for every page (§281).
+
+**The backoffice layout catches its own away-error.** A segment's `error.tsx` catches its pages, never its own layout. So the layout wraps the staff-row read and renders the backoffice's resting notice (its own words, a retry link, the sign-out button) instead of the framework's error page. Other errors still throw.
+
+**`/devs` colours the budget with the saved thresholds**, through the same cached reader the governor, Costuri and `/api/health` use.
+
+Baseline `BR-V2.03-2026-09-26`.
+
+## 448. The status in the editor's first card, the declarations under «Regulamentul»
+
+**2026-09-26. Amends §406 and §358 (where the status card sits) and §393 (where the group run's declaration is chosen in the editor).**
+
+The owner, looking at the event editor on QA (BR-V2.01), said two things. First: «starea evenimentului ar trebui să apară pe primul card «Ce fel de eveniment»». Second: «declarația la alergările de grup ar trebui să apară sub secțiunea «Regulament»; momentan nu văd unde selectez declarația».
+
+**The status.** §406 moved «Starea evenimentului» out of the first card, into the cards that are not a section of the page. The organizer then had to look for it at the bottom of the editor. It is now a named level-3 card inside «Ce fel de eveniment» again, as §358 first had it, after the type select and its help. It moved whole: the same select, the same `event.eventStatus` name, the same `#box-status` id and the same cancellation fields (§331).
+- The first card's closed line names both answers: «Alergare de grup · Programat».
+- When real people are registered, the first card has the amber outline and the risk sentence sits inside the status card. The count is still said once, under the page map (§408).
+- On the create page the card is read-only «Programat» and posts nothing. The page's hidden `SCHEDULED` is what gets posted (§358).
+- For a role without settings rights, the first card says once that the settings are not theirs, and its closed line still names the status.
+- The course and the links stay where §406 put them.
+
+**The declarations.** A group run's optional self-declaration was a checkbox in «Traseul» (§393). A race's declaration was a select in «Participare și înscrieri» › «Condiții de participare și declarația». The owner could not find the first. Both now live in one named card, «Declarația pe propria răspundere» (`#box-declaration`), inside «Regulamentul» after its language tabs, because what a runner signs is read with the rules.
+- **Group run:** the card says the surface it reads from «Traseul» and shows the checkbox with its existing behaviour (§393: on by itself for trail, disabled without an approved text). It names the approved text in force for that surface with its version («Textul în vigoare pentru Trail: „…”, v2.»). When no text is approved, the existing line says to approve one, and the public button will not show.
+- **Type that takes registrations, registering on the site:** the card holds the approved-version select and names the newest approved version. For any other mode, one sentence says no declaration is asked.
+- The fields keep their names, so the service reads them as before.
+- «Regulamentul»'s closed line adds the declaration part («declarație pentru Trail», «fără declarație», «declarația v3», or «Lipsește declarația…»). The card and the rules box open by themselves while a saved event registering on the site has no declaration.
+- «Condiții de participare» (renamed) keeps the minimum age and a line saying where the declaration is chosen now.
+- A refusal names the new place («Regulamentul › Declarația pe propria răspundere › Declarația pe care o semnează participantul») and opens the rules box and the card.
+
+The page map is unchanged. Its chips are the page's sections, and the status never was one. `groupRunDeclarationsInForce` now returns the version in force for each surface instead of a boolean. No migration.
+
+**An event may be created already cancelled, or already over (the owner, 2026-09-26 14:25: «ar trebui să pot crea un eveniment deja anulat din start»).** This reverses the read-only «Programat» that §350/§358 gave the create page. The status card inside «Ce fel de eveniment» is now the editor's own select on the create page too: «Programat» (the default), «Anulat» or «Încheiat». The page no longer posts a hidden `SCHEDULED`.
+
+Choosing «Anulat» shows the reason's two boxes, Română and English, required in both and refused on the empty box, exactly as cancelling in the editor does (§331, §354). There is no «Anunță participanții» box: nobody can be registered for an event that does not exist yet. The create writes the `event.cancelled` audit row an editor cancellation writes (who, why, `notified: false`, `recipients: 0`, `createdCancelled: true`) in the same transaction, and never queues an `EVENT_CANCELLED` email. Only a role that may save the event row may create one cancelled (`canEditEventFields`, BR-REQ-060-01).
+
+«Încheiat» is allowed only once the start has passed. Before that the service refuses it on the status select, because an event cannot be over before it begins.
+
+A cancelled event may still be published, in one press with «Creează și publică» (§406) or later. The listing and the event page show it as cancelled, as they do any cancelled event.
+
+The refusal summary now names the status and the reason under the card's new home: «Ce fel de eveniment › Starea evenimentului › …».
+
+Baseline `BR-V2.03-2026-09-26`.

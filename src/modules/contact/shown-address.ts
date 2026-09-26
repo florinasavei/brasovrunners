@@ -17,7 +17,7 @@ import {
 } from "./domain/shown-address";
 
 /**
- * «Adresa de contact afișată» (§NNN): the contact-recipients setting's shape (§164) — one
+ * «Adresa de contact afișată» (§442): the contact-recipients setting's shape (§164) — one
  * `platform_settings` row, written by an Administrator on `/admin/emails`, audited, read by
  * everything that shows the club's address or sets an email's Reply-To.
  */

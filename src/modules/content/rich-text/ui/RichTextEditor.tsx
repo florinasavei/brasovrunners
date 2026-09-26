@@ -241,7 +241,7 @@ function RichTextEditorIsland({
     imageQuality: ImageQualityLabels;
     imageChoose: string;
     imageChosen: ChosenFactsLabels;
-    /** With `{width}` and `{height}`: the selected picture's stored size (§NNN). */
+    /** With `{width}` and `{height}`: the selected picture's stored size (§437). */
     imagePixels: string;
     imageStored: StoredFactsLabels;
     imageAlt: string;
@@ -313,7 +313,7 @@ function RichTextEditorIsland({
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
   /**
-   * The picture going up, or the last one (§NNN; the owner: "să știu ce încarc"): the chosen
+   * The picture going up, or the last one (§437; the owner: "să știu ce încarc"): the chosen
    * file's pixels and weight from the moment it is decoded, and what the browser sent of it.
    */
   const [chosen, setChosen] = useState<ChosenFacts | null>(null);
@@ -322,7 +322,7 @@ function RichTextEditorIsland({
    * film's poster is this one, so another film selected afterwards never shows these facts.
    */
   const [posterStored, setPosterStored] = useState<{ src: string; facts: StoredFacts } | null>(null);
-  /** The poster going up, or the last one (§NNN), the same facts as a picture's. */
+  /** The poster going up, or the last one (§437), the same facts as a picture's. */
   const [posterChosen, setPosterChosen] = useState<ChosenFacts | null>(null);
   /**
    * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
@@ -962,7 +962,7 @@ function RichTextEditorIsland({
           </Stack>
         )}
 
-        {/* What is going up (§NNN): the chosen file's pixels and weight, and what is sent of it. */}
+        {/* What is going up (§437): the chosen file's pixels and weight, and what is sent of it. */}
         {chosen && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, pt: 0.5 }} aria-live="polite" data-testid="rich-text-image-chosen">
             {describeChosenImage(chosen, labels.imageChosen, document.documentElement.lang || "ro")}
@@ -1372,7 +1372,7 @@ function RichTextEditorIsland({
                 ✕
               </Button>
             </Stack>
-            {/* The picture's own size, whenever it is selected (§NNN): what was stored, not what the page draws. */}
+            {/* The picture's own size, whenever it is selected (§437): what was stored, not what the page draws. */}
             {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (
               <Typography variant="body2" color="text.secondary" data-testid="rich-text-image-pixels">
                 {labels.imagePixels.replace("{width}", String(imageAttrs.width)).replace("{height}", String(imageAttrs.height))}
@@ -1865,7 +1865,7 @@ async function uploadPicture(
 ): Promise<{ src: string; width: number; height: number; stored?: StoredFacts }> {
   const quality = readRemembered();
   const body = new FormData();
-  // The file's own pixels and weight as soon as it is decoded, then what is sent (§NNN).
+  // The file's own pixels and weight as soon as it is decoded, then what is sent (§437).
   const prepared = await prepareImageUpload(file, quality, (chosen) => onChosen({ name: file.name, chosen }));
   onChosen(chosenFactsOf(file.name, prepared));
   body.append("file", prepared.blob, file.name.replace(/\.[^.]+$/, "") + ".webp");

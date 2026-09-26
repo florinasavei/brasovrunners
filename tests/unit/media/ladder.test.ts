@@ -41,7 +41,7 @@ describe("§414 the quality a request may ask for", () => {
     expect(parseImageQuality("")).toBe("normal");
     expect(parseImageQuality("normal")).toBe("normal");
     expect(parseImageQuality("high")).toBe("high");
-    // §NNN: «Minimă» and «Originală» beside the two §414 words, whose meaning is unchanged.
+    // §437: «Minimă» and «Originală» beside the two §414 words, whose meaning is unchanged.
     expect(parseImageQuality("low")).toBe("low");
     expect(parseImageQuality("original")).toBe("original");
     expect([...IMAGE_QUALITIES]).toEqual(["low", "normal", "high", "original"]);
@@ -55,7 +55,7 @@ describe("§414 the ladder", () => {
   it("stores every rung narrower than 0.9 of the master, and never one wider", () => {
     // A «Normală» master is at most 2400, so it never gets the 2400 rung; a 4000 «Înaltă» one does.
     expect(ladderWidths(2400)).toEqual([480, 640, 960, 1280, 1600, 1920]);
-    // §NNN: 3200 only under a master wider than 4000 — an «Originală». A «Mare» master of up to
+    // §437: 3200 only under a master wider than 4000 — an «Originală». A «Mare» master of up to
     // 4000 was stored without it since §414, and its srcset must not start naming it.
     expect(ladderWidths(4000)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
     expect(ladderWidths(3600)).not.toContain(3200);
@@ -128,12 +128,12 @@ describe("§414 srcset", () => {
     // The local store's relative address works the same way.
     expect(pictureSrcSet(`/api/media/local/${LADDER_PREFIX}/web.webp`, 1080)).toContain(`/api/media/local/${LADDER_PREFIX}/960w.webp 960w`);
     // A 4000-pixel master at «Mare» names the 2400 rung before itself, and no 3200 file — none
-    // was ever stored under one (§414; the §NNN review's blocker).
+    // was ever stored under one (§414; the §437 review's blocker).
     const mare = pictureSrcSet(r2(LADDER_PREFIX), 4000) as string;
     expect(mare).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 4000w$/);
     expect(mare).not.toContain("3200w");
     expect(pictureSrcSet(r2(LADDER_PREFIX), 3600)).not.toContain("3200w");
-    // An «Originală» master wider than 4000 names the 3200 rung it was stored with (§NNN).
+    // An «Originală» master wider than 4000 names the 3200 rung it was stored with (§437).
     expect(pictureSrcSet(r2(LADDER_PREFIX), 4800)).toMatch(/\/2400w\.webp 2400w, \S+\/3200w\.webp 3200w, \S+\/web\.webp 4800w$/);
   });
 
@@ -240,7 +240,7 @@ describe("§414 what the person is told after an upload", () => {
     expect(describeStoredImage({ ...facts, quality: "high" }, labels, "en")).toContain(", large:");
   });
 
-  it("names each of the four levels, and a near-lossless «Originală» as such (§NNN)", () => {
+  it("names each of the four levels, and a near-lossless «Originală» as such (§437)", () => {
     expect(describeStoredImage({ ...facts, quality: "low" }, labels, "en")).toContain(", minimum:");
     expect(describeStoredImage({ ...facts, quality: "original" }, labels, "en")).toContain(", original:");
     expect(describeStoredImage({ ...facts, quality: "original", encoding: "nearLossless" }, labels, "en")).toContain(
@@ -248,13 +248,13 @@ describe("§414 what the person is told after an upload", () => {
     );
   });
 
-  it("adds the widest smaller copy's width and weight when there is one (§NNN)", () => {
+  it("adds the widest smaller copy's width and weight when there is one (§437)", () => {
     expect(describeStoredImage({ ...facts, topRung: { width: 1920, bytes: 250_000 } }, labels, "en")).toBe(
       "2400 × 1857, medium: 381 KB; 8 files, 1 MB Largest smaller copy: 1920 px, 244 KB.",
     );
   });
 
-  it("says the chosen file's pixels and weight, and what is sent only when the browser sent another file (§NNN)", () => {
+  it("says the chosen file's pixels and weight, and what is sent only when the browser sent another file (§437)", () => {
     const chosenLabels = {
       chosen: "Chosen: {name}, {width} × {height} px, {size}.",
       sent: "Sent: {width} × {height} px, {size}.",

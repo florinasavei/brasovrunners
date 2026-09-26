@@ -1,5 +1,5 @@
 /**
- * A name for a Server Action that the server can print and the browser can look for (§NNN).
+ * A name for a Server Action that the server can print and the browser can look for (§436).
  *
  * The fallback of a blocked save (`save-fallback.ts`) re-sends a form as a plain browser POST, and
  * that POST has to name the action the way React's own no-JavaScript form does — hidden

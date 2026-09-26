@@ -37,7 +37,7 @@ import { signGroupRunDeclarationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; limited?: string; closed?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; limited?: string; closed?: string; away?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -66,7 +66,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { done, invalid, changed, limited, closed } = await searchParams;
+  const { done, invalid, changed, limited, closed, away } = await searchParams;
 
   const now = new Date();
   const event = await cachedPublishedEventBySlug(locale, slug);
@@ -122,12 +122,12 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const siteKey = await cachedBotCheckSiteKey();
   // What the refused press had typed, sealed for ten minutes (§142, §314): read only after a refusal.
   const refused = parseGroupRunInvalid(invalid);
-  const draft = refused.length > 0 || limited ? await readFormDraft() : null;
+  const draft = refused.length > 0 || limited || away ? await readFormDraft() : null;
   const draftKind = ID_DOCUMENT_TYPES.find((kind) => kind === draft?.idDocumentType) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: tDeclare(`declare.idDocumentTypes.${kind}`) }));
   const fieldLabel = (field: (typeof GROUP_RUN_FORM_FIELDS)[number]) => t(`groupRunDeclaration.page.fields.${field}`);
   /*
-    The run's own minimum age (§329, §NNN): the birth date is asked only while it has one, counted
+    The run's own minimum age (§329, §440): the birth date is asked only while it has one, counted
     on the run's day in its zone — the picker's bound is the arithmetic the service refuses with
     (`latestBirthDateFor`, `isUnderMinimumAge`), today a bound as well. A refusal for age says the
     number, in the summary and under the box, rather than "fill it in" (§47, as the race's §321).
@@ -161,7 +161,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       <LegalDocumentBody
         body={document.body}
         values={{
-          // The run's facts, its minimum age among them (§NNN): "" on a run with none drops that sentence.
+          // The run's facts, its minimum age among them (§440): "" on a run with none drops that sentence.
           ...(facts?.values ?? {}),
           guardian: "—",
           guardianIdDocument: "—",
@@ -177,6 +177,12 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       {limited && (
         <Alert severity="warning" role="alert" sx={{ mb: 3 }} data-testid="group-run-declaration-limited">
           {t("groupRunDeclaration.page.limited")}
+        </Alert>
+      )}
+      {/* The database was away when it was sent (§447): nothing signed, the boxes filled again. */}
+      {away && (
+        <Alert severity="warning" role="alert" sx={{ mb: 3 }} data-testid="group-run-declaration-away">
+          {t("groupRunDeclaration.page.away")}
         </Alert>
       )}
       {/*

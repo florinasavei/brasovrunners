@@ -261,7 +261,7 @@ export type CreateRegistrationByStaffInput = {
    */
   fastTrack?: boolean;
   /**
-   * The number handed to the walk-in with the paper (§NNN): the desk's next spare, which the form
+   * The number handed to the walk-in with the paper (§444): the desk's next spare, which the form
    * suggests, or any free number the volunteer typed. Only with the fast track — a person who
    * finishes from their own email is not standing at the table holding a bib — and written only
    * if the confirmation gives them a place.
@@ -271,14 +271,14 @@ export type CreateRegistrationByStaffInput = {
 
 /**
  * The marker on the walk-in's refusal when the row was entered and the number handed with it was
- * given to somebody else in the moment between the desk's check and the confirmation (§NNN) —
+ * given to somebody else in the moment between the desk's check and the confirmation (§444) —
  * two volunteers, one spare. Like `WALK_IN_LEFT_UNCONFIRMED`, something was written: the entry
  * stands unconfirmed, and the desk confirms it on paper with another spare.
  */
 export const WALK_IN_BIB_TAKEN = "walkInBibTaken";
 
 /**
- * The desk's word for a refused handed number (§NNN): `BIB_NUMBER_TAKEN` when the box itself was
+ * The desk's word for a refused handed number (§444): `BIB_NUMBER_TAKEN` when the box itself was
  * refused and nothing was written, `WALK_IN_BIB_TAKEN` when the walk-in was entered first. Null for
  * any other error, which keeps its own code.
  */
@@ -331,7 +331,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   const event = await eventForRegistration(db, input.eventId);
 
   /*
-    The number handed with the paper (§NNN), checked before anything is written: a box that is
+    The number handed with the paper (§444), checked before anything is written: a box that is
     refused leaves no entry behind. Only on the fast track — without it the person finishes from
     their own email, and nobody at a table is holding a bib for them. Checked again under the event
     lock by the confirmation below; this is what makes the ordinary refusal cost nothing.
@@ -418,7 +418,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     try {
       await confirmRegistrationByStaff(db, actor, created.id, now, { bibNumber: handedBib });
     } catch (error) {
-      // The spare went to somebody else between the check above and this lock (§NNN): the entry
+      // The spare went to somebody else between the check above and this lock (§444): the entry
       // stands, unconfirmed and emailed nothing, and the desk is told to confirm it with another.
       if (handedBibRefusalCode(error) === "BIB_NUMBER_TAKEN") {
         throw new DomainError("CONFLICT", `${(error as Error).message} (the walk-in was entered and left unconfirmed)`, [WALK_IN_BIB_TAKEN]);
@@ -446,7 +446,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
   now: Date,
-  /** The number handed with the paper (§NNN): a desk spare, or a free number typed at the table. */
+  /** The number handed with the paper (§444): a desk spare, or a free number typed at the table. */
   options: { bibNumber?: number } = {},
 ): Promise<Registration> {
   assertDesk(actor);
@@ -454,7 +454,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   /*
-    A handed number only for a walk-in (§NNN), the rule the desk's box is drawn by: a runner who
+    A handed number only for a walk-in (§444), the rule the desk's box is drawn by: a runner who
     registered online keeps the provisional number they were shown, and a printed bib is never
     swapped. Refused naming the box, before anything is written; checked again under the lock.
   */
@@ -468,7 +468,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
     result = await confirmByStaff(db, event, registrationId, actor, now, { bibNumber: options.bibNumber });
   } catch (error) {
     /*
-      The handed number worn by somebody else after all (§NNN): the check under the lock makes this
+      The handed number worn by somebody else after all (§444): the check under the lock makes this
       nearly impossible, and the unique index is the last word when it is not — said as the desk's
       "that number is taken", naming the box, rather than as a 500. Nothing was written.
     */
@@ -485,7 +485,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
     action: "registration.confirmed_by_staff",
     entityType: "registration",
     entityId: registrationId,
-    // The number handed with the paper, when one was (§NNN): the audit says a bib left the box.
+    // The number handed with the paper, when one was (§444): the audit says a bib left the box.
     metadata: { from: current.status, to: result.status, ...(handed ? { bibNumber: options.bibNumber } : {}) },
     now,
   });
@@ -581,14 +581,14 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   try {
     updated = await db.transaction(async (tx) => {
       /*
-        The event row's lock first (§NNN), the one the confirmation holds when the desk hands a
+        The event row's lock first (§444), the one the confirmation holds when the desk hands a
         spare with the paper and the print holds when it reserves spares: two volunteers giving the
         same spare — one typing it here, one confirming with it — are then one after the other, and
         the second meets the check below rather than the unique index.
       */
       await tx.select({ id: events.id }).from(events).where(eq(events.id, current.eventId)).for("update");
       /*
-        Not a number somebody else is holding provisionally (§NNN, found while adding the spares):
+        Not a number somebody else is holding provisionally (§444, found while adding the spares):
         the unique index covers the settled column only, so 57 typed here while another runner is
         looking at a provisional 57 went through — and failed on the index the moment that runner
         was confirmed and adopted it (§220), on the desk, in front of them.
@@ -597,7 +597,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         throw new DomainError("CONFLICT", `number ${bibNumber} is already somebody's at this event`, ["bibNumber"]);
       }
       /*
-        A desk spare is on paper already (§NNN): printed blank and handed out with the name written
+        A desk spare is on paper already (§444): printed blank and handed out with the name written
         on. Marked printed, so the next "unprinted" sheet does not print a second one with the name,
         and a cancellation lists it among the bibs that exist (§311).
       */

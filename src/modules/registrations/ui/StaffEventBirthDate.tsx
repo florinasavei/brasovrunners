@@ -123,7 +123,7 @@ export function StaffBirthDateField({ label, helperText }: { label: string; help
 }
 
 /**
- * The number handed to a walk-in with the paper (§NNN), inside the fast track's box: the chosen
+ * The number handed to a walk-in with the paper (§444), inside the fast track's box: the chosen
  * event's next free desk spare, suggested, which the volunteer changes when the bib in their hand
  * is another one, or empties for the platform's own draw. It follows the event select — re-mounted
  * with the event, so a new choice brings its own suggestion — and after a refusal it holds what was

@@ -22,7 +22,7 @@ import { constraintsOf, htmlConstraints, textFieldConstraints } from "@/shared/f
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 // The event editor's boxes (§350): every box that renders an event field, read as one source.
-const EVENT_FORM = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox"]
+const EVENT_FORM = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");
 const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFields.tsx");
@@ -31,7 +31,7 @@ const asksFor = (field: string) => EVENT_FORM.includes(`box("${field}"`) || EVEN
 /** Fields of the event row that are not a box: ticks and islands with rules of their own. */
 // `links` is an island of rows (§332) whose boxes read their constraints off `eventLinkRowSchema`.
 // `nightOverride` is the "Traseul" radio of three choices (§394), whose every answer — none too —
-// is valid; `offersGroupRunDeclaration` is a tick in "Traseul" too (§394), like `isSpecial`.
+// is valid; `offersGroupRunDeclaration` is a tick under «Regulamentul» (§393, §448), like `isSpecial`.
 const NOT_A_BOX = new Set([
   "featured",
   "isSpecial",

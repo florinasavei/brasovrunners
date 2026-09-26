@@ -171,7 +171,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
   });
 
   /**
-   * §NNN — a timestamp reads on the club's own 24-hour clock. An Excel date cell has no zone and
+   * §439 — a timestamp reads on the club's own 24-hour clock. An Excel date cell has no zone and
    * the writer counts from a `Date`'s UTC fields, so 10:00Z — 13:00 in Brașov in September — must
    * reach the sheet as the serial of 13:00, and its format must carry no AM/PM.
    */

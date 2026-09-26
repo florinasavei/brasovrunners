@@ -21,7 +21,7 @@ import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
  * BR-REQ-090-05 and BR-REQ-060-01 — «De făcut», the club's own checklist on `/admin/tasks`
- * (`DECISIONS.md` §NNN; the owner, 2026-09-26: "I need another folder — a list for Amalia (the
+ * (`DECISIONS.md` §438; the owner, 2026-09-26: "I need another folder — a list for Amalia (the
  * club's to-do)"). The list operations, the count, the owner filter, the starting list's shape
  * and the role gate, all pure; the stored row and the audit trail are `tests/integration/
  * club-todo/club-todo.test.ts`.
@@ -48,7 +48,7 @@ function line(id: string, order: number, patch: Partial<ClubTodoItem> = {}): Clu
 
 const input = (text: string, owner = "", due = "") => clubTodoInputSchema.parse({ text, owner, due });
 
-describe("§NNN the starting list — the owner's two messages of 2026-09-26", () => {
+describe("§438 the starting list — the owner's two messages of 2026-09-26", () => {
   const items = startingClubTodo();
 
   it("is nineteen lines: the Administrator's twelve, then the Organizer's seven, in their order", () => {
@@ -100,7 +100,7 @@ describe("§NNN the starting list — the owner's two messages of 2026-09-26", (
   });
 });
 
-describe("§NNN reading the stored row", () => {
+describe("§438 reading the stored row", () => {
   it("drops a line it cannot read and a repeated id, and keeps the rest in order", () => {
     const value = {
       items: [line("b", 2), { id: "broken" }, line("a", 1), line("a", 3), line("c", 4, { due: "2026-02-30" })],
@@ -115,7 +115,7 @@ describe("§NNN reading the stored row", () => {
   });
 });
 
-describe("§NNN what a form posts", () => {
+describe("§438 what a form posts", () => {
   it("trims the line, reads a blank owner and a blank day as none", () => {
     expect(input("  Sună primăria  ", "  ", "")).toEqual({ text: "Sună primăria", owner: null, due: null });
     expect(input("x", " Dani  Popescu ", "2026-10-10")).toEqual({ text: "x", owner: "Dani Popescu", due: "2026-10-10" });
@@ -136,7 +136,7 @@ describe("§NNN what a form posts", () => {
   });
 });
 
-describe("§NNN the list operations", () => {
+describe("§438 the list operations", () => {
   const list = [line("a", 1, { owner: "Amalia" }), line("b", 2, { owner: "Dani" }), line("c", 3, { owner: "Amalia" })];
 
   it("adds a line at the end, open, with the next order number", () => {
@@ -212,7 +212,7 @@ describe("§NNN the list operations", () => {
   });
 });
 
-describe("§NNN the count and the owner filter", () => {
+describe("§438 the count and the owner filter", () => {
   const list = [
     line("a", 1, { owner: "Amalia" }),
     line("b", 2, { owner: "Dani", done: true, doneAt: NOW.toISOString(), by: "x" }),
@@ -246,7 +246,7 @@ describe("§NNN the count and the owner filter", () => {
   });
 });
 
-describe("§NNN BR-REQ-060-01 who reads and who writes the list", () => {
+describe("§438 BR-REQ-060-01 who reads and who writes the list", () => {
   it("is read from the Redactor up, never by the volunteer", () => {
     expect(STAFF_ROLES.filter(canReadClubTodo)).toEqual(["COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
   });

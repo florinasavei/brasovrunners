@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01 criterion 34 — the guide's «words» are the screen's words (§NNN).
+ * BR-REQ-060-01 criterion 34 — the guide's «words» are the screen's words (§441).
  *
  * The guide was rewritten as numbered steps "with the exact button words" for the colleagues who
  * run the backoffice while the owner is away. The previous one had drifted: it sent the desk to

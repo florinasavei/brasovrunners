@@ -54,7 +54,7 @@ export type GroupRunSigningInput = {
   /** The kind and the series and number, composed by the action (§283); absent or empty when not typed. */
   idDocument?: string;
   /**
-   * The signer's birth date, `YYYY-MM-DD` (§NNN): asked only while the run has a minimum age, and
+   * The signer's birth date, `YYYY-MM-DD` (§440): asked only while the run has a minimum age, and
    * counted against it on the run's day — never stored, never in the declaration or the PDF.
    */
   birthDate?: string;
@@ -82,7 +82,7 @@ export type SignableEvent = {
   editorialStatus: string;
   eventStatus: string;
   startsAt: Date;
-  /** The event's own minimum age (§329), zero for none: the signing page's door (§NNN). */
+  /** The event's own minimum age (§329), zero for none: the signing page's door (§440). */
   minAge: number;
   /** The run's own zone: the day the minimum age is counted on (§321). */
   timezone: string;

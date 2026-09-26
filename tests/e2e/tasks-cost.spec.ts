@@ -49,7 +49,7 @@ test.describe("BR-REQ-090-05 the cost half of the task board", () => {
 
   test("keeps the costs from an Organizer, who opens only the club's checklist here", async ({ page }) => {
     // BR-REQ-060-01. What a club is close to exceeding is not an Organizer's business. Since
-    // §NNN an Organizer opens `/admin/tasks` for «De făcut», the club's own checklist, and
+    // §438 an Organizer opens `/admin/tasks` for «De făcut», the club's own checklist, and
     // nothing else on it: the costs panel, asked for by name, lands back on «De făcut» with no
     // price on the page — the same "an address nobody offered reads as nothing asked" as §397.
     await signIn(page, "Dev Moderator");

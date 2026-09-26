@@ -385,6 +385,7 @@
         "done": "Ți-am trimis-o pe email, în PDF. La alergare vii ca de obicei.",
         "closed": "Declarația nu se mai poate semna pentru această alergare.",
         "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
+        "away": "Nu am putut ajunge la evidențele noastre chiar acum, așa că nu s-a semnat și nu s-a înregistrat nimic. Ce ai completat e mai jos — mai încearcă peste câteva minute.",
         "refusedTitle": "Declarația nu a fost semnată",
         "refusedNothingRecorded": "Nu s-a înregistrat nimic. Completează căsuțele de mai jos și semnează din nou:",
         "fields": {
@@ -475,7 +476,8 @@
       "checkin": "Ziua cursei",
       "emails": "Emailuri",
       "guide": "Ghid",
-      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează"
+      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează",
+      "newsletter": "Newsletter"
     },
     "outbox": {
       "status": {
@@ -1339,6 +1341,9 @@
         "note": "Ce s-a schimbat (opțional)",
         "noteHelp": "Opțional, în ambele limbi sau în niciuna · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris, sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
         "cancelTitle": "Anulezi evenimentul",
+        "cancelTitleCreate": "Creezi evenimentul anulat",
+        "cancelIntroCreate": "Evenimentul se creează cu starea Anulat și apare așa pe site dacă îl publici. Nu pleacă niciun email: nimeni nu e înscris la un eveniment nou.",
+        "cancelReasonHelpCreate": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Rămâne în jurnalul de audit, cu numele tău.",
         "cancelIntro": "Înscrierile rămân așa cum sunt, ca evidență: nimeni nu e retras și nu i se schimbă starea. Nu se mai oferă locuri, nu se mai dau numere și nu mai pleacă emailuri automate pentru acest eveniment.",
         "cancelReason": "Motivul anulării",
         "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
@@ -1448,8 +1453,9 @@
           "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
         },
         "conditions": {
-          "title": "Condiții de participare și declarația",
-          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
+          "title": "Condiții de participare",
+          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
+          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Regulamentul» → «Declarația pe propria răspundere»."
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -1475,7 +1481,8 @@
         },
         "status": {
           "title": "Starea evenimentului",
-          "createNote": "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
+          "createNote": "De obicei Programat. Alege Anulat pentru un eveniment deja anulat (trecut în evidență, de exemplu de pe Facebook) sau Încheiat pentru unul care a avut loc deja. Niciuna nu trimite emailuri: nimeni nu e încă înscris.",
+          "completedRefused": "Starea: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
         },
         "course": {
           "title": "Traseul"
@@ -1643,6 +1650,11 @@
             "locked": "blocată după publicare",
             "none": "fără adresă",
             "seoOneLanguage": "SEO într-o singură limbă"
+          },
+          "declaration": {
+            "offered": "declarație pentru {surface}",
+            "notOffered": "fără declarație",
+            "notAsked": "nu se cere"
           }
         },
         "video": {
@@ -1652,6 +1664,11 @@
           "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
           "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
           "toDescription": "Mergi la descriere"
+        },
+        "declaration": {
+          "title": "Declarația pe propria răspundere",
+          "newest": "Cea mai nouă versiune aprobată: v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
+          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația."
         }
       },
       "identical": {
@@ -1663,9 +1680,11 @@
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
-        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
-        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic."
+        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic.",
+        "surface": "Suprafața, din cardul «Traseul»: {surface}",
+        "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
       "pageFlow": {
         "title": "Pagina, de sus în jos",
@@ -1949,7 +1968,8 @@
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
         "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”). La un eveniment fără vârstă minimă — la o alergare de grup, una de cel mult 18 ani — propoziția care o conține lipsește din declarație",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
-        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
+        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
+        "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă."
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2328,6 +2348,16 @@
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
           ]
+        },
+        "newsletterNotice": {
+          "title": "Nota de confidențialitate: newsletterul",
+          "todo": "Nota în vigoare nu descrie încă newsletterul, așa că pagina de contact nu arată abonarea la noutăți și platforma nu păstrează nicio adresă pentru el, până când clubul aprobă o notă care îl descrie.",
+          "done": "Nota în vigoare descrie newsletterul: pagina de contact arată abonarea, cu temele alese și confirmarea pe email.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
+            "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
+          ]
         }
       },
       "freeVerdict": {
@@ -2525,6 +2555,9 @@
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
           "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii (setarea clubului pentru trimitere e pe „programat”), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
         }
+      },
+      "budgetThresholds": {
+        "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
       }
     },
     "clubTodo": {
@@ -2797,9 +2830,8 @@
       "columnTakenOn": "Data",
       "columnStatus": "Stare",
       "columnPhotos": "Fotografii",
-      "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt pe pagina „De făcut”, la „Stocarea fotografiilor”.",
-      "tableCaption": "Albumele galeriei",
       "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt în „Sarcini” → „Club”, la „Stocarea fotografiilor”.",
+      "tableCaption": "Albumele galeriei",
       "takenOnHelp": "Ziua în care au fost făcute fotografiile. După ea se ordonează albumele.",
       "eventHelp": "Opțional. Alege evenimentul și pagina albumului va trimite către el. Lasă „Niciunul” pentru un album liber — poze de grup, fără eveniment.",
       "noEvent": "Niciunul — album liber",
@@ -3016,7 +3048,10 @@
         "ORGANIZER_MESSAGE": "Mesaj de la organizatori",
         "GROUP_RUN_DECLARATION_SIGNED": "Declarația semnată la o alergare de grup (PDF atașat)",
         "GROUP_RUN_DECLARATION_ARCHIVE": "Copia clubului: declarație la o alergare de grup (PDF atașat)",
-        "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă"
+        "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă",
+        "NEWSLETTER_CONFIRM": "Confirmarea abonării la noutăți",
+        "NEWSLETTER": "Newsletter",
+        "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil {confirmation}.",
@@ -3042,7 +3077,10 @@
         "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului.",
         "GROUP_RUN_DECLARATION_SIGNED": "Imediat după ce cineva semnează declarația opțională pe pagina unei alergări de grup, către adresa pe care a dat-o. Cu declarația în PDF, întreagă; fără token și fără link de acțiune — nu există o înscriere de gestionat.",
         "GROUP_RUN_DECLARATION_ARCHIVE": "Odată cu declarația semnată la o alergare de grup, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici). Fără link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
-        "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link."
+        "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link.",
+        "NEWSLETTER_CONFIRM": "Imediat ce cineva se abonează din pop-up-ul de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}. Unei adrese deja abonate îi trimite, în loc, linkul spre abonamentul ei, fără să schimbe nimic. Altceva nu primește o adresă neconfirmată.",
+        "NEWSLETTER": "Doar când un organizator scrie și trimite un newsletter din pagina „Newsletter” a backoffice-ului. Către abonații temei alese și cei care primesc tot, fiecare în limba lui întâi, cu linkul de dezabonare. Pleacă după celelalte emailuri și doar din partea limitei care rămâne după rezerva pentru înscrieri.",
+        "NEW_EVENT_ALERT": "Automat, o singură dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), la prima rulare a jobului după publicare: către abonații la evenimente noi și la temele evenimentului (concurs, eveniment special, testare de echipament) și cei care primesc tot, cu linkul de dezabonare."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -3068,7 +3106,10 @@
         "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj",
         "GROUP_RUN_DECLARATION_SIGNED": "după semnarea declarației la o alergare de grup",
         "GROUP_RUN_DECLARATION_ARCHIVE": "odată cu declarația de la o alergare de grup, către arhivă",
-        "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană"
+        "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană",
+        "NEWSLETTER_CONFIRM": "imediat ce cineva se abonează",
+        "NEWSLETTER": "doar când un organizator trimite un newsletter",
+        "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -3212,7 +3253,8 @@
         "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
         "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant.",
-        "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun."
+        "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun.",
+        "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația."
       },
       "transport": {
         "title": "Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului",
@@ -3249,7 +3291,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "Încă nu există mesaje în acest grup: newsletterul are meniul lui în backoffice, în lucru. Drumul ales aici se aplică de la primul newsletter. Recomandat: Mailgun — un mesaj către multe adrese dintr-un Gmail personal e tiparul de trimitere în masă pe care Google îl restricționează."
+            "help": "Confirmarea abonării, newsletterul scris în meniul „Newsletter” și anunțul de eveniment nou, către cei abonați de pe pagina de contact. Newsletterul și anunțul pleacă ultimele și, prin Mailgun, doar din ce rămâne după rezerva pentru înscrieri. Recomandat: Mailgun — un mesaj către multe adrese dintr-un Gmail personal e tiparul de trimitere în masă pe care Google îl restricționează."
           }
         },
         "messages": "Mesajele din grup: {names}",
@@ -3346,7 +3388,7 @@
       },
       "forecast": {
         "title": "Următoarele emailuri automate",
-        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc.",
+        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc. La sfârșit, newsletterele și anunțurile de eveniment nou deja puse în coadă pentru abonați, cu momentul în care pleacă.",
         "aside": {
           "one": "1 trimitere în următoarele {days} zile",
           "few": "{count} trimiteri în următoarele {days} zile",
@@ -3370,7 +3412,9 @@
           "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
           "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
           "bibs": "se închid înscrierile; numerele de concurs devin finale",
-          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului"
+          "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
+          "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
+          "newsletter": "newsletterul, către abonații temei"
         },
         "zone": "ora din {zone}",
         "untitled": "(eveniment fără titlu)",
@@ -3383,12 +3427,14 @@
         "road": {
           "mailgun": "prin Mailgun",
           "gmail": "prin Gmail"
-        }
+        },
+        "held": "ținut pentru rezerva înscrierilor, pleacă atunci",
+        "newsletterUntitled": "(newsletter fără subiect)"
       },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
-        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
+        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar confirmând din emailul trimis adresei; la limită, emailul spune asta și nu mai are buton. Fiecare persoană își semnează singură declarația. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
         "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
         "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
         "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
@@ -3420,7 +3466,10 @@
         "saving": "Se salvează…",
         "saved": "Adresa de contact afișată a fost salvată.",
         "sender": "Emailurile pleacă în continuare de pe domeniul Mailgun: un expeditor Gmail trimis prin Mailgun nu trece verificarea DMARC și ajunge în spam sau e refuzat. Se schimbă doar adresa la care se răspunde (Reply-To). Formularul de contact nu se schimbă."
-      }
+      },
+      "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
+      "newsletterLink": "Newsletter →",
+      "newsletterLinkHelp": "Abonații și mesajele către ei au pagina lor în meniu."
     },
     "guide": {
       "title": "Ghid de utilizare",
@@ -3713,6 +3762,16 @@
               ]
             },
             {
+              "title": "Scrie abonaților newsletterului",
+              "steps": [
+                "Apasă «Newsletter» în bara de sus. Vezi câți abonați confirmați sunt, pe fiecare temă, și ce s-a trimis; adresele nu apar, doar numărul.",
+                "La «Scrie abonaților» alege tema la «Despre ce» și vezi câți îl primesc.",
+                "Scrie «Subiect (română)», «Subiect (engleză)», «Textul (română)» și «Textul (engleză)».",
+                "La «Cum arată» citește emailul în ambele limbi.",
+                "Apasă «Trimite newsletterul» și confirmă. Mesajul rămâne la «Trimise». Anunțurile de evenimente noi pleacă singure."
+              ]
+            },
+            {
               "title": "Pregătește ziua cursei",
               "steps": [
                 "Tipărește numerele (vezi mai sus).",
@@ -3822,7 +3881,7 @@
                 "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Condiții de participare și declarația»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
+                "«Condiții de participare»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]
@@ -3875,6 +3934,13 @@
                 "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
                 "Apasă «Salvează planul» și confirmă. Cifrele din «Sarcini» și butonul «Trimite acum» se iau după el.",
                 "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul»."
+              ]
+            },
+            {
+              "title": "Scoate o adresă din newsletter",
+              "steps": [
+                "Când cineva cere în scris să nu mai primească noutățile: «Newsletter» → «Scoate o adresă la cererea cuiva».",
+                "Scrie adresa la «Adresa de email», apasă «Scoate din newsletter» și confirmă. Adresa se șterge, cu temele ei."
               ]
             },
             {
@@ -4060,16 +4126,17 @@
               "title": "Înscrie a doua persoană pe aceeași adresă",
               "steps": [
                 "Prima persoană se înscrie ca de obicei.",
-                "Formularul se trimite din nou, cu aceeași adresă și numele altei persoane. Nu se creează nicio înscriere: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
-                "Adresa primește emailul „Ești deja înscris(ă) — vrei să înscrii pe altcineva cu aceeași adresă?”, cu butonul «Înscrie altă persoană».",
-                "Butonul deschide formularul cu adresa completată și blocată. Se completează datele celeilalte persoane → «Trimite înscrierea». Linkul e valabil {confirmation} și merge o singură dată.",
+                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise. Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
+                "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
+                "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
+                "Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
                 "Pe o adresă se pot înscrie cel mult {people} la un eveniment. La limită, emailul spune asta și nu mai are buton."
               ]
             },
             {
               "title": "Ce urmează pentru fiecare persoană",
               "steps": [
-                "Fiecare își confirmă și își semnează singură declarația — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei.",
+                "Fiecare persoană își semnează singură declarația (propriul email cu declarația) — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei. Fiecare are propriul loc, propriul număr de concurs și, dacă e cazul, propriul loc pe lista de așteptare.",
                 "Adresa primește câte un cod QR pentru fiecare persoană confirmată, în emailuri separate.",
                 "La masă scanezi fiecare cod pe rând: fiecare deschide rândul persoanei lui."
               ]
@@ -4078,7 +4145,8 @@
               "title": "Ce vezi în backoffice",
               "steps": [
                 "În «Înscrieri», la masă și în export, fiecare persoană e un rând separat, cu aceeași adresă.",
-                "«Înscrierile mele» arată toate înscrierile adresei, fiecare cu numele ei. Anularea sau ștergerea uneia nu le atinge pe celelalte."
+                "«Înscrierile mele» arată toate înscrierile adresei, fiecare cu numele ei. Anularea sau ștergerea uneia nu le atinge pe celelalte.",
+                "Mementourile și mulțumirile vin câte unul pentru fiecare persoană."
               ]
             },
             {
@@ -4243,6 +4311,72 @@
       "eraseTitle": "Ștergi declarația?",
       "eraseBody": "Declarația și mesajele despre ea se șterg definitiv. În jurnal rămân numele tău și motivul, nu și al celui care a semnat.",
       "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul."
+    },
+    "newsletter": {
+      "title": "Abonați",
+      "intro": "Cine s-a abonat de pe pagina de contact și pe ce teme, ce s-a trimis și când. Adresele nu apar aici, doar numărul.",
+      "aside": {
+        "one": "{count} abonat",
+        "few": "{count} abonați",
+        "other": "{count} de abonați"
+      },
+      "off": "Pagina de contact nu arată încă abonarea: nota de confidențialitate în vigoare nu descrie newsletterul. Aprobă în /admin/legal o notă nouă pornită de la textul platformei — abonarea apare singură din ziua în care intră în vigoare.",
+      "counts": "Abonați confirmați: {confirmed} · adrese care nu au confirmat încă: {unconfirmed}",
+      "topicCount": "{topic}: {count}",
+      "allowanceNone": "Planul de email nu are o limită: newsletterul pleacă tot acum.",
+      "allowanceDay": "Azi mai pot pleca cel mult {count} emailuri de newsletter: jumătate din limita zilnică rămâne pentru înscrieri. Ce nu încape pleacă în zilele următoare, singur.",
+      "allowanceMonth": "Luna aceasta mai pot pleca cel mult {count} emailuri de newsletter: o cincime din limita lunară rămâne pentru înscrieri. Ce nu încape pleacă după resetare, singur.",
+      "compose": "Scrie abonaților",
+      "composeIntro": "Un mesaj către abonații unei teme, în română și în engleză: fiecare îl primește în limba lui întâi, cu linkul de dezabonare.",
+      "topic": "Despre ce",
+      "topicHelp": "Îl primesc abonații temei alese și cei care primesc tot ce trimite clubul.",
+      "recipients": {
+        "one": "{count} abonat",
+        "few": "{count} abonați",
+        "other": "{count} de abonați"
+      },
+      "deferred": "{count} pleacă în zilele următoare",
+      "subjectRo": "Subiect (română)",
+      "subjectEn": "Subiect (engleză)",
+      "bodyRo": "Textul (română)",
+      "bodyEn": "Textul (engleză)",
+      "bodyHelp": "Text simplu, cel mult {max} de caractere: un rând gol începe un paragraf. Fără câmpuri între acolade — newsletterul nu are un nume sau un eveniment de pus în ele.",
+      "send": "Trimite newsletterul",
+      "sending": "Se trimite…",
+      "confirmTitle": {
+        "one": "Trimiți newsletterul la {count} abonat?",
+        "few": "Trimiți newsletterul la {count} abonați?",
+        "other": "Trimiți newsletterul la {count} de abonați?"
+      },
+      "confirmBody": "Tema: {topic}. Fiecare îl primește în limba lui întâi, cu linkul de dezabonare. După trimitere nu mai poate fi oprit.",
+      "history": "Trimise",
+      "historyEmpty": "Nimic trimis încă.",
+      "historyMessage": "{when} · „{subject}” · {topics} · {count} destinatari · {sender}",
+      "historyAlert": "{when} · anunț automat de eveniment nou · {topics} · {count} destinatari",
+      "historyNoSender": "cont șters",
+      "withdrawTitle": "Scoate o adresă la cererea cuiva",
+      "withdrawHelp": "Când cineva ne scrie că nu mai vrea noutățile: scrie adresa lui aici. O găsim și o ștergem, cu tot ce așteaptă să-i plece.",
+      "withdrawEmail": "Adresa de email",
+      "withdraw": "Scoate din newsletter",
+      "withdrawing": "Se scoate…",
+      "withdrawConfirmTitle": "Scoți adresa din newsletter?",
+      "withdrawConfirmBody": "Adresa se șterge din lista de noutăți, cu temele alese. Persoana se poate abona din nou de pe pagina de contact.",
+      "sent": {
+        "one": "Newsletterul a fost pus la coadă pentru {count} abonat.",
+        "few": "Newsletterul a fost pus la coadă pentru {count} abonați.",
+        "other": "Newsletterul a fost pus la coadă pentru {count} de abonați."
+      },
+      "duplicate": "Acest newsletter fusese deja trimis: nu am mai pus nimic la coadă.",
+      "withdrawn": "Adresa a fost scoasă din newsletter.",
+      "notFound": "Adresa nu era în newsletter.",
+      "lastSend": "Ultima trimitere: {when}.",
+      "lastSendNone": "Nimic trimis încă abonaților.",
+      "previewTitle": "Cum arată",
+      "previewHelp": "Mesajul exact cum îl primește un abonat, din ce e scris acum în căsuțe — cu linkul lui de dezabonare înlocuit cu un exemplu.",
+      "previewRo": "Previzualizează în română",
+      "previewEn": "Previzualizează în engleză",
+      "previewLoading": "Se pregătește previzualizarea…",
+      "previewUnavailable": "Previzualizarea nu e disponibilă acum. Mesajul se poate trimite oricum."
     }
   },
   "NotFound": {
@@ -4326,6 +4460,8 @@
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
       "tooFastTitle": "Mai încearcă o dată",
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
+      "databaseAwayTitle": "Nu am putut ajunge la evidențele noastre chiar acum",
+      "databaseAway": "Nu s-a înregistrat nimic și nu pleacă niciun email. Tot ce ai completat e mai jos — mai încearcă peste câteva minute. Dacă se repetă, site-ul poate fi în pauză o vreme; pagina evenimentului spune până când.",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
@@ -4455,7 +4591,7 @@
       },
       "family": {
         "title": "Înscrii pe altcineva cu aceeași adresă?",
-        "body": "Trimite din nou formularul — primești un email cu pasul următor."
+        "body": "Trimite din nou formularul cu numele complet și data nașterii persoanei — primești un email în care confirmi cu un buton."
       }
     },
     "journey": {
@@ -4531,25 +4667,14 @@
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
-      "title": "Înscrii o altă persoană cu aceeași adresă",
-      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment. Pentru un adult nu completezi informațiile medicale, lista publică sau Strava și Instagram: acestea țin de acordul persoanei însăși.",
-      "emailFixed": "Adresa la care a venit linkul. Nu se poate schimba aici: pentru altă adresă, completează formularul obișnuit.",
-      "phoneOptional": "Opțional pentru această persoană — de exemplu un copil fără telefon. Contactul de urgență de mai jos rămâne obligatoriu.",
-      "alreadyOnAddress": "Persoana aceasta este deja înscrisă cu această adresă. Nu s-a creat nimic. Pentru altcineva, schimbă numele și trimite din nou — linkul rămâne valabil.",
-      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email.",
-      "linkGone": "Linkul pentru încă o persoană nu mai este valabil — a fost folosit, a expirat sau este pentru alt eveniment. Trimite din nou formularul de mai jos cu adresa ta și numele persoanei: primești un email nou cu pasul următor.",
-      "people": {
-        "one": "o persoană",
-        "few": "{count} persoane",
-        "other": "{count} de persoane"
-      },
-      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul."
+      "linkGone": "Linkul acesta pentru încă o persoană nu mai este folosit. Trimite din nou formularul de mai jos cu adresa ta, numele complet și data nașterii persoanei: primești un email în care confirmi înscrierea ei cu un singur buton."
     },
     "terms": {
       "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
       "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând.",
       "changed": "Termenii și condițiile s-au schimbat cât completai formularul. Citește versiunea numită mai jos și bifează din nou."
-    }
+    },
+    "restingForm": "Formularul este oprit cât timp nu ne putem verifica evidențele — nu se poate trimite acum. Ce ai completat deja rămâne aici; revino peste câteva minute."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -4741,6 +4866,34 @@
         "title": "Înscrierea nu mai este activă",
         "body": "Linkul acesta s-a folosit deja, iar între timp înscrierea a expirat — fie a trecut termenul, fie evenimentul a început."
       }
+    },
+    "family": {
+      "title": "Înscrii încă o persoană",
+      "intro": "Formularul de înscriere la {event} a fost trimis din nou de pe adresa {email}, pentru o altă persoană. Nu am înscris-o încă: verifică datele de mai jos și confirmă.",
+      "registered": "Înscriși deja cu această adresă",
+      "nobody": "Nimeni în acest moment.",
+      "person": "Persoana pe care o înscrii",
+      "birthDate": "Data nașterii: {date}",
+      "next": "După confirmare, persoana are propriul loc și primește la {email} propriul email cu declarația de semnat, apoi propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "consent": "Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim: vezi nota de confidențialitate. Mesajele despre înscrierea lui vin la această adresă.",
+      "privacy": "Nota de confidențialitate",
+      "adultNote": "Pentru un adult nu păstrăm informațiile medicale, alegerea pentru lista publică sau Strava și Instagram din formular: acestea țin de acordul persoanei însăși.",
+      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul.",
+      "action": "Confirm că înscriu altă persoană",
+      "actionPending": "Se înscrie…",
+      "wrongData": "Datele nu sunt bune? Nu confirma: trimite din nou formularul, cu numele complet și data nașterii corecte. Linkul acesta expiră singur, iar datele trimise se șterg.",
+      "doneTitle": "Persoana este înscrisă",
+      "done": "Gata. Emailul cu declarația de semnat pentru această persoană vine pe adresa ta: fiecare persoană își semnează singură declarația și primește propriul cod QR.",
+      "doneWaitlist": "Persoana este pe lista de așteptare. Când se eliberează un loc, primești un email pe adresa ta.",
+      "alreadyOnAddress": "Nu am înscris-o: o persoană cu același nume sau cu aceeași dată a nașterii este deja înscrisă cu această adresă. Pentru altcineva, trimite din nou formularul cu numele complet și data nașterii acelei persoane.",
+      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email. Linkul rămâne valabil dacă se eliberează un loc pe adresă.",
+      "fitnessMissing": "Bifează mai întâi că persoana își declară singură, la semnare, starea de sănătate.",
+      "refused": "Nu am putut înscrie persoana cu datele trimise (de exemplu, termenii s-au schimbat între timp sau vârsta nu este permisă). Trimite din nou formularul de înscriere; linkul acesta nu s-a folosit.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
     }
   },
   "Devs": {
@@ -4748,7 +4901,8 @@
       "title": "Emailuri capturate pe această mașină",
       "intro": "Local nu pleacă nimic: fiecare mesaj pe care platforma l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
       "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino.",
-      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:"
+      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:",
+      "text": "Textul mesajului"
     },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
@@ -5010,7 +5164,10 @@
     "body": "Pagina nu a putut fi afișată. De cele mai multe ori este ceva trecător — încearcă din nou peste câteva momente.",
     "retry": "Încearcă din nou",
     "home": "Înapoi la prima pagină",
-    "reference": "Dacă se repetă, spune-ne acest cod:"
+    "reference": "Dacă se repetă, spune-ne acest cod:",
+    "staffTitle": "Backoffice-ul nu a putut încărca pagina",
+    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; bugetul lunii e pe pagina de sarcini, la Costuri.",
+    "staffTasks": "Deschide pagina de sarcini"
   },
   "Gallery": {
     "title": "Galerie",
@@ -5071,10 +5228,62 @@
     "emailConfirm": "Scrie adresa încă o dată",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
+  "Budget": {
+    "title": "Bugetul lunii",
+    "intro": "Cât a folosit baza de date din limita lunară, în ce ritm, și cum se frânează platforma singură când luna o ia înainte.",
+    "level": {
+      "unknown": "Necunoscut",
+      "green": "Verde — în ritm",
+      "amber": "Galben — luna o ia înainte",
+      "red": "Roșu — aproape de limită"
+    },
+    "meaning": {
+      "unknown": "Neon nu a putut fi citit acum, așa că platforma merge ca de obicei, fără nicio frână în plus.",
+      "green": "Consumul e pe sau sub linia lunii (limita împărțită pe zilele trecute), așa că platforma merge ca de obicei.",
+      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că platforma se frânează singură; /api/health rămâne „ok”, cu o notă.",
+      "red": "S-au folosit peste {red}% din limită: platforma se frânează cât poate, iar /api/health dă alarma ca limita să poată fi mărită la timp."
+    },
+    "spent": "{used} din {quota} ore-CU folosite ({percent}%); linia lunii e acum la {line}; perioada se încheie {end}.",
+    "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
+    "pace": "Ritmul: {perDay} ore-CU pe zi; așa, perioada ajunge la {projected} ore-CU.",
+    "paceNoLimit": "Ritmul: {perDay} ore-CU pe zi.",
+    "runsOut": "Limita s-ar atinge pe {date}.",
+    "effectLead": "Ce face platforma acum:",
+    "effect": {
+      "none": "nimic în plus — lucrările programate rulează când au ceva de făcut.",
+      "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
+      "cache": "Paginile publice își păstrează datele de {factor} ori mai mult; o modificare făcută de club apare tot imediat.",
+      "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
+      "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal.",
+      "cacheOnly": "Vizitatorii nu mai trezesc baza de date: o pagină care nu e în memorie se arată din ultima copie salvată și se reîmprospătează în fundal cel mult o dată la {minutes} minute."
+    },
+    "source": {
+      "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
+      "operations": "Cifra e calculată din jurnalul de operații Neon: timpul treaz înmulțit cu mărimea minimă a bazei de date.",
+      "legacy": "Cifra e contorul vechi al proiectului, folosit doar pentru că niciuna dintre sursele vii nu a răspuns; nu se mai actualizează și poate fi mult sub cea reală."
+    },
+    "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
+    "notRead": "necitit",
+    "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
+    "spentAll": "Limita e consumată: Neon oprește baza de date până la sfârșitul perioadei, iar site-ul arată copiile salvate.",
+    "thresholds": {
+      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
+      "amber": "Galben de la (%)",
+      "red": "Roșu de la (%)",
+      "save": "Salvează pragurile",
+      "saving": "Se salvează…",
+      "confirmTitle": "Salvezi pragurile?",
+      "confirmBody": "Platforma se frânează după noile praguri de la următoarea citire a bugetului, în cel mult un minut."
+    }
+  },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
+    "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până pe {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
-    "capacityRetry": "Încearcă din nou"
+    "capacityRetry": "Încearcă din nou",
+    "reloadingTitle": "Pagina se reîncarcă în câteva minute",
+    "reloadingBody": "Site-ul își ia acum datele doar din copiile salvate, iar pagina aceasta nu avea încă una. O pregătim chiar acum; pagina se reîncarcă singură în câteva minute.",
+    "reloadingLink": "Încearcă din nou acum"
   },
   "Weather": {
     "label": "Vremea",
@@ -5291,6 +5500,7 @@
       "honeypotOff": "Honeypot: oprit.",
       "neonPlan": "Plan Neon salvat.",
       "jobCadence": "Interval salvat.",
+      "budgetThresholds": "Pragurile bugetului salvate.",
       "deadlines": "Termene salvate.",
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
@@ -5313,7 +5523,15 @@
       "clubTodoDone": "Bifat. Rândul e la „terminate”.",
       "clubTodoReopened": "Debifat: rândul e din nou de făcut.",
       "clubTodoMoved": "Rând mutat.",
-      "clubTodoDeleted": "Rând șters de pe listă."
+      "clubTodoDeleted": "Rând șters de pe listă.",
+      "newsletterSent": {
+        "one": "Newsletter pus la coadă pentru {count} abonat.",
+        "few": "Newsletter pus la coadă pentru {count} abonați.",
+        "other": "Newsletter pus la coadă pentru {count} de abonați."
+      },
+      "newsletterDuplicate": "Acest newsletter fusese deja trimis.",
+      "newsletterWithdrawn": "Adresa a fost scoasă din newsletter.",
+      "newsletterNotFound": "Adresa nu era în newsletter."
     }
   },
   "Network": {
@@ -5373,6 +5591,83 @@
         "site": "Site",
         "browser": "Browser"
       }
+    }
+  },
+  "Newsletter": {
+    "topics": {
+      "ALL": "Toate noutățile",
+      "BIG_EVENTS": "Evenimente mari",
+      "DISCOUNTS": "Coduri de reducere",
+      "GEAR_TESTING": "Testări de încălțăminte",
+      "SPECIAL_EVENTS": "Evenimente speciale",
+      "WEEKLY_RUNS": "Alergările săptămânale",
+      "VOLUNTEERING": "Voluntariat",
+      "RESULTS_PHOTOS": "Rezultate și poze"
+    },
+    "topicHints": {
+      "ALL": "Toate temele de mai jos și cele pe care le vom adăuga.",
+      "BIG_EVENTS": "Marile zile ale clubului, de exemplu crosul aniversar: un anunț când apare în calendar, apoi înscrierile și ce se schimbă.",
+      "DISCOUNTS": "Reduceri de la partenerii clubului, doar pentru abonați.",
+      "GEAR_TESTING": "Când un magazin sau un producător aduce încălțăminte și echipament de încercat.",
+      "SPECIAL_EVENTS": "Ediții speciale, alergări tematice, evenimente făcute împreună cu alți organizatori și evenimentele altor organizatori.",
+      "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
+      "VOLUNTEERING": "Când avem nevoie de ajutor la concursuri: masa de ridicare a kitului, traseu, fotografii.",
+      "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente."
+    },
+    "heading": "Noutățile clubului pe email",
+    "intro": "Alege ce vrei să afli de la noi — evenimentele mari, reduceri, testări de încălțăminte, alergările săptămânale — și îți scriem doar despre asta.",
+    "open": "Abonează-te la noutăți",
+    "dialogTitle": "Abonează-te la noutățile clubului",
+    "dialogIntro": "Bifează ce te interesează. Îți trimitem un email cu un link de confirmare; până nu îl apeși, nu primești nimic altceva.",
+    "close": "Închide",
+    "email": "Adresa de email",
+    "emailHelp": "Aici îți trimitem linkul de confirmare și, după aceea, noutățile.",
+    "topicsLegend": "Ce vrei să primești",
+    "topicsHelp": "Alege cel puțin o temă. Le poți schimba oricând din linkul din fiecare email.",
+    "privacy": "Păstrăm adresa și temele alese doar ca să îți trimitem aceste emailuri; te dezabonezi oricând din linkul din fiecare mesaj. Detalii în",
+    "privacyLinkLabel": "nota de confidențialitate",
+    "consent": "Am citit nota de confidențialitate și sunt de acord să primesc pe email noutățile clubului despre temele bifate.",
+    "submit": "Abonează-mă",
+    "submitting": "Se trimite…",
+    "sent": {
+      "title": "Verifică-ți căsuța de email",
+      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
+    },
+    "errors": {
+      "title": "Abonarea nu a pornit încă",
+      "email": "Scrie o adresă de email validă.",
+      "topics": "Alege cel puțin o temă.",
+      "consent": "Bifează acordul: fără el nu îți putem trimite noutățile.",
+      "captcha": "Verificarea anti-robot nu a trecut. Bifeaz-o din nou și trimite.",
+      "limited": "Ai cerut deja de câteva ori în ultima oră. Verifică-ți căsuța (și dosarul Spam) sau încearcă din nou mai târziu.",
+      "unavailable": "Abonarea la noutăți nu este disponibilă acum. Încearcă mai târziu."
+    },
+    "linkInvalid": "Linkul nu mai este valabil",
+    "contactLink": "Mergi la pagina de contact",
+    "confirm": {
+      "title": "Confirmă abonarea",
+      "intro": "Apasă butonul ca să începi să primești noutățile clubului la {email}.",
+      "topics": "Temele alese: {topics}.",
+      "button": "Confirmă abonarea",
+      "pending": "Se confirmă…",
+      "done": "Gata, abonarea e activă",
+      "doneBody": "Îți scriem doar despre temele alese. Din linkul din fiecare email îți schimbi temele sau te dezabonezi.",
+      "invalidBody": "Poate a fost deja folosit, a expirat sau ai cerut între timp altul. Ca să primești unul nou, abonează-te din nou de pe pagina de contact."
+    },
+    "manage": {
+      "title": "Abonamentul tău la noutăți",
+      "intro": "Primești noutățile clubului la {email}.",
+      "saved": "Am salvat ce vrei să primești.",
+      "save": "Salvează temele",
+      "saving": "Se salvează…",
+      "topicsRefused": "Alege cel puțin o temă — sau, dacă nu mai vrei nimic, dezabonează-te mai jos.",
+      "unsubscribeTitle": "Nu mai vrei nimic de la noi?",
+      "unsubscribeBody": "Te scoatem de pe listă și îți ștergem adresa. Nu mai primești niciun email cu noutăți; înscrierile la evenimente nu sunt atinse.",
+      "unsubscribe": "Dezabonează-mă de la tot",
+      "unsubscribing": "Se dezabonează…",
+      "gone": "Te-ai dezabonat",
+      "goneBody": "Ți-am șters adresa din lista de noutăți. Poți reveni oricând de pe pagina de contact.",
+      "invalidBody": "A expirat sau abonamentul nu mai există. Fiecare email nou de la noi are un link nou; te poți și abona din nou de pe pagina de contact."
     }
   }
 }

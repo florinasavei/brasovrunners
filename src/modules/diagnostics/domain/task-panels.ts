@@ -8,12 +8,12 @@ import { canManageRegistrations, canSeeDiagnostics, type StaffRole } from "@/mod
  *
  * `club`, `botCheck` and `costs` are the club's own worklist read from the system and its money,
  * behind `canManageRegistrations` (Administrator and Superadministrator) as they always were.
- * `club` — «Club» — is the list that was called «De făcut» until §NNN: what the platform still
+ * `club` — «Club» — is the list that was called «De făcut» until §438: what the platform still
  * needs before it takes real entries, read from the system, never ticked by hand. It is still
  * where a bare `/admin/tasks` lands for those two roles (the owner, 2026-09-26: "by default I
  * need to be on the «Club» tab").
  *
- * `todo` — «De făcut» / "To do" — is the club's own checklist since §NNN: lines people type and
+ * `todo` — «De făcut» / "To do" — is the club's own checklist since §438: lines people type and
  * tick (`modules/club-todo`). Every role that reads the club's content opens it
  * (`canReadClubTodo`: Redactor, Organizer, Tehnic, Administrator, Superadministrator); the
  * service decides who may write (`canEditClubTodo`). It is where the Redactor and the Organizer

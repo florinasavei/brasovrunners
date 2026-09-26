@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-060-01 criteria 8 and 34 — the guide, task by task (§NNN).
+ * BR-REQ-060-01 criteria 8 and 34 — the guide, task by task (§441).
  *
  * The owner, leaving the backoffice to two colleagues for two weeks: the guide is "every task as
  * numbered steps with the exact button words". So a section is a list of jobs, each folded to its

@@ -27,7 +27,6 @@ import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
-import StatusBox from "@/modules/content/events/ui/boxes/StatusBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
@@ -189,12 +188,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const internal = event.registrationMode === "INTERNAL";
   // How many numbers this event has, and how many wait for the printer, for the bib card.
   const bibCounts = canReadRegistrations(staffUser.role) && internal ? await countBibs(db, event.id) : null;
-  // The desk's spares (§NNN): what is reserved, how much of it is free, where the next print starts.
+  // The desk's spares (§444): what is reserved, how much of it is free, where the next print starts.
   const spareState = bibCounts ? await spareCardState(db, event.id) : null;
   const spares = spareState
     ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
     : null;
-  // The range the print just reserved, for its banner (§NNN) — only two real numbers from the address.
+  // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
@@ -524,7 +523,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 : t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
             </Alert>
           )}
-          {/* The spares just reserved (§NNN): the sheet of exactly those numbers, blank, one press away. */}
+          {/* The spares just reserved (§444): the sheet of exactly those numbers, blank, one press away. */}
           {reservedRange && (
             <Alert
               severity="success"
@@ -796,7 +795,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       it holds, numbered and headed by whether the page shows it — the order of
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
                   <EditorGroup label={t("editor.groups.page")} />
-                  <KindBox {...box} heading={flow.headings.kind} registered={realCount} />
+                  <KindBox {...box} heading={flow.headings.kind} registered={realCount} risk={risk} notice={notice} />
                   <TitleSummaryBox languages={languages} creating={false} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} inSeries={inSeries} heading={flow.headings.when} />
@@ -831,14 +830,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
                   <LinksBox {...box} locale={locale} heading={flow.headings.links} />
                   <ProgrammeBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} />
-                  <RulesBox languages={languages} heading={flow.headings.rules} />
+                  <RulesBox {...box} languages={languages} heading={flow.headings.rules} declarations={declarations} />
                   <VideoBox {...box} heading={flow.headings.video} />
                   <StartListBox {...box} heading={flow.headings.startList} />
 
-                  {/* What makes the page without being a section of it: the status (a notice over
-                      the title only once cancelled or finished), the marks, the address. */}
+                  {/* What makes the page without being a section of it: the marks, the address. The
+                      status is in the first card since §448 (a notice over the title only once
+                      cancelled or finished). */}
                   <EditorGroup label={t("editor.groups.offPage")} />
-                  <StatusBox {...box} risk={risk} notice={notice} />
                   <PromotionBox {...box} />
                   <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />
 

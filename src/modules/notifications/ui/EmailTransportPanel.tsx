@@ -37,7 +37,7 @@ type Props = {
 };
 
 /**
- * "Prin ce pleacă emailurile" (§NNN): per group of messages, Mailgun or the club's Gmail; Gmail's
+ * "Prin ce pleacă emailurile" (§443): per group of messages, Mailgun or the club's Gmail; Gmail's
  * cap per 24 hours and its pause between messages; whether Mailgun's spent day spills over into
  * Gmail. A Server Component with one form, beside the Mailgun plan it spends less of — the same
  * shape as `EmailPlanPanel`: native selects and numbers that post as ordinary fields, the service
@@ -54,7 +54,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
       .filter((type) => EMAIL_GROUP_OF[type] === group && !neverQueued.has(type))
       .map((type) => t(`emails.types.${type}`))
       .join(", ");
-  // The newsletter group has no message yet: its help says so instead of an empty list.
+  // A group with no message queued on this deployment says nothing rather than an empty list.
   const listOf = (group: (typeof EMAIL_GROUPS)[number]) => {
     const names = namesOf(group);
     return names ? ` ${t("emails.transport.messages", { names })}` : "";
@@ -84,7 +84,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
           {t("emails.transport.unconfigured")}
         </Alert>
       )}
-      {/* A Gmail failure falls back to Mailgun or waits for a retry; said here, or nobody would know (§NNN). */}
+      {/* A Gmail failure falls back to Mailgun or waits for a retry; said here, or nobody would know (§443). */}
       {volume.gmailLastFailure && (
         <Alert severity={recentFailure ? "warning" : "info"} sx={{ mt: 1 }} data-testid="email-transport-failure">
           {t("emails.transport.lastFailure", {

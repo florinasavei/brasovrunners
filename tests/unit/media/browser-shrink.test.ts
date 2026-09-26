@@ -57,7 +57,7 @@ describe("§414 the browser half of the choice", () => {
     expect(sent.size).toBe(2 * MB);
   });
 
-  it("draws a phone's photograph at 1600 for «Minimă», and sends it as it is for «Originală» (§NNN)", async () => {
+  it("draws a phone's photograph at 1600 for «Minimă», and sends it as it is for «Originală» (§437)", async () => {
     const photo = fileOf(2.4 * MB);
     const drawnLow = stubBrowser({ width: 4032, height: 3024 }, () => 0.5 * MB);
     expect(await shrinkImageInBrowser(photo, "low")).not.toBe(photo);
@@ -68,14 +68,14 @@ describe("§414 the browser half of the choice", () => {
     expect(drawnOriginal).toEqual([]);
   });
 
-  it("draws a file too heavy to send at 6000 for «Originală», then steps down until it fits (§NNN)", async () => {
+  it("draws a file too heavy to send at 6000 for «Originală», then steps down until it fits (§437)", async () => {
     const drawn = stubBrowser({ width: 8000, height: 6000 }, (edge) => (edge >= 6000 ? 6 * MB : 3 * MB));
     const sent = await shrinkImageInBrowser(fileOf(9 * MB), "original");
     expect(drawn).toEqual([6000, 4800]);
     expect(sent.size).toBe(3 * MB);
   });
 
-  it("tells the chosen file's pixels and weight before sending, and what is sent (§NNN)", async () => {
+  it("tells the chosen file's pixels and weight before sending, and what is sent (§437)", async () => {
     const photo = fileOf(2.5 * MB);
     stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
     const told: unknown[] = [];
@@ -98,7 +98,7 @@ describe("§414 the browser half of the choice", () => {
     const fitted = await prepareImageUpload(fileOf(5 * MB), "normal");
     expect(fitted.sent).toEqual({ width: 1600, height: 1200, bytes: 3 * MB });
 
-    // Too heavy but not too wide: re-encoded at its own pixels — lighter, not resized (§NNN).
+    // Too heavy but not too wide: re-encoded at its own pixels — lighter, not resized (§437).
     stubBrowser({ width: 4032, height: 3024 }, () => 3 * MB);
     const lighter = await prepareImageUpload(fileOf(5 * MB), "original");
     expect(lighter.reencoded).toBe(true);

@@ -14,6 +14,7 @@ import { asksForMinorSignature, deadlineMergeValues, type MergeValues, minimumAg
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { listStatesMergeValues } from "./list-state-words";
+import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
 /**
@@ -194,8 +195,8 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
       // The event's own minimum age (§329) with its unit — "16 ani", "20 de ani" — for the group-run
-      // declarations' sentence (§NNN); "" when the event has none, which leaves the sentence out.
-      // A group run's only above eighteen, which its adults-only text already says (§NNN).
+      // declarations' sentence (§440); "" when the event has none, which leaves the sentence out.
+      // A group run's only above eighteen, which its adults-only text already says (§440).
       minimumAge: minimumAgeMergeValue(event.type === "GROUP_RUN" ? groupRunMinimumAge(event.minAge) : event.minAge, locale),
       // The club's deadlines, should the declaration name one (§377): read when the PDF is drawn,
       // like the event's facts above — from the instance's memo, once per batch of PDFs.
@@ -203,6 +204,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
       ...listStatesMergeValues(locale),
+      ...newsletterMergeValues(locale),
     },
     title: event.title,
     timezone: event.timezone,

@@ -84,7 +84,7 @@ export default async function BibDesignPanel({
   // What the footer's two switches would print here: this deployment's own values, never a
   // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
-  // The first address the club shows (§NNN), as the bib routes print it.
+  // The first address the club shows (§442), as the bib routes print it.
   const replyTo = (await shownContactAddressesOrDefault())[0] ?? null;
 
   /** A footer switch, with what it prints beside its words when there is something to name. */

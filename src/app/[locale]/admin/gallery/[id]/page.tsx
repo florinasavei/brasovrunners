@@ -139,7 +139,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   done: t.raw("gallery.uploaded") as string,
                   failed: t.raw("gallery.uploadFailed") as string,
                   // The quality beside the button and what the photo became (§414).
-                  // Four levels, and the chosen photo's pixels and weight before it goes up (§NNN).
+                  // Four levels, and the chosen photo's pixels and weight before it goes up (§437).
                   quality: {
                     legend: t("gallery.qualityLegend"),
                     low: t("gallery.qualityLow"),

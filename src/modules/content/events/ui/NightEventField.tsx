@@ -183,7 +183,7 @@ export default function NightEventField({
     const read = () => {
       const data = new FormData(form);
       const text = (field: string) => String(data.get(field) ?? "");
-      // «Durata» is two boxes, hours and minutes (§NNN), joined the way the save joins them.
+      // «Durata» is two boxes, hours and minutes (§433), joined the way the save joins them.
       const duration = Number(joinDuration(text("event.durationHours"), text("event.durationMinutesPart")));
       const next = {
         date: text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date),

@@ -86,7 +86,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     const high = await processUploadedImage(wide, { quality: "high" });
     expect([high.width, high.height]).toEqual([HIGH_WEB_MAX, 2667]);
     expect((await sharp(high.web).metadata()).width).toBe(HIGH_WEB_MAX);
-    // §NNN: no 3200 rung under a «Mare» master — every one stored since §414 has none, and the
+    // §437: no 3200 rung under a «Mare» master — every one stored since §414 has none, and the
     // srcset is built from the master's width, so the pipeline must agree with what is stored.
     expect(high.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
     expect((await sharp(high.rungs[high.rungs.length - 1].body).metadata()).width).toBe(2400);
@@ -100,7 +100,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect((await processUploadedImage(small, { quality: "high" })).width).toBe(1800);
   });
 
-  it("keeps 1280 pixels at «Minimă» and the file's own up to 6000 at «Originală», each lighter or heavier than its neighbour (§NNN)", async () => {
+  it("keeps 1280 pixels at «Minimă» and the file's own up to 6000 at «Originală», each lighter or heavier than its neighbour (§437)", async () => {
     // Noise drawn at 600 × 400 and enlarged: detail at every scale, and a JPEG under the 6 MB limit.
     const noise = Buffer.alloc(600 * 400 * 3);
     for (let index = 0; index < noise.length; index += 1) noise[index] = (index * 2654435761) % 251;

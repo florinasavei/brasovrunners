@@ -26,9 +26,12 @@ describe("BR-REQ-090-07 readNeonLimits — the brakes as Neon holds them", () =>
     const neon = fakeNeon(productionLikeState({ quotaCuHours: 50 }));
     const result = await readNeonLimits(NEON_ENV, { fetchImpl: neon.fetch });
 
+    // The project and its computes afresh, and the operations log for the meter's spend (§447);
+    // no consumption request, because this row names no organisation.
     expect(neon.calls.map((call) => `${call.method} ${call.path}`).sort()).toEqual([
       `GET /projects/${FAKE_PROJECT_ID}`,
       `GET /projects/${FAKE_PROJECT_ID}/endpoints`,
+      `GET /projects/${FAKE_PROJECT_ID}/operations`,
     ]);
     for (const call of neon.calls) {
       expect(call.headers.authorization).toBe("Bearer test-neon-key");

@@ -10,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { SAVE_FALLBACK_COOKIE } from "./save-fallback";
 
 /**
- * The line above the page after the simple way was tried (§NNN): the network blocked the scripted
+ * The line above the page after the simple way was tried (§436): the network blocked the scripted
  * request, the person pressed «Trimite pe calea simplă», the form left as a plain POST, and this is
  * the page the answer drew. The layout reads the cookie that button set (`SAVE_FALLBACK_COOKIE`)
  * and this island clears it, the way `ToastProvider` clears the flash — a refresh shows nothing.

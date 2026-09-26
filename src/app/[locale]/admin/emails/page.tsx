@@ -1,14 +1,16 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
-import { getPathname } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual } from "@/modules/notifications/templates";
+import { EMAIL_SAMPLE_FAMILY } from "@/modules/notifications/domain/email-sample";
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
@@ -44,7 +46,7 @@ import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmails
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
 import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { countForm } from "@/i18n/count-form";
@@ -65,7 +67,8 @@ const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
  * it and no sample-value warning over it.
  */
 function perSend(messageType: EmailMessageType): boolean {
-  return messageType === "ORGANIZER_MESSAGE";
+  // The newsletter too (§445): written in its own composer, on the backoffice's «Newsletter» page.
+  return messageType === "ORGANIZER_MESSAGE" || messageType === "NEWSLETTER";
 }
 
 /**
@@ -132,7 +135,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const deadlinesRead = readDeadlines(db);
   const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress] = await Promise.all([
     readEmailPlan(db),
-    // Which road each group takes, Gmail's cap and pace (§NNN), beside the plan it spends less of.
+    // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -156,7 +159,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
     // How many registrations one address may carry at an event (§389), straight through like the deadlines.
     readAddressCap(db),
-    // «Adresa de contact afișată» (§NNN): what the site shows and every email's Reply-To.
+    // «Adresa de contact afișată» (§442): what the site shows and every email's Reply-To.
     readShownContactAddress(db),
   ]);
   const t = await getTranslations("Admin");
@@ -198,7 +201,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     confirmationOpensDays: DEFAULT_CONFIRMATION_OPENS_DAYS,
   };
   const actionUrl = emailSampleActionUrl(emailLocale);
-  // The Reply-To the send sets (§NNN): the preview's "or reply to this email" line follows it, never the env alone.
+  // The Reply-To the send sets (§442): the preview's "or reply to this email" line follows it, never the env alone.
   const replyTo = replyToHeader(resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO));
   const mayWrite = canEditTexts(staff.role);
 
@@ -213,8 +216,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
     sample.replyTo = replyTo;
-    // And the club's limit per address, on the message that states it (§389): the link's shape.
-    if (messageType === "REGISTER_ANOTHER_PERSON") sample.addressCap = perAddress;
+    // And the club's limit per address, on the message that states it (§389): the link's shape —
+    // with who the sample address holds and the person its form named (§446).
+    if (messageType === "REGISTER_ANOTHER_PERSON") {
+      sample.addressCap = perAddress;
+      sample.familyRegistered = [...EMAIL_SAMPLE_FAMILY.registered];
+      sample.familyPersonName = EMAIL_SAMPLE_FAMILY.personName;
+      sample.familyPersonBirthDate = EMAIL_SAMPLE_FAMILY.personBirthDate;
+    }
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is
     // what a participant will actually receive rather than what the platform ships.
@@ -267,7 +276,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       */}
       <EmailPlanPanel locale={locale} plan={plan} volume={volume} mayEdit={mayEditEmail} openWhen={{ saved: saved === "emailPlan" }} />
 
-      {/* Mailgun or the club's Gmail, per group (§NNN): what spends the plan above, and what does not. */}
+      {/* Mailgun or the club's Gmail, per group (§443): what spends the plan above, and what does not. */}
       <EmailTransportPanel
         locale={locale}
         setting={transport}
@@ -308,7 +317,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "contactRecipients" }}
       />
 
-      {/* «Adresa de contact afișată» (§NNN), beside who receives the form: both are "where the club is written to". */}
+      {/* «Adresa de contact afișată» (§442), beside who receives the form: both are "where the club is written to". */}
       <ShownAddressPanel
         locale={locale}
         state={shownAddress}
@@ -317,6 +326,19 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         mayEdit={mayEditEmail}
         openWhen={{ saved: saved === "shownContactAddress" }}
       />
+      {/*
+        The newsletter (§445) has its own page in the menu since the owner's 2026-09-26 "un meniu
+        suplimentar în backoffice cu «Newsletter»": one line here pointing at it, for the roles that
+        may open it — the page answers 404 to anybody else, so nobody is offered a door that refuses.
+      */}
+      {canSendNewsletter(staff.role) && (
+        <Typography variant="body2" data-testid="newsletter-link">
+          <Link href="/admin/newsletter">{t("emails.newsletterLink")}</Link>{" "}
+          <Typography component="span" variant="body2" color="text.secondary">
+            {t("emails.newsletterLinkHelp")}
+          </Typography>
+        </Typography>
+      )}
 
       {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
       <DeadlinesPanel
@@ -378,7 +400,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             // organizer's message has none to keep: it is written per send, on the event's page (§364).
             editor: perSend(messageType) ? (
               <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
-                {t("emails.perSend")}
+                {messageType === "NEWSLETTER" ? t("emails.perSendNewsletter") : t("emails.perSend")}
               </Alert>
             ) : mayWrite ? (
               <EmailCopyEditor

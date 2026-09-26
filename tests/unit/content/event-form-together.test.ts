@@ -157,7 +157,7 @@ describe("§347 one event form for five features, on both pages", () => {
   });
 });
 
-describe("§NNN a group run's minimum age is its own box in «Traseul»", () => {
+describe("§440 a group run's minimum age is its own box in «Traseul»", () => {
   it("the reader takes `minAge` once, from the group run's box when the type is GROUP_RUN, else the race box", () => {
     expect(RETURNED.match(/\bminAge:/g)?.length ?? 0).toBe(1);
     const line = RETURNED.slice(RETURNED.indexOf("minAge:"), RETURNED.indexOf("\n", RETURNED.indexOf("minAge:")));

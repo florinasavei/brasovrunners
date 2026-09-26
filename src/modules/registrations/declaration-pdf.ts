@@ -238,7 +238,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
       doc.moveDown(0.3);
     }
     for (const paragraph of section.paragraphs) {
-      // "Declar că am cel puțin {{minimumAge}}." on a run with no minimum is no sentence (§NNN).
+      // "Declar că am cel puțin {{minimumAge}}." on a run with no minimum is no sentence (§440).
       if (dropsParagraph(paragraph, entry.values ?? {})) continue;
       const bullet = /^[•\-–]\s/.test(paragraph);
       const width = bullet ? TEXT_WIDTH - 14 : TEXT_WIDTH;

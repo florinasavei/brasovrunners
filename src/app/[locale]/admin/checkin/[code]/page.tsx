@@ -44,7 +44,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const row = isCheckinCode(code) ? await findRegistrationByCheckinCode(db, code, locale) : undefined;
   // Whether a minor's paper carries the minor's signature too (§330), as on the desk's list.
   const minorSigns = row ? await declarationAsksMinorToSignByLocale(db, new Date()) : { ro: false, en: false };
-  // The event's next free desk spare (§NNN), as on the desk's list.
+  // The event's next free desk spare (§444), as on the desk's list.
   const spares = row ? await spareStates(db, [row.eventId]) : {};
 
   return (

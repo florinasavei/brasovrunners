@@ -73,7 +73,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * "Prin ce pleacă emailurile" (§NNN): the road per group, Gmail's cap, pace and choice at the cap, the overflow. The
+ * "Prin ce pleacă emailurile" (§443): the road per group, Gmail's cap, pace and choice at the cap, the overflow. The
  * plan's gate and shape: Administrator at the door, the service asserting the role again and
  * validating every field, a refusal returned with the boxes as typed (§315).
  */
@@ -142,7 +142,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
 }
 
 /**
- * «Adresa de contact afișată» (§NNN): the mailbox, the club's Gmail, or both — shown on the site
+ * «Adresa de contact afișată» (§442): the mailbox, the club's Gmail, or both — shown on the site
  * and set as every email's Reply-To. Administrator at the door, the service asserting it again.
  */
 export async function updateShownContactAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

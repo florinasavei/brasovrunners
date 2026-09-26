@@ -7,7 +7,7 @@ const isScripted = (value: string | null | undefined) => (value ?? "").startsWit
 const isActionName = (value: string | null | undefined) => (value ?? "").startsWith("$ACTION_");
 
 /**
- * Remembers the last press of a backoffice form that is not an `ActionForm` (§NNN), for the admin
+ * Remembers the last press of a backoffice form that is not an `ActionForm` (§436), for the admin
  * error boundary: a plain `<form action={…}>` or a button with its own Server Action has no island
  * of its own, so its failure is thrown to the boundary — after React has taken the form off the
  * page. The boundary then offers this press back — sent as a plain POST (`replayNatively`) only

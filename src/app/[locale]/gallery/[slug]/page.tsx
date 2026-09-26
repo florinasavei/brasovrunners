@@ -18,6 +18,7 @@ import { cachedPublishedAlbumBySlug, cachedPublishedAlbumTranslations } from "@/
 import { PAGE_WIDTH } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
 import { DENSITY } from "@/theme/density";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -27,7 +28,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
-  const album = await cachedPublishedAlbumBySlug(locale, slug);
+  // The head says nothing rather than failing the page while the database is away (§447): the
+  // body's own read decides between its last good copy and the resting page.
+  const album = await readOrWhileAway(() => cachedPublishedAlbumBySlug(locale, slug), undefined);
   if (!album) return {};
   return {
     title: album.title,
@@ -40,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     */
     alternates: pageAlternates(
       locale,
-      slugRouteUrls(env.APP_BASE_URL, "/gallery/[slug]", await cachedPublishedAlbumTranslations(album.id)),
+      slugRouteUrls(env.APP_BASE_URL, "/gallery/[slug]", await readOrWhileAway(() => cachedPublishedAlbumTranslations(album.id), [])),
     ),
     ...(album.coverThumbUrl ? { openGraph: { images: [album.coverThumbUrl] } } : {}),
   };

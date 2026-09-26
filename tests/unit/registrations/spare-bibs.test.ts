@@ -16,10 +16,10 @@ import {
 } from "@/modules/registrations/domain/spare-bibs";
 
 /**
- * §NNN — the desk's spare bibs: the numbers a print reserves, what the allocator steps over, what
+ * §444 — the desk's spare bibs: the numbers a print reserves, what the allocator steps over, what
  * the reprint prints blank and what the desk suggests.
  */
-describe("§NNN the reservation on the event", () => {
+describe("§444 the reservation on the event", () => {
   it("reads the start and the count as the reserved numbers, or none", () => {
     expect(spareBandOf({ walkInBibStart: 900, walkInBibCount: 50 })).toEqual({ from: 900, to: 949 });
     expect(spareBandOf({ walkInBibStart: null, walkInBibCount: null })).toBeNull();
@@ -44,7 +44,7 @@ describe("§NNN the reservation on the event", () => {
   });
 });
 
-describe("§NNN what a print reserves", () => {
+describe("§444 what a print reserves", () => {
   it("starts after the highest number anybody has on the first print, or at the band's start before anybody", () => {
     // Taken 1–3 and a hand-typed 57: the spares start at 58, never inside the sequence.
     expect(nextSpareCandidates({ band: null, taken: new Set([1, 2, 3, 57]), bibStartNumber: 1, limit: 3 })).toEqual([58, 59, 60]);
@@ -88,7 +88,7 @@ describe("§NNN what a print reserves", () => {
   });
 });
 
-describe("§NNN the print's banner", () => {
+describe("§444 the print's banner", () => {
   it("reads a numeric range from the address, so the banner and its sheet link render", () => {
     // The redirect after «Tipărește» carries `from` and `to` as digits: the banner must appear.
     expect(spareRangeOfQuery("900", "949")).toEqual({ from: 900, to: 949 });
@@ -114,7 +114,7 @@ describe("§NNN the print's banner", () => {
   });
 });
 
-describe("§NNN «Confirmă aici» hands a spare only to a walk-in", () => {
+describe("§444 «Confirmă aici» hands a spare only to a walk-in", () => {
   const walkIn = { kind: "REAL", source: "STAFF", bibNumber: null, provisionalBibNumber: 3, bibPrintedAt: null };
 
   it("offers the spare to a staff walk-in, although the entry drew a provisional number like every row", () => {

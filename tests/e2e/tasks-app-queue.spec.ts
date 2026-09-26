@@ -73,7 +73,7 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     await expect(page).toHaveURL(/\/admin\/tasks$/);
     await expect(main.getByRole("heading", { name: "The work queue" })).toBeVisible();
 
-    // Since §NNN a Tehnic also reads the club's checklist «De făcut» (never writes it); the
+    // Since §438 a Tehnic also reads the club's checklist «De făcut» (never writes it); the
     // club's worklist read from the system — «Club» — and its money stay out of reach.
     const nav = main.getByRole("navigation", { name: "Ce mai este de făcut" });
     await expect(nav.getByRole("link", { name: /^De făcut/ })).toHaveCount(1);

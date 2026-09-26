@@ -63,7 +63,7 @@ export default function PhotoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: string[] } | null>(null);
   const [lastStored, setLastStored] = useState<StoredFacts | null>(null);
-  /** The photo going up now, or the last one (§NNN): its own pixels and weight, and what was sent. */
+  /** The photo going up now, or the last one (§437): its own pixels and weight, and what was sent. */
   const [lastChosen, setLastChosen] = useState<ChosenFacts | null>(null);
   const [quality, setQuality] = useImageQuality();
 
@@ -77,7 +77,7 @@ export default function PhotoUploader({
       try {
         const body = new FormData();
         // The shrunk photo, named after the original so the server records the name it had.
-        // Shrunk to what the choice keeps (§414, §NNN), and the file's own facts said as soon as
+        // Shrunk to what the choice keeps (§414, §437), and the file's own facts said as soon as
         // it is decoded, before it is sent.
         const prepared = await prepareImageUpload(file, quality, (chosen) => setLastChosen({ name: file.name, chosen }));
         setLastChosen(chosenFactsOf(file.name, prepared));

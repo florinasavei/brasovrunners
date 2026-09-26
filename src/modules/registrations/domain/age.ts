@@ -121,7 +121,7 @@ export function ageOn(birthDate: string, day: string): number | null {
 /**
  * Whether a birth date is under an event's minimum age on the event's day (§329) — the one rule
  * every door asks: the registration's (`minimumAgeRule`) and a group run's self-declaration
- * (§NNN). Zero is no minimum, so nobody is under it. A date that cannot be read is not "under":
+ * (§440). Zero is no minimum, so nobody is under it. A date that cannot be read is not "under":
  * the caller's own check says what is wrong with it, and an age rule must not add a second,
  * untrue reason. A birth date after the day is under any minimum.
  */

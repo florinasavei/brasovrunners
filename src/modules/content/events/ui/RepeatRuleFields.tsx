@@ -112,7 +112,7 @@ export default function RepeatRuleFields({
       const data = new FormData(form);
       const text = (name: string) => String(data.get(name) ?? "");
       if (followDateName) setLiveDate(text(followDateName));
-      // The time box is typed since §NNN and moves on every keystroke: the sentence reads it as the
+      // The time box is typed since §439 and moves on every keystroke: the sentence reads it as the
       // box will post it («1900» → 19:00), and a half-typed «19:» or «7pm» says no time at all.
       const typed = normalizeTypedTime(text("event.startsAtTime"));
       const next = {

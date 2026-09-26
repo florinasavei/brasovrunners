@@ -14,7 +14,7 @@ import type { Env } from "@/shared/config/env";
  * `EMAIL_REPLY_TO`, the mailbox every email already says to reply to. The seed's sample texts
  * keep every blank: a sample must not look approved.
  *
- * Since §NNN the contact address is the one the club chose to show on `/admin/emails` («Adresa de
+ * Since §442 the contact address is the one the club chose to show on `/admin/emails` («Adresa de
  * contact afișată»): the mailbox, the club's Gmail, or both — «a sau b» in the Romanian text,
  * "a or b" in the English one. An approved text keeps the address it was approved with; a change
  * of the setting reaches the legal texts through a new version started from the platform's text.

@@ -21,14 +21,14 @@ import {
 } from "@/shared/forms/save-fallback";
 
 /**
- * §NNN — a backoffice save that a corporate network refused is sent again as a plain browser POST.
+ * §436 — a backoffice save that a corporate network refused is sent again as a plain browser POST.
  *
  * What is decided here, without a browser: which failures are the network's (and so start the
  * fallback) and which are not — a refusal, a redirect, a server error, a missing action; which
  * presses already hold the no-JavaScript fields and which need the page's HTML; how the server's
  * fields and the typed values are put together; and the key the server stamps on a form. The
  * browser half — the plain POST landing, the notice after it — has no spec: the owner cut the
- * browser run on 2026-09-26 (§NNN), so it is proved on QA by hand from a blocked network.
+ * browser run on 2026-09-26 (§436), so it is proved on QA by hand from a blocked network.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
@@ -53,7 +53,7 @@ function press(overrides: Partial<Submission> = {}): Submission {
   };
 }
 
-describe("§NNN which failures are the network's", () => {
+describe("§436 which failures are the network's", () => {
   it("a fetch that never got an answer is a network failure, in every browser's words", () => {
     expect(transportFailureOf(new TypeError("Failed to fetch"))).toBe("network");
     expect(transportFailureOf(new TypeError("NetworkError when attempting to fetch resource."))).toBe("network");
@@ -97,7 +97,7 @@ describe("§NNN which failures are the network's", () => {
   });
 });
 
-describe("§NNN what the plain POST carries", () => {
+describe("§436 what the plain POST carries", () => {
   it("a form the server drew already holds its action's fields, and goes as it is", () => {
     const entries: Submission["entries"] = [
       ["$ACTION_REF_1", ""],
@@ -146,7 +146,7 @@ describe("§NNN what the plain POST carries", () => {
   });
 });
 
-describe("§NNN the press the admin boundary offers back", () => {
+describe("§436 the press the admin boundary offers back", () => {
   it("is read only while it is recent, and forgotten once its button sent it", () => {
     const now = Date.now();
     rememberSubmission(press({ at: now }));
@@ -177,7 +177,7 @@ describe("§NNN the press the admin boundary offers back", () => {
   });
 });
 
-describe("§NNN the key the server stamps on a form", () => {
+describe("§436 the key the server stamps on a form", () => {
   it("is the Server Action's id, and its bound arguments folded in", () => {
     const action = Object.assign(async () => null, { $$id: "7f00aa", $$bound: null });
     expect(actionKeyOf(action)).toBe("7f00aa");
@@ -206,7 +206,7 @@ describe("§NNN the key the server stamps on a form", () => {
   });
 });
 
-describe("§NNN the island offers the simple way and never sends it on its own", () => {
+describe("§436 the island offers the simple way and never sends it on its own", () => {
   const island = read("src/shared/forms/ActionFormIsland.tsx");
   const guarded = island.slice(island.indexOf("const guardedAction"), island.indexOf("// The notice's button"));
   const notice = read("src/shared/forms/SaveBlockedNotice.tsx");
@@ -243,7 +243,7 @@ describe("§NNN the island offers the simple way and never sends it on its own",
   });
 });
 
-describe("§NNN the words, in both languages", () => {
+describe("§436 the words, in both languages", () => {
   type Catalogue = { Network: Record<string, unknown>; Admin: { guide: Record<string, string> } };
   const catalogues = { ro: ro as unknown as Catalogue, en: en as unknown as Catalogue };
 

@@ -43,7 +43,7 @@ import type { BibRow } from "./bibs";
  */
 
 /**
- * One bib to print: a number and the name under it, or — a desk spare (§NNN) — no name, which
+ * One bib to print: a number and the name under it, or — a desk spare (§444) — no name, which
  * prints an empty line where the name goes, for the marker at the desk.
  */
 export type BibSheetRow = { bibNumber: BibRow["bibNumber"]; registeredName: string | null };
@@ -76,7 +76,7 @@ export type BibSheetInput = {
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null };
   /**
-   * The small words under a desk spare's empty name line (§NNN) — «înscris la fața locului» — in
+   * The small words under a desk spare's empty name line (§444) — «înscris la fața locului» — in
    * the sheet's language, from the caller's catalogue; absent, the line alone.
    */
   blankMark?: string;
@@ -286,7 +286,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
     /*
-      The name, or — on a desk spare (§NNN) — the empty line it is written on in marker: a rule
+      The name, or — on a desk spare (§444) — the empty line it is written on in marker: a rule
       centred in the same strip, at the name's baseline, so the handwritten name sits where a
       printed one would. `stripTop` is the strip's top; the name is set `nameTop` into it.
     */

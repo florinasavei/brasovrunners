@@ -150,7 +150,7 @@ function probeScript(src: string): Promise<boolean> {
 const CHIP_COLOR: Record<ProbeState, "default" | "success" | "error"> = { checking: "default", skipped: "default", ok: "success", blocked: "error" };
 
 /**
- * The four rows of `/admin/network` (§NNN), tried from this browser when the page opens and again on
+ * The four rows of `/admin/network` (§436), tried from this browser when the page opens and again on
  * "Verifică din nou", each green or red with the line for IT under it; and the report, copied to the
  * clipboard rather than sent. Copying is the lighter choice and the only one that works on the
  * network being diagnosed: sending it through the contact form would be a Server Action, the very

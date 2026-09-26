@@ -19,7 +19,7 @@ import {
 } from "./domain/email-transport";
 
 /**
- * Which road each group of emails takes, and Gmail's cap and pace (§NNN) — read by the outbox
+ * Which road each group of emails takes, and Gmail's cap and pace (§443) — read by the outbox
  * worker once per batch, written by an Administrator on `/admin/emails`.
  *
  * The same shape as the Mailgun plan beside it (§100): one `platform_settings` row, a strict
@@ -48,7 +48,7 @@ export async function readEmailTransport<T extends Record<string, unknown>>(db: 
     .from(platformSettings)
     .where(eq(platformSettings.key, EMAIL_TRANSPORT_SETTING_KEY))
     .limit(1);
-  // Production's default, or a smaller Gmail share where the account is production's too (§NNN).
+  // Production's default, or a smaller Gmail share where the account is production's too (§443).
   const fallback = defaultEmailTransportFor(env.APP_ENV);
   if (!row) return { ...fallback, updatedAt: null };
   // A value this code can no longer read falls back to the default rather than stopping the
@@ -97,11 +97,11 @@ export async function readGmailUsage<T extends Record<string, unknown>>(
   };
 }
 
-/** The latest Gmail slot any sender holds (§NNN review): one row every sender takes in turn. */
+/** The latest Gmail slot any sender holds (§443 review): one row every sender takes in turn. */
 export const GMAIL_SLOT_KEY = "gmailSlot";
 
 /**
- * Gmail's ledger in the database (§NNN review), shared by every sender in every instance.
+ * Gmail's ledger in the database (§443 review), shared by every sender in every instance.
  *
  * Before each Gmail message the sender asks it, and it answers from the outbox itself — the rolling
  * day's recipients and the last `sent_at`, which is the moment Gmail took the message, not the
@@ -154,7 +154,7 @@ export function createGmailLedger<T extends Record<string, unknown>>(db: Databas
   };
 }
 
-/** The last time Gmail refused or broke (§NNN), kept beside the setting; never a body, an address or a secret. */
+/** The last time Gmail refused or broke (§443), kept beside the setting; never a body, an address or a secret. */
 export const GMAIL_LAST_FAILURE_KEY = "gmailLastFailure";
 
 export type GmailFailure = { at: Date; error: string };
@@ -186,7 +186,7 @@ export async function readGmailLastFailure<T extends Record<string, unknown>>(db
 }
 
 /**
- * Gmail's part of "can the club still send email?" (§98, §NNN): what it carried against its cap and
+ * Gmail's part of "can the club still send email?" (§98, §443): what it carried against its cap and
  * its last failure. Reported, never a status of its own — a Gmail failure falls back to Mailgun or
  * is retried by the outbox, and the outbox's own counts already turn a real stall into the 503.
  */

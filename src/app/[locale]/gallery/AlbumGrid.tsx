@@ -53,7 +53,7 @@ export default async function AlbumGrid({ albums: pending }: { albums: Promise<P
                   <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 0.5 }}>
                     {album.title}
                   </Typography>
-                  {/* An event's album names the event; a free album is named by its date alone (§NNN). */}
+                  {/* An event's album names the event; a free album is named by its date alone (§434). */}
                   {album.eventTitle && (
                     <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.25 }}>
                       {album.eventTitle}

@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { forgetSubmission, rememberSubmission, type Submission } from "@/shared/forms/save-fallback";
 
 /**
- * §NNN — the backoffice's own error boundary (`app/[locale]/admin/error.tsx`) takes an error for a
+ * §436 — the backoffice's own error boundary (`app/[locale]/admin/error.tsx`) takes an error for a
  * blocked save only right after a press the guard remembered AND only when the error is the
  * transport's own. Rendered for real: a plain `TypeError` from a render — the kind a null read
  * throws — must leave it, thrown on to `[locale]/error.tsx` with its reference number (§52), even
@@ -32,7 +32,7 @@ function render(error: Error): string {
   return renderToStaticMarkup(createElement(NextIntlClientProvider, provider));
 }
 
-describe("§NNN the admin boundary", () => {
+describe("§436 the admin boundary", () => {
   beforeEach(() => forgetSubmission());
 
   it("rethrows a plain TypeError from a render to the backoffice boundary (§52), even right after a press", () => {

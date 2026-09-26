@@ -11,7 +11,7 @@ import { DEFAULT_IMAGE_QUALITY, IMAGE_QUALITIES, type ImageQuality, parseImageQu
 
 /**
  * «Calitate: Minimă / Medie (recomandat) / Mare / Originală», beside every upload (§414, four
- * levels since §NNN; the owner: "I wanna choose the quality of the image when uploading it").
+ * levels since §437; the owner: "I wanna choose the quality of the image when uploading it").
  *
  * **Per upload, remembered for the session.** The choice is about the picture — a poster with a
  * list of rules wants "high", a photograph from the finish does not — so it is made where the
@@ -87,7 +87,7 @@ export function useImageQuality(): [ImageQuality, (next: ImageQuality) => void] 
   return [quality, rememberQuality];
 }
 
-/** One label per choice (§NNN: «Minimă», «Medie», «Mare», «Originală»), the legend and the help. */
+/** One label per choice (§437: «Minimă», «Medie», «Mare», «Originală»), the legend and the help. */
 export type ImageQualityLabels = Record<ImageQuality, string> & {
   legend: string;
   help: string;

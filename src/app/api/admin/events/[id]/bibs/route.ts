@@ -27,7 +27,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
  * went to the printer (§264). Omitted, every assigned number. `spares=1` prints the desk's free
- * spares instead, blank (§NNN).
+ * spares instead, blank (§444).
  *
  * **A GET that mutates nothing**, which is why marking a batch printed is a separate press on the
  * registrations list and not something this route does: the sheet has to be openable in a tab,
@@ -73,7 +73,7 @@ export async function GET(
   // The only scope besides a range: the bibs nobody has printed yet (§264).
   const only = url.searchParams.get("only") === "unprinted" ? ("unprinted" as const) : undefined;
   /*
-    The desk's spares instead of the runners (§NNN): every number the event reserved for the desk
+    The desk's spares instead of the runners (§444): every number the event reserved for the desk
     that nobody wears, holds or wore, each with an empty line where the name goes and «înscris la
     fața locului» under it — the walk-in's name is written on at the desk. Within `from`–`to` when
     those are given: that is the link the print's banner carries, the range it just reserved. A GET
@@ -125,14 +125,14 @@ export async function GET(
     // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
     bandColour: event.bibColour,
     partners: event.coHosts.map((host) => host.name),
-    // The first address the club shows (§NNN): one line of small print has room for one.
+    // The first address the club shows (§442): one line of small print has room for one.
     replyTo: (await shownContactAddresses(db))[0] ?? null,
     siteUrl: env.APP_BASE_URL,
     generatedAt: now,
     layout,
     design: event.design,
     pictures: { header, sponsors },
-    // Under a spare's empty line (§NNN), in the sheet's language.
+    // Under a spare's empty line (§444), in the sheet's language.
     ...(spares ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
   });
 

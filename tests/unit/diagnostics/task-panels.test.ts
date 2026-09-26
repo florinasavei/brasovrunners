@@ -10,10 +10,10 @@ import {
 } from "@/modules/diagnostics/domain/task-panels";
 
 /**
- * The role gate for `/admin/tasks`, exhaustive over every role (`DECISIONS.md` §397, §NNN;
+ * The role gate for `/admin/tasks`, exhaustive over every role (`DECISIONS.md` §397, §438;
  * BR-REQ-060-01, BR-REQ-090-05).
  *
- * Five panels since §NNN: «Club» (what the system says is still owed — it was «De făcut» until
+ * Five panels since §438: «Club» (what the system says is still owed — it was «De făcut» until
  * then), «De făcut» (the club's own checklist), «Anti-robot», «Costuri» and «Aplicația». This is
  * what a page render cannot show as clearly — the exact set each door opens for, and what each
  * role lands on when it opens the bare address.
@@ -22,7 +22,7 @@ const OPS_ROLES: readonly StaffRole[] = ["ADMIN", "SUPERADMIN"];
 const APP_ROLES: readonly StaffRole[] = ["DEV", "ADMIN", "SUPERADMIN"];
 const TODO_ROLES: readonly StaffRole[] = ["COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"];
 
-describe("§NNN canOpenTasks — who may open /admin/tasks at all", () => {
+describe("§438 canOpenTasks — who may open /admin/tasks at all", () => {
   it("is every role that reads the club's content: Redactor, Organizer, Tehnic, Administrator, Superadministrator", () => {
     for (const role of TODO_ROLES) expect(canOpenTasks(role), role).toBe(true);
   });
@@ -33,7 +33,7 @@ describe("§NNN canOpenTasks — who may open /admin/tasks at all", () => {
   });
 });
 
-describe("§NNN canOpenTaskPanel — each panel's own door", () => {
+describe("§438 canOpenTaskPanel — each panel's own door", () => {
   it("opens «Club», «Anti-robot» and «Costuri» to the Administrator and the Superadministrator only", () => {
     for (const panel of ["club", "botCheck", "costs"] as const) {
       expect(STAFF_ROLES.filter((role) => canOpenTaskPanel(role, panel)), panel).toEqual(OPS_ROLES);
@@ -49,7 +49,7 @@ describe("§NNN canOpenTaskPanel — each panel's own door", () => {
   });
 });
 
-describe("§NNN the landing panel — a bare /admin/tasks", () => {
+describe("§438 the landing panel — a bare /admin/tasks", () => {
   it("lands the Administrator and the Superadministrator on «Club»", () => {
     for (const role of OPS_ROLES) {
       expect(defaultTaskPanel(role)).toBe("club");
@@ -73,7 +73,7 @@ describe("§NNN the landing panel — a bare /admin/tasks", () => {
   });
 });
 
-describe("§NNN resolveTaskPanel — a link naming a tab", () => {
+describe("§438 resolveTaskPanel — a link naming a tab", () => {
   it("still opens every panel by name for an Administrator", () => {
     for (const panel of TASK_PANELS) expect(resolveTaskPanel("ADMIN", panel)).toBe(panel);
   });
@@ -94,7 +94,7 @@ describe("§NNN resolveTaskPanel — a link naming a tab", () => {
   });
 });
 
-describe("§NNN visibleTaskPanels — the sub-navigation, in order", () => {
+describe("§438 visibleTaskPanels — the sub-navigation, in order", () => {
   it("is «Club», «De făcut», «Anti-robot», «Costuri», «Aplicația» for the Administrators", () => {
     for (const role of OPS_ROLES) expect(visibleTaskPanels(role)).toEqual(["club", "todo", "botCheck", "costs", "app"]);
   });

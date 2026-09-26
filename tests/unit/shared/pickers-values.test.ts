@@ -90,7 +90,7 @@ describe("wall-values — the scriptless box's pattern says what the value rule 
   });
 });
 
-describe("BR-REQ-050-02 normalizeTypedTime — what the typed time box reads, 24-hour only (§NNN)", () => {
+describe("BR-REQ-050-02 normalizeTypedTime — what the typed time box reads, 24-hour only (§439)", () => {
   it("reads the usual typed shapes as HH:mm", () => {
     const cases: Array<[string, string]> = [
       ["19:00", "19:00"],

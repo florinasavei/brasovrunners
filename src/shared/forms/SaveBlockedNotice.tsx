@@ -11,7 +11,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * What a blocked save says (§NNN), in the order the person acts on it: what happened and what is
+ * What a blocked save says (§436), in the order the person acts on it: what happened and what is
  * still here; when NOT to press (a save that already said "saved" is in — the version check does
  * not protect a cancel, an erase or a message sent twice); the one button that sends the form the
  * simple way; and the page that names what to ask the office's IT to let through.

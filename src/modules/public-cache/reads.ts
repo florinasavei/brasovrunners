@@ -33,7 +33,7 @@ import {
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
-import { describesListStates } from "@/modules/legal-documents/domain/merge-fields";
+import { describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -49,6 +49,7 @@ import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
 import { EXPECTED_MIGRATION } from "@/db/schema-version";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import { type PublicContent, publicRead } from "./cache";
 import { clockWindow } from "./clock";
 
@@ -304,6 +305,17 @@ export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
   return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
 }
 
+/**
+ * Whether the contact page offers the newsletter (§445): the privacy notice in force describes it
+ * (`describesNewsletter`), in every language — the same reading as the list's states above, so an
+ * approval opens the pop-up the moment the notice itself changes. `noticeDescribesNewsletter` is
+ * the uncached twin the service asks again at every subscription.
+ */
+export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
+}
+
 // --- Legal texts ------------------------------------------------------------------------------
 
 /**
@@ -352,7 +364,7 @@ export async function cachedSitemapPages(locale: Locale) {
 
 /**
  * `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation. An event album's
- * card names its event (§NNN), so an event's rename or unpublishing expires it too.
+ * card names its event (§434), so an event's rename or unpublishing expires it too.
  */
 export async function cachedPublishedAlbums(locale: Locale) {
   return publicRead(["gallery.published", locale], ["gallery", "events"], () => listPublishedAlbums(getDb(), locale));
@@ -396,16 +408,18 @@ export async function cachedSitemapAlbums(locale: Locale) {
  */
 export async function cachedContactFormReaches(): Promise<boolean> {
   try {
-    return await publicRead(["settings.contact-reaches"], ["settings"], async () =>
-      contactFormReaches(env, await readContactRecipients(getDb())),
+    // The yes/no answer only, never the addresses (§333), with its last good copy (§447).
+    const read = await readWithLastGood("settings:contact-reaches", () =>
+      publicRead(["settings.contact-reaches"], ["settings"], async () => contactFormReaches(env, await readContactRecipients(getDb()))),
     );
+    return read.value;
   } catch {
     return contactFormReaches(env, null);
   }
 }
 
 /**
- * The club's address as readers are shown it (§NNN): the footer, the header's "Contact" entry and
+ * The club's address as readers are shown it (§442): the footer, the header's "Contact" entry and
  * the contact page. Addresses the site prints anyway, so the list itself is cached. When the
  * database cannot answer, the default: the configured Gmail, else the environment's mailbox.
  */
@@ -442,7 +456,10 @@ export async function cachedBotCheckSiteKey(): Promise<string | undefined> {
  */
 export async function cachedDeadlines(): Promise<Deadlines> {
   try {
-    return (await publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb()))).deadlines;
+    // The club's own numbers from the last good copy before today's constants (§447): an outage
+    // must not quietly rewrite "48 hours" to a default the club may have changed.
+    const read = await readWithLastGood("settings:deadlines", () => publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb())));
+    return read.value.deadlines;
   } catch {
     return { ...DEFAULT_DEADLINES };
   }

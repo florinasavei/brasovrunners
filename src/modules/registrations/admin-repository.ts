@@ -795,7 +795,7 @@ export type DeskRegistration = {
    */
   bibPrintedAt: Date | null;
   /**
-   * Who entered the row (§NNN): a staff entry is a walk-in the desk may hand a spare bib with the
+   * Who entered the row (§444): a staff entry is a walk-in the desk may hand a spare bib with the
    * paper (`handsSpareAtConfirm`). Where it came from, never who or how to reach them.
    */
   source: "PUBLIC" | "STAFF";

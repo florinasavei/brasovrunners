@@ -240,7 +240,7 @@ export function bodyImageSrc(key: string): string {
 }
 
 /**
- * The host a browser reads pictures from (§NNN, the network check): the bucket's public address on
+ * The host a browser reads pictures from (§436, the network check): the bucket's public address on
  * R2 — Cloudflare serves them, never a function (§66) — and this site in every other mode.
  */
 export function publicPictureHost(): string {

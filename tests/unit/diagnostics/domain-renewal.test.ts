@@ -8,7 +8,7 @@ import {
 } from "@/modules/diagnostics/domain/domain-renewal";
 
 /**
- * §NNN — the domain's renewal reminder. The owner, 2026-09-26: the `.ro` is dropped, the `.com`
+ * §435 — the domain's renewal reminder. The owner, 2026-09-26: the `.ro` is dropped, the `.com`
  * stays, "remember to renew it for several years". The expiry is the registration day plus the
  * years paid in total; the row is green above 90 days, amber from 90, red from 30 and past it.
  */
@@ -16,7 +16,7 @@ const REGISTERED = "2026-09-16";
 // Noon in Bucharest, so the club's calendar day is the one the test names.
 const at = (day: string) => new Date(`${day}T09:00:00Z`);
 
-describe("§NNN the domain's expiry", () => {
+describe("§435 the domain's expiry", () => {
   it("is the registration day plus the years paid", () => {
     expect(domainExpiresOn(REGISTERED, 1)).toBe("2027-09-16");
     expect(domainExpiresOn(REGISTERED, 4)).toBe("2030-09-16");
@@ -32,7 +32,7 @@ describe("§NNN the domain's expiry", () => {
   });
 });
 
-describe("§NNN the row's state by date", () => {
+describe("§435 the row's state by date", () => {
   it("is ok above 90 days", () => {
     expect(domainRenewal(REGISTERED, 1, at("2027-06-17"))).toEqual({ status: "ok", expiresOn: "2027-09-16", daysLeft: 91 });
   });
@@ -65,7 +65,7 @@ describe("§NNN the row's state by date", () => {
   });
 });
 
-describe("§NNN the two variables", () => {
+describe("§435 the two variables", () => {
   it("default to no date and one year; empty strings read as unset", () => {
     const parsed = envSchema.parse({ DOMAIN_REGISTERED_ON: "", DOMAIN_RENEWAL_YEARS: "" });
     expect(parsed.DOMAIN_REGISTERED_ON).toBeUndefined();

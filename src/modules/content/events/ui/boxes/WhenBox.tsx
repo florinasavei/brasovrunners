@@ -84,7 +84,7 @@ export default async function WhenBox({ event, mayEditSettings, risk, heading, i
               required={eventInputConstraints("raceStartsAtWallTime").required}
             />
           </OnlyForType>
-          {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§NNN). */}
+          {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§433). */}
           <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
             <Typography component="legend" variant="body2" sx={{ mb: 1, p: 0 }}>
               {t("editor.duration")}

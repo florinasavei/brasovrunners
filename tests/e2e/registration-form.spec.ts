@@ -104,7 +104,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
     // The public-results consent is not asked (§322): there are no results to consent to.
     await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
-    // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§NNN).
+    // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§432).
     await expect(page.locator('input[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('input[name="nationality"]')).toHaveAttribute("required", "");
     // The city is optional and on the optional side, open (§322).
@@ -812,10 +812,11 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("50");
-    await openEditorBox(page, "Condiții de participare și declarația");
+    await openEditorBox(page, "Condiții de participare");
     // The box offers the club's fourteen until the organizer says otherwise.
     await expect(field("event.minAge")).toHaveValue("14");
     await field("event.minAge").fill("16");
+    await openEditorBox(page, "Declarația pe propria răspundere");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();
     await field("translations.ro.title").fill(`Cros pe vârste ${suffix}`);
@@ -853,7 +854,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await hydrated(page);
       await expect(field("event.minAge")).toHaveValue("16");
       await openEditorBox(page, "Participare și înscrieri");
-      await openEditorBox(page, "Condiții de participare și declarația");
+      await openEditorBox(page, "Condiții de participare");
       await field("event.minAge").fill("0");
       const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
       if (await acknowledge.count()) await acknowledge.check();
@@ -994,7 +995,8 @@ async function createRulesEvent(page: Page, lines: number): Promise<{ slug: stri
   await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
   await page.getByRole("option", { name: "Înscrieri pe site" }).click();
   await field("event.capacity").fill("50");
-  await openEditorBox(page, "Condiții de participare și declarația");
+  // The declaration is chosen under «Regulamentul» since §448.
+  await openEditorBox(page, "Declarația pe propria răspundere");
   await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
   await page.getByRole("option").nth(1).click();
   await field("translations.ro.title").fill(`Cros cu regulament ${suffix}`);

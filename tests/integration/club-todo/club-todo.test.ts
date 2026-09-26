@@ -10,7 +10,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-05 and BR-REQ-060-01 — «De făcut», the club's checklist (`DECISIONS.md` §NNN), as
+ * BR-REQ-090-05 and BR-REQ-060-01 — «De făcut», the club's checklist (`DECISIONS.md` §438), as
  * stored: one `platform_settings` row, `clubTodo`, that does not exist until somebody first
  * changes the starting list; every write under the row lock, audited with who and the line's
  * words; the role asserted by the service, whatever the page drew.
@@ -57,7 +57,7 @@ async function trail() {
   return db.select().from(auditLogs).where(eq(auditLogs.entityId, CLUB_TODO_ENTITY_ID)).orderBy(auditLogs.createdAt);
 }
 
-describe("§NNN the club's checklist, stored", () => {
+describe("§438 the club's checklist, stored", () => {
   it("reads the starting list while nothing is stored, and stores nothing by reading", async () => {
     const state = await readClubTodo(db);
     expect(state.stored).toBe(false);

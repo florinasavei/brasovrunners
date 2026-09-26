@@ -25,6 +25,7 @@ import { cachedDeadlines, cachedShownContactAddresses } from "@/modules/public-c
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
+import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
 import LegalLink from "@/shared/ui/LegalLink";
@@ -304,7 +305,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
   // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
-  // The Reply-To in force (§NNN): the mailbox, the club's Gmail, or both.
+  // The Reply-To in force (§442): the mailbox, the club's Gmail, or both.
   const canReply = (await cachedShownContactAddresses()).length > 0;
   /*
     What the refused press had typed, brought back sealed by the action (§314) and read only for
@@ -420,6 +421,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
               ...listStatesMergeValues(locale),
+              ...newsletterMergeValues(locale),
             }}
           />
 
