@@ -4,7 +4,7 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import type { TeamLinkKind } from "../links";
 
 /**
- * One glyph per kind of a person's link (§NNN): the network's own mark for Strava, Instagram and
+ * One glyph per kind of a person's link (§474): the network's own mark for Strava, Instagram and
  * Facebook — the footer's marks (`SocialIcon`, §90, §112), in the networks' colours — the globe
  * for a site of their own, the chain link for anything else.
  *

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { readSwipe, swipeAxis } from "@/modules/events/domain/calendar-swipe";
 
 /**
- * `DECISIONS.md` §NNN — the calendar swipes between months on a touch screen, like Google
+ * `DECISIONS.md` §475 — the calendar swipes between months on a touch screen, like Google
  * Calendar: a drag to the left is the next month, to the right the previous one, and nothing
  * short, slow or diagonal steps at all.
  */

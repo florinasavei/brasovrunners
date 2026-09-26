@@ -73,11 +73,11 @@ const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`
     OR ${names(sql`${eventTranslations.scheduleJson}::text`)}
     OR ${names(sql`${eventTranslations.routeDescriptionJson}::text`)})`;
 
-/** Whether a card of «Echipa» carries the asset in the words about the person, either language (§NNN). */
+/** Whether a card of «Echipa» carries the asset in the words about the person, either language (§474). */
 const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(sql`${teamMembers.bioEnJson}::text`)})`;
 
 /**
- * Whether the team page's introduction carries the asset (§NNN): the one `platform_settings` row
+ * Whether the team page's introduction carries the asset (§474): the one `platform_settings` row
  * of the page, whose value holds both languages' documents. Read as its text, like a body.
  */
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
@@ -94,9 +94,9 @@ const referencedSomewhere = sql`(
   -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
   -- is a card somebody is about to show.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})
-  -- A picture in the words about a person (§NNN), by address, as every other text is read.
+  -- A picture in the words about a person (§474), by address, as every other text is read.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
-  -- A picture in the team page's introduction (§NNN), kept in its platform setting.
+  -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
 )`;
 
@@ -249,7 +249,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(teamMembers)
     .where(isNotNull(teamMembers.photoMediaAssetId));
 
-  // A picture in the words about a person, and in the page's introduction (§NNN).
+  // A picture in the words about a person, and in the page's introduction (§474).
   const inTeamBios = await db
     .select({ assetId: mediaAssets.id, id: teamMembers.id, title: teamMembers.name })
     .from(mediaAssets)

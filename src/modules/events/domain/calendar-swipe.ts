@@ -1,5 +1,5 @@
 /**
- * The calendar's swipe (`DECISIONS.md` §NNN): a thumb drawn sideways across the month on a phone
+ * The calendar's swipe (`DECISIONS.md` §475): a thumb drawn sideways across the month on a phone
  * steps to the next or the previous one, the way Google Calendar does. The two arrows stay — the
  * swipe is a second way to press them, never the only one.
  *

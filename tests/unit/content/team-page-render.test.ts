@@ -107,14 +107,14 @@ describe("§459 the team page and its menu entry", () => {
     expect(markup).toMatch(/grid-template-columns:repeat\(4, minmax\(0, 1fr\)\)/);
     expect(markup).toContain('href="https://www.strava.com/athletes/1"');
     expect(markup).toContain('rel="noopener noreferrer"');
-    // A Strava link the club gave no label reads as the network's name, beside its mark (§NNN).
+    // A Strava link the club gave no label reads as the network's name, beside its mark (§474).
     expect(markup).toContain(">Strava<");
     expect((await generateMetadata({ params })).robots).toBeUndefined();
     expect((await generateMetadata({ params })).description).toBe("Cine suntem.");
   });
 });
 
-describe("§NNN the words about a person as rich text, and their links", () => {
+describe("§474 the words about a person as rich text, and their links", () => {
   it("draws the club's introduction and each bio through the renderer, with its list and its link", async () => {
     const bio: RichTextDoc = {
       type: "doc",

@@ -95,7 +95,7 @@ describe("§255 how many are signed up", () => {
     expect(await countRegisteredForUpcoming(db, NOW)).toBe(1);
   });
 
-  it("§NNN splits the figure per upcoming event, in the reader's language, summing to the badge", async () => {
+  it("§476 splits the figure per upcoming event, in the reader's language, summing to the badge", async () => {
     await db.insert(eventTranslations).values({ eventId: upcoming, locale: "ro", slug: "crosul", title: "Crosul" });
     const [later] = await db
       .insert(events)
@@ -121,7 +121,7 @@ describe("§255 how many are signed up", () => {
     expect(ro?.total).toBe(await countRegisteredForUpcoming(db, NOW));
   });
 
-  it("§NNN memoizes the split a minute per language, and forgetting drops it", async () => {
+  it("§476 memoizes the split a minute per language, and forgetting drops it", async () => {
     await enter(upcoming, "CONFIRMED");
     expect((await registeredBadgeBreakdown(db, NOW, "ro"))?.total).toBe(1);
     await enter(upcoming, "CONFIRMED");
@@ -134,7 +134,7 @@ describe("§255 how many are signed up", () => {
     expect((await registeredBadgeBreakdown(db, NOW, "ro"))?.total).toBe(2);
   });
 
-  it("§NNN leaves a cancelled event out of the split", async () => {
+  it("§476 leaves a cancelled event out of the split", async () => {
     const [cancelled] = await db
       .insert(events)
       .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 3 * DAY), registrationMode: "INTERNAL", capacity: 100, eventStatus: "CANCELLED" })
@@ -146,7 +146,7 @@ describe("§255 how many are signed up", () => {
     expect(split?.total).toBe(1);
   });
 
-  it("§NNN the tooltip's words, in Romanian and in English: the rule, five events, how many more", () => {
+  it("§476 the tooltip's words, in Romanian and in English: the rule, five events, how many more", () => {
     const rows: RegisteredOnEvent[] = Array.from({ length: 7 }, (_, i) => ({ eventId: `e${i}`, title: `Cros ${i + 1}`, count: i + 1 }));
     function words(locale: "ro" | "en") {
       const t = createTranslator({ locale, messages: locale === "ro" ? roMessages : enMessages, namespace: "Admin" });

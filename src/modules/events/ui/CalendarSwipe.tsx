@@ -6,7 +6,7 @@ import { type PointerEvent, type ReactNode, useEffect, useRef, useTransition } f
 import { readSwipe, type SwipeStep, swipeAxis } from "../domain/calendar-swipe";
 
 /**
- * The month follows the thumb (`DECISIONS.md` §NNN): on a touch screen a sideways drag across the
+ * The month follows the thumb (`DECISIONS.md` §475): on a touch screen a sideways drag across the
  * calendar pulls it along under the finger, and a drag far or quick enough steps to the next month
  * (to the left) or the previous one (to the right) — Google Calendar's gesture. In the year view
  * the same drag steps a year, because it presses whatever the header's arrows press.

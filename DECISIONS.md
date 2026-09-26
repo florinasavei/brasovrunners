@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.05-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.06-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.05-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.06-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -18436,3 +18436,100 @@ The bold parts come from the catalogue, not from a search in the finished text. 
 The card cuts the catalogue's sentence at a printable marker, `{{fact}}`, formatted into the slot. A unit test holds both catalogues free of it. The old whole-sentence phrase `cta.freeOf` / `freePlacesPhrase` is gone, because the card now builds its count from `cta.freeOfCard` and `cta.freeCount`.
 
 Baseline `BR-V2.05-2026-09-27`.
+
+## 473. The weather line's discreet «?»
+
+The owner, 2026-09-26: «un mic ? cu tooltip să zic că poate varia și că datele sunt furnizate de open-meteo.com, dar foarte discret». The event page's weather row now ends in a small muted question mark. The glyph is 14 px at opacity 0.55, and an invisible overlay gives it a 44 px hit area, so the line keeps its height. Its tooltip, which is also its accessible name, says in the reader's language that the forecast is indicative and may change before the start, and that the data comes from Open-Meteo. The brand name comes through the Weather catalogue's existing `source` key, so no hostname appears in `src/`. `WeatherHelp` is a client island because `Tooltip` needs a ref on its child. The page passes it a string, never an element. The glyph appears only when there is a forecast. A render test checks both languages and the no-forecast case.
+
+Baseline `BR-V2.06-2026-09-27`.
+
+## 474. «Echipa» grows up — rich-text introduction and bios, several typed links per person
+
+The owner, 2026-09-26, on the team page of §459: "trebuie să fie mai complexă această pagină, adică trebuie să pot pune mai multe link-uri și editoarele trebuie să fie tot așa smart, adică rich text".
+
+**Decision.**
+
+- **The words are rich text.** The page's introduction and each person's words are written in the editor every page and event already uses (`RichTextEditor` through `LazyRichTextEditor`). There is one fold per language, and each mounts its Tiptap only when opened (§96), so a screen of twenty cards starts no editor at all.
+  - Both languages or neither (§352). "Written" means `hasRichTextContent`, so a picture with no words counts as written.
+  - The introduction takes the whole toolbar: headings, lists, links, pictures, a film, a table.
+  - A bio takes everything but a table. A card sits two to a row on a phone and has no room for one. The toolbar does not offer it, and the save refuses it (`content/team/fields.ts#hasTable`), since a toolbar is not a guard (§270).
+  - Limits are counted on the plain words: 1500 characters per bio, 3000 per introduction. The posted document may be up to 200 000 characters of JSON, the ceiling every editorial body has.
+- **A card carries up to six links.** They are stored in `team_members.links` as an ordered list of `{ kind, url, labelRo, labelEn }`, the shape of an event's "Linkuri și fișiere" (§332) with the kinds a person has.
+  - Kinds: `STRAVA`, `INSTAGRAM`, `FACEBOOK`, `WEBSITE`, `OTHER` (`content/team/links.ts`).
+  - The address must be https with a dotted host. The label is optional, at most 60 characters, and in both languages or neither.
+  - The card draws each link with the network's own mark (`SocialIcon`, §90/§112), or a globe for a site and a chain link for anything else.
+  - The link's words are the club's label in the reader's language. Without one, the card shows the network's name; for a site or anything else it shows the host, so nobody is surprised by what opens.
+  - Every row is at least 44 px tall and opens in a new tab with `rel="noopener noreferrer"`.
+  - In the editor (`TeamLinkRowsEditor`), a refused row is named by its place on the screen ("Linkul 2: adresa"), as §315 named every other row editor's.
+- **Storage, expand only (migration `0091_team_rich_text_and_links`).**
+  - New columns: `bio_ro_json`, `bio_en_json` and `links`. `links` carries `team_members_links_is_a_short_array_of_https_links`, the same guarantee §332 gave an event's links.
+  - The introduction's documents join the `teamPage` platform setting as `introRoJson` / `introEnJson`.
+  - Every save still writes the old columns, `bio_ro` / `bio_en` (the words, `richTextToPlainText`) and `link` (the first link), and the plain `introRo` / `introEn`. The code serving while a release rolls out therefore still shows words and one link.
+  - A row or setting from before reads its plain words as one paragraph per line, and its one link as a row of a guessed kind (strava.com → Strava, instagram.com → Instagram, facebook.com → Facebook, else a site).
+  - The old columns become removable in a later contract release, once no serving code reads them.
+- **Pictures.** A picture in a bio or in the introduction is a reference for the orphan sweep, the delete guard and `/admin/gallery/pictures`, read the way every other text is: the key prefix inside the JSON as text (§73, §387). The introduction's reference is a new kind, `teamIntro`, which links to the page's own card.
+
+**Rejected.**
+
+- Pictures and films left out of bios. The owner asked for the same editor, and a picture is how a person's words are best illustrated. Each is drawn as a band across the card, the listing card's override (§417).
+- Tables in bios. They are refused, for the card's width.
+- Free-text link kinds. A kind is what lets the card show the network's mark and name without the club typing a word, and a new kind is a code change.
+- Labels as plain text in one language only. They are both or neither, as every other label is (§352).
+- Storing the rich JSON in the existing text columns. The code serving during a rollout would have drawn raw JSON.
+
+**Tests.**
+
+- Unit, `content/team-rich-text-and-links.test.ts`:
+  - documents and their words kept; a picture counts as written;
+  - one language refused on the editor's box; table, unknown node, bad JSON and over-long text refused;
+  - older plain words read as paragraphs;
+  - link rows kept in order and the spare line dropped; the first link goes to `link`;
+  - refusals named `links[i].<box>`; the six-link ceiling;
+  - the §459 link converted to a row, the kind guess, lenient reading of stored links.
+- Unit, `content/team-page-render.test.ts`: the introduction and a bio drawn by the renderer (bold, a list); links in order with the label, the network's name or the host, new tab, no referrer, 44 px; the description from the introduction's words.
+- Integration, `cms/team.test.ts`:
+  - rich bios and labelled links saved and read per language;
+  - removing every link saves none;
+  - an older row read;
+  - the database CHECK refusing an http link, a seventh link and a non-array;
+  - the rich introduction, both or neither;
+  - a picture in a bio and one in the introduction kept by the sweep, listed with where each is used, refused for deletion, then swept once emptied.
+
+Baseline `BR-V2.06-2026-09-27`.
+
+## 475. The calendar changes month by a swipe on a touch screen, like Google Calendar
+
+**Context.** The owner wants the calendar's month view to swipe between months on a phone, the way Google Calendar does. Until now the only ways to change period were the header's arrows, the month and year selects, and «Azi» (§116, §166).
+
+**Decision.** A sideways drag across the calendar steps the period. The month follows the finger under the thumb. When the finger lifts after a drag of at least a fifth of the calendar's width (never less than 48 px), or after a flick (at least 30 px at 0.4 px/ms or faster), a drag to the left goes to the next period and a drag to the right to the previous one. The horizontal travel must be at least 1.5 times the vertical; anything else is left to the page's scroll. In the year view the same gesture steps a year. It always goes exactly where the arrows go: the header and the swipe both get their addresses from one function, `calendarStepHrefs` (`CalendarHeader.tsx`), and these addresses keep every filter and the layout (§413, §137).
+
+- *An island around server HTML.* `CalendarSwipe` is a client component, and the server-rendered `EventCalendar` is passed to it as `children`, the one channel an element may cross (§370). With scripts off it is a plain box. The arrows, the selects and «Azi» are unchanged. The swipe is a second way to press them, never the only one.
+- *Touch and pen only.* Only touch and pen pointers are read; a mouse drag selects text and never swipes. `touch-action: pan-y pinch-zoom` leaves vertical scrolling and pinch-zoom to the browser. The click that may follow a sideways drag is swallowed for 400 ms, so a swipe that began on an event does not open it.
+- *No blink.* The step is `router.push(href, { scroll: false })` inside a transition. The reader stays where they are on the page, and the old month stays on screen, dimmed and `aria-busy`, until the next one is ready (§166, §413). The new one comes in 24 px from the side it was pushed towards. Under reduced motion nothing slides; the step still happens.
+- *No extra cost.* Nothing is prefetched by the swipe. The arrows' own links already are, and every extra request wakes the database (§327).
+
+The thresholds are a pure module, `events/domain/calendar-swipe.ts` (`readSwipe`, `swipeAxis`).
+
+*Rejected:*
+- **A carousel that renders the previous and next months beside the current one.** It would read three periods per view (three database reads) and put three grids in the HTML.
+- **A swipe library.** Rejected: nothing new when the platform has pointer events.
+- **Mouse drag.** Rejected: on a desktop a drag selects text.
+- **A visible "swipe" hint.** Google Calendar has none, and the arrows are still there.
+
+**Consequences.** New: `src/modules/events/domain/calendar-swipe.ts`, `src/modules/events/ui/CalendarSwipe.tsx`. Changed: `src/modules/events/ui/CalendarHeader.tsx` (`calendarStepHrefs`) and `src/modules/events/ui/CalendarSection.tsx`. Test: `tests/unit/events/calendar-swipe.test.ts`. No message keys, no migration, no dependency.
+
+Baseline `BR-V2.06-2026-09-27`.
+
+## 476. The «Înscrieri» badge says what it counts, per event
+
+The owner asked on 2026-09-26: «cum adică 4 înscrieri când văd doar 2 oameni în listă?». The badge counts every upcoming event, and the list shows one. The badge's tooltip now states the rule: active registrations, no cancelled ones and no tests, on the events still to come. Under the rule it lists the first five upcoming events by start, each with its own count, then «+N altele». The tooltip is the backoffice tooltip of §341, not a native `title`. The pill is focusable and linked to the text by `aria-describedby`, and a tap opens it on a phone. The figure and the split come from one grouped query that leaves out cancelled events. The query is memoized for a minute per language, dropped when a registration changes, and returns null on a database error. So the cost rule of §255 and §327 still holds. The badge's total is the sum of the split, so the tab and its tooltip cannot disagree. The registrations page's scope line is cut to one clause, «Numerele de mai sus sunt doar pentru evenimentul selectat.»
+
+The tooltip text is one pure function, `registeredBadgeHint` in `src/modules/registrations/nav-count.ts`. It takes the per-event split and the words from `Admin.nav`, and it is tested against both message files. The pill has one accessible description, MUI Tooltip's `describeChild`. The old memoized total `registeredBadgeCount` is gone: the badge's number is the sum of the split, `registeredBadgeBreakdown`, memoized a minute per language.
+
+Baseline `BR-V2.06-2026-09-27`.
+
+## 477. The image-quality spec fits the mobile shard again
+
+The §414/§437 image-quality spec uses the smallest fixtures that still prove the 2400 rung and the poster's ladder: a 2700-px picture and a 1280-px poster. It is also split in two, each part with its own budget: the first creates the page with its picture, and the second adds the film's poster, publishes and reads what the page offers. This lets it fit the budget on the mobile shard, and the desktop-only skip of hotfix #209 is gone. The «Originală» unit case draws a 4200-px source, which is still above «Mare»'s 4000, in place of 4800.
+
+Baseline `BR-V2.06-2026-09-27`.

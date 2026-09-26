@@ -44,7 +44,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
 }
 
 /**
- * A person's links in the editor of «Echipa» (§NNN): the rows come back as they were typed after a
+ * A person's links in the editor of «Echipa» (§474): the rows come back as they were typed after a
  * refused submit (§315), keyed on the answer — `LinkRowsEditor`'s pattern for an event (§332).
  */
 export default function TeamLinkRowsEditor(props: ComponentProps<typeof TeamLinkRowsEditorIsland>) {

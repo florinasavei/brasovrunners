@@ -10,15 +10,15 @@ import { readTeamLinks, type TeamLink, type TeamLinkKind, teamLinkLabel } from "
 import { readTeamPageSettings, teamIntroFor } from "./page-settings";
 
 /**
- * Reads for «Echipa» (§459, grown by §NNN), public and backoffice.
+ * Reads for «Echipa» (§459, grown by §474), public and backoffice.
  *
  * The public read names its columns (BR-REQ-070-01), reads only the cards shown on the site, and
  * gives each card the words of the page's own language alone: what the person does and the words
  * about them are a pair written in both languages or in neither (§352), and a stored half pair —
  * only a hand-made row can hold one — reads as none on both pages, never the other language's text.
  *
- * The words about a person are a rich-text document since §NNN (`bio_*_json`); a row from before
- * reads its plain `bio_*` as paragraphs (`storedTeamDoc`). The links are a list since §NNN
+ * The words about a person are a rich-text document since §474 (`bio_*_json`); a row from before
+ * reads its plain `bio_*` as paragraphs (`storedTeamDoc`). The links are a list since §474
  * (`links`); a row from before reads its one `link` as a row of its guessed kind (`readTeamLinks`).
  */
 

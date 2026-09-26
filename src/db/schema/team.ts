@@ -27,7 +27,7 @@ export const teamMembers = pgTable(
     roleRo: text("role_ro"),
     roleEn: text("role_en"),
     /**
-     * The words about them as plain text — both languages or neither. Since §NNN the text is
+     * The words about them as plain text — both languages or neither. Since §474 the text is
      * written in the rich-text editor and kept in `bio_*_json`; these two carry its words
      * (`richTextToPlainText`), written by every save, so the code serving while a release rolls
      * out still shows something, and a row from before the editor still reads.
@@ -35,7 +35,7 @@ export const teamMembers = pgTable(
     bioRo: text("bio_ro"),
     bioEn: text("bio_en"),
     /**
-     * The words about them as the rich-text editor wrote them (§NNN; the owner: "editoarele
+     * The words about them as the rich-text editor wrote them (§474; the owner: "editoarele
      * trebuie să fie tot așa smart, adică rich text"): paragraphs, lists, a link in the text, a
      * picture — the allowlist of `content/rich-text/domain/schema.ts`, less tables, which a card
      * two to a row has no room for. Null when nothing is written; a row from before reads its
@@ -44,13 +44,13 @@ export const teamMembers = pgTable(
     bioRoJson: jsonb("bio_ro_json"),
     bioEnJson: jsonb("bio_en_json"),
     /**
-     * One link the person chose to share — the only one before §NNN. Kept, and written with the
+     * One link the person chose to share — the only one before §474. Kept, and written with the
      * first of `links` by every save, for the code serving while a release rolls out; read only
      * when `links` is null (`content/team/links.ts#readTeamLinks`).
      */
     link: text("link"),
     /**
-     * The person's links (§NNN): an ordered list of at most six `{ kind, url, labelRo, labelEn }`
+     * The person's links (§474): an ordered list of at most six `{ kind, url, labelRo, labelEn }`
      * — Strava, Instagram, Facebook, a site of their own, anything else — every address https,
      * each label both languages or neither. Null is "no list yet": the one `link` above is read.
      */
@@ -86,7 +86,7 @@ export const teamMembers = pgTable(
     check("team_members_position_positive", sql`${t.position} >= 1`),
     check("team_members_version_positive", sql`${t.version} >= 1`),
     /**
-     * The links (§NNN): an array of at most six, every address https — the guarantee
+     * The links (§474): an array of at most six, every address https — the guarantee
      * `events_links_is_a_short_array_of_https_links` gives an event's (§332), at the layer that
      * also refuses a seed's or a hand-written `UPDATE`.
      */

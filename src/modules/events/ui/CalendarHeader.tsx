@@ -27,7 +27,7 @@ import type { CalendarLayout, CalendarView } from "./EventCalendar";
  */
 /**
  * Where the two arrows go: the period before and the period after, keeping every filter and the
- * layout. One function, because the swipe on a touch screen (`CalendarSwipe`, §NNN) must go
+ * layout. One function, because the swipe on a touch screen (`CalendarSwipe`, §475) must go
  * exactly where the arrows go.
  */
 export function calendarStepHrefs({

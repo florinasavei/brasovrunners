@@ -18,7 +18,7 @@ import { signIn } from "./support/featured-event";
 /**
  * A poster: a flat field and lettering. The picture is 2700 pixels wide — above «Medie»'s 2400 and
  * wide enough to keep the 2400 rung (under 0.9 of the master) — and the film's is 1280: light enough
- * to encode and fetch on the mobile shard as well as the desktop one (§NNN).
+ * to encode and fetch on the mobile shard as well as the desktop one (§477).
  */
 async function poster(width: number, height: number): Promise<Buffer> {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -44,7 +44,7 @@ function candidates(srcset: string): { url: string; width: number }[] {
 }
 
 test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four levels §437)", () => {
-  // Two parts, each with its own budget (§NNN): the first creates the page with its picture, the
+  // Two parts, each with its own budget (§477): the first creates the page with its picture, the
   // second adds the film's poster to it, publishes, and reads what the page offers.
   let editorUrl = "";
   let slug = "";

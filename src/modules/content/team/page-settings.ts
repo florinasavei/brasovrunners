@@ -34,7 +34,7 @@ export const TEAM_INTRO_MAX = 3000;
 export type TeamPageStatus = "DRAFT" | "PUBLISHED";
 
 /**
- * The page's state and its introduction. Since §NNN the introduction is written in the rich-text
+ * The page's state and its introduction. Since §474 the introduction is written in the rich-text
  * editor and kept as `intro*Json`; `introRo` / `introEn` keep its words, written by every save, so
  * the code serving during a rollout still reads an introduction, and a value saved before the
  * editor still reads as paragraphs.
@@ -49,7 +49,7 @@ export type TeamPageSettings = {
 
 export const DEFAULT_TEAM_PAGE: TeamPageSettings = { status: "DRAFT", introRo: null, introEn: null, introRoJson: null, introEnJson: null };
 
-/** A stored document, or null for anything that is not one (a value from before §NNN has none). */
+/** A stored document, or null for anything that is not one (a value from before §474 has none). */
 const storedDoc = z
   .unknown()
   .optional()

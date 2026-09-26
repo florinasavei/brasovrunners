@@ -4,7 +4,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Tooltip from "@mui/material/Tooltip";
 
 /**
- * The discreet «?» after the event page's weather line (§NNN; the owner, 2026-09-26: "un mic ?
+ * The discreet «?» after the event page's weather line (§473; the owner, 2026-09-26: "un mic ?
  * cu tooltip ... că poate varia și că datele sunt furnizate de open-meteo.com, dar foarte
  * discret"). A small muted glyph; the words are the tooltip and the accessible name. A client
  * island because `Tooltip` needs a ref on its child; the page hands it a string, never an element.

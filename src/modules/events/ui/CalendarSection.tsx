@@ -61,7 +61,7 @@ export default async function CalendarSection({
     <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
       <Box component="section" aria-labelledby="calendar-title" id="calendar">
         <CalendarHeader view={view} now={now} query={query} layout={layout} />
-        {/* A sideways swipe on a touch screen goes where the arrows go (§NNN). */}
+        {/* A sideways swipe on a touch screen goes where the arrows go (§475). */}
         <CalendarSwipe previousHref={steps.previous} nextHref={steps.next}>
           <EventCalendar view={view} events={events} now={now} query={query} layout={layout} />
         </CalendarSwipe>

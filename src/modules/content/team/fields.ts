@@ -22,10 +22,10 @@ import {
 } from "./links";
 
 /**
- * What the club types for one card of «Echipa» (§459, grown by §NNN).
+ * What the club types for one card of «Echipa» (§459, grown by §474).
  *
  * A name, required. What the person does for the club — Romanian **and** English, or neither
- * (§352). The words about them, written in the rich-text editor since §NNN (paragraphs, a list, a
+ * (§352). The words about them, written in the rich-text editor since §474 (paragraphs, a list, a
  * link in the text, a picture), the same pair rule, read as "written" by `hasRichTextContent` — a
  * picture with no words is something written. Up to six links, each a kind, an https address and
  * a label in both languages or neither (§332's shape). A photograph, by the id of the picture the
@@ -59,7 +59,7 @@ export function normalizeTeamText(value: string): string {
 
 /**
  * Plain words as a document: one paragraph per line. How a text written before the editor
- * (§459's textarea, the sample seed) reads on the page and opens in the editor (§NNN).
+ * (§459's textarea, the sample seed) reads on the page and opens in the editor (§474).
  */
 export function teamDocFromPlain(text: string | null | undefined): RichTextDoc {
   const lines = normalizeTeamText(text ?? "")
@@ -84,7 +84,7 @@ function parseRichTextLeniently(value: unknown): RichTextDoc | null {
   }
 }
 
-/** Whether a document holds a table anywhere — refused in a card, two to a row on a phone (§NNN). */
+/** Whether a document holds a table anywhere — refused in a card, two to a row on a phone (§474). */
 export function hasTable(doc: RichTextDoc): boolean {
   // A table is a top-level block: a list item and a quote hold paragraphs only (`schema.ts`).
   return (doc.content ?? []).some((block: RichTextBlock) => block.type === "table");
@@ -235,7 +235,7 @@ export const teamMemberFieldsSchema = z
     /** The words about them as a plain box — §459's form, a fixture, the seed. */
     bioRo: plainBox(TEAM_BIO_MAX),
     bioEn: plainBox(TEAM_BIO_MAX),
-    /** The words about them as the rich-text editor posts them (§NNN); wins over the plain box. */
+    /** The words about them as the rich-text editor posts them (§474); wins over the plain box. */
     bioRoBody: richTextBox,
     bioEnBody: richTextBox,
     /**
@@ -248,7 +248,7 @@ export const teamMemberFieldsSchema = z
       .default("")
       .transform((value) => value.trim())
       .pipe(z.string().max(MAX_TEAM_LINK_URL).refine((value) => value === "" || isTeamLinkUrl(value), "not an https link")),
-    /** The links' rows (§NNN), or absent for a caller that posts only `link`. */
+    /** The links' rows (§474), or absent for a caller that posts only `link`. */
     links: teamLinksField.optional(),
     /** The stored picture's id, or empty for a card without a photo. */
     photoAssetId: z

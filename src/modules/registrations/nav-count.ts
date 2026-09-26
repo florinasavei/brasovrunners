@@ -63,7 +63,7 @@ export function forgetRegisteredBadgeCount(): void {
 export type RegisteredOnEvent = { eventId: string; title: string; count: number };
 
 /**
- * The badge's figure split per event (§NNN): the same filter as `countRegisteredForUpcoming`,
+ * The badge's figure split per event (§476): the same filter as `countRegisteredForUpcoming`,
  * grouped by event and ordered by start, so the tab's tooltip says *what* it counts — each
  * upcoming event with its number — instead of a sum nobody can check against the list.
  *
@@ -132,7 +132,7 @@ export type BadgeHintWords = {
 };
 
 /**
- * The tab's tooltip text (§NNN): the rule in one line, then each upcoming event with its number,
+ * The tab's tooltip text (§476): the rule in one line, then each upcoming event with its number,
  * the first `BADGE_HINT_EVENTS` by start and how many more after them. Pure, so both languages
  * are tested against the catalogues.
  */

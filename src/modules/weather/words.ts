@@ -33,7 +33,7 @@ export type WeatherWords = {
   extras: string[];
   /** The degrees alone, «14 °C» — a card's pill and an hour of the block; null when the hour has none. */
   temperature: string | null;
-  /** The «?» tooltip after the event page's line (§NNN): the forecast may vary, and whose data it is. */
+  /** The «?» tooltip after the event page's line (§473): the forecast may vary, and whose data it is. */
   help: string;
   /** The chance of rain alone, «20%» — an hour of the block; null when the hour has none. */
   rainShort: string | null;

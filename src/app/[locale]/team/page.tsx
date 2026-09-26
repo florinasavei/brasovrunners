@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 const SMALL_TEXT = { xs: "0.8125rem", sm: "0.875rem" } as const;
 
 /**
- * The words about a person (§NNN) drawn by the page's own renderer, at the card's size: the
+ * The words about a person (§474) drawn by the page's own renderer, at the card's size: the
  * paragraphs and lists in the card's small type, a heading one step above it, and every picture a
  * band across the card — a floated third of a column two to a row would be a thumbnail, so the
  * chosen width and side are overridden one class more specifically, as the listing card does (§417).
@@ -50,7 +50,7 @@ const BIO_SX = {
   "& figcaption": { textAlign: "center" },
 } as const;
 
-/** The club's introduction (§NNN): the page's lead, in the renderer's own type, a little quieter. */
+/** The club's introduction (§474): the page's lead, in the renderer's own type, a little quieter. */
 const INTRO_SX = { color: "text.secondary", mb: 3, "& > :last-child": { mb: 0 } } as const;
 
 /**
@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /**
  * «Echipa» / "The team" (§459): the people who run the club, one card each — a photograph, the
- * name, what they do, the words about them in the editor every page uses, and their links (§NNN).
+ * name, what they do, the words about them in the editor every page uses, and their links (§474).
  *
  * A platform page, like the contact form: its address and title are the platform's. The club keeps
  * the cards, the page's switch and, if it wants one, its own introduction in both languages, in
@@ -109,7 +109,7 @@ export default async function TeamPage({ params }: Props) {
         {t("title")}
       </Typography>
       {page?.intro ? (
-        // The club's own introduction, written in the editor every page uses (§NNN).
+        // The club's own introduction, written in the editor every page uses (§474).
         <Box sx={INTRO_SX} data-testid="team-intro">
           <RichText body={page.intro} />
         </Box>
@@ -184,7 +184,7 @@ export default async function TeamPage({ params }: Props) {
 }
 
 /**
- * A person's links (§NNN), one row each in the club's order: the network's mark (§90), the club's
+ * A person's links (§474), one row each in the club's order: the network's mark (§90), the club's
  * label in this language — or, without one, the network's name, and for a site or anything else
  * its host ("ana-alearga.ro"), so nobody is surprised by what opens. Every row is at least 44
  * pixels tall (BR-REQ-041-01 criterion 6) and opens in a new tab with no referrer: the address is

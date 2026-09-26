@@ -99,7 +99,7 @@ describe("§459 the team page's cards", () => {
 
     const [ro] = await listVisibleTeamMembers(db, "ro");
     const [en] = await listVisibleTeamMembers(db, "en");
-    // Plain words from a caller without the editor read as a paragraph of the document (§NNN).
+    // Plain words from a caller without the editor read as a paragraph of the document (§474).
     const paragraph = (words: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: words }] }] });
     expect(ro).toMatchObject({ name: "Ana Popescu", role: "Antrenoare", bio: paragraph("Aleargă pe Tâmpa de zece ani."), photo: null });
     expect(en).toMatchObject({ name: "Ana Popescu", role: "Coach", bio: paragraph("Has run up Tâmpa for ten years.") });
@@ -298,7 +298,7 @@ describe("§459 the team page's cards", () => {
     expect((await readPublicTeamPage(db, "en")).intro).toBeNull();
   });
 
-  describe("§NNN rich text and several links", () => {
+  describe("§474 rich text and several links", () => {
     const doc = (...paragraphs: string[]) => ({
       type: "doc" as const,
       content: paragraphs.map((words) => ({ type: "paragraph" as const, content: [{ type: "text" as const, text: words }] })),

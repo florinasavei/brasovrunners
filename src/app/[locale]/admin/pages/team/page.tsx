@@ -68,7 +68,7 @@ export const dynamic = "force-dynamic";
  * and a photo, so it is written in a fold on its own row — closed, with its words on the line,
  * until somebody opens it (§336) — rather than behind a second screen. The words are the rich-text
  * editor's, each language in a fold of its own that mounts the editor only when opened (§96,
- * §NNN), so a screen of twenty cards starts no editor at all. Each form carries a scope, so the ids
+ * §474), so a screen of twenty cards starts no editor at all. Each form carries a scope, so the ids
  * the refusal summary links to are never shared between two cards.
  */
 export default async function AdminTeamPage({ params, searchParams }: Props) {
@@ -107,7 +107,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
       moveDown: t("team.linkRows.moveDown"),
       row: t("team.linkRows.row"),
     },
-    // The card's own words for each kind — what the page shows when a link has no label (§NNN).
+    // The card's own words for each kind — what the page shows when a link has no label (§474).
     kinds: await teamLinkKindWords(),
   };
   // Each link row's four boxes by the name the editor posts, so the summary says "Linkul 2: adresa".
@@ -236,7 +236,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
-/** What the rich-text editors and the links' rows need, translated once on the server (§NNN). */
+/** What the rich-text editors and the links' rows need, translated once on the server (§474). */
 type Editing = {
   rich: ReturnType<typeof richTextEditorLabels>;
   links: TeamLinkRowsLabels;
@@ -312,7 +312,7 @@ function PageCard({
             <summary>{t("team.introFold")}</summary>
             <ActionForm action={saveTeamPageIntroAction} messages={messages} scope="intro" data-testid="team-intro-form">
               <input type="hidden" name="uiLocale" value={locale} />
-              {/* The page's own column, so the whole toolbar: a picture, a film, a table (§NNN). */}
+              {/* The page's own column, so the whole toolbar: a picture, a film, a table (§474). */}
               <Stack spacing={1.5}>
                 <LazyRichTextEditor
                   name="introRoBody"
@@ -496,7 +496,7 @@ function oneSided(member: AdminTeamMember): boolean {
 /**
  * The boxes of a card, for adding one and for writing one: the name, then the role Română and
  * English side by side from `sm` — both or neither, the partner description's pattern (§352) —
- * then the words about the person in the rich-text editor, one fold per language (§NNN), the
+ * then the words about the person in the rich-text editor, one fold per language (§474), the
  * person's links, and the photo.
  */
 function MemberFields({
@@ -545,7 +545,7 @@ function MemberFields({
         />
       </Box>
       {/*
-        The words about the person in the editor every page uses (§NNN): paragraphs, a list, a link
+        The words about the person in the editor every page uses (§474): paragraphs, a list, a link
         in the text, a picture. No table — a card two to a row on a phone has no room for one, and
         the save refuses it. Folded, so a screen of cards mounts no editor until one is opened (§96).
       */}

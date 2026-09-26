@@ -76,7 +76,7 @@ export default async function BackofficeShell({
     : null;
   const registered = breakdown?.total ?? null;
   /*
-    The tooltip says what the figure counts, per event (§NNN): the rule in one line, then each
+    The tooltip says what the figure counts, per event (§476): the rule in one line, then each
     upcoming event with its number, the first five by start and how many more after them — so
     a reader whose list disagrees with the badge sees which event the difference is on.
   */

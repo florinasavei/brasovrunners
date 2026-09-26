@@ -4,7 +4,7 @@ import { storedTeamDoc, TEAM_BIO_MAX, teamDocFromPlain, teamFieldName, teamMembe
 import { guessTeamLinkKind, MAX_TEAM_LINKS, readTeamLinks, teamLinkHost } from "@/modules/content/team/links";
 
 /**
- * §NNN — «Echipa» grows up: the words about a person are a rich text in both languages or neither,
+ * §474 — «Echipa» grows up: the words about a person are a rich text in both languages or neither,
  * without a table; a card carries up to six typed links, each https, each label both languages or
  * neither; and a card from before — plain words, one link — reads as it did.
  */
@@ -36,7 +36,7 @@ const issuesOf = (value: unknown) => {
   return parsed.success ? [] : parsed.error.issues.map((issue) => teamFieldName(issue.path));
 };
 
-describe("§NNN the words about a person, in the rich-text editor", () => {
+describe("§474 the words about a person, in the rich-text editor", () => {
   it("keeps both documents and their words, and a picture with no words counts as written", () => {
     const parsed = teamMemberFieldsSchema.parse({ ...base, ...rich(doc("Aleargă.", "De zece ani."), doc("Runs.", "For ten years.")) });
     expect(parsed.bioRoJson).toEqual(doc("Aleargă.", "De zece ani."));
@@ -76,7 +76,7 @@ describe("§NNN the words about a person, in the rich-text editor", () => {
   });
 });
 
-describe("§NNN a person's links", () => {
+describe("§474 a person's links", () => {
   const row = (overrides: Record<string, string>) => ({ kind: "STRAVA", url: "", labelRo: "", labelEn: "", ...overrides });
 
   it("keeps the rows in order, drops the spare line, and writes the first to §459's column", () => {

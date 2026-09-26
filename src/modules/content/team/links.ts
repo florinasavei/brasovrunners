@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * The links on a card of «Echipa» (§NNN, growing §459's one link; the owner, 2026-09-26: "trebuie
+ * The links on a card of «Echipa» (§474, growing §459's one link; the owner, 2026-09-26: "trebuie
  * să pot pune mai multe link-uri").
  *
  * An ordered list in `team_members.links`, `[{ kind, url, labelRo, labelEn }]`, at most six: a

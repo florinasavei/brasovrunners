@@ -4,7 +4,7 @@ import type { EventForecast, WeatherReading } from "@/modules/weather/domain/for
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 / §NNN: the event page's weather row ends in a discreet «?» (a render, both languages,
+ * BR-REQ-041-01 / §473: the event page's weather row ends in a discreet «?» (a render, both languages,
  * and absent without a forecast).
  */
 let currentLocale: "ro" | "en" = "ro";
@@ -92,7 +92,7 @@ const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/sty
 
 const helpButton = (html: string) => /<button[^>]*data-testid="event-weather-help"[^>]*>/.exec(html)?.[0] ?? "";
 
-describe("the weather row's help glyph (§NNN)", () => {
+describe("the weather row's help glyph (§473)", () => {
   it("renders the «?» with the Romanian words as its accessible name", async () => {
     const html = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true, weather: forecast(reading()) })));
     const button = helpButton(html);

@@ -33,7 +33,7 @@ function text(form: FormData, name: string): string {
 }
 
 /**
- * The links' rows (§NNN), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,
+ * The links' rows (§474), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,
  * blanks included; `fields.ts` drops the spare line and names a refused row by this same index.
  * The editor always posts `links.present`, so a card whose every row was removed saves "no links".
  */
@@ -61,7 +61,7 @@ function fieldsOf(form: FormData) {
     name: text(form, "name"),
     roleRo: text(form, "roleRo"),
     roleEn: text(form, "roleEn"),
-    // The words about the person, from the rich-text editor (§NNN).
+    // The words about the person, from the rich-text editor (§474).
     bioRoBody: body(form, "bioRoBody"),
     bioEnBody: body(form, "bioEnBody"),
     links: linkRowsOf(form),
