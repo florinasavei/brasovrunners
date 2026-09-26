@@ -159,9 +159,30 @@ function periodHours(period: MonthPeriod, now: Date): { total: number; elapsed: 
 }
 
 /**
+ * Where `now` stands in a provider's period: which day of it (1-based, counted from the period's
+ * own start, never from the club's midnight), how many days it has, and the hours left.
+ *
+ * The period is the provider's, in its own clock — Neon's billing period, the UTC calendar month
+ * the outbox and Vercel count — so at 01:30 on 1 October in Brașov (22:30 UTC on 30 September)
+ * the month being projected is still September, on its last day with an hour and a half left.
+ * Counting days in the club's zone instead would move three hours of every month's edge into the
+ * wrong month and disagree with the provider's own meter; the test at the month's edge holds this.
+ */
+export function periodProgress(period: MonthPeriod, now: Date): { day: number; days: number; hoursLeft: number } {
+  const { total, elapsed } = periodHours(period, now);
+  const days = Math.round(total / 24);
+  return { day: Math.min(Math.floor(elapsed / 24) + 1, Math.max(days, 1)), days, hoursLeft: total - elapsed };
+}
+
+/**
  * The usage at the period's end if the pace so far holds: `used` plus the hourly pace times the
  * hours left, the pace measured over at least a day — `neonBudget`'s own formula (§447), so the
  * two cards never print two projections for one month. Never below `used`.
+ *
+ * Kept as §447's hourly pace rather than a count of days elapsed in the club's zone: the two agree
+ * to the day in mid-month, but a day count jumps at the club's midnight and at the month's edge
+ * would divide a UTC period's usage by the club's calendar (`periodProgress`), while the hourly
+ * pace with its one-day floor is smooth, provider-aligned, and the number «Bugetul lunii» prints.
  */
 export function projectToPeriodEnd(used: number, period: MonthPeriod, now: Date): number {
   const { total, elapsed } = periodHours(period, now);

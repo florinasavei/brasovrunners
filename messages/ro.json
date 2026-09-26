@@ -2146,7 +2146,8 @@
           "floorDown": "{cu} CU mai puțin la mărimea minimă ≈ {usd} USD mai puțin pe lună la 100 % utilizare.",
           "alwaysOn": "Fără oprire, baza nu mai doarme: cel puțin {usd} USD pe lună la mărimea minimă de {min} CU, chiar fără niciun vizitator.",
           "sleepsAgain": "Cu oprirea înapoi, o lună fără vizitatori nu mai costă cei {usd} USD ai bazei mereu pornite.",
-          "same": "Costul lunii nu se schimbă."
+          "same": "Costul lunii nu se schimbă.",
+          "free": "Pe planul Free schimbarea nu costă nimic până se consumă cele {hours} ore-CU incluse în lună; o mărime mai mare le consumă mai repede, iar când se termină, Neon oprește baza până la perioada următoare."
         }
       },
       "filter": {

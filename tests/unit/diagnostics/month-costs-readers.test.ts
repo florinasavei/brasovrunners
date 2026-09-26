@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { previousPeriodCuSeconds } from "@/modules/diagnostics/domain/neon-meter";
 import { FAKE_PROJECT_ID, fakeNeon, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
@@ -95,6 +96,34 @@ describe("Neon's previous billing period", () => {
     expect(history?.searchParams.get("from")).toBe("2026-09-01T00:00:00.000Z");
     expect(history?.searchParams.get("to")).toBe("2026-10-01T00:00:00.000Z");
     expect(history?.searchParams.get("org_id")).toBe("org-club");
+  });
+
+  it("takes the previous period's start from Neon's answer, not the first of the month", async () => {
+    // Periods that turn on the 16th: current from 16 October, previous from 16 September. The
+    // answer, asked from 1 September, also carries the tail of the period before (from 16 August).
+    const start = new Date("2026-10-16T00:00:00.000Z");
+    const state = productionLikeState();
+    (state.project as Record<string, unknown>).org_id = "org-club";
+    state.consumption = {
+      projects: [
+        {
+          project_id: FAKE_PROJECT_ID,
+          periods: [
+            { period_start: "2026-08-16T00:00:00Z", consumption: [{ metrics: [{ metric_name: "compute_unit_seconds", value: 360_000 }] }] },
+            { period_start: "2026-09-16T00:00:00Z", consumption: [{ metrics: [{ metric_name: "compute_unit_seconds", value: 54_000 }] }] },
+          ],
+        },
+      ],
+    };
+    const read = await readNeonPreviousPeriod(NEON_ENV, start, { fetchImpl: fakeNeon(state).fetch });
+    expect(read).toEqual({ ok: true, cuHours: 15, start: new Date("2026-09-16T00:00:00.000Z"), end: start });
+  });
+
+  it("falls back to the first of the month before when the answer names no period start", () => {
+    const body = { projects: [{ project_id: "p", periods: [{ consumption: [{ metrics: [{ metric_name: "compute_unit_seconds", value: 7_200 }] }] }] }] };
+    const fallback = new Date("2026-09-01T00:00:00.000Z");
+    expect(previousPeriodCuSeconds(body, "p", new Date("2026-10-01T00:00:00.000Z"), fallback)).toEqual({ seconds: 7_200, start: fallback });
+    expect(previousPeriodCuSeconds({ projects: [] }, "p", new Date("2026-10-01T00:00:00.000Z"), fallback)).toBeNull();
   });
 
   it("says why for a project-scoped key, which Neon refuses the history", async () => {

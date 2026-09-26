@@ -363,8 +363,8 @@ export function quotaBoxValue(quotaCuHours: number | null): string {
 }
 
 /**
- * What a change of the compute's settings does to the month's bill (§NNN), at Launch's rate from
- * the one catalogue over the thirty-day month the cost row prices (`NEON_MONTH_HOURS`) — the
+ * What a change of the compute's settings does to the month's bill (§NNN), at the rate of the plan
+ * Neon reports from the one catalogue (Launch when it reports none) over the thirty-day month the cost row prices (`NEON_MONTH_HOURS`) — the
  * figures the confirmation names before the save, in the owner's words: «0,5 CU în plus ≈ X pe lună
  * la 100 % utilizare».
  *
@@ -379,16 +379,26 @@ export function quotaBoxValue(quotaCuHours: number | null): string {
 export type NeonComputeSettings = { minCu: number; maxCu: number; suspendMode: NeonSuspendMode };
 
 export type NeonLimitsMoney = {
+  /** The plan the figures are priced at: the one Neon reported, or Launch when the page knows none. */
+  plan: NeonPlanId;
   ceiling: { deltaCu: number; deltaUsdPerMonth: number };
   floor: { deltaCu: number; deltaUsdPerMonth: number };
   idleMonth: { beforeUsd: number; afterUsd: number };
 };
 
-export function neonLimitsMoney(before: NeonComputeSettings, after: NeonComputeSettings): NeonLimitsMoney {
-  const rate = NEON_PLANS.LAUNCH.usdPerCuHour;
+/**
+ * Priced at the plan the page knows (`reportedPlan`): Free bills nothing — its hours are included
+ * and then refused — so every figure is zero there; Launch bills its rate. A plan the page does not
+ * know is priced at Launch, the only plan that bills, so the dialog never says "free" of a change
+ * that may cost money.
+ */
+export function neonLimitsMoney(before: NeonComputeSettings, after: NeonComputeSettings, reportedPlan: NeonPlanId | null): NeonLimitsMoney {
+  const plan: NeonPlanId = reportedPlan ?? "LAUNCH";
+  const rate = NEON_PLANS[plan].usdPerCuHour;
   const month = (cu: number) => cu * rate * NEON_MONTH_HOURS;
   const idle = (settings: NeonComputeSettings) => (settings.suspendMode === "never" ? month(settings.minCu) : 0);
   return {
+    plan,
     ceiling: { deltaCu: after.maxCu - before.maxCu, deltaUsdPerMonth: month(after.maxCu - before.maxCu) },
     floor: { deltaCu: after.minCu - before.minCu, deltaUsdPerMonth: month(after.minCu - before.minCu) },
     idleMonth: { beforeUsd: idle(before), afterUsd: idle(after) },

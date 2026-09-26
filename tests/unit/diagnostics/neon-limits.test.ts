@@ -234,7 +234,7 @@ describe("§NNN the floor and scale to zero", () => {
   });
 
   it("prices a change at Launch's rate over the thirty-day month", () => {
-    const money = neonLimitsMoney({ minCu: 0.25, maxCu: 1, suspendMode: "auto" }, { minCu: 0.5, maxCu: 2, suspendMode: "never" });
+    const money = neonLimitsMoney({ minCu: 0.25, maxCu: 1, suspendMode: "auto" }, { minCu: 0.5, maxCu: 2, suspendMode: "never" }, "LAUNCH");
     const rate = NEON_PLANS.LAUNCH.usdPerCuHour;
     expect(money.ceiling.deltaCu).toBe(1);
     expect(money.ceiling.deltaUsdPerMonth).toBeCloseTo(rate * 720, 9);
@@ -244,5 +244,17 @@ describe("§NNN the floor and scale to zero", () => {
     expect(suspendModeOf(0)).toBe("auto");
     expect(suspendModeOf(300)).toBe("auto");
     expect(suspendModeOf(undefined)).toBe("auto");
+  });
+
+  it("prices a change at nothing on Free, and at Launch when the plan is unknown", () => {
+    const before = { minCu: 0.25, maxCu: 1, suspendMode: "auto" as const };
+    const after = { minCu: 0.5, maxCu: 2, suspendMode: "auto" as const };
+    const free = neonLimitsMoney(before, after, "FREE");
+    expect(free.plan).toBe("FREE");
+    expect(free.ceiling).toEqual({ deltaCu: 1, deltaUsdPerMonth: 0 });
+    expect(free.floor).toEqual({ deltaCu: 0.25, deltaUsdPerMonth: 0 });
+    const unknown = neonLimitsMoney(before, after, null);
+    expect(unknown.plan).toBe("LAUNCH");
+    expect(unknown.ceiling.deltaUsdPerMonth).toBeCloseTo(NEON_PLANS.LAUNCH.usdPerCuHour * 720, 9);
   });
 });

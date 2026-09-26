@@ -5,10 +5,12 @@ import {
   type MonthCostLine,
   monthCosts,
   monthTotals,
+  periodProgress,
   previousMonth,
   projectToPeriodEnd,
   utcMonth,
 } from "@/modules/diagnostics/domain/month-costs";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
 import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "@/modules/diagnostics/platform-plans";
 import { neonBudget } from "@/modules/diagnostics/domain/neon-budget";
@@ -77,6 +79,33 @@ describe("the pace a month is projected at", () => {
       const budget = neonBudget({ usedCuHours: used, quotaCuHours: 100, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, now });
       expect(projectToPeriodEnd(used, OCTOBER, now)).toBeCloseTo(budget.projectedCuHours ?? Number.NaN, 9);
     }
+  });
+
+  it("counts the period's day and hours left in the provider's clock at the club's month edge", () => {
+    const inClubZone = (at: Date) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(at);
+    // 01:30 on 1 October in Brașov is 22:30 UTC on 30 September: the provider's month is still September.
+    const clubMidnightPast = new Date("2026-09-30T22:30:00.000Z");
+    expect(inClubZone(clubMidnightPast)).toBe("2026-10-01, 01:30");
+    const september = utcMonth(clubMidnightPast);
+    expect(september.start.toISOString()).toBe("2026-09-01T00:00:00.000Z");
+    expect(periodProgress(september, clubMidnightPast)).toEqual({ day: 30, days: 30, hoursLeft: 1.5 });
+    // 30 CU-hours over 718.5 hours, 1.5 left: the projection barely moves, and stays September's.
+    expect(projectToPeriodEnd(30, september, clubMidnightPast)).toBeCloseTo(30 + (30 / 718.5) * 1.5, 9);
+
+    // 02:59 on 1 October in Brașov (23:59 UTC): still September, one minute left.
+    const lastMinute = new Date("2026-09-30T23:59:00.000Z");
+    expect(inClubZone(lastMinute)).toBe("2026-10-01, 02:59");
+    expect(periodProgress(september, lastMinute).day).toBe(30);
+    expect(periodProgress(september, lastMinute).hoursLeft).toBeCloseTo(1 / 60, 9);
+
+    // 03:00 in Brașov is the UTC month's first instant: day 1 of October's 31, every hour left.
+    expect(inClubZone(OCTOBER.start)).toBe("2026-10-01, 03:00");
+    expect(periodProgress(OCTOBER, OCTOBER.start)).toEqual({ day: 1, days: 31, hoursLeft: 744 });
+    // The pace's one-day floor keeps the first hours from projecting a month of them.
+    expect(projectToPeriodEnd(1, OCTOBER, new Date("2026-10-01T01:00:00.000Z"))).toBeCloseTo(1 + (1 / 24) * 743, 9);
+    // At the period's end: the last day, nothing left.
+    expect(periodProgress(OCTOBER, OCTOBER.end)).toEqual({ day: 31, days: 31, hoursLeft: 0 });
   });
 });
 

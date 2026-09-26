@@ -2146,7 +2146,8 @@
           "floorDown": "{cu} CU less at the minimum size ≈ {usd} USD less a month at 100 % utilisation.",
           "alwaysOn": "Without suspending, the database never sleeps: at least {usd} USD a month at the minimum size of {min} CU, even with no visitor at all.",
           "sleepsAgain": "With suspending back on, a month with no visitors no longer costs the {usd} USD of an always-on database.",
-          "same": "The month's cost does not change."
+          "same": "The month's cost does not change.",
+          "free": "On the Free plan the change costs nothing until the month's {hours} included CU-hours are spent; a larger size spends them faster, and when they run out Neon suspends the database until the next period."
         }
       },
       "filter": {

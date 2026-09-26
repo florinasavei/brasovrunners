@@ -163,7 +163,7 @@ describe("§NNN the compute's floor and scale to zero, and the money the confirm
     expect(text(html)).toContain("Mărimea minimă: 0,5 CU · Oprirea când nu e folosită: niciodată — baza e mereu pornită");
   });
 
-  it("names the month's money for the chosen settings, in the owner's words", async () => {
+  it("names the month's money for the chosen settings, in the owner's words, on Launch", async () => {
     const { createFormatter, createTranslator } = await import("next-intl");
     const messages = (await import("../../../messages/ro.json")).default;
     const translator = createTranslator({ locale: "ro", messages, namespace: "Admin" });
@@ -173,16 +173,57 @@ describe("§NNN the compute's floor and scale to zero, and the money the confirm
     const now = { minCu: 0.25, maxCu: 1, suspendMode: "auto" as const };
 
     // 0.5 CU more at the ceiling: 0.5 × 0.106 × 720 = 38.16 USD a month at 100 % utilisation.
-    expect(moneySentence(t, numbers, now, { ...now, maxCu: 1.5 })).toBe("0,5 CU în plus la mărimea maximă ≈ 38,16 USD în plus pe lună la 100 % utilizare.");
-    expect(moneySentence(t, numbers, now, { ...now, maxCu: 0.5 })).toBe("0,5 CU mai puțin la mărimea maximă ≈ 38,16 USD mai puțin pe lună la 100 % utilizare.");
-    expect(moneySentence(t, numbers, now, { ...now, minCu: 0.5 })).toBe("0,25 CU în plus la mărimea minimă ≈ 19,08 USD în plus pe lună la 100 % utilizare.");
+    expect(moneySentence(t, numbers, now, { ...now, maxCu: 1.5 }, "LAUNCH")).toBe("0,5 CU în plus la mărimea maximă ≈ 38,16 USD în plus pe lună la 100 % utilizare.");
+    expect(moneySentence(t, numbers, now, { ...now, maxCu: 0.5 }, "LAUNCH")).toBe("0,5 CU mai puțin la mărimea maximă ≈ 38,16 USD mai puțin pe lună la 100 % utilizare.");
+    expect(moneySentence(t, numbers, now, { ...now, minCu: 0.5 }, "LAUNCH")).toBe("0,25 CU în plus la mărimea minimă ≈ 19,08 USD în plus pe lună la 100 % utilizare.");
     // Always on bills the floor every hour: 0.25 × 0.106 × 720 = 19.08.
-    expect(moneySentence(t, numbers, now, { ...now, suspendMode: "never" })).toBe(
+    expect(moneySentence(t, numbers, now, { ...now, suspendMode: "never" }, "LAUNCH")).toBe(
       "Fără oprire, baza nu mai doarme: cel puțin 19,08 USD pe lună la mărimea minimă de 0,25 CU, chiar fără niciun vizitator.",
     );
-    expect(moneySentence(t, numbers, { ...now, suspendMode: "never" }, now)).toBe(
+    expect(moneySentence(t, numbers, { ...now, suspendMode: "never" }, now, "LAUNCH")).toBe(
       "Cu oprirea înapoi, o lună fără vizitatori nu mai costă cei 19,08 USD ai bazei mereu pornite.",
     );
-    expect(moneySentence(t, numbers, now, now)).toBe("Costul lunii nu se schimbă.");
+    expect(moneySentence(t, numbers, now, now, "LAUNCH")).toBe("Costul lunii nu se schimbă.");
+  });
+
+  it("says a change costs nothing on Free until the included hours are spent, and prices an unknown plan at Launch", async () => {
+    const { createFormatter, createTranslator } = await import("next-intl");
+    const messages = (await import("../../../messages/ro.json")).default;
+    const translator = createTranslator({ locale: "ro", messages, namespace: "Admin" });
+    const t = (key: string, values?: Record<string, string>) => translator(key as "tasks.neonLimits.save", values);
+    const format = createFormatter({ locale: "ro" });
+    const numbers = { number: (value: number, options?: { minimumFractionDigits?: number; maximumFractionDigits?: number }) => format.number(value, options) };
+    const now = { minCu: 0.25, maxCu: 1, suspendMode: "auto" as const };
+    const free =
+      "Pe planul Free schimbarea nu costă nimic până se consumă cele 100 ore-CU incluse în lună; o mărime mai mare le consumă mai repede, iar când se termină, Neon oprește baza până la perioada următoare.";
+
+    // Free: no USD figure at all, whatever the change.
+    expect(moneySentence(t, numbers, now, { ...now, maxCu: 2 }, "FREE")).toBe(free);
+    expect(moneySentence(t, numbers, now, { ...now, minCu: 0.5 }, "FREE")).toBe(free);
+    expect(moneySentence(t, numbers, now, now, "FREE")).toBe("Costul lunii nu se schimbă.");
+    // Unknown plan: Launch's rate, the one plan that bills.
+    expect(moneySentence(t, numbers, now, { ...now, maxCu: 1.5 }, null)).toBe(moneySentence(t, numbers, now, { ...now, maxCu: 1.5 }, "LAUNCH"));
+  });
+
+  it("prices the dialog at the plan Neon reports", async () => {
+    // The dialogs open on the client; their bodies are the form's `confirm` prop in the tree the card returns.
+    const bodies = async (limits: NeonLimitsReading): Promise<string> => {
+      const found: string[] = [];
+      const walk = (node: unknown): void => {
+        if (Array.isArray(node)) return node.forEach(walk);
+        if (!node || typeof node !== "object" || !("props" in node)) return;
+        const props = (node as { props: Record<string, unknown> }).props;
+        if (Array.isArray(props.confirm)) for (const spec of props.confirm as Array<{ body: string }>) found.push(spec.body);
+        walk(props.children);
+      };
+      walk(await NeonLimitsPanel({ locale: "ro", reading: { ok: true, limits }, appEnv: "qa", mayEdit: true }));
+      return found.join("\n");
+    };
+    const launch = await bodies(LIMITS);
+    expect(launch).toContain("USD în plus pe lună la 100 % utilizare");
+    expect(launch).not.toContain("Pe planul Free");
+    const onFree = await bodies({ ...LIMITS, reportedPlan: "FREE" });
+    expect(onFree).toContain("Pe planul Free schimbarea nu costă nimic");
+    expect(onFree).not.toContain("USD în plus pe lună");
   });
 });

@@ -13,6 +13,7 @@ import {
   type NeonMeterSource,
   type NeonOperation,
   pickMeterReading,
+  previousPeriodCuSeconds,
 } from "./domain/neon-meter";
 import { NEON_PLANS, type NeonPlanId, neonPlanFromSubscription } from "./domain/neon-plan";
 
@@ -443,8 +444,9 @@ export async function readNeonConsumption(
  * (`NEON_SHARED_READ_SECONDS`), so an open of Costuri asks Neon at most once a quarter of an hour;
  * a finished period does not change.
  *
- * The previous period is the calendar month before the current period's start, UTC — Neon's
- * periods are calendar months.
+ * The previous period is the one Neon's answer names before the current period's start (its own
+ * `period_start`, `previousPeriodCuSeconds`); the calendar month before, UTC, only when the answer
+ * names none.
  */
 export async function readNeonPreviousPeriod(
   env: NeonEnv,
@@ -466,11 +468,14 @@ export async function readNeonPreviousPeriod(
   const refusedAt = consumptionRefusals.get(refusalKey);
   const now = Date.now();
   if (refusedAt !== undefined && now - refusedAt >= 0 && now - refusedAt < NEON_CONSUMPTION_REFUSAL_MS) return { ok: false, reason: "HTTP 403/404, remembered" };
-  const start =new Date(Date.UTC(periodStart.getUTCFullYear(), periodStart.getUTCMonth() - 1, 1));
+  // Asked from the first of the calendar month before, which reaches back past the previous
+  // period's start whatever day Neon begins its periods on; the answer's own `period_start` then
+  // says where that period began, and the first of the month is the start only when it says nothing.
+  const from = new Date(Date.UTC(periodStart.getUTCFullYear(), periodStart.getUTCMonth() - 1, 1));
   const query = new URLSearchParams({
     org_id: orgId,
     project_ids: env.NEON_PROJECT_ID,
-    from: start.toISOString(),
+    from: from.toISOString(),
     to: periodStart.toISOString(),
     granularity: "daily",
     metrics: "compute_unit_seconds",
@@ -480,8 +485,10 @@ export async function readNeonPreviousPeriod(
     if (answer.failure.kind === "forbidden" || answer.failure.kind === "refused") consumptionRefusals.set(refusalKey, now);
     return { ok: false, reason: reasonOf(answer.failure) };
   }
-  const seconds = meteredCuSeconds(answer.body, env.NEON_PROJECT_ID, start);
-  return seconds === null ? { ok: false, reason: "unexpected answer" } : { ok: true, cuHours: seconds / 3600, start, end: periodStart };
+  const previous = previousPeriodCuSeconds(answer.body, env.NEON_PROJECT_ID, periodStart, from);
+  return previous === null
+    ? { ok: false, reason: "unexpected answer" }
+    : { ok: true, cuHours: previous.seconds / 3600, start: previous.start, end: periodStart };
 }
 
 /**

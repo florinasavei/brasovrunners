@@ -22,7 +22,7 @@ import {
   quotaBoxValue,
   recommendedNeonQuotaCuHours,
 } from "@/modules/diagnostics/domain/neon-limits";
-import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
+import { NEON_PLANS, type NeonPlanId } from "@/modules/diagnostics/domain/neon-plan";
 import type { NeonFailure } from "@/modules/diagnostics/neon";
 import type { AppEnvironment } from "@/shared/config/env-enums";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -52,18 +52,27 @@ type Props = {
 
 /**
  * The sentence the confirmation adds for one choice of the compute's settings (§NNN): what the
- * change does to the month's bill, in USD at Launch's rate, or that it changes nothing. Exported
- * for the test that holds the words to the money.
+ * change does to the month's bill at the plan Neon reports (Launch's rate in USD; on Free, that it
+ * costs nothing until the plan's included hours are spent), or that it changes nothing. A plan the
+ * page does not know is priced at Launch, the one that bills. Exported for the test that holds the
+ * words to the money, per plan.
  */
 export function moneySentence(
   t: (key: string, values?: Record<string, string>) => string,
   format: { number: (value: number, options?: { minimumFractionDigits?: number; maximumFractionDigits?: number }) => string },
   before: NeonComputeSettings,
   after: NeonComputeSettings,
+  plan: NeonPlanId | null,
 ): string {
-  const money = neonLimitsMoney(before, after);
+  const money = neonLimitsMoney(before, after, plan);
   const cu = (value: number) => format.number(Math.abs(value), { maximumFractionDigits: 2 });
   const usd = (value: number) => format.number(Math.abs(value), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const changes = money.ceiling.deltaCu !== 0 || money.floor.deltaCu !== 0 || before.suspendMode !== after.suspendMode;
+  if (money.plan === "FREE") {
+    return changes
+      ? t("tasks.neonLimits.money.free", { hours: format.number(NEON_PLANS.FREE.cuHoursPerMonth ?? 0, { maximumFractionDigits: 0 }) })
+      : t("tasks.neonLimits.money.same");
+  }
   const parts: string[] = [];
   if (money.ceiling.deltaCu !== 0) {
     parts.push(
@@ -174,7 +183,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
         .flatMap((floor) =>
           suspendModes.map((mode) => ({
             ...baseConfirm,
-            body: `${t("confirm.neonLimitsBody")} ${moneySentence(translate, numbers, before, { minCu: floor.cu, maxCu: ceiling.cu, suspendMode: mode })}`,
+            body: `${t("confirm.neonLimitsBody")} ${moneySentence(translate, numbers, before, { minCu: floor.cu, maxCu: ceiling.cu, suspendMode: mode }, limits.reportedPlan)}`,
             when: [
               { field: "maxCu", equals: String(ceiling.cu) },
               { field: "minCu", equals: String(floor.cu) },
