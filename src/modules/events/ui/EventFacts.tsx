@@ -1031,8 +1031,8 @@ export default async function EventFacts({
     The weather at the start (§402; the owner, 2026-09-25: "vreau să afișez și starea vremii bazat
     pe ceva API"): «Vremea» with the forecast's own glyph in the row glyph's place — the sun, a
     cloud, a raindrop — then its word, the temperature, the chance of rain and the wind, as one
-    flowing line like «Când». Open-Meteo's credit is the footer's alone since §NNN. Only when the page read a forecast: within seven days of the start and when the service
-    answered; otherwise the row is not there at all, never a sentence saying it is missing. After
+    flowing line like «Când». Open-Meteo's credit is the footer's alone since §NNN. Only when the
+    page read a forecast: within seven days of the start and when the service answered; otherwise the row is not there at all, never a sentence saying it is missing. After
     the short facts and before the partners, whose cards stay last (§356).
 
     Since §416 (the owner, 2026-09-25: "la vreme aș vrea să văd exact pe locația selectată, să văd
