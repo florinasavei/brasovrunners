@@ -2685,11 +2685,10 @@
       "columnTakenOn": "Date",
       "columnStatus": "Status",
       "columnPhotos": "Photos",
-      "tableCaption": "The gallery's albums",
       "storageUnconfigured": "Photo storage is not configured for this environment: the R2 variables are missing. The steps are on the “To do” page, under “Photo storage”.",
       "takenOnHelp": "The day the photos were taken. Albums are ordered by it.",
-      "eventHelp": "Optional. The album page will link to the event.",
-      "noEvent": "No event",
+      "eventHelp": "Optional. Choose the event and the album page will link to it. Leave “None” for a free album — group photos, no event.",
+      "noEvent": "None — free album",
       "slugHelp": "Lowercase letters, digits and hyphens. Becomes the album's address.",
       "slugLocked": "The address is fixed after publication, so shared links keep working.",
       "language": {
@@ -2698,7 +2697,7 @@
       },
       "fields": {
         "takenOn": "Date of the photos",
-        "event": "Event",
+        "event": "Linked to an event",
         "title": "Title",
         "slug": "Address (slug)",
         "description": "Description"
@@ -2706,7 +2705,16 @@
       "tabAlbums": "Albums",
       "tabPictures": "Pictures",
       "descriptionHelp": "Optional — in both languages or neither.",
-      "bothOrNeither": "write it in both languages or neither"
+      "bothOrNeither": "write it in both languages or neither",
+      "columnEvent": "Event",
+      "group": {
+        "event": "Event albums",
+        "free": "Free albums"
+      },
+      "groupEmpty": {
+        "event": "No album linked to an event.",
+        "free": "No free album. A free album holds group photos that belong to no event: under “New album”, leave “Linked to an event” on “None”."
+      }
     },
     "thanks": {
       "title": "After the race",

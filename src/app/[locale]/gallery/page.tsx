@@ -125,6 +125,12 @@ async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSumma
                   <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 0.5 }}>
                     {album.title}
                   </Typography>
+                  {/* An event's album names the event; a free album is named by its date alone (§NNN). */}
+                  {album.eventTitle && (
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.25 }}>
+                      {album.eventTitle}
+                    </Typography>
+                  )}
                   <Typography variant="body2" color="text.secondary">
                     {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
                   </Typography>

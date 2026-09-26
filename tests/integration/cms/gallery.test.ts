@@ -3,9 +3,12 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { eventTranslations, events } from "@/db/schema/events";
 import {
+  albumKind,
   findPublishedAlbumBySlug,
   findPublishedAlbumSiblingSlug,
+  listAlbumsForAdmin,
   listPublishedAlbums,
 } from "@/modules/content/gallery/repository";
 import {
@@ -113,6 +116,61 @@ describe("BR-REQ-054-01 the photo gallery", () => {
     // The Romanian slug is not an English address (BR-REQ-040-02).
     expect(await findPublishedAlbumBySlug(db, "en", "crosul-2026")).toBeUndefined();
     expect(await findPublishedAlbumSiblingSlug(db, "ro", "crosul-2026", "en")).toBe("cross-2026");
+  });
+
+  it("§NNN lists a free album and an event's album together, newest first, naming only a published event", async () => {
+    const [event] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date("2026-10-11T06:00:00Z"), locationName: "Poiana" })
+      .returning();
+    await db.insert(eventTranslations).values([
+      { eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul Poienii" },
+      { eventId: event.id, locale: "en", slug: "the-cross", title: "The Poiana cross" },
+    ]);
+
+    const publish = async (fields: typeof FIELDS) => {
+      const album = await createAlbum(db, { actor: editor, fields });
+      await addPhoto(db, { actor: editor, albumId: album.id, file: await photo(), originalFilename: "a.jpg" });
+      const [current] = await db.select().from(galleryAlbums).where(eq(galleryAlbums.id, album.id));
+      const reviewed = await transitionAlbum(db, { actor: editor, albumId: album.id, expectedVersion: current.version, to: "IN_REVIEW" });
+      await transitionAlbum(db, { actor: editor, albumId: album.id, expectedVersion: reviewed.version, to: "PUBLISHED" });
+      return album;
+    };
+    // The event's album is older; the free one — group photos, no event — newer.
+    const eventAlbum = await publish({ ...FIELDS, eventId: event.id });
+    const freeAlbum = await publish({
+      takenOn: "2026-11-02",
+      eventId: "",
+      translations: {
+        ro: { slug: "poze-de-grup", title: "Poze de grup", description: "" },
+        en: { slug: "group-photos", title: "Group photos", description: "" },
+      },
+    });
+
+    // The link is optional: a free album is stored with no event.
+    const [freeRow] = await db.select().from(galleryAlbums).where(eq(galleryAlbums.id, freeAlbum.id));
+    expect(freeRow.eventId).toBeNull();
+
+    // A draft event is never named on the public list, only a published one.
+    const draftListed = await listPublishedAlbums(db, "ro");
+    expect(draftListed.map((album) => [album.title, album.eventTitle])).toEqual([
+      ["Poze de grup", null],
+      ["Crosul aniversar 2026", null],
+    ]);
+
+    await db.update(events).set({ editorialStatus: "PUBLISHED", publishedAt: new Date() }).where(eq(events.id, event.id));
+    const listed = await listPublishedAlbums(db, "en");
+    expect(listed.map((album) => [album.id, album.eventTitle])).toEqual([
+      [freeAlbum.id, null],
+      [eventAlbum.id, "The Poiana cross"],
+    ]);
+
+    // The backoffice sorts both into their groups, a draft event's album included.
+    const admin = await listAlbumsForAdmin(db, "ro");
+    expect(admin.map((row) => [row.title, albumKind(row), row.eventTitle])).toEqual([
+      ["Poze de grup", "free", null],
+      ["Crosul aniversar 2026", "event", "Crosul Poienii"],
+    ]);
   });
 
   it("removes a photo's objects with its rows, moves the cover on, and removes an album's objects", async () => {
