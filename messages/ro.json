@@ -3481,7 +3481,7 @@
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
-    "missingTitle": "Mai ai de completat:",
+    "missingTitle": "Mai lipsesc:",
     "submittedTo": "L-am trimis la adresa:",
     "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
     "done": {
@@ -3704,6 +3704,7 @@
       "open": "Citește condițiile concursului",
       "reading": "Apasă pe căsuță sau pe buton: condițiile se deschid aici, le citești până la capăt și abia apoi se bifează.",
       "tick": "Am citit și sunt de acord cu condițiile concursului",
+      "missing": "Condițiile concursului — deschide-le și citește-le până la capăt",
       "panelTitle": "Condițiile concursului — {event}",
       "keepReading": "Derulează până la sfârșit ca să poți confirma.",
       "agreeButton": "Am citit și sunt de acord",

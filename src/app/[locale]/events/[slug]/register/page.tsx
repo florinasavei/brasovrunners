@@ -1424,7 +1424,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   (§NNN) — named by the same short names the refusal summary at the top uses.
                 */
                 missingTitle={t("missingTitle")}
-                missingNames={Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, t(`fieldNames.${name}`)]))}
+                missingNames={{
+                  ...Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, t(`fieldNames.${name}`)])),
+                  // Not only what is missing but what to do about it: the box does not tick on a
+                  // press, so "Condițiile concursului" alone sent people to press it (§NNN).
+                  rulesAcknowledged: t("rules.missing"),
+                }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the
                   club's switch off, there is no token to wait for and waiting would be a button

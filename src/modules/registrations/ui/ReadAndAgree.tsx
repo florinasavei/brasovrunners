@@ -11,7 +11,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import RichText from "@/modules/content/rich-text/ui/RichText";
-import { hasReachedEnd } from "../domain/read-gate";
+import { hasReachedEnd, SCROLL_END_TOLERANCE_PX } from "../domain/read-gate";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
@@ -117,15 +117,21 @@ export default function ReadAndAgree({
   // Sticky: once the end has been reached it stays reached, whatever a later opening measures.
   const [readToEnd, setReadToEnd] = useState(defaultAgreed);
   const [body, setBody] = useState<HTMLDivElement | null>(null);
+  const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
   const hintId = useId();
   const tickRef = useRef<HTMLInputElement | null>(null);
 
   /*
-    Tell the form the box changed (§NNN). A tick given from the panel is React state, and a
-    property React writes fires no event — so the send button's watcher, which listens to the
-    form's own `input` and `change`, went on listing "Condițiile concursului" after it had been
-    ticked. A bubbling native `change` is what any other box sends; React's own `onChange` for a
-    checkbox listens to `click`, so this never reaches the handler below.
+    Tell the form the box changed (§NNN). **This is the proven cause of the owner's "I did but
+    still disabled!"** — and it was on `qa` before this change, not only in a first draft of it:
+    «Am citit și sunt de acord» swapped the hidden invalid input for the ticked one through React
+    state alone, and a property React writes fires no event. The send button's watcher listens to
+    the form's own `input` and `change`, so it never measured again: the button stayed dimmed,
+    with "fill in the fields marked *", until the person happened to type somewhere else. (The
+    tolerance of the read gate was never the cause; it has been 8 px since §195.) A bubbling native
+    `change` is what any other box sends; React's own `onChange` for a checkbox listens to
+    `click`, so this never reaches the handler below. The e2e that sees «Condițiile concursului»
+    leave the list right after the panel's button, with no other input, is the regression proof.
   */
   useEffect(() => {
     tickRef.current?.dispatchEvent(new Event("change", { bubbles: true }));
@@ -173,6 +179,25 @@ export default function ReadAndAgree({
       body.removeEventListener("load", again, true);
     };
   }, [body, take]);
+
+  /*
+    A second witness, independent of the arithmetic (§NNN): a one-pixel mark after the text,
+    watched with the text's own box as the root. It is on screen only when the end of the text is,
+    whatever the device pixel ratio or the page's zoom make of `scrollTop` — so the measurement
+    above and this one would both have to be wrong for a reader at the end to be kept waiting.
+    The bottom margin is the read gate's own tolerance, so the two agree about where "the end" is.
+  */
+  useEffect(() => {
+    if (!body || !sentinel || typeof IntersectionObserver !== "function") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) setReadToEnd(true);
+      },
+      { root: body, rootMargin: `0px 0px ${SCROLL_END_TOLERANCE_PX}px 0px`, threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [body, sentinel]);
 
   /*
     Before hydration — and for ever, if the script never arrives — an ordinary required checkbox
@@ -228,7 +253,7 @@ export default function ReadAndAgree({
             }
             setAgreed(event.target.checked);
           }}
-          slotProps={{ input: { ref: tickRef, "aria-label": tickLabel, "aria-describedby": agreed ? undefined : hintId } }}
+          slotProps={{ input: { ref: tickRef, "aria-label": tickLabel, "aria-describedby": agreed || readToEnd ? undefined : hintId } }}
           sx={{
             ...CHECKBOX_TAP_TARGET,
             color: "inherit",
@@ -255,7 +280,12 @@ export default function ReadAndAgree({
           </span>
         </Button>
       </Box>
-      {!agreed && (
+      {/*
+        "…read to the end, and only then is the box ticked" is true only before the reading: once
+        read, a press on the box ticks it at once, and the hint would describe what no longer
+        happens (§NNN).
+      */}
+      {!agreed && !readToEnd && (
         <Typography id={hintId} variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {readingLabel}
         </Typography>
@@ -275,6 +305,7 @@ export default function ReadAndAgree({
           sx={{ maxHeight: "60vh" }}
         >
           <RichText body={document} />
+          <Box ref={setSentinel} aria-hidden="true" data-testid="rules-end" sx={{ height: "1px" }} />
         </DialogContent>
         <DialogActions sx={{ flexWrap: "wrap", gap: 1, px: 3, py: 2 }}>
           {!readToEnd && (

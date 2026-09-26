@@ -925,7 +925,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
       "Adresa scrisă a doua oară",
       "Declarația că ești apt medical",
       "Nota de confidențialitate",
-      "Condițiile concursului",
+      RULES_MISSING,
       "Acceptarea termenilor și condițiilor",
     ]) {
       const item = missing.getByRole("link", { name, exact: true });
@@ -950,61 +950,112 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
   });
 });
 
+/** How the list above the send button names the race's conditions: what is missing and what to do (§NNN). */
+const RULES_MISSING = "Condițiile concursului — deschide-le și citește-le până la capăt";
+
+/**
+ * A published race with conditions of its own, `lines` paragraphs long in each language: the
+ * featured race carries none, and every other spec here ticks its plain box — rules on it would
+ * change their branch under them. Per project and per run; `retireRulesEvent` moves it to draft.
+ */
+async function createRulesEvent(page: Page, lines: number): Promise<{ slug: string; editorUrl: string }> {
+  const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+  const slug = `cros-cu-regulament-${suffix}`;
+  const field = (name: string) => page.locator(`[name="${name}"]`);
+  const day = new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10);
+  const richText = async (strip: "title" | "rules", locale: "ro" | "en", name: string, text: string[]) => {
+    const panel = languagePanel(page, strip, locale);
+    await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.${name}"]`));
+    await panel.locator(`[data-rich-text="translations.${locale}.${name}"] [data-field]`).click();
+    for (const [index, line] of text.entries()) {
+      if (index > 0) await page.keyboard.press("Enter");
+      await page.keyboard.insertText(line);
+    }
+  };
+  const rules = (word: string) =>
+    Array.from({ length: lines }, (_, index) => `${word} ${index + 1}. Alergătorul respectă traseul marcat, arbitrii și ceilalți participanți.`);
+
+  await signIn(page, "Dev Administrator");
+  await page.goto("/ro/admin/events/new");
+  await hydrated(page);
+  await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+  await page.getByRole("option", { name: "Concurs" }).click();
+  await fillDateField(page, "Începutul evenimentului", day);
+  await fillTimeField(page, "Ora", "09:00");
+  await field("event.locationName").fill("Parcul Tractorul");
+  await field("event.locationNameEn").fill("Parcul Tractorul");
+  await openEditorBox(page, "Participare și înscrieri");
+  await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+  await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+  await field("event.capacity").fill("50");
+  await openEditorBox(page, "Condiții de participare și declarația");
+  await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
+  await page.getByRole("option").nth(1).click();
+  await field("translations.ro.title").fill(`Cros cu regulament ${suffix}`);
+  await field("translations.ro.slug").fill(slug);
+  await richText("title", "ro", "excerptBody", ["Un concurs cu regulamentul lui."]);
+  await languageTab(page, "title", "en").click();
+  await field("translations.en.title").fill(`Cross with rules ${suffix}`);
+  await languageTab(page, "address", "en").click();
+  await field("translations.en.slug").fill(`cross-with-rules-${suffix}`);
+  await richText("title", "en", "excerptBody", ["A race with its own rules."]);
+  // The race's own conditions, both languages (the owner's rule: both or neither).
+  await openEditorBox(page, "Regulamentul");
+  await richText("rules", "ro", "rules", rules("Regula"));
+  await languageTab(page, "rules", "en").click();
+  await richText("rules", "en", "rules", rules("Rule"));
+  await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
+  await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+  return { slug, editorUrl: page.url().split("?")[0] };
+}
+
+async function retireRulesEvent(page: Page, editorUrl: string) {
+  await page.goto(editorUrl);
+  await hydrated(page);
+  await page.getByRole("button", { name: "Mută în ciornă" }).click();
+  await confirmDialog(page);
+  // Teardown on a busy machine: the move is a server round trip, and it is not what is tested.
+  await expect(page.getByText("Ciornă", { exact: true })).toBeVisible({ timeout: 20_000 });
+}
+
+/**
+ * The gate walked from the box: a press on it opens the text, the end of the text opens the
+ * panel's button, and that button ticks the box — and takes the conditions off the list above
+ * the send button **with no other input on the form**. That last step is the regression proof
+ * of the owner's "I did but still disabled!": before §NNN the tick was React state only, no
+ * `change` reached the form, and the send button stayed dimmed until somebody typed elsewhere.
+ */
+async function readAndAgree(page: Page, { scroll }: { scroll: boolean }) {
+  const tick = page.locator('[name="rulesAcknowledged"]');
+  const missing = page.getByTestId("form-missing");
+  await expect(missing.getByRole("link", { name: RULES_MISSING, exact: true })).toBeVisible();
+  await tick.click();
+  const dialog = page.getByRole("dialog", { name: /Condițiile concursului/ });
+  await expect(dialog).toBeVisible();
+  await expect(tick).not.toBeChecked();
+  const agree = dialog.getByRole("button", { name: "Am citit și sunt de acord" });
+  if (scroll) {
+    await expect(agree).toBeDisabled();
+    // To the end of the text, and the panel's own button opens.
+    await dialog.getByTestId("rules-text").evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+  }
+  await expect(agree).toBeEnabled();
+  await agree.click();
+  await expect(dialog).toBeHidden();
+  await expect(tick).toBeChecked();
+  // No other input since the press: the list saw the tick by itself.
+  await expect(missing.getByRole("link", { name: RULES_MISSING, exact: true })).toHaveCount(0);
+  // Read: the hint that a press opens the text is gone, since it no longer does.
+  await expect(page.getByText(/abia apoi se bifează/)).toHaveCount(0);
+}
+
 test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read button (§195, §NNN)", () => {
   test("the box and the button are one row; the box opens the text; reading to the end ticks it; a refusal keeps it; the entry goes through", async ({ page }) => {
-    // An event of its own, per project and per run: the featured race carries no rules, and every
-    // other spec here ticks its plain box — rules on it would change their branch under them.
     test.setTimeout(test.info().timeout + 120_000);
-    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
-    const slug = `cros-cu-regulament-${suffix}`;
     const field = (name: string) => page.locator(`[name="${name}"]`);
-    const day = new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10);
-    const richText = async (strip: "title" | "rules", locale: "ro" | "en", name: string, lines: string[]) => {
-      const panel = languagePanel(page, strip, locale);
-      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.${name}"]`));
-      await panel.locator(`[data-rich-text="translations.${locale}.${name}"] [data-field]`).click();
-      for (const [index, line] of lines.entries()) {
-        if (index > 0) await page.keyboard.press("Enter");
-        await page.keyboard.insertText(line);
-      }
-    };
     // Long enough to scroll in the panel at either viewport: the gate is the scroll to the end.
-    const rules = (word: string) =>
-      Array.from({ length: 28 }, (_, index) => `${word} ${index + 1}. Alergătorul respectă traseul marcat, arbitrii și ceilalți participanți.`);
-
-    await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/events/new");
-    await hydrated(page);
-    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
-    await page.getByRole("option", { name: "Concurs" }).click();
-    await fillDateField(page, "Începutul evenimentului", day);
-    await fillTimeField(page, "Ora", "09:00");
-    await field("event.locationName").fill("Parcul Tractorul");
-    await field("event.locationNameEn").fill("Parcul Tractorul");
-    await openEditorBox(page, "Participare și înscrieri");
-    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
-    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
-    await field("event.capacity").fill("50");
-    await openEditorBox(page, "Condiții de participare și declarația");
-    await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
-    await page.getByRole("option").nth(1).click();
-    await field("translations.ro.title").fill(`Cros cu regulament ${suffix}`);
-    await field("translations.ro.slug").fill(slug);
-    await richText("title", "ro", "excerptBody", ["Un concurs cu regulamentul lui."]);
-    await languageTab(page, "title", "en").click();
-    await field("translations.en.title").fill(`Cross with rules ${suffix}`);
-    await languageTab(page, "address", "en").click();
-    await field("translations.en.slug").fill(`cross-with-rules-${suffix}`);
-    await richText("title", "en", "excerptBody", ["A race with its own rules."]);
-    // The race's own conditions, both languages (the owner's rule: both or neither).
-    await openEditorBox(page, "Regulamentul");
-    await richText("rules", "ro", "rules", rules("Regula"));
-    await languageTab(page, "rules", "en").click();
-    await richText("rules", "en", "rules", rules("Rule"));
-    await page.getByRole("button", { name: "Creează și publică" }).click();
-    await confirmDialog(page, "Creezi și publici evenimentul?");
-    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
-    const editorUrl = page.url().split("?")[0];
+    const { slug, editorUrl } = await createRulesEvent(page, 28);
 
     try {
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
@@ -1034,25 +1085,7 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
       // Side by side, the box first: one row, not a box stacked over a button.
       expect((own?.x ?? 0) + (own?.width ?? 0)).toBeLessThanOrEqual((readBox?.x ?? 0) + 1);
 
-      // Named in the list above the send button while it is not ticked.
-      const missing = page.getByTestId("form-missing");
-      await expect(missing.getByRole("link", { name: "Condițiile concursului", exact: true })).toBeVisible();
-
-      // A press on the box opens the text rather than ticking it: the box is where a person presses.
-      await tick.click();
-      const dialog = page.getByRole("dialog", { name: /Condițiile concursului/ });
-      await expect(dialog).toBeVisible();
-      await expect(tick).not.toBeChecked();
-      const agree = dialog.getByRole("button", { name: "Am citit și sunt de acord" });
-      await expect(agree).toBeDisabled();
-
-      // To the end of the text, and the panel's own button opens.
-      await dialog.getByTestId("rules-text").evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
-      await expect(agree).toBeEnabled();
-      await agree.click();
-      await expect(dialog).toBeHidden();
-      await expect(tick).toBeChecked();
-      await expect(missing.getByRole("link", { name: "Condițiile concursului", exact: true })).toHaveCount(0);
+      await readAndAgree(page, { scroll: true });
 
       /*
         A refusal about something else keeps the tick (§286: "vreau să persist inclusiv bifele"):
@@ -1071,11 +1104,53 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
       await page.getByRole("button", { name: "Trimite înscrierea" }).click();
       await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
     } finally {
-      await page.goto(editorUrl);
+      await retireRulesEvent(page, editorUrl);
+    }
+  });
+
+  test("a short text that needs no scroll can be agreed to at once", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 120_000);
+    const { slug, editorUrl } = await createRulesEvent(page, 2);
+    try {
+      await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await hydrated(page);
-      await page.getByRole("button", { name: "Mută în ciornă" }).click();
-      await confirmDialog(page);
-      await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+      await readAndAgree(page, { scroll: false });
+    } finally {
+      await retireRulesEvent(page, editorUrl);
+    }
+  });
+
+  test("at a 90 % page zoom the end of the text is still the end", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 120_000);
+    const { slug, editorUrl } = await createRulesEvent(page, 28);
+    try {
+      await page.goto(`/ro/evenimente/${slug}/inscriere`);
+      await hydrated(page);
+      // CSS zoom makes every scroll measurement fractional, as a browser zoomed to 90 % does.
+      await page.evaluate(() => {
+        document.body.style.zoom = "0.9";
+      });
+      await readAndAgree(page, { scroll: true });
+    } finally {
+      await retireRulesEvent(page, editorUrl);
+    }
+  });
+});
+
+test.describe("BR-REQ-041-01 the race's conditions on a 125 % screen (§NNN)", () => {
+  // A laptop at Windows's default 125 %: the device pixel ratio is fractional, and so is scrollTop.
+  test.use({ deviceScaleFactor: 1.25 });
+
+  test("reading to the end ticks the box at a fractional pixel ratio", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 120_000);
+    const { slug, editorUrl } = await createRulesEvent(page, 28);
+    try {
+      await page.goto(`/ro/evenimente/${slug}/inscriere`);
+      await hydrated(page);
+      expect(await page.evaluate(() => window.devicePixelRatio)).toBe(1.25);
+      await readAndAgree(page, { scroll: true });
+    } finally {
+      await retireRulesEvent(page, editorUrl);
     }
   });
 });

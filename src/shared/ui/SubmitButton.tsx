@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import { type ComponentType, type MouseEvent, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { paintedScheduler } from "@/shared/forms/after-paint";
+import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
 import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
@@ -19,48 +20,6 @@ import { accentOnHover } from "@/theme/surfaces";
  * flight is exactly as big as the glyph it replaced and the label does not move.
  */
 const GLYPH_PX = { small: 18, medium: 20, large: 22 } as const;
-
-/** A form control as the watcher reads it: its own validity and its own labels. */
-type WatchedControl = Element & {
-  validity?: ValidityState;
-  willValidate?: boolean;
-  labels?: NodeListOf<HTMLLabelElement> | null;
-};
-
-/** One entry of the list of what is missing (§NNN): what it is called, and where it is. */
-type MissingControl = { key: string; label: string; id: string | null };
-
-/**
- * A control's name for a person: its `<label>` without MUI's " *", or its `aria-label`; a box
- * inside a language tab says which language, or "Titlu" would not say which of two titles.
- */
-function labelOf(control: WatchedControl): string | null {
-  const text = control.labels?.[0]?.textContent?.replace(/\s*\*\s*$/, "").trim() || control.getAttribute("aria-label");
-  const language = control.closest("[data-language]")?.getAttribute("data-language");
-  return text ? (language ? `${language}: ${text}` : text) : null;
-}
-
-/**
- * The refused controls as a list: one entry per posted name (a phone's digits and its country,
- * a group of boxes, are one question), named by the caller's short name for it first.
- */
-function missingControls(invalid: readonly WatchedControl[], names: Readonly<Record<string, string>>): MissingControl[] {
-  const seen = new Set<string>();
-  const entries: MissingControl[] = [];
-  for (const control of invalid) {
-    const name = control.getAttribute("name") ?? "";
-    const label = (name && names[name]) || labelOf(control);
-    const key = name || control.id || label;
-    if (!key || !label || seen.has(key)) continue;
-    seen.add(key);
-    entries.push({ key, label, id: control.id || null });
-  }
-  return entries;
-}
-
-function sameEntries(a: readonly MissingControl[], b: readonly MissingControl[]): boolean {
-  return a.length === b.length && a.every((entry, index) => entry.key === b[index].key && entry.label === b[index].label && entry.id === b[index].id);
-}
 
 /**
  * Bring a listed control into view and focus it — opening any fold around it first, since a
@@ -246,14 +205,12 @@ export default function SubmitButton({
 
     const measure = () => {
       const controls = Array.from(form.elements) as WatchedControl[];
-      // `willValidate`: a control in a disabled fieldset (`ShownForMinor`) is not the browser's to
-      // refuse, and must not be listed as missing.
-      const refused = (control: WatchedControl) =>
-        control.willValidate !== false && control.validity !== undefined && !control.validity.valid;
+      // `isRefused` skips a control that will not validate: one in a disabled fieldset
+      // (`ShownForMinor`) is not the browser's to refuse, and must not be listed as missing.
       // The whole scan only where a list is drawn; elsewhere the first refusal is all that is said,
       // and the event editor's few hundred boxes stop at it (§371).
-      const invalid = lists ? controls.filter(refused) : [];
-      const first = lists ? invalid[0] : controls.find(refused);
+      const invalid = lists ? controls.filter(isRefused) : [];
+      const first = lists ? invalid[0] : controls.find(isRefused);
       setComplete(first === undefined);
       if (lists) {
         const entries = missingControls(invalid, names);

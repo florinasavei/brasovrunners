@@ -3481,7 +3481,7 @@
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
-    "missingTitle": "Still to fill in:",
+    "missingTitle": "Still missing:",
     "submittedTo": "We sent it to:",
     "submittedAlready": "If you were already registered for this event, that email is your existing confirmation — no second registration was created.",
     "done": {
@@ -3704,6 +3704,7 @@
       "open": "Read the race conditions",
       "reading": "Press the box or the button: the conditions open here, you read them to the end, and only then is the box ticked.",
       "tick": "I have read and agree to the race conditions",
+      "missing": "The race conditions — open them and read to the end",
       "panelTitle": "Race conditions — {event}",
       "keepReading": "Scroll to the end to be able to confirm.",
       "agreeButton": "I have read them and I agree",
