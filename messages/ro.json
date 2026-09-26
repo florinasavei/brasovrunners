@@ -49,7 +49,6 @@
     "othersCountFiltered": "Evenimentele alese ({count})",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
     "pastCountFiltered": "Din trecut, după filtre ({count})",
-    "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
       "label": "Filtrele evenimentelor",
       "button": "Filtre",

@@ -49,7 +49,6 @@
     "othersCountFiltered": "Matching events ({count})",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
     "pastCountFiltered": "Past, filtered ({count})",
-    "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
       "label": "Event filters",
       "button": "Filters",
