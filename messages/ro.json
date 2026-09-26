@@ -3236,6 +3236,25 @@
                 "După ce a mers, jos apare pentru câteva secunde un mesaj care spune ce s-a făcut.",
                 "Dacă lipsește ceva, sus apare un chenar roșu cu fiecare lipsă ca link: atinge-l, completează, apasă din nou. Ce ai scris rămâne."
               ]
+            },
+            {
+              "title": "Ce poate fiecare rol: Administrator și Organizator",
+              "steps": [
+                "Organizatorul (Dani): vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților.",
+                "Organizatorul nu publică un eveniment, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
+                "Administratorul (Amalia): tot ce face Organizatorul, plus «Creează și publică», anularea și ștergerea unei înscrieri, retrimiterea emailurilor și «Alocă numerele».",
+                "Superadministratorul: tot ce face Administratorul, plus documentele legale și conturile din «Echipa»."
+              ]
+            },
+            {
+              "title": "Ce NU se poate face",
+              "steps": [
+                "Un Voluntar nu vede adrese de email, nu anulează, nu șterge și nu exportă liste.",
+                "Un Redactor nu schimbă setările unui eveniment și nu publică nimic.",
+                "Un Organizator nu publică, nu anulează, nu șterge o înscriere și nu retrimite emailuri.",
+                "Niciun rol în afară de Superadministrator nu aprobă documente legale sau nu adaugă un coleg în «Echipa».",
+                "Nimeni nu ocolește fereastra de confirmare de la o apăsare importantă (vezi mai sus)."
+              ]
             }
           ]
         },
@@ -3244,7 +3263,11 @@
           "who": "Voluntar, Organizator și orice alt rol. Pe telefon.",
           "roles": [
             "CONTRIBUTOR",
-            "MODERATOR"
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
           ],
           "tasks": [
             {
@@ -3391,8 +3414,7 @@
           "title": "Organizator — înscrieri, numere, mesaje",
           "who": "Rol: Organizator. Vezi tot și schimbi setările evenimentului; nu publici, nu anulezi și nu ștergi înscrieri.",
           "roles": [
-            "MODERATOR",
-            "DEV"
+            "MODERATOR"
           ],
           "tasks": [
             {
@@ -3509,7 +3531,8 @@
                 "«Data și ora», apoi «Locul»: punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
                 "Restul cardurilor după nevoie: «Descrierea evenimentului», «Traseul», «Cost», «Participare și înscrieri», «Programul zilei și ce să aduci», «Regulamentul».",
                 "«Creează evenimentul» îl salvează ca ciornă (nu apare pe site). «Creează și publică» îl pune direct pe site.",
-                "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou."
+                "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou.",
+                "Greșeala obișnuită: tabul «English» necompletat lasă evenimentul fără engleză; sau apeși «Creează evenimentul» crezând că a intrat pe site — rămâne ciornă, nu «Creează și publică»."
               ]
             },
             {
@@ -3520,7 +3543,8 @@
                 "Scrie în «Română» și în «English»: un text opțional se scrie în ambele limbi sau în niciuna.",
                 "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
                 "O dată dintr-o serie: la «Salvează pentru:» alege «Doar această dată», «Această dată și următoarele» sau «Toate datele seriei».",
-                "Apasă «Salvează». Apare imediat pe site, în ambele limbi."
+                "Apasă «Salvează». Apare imediat pe site, în ambele limbi.",
+                "Greșeala obișnuită: alegi «Doar această dată» când vrei să schimbi toată seria (sau invers) — verifică mesajul de sub «Salvează pentru:» înainte de a apăsa «Salvează»."
               ]
             },
             {
@@ -3827,6 +3851,44 @@
               "steps": [
                 "«Emailuri» → «Termene» → «Maxim de înscrieri pe o adresă (pe eveniment)».",
                 "Scrie numărul, apasă «Salvează maximul» și confirmă."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Când ceva nu merge",
+          "who": "Pentru toate rolurile. Ce verifici și cui scrii.",
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Verifică dacă platforma funcționează",
+              "steps": [
+                "Deschide /api/health într-un tab nou al browserului — e text simplu, nu o pagină din site.",
+                "Dacă scrie \"ok\", platforma funcționează. Orice alt cuvânt înseamnă o problemă reală.",
+                "Nu știi ce înseamnă restul textului? Trimite-l unui Superadministrator sau proprietarului clubului."
+              ]
+            },
+            {
+              "title": "Scrie cuiva când ceva nu merge",
+              "steps": [
+                "O pagină arată o eroare, un buton nu răspunde sau o apăsare nu se termină? Fă o poză ecranului cu ce scrie.",
+                "Scrie proprietarului clubului sau unui Superadministrator: ce ai apăsat, pe ce pagină și poza.",
+                "Nu aștepta să se repare singur: un email netrimis sau o înscriere blocată contează pentru cineva care așteaptă."
+              ]
+            },
+            {
+              "title": "O salvare eșuează pe laptopul de birou",
+              "steps": [
+                "Internetul de birou blochează uneori cererea către server, mai ales pe o rețea de firmă.",
+                "Încearcă din nou după ce pornești hotspot-ul de pe telefon și te conectezi la el de pe laptop.",
+                "Merge de pe hotspot dar nu de pe rețeaua de birou? Spune-i cuiva de la birou — e o problemă a rețelei, nu a platformei."
               ]
             }
           ]

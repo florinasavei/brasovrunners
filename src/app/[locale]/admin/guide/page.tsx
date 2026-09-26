@@ -15,6 +15,7 @@ import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
 import { fillIn } from "@/shared/forms/fill-in";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
+import { orderGuideSections } from "@/modules/staff-identity/domain/guide-order";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
@@ -64,10 +65,10 @@ export default async function GuidePage({ params }: Props) {
   const t = await getTranslations("Admin");
   const all = t.raw("guide.sections") as GuideSection[];
   // The reader's own section first — the owner: "a how-to page depending on each role" — then
-  // the colleagues' in the catalogue's order, folded. A stable partition, not a sort.
-  const mine = all.filter((section) => section.roles.includes(staffUser.role));
-  const others = all.filter((section) => !section.roles.includes(staffUser.role));
-  const sections = [...mine, ...others];
+  // the colleagues' in the catalogue's order, folded. A stable partition, not a sort
+  // (`orderGuideSections`, unit-tested per role).
+  const sections = orderGuideSections(all, staffUser.role);
+  const mine = sections.filter((section) => section.roles.includes(staffUser.role));
   /*
     The deadlines the steps name — "{hold}", "{offer}", "{checkin}" — are the club's (§377), filled
     into the catalogue's raw lines here, since `t.raw` hands the sentences over unformatted.

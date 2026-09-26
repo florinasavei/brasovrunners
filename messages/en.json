@@ -3236,6 +3236,25 @@
                 "Once it worked, a message at the bottom says for a few seconds what was done.",
                 "If something is missing, a red box at the top names each gap as a link: tap it, fill it in, press again. What you typed stays."
               ]
+            },
+            {
+              "title": "What each role can do: Administrator vs Organizer",
+              "steps": [
+                "The Organizer (Dani): reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants.",
+                "The Organizer does not publish an event, does not cancel or erase a registration, does not resend emails and does not assign numbers.",
+                "The Administrator (Amalia): everything the Organizer does, plus «Create and publish», cancelling and erasing a registration, resending emails and «Assign numbers».",
+                "The Superadministrator: everything the Administrator does, plus the legal documents and the accounts under «Staff»."
+              ]
+            },
+            {
+              "title": "What cannot be done",
+              "steps": [
+                "A Volunteer never sees email addresses, cancels, erases or exports a list.",
+                "A Redactor never changes an event's settings and never publishes anything.",
+                "An Organizer never publishes, cancels or erases a registration, and never resends an email.",
+                "No role but the Superadministrator approves a legal document or adds a colleague under «Staff».",
+                "Nobody skips the confirmation window before an important press (see above)."
+              ]
             }
           ]
         },
@@ -3244,7 +3263,11 @@
           "who": "Volunteer, Organizer and every other role. On a phone.",
           "roles": [
             "CONTRIBUTOR",
-            "MODERATOR"
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
           ],
           "tasks": [
             {
@@ -3391,8 +3414,7 @@
           "title": "Organizer — registrations, numbers, messages",
           "who": "Role: Organizer (Organizator). You see everything and change the event's settings; you do not publish, cancel or erase registrations.",
           "roles": [
-            "MODERATOR",
-            "DEV"
+            "MODERATOR"
           ],
           "tasks": [
             {
@@ -3509,7 +3531,8 @@
                 "«Date and time», then «The place»: the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
                 "The other cards as needed: «Event description», «The course», «Cost», «Taking part and registration», «The day's programme and what to bring», «Rules».",
                 "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
-                "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again."
+                "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
+                "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."
               ]
             },
             {
@@ -3520,7 +3543,8 @@
                 "Write in «Română» and in «English»: an optional text is written in both languages or neither.",
                 "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
                 "A date of a series: under «Save for:» pick «This date only», «This and the following dates» or «All dates of the series».",
-                "Press «Save». It is on the site at once, in both languages."
+                "Press «Save». It is on the site at once, in both languages.",
+                "The usual mistake: picking «This date only» when you meant the whole series (or the other way round) — check the message under «Save for:» before you press «Save»."
               ]
             },
             {
@@ -3827,6 +3851,44 @@
               "steps": [
                 "«Emails» → «Deadlines» → «Registrations per address (per event)».",
                 "Type the number, press «Save the limit» and confirm."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "When something goes wrong",
+          "who": "For everyone. What to check, and who to write to.",
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Check whether the platform is working",
+              "steps": [
+                "Open /api/health in a new browser tab — it is plain text, not a page from the site.",
+                "If it says \"ok\", the platform is working. Any other word means a real problem.",
+                "Not sure what the rest of the text means? Send it to a superadministrator or the club's owner."
+              ]
+            },
+            {
+              "title": "Write to someone when something is wrong",
+              "steps": [
+                "A page shows an error, a button does nothing, or a press never finishes? Take a screenshot of what it says.",
+                "Write to the club's owner or a superadministrator: what you pressed, on what page, and the screenshot.",
+                "Do not wait for it to fix itself: an email that never sent or a stuck registration matters to someone waiting."
+              ]
+            },
+            {
+              "title": "A save fails from an office laptop",
+              "steps": [
+                "An office network sometimes blocks the request to the server, especially a company one.",
+                "Try again after turning on your phone's hotspot and connecting the laptop to it.",
+                "Works over the hotspot but not the office network? Tell someone at the office — it is the network's problem, not the platform's."
               ]
             }
           ]
