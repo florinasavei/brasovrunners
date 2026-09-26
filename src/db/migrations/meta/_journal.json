@@ -601,21 +601,21 @@
       "idx": 85,
       "version": "7",
       "when": 1790427010906,
-      "tag": "0087_team_members",
+      "tag": "0088_email_transport",
       "breakpoints": true
     },
     {
       "idx": 86,
       "version": "7",
-      "when": 1790427011906,
-      "tag": "0088_email_transport",
+      "when": 1790429803237,
+      "tag": "0089_registration_opens_soon",
       "breakpoints": true
     },
     {
       "idx": 87,
       "version": "7",
-      "when": 1790429803237,
-      "tag": "0089_registration_opens_soon",
+      "when": 1790429804237,
+      "tag": "0090_team_members",
       "breakpoints": true
     }
   ]
