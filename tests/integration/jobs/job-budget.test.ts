@@ -25,7 +25,7 @@ const SECRET = "correct-job-secret-value";
 
 let db: TestDatabase;
 let close: () => Promise<void>;
-const pool = vi.hoisted(() => ({ open: true }));
+const pool = vi.hoisted(() => ({ open: true, refuseWith: null as Error | null }));
 const budget = vi.hoisted(() => ({ level: "normal" as string }));
 
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
@@ -36,6 +36,18 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
 vi.mock("@/db/client", () => ({
   getDb: () => {
     if (!pool.open) throw new Error("a ping the budget paused opened the database");
+    // A database that is there as an object but refuses every query, as Neon's proxy does.
+    const refusal = pool.refuseWith;
+    if (refusal) {
+      return new Proxy(
+        {},
+        {
+          get: () => () => {
+            throw refusal;
+          },
+        },
+      );
+    }
     return db;
   },
 }));
@@ -86,6 +98,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   pool.open = true;
+  pool.refuseWith = null;
   budget.level = "normal";
   await resetTables(db);
   fakeNextCache.reset();
@@ -129,5 +142,29 @@ describe("§NNN a job ping under the month's budget", () => {
     budget.level = "ahead";
     const run = await pingAt(0);
     expect(run.body.cadenceMinutes).toBe(120);
+  });
+
+  /*
+    The case the governor cannot see: with a project-scoped key the level comes from the
+    operations log, which stops growing once Neon suspends the project, so it may still read
+    `critical` while every query is refused. The error itself says so, and the ping answers 200.
+  */
+  it("answers 200 with database-away when Neon refuses on its quota while the level still reads critical", async () => {
+    budget.level = "critical";
+    pool.refuseWith = new Error("Your project has exceeded the compute time quota. Upgrade your plan to increase limits.");
+    const answer = await pingAt(0);
+    expect(answer.status).toBe(200);
+    expect(answer.body).toMatchObject({ job: "registration-maintenance", ran: false, reason: "database-away", quota: true, budgetLevel: "critical" });
+    expect(await readLastPing("registration-maintenance", at(0), 30 * MINUTE)).toMatchObject({ ran: false });
+  });
+
+  it("answers 200 with database-away on an ordinary outage too, and still fails on a bug", async () => {
+    pool.refuseWith = Object.assign(new Error("connect ECONNREFUSED 127.0.0.1:5432"), { code: "ECONNREFUSED" });
+    const away = await pingAt(0, { route: outbox });
+    expect(away.status).toBe(200);
+    expect(away.body).toMatchObject({ job: "email-outbox", ran: false, reason: "database-away", quota: false });
+
+    pool.refuseWith = new Error('column "nope" does not exist');
+    await expect(pingAt(5)).rejects.toThrow(/does not exist/);
   });
 });

@@ -384,6 +384,7 @@
         "done": "We have emailed it to you as a PDF. Come to the run as usual.",
         "closed": "The declaration can no longer be signed for this run.",
         "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
+        "away": "We could not reach our records just now, so nothing was signed or recorded. What you filled in is still below — please try again in a few minutes.",
         "refusedTitle": "The declaration was not signed",
         "refusedNothingRecorded": "Nothing was recorded. Fill in the boxes below and sign again:",
         "fields": {
@@ -3523,6 +3524,8 @@
       "generic": "The registration could not be submitted. Check what you entered and try again.",
       "tooFastTitle": "Please try once more",
       "throttledTitle": "You have already sent this form a few times",
+      "databaseAwayTitle": "We could not reach our records just now",
+      "databaseAway": "Nothing was registered and no email is on its way. Everything you filled in is still below — try again in a few minutes. If it keeps happening, the site may be paused for a while; the event page says until when.",
       "throttled": "We have had several registrations from this address in the last hour, so we have paused it for a while. Try again in an hour — or, if it is urgent, write to us through the contact form and we will register you ourselves. Nothing you filled in has been lost.",
       "tooFast": "The automated check did not pass first time — it happens to real people too. Your answers are still here.",
       "tooFastNothingSent": "Nothing was registered and no email was sent to you. Press “Send the registration again” — your answers and your ticks are still here.",
@@ -4206,7 +4209,10 @@
     "body": "This page could not be displayed. It is usually temporary — try again in a moment.",
     "retry": "Try again",
     "home": "Back to the first page",
-    "reference": "If it keeps happening, tell us this code:"
+    "reference": "If it keeps happening, tell us this code:",
+    "staffTitle": "The backoffice could not load this page",
+    "staffBody": "Our database did not answer just now — it may be starting, or paused for the rest of the month. Nothing on this screen was saved unless it said so. Try again in a minute; the month's budget is on the tasks page, under Costs.",
+    "staffTasks": "Open the tasks page"
   },
   "Gallery": {
     "title": "Gallery",
@@ -4303,9 +4309,9 @@
     "source": {
       "metered": "The figure is the one Neon bills (compute_unit_seconds).",
       "operations": "The figure is worked out from Neon's operations log: the time awake times the database's smallest size.",
-      "legacy": "The figure is the project's old counter, which has not updated since 24 September; it may be well under the real one."
+      "legacy": "The figure is the project's old counter, used only because neither live source answered; it no longer updates and may be well under the real one."
     },
-    "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours; the largest is used.",
+    "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours; the larger of the first two is used, the old counter only when neither answered.",
     "notRead": "not read",
     "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it."
   },

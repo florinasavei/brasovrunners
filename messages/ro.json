@@ -384,6 +384,7 @@
         "done": "Ți-am trimis-o pe email, în PDF. La alergare vii ca de obicei.",
         "closed": "Declarația nu se mai poate semna pentru această alergare.",
         "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
+        "away": "Nu am putut ajunge la evidențele noastre chiar acum, așa că nu s-a semnat și nu s-a înregistrat nimic. Ce ai completat e mai jos — mai încearcă peste câteva minute.",
         "refusedTitle": "Declarația nu a fost semnată",
         "refusedNothingRecorded": "Nu s-a înregistrat nimic. Completează căsuțele de mai jos și semnează din nou:",
         "fields": {
@@ -3523,6 +3524,8 @@
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
       "tooFastTitle": "Mai încearcă o dată",
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
+      "databaseAwayTitle": "Nu am putut ajunge la evidențele noastre chiar acum",
+      "databaseAway": "Nu s-a înregistrat nimic și nu pleacă niciun email. Tot ce ai completat e mai jos — mai încearcă peste câteva minute. Dacă se repetă, site-ul poate fi în pauză o vreme; pagina evenimentului spune până când.",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
@@ -4206,7 +4209,10 @@
     "body": "Pagina nu a putut fi afișată. De cele mai multe ori este ceva trecător — încearcă din nou peste câteva momente.",
     "retry": "Încearcă din nou",
     "home": "Înapoi la prima pagină",
-    "reference": "Dacă se repetă, spune-ne acest cod:"
+    "reference": "Dacă se repetă, spune-ne acest cod:",
+    "staffTitle": "Backoffice-ul nu a putut încărca pagina",
+    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; bugetul lunii e pe pagina de sarcini, la Costuri.",
+    "staffTasks": "Deschide pagina de sarcini"
   },
   "Gallery": {
     "title": "Galerie",
@@ -4303,9 +4309,9 @@
     "source": {
       "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
       "operations": "Cifra e calculată din jurnalul de operații Neon: timpul treaz înmulțit cu mărimea minimă a bazei de date.",
-      "legacy": "Cifra e contorul vechi al proiectului, care nu se mai actualizează din 24 septembrie; poate fi mult sub cea reală."
+      "legacy": "Cifra e contorul vechi al proiectului, folosit doar pentru că niciuna dintre sursele vii nu a răspuns; nu se mai actualizează și poate fi mult sub cea reală."
     },
-    "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare.",
+    "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
     "notRead": "necitit",
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească."
   },

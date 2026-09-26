@@ -6,7 +6,8 @@ import { checkSchemaVersion } from "@/db/schema-version";
 import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
-import { checkNeonQuotaHealth } from "@/modules/diagnostics/neon";
+import { checkNeonQuotaHealth, type NeonQuotaHealth } from "@/modules/diagnostics/neon";
+import { isQuotaRefusalError } from "@/modules/resilience/domain/database-away";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
@@ -143,6 +144,20 @@ async function reuseDatabaseHalf(
   }
 }
 
+/** How long the route waits for the month's budget before probing without it (§NNN). */
+const HEALTH_BUDGET_WAIT_MS = 2_500;
+
+/** The quota reading when it did not answer in time: nothing asked, as for a missing key. */
+const QUOTA_NOT_ASKED: NeonQuotaHealth = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" };
+
+function withinWait<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timer = setTimeout(() => resolve(fallback), ms);
+  });
+  return Promise.race([promise.catch(() => fallback), timeout]).finally(() => clearTimeout(timer));
+}
+
 export async function GET(): Promise<Response> {
   const db = getDb();
   const now = new Date();
@@ -158,15 +173,28 @@ export async function GET(): Promise<Response> {
   //
   // The quota reading comes first since §NNN because it also says the month's budget level, and
   // the level decides whether the database half may be a recent answer rather than a fresh one.
-  const [neonQuota, turnstile] = await Promise.all([checkNeonQuotaHealth(env, fetch, now), probeTurnstileSecret()]);
+  //
+  // The quota reading waits `HEALTH_BUDGET_WAIT_MS` at most before the probe goes ahead without
+  // it (the level `unknown`: no reuse, the ordinary floor). On a cache miss it is several of
+  // Neon's requests in a row, and a monitor that times out on this endpoint must not be kept
+  // waiting on a third party before `select 1` is even asked.
+  const [neonQuota, turnstile] = await Promise.all([
+    withinWait(checkNeonQuotaHealth(env, fetch, now), HEALTH_BUDGET_WAIT_MS, QUOTA_NOT_ASKED),
+    probeTurnstileSecret(),
+  ]);
   const effects = governorEffects(neonQuota.level);
 
   // Nothing else is asked once the probe has failed: every check below needs the connection the
-  // probe just proved is not there.
+  // probe just proved is not there. The probe's own error is kept: it is what says whether Neon
+  // refused on its quota (`suspended`) rather than the database merely being away (`down`).
+  let probeError: unknown = null;
   const probeAndAsk = async () => {
     const reachable = await db.execute(sql`select 1`).then(
       () => true,
-      () => false,
+      (error: unknown) => {
+        probeError = error;
+        return false;
+      },
     );
     return reachable ? await askTheDatabase(db, now, effects.jobFloorMinutes) : null;
   };
@@ -181,7 +209,18 @@ export async function GET(): Promise<Response> {
     cannot work against — the public pages are throwing on the same connection — so it is
     reported as `down` rather than as an `ok` database with mysteriously absent figures.
   */
-  const database: "ok" | "down" = checks ? "ok" : "down";
+  /*
+    `suspended` (§NNN): Neon has cut the project off for the rest of its billing period — its
+    refusal says so ("exceeded the compute time quota"), or the governor reads the quota spent.
+    Nothing is broken that a deploy could fix, the public pages serve their last good copies with
+    the date the site is whole again, and the jobs answer 200 without trying; so the status is
+    `degraded` (still a 503 — the monitor must hear it) rather than `down`.
+  */
+  const database: "ok" | "down" | "suspended" = checks
+    ? "ok"
+    : isQuotaRefusalError(probeError) || neonQuota.level === "exhausted"
+      ? "suspended"
+      : "down";
   const schema = checks?.schema ?? null;
   const jobs = checks?.jobs ?? null;
   const email = checks?.email ?? null;
@@ -199,7 +238,8 @@ export async function GET(): Promise<Response> {
   const status =
     database === "down" || schemaDown
       ? "down"
-      : anyJobStale ||
+      : database === "suspended" ||
+          anyJobStale ||
           schemaDegraded ||
           email?.status === "stalled" ||
           neonQuota.status === "near-limit" ||

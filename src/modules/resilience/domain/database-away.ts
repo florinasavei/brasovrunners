@@ -49,3 +49,41 @@ export function isDatabaseAwayError(error: unknown): boolean {
   }
   return false;
 }
+
+/**
+ * Neon's own refusal of a project whose monthly compute quota is spent ("exceeded the compute time
+ * quota") — the one away-error that says how long it lasts: until the billing period ends.
+ *
+ * It is read off the error on its own, whatever the governor's level says, because the level can
+ * lag the refusal: with a project-scoped key the level comes from the operations log, which counts
+ * only the compute's floor and stops growing once Neon suspends the project (no further
+ * `start_compute` succeeds), so a project Neon has cut off may still read 98–99%. The error in
+ * hand is the better witness.
+ */
+const QUOTA_MESSAGE = /compute time quota/i;
+
+export function isQuotaRefusalError(error: unknown): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    seen.add(current);
+    const { message } = current as { message?: unknown };
+    if (typeof message === "string" && QUOTA_MESSAGE.test(message)) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
+/**
+ * When a quota refusal ends if nothing better says: the start of the next calendar month in UTC,
+ * which is where Neon's billing periods turn (the project row's `consumption_period_end`), and in
+ * any case no further than `QUOTA_REST_MAX_DAYS` away — a bound, so a clock or a period that
+ * changed shape can never leave the site serving copies for longer than a month.
+ */
+export const QUOTA_REST_MAX_DAYS = 31;
+
+export function defaultRestingUntil(now: Date): Date {
+  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const bound = new Date(now.getTime() + QUOTA_REST_MAX_DAYS * 86_400_000);
+  return nextMonth < bound ? nextMonth : bound;
+}

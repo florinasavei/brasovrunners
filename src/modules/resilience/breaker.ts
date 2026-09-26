@@ -22,14 +22,19 @@ export const BREAKER_FIRST_MS = 15_000;
 export const BREAKER_MAX_MS = 5 * 60_000;
 
 /** Thrown instead of asking a database this instance already knows is away. Its message is one `isDatabaseAwayError` reads as away. */
+/**
+ * Its `cause` is the failure that opened the breaker, so a reader that asks *why* the database is
+ * away — Neon's quota refusal (`isQuotaRefusalError`) or an ordinary outage — gets the same answer
+ * from the skipped reads as from the one that failed.
+ */
 export class DatabaseRestingError extends Error {
-  constructor() {
-    super("the database is resting; the breaker is open (§NNN)");
+  constructor(cause?: unknown) {
+    super("the database is resting; the breaker is open (§NNN)", cause === undefined ? undefined : { cause });
     this.name = "DatabaseRestingError";
   }
 }
 
-const state = { openUntil: 0, failures: 0 };
+const state: { openUntil: number; failures: number; lastError: unknown } = { openUntil: 0, failures: 0, lastError: undefined };
 
 /** Whether this instance should skip the database for now. */
 export function breakerOpen(now: number = Date.now()): boolean {
@@ -39,6 +44,7 @@ export function breakerOpen(now: number = Date.now()): boolean {
 /** A read failed: if it is the database being away, open the breaker for longer each time. Returns whether it was. */
 export function noteReadFailure(error: unknown, now: number = Date.now()): boolean {
   if (!isDatabaseAwayError(error)) return false;
+  state.lastError = error;
   if (now >= state.openUntil) {
     state.failures += 1;
     state.openUntil = now + Math.min(BREAKER_FIRST_MS * 2 ** (state.failures - 1), BREAKER_MAX_MS);
@@ -50,6 +56,7 @@ export function noteReadFailure(error: unknown, now: number = Date.now()): boole
 export function noteReadSuccess(): void {
   state.failures = 0;
   state.openUntil = 0;
+  state.lastError = undefined;
 }
 
 /**
@@ -57,7 +64,7 @@ export function noteReadSuccess(): void {
  * noted either way when it runs.
  */
 export async function throughBreaker<T>(load: () => Promise<T>, now: () => number = Date.now): Promise<T> {
-  if (breakerOpen(now())) throw new DatabaseRestingError();
+  if (breakerOpen(now())) throw new DatabaseRestingError(state.lastError);
   try {
     const value = await load();
     noteReadSuccess();

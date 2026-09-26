@@ -76,4 +76,35 @@ describe("§NNN the last good copy while the database rests for the month", () =
     expect(read).toMatchObject({ freshness: "live", restingUntil: null });
     expect(budget.calls).toBe(0);
   });
+
+  /*
+    The realistic case (the review of §NNN): a project-scoped key reads the level off the
+    operations log, which stops growing once Neon suspends the project — so it may read `critical`
+    while every query is refused. The refusal itself is what says the database rests.
+  */
+  it("rests on Neon's quota refusal while the governor still reads `critical`, until the meter's period end", async () => {
+    budget.reading = { level: "critical", effects: { restingCopies: false }, meter: { periodEnd: PERIOD_END } };
+    await readWithLastGood("events:ro", async () => ["Crosul de toamnă"], TAKEN);
+    const wrapped = Object.assign(new Error("Failed query: select …"), { cause: SUSPENDED });
+    const read = await readWithLastGood<string[]>("events:ro", () => Promise.reject(wrapped), hoursLater(3 * 24));
+    expect(read).toMatchObject({ freshness: "stale", value: ["Crosul de toamnă"], restingUntil: PERIOD_END });
+  });
+
+  it("rests on the quota refusal with no meter at all, until the start of the next month", async () => {
+    await readWithLastGood("events:ro", async () => ["x"], TAKEN);
+    const read = await readWithLastGood("events:ro", () => Promise.reject(SUSPENDED), hoursLater(2 * 24));
+    expect(read.restingUntil).toEqual(new Date("2026-11-01T00:00:00.000Z"));
+  });
+
+  it("keeps resting on the skipped reads the breaker answers after a quota refusal", async () => {
+    const { throughBreaker, resetBreaker } = await import("@/modules/resilience/breaker");
+    resetBreaker();
+    await readWithLastGood("events:ro", async () => ["x"], TAKEN);
+    const at = hoursLater(20);
+    await readWithLastGood("events:ro", () => throughBreaker(() => Promise.reject(SUSPENDED), () => at.getTime()), at);
+    // The breaker is open now: the next read never reaches the database, and still rests.
+    const skipped = await readWithLastGood("events:ro", () => throughBreaker(() => Promise.resolve(["fresh"]), () => at.getTime() + 1), at);
+    expect(skipped).toMatchObject({ freshness: "stale", restingUntil: new Date("2026-11-01T00:00:00.000Z") });
+    resetBreaker();
+  });
 });

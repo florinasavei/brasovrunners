@@ -48,6 +48,12 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
       const source = await readFile(file, "utf8");
       // The directive is only a directive on the first line of the module.
       const firstLine = source.split("\n").find((line) => line.trim() !== "") ?? "";
+      /*
+        The one exception (§NNN): the backoffice's error boundary, which Next requires to be a
+        Client Component. It is a one-line re-export of a component outside this tree, and a
+        boundary's props are the thrown error's digest and `reset` — never a row.
+      */
+      if (relative(ADMIN_ROUTES, file).split(sep).join("/") === "error.tsx") continue;
       if (/^["']use client["']/.test(firstLine.trim())) {
         offenders.push(relative(ROOT, file).split(sep).join("/"));
       }

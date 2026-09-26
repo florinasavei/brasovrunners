@@ -114,4 +114,37 @@ describe("§NNN /api/health reads the month's budget", () => {
     execute.mockResolvedValue(undefined);
     expect((await (await GET()).json()).database).toBe("ok");
   });
+
+  it("says `suspended` when Neon refuses on its quota, even while the governor still reads `critical`", async () => {
+    answering("critical", "near-limit");
+    execute.mockRejectedValue(
+      Object.assign(new Error("Failed query: select 1"), {
+        cause: new Error("Your project has exceeded the compute time quota. Upgrade your plan to increase limits."),
+      }),
+    );
+    const response = await GET();
+    const body = await response.json();
+    expect(response.status).toBe(503);
+    expect(body.database).toBe("suspended");
+    expect(body.status).toBe("degraded");
+    expect(body.jobs).toBeNull();
+  });
+
+  it("says `suspended` for any refusal once the quota reads spent, and `down` for an ordinary outage below it", async () => {
+    execute.mockRejectedValue(new Error("connect ECONNREFUSED"));
+    answering("exhausted", "near-limit");
+    expect((await (await GET()).json()).database).toBe("suspended");
+    answering("normal");
+    const down = await (await GET()).json();
+    expect(down.database).toBe("down");
+    expect(down.status).toBe("down");
+  });
+
+  it("probes without the budget when Neon is slow, rather than keeping the monitor waiting", async () => {
+    checkNeonQuotaHealth.mockReturnValue(new Promise(() => {}));
+    const body = await (await GET()).json();
+    expect(body.database).toBe("ok");
+    expect(body.neon).toEqual({ status: "ok", percent: null, level: "unknown" });
+    expect(execute).toHaveBeenCalledTimes(1);
+  }, 10_000);
 });

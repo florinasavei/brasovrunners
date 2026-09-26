@@ -23,16 +23,17 @@
  *   read anyway) and because it is what Neon's quota may still be counted against; nobody could
  *   find out which (the report of 2026-09-26).
  *
- * The figure every page and the governor use is the **largest** of those that answered. Each is
- * a lower bound of the truth in its own way (the metered one lags a quarter of an hour, the log
- * counts only the floor, the legacy counter stopped), so the largest is the closest, and a quota
- * is the one number where reading low is the dangerous direction.
+ * The figure every page and the governor use is the **larger** of the two live sources that
+ * answered. Each is a lower bound of the truth in its own way (the metered one lags a quarter of
+ * an hour, the log counts only the floor), so the larger is the closer, and a quota is the one
+ * number where reading low is the dangerous direction. The legacy counter is a labelled fallback
+ * only, used when neither live source answered (`pickMeterReading`).
  */
 
 export type NeonMeterSource = "metered" | "operations" | "legacy";
 
 /** One operation off `GET /projects/{id}/operations`, only the fields the arithmetic reads. */
-export type NeonOperation = { action: string; status: string; created_at: string; updated_at?: string };
+export type NeonOperation = { action: string; status: string; created_at: string; updated_at?: string; endpoint_id?: string | null };
 
 /**
  * How long the compute was awake inside `[periodStart, now]`, in seconds, from the operations log
@@ -44,6 +45,7 @@ export type NeonOperation = { action: string; status: string; created_at: string
  * - A suspension with no start before it inside the log began before the log does: the compute
  *   was already awake at the period's start (or at the log's oldest entry, if later).
  * - A start with no suspension after it is still awake: it counts up to `now`.
+ * - Each compute (`endpoint_id`) is its own timeline, summed at the end.
  * - `reachesPeriodStart` is the caller's knowledge that the pages it read go back past the
  *   period's start. Without it the oldest wakes are missing, and a figure that silently dropped
  *   them would read low — so it is null, and the other sources answer.
@@ -55,6 +57,22 @@ export function awakeSecondsFromOperations(
   reachesPeriodStart: boolean,
 ): number | null {
   if (!reachesPeriodStart) return null;
+  // Per compute: a second endpoint (a branch's, a migration's) has its own starts and suspensions,
+  // and one timeline across both would merge overlapping wakes and read low. Operations with no
+  // endpoint named are grouped together, as the one read-write compute they almost always are.
+  const byEndpoint = new Map<string, NeonOperation[]>();
+  for (const op of operations) {
+    const key = typeof op.endpoint_id === "string" ? op.endpoint_id : "";
+    const list = byEndpoint.get(key);
+    if (list) list.push(op);
+    else byEndpoint.set(key, [op]);
+  }
+  let total = 0;
+  for (const list of byEndpoint.values()) total += awakeSecondsOfOneCompute(list, periodStart, now);
+  return total;
+}
+
+function awakeSecondsOfOneCompute(operations: readonly NeonOperation[], periodStart: Date, now: Date): number {
   const start = periodStart.getTime();
   const end = now.getTime();
   const events = operations
@@ -113,7 +131,14 @@ export function meteredCuSeconds(body: unknown, projectId: string, periodStart: 
   return found ? seconds : null;
 }
 
-/** The three readings, and the one the pages use: the largest that answered, and which it was. */
+/**
+ * The three readings, and the one the pages use: the larger of the two live sources that answered
+ * — `metered` and `operations` — and the legacy counter **only when neither did**, labelled as
+ * such. The counter stopped updating on 2026-09-24 and nobody knows whether it resets when a
+ * period turns; letting a frozen figure compete as an equal would, on the first day of a period,
+ * read a whole month's pace off one day and throttle (or pause) the jobs for nothing. It stays on
+ * the meter as a displayed third reading.
+ */
 export function pickMeterReading(readings: { metered: number | null; operations: number | null; legacy: number }): {
   usedCuHours: number;
   source: NeonMeterSource;
@@ -121,14 +146,14 @@ export function pickMeterReading(readings: { metered: number | null; operations:
   const candidates: Array<[NeonMeterSource, number | null]> = [
     ["metered", readings.metered],
     ["operations", readings.operations],
-    ["legacy", readings.legacy],
   ];
   let best: { usedCuHours: number; source: NeonMeterSource } | null = null;
   for (const [source, value] of candidates) {
     // Strictly larger only, so a tie goes to the better-founded source: the order above.
     if (value !== null && Number.isFinite(value) && (best === null || value > best.usedCuHours)) best = { usedCuHours: value, source };
   }
-  return best ?? { usedCuHours: 0, source: "legacy" };
+  if (best) return best;
+  return { usedCuHours: Number.isFinite(readings.legacy) ? readings.legacy : 0, source: "legacy" };
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

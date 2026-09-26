@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { awakeSecondsFromOperations, meteredCuSeconds, pickMeterReading } from "@/modules/diagnostics/domain/neon-meter";
-import { readNeonConsumption, readNeonLimits, readNeonMeter } from "@/modules/diagnostics/neon";
+import { forgetNeonConsumptionRefusals, NEON_CONSUMPTION_REFUSAL_MS, readNeonConsumption, readNeonLimits, readNeonMeter } from "@/modules/diagnostics/neon";
 import { FAKE_PROJECT_ID, fakeNeon, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
@@ -82,8 +82,22 @@ describe("§NNN the metered figure from the consumption endpoint", () => {
   });
 });
 
+describe("§NNN awake time per compute", () => {
+  it("sums each endpoint's own timeline, so two computes awake at once are not merged into one", () => {
+    const at = (iso: string, action: string, endpoint: string) => ({ ...op(action, iso), endpoint_id: endpoint });
+    const operations = [
+      at("2026-09-25T12:00:00Z", "suspend_compute", "ep-main"),
+      at("2026-09-25T11:00:00Z", "suspend_compute", "ep-branch"),
+      at("2026-09-25T10:30:00Z", "start_compute", "ep-branch"),
+      at("2026-09-25T10:00:00Z", "start_compute", "ep-main"),
+    ];
+    // Two hours on the main compute, half an hour on the branch's, overlapping.
+    expect(awakeSecondsFromOperations(operations, PERIOD_START, NOW, true)).toBe(2.5 * 3600);
+  });
+});
+
 describe("§NNN which reading the pages use", () => {
-  it("takes the largest that answered, and says which", () => {
+  it("takes the larger of the two live sources that answered, and says which", () => {
     // Production on 2026-09-26: the frozen counter at 9.03 against 16.48 metered.
     expect(pickMeterReading({ metered: 16.48, operations: 16.2, legacy: 9.03 })).toEqual({ usedCuHours: 16.48, source: "metered" });
     // A project-scoped key: no metered figure; the log wins over the frozen counter.
@@ -93,9 +107,33 @@ describe("§NNN which reading the pages use", () => {
     // A tie goes to the better-founded source.
     expect(pickMeterReading({ metered: 3, operations: 3, legacy: 3 }).source).toBe("metered");
   });
+
+  it("never lets the frozen legacy counter outbid a live source, however large it is", () => {
+    // 1 October, a counter that did not reset: 9.03 frozen against a first day of 0.4 from the log.
+    expect(pickMeterReading({ metered: null, operations: 0.4, legacy: 9.03 })).toEqual({ usedCuHours: 0.4, source: "operations" });
+    expect(pickMeterReading({ metered: 1.2, operations: null, legacy: 99 })).toEqual({ usedCuHours: 1.2, source: "metered" });
+  });
 });
 
 describe("§NNN readNeonMeter — the one reader", () => {
+  beforeEach(() => forgetNeonConsumptionRefusals());
+
+  it("remembers a project-scoped key's refusal of the consumption endpoint, for the shared reading only", async () => {
+    const state = productionLikeState({ quotaCuHours: 100 });
+    state.project.org_id = "org-example";
+    const neon = fakeNeon(state);
+    const consumptionCalls = () => neon.calls.filter((call) => call.path === "/consumption_history/v2/projects").length;
+
+    await readNeonMeter(NEON_ENV, { fetchImpl: neon.fetch, shared: true }, NOW);
+    await readNeonMeter(NEON_ENV, { fetchImpl: neon.fetch, shared: true }, new Date(NOW.getTime() + 60_000));
+    expect(consumptionCalls()).toBe(1);
+    // A direct read always asks; the shared one asks again once the refusal is old.
+    await readNeonMeter(NEON_ENV, { fetchImpl: neon.fetch }, NOW);
+    expect(consumptionCalls()).toBe(2);
+    await readNeonMeter(NEON_ENV, { fetchImpl: neon.fetch, shared: true }, new Date(NOW.getTime() + NEON_CONSUMPTION_REFUSAL_MS));
+    expect(consumptionCalls()).toBe(3);
+  });
+
   it("prices the awake time at the compute's floor when the key may not read the organisation's consumption", async () => {
     const state = productionLikeState({ usedCuHours: 5.42, quotaCuHours: 30 });
     state.project.consumption_period_start = "2026-09-22T07:00:00Z";
@@ -110,8 +148,9 @@ describe("§NNN readNeonMeter — the one reader", () => {
     expect(read.meter.operationsCuHours).toBeCloseTo(8 * 0.25, 5);
     expect(read.meter.meteredCuHours).toBeNull();
     expect(read.meter.legacyCuHours).toBeCloseTo(5.42, 2);
-    // 5.42 (frozen) beats 2.0 here: the largest wins, whichever it is.
-    expect(read.meter.source).toBe("legacy");
+    // The frozen 5.42 is shown, never used while the log answers: 2.0 is the figure.
+    expect(read.meter.source).toBe("operations");
+    expect(read.meter.usedCuHours).toBeCloseTo(2, 5);
     expect(read.meter.awakeHours).toBeCloseTo(8, 5);
     expect(read.meter.quotaCuHours).toBe(30);
     // The consumption endpoint was asked — the key might have been an organisation's — and refused.

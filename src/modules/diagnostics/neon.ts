@@ -245,6 +245,9 @@ async function readMeteredSeconds(
   deps: NeonDeps,
 ): Promise<number | null> {
   if (!orgId) return null;
+  const refusalKey = `${env.NEON_PROJECT_ID}:${orgId}`;
+  const refusedAt = consumptionRefusals.get(refusalKey);
+  if (deps.shared && refusedAt !== undefined && now.getTime() - refusedAt >= 0 && now.getTime() - refusedAt < NEON_CONSUMPTION_REFUSAL_MS) return null;
   const query = new URLSearchParams({
     org_id: orgId,
     project_ids: env.NEON_PROJECT_ID,
@@ -254,7 +257,29 @@ async function readMeteredSeconds(
     metrics: "compute_unit_seconds",
   });
   const answer = await neonRequest(env, `/consumption_history/v2/projects?${query.toString()}`, { method: "GET" }, deps);
-  return answer.ok ? meteredCuSeconds(answer.body, env.NEON_PROJECT_ID, periodStart) : null;
+  if (!answer.ok) {
+    // A key scoped to one project is refused here every time (403/404); Next's fetch cache keeps
+    // no refusal, so without this every shared reading would send Neon one more doomed request.
+    if (answer.failure.kind === "forbidden" || answer.failure.kind === "refused") consumptionRefusals.set(refusalKey, now.getTime());
+    return null;
+  }
+  consumptionRefusals.delete(refusalKey);
+  return meteredCuSeconds(answer.body, env.NEON_PROJECT_ID, periodStart);
+}
+
+/**
+ * How long this instance believes a refusal of the consumption endpoint before asking again: six
+ * hours, so a key the owner swaps for an organisation's is noticed the same day, and a key that
+ * cannot read it costs Neon four requests a day per instance rather than one per reading. Only
+ * the shared reading (`deps.shared`) honours it; a direct read — the limits card's save, a test —
+ * always asks.
+ */
+export const NEON_CONSUMPTION_REFUSAL_MS = 6 * 3_600_000;
+const consumptionRefusals = new Map<string, number>();
+
+/** For the tests, which must not see one case's refusal in the next. */
+export function forgetNeonConsumptionRefusals(): void {
+  consumptionRefusals.clear();
 }
 
 /** The read-write compute's floor, from the endpoints answer; the platform's own when none says. */

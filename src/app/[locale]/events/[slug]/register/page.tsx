@@ -199,6 +199,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const throttled = (fields ?? "").split(",").includes("throttled");
   /**
+   * The database was away when the form was sent (§NNN): a compute that could not start, or Neon
+   * refusing on its monthly quota. About nothing the person typed, like the three above; the
+   * draft cookie brought their answers back, and nothing was registered or sent.
+   */
+  const databaseAway = (fields ?? "").split(",").includes("databaseAway");
+  /**
    * The emergency contact was the runner's own number (§228). A marker rather than a field,
    * like the two above, so the summary can still link the field while the sentence beneath it
    * says which of the two rules refused it — "that number is not valid" is untrue and was what
@@ -511,7 +517,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               sx={{ mb: 2 }}
             >
               <AlertTitle>
-                {throttled ? t("errors.throttledTitle") : tooFast ? t("errors.tooFastTitle") : t("errors.title")}
+                {databaseAway
+                  ? t("errors.databaseAwayTitle")
+                  : throttled
+                    ? t("errors.throttledTitle")
+                    : tooFast
+                      ? t("errors.tooFastTitle")
+                      : t("errors.title")}
               </AlertTitle>
               {/*
                 The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
@@ -525,7 +537,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 the one rejection that is about nothing they typed, so it is said first and on
                 its own, and the catalogue already had the sentence for it.
               */}
-              {alreadyOnAddress ? (
+              {databaseAway ? (
+                t("errors.databaseAway")
+              ) : alreadyOnAddress ? (
                 // Behind the emailed link (§389): this runner is on the address already, and the
                 // link still works for somebody else.
                 t("another.alreadyOnAddress")
