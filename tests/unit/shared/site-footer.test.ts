@@ -369,10 +369,13 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(container).toMatch(/flex-wrap:wrap;/);
     expect(container, "no margin between two lines").toMatch(/row-gap:0(px)?;/);
     // The density scale's short step between two links on a phone (§380), 16px from `sm`.
-    expect(container).toMatch(/(^|[;{])column-gap:8px;/);
+    // §NNN: compact on a phone — the smallest step (6px), 16px from `sm`.
+    expect(container).toMatch(/(^|[;{])column-gap:6px;/);
     expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
-    // Every link in it a 44px target (BR-REQ-041-01 criterion 6).
-    expect(container).toMatch(/ a\{[^}]*min-height:44px;/);
+    // §NNN: every link the bar's own target — 24px, 28px from 360, 44px from `sm` (footer-target.ts).
+    expect(container).toMatch(/ a\{[^}]*min-height:24px;/);
+    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]*a\{[^}]*min-height:28px;/);
+    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*a\{[^}]*min-height:44px;/);
     // No stacked `spacing`, no paragraph of its own for the address.
     expect(panel).not.toMatch(/<p class="MuiTypography/);
 

@@ -333,18 +333,13 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             // no margin between them, "Scrie-ne" once, and the whole panel shorter than the 188px
             // it was at 360 in Romanian (with the club's address configured) before the change.
             const panelControls = panelContent(fold).locator("a, [role=button]");
-            const tops: number[] = [];
+            // Compact since §NNN: a link is the bar's own target (24, 28 from 360, 44 from `sm`),
+            // the stamp keeps its 44px long-press box.
             for (let i = 0; i < (await panelControls.count()); i++) {
               const box = await boxOf(panelControls.nth(i), `the panel's control ${i}`);
-              expect(box.height, `the panel's control ${i} is 44px tall at ${width}px`).toBeGreaterThanOrEqual(43.5);
-              tops.push(box.y);
+              expect(box.height, `the panel's control ${i} is a target at ${width}px`).toBeGreaterThanOrEqual(targetAt(width) - 0.5);
             }
-            const lines = [...new Set(tops.map((top) => Math.round(top - panel.y)))];
-            for (const line of lines) {
-              expect(line % 44 <= 1 || line % 44 >= 43, `a panel line starts at ${line}px, a multiple of 44 at ${width}px`).toBe(true);
-            }
-            expect(panel.height, `the panel's height at ${width}px`).toBeLessThanOrEqual(lines.length * 44 + 8);
-            expect(panel.height, `the panel is shorter than §378's 188px at ${width}px`).toBeLessThan(188);
+            expect(panel.height, `the panel is shorter than §385's 136px at ${width}px`).toBeLessThan(width >= SM ? 188 : 136);
             const panelText = await panelContent(fold).evaluate((el) => el.textContent ?? "");
             expect(panelText.match(/Scrie-ne|Write to us/g), `"Scrie-ne" once at ${width}px`).toHaveLength(1);
             // The stamp, a chip, is the panel's last item.

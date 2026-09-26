@@ -311,16 +311,21 @@ export default async function SiteFooter() {
                 // A column gap rather than a margin: a margin is kept by an item that wraps to the
                 // next line, so it started further in than the one above. Two links on one line
                 // are the density scale's short step apart on a phone (§380), 16 pixels from `sm`.
-                columnGap: { xs: DENSITY.gapSm, sm: 2 },
+                // §NNN (the owner, 2026-09-26: "Informațiile din footer sunt mult prea spațiate"):
+                // on a phone the links are the bar's own targets (`footer-target.ts`: 24 below 360,
+                // 28 up to `sm`, WCAG 2.2 SC 2.5.8, the size §372 chose for the bar) rather than 44
+                // each, so a line of the open fold is 24–28 pixels, not 44; 44 from `sm` as before.
+                // Two links on one line are the density scale's smallest step apart on a phone.
+                columnGap: { xs: DENSITY.gapXs, sm: 2 },
                 rowGap: 0,
                 pt: 0,
-                pb: 0.5,
+                pb: { xs: 0, sm: 0.5 },
                 // Indented to where the summary's words start, so it reads as the fold's body.
                 pl: { xs: 1.5, sm: 2 },
                 // The address's own size before (`body2`), for every link now: 14 pixels rather
                 // than 16, so the terms and "my registrations" share a line at 320.
                 fontSize: "0.875rem",
-                "& a": { display: "inline-flex", alignItems: "center", minHeight: 44 },
+                "& a": { display: "inline-flex", alignItems: "center", ...footerTargetSx(["minHeight"]) },
               }}
             >
               {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
