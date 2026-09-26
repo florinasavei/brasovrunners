@@ -276,6 +276,15 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
       ["raceStartsAt"],
     );
   }
+  // «Se deschid în curând» says there is no date yet (§NNN): a date beside it is two answers to one
+  // question, and the organizer is asked which one they mean rather than one being dropped.
+  if (fields.registrationOpensSoon === true && registrationOpensAt) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "registrationOpensAt: an opening date and «opens soon» cannot both be set",
+      ["registrationOpensAt"],
+    );
+  }
   if (
     registrationOpensAt &&
     registrationClosesAt &&
@@ -477,6 +486,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // the select writes nothing, so a save that never mentioned it keeps what the organizer chose.
     ...(fields.reminderHoursBefore === undefined ? {} : { reminderHoursBefore: fields.reminderHoursBefore }),
     registrationOpensAt: times.registrationOpensAt,
+    // «Se deschid în curând» (§NNN), by the partners' discipline: a caller that did not post the
+    // switch writes nothing, so no script opens a registration the organizer holds shut by not
+    // mentioning it. The editor and the create form always post it.
+    ...(fields.registrationOpensSoon === undefined ? {} : { registrationOpensSoon: fields.registrationOpensSoon }),
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
     participantListVisibility: fields.participantListVisibility,
@@ -516,6 +529,7 @@ const TURN_UP_FIELDS = {
   waitlistCapacity: null,
   declarationDocumentId: null,
   registrationOpensAtWallTime: "",
+  registrationOpensSoon: false,
   registrationClosesAtWallTime: "",
   participantListVisibility: "HIDDEN",
   externalProvider: null,
@@ -540,7 +554,14 @@ export function normalizeForMode<T extends EventFieldsInput>(fields: T): T {
 }
 
 /** What "Pe site" alone shows, and what "La organizator" alone shows — as the values stored in their place. */
-const INTERNAL_ONLY_FIELDS = { capacity: null, waitlistCapacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
+const INTERNAL_ONLY_FIELDS = {
+  capacity: null,
+  waitlistCapacity: null,
+  declarationDocumentId: null,
+  participantListVisibility: "HIDDEN",
+  // «Se deschid în curând» (§NNN) holds the site's own door shut; there is no such door elsewhere.
+  registrationOpensSoon: false,
+} as const;
 const EXTERNAL_ONLY_FIELDS = { externalProvider: null, externalRegistrationUrl: null } as const;
 
 function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
@@ -1609,6 +1630,9 @@ const SERIES_COLUMNS = [
   // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
   "registrationMode",
+  // «Se deschid în curând» (§NNN) travels with the opening date it stands in for, which the
+  // series carries as a time column below.
+  "registrationOpensSoon",
   "capacity",
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
   // raising it offers nobody anything, and lowering it removes nobody already waiting.
@@ -1934,6 +1958,7 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(
       registrationMode: event.registrationMode,
       startsAt: event.startsAt,
       registrationOpensAt: event.registrationOpensAt,
+      registrationOpensSoon: event.registrationOpensSoon,
       registrationClosesAt: event.registrationClosesAt,
       confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
       confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
@@ -2612,6 +2637,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     reminderHoursBefore: source.reminderHoursBefore,
     registrationMode: source.registrationMode,
     registrationOpensAt: source.registrationOpensAt,
+    registrationOpensSoon: source.registrationOpensSoon,
     registrationClosesAt: source.registrationClosesAt,
     declarationDocumentId: source.declarationDocumentId,
     participantListVisibility: "HIDDEN" as const,

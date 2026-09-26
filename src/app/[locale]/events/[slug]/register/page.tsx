@@ -151,6 +151,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       eventStatus: event.eventStatus,
       startsAt: event.startsAt,
       registrationOpensAt: event.registrationOpensAt,
+      registrationOpensSoon: event.registrationOpensSoon,
       registrationClosesAt: event.registrationClosesAt,
       publishedAt: event.publishedAt,
     },

@@ -19,6 +19,7 @@ import {
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { type EventFieldName, eventInputConstraints } from "../../constraints";
 import BibDesignPanel from "../BibDesignPanel";
@@ -258,6 +259,13 @@ export default async function RegistrationBox({
                   {/* 8.1 — from when until when. */}
                   <Panel collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
+                      {/* «Se deschid în curând» (§NNN): announced, with no date. The marker says the
+                          form carried the box, so an unticked one reads as "off", not "not edited". */}
+                      <input type="hidden" name="event.registrationOpensSoon.present" value="1" />
+                      <CheckboxField name="event.registrationOpensSoon" defaultChecked={event?.registrationOpensSoon ?? false}>
+                        {t("editor.registrationOpensSoon")}
+                      </CheckboxField>
+                      <BoxNote>{t("editor.registrationOpensSoonHelp")}</BoxNote>
                       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                         <WallTimeField name="event.registrationOpensAt" label={t("editor.registrationOpensAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationOpensAt ?? null} zone={zone} />
                         <WallTimeField name="event.registrationClosesAt" label={t("editor.registrationClosesAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationClosesAt ?? null} zone={zone} />

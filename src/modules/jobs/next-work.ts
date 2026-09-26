@@ -206,6 +206,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   const interested = await any
     .selectDistinct({
       registrationOpensAt: events.registrationOpensAt,
+      registrationOpensSoon: events.registrationOpensSoon,
       publishedAt: events.publishedAt,
       registrationClosesAt: events.registrationClosesAt,
       startsAt: events.startsAt,
@@ -214,7 +215,8 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     .innerJoin(events, eq(events.id, registrationInterests.eventId))
     .where(sql`coalesce(${events.registrationClosesAt}, ${events.startsAt}) > ${nowIso}::timestamptz`);
   const interestInstants = interested.flatMap((event) => {
-    const opensAt = toDate(event.registrationOpensAt) ?? toDate(event.publishedAt);
+    // «Se deschid în curând» (§NNN) has no instant to wait for: the save that opens it wakes the job.
+    const opensAt = event.registrationOpensSoon === true ? null : (toDate(event.registrationOpensAt) ?? toDate(event.publishedAt));
     const closesAt = toDate(event.registrationClosesAt) ?? toDate(event.startsAt);
     return [opensAt && opensAt > now ? opensAt : null, closesAt && closesAt > now ? closesAt : null];
   });

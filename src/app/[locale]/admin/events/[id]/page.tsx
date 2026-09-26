@@ -115,7 +115,7 @@ import {
 } from "../../actions";
 import { countForm } from "@/i18n/count-form";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
-import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
+import { registrationState } from "@/modules/events/domain/registration-window";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { seriesHorizonEnd, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
@@ -231,7 +231,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   // "Anunță-mă" (§146): while the window is ahead, how many addresses wait for the announcement.
   const interestsWaiting =
-    canManageRegistrations(staffUser.role) && upcomingRegistrationOpening(event, now) !== null ? await countInterests(db, event.id) : null;
+    canManageRegistrations(staffUser.role) && registrationState(event, now) === "NOT_YET_OPEN" ? await countInterests(db, event.id) : null;
 
   // The waiting list's length, for the queue and for the sentence under "Număr de locuri" (§147).
   const waiting = internal && (maySaveSettings || canReadRegistrations(staffUser.role)) ? await countEligibleWaitlisted(db, event.id) : 0;

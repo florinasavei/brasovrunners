@@ -214,6 +214,10 @@ describe("§350 each box's summary, empty and filled", () => {
 
   it("the registration box's cards", () => {
     expect(registrationWindowSummary(words, null, "ro")).toBe("De la publicare – până la start");
+    // §NNN: an opening announced with no date says so, in place of the publication fallback.
+    expect(
+      registrationWindowSummary(words, { registrationOpensAt: null, registrationOpensSoon: true, registrationClosesAt: null, timezone: ZONE }, "ro"),
+    ).toBe("Se deschid în curând – până la start");
     expect(
       registrationWindowSummary(words, { registrationOpensAt: new Date("2026-10-01T07:00:00Z"), registrationClosesAt: null, timezone: ZONE }, "ro"),
     ).toBe("Joi, 1 oct. 2026, 10:00 – până la start");

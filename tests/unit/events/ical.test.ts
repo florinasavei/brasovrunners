@@ -376,6 +376,7 @@ describe("the calendar file", () => {
       eventStatus: "SCHEDULED" as const,
       startsAt: new Date("2026-10-11T06:00:00.000Z"),
       registrationOpensAt: new Date("2026-10-01T15:00:00.000Z"),
+      registrationOpensSoon: false,
       registrationClosesAt: null,
       publishedAt: new Date("2026-09-01T00:00:00.000Z"),
       externalRegistrationUrl: null,
@@ -388,6 +389,15 @@ describe("the calendar file", () => {
       url: "https://o.example.test",
     });
     expect(calendarRegistration({ ...base, registrationMode: "NONE" }, register, new Date("2026-09-20T00:00:00.000Z"))).toBeNull();
+    // «Se deschid în curând» (§NNN): ahead with no date, whatever the clock or a stray date says.
+    const soon = { ...base, registrationOpensSoon: true };
+    expect(calendarRegistration(soon, register, new Date("2026-10-05T00:00:00.000Z"))).toEqual({ kind: "NOT_YET_OPEN", opensAt: null, url: register });
+    const soonLine = calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "NOT_YET_OPEN", opensAt: null, url: register } }, labelsRo);
+    expect(soonLine).toContain(`\n\nÎnscrierile se deschid în curând — ${register}\n\n`);
+    const soonLineEn = calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "NOT_YET_OPEN", opensAt: null, url: register } }, labelsEn);
+    expect(soonLineEn).toContain(`Registration opens soon — ${register}`);
+    // No boundary to stamp while it is soon: the row's own change, even after the stray date.
+    expect(calendarStamp({ ...soon, updatedAt: new Date("2026-09-19T10:00:00.000Z") }, new Date("2026-10-05T00:00:00.000Z"))).toEqual(new Date("2026-09-19T10:00:00.000Z"));
     expect(calendarRegistration({ ...base, eventStatus: "CANCELLED" }, register, new Date("2026-10-02T00:00:00.000Z"))).toBeNull();
     expect(calendarRegistration({ ...base, eventStatus: "COMPLETED" }, register, new Date("2026-10-12T00:00:00.000Z"))).toBeNull();
   });
@@ -398,6 +408,7 @@ describe("the calendar file", () => {
       eventStatus: "SCHEDULED" as const,
       startsAt: new Date("2026-10-11T06:00:00.000Z"),
       registrationOpensAt: new Date("2026-10-01T15:00:00.000Z"),
+      registrationOpensSoon: false,
       registrationClosesAt: null,
       publishedAt: new Date("2026-09-01T00:00:00.000Z"),
       updatedAt: new Date("2026-09-19T10:00:00.000Z"),

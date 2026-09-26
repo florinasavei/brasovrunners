@@ -116,6 +116,7 @@ describe("§383 when an automatic email is due", () => {
       editorialStatus: "PUBLISHED",
       startsAt: at(20 * DAY),
       registrationOpensAt: at(2 * DAY),
+      registrationOpensSoon: false,
       registrationClosesAt: null,
       publishedAt: at(-DAY),
     };

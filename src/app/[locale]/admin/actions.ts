@@ -284,6 +284,10 @@ function eventFieldsFrom(form: FormData) {
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),
+    // «Înscrierile se deschid în curând» (§NNN): a checkbox, read only when the form carried its
+    // marker — an unticked box posts nothing, and a form without the box must read as "not
+    // editing it" rather than as "open", which would open a door the organizer holds shut.
+    registrationOpensSoon: form.get("event.registrationOpensSoon.present") === "1" ? form.get("event.registrationOpensSoon") === "on" : undefined,
     registrationClosesAtWallTime: wallTime("registrationClosesAt"),
     declarationDocumentId: value("declarationDocumentId"),
     // A checkbox, so an absent value is HIDDEN — the safe half of a disclosure switch.
