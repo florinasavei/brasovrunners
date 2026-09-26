@@ -222,9 +222,13 @@ describe("§446 the form sent again from a registered address for a different pe
     expect(subject).toContain("Înscrii încă o persoană la Crosul familiei?");
     expect(subject).toContain("Registering one more person for The family cross?");
     expect(text).toContain("Înscriși deja cu această adresă: Ana P.");
-    expect(text).toContain("Persoana din formular: Maria Pop, născută pe 11 iulie 1990");
+    expect(text).toContain("Persoana din formular: Maria Pop");
+    expect(text).toContain("Data nașterii: 11 iulie 1990");
+    expect(text).toContain("Dacă nu tu ai trimis formularul, ignoră mesajul");
     expect(text).toContain("Already registered with this address: Ana P.");
-    expect(text).toContain("The person in the form: Maria Pop, born on 11 July 1990");
+    expect(text).toContain("The person in the form: Maria Pop");
+    expect(text).toContain("Date of birth: 11 July 1990");
+    expect(text).toContain("If you did not send the form, ignore this message");
     expect(text).not.toContain("Vecina");
     expect(text).toContain("Confirm că înscriu altă persoană");
     expect(text).toContain("Limita: cel mult 4 persoane pe o adresă, la un eveniment");
@@ -632,8 +636,12 @@ describe("§NNN the family email's facts in bold, and «Nu înscriu această per
     expect(message.html.match(/data-email-part="family-facts"/g)).toHaveLength(2);
     // The name and the birth date each bold, the date in words in each language (never 11.07.1990).
     const bold = (text: string) => `<strong style="font-size:16px">${text}</strong>`;
-    expect(message.html).toContain(`${bold("Maria Pop")}, născută pe ${bold("11 iulie 1990")}`);
-    expect(message.html).toContain(`${bold("Maria Pop")}, born on ${bold("11 July 1990")}`);
+    expect(message.html).toContain(bold("Maria Pop"));
+    expect(message.html).toContain(bold("11 iulie 1990"));
+    expect(message.html).toContain(bold("primește propriul loc"));
+    expect(message.html).not.toContain("născut");
+    expect(message.html).toContain(bold("11 July 1990"));
+    expect(message.html).toContain(bold("they get their own place"));
     expect(message.html).not.toContain("11.07.1990");
     expect(message.html).toContain(bold("Ana P."));
     expect(message.text).toMatch(/Evenimentul: Crosul familiei, /);

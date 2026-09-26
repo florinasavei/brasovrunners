@@ -1118,6 +1118,7 @@ const T = {
             : [
               // One line to open, the facts in the box above (§NNN); the consent line keeps the privacy link (§419; GDPR art. 14).
               "Formularul a fost trimis din nou cu această adresă, pentru o altă persoană — nu am înscris-o încă: confirmă cu primul buton sau renunță cu al doilea.",
+              "Dacă nu tu ai trimis formularul, ignoră mesajul: nu se înscrie nimeni, iar datele se șterg singure când linkul expiră.",
               "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
             ],
       action: "Confirm că înscriu altă persoană",
@@ -1219,14 +1220,9 @@ const T = {
     familyFacts: (f: FamilyFactsInput): FamilyFact[] => [
       ...(f.event ? [{ label: "Evenimentul", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
       { label: "Înscriși deja cu această adresă", value: [{ text: f.registered.length > 0 ? f.registered.join(", ") : "nimeni în acest moment", bold: true }] },
-      {
-        label: "Persoana din formular",
-        value: [
-          { text: f.name, bold: true },
-          ...(formatBirthDate(f.birthDate, "ro") ? [{ text: ", născută pe " }, { text: formatBirthDate(f.birthDate, "ro"), bold: true }] : []),
-        ],
-      },
-      { label: "Ce se întâmplă dacă apeși", value: [{ text: "primește propriul loc, propriul email cu declarația și propriul cod QR, pe această adresă" }] },
+      { label: "Persoana din formular", value: [{ text: f.name, bold: true }] },
+      ...(formatBirthDate(f.birthDate, "ro") ? [{ label: "Data nașterii", value: [{ text: formatBirthDate(f.birthDate, "ro"), bold: true }] }] : []),
+      { label: "Ce se întâmplă dacă apeși", value: [{ text: "primește propriul loc", bold: true }, { text: ", propriul email cu declarația și propriul cod QR, pe această adresă" }] },
       { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
       ...(f.cap !== undefined
         ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
@@ -1540,6 +1536,7 @@ const T = {
               ]
             : [
               "The form was sent again with this address, for another person — we have not registered them yet: confirm with the first button or decline with the second.",
+              "If you did not send the form, ignore this message: nobody is registered, and the details are deleted when the link expires.",
               "Register someone only with their agreement, and tell them how we use their details: the privacy notice is at the link at the end of this message.",
             ],
       action: "I confirm I am registering another person",
@@ -1621,14 +1618,9 @@ const T = {
     familyFacts: (f: FamilyFactsInput): FamilyFact[] => [
       ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
       { label: "Already registered with this address", value: [{ text: f.registered.length > 0 ? f.registered.join(", ") : "nobody at the moment", bold: true }] },
-      {
-        label: "The person in the form",
-        value: [
-          { text: f.name, bold: true },
-          ...(formatBirthDate(f.birthDate, "en") ? [{ text: ", born on " }, { text: formatBirthDate(f.birthDate, "en"), bold: true }] : []),
-        ],
-      },
-      { label: "What happens if you press", value: [{ text: "they get their own place, their own email with the declaration and their own QR code, at this address" }] },
+      { label: "The person in the form", value: [{ text: f.name, bold: true }] },
+      ...(formatBirthDate(f.birthDate, "en") ? [{ label: "Date of birth", value: [{ text: formatBirthDate(f.birthDate, "en"), bold: true }] }] : []),
+      { label: "What happens if you press", value: [{ text: "they get their own place", bold: true }, { text: ", their own email with the declaration and their own QR code, at this address" }] },
       { label: "Deadline", value: [{ text: "the link is valid for " }, { text: f.hours, bold: true }, { text: " and can be used once" }] },
       ...(f.cap !== undefined
         ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]

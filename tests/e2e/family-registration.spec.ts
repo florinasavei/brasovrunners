@@ -127,7 +127,8 @@ test.describe("§389 §446 a family on one address", () => {
     // The captured email: who the address holds, the person the form named, one button.
     const offer = await capturedEmail(page, email, "Înscriși deja cu această adresă");
     expect(offer.text).toContain("Înscriși deja cu această adresă: Ana P.");
-    expect(offer.text).toContain(`Persoana din formular: Maria ${lastName}, născută pe 11 iulie 1990`);
+    expect(offer.text).toContain(`Persoana din formular: Maria ${lastName}`);
+    expect(offer.text).toContain("Data nașterii: 11 iulie 1990");
     expect(offer.text).toContain("Confirm că înscriu altă persoană");
     const link = offer.links.find((href) => href.includes("/inregistrari/familie/"));
     expect(link).toBeTruthy();
