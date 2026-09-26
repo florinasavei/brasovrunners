@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { events } from "@/db/schema/events";
+import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
-import { countRegisteredForUpcoming, forgetRegisteredBadgeCount, registeredBadgeCount } from "@/modules/registrations/nav-count";
+import { countRegisteredForUpcoming, forgetRegisteredBadgeCount, registeredBadgeBreakdown, registeredBadgeCount } from "@/modules/registrations/nav-count";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -98,5 +98,31 @@ describe("§255 how many are signed up", () => {
     expect(await registeredBadgeCount(db, new Date(NOW.getTime() + 61_000))).toBe(2);
     forgetRegisteredBadgeCount();
     expect(await registeredBadgeCount(db, NOW)).toBe(2);
+  });
+
+  it("§NNN splits the figure per upcoming event, in the reader's language, summing to the badge", async () => {
+    await db.insert(eventTranslations).values({ eventId: upcoming, locale: "ro", slug: "crosul", title: "Crosul" });
+    const [later] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 14 * DAY), registrationMode: "INTERNAL", capacity: 100 })
+      .returning();
+    await enter(upcoming, "CONFIRMED");
+    await enter(upcoming, "WAITLISTED");
+    await enter(upcoming, "CONFIRMED", "TEST");
+    await enter(later.id, "PENDING_DECLARATION");
+    await enter(past, "CONFIRMED");
+
+    const ro = await registeredBadgeBreakdown(db, NOW, "ro");
+    expect(ro).toEqual({
+      total: 3,
+      events: [
+        { eventId: upcoming, title: "Crosul", count: 2 },
+        { eventId: later.id, title: "—", count: 1 },
+      ],
+    });
+    // No English row: a dash, never the Romanian title.
+    const en = await registeredBadgeBreakdown(db, NOW, "en");
+    expect(en?.events.map((row) => row.title)).toEqual(["—", "—"]);
+    expect(ro?.total).toBe(await countRegisteredForUpcoming(db, NOW));
   });
 });

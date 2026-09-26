@@ -475,7 +475,9 @@
       "checkin": "Race day",
       "emails": "Emails",
       "guide": "Guide",
-      "registeredHint": "How many are signed up across every event still to come",
+      "registeredHint": "Active registrations (no cancelled, no tests) on the events still to come:",
+      "registeredEvent": "{title}: {count}",
+      "registeredMoreEvents": "Other events: {count}",
       "newsletter": "Newsletter"
     },
     "outbox": {

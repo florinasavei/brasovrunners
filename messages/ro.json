@@ -475,7 +475,9 @@
       "checkin": "Ziua cursei",
       "emails": "Emailuri",
       "guide": "Ghid",
-      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează",
+      "registeredHint": "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
+      "registeredEvent": "{title}: {count}",
+      "registeredMoreEvents": "Alte evenimente: {count}",
       "newsletter": "Newsletter"
     },
     "outbox": {

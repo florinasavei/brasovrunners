@@ -8,7 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getDb } from "@/db/client";
-import { registeredBadgeCount } from "@/modules/registrations/nav-count";
+import { BADGE_HINT_EVENTS, registeredBadgeBreakdown } from "@/modules/registrations/nav-count";
 import { type AdminSection, canReadRegistrations, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
@@ -71,13 +71,30 @@ export default async function BackofficeShell({
     bills compute time (§68). Only for the roles that may open the list — the Organizer since
     §289 — so for everybody else there is no query and no number.
   */
-  const registered = canReadRegistrations(staffUser.role) ? await registeredBadgeCount(getDb(), new Date()) : null;
+  const breakdown = canReadRegistrations(staffUser.role)
+    ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
+    : null;
+  const registered = breakdown?.total ?? null;
+  /*
+    The tooltip says what the figure counts, per event (§NNN): the rule in one line, then each
+    upcoming event with its number, the first eight by start and how many more after them — so
+    a reader whose list disagrees with the badge sees which event the difference is on.
+  */
+  const registeredHint = breakdown
+    ? [
+        t("nav.registeredHint"),
+        ...breakdown.events.slice(0, BADGE_HINT_EVENTS).map((row) => t("nav.registeredEvent", { title: row.title, count: row.count })),
+        ...(breakdown.events.length > BADGE_HINT_EVENTS
+          ? [t("nav.registeredMoreEvents", { count: breakdown.events.length - BADGE_HINT_EVENTS })]
+          : []),
+      ].join("\n")
+    : undefined;
 
   const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
-    ...(section === "registrations" ? { count: registered, countHint: t("nav.registeredHint") } : {}),
+    ...(section === "registrations" ? { count: registered, countHint: registeredHint } : {}),
   }));
 
   return (
