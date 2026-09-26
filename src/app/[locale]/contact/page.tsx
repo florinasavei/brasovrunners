@@ -77,7 +77,7 @@ const fieldId = (name: string) => `c-${name}`;
  * working. Every guard is on the server; a rejection is a redirect back here with the field
  * names and the typed values in the draft cookie, the same shape as the registration form.
  *
- * The club's address is shown beside the form as a `mailto:` on every deployment (§NNN).
+ * The club's address is shown beside the form as a `mailto:` on every deployment (§449).
  * On a deployment where the form has no way out the page shows the club's address as a
  * `mailto:` instead of a form that would fail — the address from the environment, never the
  * source (§8). "No way out" is two things since §164: no transport (`CONTACT_FORM_MODE=off`,
@@ -297,9 +297,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
             </Stack>
           </form>
 
-          {/* The club's address beside the form, always (§NNN): a visitor who prefers their own
+          {/* The club's address beside the form, always (§449): a visitor who prefers their own
               mail client, or whose message the form cannot carry, writes straight to the club. */}
-          {writeTo.length > 0 && (
+          {writeTo.length > 0 && error !== "DELIVERY" && (
             <Typography variant="body1" sx={{ mt: 3 }}>
               {t("direct")} {addressLinks}
             </Typography>

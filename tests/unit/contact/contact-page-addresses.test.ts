@@ -14,13 +14,18 @@ const MAILBOX = "contact@mail.example.test";
 const GMAIL = "club@gmail.example.test";
 
 let formReaches = false;
+let locale: "ro" | "en" = "ro";
 
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
-  const messages = (await import("../../../messages/ro.json")).default;
+  const catalogues = {
+    ro: (await import("../../../messages/ro.json")).default,
+    en: (await import("../../../messages/en.json")).default,
+  };
   return {
-    getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Contact" }),
-    getLocale: async () => "ro",
+    getTranslations: async (namespace: string) =>
+      createTranslator({ locale, messages: catalogues[locale] as typeof catalogues.ro, namespace: namespace as "Contact" }),
+    getLocale: async () => locale,
     setRequestLocale: () => undefined,
   };
 });
@@ -49,13 +54,16 @@ vi.mock("@/app/[locale]/contact/actions", () => ({ submitContactAction: async ()
 vi.mock("@/shared/ui/Wordmark", () => ({ default: () => null }));
 
 const { NextIntlClientProvider } = await import("next-intl");
-const messages = (await import("../../../messages/ro.json")).default;
+const catalogues = {
+  ro: (await import("../../../messages/ro.json")).default,
+  en: (await import("../../../messages/en.json")).default,
+};
 const { default: ContactPage } = await import("@/app/[locale]/contact/page");
 
 async function renderContactPage(): Promise<string> {
-  const page = (await ContactPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) })) as ReactElement;
+  const page = (await ContactPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) })) as ReactElement;
   const stream = await renderToReadableStream(
-    createElement(NextIntlClientProvider, { locale: "ro", messages } as unknown as ComponentProps<typeof NextIntlClientProvider>, page),
+    createElement(NextIntlClientProvider, { locale, messages: catalogues[locale] } as unknown as ComponentProps<typeof NextIntlClientProvider>, page),
   );
   await stream.allReady;
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
@@ -71,17 +79,24 @@ describe("§442 the contact page shows the addresses in force", () => {
     expect(html.slice(gmailAt, mailboxAt)).toContain(" sau ");
   });
 
-  it("§NNN shows the addresses beside the form too, when the form works", async () => {
+  it.each([
+    ["ro", "Sau scrie-ne direct la", " sau "],
+    ["en", "Or write to us directly at", " or "],
+  ] as const)("§449 shows the addresses beside the form too, when the form works (%s)", async (lang, lead, join) => {
     formReaches = true;
+    locale = lang;
     try {
       const html = await renderContactPage();
       expect(html).toContain("<form");
-      expect(html).toContain("Sau scrie-ne direct la");
+      expect(html).toContain(lead);
       const gmailAt = html.indexOf(`href="mailto:${GMAIL}"`);
+      const mailboxAt = html.indexOf(`href="mailto:${MAILBOX}"`);
       expect(gmailAt).toBeGreaterThan(html.indexOf("<form"));
-      expect(html.indexOf(`href="mailto:${MAILBOX}"`)).toBeGreaterThan(gmailAt);
+      expect(mailboxAt).toBeGreaterThan(gmailAt);
+      expect(html.slice(gmailAt, mailboxAt)).toContain(join);
     } finally {
       formReaches = false;
+      locale = "ro";
     }
   });
 });
