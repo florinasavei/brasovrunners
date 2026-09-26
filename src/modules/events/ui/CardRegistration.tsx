@@ -29,7 +29,12 @@ export type CardRegistrationLine = {
 /** A sentence in three pieces, the middle one the fact: "Înscrieri deschise până " + date + "". */
 export type FactParts = { before: string; fact: string; after: string };
 
-const SLOT = "";
+/**
+ * The marker formatted into the slot and cut at: printable, and made of braces and a word no
+ * catalogue sentence carries — `tests/unit/events/card-registration-line.test.ts` holds both
+ * catalogues to it (§NNN).
+ */
+export const SLOT = "{{fact}}";
 
 /**
  * The catalogue's own sentence with `fact` in the slot `name`: the words around it come from the

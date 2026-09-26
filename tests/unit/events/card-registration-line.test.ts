@@ -5,7 +5,7 @@ import ro from "../../../messages/ro.json";
 import type { PublicEvent } from "@/modules/events/repository";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import CardRegistration, { cardRegistrationLine } from "@/modules/events/ui/CardRegistration";
+import CardRegistration, { cardRegistrationLine, SLOT } from "@/modules/events/ui/CardRegistration";
 import type { RegistrationDoor } from "@/modules/events/ui/registration-door";
 
 /**
@@ -153,5 +153,13 @@ describe("§NNN CardRegistration — only the date, the hour and the free places
     }
     // The waiting list after the dot is words, not a count: only the date is bold.
     expect(strongs(render("ro", known({ kind: "FULL", waitlistRoom: null }, { taken: 10, capacity: 10 })))).toEqual(["sâm., 26 sept. 2026, la 10:00"]);
+  });
+});
+
+describe("§NNN the slot marker — printable, and in no catalogue sentence", () => {
+  it("is visible text, and neither catalogue carries it anywhere", () => {
+    expect(SLOT).toMatch(/^[\x20-\x7e]+$/);
+    expect(JSON.stringify(ro)).not.toContain(SLOT);
+    expect(JSON.stringify(en)).not.toContain(SLOT);
   });
 });

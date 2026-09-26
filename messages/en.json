@@ -270,11 +270,6 @@
       "opensSoon": "Registration opens soon.",
       "opensSoonShort": "Registration opens soon",
       "openUntilShort": "Registration open until {date}",
-      "freeOf": {
-        "one": "{count} place left out of {places}",
-        "few": "{count} places left out of {places}",
-        "other": "{count} places left out of {places}"
-      },
       "freeCount": {
         "one": "{count} place left",
         "few": "{count} places left",
