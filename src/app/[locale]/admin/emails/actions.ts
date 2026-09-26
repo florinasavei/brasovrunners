@@ -151,7 +151,8 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
       getDb(),
       actor,
       {
-        declarations: { to: posted("declarationsTo"), cc: list("declarationsCc"), bcc: list("declarationsBcc") },
+        // Split like the list boxes, so "arhiva@x.ro;" is the address and not a refusal naming it.
+        declarations: { to: list("declarationsTo")[0] ?? "", cc: list("declarationsCc"), bcc: list("declarationsBcc") },
         confirmations: { to: list("confirmationsTo") },
         // A club copy of every message a real participant receives (2026-09-22): since §320 one
         // outbox row per address, queued beside the participant's by `enqueueEmail`, stripped of
@@ -169,7 +170,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
     */
     const outcome = refused(error, form, { fieldNames: (domain) => clubNoticeBoxesOf(domain.fields) });
     if (outcome.error !== "VALIDATION_ERROR") return outcome;
-    const lists = [[posted("declarationsTo")], ...(["declarationsCc", "declarationsBcc", "confirmationsTo", "participantsBcc"] as const).map(list)];
+    const lists = [list("declarationsTo").slice(0, 1), ...(["declarationsCc", "declarationsBcc", "confirmationsTo", "participantsBcc"] as const).map(list)];
     return { ...outcome, ...addressListRefusal(lists, CLUB_NOTICE_RECIPIENTS_MAX) };
   }
   revalidatePath(path);

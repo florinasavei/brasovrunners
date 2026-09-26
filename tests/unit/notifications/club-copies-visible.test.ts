@@ -12,6 +12,7 @@ import {
   CLUB_NOTICE_RECIPIENTS_MAX,
   clubNoticeBoxesOf,
   clubNoticesSchema,
+  mailboxesReceivingCopies,
 } from "@/modules/notifications/domain/club-notices";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -96,6 +97,34 @@ describe("§NNN the club's copies are shown back and can be saved", () => {
     expect(panel).toContain('t("emails.clubNotices.asideNames"');
     // The four list boxes grow with what they hold.
     expect(panel.match(/\{\.\.\.listBox\}/g)).toHaveLength(4);
+  });
+
+  it("the closed fold names only the mailboxes that receive something: idle declaration Cc/Bcc are left out", () => {
+    const notices = { confirmations: { to: ["Anunt@example.ro"] }, participants: { bcc: ["presedinte@example.ro", "anunt@example.ro"] } };
+    // No archive address: the declaration's Cc and Bcc are kept but nothing sends them (§244).
+    const idle = { to: null, cc: ["cc@example.ro"], bcc: ["bcc@example.ro"], source: "none" } as const;
+    expect(mailboxesReceivingCopies(idle, notices)).toEqual(["Anunt@example.ro", "presedinte@example.ro"]);
+    // With an archive address they receive the copy, and are named.
+    const live = { ...idle, to: "arhiva@example.ro", source: "setting" } as const;
+    expect(mailboxesReceivingCopies(live, notices)).toEqual([
+      "arhiva@example.ro",
+      "cc@example.ro",
+      "bcc@example.ro",
+      "Anunt@example.ro",
+      "presedinte@example.ro",
+    ]);
+    const nobody = { confirmations: { to: [] }, participants: { bcc: [] } };
+    expect(mailboxesReceivingCopies(idle, nobody)).toEqual([]);
+  });
+
+  it("one archive address with a trailing separator is that address, not a refusal", () => {
+    for (const typed of ["arhiva@example.ro;", "arhiva@example.ro,", " arhiva@example.ro\n"]) {
+      const to = parseAddressList(typed)[0] ?? "";
+      expect(to, typed).toBe("arhiva@example.ro");
+      expect(clubNoticesSchema.safeParse({ declarations: { to } }).success, typed).toBe(true);
+    }
+    const actions = read("src/app/[locale]/admin/emails/actions.ts");
+    expect(actions).toContain('to: list("declarationsTo")[0] ?? ""');
   });
 
   it("every new sentence exists in both languages, with the same placeholders", () => {

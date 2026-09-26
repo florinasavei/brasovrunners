@@ -192,6 +192,24 @@ export function declarationArchiveIsConfigured(
   return resolveDeclarationCopies(setting, environmentTo).to !== null;
 }
 
+/**
+ * The mailboxes that actually receive something from the club's lists, for the closed fold's
+ * summary on `/admin/emails` (§336): the declaration copy as it resolves — its Cc and Bcc only
+ * while it has a "to", since without one nothing is sent (§244) — the confirmation notices and
+ * the hidden copies of the participants' messages. A mailbox on two lists is one mailbox,
+ * compared without case the way the lists themselves drop a repeat; the first spelling is kept.
+ */
+export function mailboxesReceivingCopies(
+  declarations: DeclarationCopies,
+  notices: Pick<ClubNotices, "confirmations" | "participants">,
+): string[] {
+  const declarationMailboxes = declarations.to ? [declarations.to, ...declarations.cc, ...declarations.bcc] : [];
+  const all = [...declarationMailboxes, ...notices.confirmations.to, ...notices.participants.bcc].filter(Boolean);
+  const byKey = new Map<string, string>();
+  for (const address of all) if (!byKey.has(address.toLowerCase())) byKey.set(address.toLowerCase(), address);
+  return [...byKey.values()];
+}
+
 /** Who is told that somebody confirmed (§245). No environment fallback: this never had one. */
 export function confirmationNoticeRecipients(setting: ClubNotices | null): readonly string[] {
   return setting?.confirmations.to ?? [];

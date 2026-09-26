@@ -12,7 +12,7 @@ import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
-import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
+import { mailboxesReceivingCopies, type DeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -46,18 +46,11 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   /*
-    How many mailboxes receive anything from these lists, for the closed fold's summary (§336):
-    the declaration copy as it resolves (the setting, or `DECLARATIONS_ARCHIVE_TO`), the
-    confirmation notices and the hidden copies of the participants' messages. A mailbox on two
-    lists is one mailbox, compared without case the way the lists themselves drop a repeat.
+    The mailboxes that receive anything from these lists, for the closed fold's summary (§336).
+    The declaration's Cc and Bcc count only while it has a "to": the alert below says of idle
+    ones that none is sent, and the summary must not say they receive copies.
   */
-  const mailboxes = [
-    ...new Map(
-      [declarations.to, ...declarations.cc, ...declarations.bcc, ...notices.confirmations.to, ...notices.participants.bcc]
-        .filter((address): address is string => Boolean(address))
-        .map((address) => [address.toLowerCase(), address] as const),
-    ).values(),
-  ];
+  const mailboxes = mailboxesReceivingCopies(declarations, notices);
   /*
     The declaration's Cc and Bcc are kept while nothing sends them: a copy needs an address it is
     *for* (§244, `resolveDeclarationCopies`), and "Nicio adresă" alone read as a Bcc that had not
