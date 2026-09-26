@@ -348,9 +348,12 @@ export async function cachedSitemapPages(locale: Locale) {
   });
 }
 
-/** `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation. */
+/**
+ * `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation. An event album's
+ * card names its event (§NNN), so an event's rename or unpublishing expires it too.
+ */
 export async function cachedPublishedAlbums(locale: Locale) {
-  return publicRead(["gallery.published", locale], ["gallery"], () => listPublishedAlbums(getDb(), locale));
+  return publicRead(["gallery.published", locale], ["gallery", "events"], () => listPublishedAlbums(getDb(), locale));
 }
 
 /** `findPublishedAlbumBySlug`: one album, its photos, and the event it is from — hence `events` too. */

@@ -2716,11 +2716,10 @@
       "columnTakenOn": "Data",
       "columnStatus": "Stare",
       "columnPhotos": "Fotografii",
-      "tableCaption": "Albumele galeriei",
       "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt pe pagina „De făcut”, la „Stocarea fotografiilor”.",
       "takenOnHelp": "Ziua în care au fost făcute fotografiile. După ea se ordonează albumele.",
-      "eventHelp": "Opțional. Pagina albumului va trimite către eveniment.",
-      "noEvent": "Fără eveniment",
+      "eventHelp": "Opțional. Alege evenimentul și pagina albumului va trimite către el. Lasă „Niciunul” pentru un album liber — poze de grup, fără eveniment.",
+      "noEvent": "Niciunul — album liber",
       "slugHelp": "Litere mici, cifre și cratime. Devine adresa albumului.",
       "slugLocked": "Adresa este fixă după publicare, ca să nu se strice linkurile distribuite.",
       "language": {
@@ -2729,7 +2728,7 @@
       },
       "fields": {
         "takenOn": "Data fotografiilor",
-        "event": "Evenimentul",
+        "event": "Legat de un eveniment",
         "title": "Titlu",
         "slug": "Adresă (slug)",
         "description": "Descriere"
@@ -2737,7 +2736,16 @@
       "tabAlbums": "Albume",
       "tabPictures": "Imagini",
       "descriptionHelp": "Opțional — în ambele limbi sau în niciuna.",
-      "bothOrNeither": "scrie-o în ambele limbi sau în niciuna"
+      "bothOrNeither": "scrie-o în ambele limbi sau în niciuna",
+      "columnEvent": "Evenimentul",
+      "group": {
+        "event": "Albume de la evenimente",
+        "free": "Albume libere"
+      },
+      "groupEmpty": {
+        "event": "Niciun album legat de un eveniment.",
+        "free": "Niciun album liber. Un album liber are poze de grup care nu țin de un eveniment: la „Album nou”, lasă „Legat de un eveniment” pe „Niciunul”."
+      }
     },
     "thanks": {
       "title": "După cursă",

@@ -43,6 +43,12 @@ export type PublicAlbumSummary = {
   coverWebUrl: string | null;
   coverWidth: number | null;
   coverHeight: number | null;
+  /**
+   * The event the photos are from, titled in this locale, when the album is linked to one and
+   * that event is published here; null for a free album (§NNN) — which the listing names by
+   * its date alone.
+   */
+  eventTitle: string | null;
 };
 
 function urlsFor(keyPrefix: string) {
@@ -79,6 +85,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
       coverWidth: cover.width,
       coverHeight: cover.height,
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,
+      eventTitle: publishedEventTitle(locale),
     })
     .from(galleryAlbums)
     .innerJoin(
@@ -87,7 +94,10 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     )
     .leftJoin(mediaAssets, eq(mediaAssets.id, galleryAlbums.coverMediaAssetId))
     .where(eq(galleryAlbums.editorialStatus, "PUBLISHED"))
-    .orderBy(desc(galleryAlbums.takenOn), desc(galleryAlbums.publishedAt));
+    // Newest first, both kinds in one list (§NNN): an event's album and a free one are ordered
+    // by the day the photos were taken, never grouped apart; the id breaks a same-day tie so
+    // the order does not change between two reads.
+    .orderBy(desc(galleryAlbums.takenOn), desc(galleryAlbums.publishedAt), asc(galleryAlbums.id));
 
   return rows.map((row) => ({
     id: row.id,
@@ -98,7 +108,23 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     updatedAt: row.updatedAt,
     photoCount: Number(row.photoCount),
     ...coverOf(row),
+    eventTitle: row.eventTitle ?? null,
   }));
+}
+
+/**
+ * The linked event's title in `locale`, only while that event is published there — a draft
+ * event's name never reaches a public page through its album (BR-REQ-040-02). Null for a free
+ * album (§NNN).
+ */
+function publishedEventTitle(locale: Locale) {
+  return sql<string | null>`(
+    select ${eventTranslations.title} from ${eventTranslations}
+    inner join ${events} on ${events.id} = ${eventTranslations.eventId}
+    where ${events.id} = ${galleryAlbums.eventId}
+      and ${eventTranslations.locale} = ${locale}
+      and ${events.editorialStatus} = 'PUBLISHED'
+    limit 1)`;
 }
 
 export type PublicAlbum = PublicAlbumSummary & {
@@ -157,6 +183,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
     updatedAt: row.updatedAt,
     photoCount: photos.length,
     ...coverOf(row),
+    eventTitle: event?.title ?? null,
     photos,
     event,
   };
@@ -190,7 +217,18 @@ export type AlbumListRow = {
   takenOn: Date;
   title: string;
   photoCount: number;
+  /** The linked event, or null for a free album (§NNN). */
+  eventId: string | null;
+  /** That event's title in the backoffice's locale, whatever its status; null when it has none there. */
+  eventTitle: string | null;
 };
+
+/** Which of the backoffice list's two groups an album sits in (§NNN): linked to an event, or free. */
+export type AlbumKind = "event" | "free";
+
+export function albumKind(row: { eventId: string | null }): AlbumKind {
+  return row.eventId === null ? "free" : "event";
+}
 
 /** The backoffice list: every album, titled in the backoffice's locale, newest first. */
 export async function listAlbumsForAdmin<T extends Record<string, unknown>>(
@@ -205,14 +243,20 @@ export async function listAlbumsForAdmin<T extends Record<string, unknown>>(
       takenOn: galleryAlbums.takenOn,
       title: galleryAlbumTranslations.title,
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,
+      eventId: galleryAlbums.eventId,
+      eventTitle: eventTranslations.title,
     })
     .from(galleryAlbums)
     .innerJoin(
       galleryAlbumTranslations,
       and(eq(galleryAlbumTranslations.albumId, galleryAlbums.id), eq(galleryAlbumTranslations.locale, locale)),
     )
-    .orderBy(desc(galleryAlbums.takenOn));
-  return rows.map((row) => ({ ...row, photoCount: Number(row.photoCount) }));
+    .leftJoin(
+      eventTranslations,
+      and(eq(eventTranslations.eventId, galleryAlbums.eventId), eq(eventTranslations.locale, locale)),
+    )
+    .orderBy(desc(galleryAlbums.takenOn), asc(galleryAlbums.id));
+  return rows.map((row) => ({ ...row, eventTitle: row.eventTitle ?? null, photoCount: Number(row.photoCount) }));
 }
 
 export type EditableAlbum = {

@@ -24,6 +24,8 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.goto("/ro/admin/gallery/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
+    // The event is optional (§NNN): left unchosen, the album is a free one.
+    await expect(field("eventId")).toHaveValue("");
     await fillDateField(page, "Data fotografiilor", "2026-09-13");
     await field("translations.ro.title").fill(`Alergarea de duminică ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -70,6 +72,14 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.getByRole("button", { name: "Publică" }).click();
     await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
+
+    // A free album (§NNN): no event chosen, so the list puts it in its own group.
+    await page.goto("/ro/admin/gallery");
+    const free = page.getByRole("region", { name: /Albume libere/ });
+    await expect(free.getByRole("link", { name: new RegExp(`Alergarea de duminică ${suffix}`) })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: /Albume de la evenimente/ }).getByRole("link", { name: new RegExp(suffix) }),
+    ).toHaveCount(0);
   });
 
   test("shows the album on the public site, in the nav, and the photo opens", async ({ page }) => {
