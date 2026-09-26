@@ -1256,7 +1256,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   closeLabel={t("rules.close")}
                   plainLabel={t("rules.plain")}
                   tickLabel={t("rules.tick")}
-                  // A refusal about another field brings the tick back as posted (§286, §NNN).
+                  // A refusal about another field brings the tick back as posted (§286, §422).
                   defaultAgreed={prefill("rulesAcknowledged") === "on"}
                   href={`${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}#rules`}
                   document={event.rulesJson}
@@ -1421,13 +1421,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 incompleteHint={t("incompleteHint")}
                 /*
                   Every required field still empty, listed above the button and going to it
-                  (§NNN) — named by the same short names the refusal summary at the top uses.
+                  (§422) — named by the same short names the refusal summary at the top uses.
                 */
                 missingTitle={t("missingTitle")}
                 missingNames={{
                   ...Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, t(`fieldNames.${name}`)])),
                   // Not only what is missing but what to do about it: the box does not tick on a
-                  // press, so "Condițiile concursului" alone sent people to press it (§NNN).
+                  // press, so "Condițiile concursului" alone sent people to press it (§422).
                   rulesAcknowledged: t("rules.missing"),
                 }}
                 /*

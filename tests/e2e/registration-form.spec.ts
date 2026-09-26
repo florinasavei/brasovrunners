@@ -50,7 +50,7 @@ async function fillRequired(page: Page, omit?: string) {
     "I have read the race conditions" (§195), required on the public form.
 
     The seeded events carry no rules of their own, so this is the plain-checkbox branch. An event
-    that *has* rules gets the box inside the read button instead (§NNN) — a press on the box opens
+    that *has* rules gets the box inside the read button instead (§422) — a press on the box opens
     the text, and only a scroll to the end and "Am citit și sunt de acord" tick it — so `.check()`
     fails there by design. Worth knowing before somebody adds rules to the seed and wonders why
     this stops working. A spec on an event with rules passes `"rulesAcknowledged"` as `omit` and
@@ -897,7 +897,7 @@ async function thumbBox(input: Locator): Promise<{ x: number; y: number; width: 
   });
 }
 
-test.describe("BR-REQ-041-01 what is still missing is listed above the send button (§NNN)", () => {
+test.describe("BR-REQ-041-01 what is still missing is listed above the send button (§422)", () => {
   test("names every required field still empty, shrinks as they are filled, reaches each one, and a label wears one asterisk", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -950,7 +950,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
   });
 });
 
-/** How the list above the send button names the race's conditions: what is missing and what to do (§NNN). */
+/** How the list above the send button names the race's conditions: what is missing and what to do (§422). */
 const RULES_MISSING = "Condițiile concursului — deschide-le și citește-le până la capăt";
 
 /**
@@ -1023,7 +1023,7 @@ async function retireRulesEvent(page: Page, editorUrl: string) {
  * The gate walked from the box: a press on it opens the text, the end of the text opens the
  * panel's button, and that button ticks the box — and takes the conditions off the list above
  * the send button **with no other input on the form**. That last step is the regression proof
- * of the owner's "I did but still disabled!": before §NNN the tick was React state only, no
+ * of the owner's "I did but still disabled!": before §422 the tick was React state only, no
  * `change` reached the form, and the send button stayed dimmed until somebody typed elsewhere.
  */
 async function readAndAgree(page: Page, { scroll }: { scroll: boolean }) {
@@ -1050,7 +1050,7 @@ async function readAndAgree(page: Page, { scroll }: { scroll: boolean }) {
   await expect(page.getByText(/abia apoi se bifează/)).toHaveCount(0);
 }
 
-test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read button (§195, §NNN)", () => {
+test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read button (§195, §422)", () => {
   test("the box and the button are one row; the box opens the text; reading to the end ticks it; a refusal keeps it; the entry goes through", async ({ page }) => {
     test.setTimeout(test.info().timeout + 120_000);
     const field = (name: string) => page.locator(`[name="${name}"]`);
@@ -1137,7 +1137,7 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
   });
 });
 
-test.describe("BR-REQ-041-01 the race's conditions on a 125 % screen (§NNN)", () => {
+test.describe("BR-REQ-041-01 the race's conditions on a 125 % screen (§422)", () => {
   // A laptop at Windows's default 125 %: the device pixel ratio is fractional, and so is scrollTop.
   test.use({ deviceScaleFactor: 1.25 });
 

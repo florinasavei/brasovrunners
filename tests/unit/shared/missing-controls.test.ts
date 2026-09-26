@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isRefused, labelOf, missingControls, sameEntries, type WatchedControl } from "@/shared/ui/missing-controls";
 
 /**
- * §NNN — the list of what is still missing above the registration form's send button
+ * §422 — the list of what is still missing above the registration form's send button
  * (BR-REQ-041-01; the refusal summary's short names, §47). The naming rules, without a browser:
  * a control is a plain object with the members the watcher reads.
  */
@@ -37,7 +37,7 @@ function control({
   };
 }
 
-describe("§NNN what is still missing, named", () => {
+describe("§422 what is still missing, named", () => {
   it("strips MUI's trailing asterisk from a label", () => {
     expect(labelOf(control({ label: "Prenume *" }))).toBe("Prenume");
     expect(labelOf(control({ label: "Prenume *" }))).toBe("Prenume");

@@ -35,7 +35,7 @@ describe("§195 the read gate", () => {
     expect(hasReachedEnd({ scrollTop: 1200, clientHeight: 400, scrollHeight: 2000 })).toBe(false);
   });
 
-  it("reads fractional measurements at a scaled or zoomed screen (§NNN)", () => {
+  it("reads fractional measurements at a scaled or zoomed screen (§422)", () => {
     // At 125 % or a 90 % zoom each of the three numbers is fractional.
     expect(hasReachedEnd({ scrollTop: 1599.4, clientHeight: 400.2, scrollHeight: 2000 })).toBe(true);
     // The end of the tolerance falls inside a fraction: rounded up, it is the end.
@@ -46,7 +46,7 @@ describe("§195 the read gate", () => {
     expect(hasReachedEnd({ scrollTop: 1199.6, clientHeight: 400.2, scrollHeight: 2000.4 })).toBe(false);
   });
 
-  it("opens a short text with fractional boxes at once (§NNN)", () => {
+  it("opens a short text with fractional boxes at once (§422)", () => {
     expect(hasReachedEnd({ scrollTop: 0, clientHeight: 399.8, scrollHeight: 400.6 })).toBe(true);
     expect(hasReachedEnd({ scrollTop: 0, clientHeight: 312.5, scrollHeight: 318.75 })).toBe(true);
   });

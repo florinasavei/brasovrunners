@@ -1,5 +1,5 @@
 /**
- * What the send button's list of what is missing says (§NNN), apart from the island that draws it
+ * What the send button's list of what is missing says (§422), apart from the island that draws it
  * so the naming rules can be tested without a browser: a control is read through the few members
  * listed in `WatchedControl`, which a plain object can stand in for.
  */

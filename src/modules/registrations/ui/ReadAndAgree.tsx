@@ -15,7 +15,7 @@ import { hasReachedEnd, SCROLL_END_TOLERANCE_PX } from "../domain/read-gate";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * "I have read the race's conditions", behind actually opening them (`DECISIONS.md` §195, §NNN).
+ * "I have read the race's conditions", behind actually opening them (`DECISIONS.md` §195, §422).
  *
  * The owner: "oamenii trebuie să deschidă condițiile concursului într-un pop-up, să dea scroll
  * până jos și să confirme, dar fă safe! Adică unii oameni nu sunt așa tech-savvy (afișează «dă
@@ -24,7 +24,7 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  *
  * ## The shape, and why it is this shape
  *
- * **One row: the box inside the read button** (§NNN). §195 put a button where the box would be
+ * **One row: the box inside the read button** (§422). §195 put a button where the box would be
  * and hid the required box itself — a transparent pixel, placed by the browser wherever its
  * static position fell. Measured on the form, that was some six hundred pixels above the button:
  * a press on "send" with the conditions unread made the browser say "tick this box" at a spot
@@ -37,9 +37,9 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  * - once read, the box behaves like any other box — untick it, tick it again, no second reading.
  *
  * The button is still the first thing a person sees (§195's "dă click aici"); the box inside it
- * is what the browser's refusal and the send button's list of what is missing (§NNN) point at.
+ * is what the browser's refusal and the send button's list of what is missing (§422) point at.
  *
- * ## Robust, measured (§NNN)
+ * ## Robust, measured (§422)
  *
  * - **Having read to the end stays true.** It was a measurement taken afresh on every opening, so
  *   closing the panel after reading and opening it again asked for the scroll again.
@@ -122,7 +122,7 @@ export default function ReadAndAgree({
   const tickRef = useRef<HTMLInputElement | null>(null);
 
   /*
-    Tell the form the box changed (§NNN). **This is the proven cause of the owner's "I did but
+    Tell the form the box changed (§422). **This is the proven cause of the owner's "I did but
     still disabled!"** — and it was on `qa` before this change, not only in a first draft of it:
     «Am citit și sunt de acord» swapped the hidden invalid input for the ticked one through React
     state alone, and a property React writes fires no event. The send button's watcher listens to
@@ -181,7 +181,7 @@ export default function ReadAndAgree({
   }, [body, take]);
 
   /*
-    A second witness, independent of the arithmetic (§NNN): a one-pixel mark after the text,
+    A second witness, independent of the arithmetic (§422): a one-pixel mark after the text,
     watched with the text's own box as the root. It is on screen only when the end of the text is,
     whatever the device pixel ratio or the page's zoom make of `scrollTop` — so the measurement
     above and this one would both have to be wrong for a reader at the end to be kept waiting.
@@ -283,7 +283,7 @@ export default function ReadAndAgree({
       {/*
         "…read to the end, and only then is the box ticked" is true only before the reading: once
         read, a press on the box ticks it at once, and the hint would describe what no longer
-        happens (§NNN).
+        happens (§422).
       */}
       {!agreed && !readToEnd && (
         <Typography id={hintId} variant="body2" color="text.secondary" sx={{ mt: 1 }}>

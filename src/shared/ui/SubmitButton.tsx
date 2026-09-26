@@ -76,7 +76,7 @@ export type SubmitButtonProps = {
   incompleteHintNamed?: string;
   /**
    * The heading of a live list, **above** the button, of every control the browser would refuse
-   * — not only the first (§NNN; the owner, of the registration form: a dimmed button and "fill in
+   * — not only the first (§422; the owner, of the registration form: a dimmed button and "fill in
    * the fields marked *" while the one thing missing was a box nobody could see). Given, the list
    * takes the place of the sentence beneath: each entry is a link that brings its field into view
    * and focuses it, and the list shrinks as the form is filled. The same scan as the dimming — one
@@ -189,7 +189,7 @@ export default function SubmitButton({
   const [complete, setComplete] = useState(true);
   // The label of the first control the browser would refuse, for the named sentence (§315).
   const [firstMissing, setFirstMissing] = useState<string | null>(null);
-  // Every control the browser would refuse, in the form's order, for the list above (§NNN).
+  // Every control the browser would refuse, in the form's order, for the list above (§422).
   const [missing, setMissing] = useState<readonly MissingControl[]>([]);
   const lists = Boolean(missingTitle);
   const watches = Boolean(incompleteHint || incompleteHintNamed || lists);
@@ -367,7 +367,7 @@ export default function SubmitButton({
       }}
     >
       {/*
-        What is still missing, above the button (§NNN): where somebody about to press is already
+        What is still missing, above the button (§422): where somebody about to press is already
         looking, every entry a thumb's target (BR-REQ-041-01 criterion 6) that goes to its field.
         Not a live region — a list re-read at every keystroke would talk over the typing; it is
         the button's description instead, read with it.
