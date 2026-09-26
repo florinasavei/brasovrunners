@@ -11,9 +11,8 @@ import { isDateValue } from "./wall-values";
  * not a browser's business at all: the service turns the posted pair into an instant with the
  * zone the form also posts, exactly as before the pickers (`events/domain/zoned-time.ts`).
  *
- * The time half no longer goes through here: `TimeField` is the platform's own `<input
- * type="time">` since §400 (amending §345), which reads and posts `HH:mm` directly with no
- * picker value to convert.
+ * The time half no longer goes through here: `TimeField` is a typed 24-hour text box since §400
+ * and §NNN, which shows and posts `HH:mm` directly with no picker value to convert.
  *
  * What cannot be posted is posted as "": an empty box, or one half typed. The box itself says so
  * before the press (`DateField`), the way a half-typed native date box did.

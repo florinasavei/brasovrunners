@@ -15,8 +15,8 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
  * over the same AM/PM complaint. The date stays a picker (`shared/forms/pickers/DateField`):
  * `30.09.2026`, day first, in either language. The time went back to the platform's own `<input
  * type="time">` (`TimeField`) once the owner asked for it, 2026-09-25 — "I simply hate this time
- * picker" — trading the picker's guaranteed 24-hour *display* for the control every runner
- * already has on their phone; what it *posts* is still `HH:mm` either way.
+ * picker" — and that brought the AM/PM face back on an English-language browser, so since §NNN
+ * the time is a typed 24-hour text box (`TimeField`) that shows exactly the `19:00` it posts.
  *
  * **Nothing below the form changed.** The two still post as `<name>Date` (`YYYY-MM-DD`) and
  * `<name>Time` (`HH:mm`), from hidden inputs beside the pickers; `admin/actions.ts` joins them

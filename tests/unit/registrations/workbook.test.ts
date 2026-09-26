@@ -156,4 +156,27 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(buffer.subarray(0, 2).toString("ascii")).toBe("PK");
     expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toBeTruthy();
   });
+
+  /**
+   * §NNN — a timestamp reads on the club's own 24-hour clock. An Excel date cell has no zone and
+   * the writer counts from a `Date`'s UTC fields, so 10:00Z — 13:00 in Brașov in September — must
+   * reach the sheet as the serial of 13:00, and its format must carry no AM/PM.
+   */
+  it("writes a timestamp as Brașov's wall clock, on the 24-hour clock", async () => {
+    const serialOf = (utcWall: number) => utcWall / (24 * 60 * 60 * 1000) + (70 * 365 + 19);
+    const parts = unzip(
+      await buildRegistrationsWorkbook(
+        [row({ submittedAt: new Date("2026-09-04T10:00:00.000Z"), confirmedAt: new Date("2026-01-15T17:30:00.000Z"), fitnessDeclaredAt: null })],
+        "Test",
+      ),
+    );
+    const sheet = parts.get("xl/worksheets/sheet1.xml") ?? "";
+    // Summer time, +3: 10:00Z is 13:00. Winter time, +2: 17:30Z is 19:30 — never "7:30 PM".
+    expect(sheet).toContain(`<v>${serialOf(Date.UTC(2026, 8, 4, 13, 0))}</v>`);
+    expect(sheet).toContain(`<v>${serialOf(Date.UTC(2026, 0, 15, 19, 30))}</v>`);
+    expect(sheet).not.toContain(`<v>${serialOf(Date.UTC(2026, 8, 4, 10, 0))}</v>`);
+    const styles = parts.get("xl/styles.xml") ?? "";
+    expect(styles).toContain("dd.mm.yyyy hh:mm");
+    expect(styles).not.toMatch(/AM\/PM|A\/P/i);
+  });
 });

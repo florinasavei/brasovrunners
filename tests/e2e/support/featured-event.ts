@@ -169,10 +169,9 @@ export async function fillDateField(scope: Page | Locator, label: string, value:
 }
 
 /**
- * The time half, the platform's own `<input type="time">` since §345 was amended, 2026-09-25 —
- * MUI's picker before that, which `fillDateField` above still drives (the date half of §345 is
- * untouched). `.fill()` on a native time box takes `HH:mm` directly and posts exactly that,
- * always on the 24-hour clock (`type="time"`'s own value has no AM/PM to disagree about).
+ * The time half, a typed 24-hour text box since §NNN (the browser's own time input of §400 before
+ * that, MUI's picker before that, which `fillDateField` above still drives for the date).
+ * `.fill()` takes `HH:mm` directly; the box shows and posts exactly that.
  *
  * By role and accessible name, **not** `getByLabel`: a required box's `<label>` carries a second,
  * `aria-hidden` child for the asterisk (MUI's own `Mui­FormLabel-asterisk`), and `getByLabel`'s
