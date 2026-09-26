@@ -311,6 +311,9 @@ describe("§394 the event page's facts", () => {
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");
+    // The tooltip only opens on hover or focus, and the chip is not focusable, so the sunset
+    // sentence must also reach the chip's accessible name as a visually hidden `srSuffix` (§NNN).
+    expect(route!.dd).toContain("— Soarele apune la 16:44");
     expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
   });
 

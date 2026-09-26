@@ -137,12 +137,16 @@ export function nightPill(
 ): Pill | null {
   const facts = clubNightEvent(event);
   if (!facts.night) return null;
-  // The tooltip names the sunset alone (§415).
+  // The tooltip names the sunset alone (§415). `GlyphChip` only opens the tooltip on hover or
+  // focus, so a chip that is itself a plain, unfocusable `div` never lets a keyboard or
+  // screen-reader user reach it (`aria-describedby` is only set while MUI's `Tooltip` is open).
+  // `srSuffix` renders the same sentence as a visually hidden span inside the chip's own
+  // accessible name instead, so it is heard unconditionally (§NNN).
   const tooltip = nightTooltip(facts, t);
   return {
     glyph: "night",
     label: t("night.chip"),
-    ...(tooltip ? { tooltip } : {}),
+    ...(tooltip ? { tooltip, srSuffix: tooltip } : {}),
   };
 }
 

@@ -31,8 +31,11 @@ const MOON = 'svg:has(path[d^="M9.5 2c-1.82 0-3.53.5-5 1.35"])';
 /** The torch it replaced, which no night pill may wear any more. */
 const TORCH = 'svg:has(path[d^="M6 2h12v3H6z"])';
 /** The pill's one word, «Noapte» / «Night», on every type (§NNN). */
-const NIGHT_RO = /^Noapte$/;
-const NIGHT_EN = /^Night$/;
+// The chip's accessible name now carries the sunset sentence as a visually hidden suffix
+// (§NNN), which `hasText` also sees, so the filter matches the leading word rather than the
+// whole string.
+const NIGHT_RO = /^Noapte\b/;
+const NIGHT_EN = /^Night\b/;
 
 let title = "";
 let englishTitle = "";
