@@ -17,7 +17,7 @@ import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
-import { forecastPlaceWords, weatherListWords, weatherWords } from "@/modules/weather/words";
+import { weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
@@ -105,39 +105,7 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
  */
 const RACE_ROW_GAP = 0.5;
 
-/**
- * The event page's hours from the start (§416): a row of small outlined cells, each as wide as a
- * third of the answer's column and never narrower than 72 pixels — three of them and their two gaps
- * are 232 pixels, inside the 260 a 320-pixel phone leaves the answer under its label — and never
- * wider than 112, so on a desktop they read as a strip and not as three stretched boxes. Wrapping
- * is allowed, never needed at three.
- */
-const WEATHER_HOURS_SX = { listStyle: "none", p: 0, m: 0, mt: 1, mb: 0.5, display: "flex", flexWrap: "wrap", gap: 1 } as const;
-const WEATHER_HOUR_SX = {
-  position: "relative",
-  flex: "1 1 0",
-  minWidth: "72px",
-  maxWidth: "112px",
-  border: 1,
-  borderColor: "divider",
-  borderRadius: 2,
-  px: 1,
-  py: 0.75,
-  textAlign: "center",
-} as const;
-
-/** Read by a screen reader, never seen: an hour's word beside its glyph (`GlyphChip`'s technique, strings for the sizes). */
-const SR_ONLY_SX = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-} as const;
+// The weather row is one line since §NNN; the hours strip, details and place line went with it.
 
 /**
  * The facts of an event, grouped by the question they answer.
@@ -1043,15 +1011,18 @@ export default async function EventFacts({
       cells — the hour on the event's clock, its glyph (its word for a screen reader), the degrees
       and the chance of rain — an ordered list, so a screen reader hears "list, 3 items";
     - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», the row's last line.
+
+    Since §NNN (the owner, 2026-09-26: the page's weather as small as the card's) the row is the
+    first line reduced to the glyph, the sky's word and the start hour's degrees — and the umbrella
+    with «ploaie probabilă» only when rain is likely. No wind, no chance of rain on a dry hour; the
+    details, the hours strip and the place line are gone; the reminder keeps its own line.
   */
   if (weather) {
     const words = weatherWords(weather.start, locale);
-    const list = weatherListWords(locale);
-    const hours = weather.hours.map((hour) => ({ hour, words: weatherWords(hour, locale) }));
     const umbrella = rainLikely(weather.start) ? (
       <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
         <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
-        {words.rainLikely}
+        {words.rainLikelyChance}
       </Box>
     ) : null;
     rows.push({
@@ -1060,44 +1031,7 @@ export default async function EventFacts({
       icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow(forecastSummaryPieces(words, weather.start, umbrella))}
-          {words.extras.length > 0 && (
-            <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-details">
-              {flow(words.extras)}
-            </Typography>
-          )}
-          {hours.length > 1 && (
-            <Box component="ol" aria-label={list.hours} data-testid="weather-hours" sx={WEATHER_HOURS_SX}>
-              {hours.map(({ hour, words: hourWords }) => {
-                const HourGlyph = WEATHER_GLYPH[hour.glyph];
-                return (
-                  <Box component="li" key={hour.hourAt} data-testid="weather-hour" sx={WEATHER_HOUR_SX}>
-                    <Typography component="div" variant="body2" color="text.secondary">
-                      {time(new Date(hour.hourAt))}
-                    </Typography>
-                    <HourGlyph aria-hidden="true" sx={{ fontSize: 20, color: "text.secondary", display: "block", mx: "auto", my: 0.25 }} />
-                    <Box component="span" sx={SR_ONLY_SX}>
-                      {hourWords.summary}
-                    </Box>
-                    {hourWords.temperature && (
-                      <Typography component="div" variant="body2" sx={{ fontWeight: 600 }}>
-                        {hourWords.temperature}
-                      </Typography>
-                    )}
-                    {hourWords.rainShort && (
-                      <Typography component="div" variant="caption" color="text.secondary">
-                        {hourWords.rainShort}
-                      </Typography>
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
-          )}
-          <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-credit">
-            {/* The ten pixels above given back, the ten below kept: the next row's label may sit nearer than that (§366). */}
-            {forecastPlaceWords(weather.place, locale)}
-          </Typography>
+          {flow([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])])}
         </Box>
       ),
     });

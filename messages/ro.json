@@ -5492,6 +5492,7 @@
     "temperature": "{degrees} °C",
     "rain": "{percent}% șanse de ploaie",
     "rainLikely": "ploaie probabilă",
+    "rainLikelyChance": "ploaie probabilă {percent} %",
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
@@ -5501,12 +5502,7 @@
     "humidity": "umiditate {percent}%",
     "uv": "indice UV {index}",
     "rainShort": "{percent}% ploaie",
-    "hours": "Pe ore, de la start",
     "atStart": "Vremea la start",
-    "place": {
-      "event": "Pentru locul evenimentului",
-      "club": "Pentru {place}"
-    },
     "codes": {
       "clear": "Senin",
       "mainlyClear": "Predominant senin",

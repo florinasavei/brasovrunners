@@ -5492,6 +5492,7 @@
     "temperature": "{degrees} °C",
     "rain": "{percent}% chance of rain",
     "rainLikely": "rain likely",
+    "rainLikelyChance": "rain likely {percent}%",
     "wind": "wind {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Forecast: {source}",
@@ -5501,12 +5502,7 @@
     "humidity": "humidity {percent}%",
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
-    "hours": "Hour by hour, from the start",
     "atStart": "Weather at the start",
-    "place": {
-      "event": "For the event's place",
-      "club": "For {place}"
-    },
     "codes": {
       "clear": "Clear",
       "mainlyClear": "Mostly clear",

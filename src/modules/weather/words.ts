@@ -1,9 +1,7 @@
 import { createTranslator } from "next-intl";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { CLUB_LOCALITY } from "@/modules/events/domain/place";
-import type { WeatherReading } from "./domain/forecast";
-import type { ForecastPlaceSource } from "./domain/place";
+import { rainLikely as isRainLikely, type WeatherReading } from "./domain/forecast";
 
 /**
  * A forecast in words, in one language (§402) — the page's row and the reminder's row say the
@@ -39,6 +37,10 @@ export type WeatherWords = {
   rainShort: string | null;
   /** «ploaie probabilă» / "rain likely" — the words a card, the hero and the event page add to the spoken text when `rainLikely` holds (§429). */
   rainLikely: string;
+  /** «ploaie probabilă 60 %» when `rainLikely` holds (the chance only when the hour has one), else null (§NNN). */
+  rainLikelyChance: string | null;
+  /** The reminder's one line (§NNN): the sky's word, the degrees, and the rain phrase only when rain is likely — no wind, no humidity. */
+  line: string;
 };
 
 export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): WeatherWords {
@@ -67,6 +69,11 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     ...(reading.humidity !== null ? [t("humidity", { percent: whole(reading.humidity) })] : []),
     ...(sunny ? [t("uv", { index: whole(reading.uvIndex ?? 0) })] : []),
   ];
+  const rainLikelyChance = !isRainLikely(reading)
+    ? null
+    : reading.precipitationProbability !== null
+      ? t("rainLikelyChance", { percent: whole(reading.precipitationProbability) })
+      : t("rainLikely");
   return {
     label: t("label"),
     summary,
@@ -76,6 +83,8 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     temperature,
     rainShort: reading.precipitationProbability !== null ? t("rainShort", { percent: whole(reading.precipitationProbability) }) : null,
     rainLikely: t("rainLikely"),
+    rainLikelyChance,
+    line: [summary, ...(temperature !== null ? [temperature] : []), ...(rainLikelyChance !== null ? [rainLikelyChance] : [])].join(", "),
   };
 }
 
@@ -84,22 +93,12 @@ function weatherCatalogue(locale: "ro" | "en") {
 }
 
 /**
- * Which place the forecast is for, in words (§416): «Pentru locul evenimentului» when it was read
- * at the event's own pin or typed pair, «Pentru Brașov» when it fell back to the club's place — so
- * a runner never reads the city's forecast as the trailhead's.
- */
-export function forecastPlaceWords(source: ForecastPlaceSource, locale: "ro" | "en"): string {
-  const t = weatherCatalogue(locale);
-  return source === "club" ? t("place.club", { place: CLUB_LOCALITY }) : t("place.event");
-}
-
-/**
- * The words that belong to no one hour: the block's list name, «Pe ore, de la start»; a card pill's
+ * The words that belong to no one hour: a card pill's
  * spoken prefix, «Vremea la start»; and the credit, «Prognoză: Open-Meteo», for the site footer's
  * «Despre club» fold (`SiteFooter`, §429) — the event page and the featured hero say theirs beside
  * the forecast, through `weatherWords`.
  */
-export function weatherListWords(locale: "ro" | "en"): { hours: string; atStart: string; credit: string } {
+export function weatherListWords(locale: "ro" | "en"): { atStart: string; credit: string } {
   const t = weatherCatalogue(locale);
-  return { hours: t("hours"), atStart: t("atStart"), credit: t("credit", { source: t("source") }) };
+  return { atStart: t("atStart"), credit: t("credit", { source: t("source") }) };
 }
