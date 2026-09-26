@@ -5,11 +5,11 @@ import {
   DURATION_HOURS_CONSTRAINTS,
   DURATION_MAX_MINUTES,
   DURATION_MINUTES_CONSTRAINTS,
-  durationShort,
   joinDuration,
   savedDurationMinutes,
   splitDuration,
 } from "@/modules/content/events/duration";
+import { durationShort } from "@/i18n/dates";
 import { eventInputConstraints } from "@/modules/content/events/constraints";
 import { eventFieldsSchema } from "@/modules/content/events/fields";
 import { eventFormFieldName } from "@/modules/content/events/form-names";

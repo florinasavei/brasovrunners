@@ -193,3 +193,14 @@ export function composeCalendarDay(ymd: string, words: CalendarDayWords): string
 export function formatDayRange(from: Date, until: Date, options: DayOptions): string {
   return `${formatDay(from, options)} – ${formatDay(until, { ...options, position: "inline" })}`;
 }
+
+/**
+ * A length of time in hours and minutes, the one formula for it (§NNN): "3 h 30 min", "2 h",
+ * "45 min". No locale: "h" and "min" are the units' symbols in Romanian and in English alike.
+ */
+export function durationShort(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} min`;
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`;
+}

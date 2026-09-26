@@ -1,5 +1,5 @@
 import { countForm } from "@/i18n/count-form";
-import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, durationShort, formatDay, formatTime } from "@/i18n/dates";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages, isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { fillIn } from "@/shared/forms/fill-in";
@@ -8,7 +8,7 @@ import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/lin
 import { placeInBox } from "@/modules/events/domain/place";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
-import { durationShort, savedDurationMinutes } from "../duration";
+import { savedDurationMinutes } from "../duration";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
 

@@ -20,7 +20,10 @@ import type { HtmlConstraints } from "@/shared/forms/constraints";
 /** A week, the schema's ceiling on the total (`fields.ts`, §71). */
 export const DURATION_MAX_MINUTES = 7 * 24 * 60;
 
-/** The hours box: a whole number up to a week's worth. */
+/**
+ * The hours box: a whole number up to a week's worth, 168 — the schema's ceiling on the total
+ * (§71), not a round 99, so a multi-day camp the schema accepts is never refused by the box.
+ */
 export const DURATION_HOURS_CONSTRAINTS: HtmlConstraints = { type: "number", min: 0, max: DURATION_MAX_MINUTES / 60, step: 1 };
 
 /** The minutes box: what is left past the hours, so never an hour or more. */
@@ -61,15 +64,4 @@ export function savedDurationMinutes(startsAt: Date | null | undefined, endsAt: 
   if (!startsAt || !endsAt) return null;
   const minutes = Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000);
   return minutes > 0 ? minutes : null;
-}
-
-/**
- * A duration as the closed box line writes it: "3 h 30 min", "2 h", "45 min". The same in both
- * languages — "h" and "min" are the units' symbols in Romanian and in English alike.
- */
-export function durationShort(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours === 0) return `${minutes} min`;
-  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`;
 }
