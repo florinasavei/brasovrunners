@@ -60,12 +60,18 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
  * the same 2400 file a «Normală» picture's master is, and only a screen wider than that takes
  * the whole master.
  *
- * 3200 is a rung only under a master wider than 3555 (§NNN): a 4000-pixel «Mare» and a
- * «Originală» of up to 6000. Without it the event page's widest column on a laptop at 2× (2976
- * physical pixels) skipped from the 2400 rung straight to the master — for «Originală», a
- * 6000-pixel file of several megabytes for every visitor with a sharp screen.
+ * 3200 is a rung only under a master wider than `HIGH_WEB_MAX` (§NNN) — that is, only under an
+ * «Originală», which is the one choice that can store more than 4000 pixels. Without it the event
+ * page's widest column on a laptop at 2× (2976 physical pixels) skipped from the 2400 rung
+ * straight to a 6000-pixel master of several megabytes. A «Mare» master of 3556–4000 pixels does
+ * **not** get it, and must not: the srcset is built at render time from the master's width, and
+ * every such master stored since §414 was stored without a 3200 file — naming one would be a
+ * broken picture (`isLadderKeyPrefix`).
  */
 export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920, 2400, 3200] as const;
+
+/** The rung that exists only under an «Originală» master (§NNN). */
+const ORIGINAL_ONLY_RUNG = 3200;
 
 const MASTER_MAX_EDGE: Record<ImageQuality, number> = {
   low: LOW_WEB_MAX,
@@ -81,10 +87,18 @@ export function masterMaxEdge(quality: ImageQuality): number {
 
 /**
  * The rungs stored below a master of this width: those narrower than 0.9 of it. A 1725-pixel
- * portrait gets 480…1280, not a 1600 that would be the master again for 7% fewer bytes.
+ * portrait gets 480…1280, not a 1600 that would be the master again for 7% fewer bytes. The 3200
+ * rung only under a master wider than `HIGH_WEB_MAX` (an «Originală»; see `LADDER_WIDTHS`).
  */
 export function ladderWidths(masterWidth: number): number[] {
-  return LADDER_WIDTHS.filter((width) => width < masterWidth * 0.9);
+  return LADDER_WIDTHS.filter(
+    (width) => width < masterWidth * 0.9 && (width !== ORIGINAL_ONLY_RUNG || masterWidth > HIGH_WEB_MAX),
+  );
+}
+
+/** The widest file the browser can take below the master, or `null` when the master is alone. */
+export function topRungWidth(masterWidth: number): number | null {
+  return ladderWidths(masterWidth).at(-1) ?? null;
 }
 
 /**

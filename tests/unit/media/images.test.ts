@@ -86,9 +86,10 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     const high = await processUploadedImage(wide, { quality: "high" });
     expect([high.width, high.height]).toEqual([HIGH_WEB_MAX, 2667]);
     expect((await sharp(high.web).metadata()).width).toBe(HIGH_WEB_MAX);
-    // §NNN: and a 3200 rung, so a laptop at 2× on the widest column is not sent the master.
-    expect(high.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400, 3200]);
-    expect((await sharp(high.rungs[high.rungs.length - 1].body).metadata()).width).toBe(3200);
+    // §NNN: no 3200 rung under a «Mare» master — every one stored since §414 has none, and the
+    // srcset is built from the master's width, so the pipeline must agree with what is stored.
+    expect(high.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
+    expect((await sharp(high.rungs[high.rungs.length - 1].body).metadata()).width).toBe(2400);
 
     const normal = await processUploadedImage(wide, { quality: "normal" });
     expect([normal.width, normal.height]).toEqual([WEB_MAX, 1600]);
@@ -116,7 +117,9 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     // Nothing resized: 4800 is under «Originală»'s 6000.
     expect([original.width, original.height, original.quality]).toEqual([4800, 3200, "original"]);
     expect((await sharp(original.web).metadata()).width).toBe(4800);
+    // A master wider than 4000 exists only at «Originală», so only it gets the 3200 rung.
     expect(original.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400, 3200]);
+    expect((await sharp(original.rungs[original.rungs.length - 1].body).metadata()).width).toBe(3200);
     // Noise is no poster: lossy, at 95.
     expect(original.encoding).toBe("lossy");
 

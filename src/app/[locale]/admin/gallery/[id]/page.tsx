@@ -155,9 +155,11 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   chosen: {
                     chosen: t.raw("gallery.chosen") as string,
                     sent: t.raw("gallery.sent") as string,
+                    lighter: t.raw("gallery.lighter") as string,
                   },
                   stored: {
                     template: t.raw("gallery.stored") as string,
+                    topRung: t.raw("gallery.storedTopRung") as string,
                     low: t("gallery.storedLow"),
                     normal: t("gallery.storedNormal"),
                     high: t("gallery.storedHigh"),

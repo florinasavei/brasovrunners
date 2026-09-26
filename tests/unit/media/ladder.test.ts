@@ -13,6 +13,7 @@ import {
   parseImageQuality,
   pictureSizes,
   pictureSrcSet,
+  topRungWidth,
 } from "@/modules/media/ladder";
 import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { chosenFactsOf, describeChosenImage, describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
@@ -51,9 +52,13 @@ describe("§414 the ladder", () => {
   it("stores every rung narrower than 0.9 of the master, and never one wider", () => {
     // A «Normală» master is at most 2400, so it never gets the 2400 rung; a 4000 «Înaltă» one does.
     expect(ladderWidths(2400)).toEqual([480, 640, 960, 1280, 1600, 1920]);
-    // §NNN: 3200 only under a master wider than 3555 — a 4000 «Mare», a 6000 «Originală».
-    expect(ladderWidths(4000)).toEqual([...LADDER_WIDTHS]);
+    // §NNN: 3200 only under a master wider than 4000 — an «Originală». A «Mare» master of up to
+    // 4000 was stored without it since §414, and its srcset must not start naming it.
+    expect(ladderWidths(4000)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
+    expect(ladderWidths(3600)).not.toContain(3200);
+    expect(ladderWidths(4001)).toEqual([...LADDER_WIDTHS]);
     expect(ladderWidths(6000)).toEqual([...LADDER_WIDTHS]);
+    expect([topRungWidth(4000), topRungWidth(6000), topRungWidth(1080), topRungWidth(500)]).toEqual([2400, 3200, 960, null]);
     expect(ladderWidths(3000)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
     // A «Minimă» master: a phone's column at 3× and no more.
     expect(ladderWidths(1280)).toEqual([480, 640, 960]);
@@ -90,10 +95,14 @@ describe("§414 srcset", () => {
     );
     // The local store's relative address works the same way.
     expect(pictureSrcSet(`/api/media/local/${LADDER_PREFIX}/web.webp`, 1080)).toContain(`/api/media/local/${LADDER_PREFIX}/960w.webp 960w`);
-    // A 4000-pixel master at «Mare» names the 2400 and 3200 rungs before itself (§414, §NNN).
-    expect(pictureSrcSet(r2(LADDER_PREFIX), 4000)).toMatch(
-      /\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/3200w\.webp 3200w, \S+\/web\.webp 4000w$/,
-    );
+    // A 4000-pixel master at «Mare» names the 2400 rung before itself, and no 3200 file — none
+    // was ever stored under one (§414; the §NNN review's blocker).
+    const mare = pictureSrcSet(r2(LADDER_PREFIX), 4000) as string;
+    expect(mare).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 4000w$/);
+    expect(mare).not.toContain("3200w");
+    expect(pictureSrcSet(r2(LADDER_PREFIX), 3600)).not.toContain("3200w");
+    // An «Originală» master wider than 4000 names the 3200 rung it was stored with (§NNN).
+    expect(pictureSrcSet(r2(LADDER_PREFIX), 4800)).toMatch(/\/2400w\.webp 2400w, \S+\/3200w\.webp 3200w, \S+\/web\.webp 4800w$/);
   });
 
   it("offers an older picture nothing: its one file, as a page always drew it", () => {
@@ -175,13 +184,23 @@ describe("§414 the body renderer", () => {
 describe("§414 what the person is told after an upload", () => {
   const labels = {
     template: "{width} × {height}, {quality}: {size}; {files} files, {total}",
+    topRung: "Largest smaller copy: {width} px, {size}.",
     low: "minimum",
     normal: "medium",
     high: "large",
     original: "original",
     nearLossless: "{quality}, near-lossless",
   };
-  const facts = { width: 2400, height: 1857, quality: "normal" as const, encoding: "lossy" as const, bytes: 390_000, files: 8, totalBytes: 1_090_000 };
+  const facts = {
+    width: 2400,
+    height: 1857,
+    quality: "normal" as const,
+    encoding: "lossy" as const,
+    bytes: 390_000,
+    files: 8,
+    totalBytes: 1_090_000,
+    topRung: null,
+  };
 
   it("states the size, the choice, the bytes and the files", () => {
     expect(describeStoredImage(facts, labels, "en")).toBe("2400 × 1857, medium: 381 KB; 8 files, 1 MB");
@@ -197,16 +216,29 @@ describe("§414 what the person is told after an upload", () => {
     );
   });
 
-  it("says the chosen file's pixels and weight, and what is sent only when the browser resized it (§NNN)", () => {
-    const chosenLabels = { chosen: "Chosen: {name}, {width} × {height} px, {size}.", sent: "Sent: {width} × {height} px, {size}." };
+  it("adds the widest smaller copy's width and weight when there is one (§NNN)", () => {
+    expect(describeStoredImage({ ...facts, topRung: { width: 1920, bytes: 250_000 } }, labels, "en")).toBe(
+      "2400 × 1857, medium: 381 KB; 8 files, 1 MB Largest smaller copy: 1920 px, 244 KB.",
+    );
+  });
+
+  it("says the chosen file's pixels and weight, and what is sent only when the browser sent another file (§NNN)", () => {
+    const chosenLabels = {
+      chosen: "Chosen: {name}, {width} × {height} px, {size}.",
+      sent: "Sent: {width} × {height} px, {size}.",
+      lighter: "Sent lighter: {size}.",
+    };
     const chosen = { width: 4032, height: 3024, bytes: 3.2 * 1024 * 1024 };
-    const asItIs = chosenFactsOf("IMG_0001.jpg", { chosen, sent: chosen, resized: false });
+    const asItIs = chosenFactsOf("IMG_0001.jpg", { chosen, sent: chosen, reencoded: false });
     expect(asItIs.sent).toBeUndefined();
     expect(describeChosenImage(asItIs, chosenLabels, "ro")).toBe("Chosen: IMG_0001.jpg, 4032 × 3024 px, 3,2 MB.");
-    const resized = chosenFactsOf("IMG_0001.jpg", { chosen, sent: { width: 3000, height: 2250, bytes: 1_200_000 }, resized: true });
+    const resized = chosenFactsOf("IMG_0001.jpg", { chosen, sent: { width: 3000, height: 2250, bytes: 1_200_000 }, reencoded: true });
     expect(describeChosenImage(resized, chosenLabels, "en")).toBe(
       "Chosen: IMG_0001.jpg, 4032 × 3024 px, 3.2 MB. Sent: 3000 × 2250 px, 1.1 MB.",
     );
+    // Re-encoded at the same pixels only to be lighter: never "smaller" with the same size twice.
+    const lighter = chosenFactsOf("IMG_0001.jpg", { chosen, sent: { width: 4032, height: 3024, bytes: 3 * 1024 * 1024 }, reencoded: true });
+    expect(describeChosenImage(lighter, chosenLabels, "en")).toBe("Chosen: IMG_0001.jpg, 4032 × 3024 px, 3.2 MB. Sent lighter: 3 MB.");
   });
 
   it("writes a megabyte with the page's decimal separator", () => {

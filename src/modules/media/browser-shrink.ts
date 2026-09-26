@@ -41,10 +41,12 @@ export type ImageFileFacts = { width: number; height: number; bytes: number };
 
 /**
  * What an upload is about to send, and what it was chosen from (§NNN; the owner: "aș vrea să
- * afișez și dimensiunea imaginilor în editor, să știu ce încarc"). `sent` equals `chosen`'s
- * pixels when the file goes up untouched; `resized` says the browser drew it smaller first.
+ * afișez și dimensiunea imaginilor în editor, să știu ce încarc"). `sent` equals `chosen` when
+ * the file goes up untouched; `reencoded` says the browser encoded a new file to send, and
+ * `resized` that the new file also has fewer pixels — a file that is only too heavy is re-encoded
+ * at its own pixels, and the page then says "lighter", never "smaller" with the same size twice.
  */
-export type PreparedUpload = { blob: Blob; chosen: ImageFileFacts; sent: ImageFileFacts; resized: boolean };
+export type PreparedUpload = { blob: Blob; chosen: ImageFileFacts; sent: ImageFileFacts; resized: boolean; reencoded: boolean };
 
 /** Quality for the intermediate. High, because the server re-encodes it — see above. */
 const INTERMEDIATE_QUALITY = 0.95;
@@ -93,7 +95,7 @@ export async function prepareImageUpload(
   const fitsAsItIs = SENT_AS_IT_IS.has(quality) ? longest <= MAX_DIMENSION : longest <= maxEdge;
   if (file.size <= SEND_LIMIT && fitsAsItIs) {
     bitmap.close();
-    return { blob: file, chosen, sent: chosen, resized: false };
+    return { blob: file, chosen, sent: chosen, resized: false, reencoded: false };
   }
 
   const scale = Math.min(1, maxEdge / longest);
@@ -119,11 +121,15 @@ export async function prepareImageUpload(
     until it fits — quality is held, because size is the constraint the platform actually has and
     softness is the one the reader actually sees.
   */
-  if (encoded.size <= SEND_LIMIT) {
-    return { blob: encoded, chosen, sent: { width: canvas.width, height: canvas.height, bytes: encoded.size }, resized: true };
-  }
+  if (encoded.size <= SEND_LIMIT) return sentAs(encoded, chosen, canvas.width, canvas.height);
   const fitted = await shrinkToFit(canvas, SEND_LIMIT);
-  return { blob: fitted.blob, chosen, sent: { width: fitted.width, height: fitted.height, bytes: fitted.blob.size }, resized: true };
+  return sentAs(fitted.blob, chosen, fitted.width, fitted.height);
+}
+
+/** A re-encoded file's facts; `resized` only when its pixels are not the chosen file's (§NNN). */
+function sentAs(blob: Blob, chosen: ImageFileFacts, width: number, height: number): PreparedUpload {
+  const resized = width !== chosen.width || height !== chosen.height;
+  return { blob, chosen, sent: { width, height, bytes: blob.size }, resized, reencoded: true };
 }
 
 async function shrinkToFit(source: HTMLCanvasElement, limit: number): Promise<{ blob: Blob; width: number; height: number }> {

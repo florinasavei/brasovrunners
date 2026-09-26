@@ -83,11 +83,13 @@ describe("§414 the browser half of the choice", () => {
     expect(told).toEqual([{ width: 4032, height: 3024, bytes: 2.5 * MB }]);
     expect(prepared.chosen).toEqual({ width: 4032, height: 3024, bytes: 2.5 * MB });
     expect(prepared.resized).toBe(true);
+    expect(prepared.reencoded).toBe(true);
     expect(prepared.sent).toEqual({ width: 3000, height: 2250, bytes: 1 * MB });
 
     stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
     const asItIs = await prepareImageUpload(photo, "high");
     expect(asItIs.resized).toBe(false);
+    expect(asItIs.reencoded).toBe(false);
     expect(asItIs.blob).toBe(photo);
     expect(asItIs.sent).toEqual(asItIs.chosen);
 
@@ -95,6 +97,13 @@ describe("§414 the browser half of the choice", () => {
     stubBrowser({ width: 2000, height: 1500 }, (edge) => (edge >= 2000 ? 5 * MB : 3 * MB));
     const fitted = await prepareImageUpload(fileOf(5 * MB), "normal");
     expect(fitted.sent).toEqual({ width: 1600, height: 1200, bytes: 3 * MB });
+
+    // Too heavy but not too wide: re-encoded at its own pixels — lighter, not resized (§NNN).
+    stubBrowser({ width: 4032, height: 3024 }, () => 3 * MB);
+    const lighter = await prepareImageUpload(fileOf(5 * MB), "original");
+    expect(lighter.reencoded).toBe(true);
+    expect(lighter.resized).toBe(false);
+    expect(lighter.sent).toEqual({ width: 4032, height: 3024, bytes: 3 * MB });
   });
 
   it("keeps every upload under the platform's request limit, not only the server's 6 MB", async () => {

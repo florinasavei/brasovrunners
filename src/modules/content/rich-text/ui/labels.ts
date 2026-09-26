@@ -91,11 +91,13 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageChosen: {
       chosen: rt.raw("imageChosen") as string,
       sent: rt.raw("imageSent") as string,
+      lighter: rt.raw("imageLighter") as string,
     },
     imagePixels: rt.raw("imagePixels") as string,
     // Raw, with its six placeholders: the island substitutes the facts itself.
     imageStored: {
       template: rt.raw("imageStored") as string,
+      topRung: rt.raw("imageStoredTopRung") as string,
       low: rt("imageStoredLow"),
       normal: rt("imageStoredNormal"),
       high: rt("imageStoredHigh"),

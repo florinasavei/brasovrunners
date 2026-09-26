@@ -58,6 +58,8 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await expect(page.getByText("1 fotografii încărcate.")).toBeVisible({ timeout: 20_000 });
     // What the photo became, in words: its size and the quality it was stored at.
     await expect(page.getByTestId("photo-stored")).toContainText("1600 × 1200 px, calitate mare");
+    // And the widest smaller copy, what a laptop at 2× loads (§NNN): 1280 under a 1600 master.
+    await expect(page.getByTestId("photo-stored")).toContainText("Cea mai mare copie micșorată: 1280 px lățime");
     // And what was chosen, before it went up (§NNN): the file's own pixels and weight.
     await expect(page.getByTestId("photo-chosen")).toContainText("Fotografia aleasă: IMG_0042.jpg, 1600 × 1200 px");
     // Remembered for the session: the page comes back with the same choice.
