@@ -24,9 +24,9 @@ import {
   EMAIL_SAMPLE,
   EMAIL_SAMPLE_EVENT,
   EMAIL_SAMPLE_FORMER_INVITER,
-  EMAIL_SAMPLE_FORMER_WHEN,
   type EmailSampleHit,
   emailSampleDeadlines,
+  emailSampleFormerValuesOf,
   emailSampleLiteralsIn,
   emailSampleReplacementOf,
   emailSampleValueOf,
@@ -483,11 +483,14 @@ function sampleSentencesOf(messageType: EmailMessageType, locale: EmailLocale): 
  * Every value the page's sample has given a field, today's first: the start as it read before
  * §349 changed its form on the same day as this, and the inviter's former name (§359). The hold's
  * deadline and the time of signing have one since the email follow-up (§373) — no old starting
- * text carried them, and a text written since that holds the sample's is found all the same.
+ * text carried them, and a text written since that holds the sample's is found all the same. All
+ * three moments also read with a bare hour until §NNN put "la" / "at" before it.
  */
 function sampleValuesEver(name: EmailCopyPlaceholder, locale: EmailLocale): string[] {
   const today = emailSampleValueOf(name, locale);
-  if (name === "eventStartsAtFormatted") return [today, ...EMAIL_SAMPLE_FORMER_WHEN[locale]];
+  if (name === "eventStartsAtFormatted" || name === "holdExpiresAtFormatted" || name === "signedAtFormatted") {
+    return [today, ...emailSampleFormerValuesOf(name, locale)];
+  }
   if (name === "inviterName") return [today, ...EMAIL_SAMPLE_FORMER_INVITER];
   return [today];
 }

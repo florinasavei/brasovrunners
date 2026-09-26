@@ -26,13 +26,13 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     date: "Data",
     idDocument: "Act de identitate",
     version: "Versiunea",
-    // "pe", not "la": {date} and {when} start with a weekday — "Generat pe joi, 24 sept. 2026,
-    // 18:05" (§349).
-    generatedOn: "Generat pe {date}",
+    // No preposition before {date} and {when}: each starts with a weekday — "Generat joi, 24 sept.
+    // 2026, la 18:05" (§NNN, reversing §349's "pe").
+    generatedOn: "Generat {date}",
     page: "Pagina {n} din {total}",
     signedByLink:
-      "Semnat electronic pe {when}, din linkul unic trimis pe adresa de email a înscrierii: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea.",
-    signedOnPaper: "Semnat pe hârtie, la masa de înscrieri; înregistrat de {who} pe {when}. Originalul semnat este păstrat de club.",
+      "Semnat electronic {when}, din linkul unic trimis pe adresa de email a înscrierii: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea.",
+    signedOnPaper: "Semnat pe hârtie, la masa de înscrieri; înregistrat de {who}, {when}. Originalul semnat este păstrat de club.",
     attesterRemoved: "un membru al echipei (cont șters)",
     // The event's bundle, while it carries whole identity documents (§418; privacy notice §7).
     idDocumentsNotice: "Conține seria și numărul actelor de identitate — ștergeți fișierul în cel mult șapte zile de la eveniment.",
@@ -59,7 +59,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
 
 export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
   const words = WORDS[locale];
-  // "Generat pe joi, 24 sept. 2026, 18:05" (§349).
+  // "Generat joi, 24 sept. 2026, la 18:05" (§349, §NNN).
   const generated = formatDay(now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
   return {
     organization: words.organization,

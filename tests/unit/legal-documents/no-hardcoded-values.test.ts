@@ -154,7 +154,7 @@ describe("§369 the declaration's token legend: made-up examples, in both langua
       );
     }
     expect(example("{{eventDate}}")).toEqual({ ro: "sâmbătă, 21 nov. 2026", en: "Saturday, 21 Nov 2026" });
-    expect(example("{{signedAt}}").ro).toBe("duminică, 20 sept. 2026, 19:42");
+    expect(example("{{signedAt}}").ro).toBe("duminică, 20 sept. 2026, la 19:42");
   });
 
   it("gives the declarant the words a minor's signature actually produces", () => {

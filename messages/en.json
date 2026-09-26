@@ -3996,10 +3996,10 @@
     "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
     "weather": {
       "title": "Weather forecast",
-      "ok": "Open-Meteo (public, keyless) — last answer at {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
+      "ok": "Open-Meteo (public, keyless) — last answer on {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
       "failed": "Open-Meteo (public, keyless) — no answer ({reason}). The pages and the reminders show no weather until it answers.",
-      "failedAt": "Open-Meteo (public, keyless) — no answer at {when} ({reason}). The pages and the reminders show no weather until it answers.",
-      "stale": "Open-Meteo (public, keyless) — last answer at {when}, too old to show. The pages and the reminders show no weather until it answers.",
+      "failedAt": "Open-Meteo (public, keyless) — no answer on {when} ({reason}). The pages and the reminders show no weather until it answers.",
+      "stale": "Open-Meteo (public, keyless) — last answer on {when}, too old to show. The pages and the reminders show no weather until it answers.",
       "stub": "the test forecast (E2E_WEATHER_STUB) — the same fixed hour, and no request to Open-Meteo.",
       "off": "off in this environment."
     },

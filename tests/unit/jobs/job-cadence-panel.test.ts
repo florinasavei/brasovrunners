@@ -73,10 +73,10 @@ describe("§334, §221 the throttle card's sentence about email", () => {
         emailTiming: "immediate",
       })) as ReactElement,
     ).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
-    expect(html).toContain("ultima rulare reală: joi, 24 sept. 2026, 10:15");
-    expect(html).toContain("următoarea, cel târziu: joi, 24 sept. 2026, 11:15 (intervalul tău)");
-    expect(html).toContain("ultimul ping: joi, 24 sept. 2026, 10:30, sărit fără bază de date");
-    expect(html).toContain("Setat joi, 24 sept. 2026, 10:00.");
+    expect(html).toContain("ultima rulare reală: joi, 24 sept. 2026, la 10:15");
+    expect(html).toContain("următoarea, cel târziu: joi, 24 sept. 2026, la 11:15 (intervalul tău)");
+    expect(html).toContain("ultimul ping: joi, 24 sept. 2026, la 10:30, sărit fără bază de date");
+    expect(html).toContain("Setat joi, 24 sept. 2026, la 10:00.");
   });
 
   it("keeps email out of the line that holds in every case, in both languages", () => {

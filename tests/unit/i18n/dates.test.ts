@@ -70,7 +70,7 @@ describe("BR-REQ-040-03 criterion 5 a capital where the date starts, lower case 
   it("keeps Romanian's lower case inside a sentence", () => {
     expect(formatDay(SATURDAY, { locale: "ro", timeZone: BUCHAREST, position: "inline" })).toBe("sâmbătă, 16 ian. 2027");
     expect(formatDay(SATURDAY, { locale: "ro", timeZone: BUCHAREST, style: "short", withTime: true, position: "inline" })).toBe(
-      "sâm., 16 ian. 2027, 09:30",
+      "sâm., 16 ian. 2027, la 09:30",
     );
   });
 

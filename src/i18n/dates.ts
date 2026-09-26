@@ -23,7 +23,17 @@
  * sentence ("are loc sâmbătă, 16 ian.") and with a capital where the date starts a label, a
  * line, a cell or a heading ("Sâmbătă, 16 ian. 2027"). `position` says which: "start" (the
  * default) capitalises the first letter, "inline" leaves the language's own case. English
- * weekday names are capitalised either way.
+ * weekday names are capitalised either way. "continues" is the language's own case outside a
+ * sentence — the second half of a span, "Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59".
+ *
+ * **No «pe» before a weekday, «la» before the hour** (§NNN, reversing §349's «pe»; the owner,
+ * 2026-09-26: «Înscrierile se deschid pe sâmbătă, 26 sept. 2026, 17:00» is not grammatical).
+ * Romanian puts no preposition before a weekday that names the day something happens — "se
+ * deschid sâmbătă, 26 sept. 2026" — so no catalogue sentence puts «pe» before a date ("până pe" is
+ * "până"); and an "inline" date with its time says the hour's own preposition itself:
+ * "sâmbătă, 26 sept. 2026, la 17:00" / "Saturday, 26 Sept 2026, at 17:00". A "start" date — a
+ * label, a cell, a heading, a span's second half ("continues") — keeps the bare ", 17:00". `tests/unit/i18n/date-prepositions.test.ts`
+ * reads every sentence of both catalogues and the platform's own email and PDF sentences.
  *
  * **The zone is the caller's to name.** An event's date is formatted in the event's own zone
  * (`event.timezone`), never the server's or the browser's; a platform timestamp (a submission,
@@ -67,7 +77,7 @@ export const DATE_FORMATS = {
   time: { hour: "2-digit", minute: "2-digit", hourCycle: "h23" },
 } satisfies Record<string, Intl.DateTimeFormatOptions>;
 
-type Position = "start" | "inline";
+type Position = "start" | "inline" | "continues";
 
 export type DayOptions = {
   /** The reader's language: "ro" or "en" (anything else reads as English). */
@@ -75,7 +85,7 @@ export type DayOptions = {
   /** The event's own zone for an event date; `CLUB_TIME_ZONE` for a platform timestamp. */
   timeZone: string;
   style?: DayStyle;
-  /** ", 09:30" after the date, in the same zone, always 24-hour. */
+  /** ", 09:30" after the date — ", la 09:30" / ", at 09:30" when inline — in the same zone, always 24-hour. */
   withTime?: boolean;
   /**
    * False only where a header around the date already names the year — a month's calendar
@@ -83,7 +93,11 @@ export type DayOptions = {
    * the year: a listing card's phone width (§366). Everywhere else a date carries its year.
    */
   year?: boolean;
-  /** "start" capitalises the first letter (the default); "inline" keeps Romanian's lower case. */
+  /**
+   * "start" capitalises the first letter (the default); "inline" keeps Romanian's lower case
+   * and, inside the sentence, says "la" / "at" before the hour (§NNN); "continues" keeps the lower
+   * case with the bare hour — a span's second half, not a sentence.
+   */
   position?: Position;
 };
 
@@ -117,13 +131,23 @@ function compose(instant: Date, timeZone: string, options: Omit<DayOptions, "tim
     ...(options.year === false ? {} : { year: "numeric" }),
     timeZone,
   }).format(instant);
-  const text = withTime ? `${weekday}, ${day}, ${formatTime(instant, { locale: options.locale, timeZone })}` : `${weekday}, ${day}`;
-  return (options.position ?? "start") === "start" ? capitalizeFirst(text, options.locale) : text;
+  const position = options.position ?? "start";
+  const time = withTime ? formatTime(instant, { locale: options.locale, timeZone }) : null;
+  // Inside a sentence the hour takes its preposition — "sâmbătă, 26 sept. 2026, la 17:00" /
+  // "Saturday, 26 Sept 2026, at 17:00" (§NNN); a label, a cell or a heading keeps the bare hour.
+  const clock = time === null ? "" : position === "inline" ? `, ${hourPreposition(options.locale)} ${time}` : `, ${time}`;
+  const text = `${weekday}, ${day}${clock}`;
+  return position === "start" ? capitalizeFirst(text, options.locale) : text;
+}
+
+/** "la" / "at": the word before an hour inside a sentence (§NNN). */
+function hourPreposition(locale: string): "la" | "at" {
+  return intlLocale(locale) === "ro-RO" ? "la" : "at";
 }
 
 /**
  * An instant as a day a person reads: "Sâmbătă, 16 ian. 2027" / "Sat, 16 Jan 2027", with
- * ", 09:30" when `withTime` — in the zone the caller names.
+ * ", 09:30" when `withTime` (", la 09:30" / ", at 09:30" inline) — in the zone the caller names.
  */
 export function formatDay(date: Date, options: DayOptions): string {
   return compose(date, options.timeZone, options, options.withTime === true);
@@ -188,8 +212,10 @@ export function composeCalendarDay(ymd: string, words: CalendarDayWords): string
 
 /**
  * Two days as one span: "Sâm., 16 ian. 2027 – dum., 17 ian. 2027". The second day continues the
- * first, so it keeps the language's own case; the first follows `position`.
+ * first, so it keeps the language's own case; the first follows `position`, and the hour's "la"
+ * belongs to both halves or neither (§NNN).
  */
 export function formatDayRange(from: Date, until: Date, options: DayOptions): string {
-  return `${formatDay(from, options)} – ${formatDay(until, { ...options, position: "inline" })}`;
+  const second: Position = options.position === "inline" ? "inline" : "continues";
+  return `${formatDay(from, options)} – ${formatDay(until, { ...options, position: second })}`;
 }

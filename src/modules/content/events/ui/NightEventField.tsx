@@ -18,14 +18,14 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 export type NightEventWords = {
   label: string;
   choices: Readonly<Record<NightChoice, string>>;
-  /** "Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}" — the start named before the sunset (§404). */
+  /** "Automat: {day}, începe la {start}, apusul la {sunset} — {verdict}" — the start named before the sunset (§404). */
   autoLine: string;
   /**
-   * "Automat: pe {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}" (§404):
+   * "Automat: {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}" (§404):
    * an early-morning night start names that day's sunrise, never the evening's sunset.
    */
   autoLineDawn: string;
-  /** "Automat: pe {day}, apusul la {sunset} — alege ora startului" */
+  /** "Automat: {day}, apusul la {sunset} — alege ora startului" */
   autoLineNoTime: string;
   /** "Automat: alege data startului și se calculează aici." */
   autoLineNoDate: string;

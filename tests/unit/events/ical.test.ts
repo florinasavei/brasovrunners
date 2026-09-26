@@ -360,7 +360,7 @@ describe("the calendar file", () => {
     expect(at({ kind: "OPEN", url: register })).toContain(`\n\nÎnscrierile sunt deschise — ${register}\n\n`);
     // The opening date in the event's zone, the page's own sentence, and the door after it.
     expect(at({ kind: "NOT_YET_OPEN", opensAt: new Date("2026-10-01T15:00:00.000Z"), url: register })).toContain(
-      `\n\nÎnscrierile se deschid pe joi, 1 oct. 2026, 18:00 — ${register}\n\n`,
+      `\n\nÎnscrierile se deschid joi, 1 oct. 2026, la 18:00 — ${register}\n\n`,
     );
     expect(at({ kind: "CLOSED" })).toContain("\n\nÎnscrierile s-au închis\n\n");
     expect(at({ kind: "EXTERNAL", url: "https://organizer.example.test/entries" })).toContain("\n\nÎnscriere pe site-ul organizatorului — https://organizer.example.test/entries\n\n");
