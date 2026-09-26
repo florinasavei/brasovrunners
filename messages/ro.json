@@ -5524,6 +5524,7 @@
     "rainLikely": "ploaie probabilă",
     "rainLikelyChance": "ploaie probabilă {percent} %",
     "wind": "vânt {speed} km/h",
+    "help": "Prognoză orientativă, poate varia până la start. Date furnizate de {source}.",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
     "feelsLike": "se simte ca {degrees} °C",

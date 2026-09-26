@@ -33,6 +33,8 @@ export type WeatherWords = {
   extras: string[];
   /** The degrees alone, «14 °C» — a card's pill and an hour of the block; null when the hour has none. */
   temperature: string | null;
+  /** The «?» tooltip after the event page's line (§NNN): the forecast may vary, and whose data it is. */
+  help: string;
   /** The chance of rain alone, «20%» — an hour of the block; null when the hour has none. */
   rainShort: string | null;
   /** «ploaie probabilă» / "rain likely" — the words a card, the hero and the event page add to the spoken text when `rainLikely` holds (§429). */
@@ -79,6 +81,7 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     summary,
     details,
     credit: t("credit", { source: t("source") }),
+    help: t("help", { source: t("source") }),
     extras,
     temperature,
     rainShort: reading.precipitationProbability !== null ? t("rainShort", { percent: whole(reading.precipitationProbability) }) : null,
