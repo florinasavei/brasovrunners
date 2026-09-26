@@ -739,14 +739,14 @@ const T = {
     completeDeclaration: {
       subject: (d: TemplateData) =>
         d.confirmLater
-          ? `Ești înscris — confirmă participarea până la ${d.holdExpiresAtFormatted ?? "termen"}`
+          ? `Ești înscris — confirmă participarea până ${d.holdExpiresAtFormatted ?? "termen"}`
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
           ? // No "the race is free" (§419): said of any event more than a day away, paid or not a race.
             `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce semnezi declarația pe proprie răspundere. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
-        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
+        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
       ],
       action: "Semnează declarația",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
@@ -766,7 +766,7 @@ const T = {
       */
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
-          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până la ${d.holdExpiresAtFormatted} (ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}); după acest termen, locul trece la următorul de pe lista de așteptare.`
+          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până ${d.holdExpiresAtFormatted} (ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}); după acest termen, locul trece la următorul de pe lista de așteptare.`
           : `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)} de la ofertă să semnezi declarația pe propria răspundere; după aceea, locul trece la următorul de pe lista de așteptare.`,
       ],
       action: "Confirmă locul",

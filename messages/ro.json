@@ -656,9 +656,9 @@
       "emailVouched": "adresă garantată de {who}",
       "journey": {
         "title": "Parcursul înscrierii",
-        "held": "până la {until}",
+        "held": "până {until}",
         "heldKept": "termen depășit, locul se ține cât nu așteaptă nimeni",
-        "offered": "loc oferit, până la {until}",
+        "offered": "loc oferit, până {until}",
         "waitlisted": "pe lista de așteptare",
         "bib": "nr. {number}",
         "pickedUp": "a ridicat nr. {number}",
@@ -1783,7 +1783,7 @@
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
       "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
-      "offered": "ofertă până la {until}",
+      "offered": "ofertă până {until}",
       "since": "din {when}",
       "interestTitle": "Adrese care așteaptă anunțul deschiderii: {count}",
       "interestHelp": "Lăsate la „Anunță-mă” pe pagina evenimentului. Primesc un singur email la prima rulare a jobului după ce se deschid înscrierile și se șterg odată cu el. Dacă cineva îți scrie că nu mai vrea mesajul, tastează adresa lui aici: dispare din listă. Adresele nu se afișează.",
@@ -3807,9 +3807,9 @@
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
-      "deadline": "Locul tău este rezervat până la {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
+      "deadline": "Locul tău este rezervat până {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
       "deadlineAtStart": "Locul tău este rezervat până la start, {deadline}: nu expiră înainte. Înscrierea e completă doar cu declarația semnată.",
-      "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
+      "deadlinePassed": "Termenul, {deadline}, a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
       "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment, iar în copia clubului apar mascate (rămân cel mult primele două și ultimele două caractere); nu păstrăm o copie a actului.",
@@ -3919,7 +3919,7 @@
       "eventCancelledChip": "Eveniment anulat",
       "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
       "runner": "Înscris: {name}",
-      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până la {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
+      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
     },
     "manage": {
       "title": "Gestionează înscrierea",

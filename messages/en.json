@@ -3809,7 +3809,7 @@
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
       "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
-      "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
+      "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (at most the first two and last two characters remain); we never keep a copy of the document.",
       "idDocumentPlaceholder": "BV 123456",

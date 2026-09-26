@@ -2,6 +2,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { formatDay, formatDayRange } from "@/i18n/dates";
+import { emailSampleActionUrl, emailSampleFor } from "@/modules/notifications/email-copy-fields";
+import { renderBilingual } from "@/modules/notifications/templates";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -79,6 +81,18 @@ describe("§NNN the hour inside a sentence takes «la» / «at»", () => {
   });
 });
 
+/**
+ * The keys that keep «până la {x}»: a series' last date or a range's end, filled with a date that
+ * carries no hour, where «până la» is Romanian's own «until». Every deadline — a hold, an offer,
+ * a confirm-by — carries its hour and reads «până {x}».
+ */
+const RANGE_UNTIL_WITHOUT_TIME = new Set<string>([
+  "Admin.editor.repeatRuleUntil",
+  "Admin.editor.repeatRuleLiveUntil",
+  "Admin.editor.scope.countFollowing",
+  "Admin.editor.scope.countRange",
+]);
+
 describe("§NNN no catalogue sentence puts a preposition before a date the helper wrote", () => {
   it("never writes «pe» before a date in Romanian", () => {
     const offending = sentences(ro as unknown as Tree).flatMap(([key, text]) =>
@@ -92,9 +106,12 @@ describe("§NNN no catalogue sentence puts a preposition before a date the helpe
 
   it("never writes «la» / «at» before a date, whose hour already carries it", () => {
     const romanian = sentences(ro as unknown as Tree).flatMap(([key, text]) =>
-      [...text.matchAll(new RegExp(`(?<![\\p{L}])(?<!până )(?<!de )la \\{(${DATE_PLACEHOLDERS})\\}`, "gu"))].map((match) => `${key}: ${match[0]}`),
+      [...text.matchAll(new RegExp(`(?<![\\p{L}])(?<!de )la \\{(${DATE_PLACEHOLDERS})\\}`, "gu"))]
+        .map((match) => `${key}: ${match[0]}`)
+        .filter((entry) => !RANGE_UNTIL_WITHOUT_TIME.has(entry.slice(0, entry.indexOf(": ")))),
     );
-    // «până la {until}» and «de la {first}» are Romanian's own «until» and «from», not the hour's word, and stay.
+    // «de la {first}» is Romanian's own «from». «până la {x}» stays only on the keys listed in
+    // RANGE_UNTIL_WITHOUT_TIME, whose value carries no hour; a deadline with its hour reads «până {x}».
     const english = sentences(en as unknown as Tree).flatMap(([key, text]) =>
       [...text.matchAll(new RegExp(`\\bat \\{(${DATE_PLACEHOLDERS})\\}`, "g"))].map((match) => `${key}: ${match[0]}`),
     );
@@ -114,13 +131,49 @@ describe("§NNN the platform's own sentences in src/ (emails, the PDFs) say no �
       return /\.(ts|tsx)$/.test(name) ? [path] : [];
     });
 
-  it("finds no «pe {when}», «pe {date}» or «pe ${…Formatted}» in a Romanian string", () => {
+  it("finds no «pe ${…Formatted}» nor «până la» before a deadline with its hour in a Romanian string", () => {
     const offending = files(SRC).flatMap((path) => {
       const text = readFileSync(path, "utf8");
-      return [...text.matchAll(/(?<![\p{L}])pe (\{(date|when|until|day)\}|\$\{[^}]*Formatted[^}]*\})/gu)].map(
+      return [...text.matchAll(/(?<![\p{L}])(?:pe (?:\{(?:date|when|until|day)\}|\$\{[^}]*Formatted[^}]*\})|până la (?:\$\{[^}]*Formatted[^}]*\}|\{(?:until|deadline|due)\}))/gu)].map(
         (match) => `${relative(process.cwd(), path)}: ${match[0]}`,
       );
     });
     expect(offending).toEqual([]);
+  });
+});
+
+describe("§NNN the other sentences that carry a date, rendered in both languages", () => {
+  const date = (locale: "ro" | "en", at: Date) =>
+    formatDay(at, { locale, timeZone: ZONE, style: "short", withTime: true, position: "inline" });
+  const race = new Date("2026-11-21T07:00:00Z");
+  const opens = new Date("2026-11-14T07:00:00Z");
+  const due = new Date("2026-11-19T07:00:00Z");
+
+  it("says the confirmation window (§407) with no preposition before a date and «la» / «at» before the hour", () => {
+    const words = (locale: "ro" | "en") => ({ date: date(locale, race), opens: date(locale, opens), due: date(locale, due) });
+    expect(fill(ro.Admin.editor.boxes.confirmation.dates, words("ro"))).toBe(
+      "Pentru sâm., 21 nov. 2026, la 09:00: cerută din sâm., 14 nov. 2026, la 09:00, termen joi, 19 nov. 2026, la 09:00.",
+    );
+    expect(fill(en.Admin.editor.boxes.confirmation.dates, words("en"))).toBe(
+      "For Sat, 21 Nov 2026, at 09:00: asked from Sat, 14 Nov 2026, at 09:00, due Thu, 19 Nov 2026, at 09:00.",
+    );
+  });
+
+  it("says a deadline as «până X, la HH:MM» / «until X, at HH:MM», never «până la X»", () => {
+    const long = (locale: "ro" | "en") => formatDay(due, { locale, timeZone: ZONE, style: "long", withTime: true, position: "inline" });
+    expect(fill(ro.Registrations.declare.deadline, { deadline: long("ro") })).toMatch(/^Locul tău este rezervat până joi, 19 nov\. 2026, la 09:00\./);
+    expect(fill(en.Registrations.declare.deadline, { deadline: long("en") })).toMatch(/^Your place is held until Thursday, 19 Nov 2026, at 09:00\./);
+    expect(fill(ro.Registrations.declare.deadlinePassed, { deadline: long("ro") })).toMatch(/^Termenul, joi, 19 nov\. 2026, la 09:00, a trecut,/);
+    expect(fill(en.Registrations.declare.deadlinePassed, { deadline: long("en") })).toMatch(/^The deadline, Thursday, 19 Nov 2026, at 09:00, has passed,/);
+  });
+
+  it("starts the email's «Când» / «When» row with the date, capitalised, and no preposition", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const content = renderBilingual("REGISTRATION_CONFIRMED", locale, emailSampleFor("REGISTRATION_CONFIRMED", locale), emailSampleActionUrl(locale));
+      const label = locale === "ro" ? "Când" : "When";
+      const row = content.text.split("\n").find((line) => line.startsWith(`${label}: `));
+      expect(row).toMatch(new RegExp(`^${label}: \\p{Lu}\\p{L}+, \\d{1,2} \\p{L}+\\.? \\d{4}`, "u"));
+      expect(row).not.toMatch(/(?<![\p{L}])(pe|on) \p{L}+, \d/u);
+    }
   });
 });

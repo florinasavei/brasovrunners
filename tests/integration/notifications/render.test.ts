@@ -534,14 +534,14 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     const live = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer"), db, NOW);
     const when = formatDay(offerDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
     expect(live.text).toContain(
-      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până la ${when} (ai la dispoziție ${offerHours}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
+      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până ${when} (ai la dispoziție ${offerHours}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
     );
     expect(live.text).toContain("It is yours if you sign the self-declaration by ");
     expect(live.text).not.toContain("timp limitat");
 
     const lapsed = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-late"), db, new Date(offerDeadline.getTime() + 60_000));
     expect(lapsed.text).toContain(`S-a eliberat un loc la Crosul. Ai la dispoziție ${offerHours} de la ofertă să semnezi declarația pe propria răspundere`);
-    expect(lapsed.text).not.toContain("până la");
+    expect(lapsed.text).not.toContain("răspundere până");
   });
 
   it("§419 a capped offer states the length it was actually given, not the club's current setting (review finding)", async () => {
@@ -564,7 +564,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-capped"), db, NOW);
     const when = formatDay(cappedDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
     expect(message.text).toContain(
-      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până la ${when} (ai la dispoziție ${hoursPhrase("ro", 3)}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
+      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până ${when} (ai la dispoziție ${hoursPhrase("ro", 3)}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
     );
     expect(message.text).not.toContain(hoursPhrase("ro", DEFAULT_DEADLINES.offerHours));
   });

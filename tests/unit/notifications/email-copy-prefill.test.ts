@@ -225,7 +225,7 @@ describe("§359 the editor starts from the platform's words, with the fields", (
   it("gives each sentence a fact may be missing from a paragraph of its own, and keeps a paragraph that opens with one whole", () => {
     expect(emailCopyPrefill("COMPLETE_DECLARATION", "ro").paragraphs.slice(1)).toEqual([
       "Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.",
-      "Dacă se formează lista de așteptare, locul îți este ținut până la {holdExpiresAtFormatted}; până atunci semnează.",
+      "Dacă se formează lista de așteptare, locul îți este ținut până {holdExpiresAtFormatted}; până atunci semnează.",
     ]);
     expect(emailCopyPrefill("BIB_ASSIGNED", "en").paragraphs).toEqual([
       "You have number {bibNumber} at {eventTitle}.",
@@ -327,7 +327,7 @@ describe("§359 a paragraph whose every field is missing is not sent", () => {
     expect(text("REGISTRATION_CONFIRMED", { ...REAL, clubCopy: true })).not.toContain("spune codul");
     expect(text("EVENT_REMINDER", { ...REAL, clubCopy: true })).not.toContain("say the code");
     const declaration = text("COMPLETE_DECLARATION", sparse("COMPLETE_DECLARATION"));
-    expect(declaration).not.toContain("ținut până la");
+    expect(declaration).not.toContain("ținut până");
     // The sentence before it, which names no field, is still there.
     expect(declaration).toContain("înainte să-ți ridici numărul.");
     expect(text("CLUB_CONFIRMATION_NOTICE", sparse("CLUB_CONFIRMATION_NOTICE"))).not.toContain("Numărul de concurs");

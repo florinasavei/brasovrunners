@@ -171,7 +171,7 @@ describe("§407 a confirmation deadline of zero days is the start", () => {
     expect(confirmationDueWords("ro", 2)).toBe("cu 2 zile înainte de start");
     expect(confirmationDueWords("en", 1)).toBe("one day before the start");
     expect(confirmationDueWords("ro", 7)).toBe("cu o săptămână înainte de start");
-    expect(confirmationDueMoment("ro", { at: startsAt, startsAt }, "duminică, 11 oct. 2026, 09:00")).toBe("start, duminică, 11 oct. 2026, 09:00");
+    expect(confirmationDueMoment("ro", { at: startsAt, startsAt }, "duminică, 11 oct. 2026, 09:00")).toBe("la start, duminică, 11 oct. 2026, 09:00");
     expect(confirmationDueMoment("en", { at: startsAt, startsAt }, "Sunday, 11 Oct 2026, 09:00")).toBe("the start, Sunday, 11 Oct 2026, 09:00");
     expect(confirmationDueMoment("ro", { at: new Date(startsAt.getTime() - 2 * DAY), startsAt }, "vineri")).toBe("vineri");
   });
