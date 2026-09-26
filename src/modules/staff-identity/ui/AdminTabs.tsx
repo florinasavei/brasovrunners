@@ -3,9 +3,11 @@
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import Tooltip from "@mui/material/Tooltip";
+import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 import { usePathname } from "next/navigation";
 import type { AdminSection } from "../domain/roles";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import ArticleIcon from "@mui/icons-material/Article";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -146,21 +148,7 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
                     word (the owner, 2026-09-22). Orange under dark ink is the one accent pair
                     `theme.ts` keeps identical in both schemes, so this needs no dark variant.
                   */}
-                  <Box
-                    component="span"
-                    sx={{
-                      bgcolor: "secondary.main",
-                      color: "secondary.contrastText",
-                      borderRadius: 5,
-                      px: 0.75,
-                      ml: 0.25,
-                      fontWeight: 700,
-                      fontSize: "0.75rem",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {item.count}
-                  </Box>
+                  <CountBadge count={item.count} hint={item.countHint} />
                 </>
               ) : (
                 item.label
@@ -170,12 +158,57 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
             iconPosition="start"
             component="a"
             href={item.href}
-            // What the number means, for the reader who finds it disagreeing with a list (§277).
-            title={typeof item.count === "number" ? item.countHint : undefined}
             sx={{ minHeight: 44, textTransform: "none" }}
           />
         );
       })}
     </Tabs>
+  );
+}
+
+/**
+ * The figure's pill, and what it counts in the backoffice tooltip (§341, §277): the rule, then
+ * one line per upcoming event. The pill is focusable and names the text through
+ * `aria-describedby`, so a keyboard or a screen reader reaches it; a tap opens it on a phone.
+ */
+function CountBadge({ count, hint }: { count: number; hint?: string }) {
+  const id = useId();
+  const pill = (
+    <Box
+      component="span"
+      sx={{
+        bgcolor: "secondary.main",
+        color: "secondary.contrastText",
+        borderRadius: 5,
+        px: 0.75,
+        ml: 0.25,
+        fontWeight: 700,
+        fontSize: "0.75rem",
+        lineHeight: 1.6,
+      }}
+    >
+      {count}
+    </Box>
+  );
+  if (!hint) return pill;
+  return (
+    <>
+      <Tooltip
+        title={hint}
+        // The pill keeps the number as its name; the text is its description.
+        describeChild
+        enterTouchDelay={0}
+        leaveTouchDelay={readingTimeMs(hint)}
+        arrow
+        slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}
+      >
+        <Box component="span" tabIndex={0} aria-describedby={id} sx={{ display: "inline-flex" }}>
+          {pill}
+        </Box>
+      </Tooltip>
+      <Box component="span" id={id} sx={{ display: "none" }}>
+        {hint}
+      </Box>
+    </>
   );
 }

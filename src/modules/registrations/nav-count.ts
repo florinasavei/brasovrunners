@@ -144,4 +144,4 @@ export async function registeredBadgeBreakdown<T extends Record<string, unknown>
 }
 
 /** How many events the tooltip names before it says how many more — a tooltip is not a list. */
-export const BADGE_HINT_EVENTS = 8;
+export const BADGE_HINT_EVENTS = 5;

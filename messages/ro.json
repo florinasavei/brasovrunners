@@ -477,7 +477,7 @@
       "guide": "Ghid",
       "registeredHint": "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
       "registeredEvent": "{title}: {count}",
-      "registeredMoreEvents": "Alte evenimente: {count}",
+      "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
     "outbox": {
@@ -717,7 +717,7 @@
       "filtersInUse": "filtre active",
       "summaryScopeEvent": "la {event}",
       "summaryScopeAll": "toate evenimentele",
-      "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat; cifra de pe tabul „Înscrieri” numără toate evenimentele care urmează.",
+      "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat.",
       "summaryScopeAllLink": "Arată toate evenimentele",
       "bulkEraseTitle": "Șterge definitiv înscrierile bifate",
       "bulkEraseHelp": "Se șterg din evidență, locurile se eliberează și nu se mai poate reveni. Rămâne doar o urmă în jurnal: cine a șters și de ce, niciodată pe cine.",

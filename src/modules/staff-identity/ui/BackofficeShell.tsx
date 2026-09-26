@@ -66,7 +66,7 @@ export default async function BackofficeShell({
     How many are signed up, beside the "Înscrieri" tab (§255).
 
     Read here because the shell is the one place every backoffice page passes through, and
-    memoized for a minute inside `registeredBadgeCount` so the badge costs about one indexed
+    memoized for a minute per language inside `registeredBadgeBreakdown` so the badge costs about one indexed
     count a minute rather than one per page view — the club's database is a free Neon plan that
     bills compute time (§68). Only for the roles that may open the list — the Organizer since
     §289 — so for everybody else there is no query and no number.
@@ -77,7 +77,7 @@ export default async function BackofficeShell({
   const registered = breakdown?.total ?? null;
   /*
     The tooltip says what the figure counts, per event (§NNN): the rule in one line, then each
-    upcoming event with its number, the first eight by start and how many more after them — so
+    upcoming event with its number, the first five by start and how many more after them — so
     a reader whose list disagrees with the badge sees which event the difference is on.
   */
   const registeredHint = breakdown

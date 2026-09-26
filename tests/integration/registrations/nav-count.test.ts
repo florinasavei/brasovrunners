@@ -125,4 +125,29 @@ describe("§255 how many are signed up", () => {
     expect(en?.events.map((row) => row.title)).toEqual(["—", "—"]);
     expect(ro?.total).toBe(await countRegisteredForUpcoming(db, NOW));
   });
+
+  it("§NNN memoizes the split a minute per language, and forgetting drops it", async () => {
+    await enter(upcoming, "CONFIRMED");
+    expect((await registeredBadgeBreakdown(db, NOW, "ro"))?.total).toBe(1);
+    await enter(upcoming, "CONFIRMED");
+    expect((await registeredBadgeBreakdown(db, new Date(NOW.getTime() + 1_000), "ro"))?.events).toEqual([
+      { eventId: upcoming, title: "—", count: 1 },
+    ]);
+    // The other language has its own memo, read fresh.
+    expect((await registeredBadgeBreakdown(db, NOW, "en"))?.total).toBe(2);
+    forgetRegisteredBadgeCount();
+    expect((await registeredBadgeBreakdown(db, NOW, "ro"))?.total).toBe(2);
+  });
+
+  it("§NNN leaves a cancelled event out of the split", async () => {
+    const [cancelled] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 3 * DAY), registrationMode: "INTERNAL", capacity: 100, eventStatus: "CANCELLED" })
+      .returning();
+    await enter(cancelled.id, "CONFIRMED");
+    await enter(upcoming, "CONFIRMED");
+    const split = await registeredBadgeBreakdown(db, NOW, "ro");
+    expect(split?.events.map((row) => row.eventId)).toEqual([upcoming]);
+    expect(split?.total).toBe(1);
+  });
 });
