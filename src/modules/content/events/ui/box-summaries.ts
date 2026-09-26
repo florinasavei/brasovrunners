@@ -66,7 +66,7 @@ export type SummaryWords = {
     external: string;
     externalUnnamed: string;
   };
-  window: { range: string; fromPublication: string; untilStart: string };
+  window: { range: string; fromPublication: string; soon: string; untilStart: string };
   conditions: { noDeclaration: string };
   /** A group run's optional self-declaration, under «Regulamentul» (§448). */
   declaration: { offered: string; notOffered: string; notAsked: string };
@@ -104,7 +104,7 @@ function join(words: SummaryWords, parts: readonly (string | null | undefined | 
  * line (`formatDay`'s short form, §350), in the reader's language and the event's zone. `inline`
  * keeps Romanian's lower case for a date inside a sentence ("până la dum., 1 nov. 2026").
  */
-export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" = "start"): string {
+export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" | "continues" = "start"): string {
   return formatDay(date, { locale, timeZone: zone, style: "short", withTime: true, position });
 }
 
@@ -371,16 +371,22 @@ export function registrationSummary(
   ]);
 }
 
-type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClosesAt" | "timezone">;
+type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClosesAt" | "timezone"> &
+  Partial<Pick<EditableEvent, "registrationOpensSoon">>;
 
 /**
  * Sub-card 8.1: `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, or `De la publicare – până
- * la start`. The second date continues the first, so it keeps the language's own case, as
- * `formatDayRange` writes a span.
+ * la start`, or `Se deschid în curând – până la start` while the opening has no date (§451). The
+ * second date continues the first, so it keeps the language's own case, as `formatDayRange`
+ * writes a span.
  */
 export function registrationWindowSummary(words: SummaryWords, event: WindowEvent | null, locale: string): string {
-  const from = event?.registrationOpensAt ? summaryDateTime(event.registrationOpensAt, event.timezone, locale) : words.window.fromPublication;
-  const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "inline") : words.window.untilStart;
+  const from = event?.registrationOpensSoon
+    ? words.window.soon
+    : event?.registrationOpensAt
+      ? summaryDateTime(event.registrationOpensAt, event.timezone, locale)
+      : words.window.fromPublication;
+  const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "continues") : words.window.untilStart;
   return fillIn(words.window.range, { from, to });
 }
 

@@ -58,7 +58,8 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     },
   },
   typography: {
-    // Provided by next/font in the locale layout; latin-ext covers ș, ț, ă, â, î.
+    // Provided by next/font/local in the locale layout, from `src/theme/fonts/` (§460): each
+    // file carries latin and latin-ext together, which covers ș, ț, ă, â, î.
     fontFamily: `${options.body}, ${FONT.fallback}`,
     // Headings take the display role, so an arriving club typeface changes these and leaves
     // body text alone. Both resolve to Roboto until one arrives — see brand.ts.

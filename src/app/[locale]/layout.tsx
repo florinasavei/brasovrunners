@@ -1,7 +1,6 @@
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata } from "next";
-import { Caveat, Inter, Nunito, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -19,39 +18,66 @@ import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
 import { CLUB_NAME } from "@/theme/brand";
 
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700", "900"],
-  subsets: ["latin", "latin-ext"],
+/**
+ * Every face is a file in the repository, never a download at build (§460). `next/font/google`
+ * fetched these from Google on every build without a warm cache, and a runner that could not
+ * reach Google failed the build with "cannot resolve …/font/google/font" — nothing wrong with
+ * the code, a red pull request all the same, again and again. The files in `src/theme/fonts/`
+ * are Google's own WOFF2 for each weight, one file per weight covering `latin` and `latin-ext`
+ * together (ș, ț, ă, â, î — `tests/unit/theme/fonts.test.ts` reads each file's `cmap`), under
+ * the SIL Open Font License beside them (`<Family>-LICENSE.txt`).
+ *
+ * Roboto is the body and heading face and is preloaded on every page, as it was. The other
+ * three are not: a browser fetches a face only when a rendered style names it, so declaring a
+ * variable costs nothing, and a preload would make every visitor pay for a face they never see.
+ */
+const roboto = localFont({
+  src: [
+    { path: "../../theme/fonts/Roboto-300.woff2", weight: "300", style: "normal" },
+    { path: "../../theme/fonts/Roboto-400.woff2", weight: "400", style: "normal" },
+    { path: "../../theme/fonts/Roboto-500.woff2", weight: "500", style: "normal" },
+    { path: "../../theme/fonts/Roboto-700.woff2", weight: "700", style: "normal" },
+    { path: "../../theme/fonts/Roboto-900.woff2", weight: "900", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-roboto",
 });
 
 /**
  * Two more faces for the theme lab (`theme/preview.ts`, BR-REQ-090-06), self-hosted like
- * Roboto. Declaring a variable costs nothing at load: a browser fetches a font file only when
- * a rendered style names it, and nothing does until a preview says so.
+ * Roboto; nothing names them until a preview says so.
  */
-const inter = Inter({
-  weight: ["400", "500", "700"],
-  subsets: ["latin", "latin-ext"],
+const inter = localFont({
+  src: [
+    { path: "../../theme/fonts/Inter-400.woff2", weight: "400", style: "normal" },
+    { path: "../../theme/fonts/Inter-500.woff2", weight: "500", style: "normal" },
+    { path: "../../theme/fonts/Inter-700.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-inter",
+  preload: false,
 });
 /**
  * The hand the declaration is signed in (`DECISIONS.md` §86): a typed name shown as a
  * signature. Self-hosted like the rest; loaded only on the pages whose styles name it.
  */
-const signature = Caveat({
-  weight: ["500"],
-  subsets: ["latin", "latin-ext"],
+const signature = localFont({
+  src: "../../theme/fonts/Caveat-500.woff2",
+  weight: "500",
+  style: "normal",
   display: "swap",
   variable: "--font-signature",
+  preload: false,
 });
-const nunito = Nunito({
-  weight: ["400", "500", "700"],
-  subsets: ["latin", "latin-ext"],
+const nunito = localFont({
+  src: [
+    { path: "../../theme/fonts/Nunito-400.woff2", weight: "400", style: "normal" },
+    { path: "../../theme/fonts/Nunito-500.woff2", weight: "500", style: "normal" },
+    { path: "../../theme/fonts/Nunito-700.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-nunito",
+  preload: false,
 });
 
 /**

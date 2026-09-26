@@ -135,13 +135,15 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     }
   });
 
-  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §413)", async ({
+  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §413, §458)", async ({
     page,
   }) => {
     const isMobile = test.info().project.name === "mobile";
     // Since §413 the filters are one «Filtre» button above the hero (the hero follows them), so the
     // step is measured from the button's block to the first visible thing under it — the hero,
-    // the notice or the grid, whichever the page has — rather than to the grid alone.
+    // the notice or the grid, whichever the page has — rather than to the grid alone. Since §458
+    // (the owner: "prea mult padding") the step is the wrapper's `mb: { xs: DENSITY.gapSm, sm: 1.5 }`
+    // on the listing page, half of §401's `sectionGap`.
     const measure = async (expectMin: number, expectMax: number) => {
       await page.goto("/ro/evenimente");
       const panel = page.locator("#main").getByTestId("listing-filters");
@@ -157,14 +159,14 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
       expect(gap).toBeLessThanOrEqual(expectMax);
     };
     if (isMobile) {
-      // `DENSITY.sectionGap` on a phone is 16px (2 spacing units), at every width the owner named.
+      // `DENSITY.gapSm` on a phone is 8px (1 spacing unit), at every width the owner named.
       for (const width of [320, 360, 390, 412]) {
         await page.setViewportSize({ width, height: 800 });
-        await measure(15, 17);
+        await measure(7, 9);
       }
     } else {
-      // From `sm` up the step is 24px (3 spacing units) — the desktop project's own viewport.
-      await measure(23, 25);
+      // From `sm` up the step is 12px (1.5 spacing units) — the desktop project's own viewport.
+      await measure(11, 13);
     }
   });
 

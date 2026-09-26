@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { CONTACT_ADDRESS_MODES, joinContactAddresses, replyToHeader } from "@/modules/contact/domain/shown-address";
 import type { ShownContactAddressState } from "@/modules/contact/shown-address";
 import ActionForm from "@/shared/forms/ActionForm";
-import RecallField, { RecallRadio } from "@/shared/forms/recall";
+import { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
@@ -20,6 +20,8 @@ type Props = {
   state: ShownContactAddressState;
   /** `EMAIL_REPLY_TO`, the mailbox on the Mailgun domain — the default choice's address. */
   mailbox: string | null;
+  /** `CONTACT_SMTP_USER` when it is an address: the Gmail the two other modes show, never typed. */
+  configuredGmail: string | null;
   /** The addresses in force, in order (`resolveShownContactAddresses`). */
   resolved: readonly string[];
   /** Administrator only (§291); the service refuses anybody else. */
@@ -31,12 +33,12 @@ type Props = {
  * «Adresa de contact afișată» (§442; the owner, 2026-09-26: "configure the default mail shown…
  * switch and show the club's Gmail, or show both").
  *
- * The contact recipients' shape (§164): a Server Component, one form, three radios and a box for
- * the Gmail, Save behind the §384 confirmation. The choice is what the footer, the contact page,
+ * The contact recipients' shape (§164): a Server Component, one form, three radios and the Gmail
+ * read-only from configuration (§442 as amended), Save behind the §384 confirmation. The choice is what the footer, the contact page,
  * the legal texts started from the platform's text and the bib print, and every email's Reply-To.
  * The sender does not change, and the panel says why.
  */
-export default async function ShownAddressPanel({ locale, state, mailbox, resolved, mayEdit, openWhen }: Props) {
+export default async function ShownAddressPanel({ locale, state, mailbox, configuredGmail, resolved, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const shown = joinContactAddresses(resolved, locale) || "—";
@@ -71,7 +73,7 @@ export default async function ShownAddressPanel({ locale, state, mailbox, resolv
         <Box sx={{ mt: 1.5 }}>
           <ActionForm
             action={updateShownContactAddressAction}
-            messages={await refusalMessages({ mode: t("emails.shownAddress.legend"), gmail: t("emails.shownAddress.gmail") })}
+            messages={await refusalMessages({ mode: t("emails.shownAddress.legend") })}
             confirm={{
               title: t("confirm.shownAddressTitle"),
               body: t("confirm.shownAddressBody"),
@@ -94,22 +96,27 @@ export default async function ShownAddressPanel({ locale, state, mailbox, resolv
                     component="label"
                     sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 44, cursor: "pointer" }}
                   >
-                    <RecallRadio name="mode" value={mode} defaultChecked={state.mode === mode} style={{ width: 20, height: 20 }} />
+                    <RecallRadio
+                      name="mode"
+                      value={mode}
+                      defaultChecked={state.mode === mode}
+                      disabled={mode !== "mailbox" && !configuredGmail}
+                      style={{ width: 20, height: 20 }}
+                    />
                     <Typography component="span" variant="body2" sx={{ overflowWrap: "anywhere" }}>
-                      {t(`emails.shownAddress.modes.${mode}`, { mailbox: mailbox ?? t("emails.shownAddress.noMailbox") })}
+                      {t(`emails.shownAddress.modes.${mode}`, {
+                        mailbox: mailbox ?? t("emails.shownAddress.noMailbox"),
+                        gmail: configuredGmail ?? t("emails.shownAddress.noGmail"),
+                      })}
                     </Typography>
                   </Box>
                 ))}
               </Box>
-              <RecallField
-                name="gmail"
-                type="email"
-                label={t("emails.shownAddress.gmail")}
-                defaultValue={state.gmail ?? ""}
-                size="small"
-                helperText={t("emails.shownAddress.gmailHelp")}
-                slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false } }}
-              />
+              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }} data-testid="shown-contact-address-gmail">
+                {configuredGmail
+                  ? t("emails.shownAddress.gmailConfigured", { gmail: configuredGmail })
+                  : t("emails.shownAddress.gmailMissing")}
+              </Typography>
               <Box>
                 <GlyphSubmitButton label={t("emails.shownAddress.save")} pendingLabel={t("emails.shownAddress.saving")} icon="save" />
               </Box>

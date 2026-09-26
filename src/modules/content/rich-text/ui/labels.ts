@@ -118,6 +118,28 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageCropReset: rt("imageCropReset"),
     // Raw, with its four placeholders: the island substitutes the percentages itself.
     imageCropPosition: rt.raw("imageCropPosition") as string,
+    // The shapes and the card's centre (§454).
+    imageShapes: {
+      presets: rt("imageShapes"),
+      preset: {
+        free: rt("imageShapeFree"),
+        "16:9": rt("imageShape169"),
+        "4:3": rt("imageShape43"),
+        "1:1": rt("imageShape11"),
+        "4:5": rt("imageShape45"),
+      },
+      target: rt("imageCropTarget"),
+      targetCrop: rt("imageCropTargetCrop"),
+      targetFocus: rt("imageCropTargetFocus"),
+      focusHelp: rt("imageFocusHelp"),
+      focusReset: rt("imageFocusReset"),
+      // Raw, with its two placeholders: the island substitutes the percentages itself.
+      focusPosition: rt.raw("imageFocusPosition") as string,
+      cardPreview: rt("imageCardPreview"),
+    },
+    imageUploadShapeHelp: rt("imageUploadShapeHelp"),
+    // Raw, with its placeholder: the island names the shape itself.
+    imageUploadCropped: rt.raw("imageUploadCropped") as string,
     imageRemove: rt("imageRemove"),
     imageDone: rt("imageDone"),
     imageClose: rt("imageClose"),

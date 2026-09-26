@@ -289,6 +289,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       editorialStatus: events.editorialStatus,
       startsAt: events.startsAt,
       registrationOpensAt: events.registrationOpensAt,
+      registrationOpensSoon: events.registrationOpensSoon,
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
       addresses: sql<number>`count(*)::int`,
@@ -302,6 +303,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       events.editorialStatus,
       events.startsAt,
       events.registrationOpensAt,
+      events.registrationOpensSoon,
       events.registrationClosesAt,
       events.publishedAt,
     );

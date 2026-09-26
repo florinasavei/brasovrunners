@@ -53,7 +53,7 @@ let admin: StaffUser;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("@/modules/staff-identity/session", () => ({
   requireStaff: async () => volunteer,
-  requireStaffRole: async () => admin,
+  requireStaffCapability: async () => admin,
 }));
 
 const { createRegistrationAction } = await import("@/app/[locale]/admin/registrations/actions");

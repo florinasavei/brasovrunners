@@ -60,10 +60,16 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await expect(page.getByText("Ciornă", { exact: false }).first()).toBeVisible();
   });
 
-  test("does not offer New version to an Administrator, who may only read", async ({ page }) => {
-    await signIn(page, "Dev Administrator");
+  test("does not offer New version to an Organizer, who may only read (§450)", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/legal");
     await expect(page.getByRole("link", { name: "Versiune nouă" })).toHaveCount(0);
+  });
+
+  test("offers New version to an Administrator, who runs the club's legal texts (§450)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/legal");
+    await expect(page.getByRole("link", { name: "Versiune nouă" }).first()).toBeVisible();
   });
 
   /**
@@ -155,7 +161,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
   test("offers one download per language on the version page, and the file is a PDF", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/legal");
-    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):visible').first().click();
+    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
     await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}$/);
 
     const download = page.waitForEvent("download");

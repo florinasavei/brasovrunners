@@ -90,7 +90,7 @@ export function confirmationDueWords(locale: string, days: number): string {
  */
 export function confirmationDueMoment(locale: string, due: { at: Date; startsAt: Date }, formatted: string): string {
   if (!confirmationDueAtStart(due)) return formatted;
-  return locale === "en" ? `the start, ${formatted}` : `start, ${formatted}`;
+  return locale === "en" ? `the start, ${formatted}` : `la start, ${formatted}`;
 }
 
 /**

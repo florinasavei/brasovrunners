@@ -27,6 +27,11 @@ import { sampleValuesIn } from "@/modules/notifications/email-copy-fields";
  */
 type Decision = { value: string; placeholder?: EmailCopyPlaceholder; everywhere: boolean };
 
+const FORMER_BARE_HOUR = {
+  ro: { hold: "vineri, 2 oct. 2026, 18:30", signed: "luni, 28 sept. 2026, 19:42" },
+  en: { hold: "Friday, 2 Oct 2026, 18:30", signed: "Monday, 28 Sept 2026, 19:42" },
+} as const;
+
 const DECISIONS: readonly Decision[] = [
   { value: "ana.popescu@example.org", everywhere: true },
   ...(["ro", "en"] as const).flatMap((locale): Decision[] => [
@@ -39,6 +44,9 @@ const DECISIONS: readonly Decision[] = [
     { value: EMAIL_SAMPLE[locale].eventChecklist, placeholder: "eventChecklist", everywhere: true },
     { value: EMAIL_SAMPLE[locale].holdExpiresAtFormatted, placeholder: "holdExpiresAtFormatted", everywhere: true },
     { value: EMAIL_SAMPLE[locale].signedAtFormatted, placeholder: "signedAtFormatted", everywhere: true },
+    // The two moments as they read before "la" / "at" came before the hour (§452).
+    { value: FORMER_BARE_HOUR[locale].hold, placeholder: "holdExpiresAtFormatted", everywhere: true },
+    { value: FORMER_BARE_HOUR[locale].signed, placeholder: "signedAtFormatted", everywhere: true },
     { value: EMAIL_SAMPLE[locale].staffRole, placeholder: "staffRole", everywhere: false },
     { value: EMAIL_SAMPLE[locale].inviterName, placeholder: "inviterName", everywhere: true },
   ]),
@@ -81,9 +89,9 @@ describe("§373 the guard refuses the sample exactly as it writes it", () => {
   });
 
   it("names the field and saves the value's place for it, in the subject and the words", () => {
-    expect(sampleValuesIn({ subject: "Salut, Ana Popescu", paragraphs: ["Ne vedem pe vineri, 2 oct. 2026, 18:30."] }, "COMPLETE_DECLARATION", "ro")).toEqual([
+    expect(sampleValuesIn({ subject: "Salut, Ana Popescu", paragraphs: ["Ne vedem vineri, 2 oct. 2026, la 18:30."] }, "COMPLETE_DECLARATION", "ro")).toEqual([
       { field: "subject", value: "Ana Popescu", placeholder: "participantName" },
-      { field: "body", value: "vineri, 2 oct. 2026, 18:30", placeholder: "holdExpiresAtFormatted" },
+      { field: "body", value: "vineri, 2 oct. 2026, la 18:30", placeholder: "holdExpiresAtFormatted" },
     ]);
   });
 });

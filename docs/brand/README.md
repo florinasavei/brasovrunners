@@ -73,7 +73,7 @@ never be tested.
 ### The ancestor is already installed
 
 The read-me names it: **"Base font: Roboto Black Italic."** Roboto is already loaded by
-`next/font` in this app, is Apache-2.0, and has complete Romanian coverage. Roboto at weight
+`next/font/local` from `src/theme/fonts/` in this app (§460; Google's current Roboto ships under the SIL OFL 1.1, the licence beside the files), and has complete Romanian coverage. Roboto at weight
 900, italic, is therefore the closest possible stand-in for the kit's face, costs nothing to
 add, raises no licence question, and can set "Brașov" correctly. The slice effect is
 reproducible in CSS over any typeface.

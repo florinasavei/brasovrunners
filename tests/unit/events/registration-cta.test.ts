@@ -25,6 +25,7 @@ function event(overrides: Partial<RegistrationCtaInput> = {}): RegistrationCtaIn
     eventStatus: "SCHEDULED",
     startsAt: START,
     registrationOpensAt: null,
+    registrationOpensSoon: false,
     registrationClosesAt: null,
     publishedAt: PUBLISHED,
     externalRegistrationUrl: null,
@@ -113,6 +114,18 @@ describe("BR-REQ-011-01 the window, stated to a visitor", () => {
       kind: "NOT_YET_OPEN",
       opensAt: PUBLISHED,
     });
+  });
+
+  it("says «soon» with no date while the organizer has announced the opening without one (§451)", () => {
+    // After publication, before the start: the window would be open but for the switch.
+    expect(registrationCta(event({ registrationOpensSoon: true }), DURING)).toEqual({ kind: "NOT_YET_OPEN", opensAt: null });
+    // The switch outranks a stray date too — the stricter of the two answers wins.
+    expect(registrationCta(event({ registrationOpensSoon: true, registrationOpensAt: new Date("2026-09-10T06:00:00Z") }), DURING)).toEqual({
+      kind: "NOT_YET_OPEN",
+      opensAt: null,
+    });
+    // Cancelled still outranks everything.
+    expect(registrationCta(event({ registrationOpensSoon: true, eventStatus: "CANCELLED" }), DURING)).toEqual({ kind: "CANCELLED" });
   });
 
   it("says registration is closed once the window has passed", () => {

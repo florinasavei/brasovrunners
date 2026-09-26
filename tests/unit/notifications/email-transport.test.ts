@@ -62,12 +62,17 @@ describe("§443 the message groups and the setting", () => {
     expect(emailGroupOf("DECLARATION_ARCHIVE", false)).toBe("club");
   });
 
-  it("defaults to the club's mail and the newsletter through Gmail, every participant through Mailgun, deferral at the cap and no overflow", () => {
+  it("defaults to the club's mail through Gmail, every participant and the newsletter through Mailgun, deferral at the cap and no overflow", () => {
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "CLUB_CONFIRMATION_NOTICE", false)).toBe("gmail");
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "REGISTRATION_CONFIRMED", true)).toBe("gmail");
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "REGISTRATION_CONFIRMED", false)).toBe("mailgun");
     expect(preferredTransport(DEFAULT_EMAIL_TRANSPORT, "ORGANIZER_MESSAGE", false)).toBe("mailgun");
-    expect(DEFAULT_EMAIL_TRANSPORT.groups.newsletter).toBe("gmail");
+    // §443 as amended: a newsletter to many addresses from a personal Gmail is the bulk pattern Google restricts.
+    expect(DEFAULT_EMAIL_TRANSPORT.groups.newsletter).toBe("mailgun");
+    expect(defaultEmailTransportFor("production").groups.newsletter).toBe("mailgun");
+    expect(defaultEmailTransportFor("qa").groups.newsletter).toBe("mailgun");
+    // Gmail only for mail whose recipient is the club itself.
+    expect(Object.entries(DEFAULT_EMAIL_TRANSPORT.groups).filter(([, road]) => road === "gmail").map(([group]) => group)).toEqual(["club"]);
     // The privacy notice names Gmail as the club's mailbox, not as a road to participants.
     expect(DEFAULT_EMAIL_TRANSPORT.overflowToGmail).toBe(false);
     expect(DEFAULT_EMAIL_TRANSPORT.atGmailCap).toBe("defer");

@@ -778,14 +778,14 @@ const T = {
     completeDeclaration: {
       subject: (d: TemplateData) =>
         d.confirmLater
-          ? `Ești înscris — confirmă participarea până la ${d.holdExpiresAtFormatted ?? "termen"}`
+          ? `Ești înscris — confirmă participarea până ${d.holdExpiresAtFormatted ?? "termen"}`
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
           ? // No "the race is free" (§419): said of any event more than a day away, paid or not a race.
             `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce semnezi declarația pe proprie răspundere. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
-        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
+        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
       ],
       action: "Semnează declarația",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
@@ -805,7 +805,7 @@ const T = {
       */
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
-          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până la ${d.holdExpiresAtFormatted} (ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}); după acest termen, locul trece la următorul de pe lista de așteptare.`
+          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până ${d.holdExpiresAtFormatted} (ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}); după acest termen, locul trece la următorul de pe lista de așteptare.`
           : `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)} de la ofertă să semnezi declarația pe propria răspundere; după aceea, locul trece la următorul de pe lista de așteptare.`,
       ],
       action: "Confirmă locul",
@@ -873,7 +873,7 @@ const T = {
     declarationSigned: {
       subject: "Declarația ta semnată",
       body: (d: TemplateData) => [
-        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
         "Kitul de participare se ridică personal, pe baza actului de identitate scris în declarație.",
         "Dacă nu vezi atașamentul, același document este la linkul de mai jos.",
       ],
@@ -899,7 +899,7 @@ const T = {
       subject: (d: TemplateData) => `Declarație semnată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Salut,",
       body: (d: TemplateData) => [
-        `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
+        `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}.`,
         /*
           The PDF attached masks the identity document (§320); the sentence says how, how long the copy
           is kept — nothing sweeps a mailbox, so the email is where the reader learns when to delete
@@ -912,7 +912,7 @@ const T = {
       // The signer's copy of a group run's optional self-declaration (§393): the PDF attached, no token.
       subject: (d: TemplateData) => `Declarația ta pe propria răspundere — ${d.eventTitle ?? "alergarea de grup"}`,
       body: (d: TemplateData) => [
-        `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
         `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Pe platforma clubului, declarația se șterge la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare.`,
       ],
     },
@@ -921,7 +921,7 @@ const T = {
       subject: (d: TemplateData) => `Declarație semnată (alergare de grup): ${d.participantName || "alergător"} — ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Salut,",
       body: (d: TemplateData) => [
-        `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
+        `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}.`,
         // The legitimate-interest, three-year choice of the notice, and the right to object (§419).
         `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la alergare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare, când platforma o șterge.`,
       ],

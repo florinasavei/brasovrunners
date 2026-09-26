@@ -22,6 +22,7 @@ function event(overrides: Partial<RegistrationWindowInput> = {}): RegistrationWi
     eventStatus: "SCHEDULED",
     startsAt: START,
     registrationOpensAt: null,
+    registrationOpensSoon: false,
     registrationClosesAt: null,
     publishedAt: PUBLISHED,
     ...overrides,
@@ -53,6 +54,31 @@ describe("BR-REQ-011-01 registration window defaults", () => {
     // Closes before the event starts, and stays closed after.
     expect(registrationState(e, closes)).toBe("CLOSED");
     expect(registrationState(e, START)).toBe("CLOSED");
+  });
+});
+
+describe("BR-REQ-011-01 «Înscrierile se deschid în curând» (§451)", () => {
+  it("keeps an internal window ahead whatever the clock says, until the close", () => {
+    const soon = event({ registrationOpensSoon: true });
+    expect(registrationState(soon, new Date(PUBLISHED.getTime() + 1000))).toBe("NOT_YET_OPEN");
+    expect(registrationState(soon, new Date(START.getTime() - 1000))).toBe("NOT_YET_OPEN");
+    // A stray opening date already passed does not open it.
+    expect(registrationState(event({ registrationOpensSoon: true, registrationOpensAt: PUBLISHED }), new Date(START.getTime() - 1000))).toBe("NOT_YET_OPEN");
+    // Once the close has passed the window is over, opened or not.
+    expect(registrationState(soon, START)).toBe("CLOSED");
+    expect(registrationState(event({ registrationOpensSoon: true, registrationClosesAt: new Date("2026-09-20T00:00:00Z") }), new Date("2026-09-20T00:00:00Z"))).toBe("CLOSED");
+  });
+
+  it("means nothing where the site takes no registration, and never outranks a cancellation", () => {
+    const during = new Date("2026-09-15T00:00:00Z");
+    expect(registrationState(event({ registrationOpensSoon: true, registrationMode: "EXTERNAL" }), during)).toBe("EXTERNAL");
+    expect(registrationState(event({ registrationOpensSoon: true, registrationMode: "NONE" }), during)).toBe("NOT_APPLICABLE");
+    expect(registrationState(event({ registrationOpensSoon: true, eventStatus: "CANCELLED" }), during)).toBe("EVENT_CANCELLED");
+  });
+
+  it("has no opening date to name", () => {
+    expect(upcomingRegistrationOpening(event({ registrationOpensSoon: true }), new Date("2026-09-15T00:00:00Z"))).toBeNull();
+    expect(openRegistrationClosing(event({ registrationOpensSoon: true }), new Date("2026-09-15T00:00:00Z"))).toBeNull();
   });
 });
 

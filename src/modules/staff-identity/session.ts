@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
-import { type StaffRole, atLeast } from "./domain/roles";
+import type { StaffRole } from "./domain/roles";
 import { findStaffUserById } from "./repository";
 
 /**
@@ -70,19 +70,23 @@ export async function requireStaff(): Promise<StaffUser> {
 }
 
 /**
- * A coarse gate: "at least this role".
+ * The door of every staff action: "may this person do *this*", asked by name.
  *
- * The hierarchy itself lives in `domain/roles.ts` and is imported rather than restated — this
- * file used to keep its own copy of the rank, which is one rule in two places and exactly the
- * thing §1.5 forbids. The interesting rules are conditional on the content itself ("their own
- * drafts") and live there too; every service consults them after this one has answered.
+ * The argument is one of the capabilities in `domain/roles.ts` — `canManagePlatform`,
+ * `canWriteLegalTexts`, `canManageStaff`, … — never a role. The door used to take a bare rank
+ * (`requireStaffRole("ADMIN")`), which let a page ask `canWriteLegalTexts` while its action asked
+ * "at least ADMIN": two answers to one question that could drift apart with nothing noticing.
+ * Now the page, the action and the service all name the same predicate, and
+ * `tests/unit/staff/no-raw-role-checks.test.ts` refuses a raw role comparison anywhere else.
+ * The rules that depend on the content itself ("their own drafts", "not a Superadministrator's
+ * row") are the services' to assert after this one has answered.
  */
-export async function requireStaffRole(minimum: StaffRole): Promise<StaffUser> {
+export async function requireStaffCapability(capability: (role: StaffRole) => boolean): Promise<StaffUser> {
   const staffUser = await requireStaff();
-  if (!atLeast(staffUser.role, minimum)) {
+  if (!capability(staffUser.role)) {
     throw new DomainError(
       "FORBIDDEN",
-      `role ${staffUser.role} is below the required ${minimum}`,
+      `role ${staffUser.role} may not ${capability.name || "do this"}`,
     );
   }
   return staffUser;

@@ -10,7 +10,16 @@ import {
   tableColumnFractions,
 } from "../domain/schema";
 import { shortenUrls } from "../domain/short-url";
-import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
+import {
+  CARD_FRAME_SX,
+  cardCoverSx,
+  cardFrameGeometry,
+  cropGeometry,
+  cropImageSx,
+  cropWindowSx,
+  imageCaptionSx,
+  imageFigureSx,
+} from "./image-layout";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
 import { tableSx } from "./table-layout";
@@ -39,6 +48,7 @@ export default function RichText({
   body,
   links = true,
   pictures = "page",
+  framed = pictures === "card",
 }: {
   body: unknown;
   links?: boolean;
@@ -48,6 +58,12 @@ export default function RichText({
    * which is how the browser picks the smallest stored width that is still sharp there.
    */
   pictures?: PictureColumn;
+  /**
+   * Every picture in the one 16∶9 frame at its focal point (§454) rather than its natural ratio or
+   * the organizer's crop: always on a listing card, and on the featured hero's summary, which is a
+   * card of its own above the listing. The event page never frames.
+   */
+  framed?: boolean;
 }) {
   const doc = readRichText(body);
   const blocks = doc.content ?? [];
@@ -62,7 +78,7 @@ export default function RichText({
   return (
     <>
       {blocks.map((block, index) => (
-        <Fragment key={index}>{renderBlock(block, floats, links, pictures)}</Fragment>
+        <Fragment key={index}>{renderBlock(block, floats, links, pictures, framed)}</Fragment>
       ))}
       {floats && <Box sx={{ clear: "both" }} />}
     </>
@@ -74,7 +90,13 @@ export default function RichText({
  * written before the alignment existed, and a false one emits exactly the styles it emitted
  * before: the clearing rules are not merely no-ops there, they are absent.
  */
-function renderBlock(block: RichTextBlock, floats = false, links = true, pictures: PictureColumn = "page"): ReactNode {
+function renderBlock(
+  block: RichTextBlock,
+  floats = false,
+  links = true,
+  pictures: PictureColumn = "page",
+  framed = pictures === "card",
+): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
@@ -103,17 +125,18 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
       // A picture the organizer cropped (§241) is the same <img> inside a window that shows the
       // rectangle they drew. The window is emitted only when there is a crop, so every picture
       // written before today renders the markup it rendered yesterday, byte for byte.
+      if (framed) return renderFramedPicture(block, pictures, floats);
       const crop = cropGeometry(block.attrs.crop, block.attrs);
       /*
         The ladder (§414): a picture stored since then names its smaller siblings, and `sizes`
         says how wide it is drawn here — the column's share of the screen, magnified by the crop
         when there is one, because a cropped photograph is drawn `1 / crop.w` times its window.
         A picture from before has no siblings, gets no `srcset`, and renders the markup it
-        rendered yesterday. A card's picture is always the card's width (`CARD_EXCERPT_SX`).
+        rendered yesterday. A card's or the hero's picture is drawn by `renderFramedPicture` instead.
       */
       const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
       const sizes = srcSet
-        ? pictureSizes(pictures, pictures === "card" ? 100 : block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
+        ? pictureSizes(pictures, block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
         : undefined;
       return (
         <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
@@ -265,7 +288,7 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
                       rowSpan={cell.attrs?.rowspan}
                     >
                       {cell.content.map((inner, innerIndex) => (
-                        <Fragment key={innerIndex}>{renderBlock(inner, false, links, pictures)}</Fragment>
+                        <Fragment key={innerIndex}>{renderBlock(inner, false, links, pictures, framed)}</Fragment>
                       ))}
                     </Box>
                   ))}
@@ -277,6 +300,44 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
       );
     }
   }
+}
+
+/**
+ * A picture on a listing card or the featured hero (§454): the same 16∶9 frame on every card, over
+ * the organizer's crop, centred on the focal point the club picked (`cardFrameGeometry`). On a card
+ * the figure's column share and side are overridden by the card's own rules (`CARD_EXCERPT_SX`); on
+ * the hero, which is the page's width, they are the organizer's as on the event page, and only the
+ * shape is the frame's. The caption stays under it.
+ */
+function renderFramedPicture(
+  block: Extract<RichTextBlock, { type: "image" }>,
+  pictures: PictureColumn,
+  floats: boolean,
+): ReactNode {
+  const card = pictures === "card";
+  const frame = cardFrameGeometry(block.attrs);
+  const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
+  const sizes = srcSet ? pictureSizes(pictures, card ? 100 : block.attrs.widthPercent, frame?.magnify ?? 1) : undefined;
+  return (
+    <Box component="figure" sx={imageFigureSx(block.attrs, card ? false : floats)}>
+      <Box className="rt-card-frame" data-testid="card-picture" sx={CARD_FRAME_SX}>
+        <Box
+          component="img"
+          src={block.attrs.src}
+          srcSet={srcSet}
+          sizes={sizes}
+          alt={block.attrs.alt}
+          loading="lazy"
+          sx={frame ? cropImageSx(frame.geometry) : cardCoverSx(block.attrs.focus)}
+        />
+      </Box>
+      {block.attrs.caption !== "" && (
+        <Typography component="figcaption" variant="body2" color="text.secondary" sx={imageCaptionSx(block.attrs)}>
+          {block.attrs.caption}
+        </Typography>
+      )}
+    </Box>
+  );
 }
 
 /**

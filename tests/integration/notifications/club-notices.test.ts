@@ -326,6 +326,17 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
     expect((await readClubNotices(db)).declarations.to).toBe(ARCHIVE);
   });
 
+  it("names the refused list by its path, never by the setting's first word or an index (§457)", async () => {
+    // The owner's Bcc that would not save: the refusal named `participants`, which is no box.
+    const refusal = await setNotices(db, {
+      declarations: { to: ARCHIVE, cc: [], bcc: ["arhiva@example.ro", "not an address"] },
+      confirmations: { to: [] },
+      participants: { bcc: ["nope"] },
+    }).catch((error: unknown) => error);
+    expect(refusal).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect((refusal as { fields: readonly string[] }).fields).toEqual(["declarations.bcc", "participants.bcc"]);
+  });
+
   it("shows the club what is queued: the unsent rows, oldest first (§243)", async () => {
     await approve(db);
     await setNotices(db, {

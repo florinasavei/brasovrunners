@@ -46,6 +46,7 @@ const row = (id: string, fields: Partial<Row> = {}): Row => ({
   eventStatus: "SCHEDULED",
   startsAt: FUTURE,
   registrationOpensAt: null,
+  registrationOpensSoon: false,
   registrationClosesAt: null,
   publishedAt: PAST,
   externalRegistrationUrl: null,

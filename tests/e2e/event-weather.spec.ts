@@ -30,7 +30,7 @@ const row = (page: Page, label: string) =>
   page.locator('[data-testid="event-facts"] dt').filter({ hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
 
 test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
-  test("the Romanian page says the forecast for a start within seven days, and credits Open-Meteo", async ({ page }) => {
+  test("the Romanian page says the forecast for a start within seven days; Open-Meteo is credited in the footer, not the row", async ({ page }) => {
     await page.goto(SOON.ro);
     const weather = row(page, "Vremea");
     await expect(weather).toBeVisible();
@@ -39,10 +39,12 @@ test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
     await expect(weather).toContainText("20% șanse de ploaie");
     await expect(weather).toContainText("vânt 11 km/h");
 
-    // The credit the data's licence asks for, a thumb's target like every link on the page.
-    const credit = weather.getByRole("link", { name: "Prognoză: Open-Meteo" });
-    await expect(credit).toHaveAttribute("href", /open-meteo\.com/);
-    expect((await credit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The credit the data's licence asks for is the footer fold's alone (§455), never the row's.
+    await expect(page.locator("#main").getByText("Open-Meteo")).toHaveCount(0);
+    const footerCredit = page.getByTestId("footer-weather-credit");
+    await page.getByTestId("footer-about-fold").locator("summary").click();
+    await expect(footerCredit).toBeVisible();
+    await expect(footerCredit).toHaveAttribute("href", /open-meteo\.com/);
 
     // The row's glyph is the forecast's own, drawn at the row glyph's size.
     const glyph = page.locator('[data-testid="event-facts"] dt').filter({ hasText: /^Vremea$/ }).locator("svg");
@@ -61,7 +63,7 @@ test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
     await expect(weather).toContainText("14 °C");
     await expect(weather).toContainText("20% chance of rain");
     await expect(weather).toContainText("wind 11 km/h");
-    await expect(weather.getByRole("link", { name: "Forecast: Open-Meteo" })).toBeVisible();
+    await expect(page.locator("#main").getByText("Open-Meteo")).toHaveCount(0);
   });
 
   test("a start more than seven days away has no weather row", async ({ page }) => {

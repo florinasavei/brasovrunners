@@ -101,14 +101,14 @@ describe("BR-REQ-040-03 criterion 4 the event's facts carry the day of the week,
     const early = new Date("2026-09-20T09:00:00Z");
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: early, variant: "compact", links: false }));
     expect(html).toContain("Sâmbătă, 16 ian. 2027");
-    expect(html).toContain("Înscrierile se deschid pe joi, 1 oct. 2026, 18:00");
+    expect(html).toContain("Înscrierile se deschid joi, 1 oct. 2026, la 18:00");
   });
 
   it("and in English", async () => {
     pageLocale = "en";
     const early = new Date("2026-09-20T09:00:00Z");
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: early, variant: "compact", links: false }));
-    expect(html).toContain("Thu, 1 Oct 2026, 18:00");
+    expect(html).toContain("Registration opens on Thu, 1 Oct 2026, at 18:00");
   });
 });
 

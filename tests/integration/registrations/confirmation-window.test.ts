@@ -118,15 +118,15 @@ describe("the participation window (§104)", () => {
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     // The deadline with its weekday, and the English half in English (§349).
     expect(message.subject).toBe(
-      "Ești înscris — confirmă participarea până la vineri, 9 oct. 2026, 09:00 / You are registered — confirm your participation by Friday, 9 Oct 2026, 09:00",
+      "Ești înscris — confirmă participarea până vineri, 9 oct. 2026, la 09:00 / You are registered — confirm your participation by Friday, 9 Oct 2026, at 09:00",
     );
     // Never "the race is free" (§419): said of any event more than a day away, paid or not a race.
     expect(message.text).not.toContain("Cursa e gratuită");
     expect(message.text).toContain("Înscrierea este completă doar după ce semnezi declarația pe proprie răspundere.");
     expect(message.text).toContain("Your registration is complete only once you sign the declaration of own responsibility.");
     expect(message.text).toContain("pe hârtie la masa de înscrieri");
-    expect(message.text).toContain("Dacă se formează lista de așteptare, locul îți este ținut până la vineri, 9 oct. 2026, 09:00");
-    expect(message.text).toContain("If a waiting list forms, the place is held for you until Friday, 9 Oct 2026, 09:00");
+    expect(message.text).toContain("Dacă se formează lista de așteptare, locul îți este ținut până vineri, 9 oct. 2026, la 09:00");
+    expect(message.text).toContain("If a waiting list forms, the place is held for you until Friday, 9 Oct 2026, at 09:00");
   });
 
   it("keeps the thirty minutes inside the window, on a weekly run, and when the window is switched off", async () => {
@@ -244,10 +244,10 @@ describe("the participation window (§104)", () => {
     const [queued] = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, first.id)).then((rows) => rows.filter((r) => r.messageType === "COMPLETE_DECLARATION"));
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(message.subject).toBe(
-      "Ești înscris — confirmă participarea până la start, duminică, 11 oct. 2026, 09:00 / You are registered — confirm your participation by the start, Sunday, 11 Oct 2026, 09:00",
+      "Ești înscris — confirmă participarea până la start, duminică, 11 oct. 2026, la 09:00 / You are registered — confirm your participation by the start, Sunday, 11 Oct 2026, at 09:00",
     );
-    expect(message.text).toContain("locul îți este ținut până la start, duminică, 11 oct. 2026, 09:00");
-    expect(message.text).toContain("the place is held for you until the start, Sunday, 11 Oct 2026, 09:00");
+    expect(message.text).toContain("locul îți este ținut până la start, duminică, 11 oct. 2026, la 09:00");
+    expect(message.text).toContain("the place is held for you until the start, Sunday, 11 Oct 2026, at 09:00");
 
     // The window opens: the reminder goes, as with any deadline.
     expect((await runRegistrationMaintenance(db, new Date(START.getTime() - 7 * DAY + 60_000))).confirmationsQueued).toBe(1);

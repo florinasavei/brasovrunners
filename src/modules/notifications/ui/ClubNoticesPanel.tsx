@@ -12,7 +12,7 @@ import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
-import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
+import { mailboxesReceivingCopies, type DeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -46,22 +46,34 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   /*
-    How many mailboxes receive anything from these lists, for the closed fold's summary (§336):
-    the declaration copy as it resolves (the setting, or `DECLARATIONS_ARCHIVE_TO`), the
-    confirmation notices and the hidden copies of the participants' messages. A mailbox on two
-    lists is one mailbox, compared without case the way the lists themselves drop a repeat.
+    The mailboxes that receive anything from these lists, for the closed fold's summary (§336).
+    The declaration's Cc and Bcc count only while it has a "to": the alert below says of idle
+    ones that none is sent, and the summary must not say they receive copies.
   */
-  const mailboxes = new Set(
-    [declarations.to, ...declarations.cc, ...declarations.bcc, ...notices.confirmations.to, ...notices.participants.bcc]
-      .filter((address): address is string => Boolean(address))
-      .map((address) => address.toLowerCase()),
-  ).size;
+  const mailboxes = mailboxesReceivingCopies(declarations, notices);
+  /*
+    The declaration's Cc and Bcc are kept while nothing sends them: a copy needs an address it is
+    *for* (§244, `resolveDeclarationCopies`), and "Nicio adresă" alone read as a Bcc that had not
+    saved (§457). Said in words next to the lists, with the addresses.
+  */
+  const idleDeclarationCopies = declarations.to === null && declarations.cc.length + declarations.bcc.length > 0;
+  // A list box grows with what it holds, so every address typed into it is in view (§457).
+  const listBox = { multiline: true, minRows: 1, maxRows: 6 } as const;
 
   return (
     <Panel
       title={t("emails.clubNotices.title")}
       intro={t("emails.clubNotices.intro")}
-      aside={t("emails.clubNotices.aside", { count: mailboxes })}
+      /*
+        The closed fold names the mailboxes, not only how many (§457; the owner: "trebuie să pot
+        vedea pe cine am pus în BCC"): the club's own addresses, read by the roles this panel is
+        drawn for (`maySeeQueue`), so the summary may carry them.
+      */
+      aside={
+        mailboxes.length > 0
+          ? t("emails.clubNotices.asideNames", { count: mailboxes.length, addresses: formatAddressList(mailboxes) })
+          : t("emails.clubNotices.aside", { count: 0 })
+      }
       collapsible
       openWhen={openWhen}
       id="club-notices"
@@ -73,6 +85,20 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           to: declarations.to ?? "—",
           cc: formatAddressList(declarations.cc) || "—",
           bcc: formatAddressList(declarations.bcc) || "—",
+        })}
+      </Typography>
+      {idleDeclarationCopies && (
+        <Alert severity="warning" sx={{ py: 0.5, mt: 0.5 }} data-testid="club-notices-idle-copies">
+          {t("emails.clubNotices.declarationCopiesIdle", {
+            cc: formatAddressList(declarations.cc) || "—",
+            bcc: formatAddressList(declarations.bcc) || "—",
+          })}
+        </Alert>
+      )}
+      {/* Every list in force is named, the confirmation notices too, so nothing saved is only in a box (§457). */}
+      <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+        {t("emails.clubNotices.confirmationsInForce", {
+          to: formatAddressList(notices.confirmations.to) || "—",
         })}
       </Typography>
       {/* The hidden copies of every participant message, named in force like the lists above (2026-09-22). */}
@@ -123,6 +149,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           />
           <RecallField
             name="declarationsCc"
+            {...listBox}
             label={t("emails.clubNotices.declarationsCc")}
             defaultValue={formatAddressList(notices.declarations.cc)}
             size="small"
@@ -135,6 +162,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           </Alert>
           <RecallField
             name="declarationsBcc"
+            {...listBox}
             label={t("emails.clubNotices.declarationsBcc")}
             defaultValue={formatAddressList(notices.declarations.bcc)}
             size="small"
@@ -143,6 +171,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           />
           <RecallField
             name="confirmationsTo"
+            {...listBox}
             label={t("emails.clubNotices.confirmationsTo")}
             defaultValue={formatAddressList(notices.confirmations.to)}
             size="small"
@@ -166,6 +195,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           </Alert>
           <RecallField
             name="participantsBcc"
+            {...listBox}
             label={t("emails.clubNotices.participantsBcc")}
             defaultValue={formatAddressList(notices.participants.bcc)}
             size="small"

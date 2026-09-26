@@ -110,6 +110,7 @@ const PUBLIC_COLUMNS = {
   offersGroupRunDeclaration: events.offersGroupRunDeclaration,
   registrationMode: events.registrationMode,
   registrationOpensAt: events.registrationOpensAt,
+  registrationOpensSoon: events.registrationOpensSoon,
   registrationClosesAt: events.registrationClosesAt,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,

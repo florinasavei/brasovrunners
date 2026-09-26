@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
+import { CLUB_TIME_ZONE, formatDay } from "../../src/i18n/dates";
 import { FEATURED, ensureRegistrationIsOpen, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -236,6 +237,9 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await expect(dialog).toContainText(`Numărul ${bib} e deja tipărit`);
     await confirmDialog(page);
     await page.waitForURL(/saved=registrationCancelled/);
+    // The day it was cancelled, as the desk and the list write it: the weekday's short date with
+    // no «pe» before it (§452) — "Înscriere anulată sâm., 26 sept. 2026".
+    const cancelledOn = formatDay(new Date(), { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
     await expect(page.getByTestId("void-bib")).toContainText(`BID ${bib} tipărit`);
     await expect(page.getByText(/Anulată:/)).toContainText(`BID ${bib} tipărit`);
 
@@ -244,7 +248,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const scanned = page.getByTestId("desk-row");
     await expect(scanned).toContainText(suffix);
     const red = page.getByTestId("desk-void");
-    await expect(red).toContainText("Înscriere anulată pe");
+    await expect(red).toContainText(`Înscriere anulată ${cancelledOn}`);
     await expect(red).toContainText(`Numărul ${bib} a fost tipărit — nu se dă`);
     await expect(scanned.getByRole("button", { name: "Marchează prezent" })).toHaveCount(0);
     await expect(scanned.getByRole("button", { name: "Confirmă pe hârtie" })).toHaveCount(0);
@@ -253,7 +257,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // And by its number, typed at the desk: the same row, the same red line — never "nobody".
     await page.goto(`/ro/admin/checkin?eventId=${eventId}&q=${bib}`);
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toHaveCount(1);
-    await expect(page.getByTestId("desk-void")).toContainText("Înscriere anulată pe");
+    await expect(page.getByTestId("desk-void")).toContainText(`Înscriere anulată ${cancelledOn}`);
 
     // The list's bibs panel names the number, whose it was and what happened, as one visible
     // link to the row — readable on a phone, not hidden in a tooltip.
@@ -265,7 +269,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     expect(widths.doc, "the registrations list overflows the viewport horizontally").toBeLessThanOrEqual(widths.view);
     const voidLine = page.locator("#main").getByTestId("registrations-void-bibs");
     await expect(voidLine).toContainText("de scos din teanc");
-    await voidLine.getByRole("link", { name: `Numărul ${bib}: ${name}, înscriere anulată pe` }).click();
+    await voidLine.getByRole("link", { name: `Numărul ${bib}: ${name}, înscriere anulată ${cancelledOn}` }).click();
     await expect(page).toHaveURL(detailUrl.replace(/\?.*$/, ""));
 
     // The banner a bulk cancel returns to names the printed numbers it voided, as the action

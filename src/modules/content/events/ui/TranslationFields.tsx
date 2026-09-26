@@ -169,6 +169,8 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.excerptEmpty")}
         initialBody={translation.excerptJson ?? fromPlainText(translation.excerpt)}
         accessibleSuffix={translation.locale.toUpperCase()}
+        // Its pictures are the listing card's, in the card's 16∶9 frame (§454).
+        cardPictures
         labels={await editorLabels()}
       />
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>

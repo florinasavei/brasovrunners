@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import {
   DEFAULT_SHOWN_CONTACT_ADDRESS,
+  defaultShownContactAddress,
   joinContactAddresses,
   replyToHeader,
+  configuredGmailAddress,
+  effectiveGmail,
   resolveShownContactAddresses,
   shownContactAddressSchema,
 } from "@/modules/contact/domain/shown-address";
@@ -18,10 +23,41 @@ const MAILBOX = "contact@mail.example.test";
 const GMAIL = "club@gmail.example.test";
 
 describe("the shown contact address, three modes", () => {
-  it("defaults to the environment's mailbox, and to nothing without it", () => {
+  it("defaults to the environment's mailbox where no Gmail is configured, and to nothing without it", () => {
     expect(DEFAULT_SHOWN_CONTACT_ADDRESS.mode).toBe("mailbox");
     expect(resolveShownContactAddresses(null, MAILBOX)).toEqual([MAILBOX]);
+    expect(resolveShownContactAddresses(null, MAILBOX, null)).toEqual([MAILBOX]);
     expect(resolveShownContactAddresses(null, undefined)).toEqual([]);
+  });
+
+  it("§442 as amended: defaults to the configured Gmail (CONTACT_SMTP_USER) until the club chooses", () => {
+    expect(defaultShownContactAddress(GMAIL)).toEqual({ mode: "gmail", gmail: GMAIL });
+    expect(defaultShownContactAddress(`  ${GMAIL} `)).toEqual({ mode: "gmail", gmail: GMAIL });
+    expect(resolveShownContactAddresses(null, MAILBOX, GMAIL)).toEqual([GMAIL]);
+    expect(replyToHeader(resolveShownContactAddresses(null, MAILBOX, GMAIL))).toBe(GMAIL);
+    // No Gmail, or one that is not an address: the mailbox, as before.
+    expect(defaultShownContactAddress(undefined)).toEqual(DEFAULT_SHOWN_CONTACT_ADDRESS);
+    expect(defaultShownContactAddress("")).toEqual(DEFAULT_SHOWN_CONTACT_ADDRESS);
+    expect(defaultShownContactAddress("not an address")).toEqual(DEFAULT_SHOWN_CONTACT_ADDRESS);
+    // A saved choice wins over the default, the mailbox included.
+    expect(resolveShownContactAddresses({ mode: "mailbox", gmail: null }, MAILBOX, GMAIL)).toEqual([MAILBOX]);
+    // The Gmail is the configuration's: a typed one kept in an older row gives way to it.
+    expect(resolveShownContactAddresses({ mode: "both", gmail: GMAIL }, MAILBOX, "other@gmail.example.test")).toEqual([
+      "other@gmail.example.test",
+      MAILBOX,
+    ]);
+  });
+
+  it("§442 as amended: the Gmail comes from configuration; a legacy typed one only where none is configured", () => {
+    expect(effectiveGmail(GMAIL, GMAIL)).toBe(GMAIL);
+    expect(effectiveGmail("typed@gmail.example.test", GMAIL)).toBe(GMAIL);
+    expect(effectiveGmail(null, GMAIL)).toBe(GMAIL);
+    expect(effectiveGmail("typed@gmail.example.test", undefined)).toBe("typed@gmail.example.test");
+    expect(effectiveGmail(null, "not an address")).toBeNull();
+    expect(configuredGmailAddress(` ${GMAIL} `)).toBe(GMAIL);
+    expect(resolveShownContactAddresses({ mode: "gmail", gmail: null }, MAILBOX, GMAIL)).toEqual([GMAIL]);
+    // A Gmail mode with no Gmail anywhere falls back to the mailbox.
+    expect(resolveShownContactAddresses({ mode: "gmail", gmail: null }, MAILBOX, null)).toEqual([MAILBOX]);
   });
 
   it("shows the Gmail alone, or the Gmail first and then the mailbox", () => {
@@ -37,9 +73,8 @@ describe("the shown contact address, three modes", () => {
   it("validates the Gmail, and asks for it only where it is shown", () => {
     expect(shownContactAddressSchema.parse({ mode: "mailbox", gmail: "" })).toEqual({ mode: "mailbox", gmail: null });
     expect(shownContactAddressSchema.parse({ mode: "gmail", gmail: `  ${GMAIL} ` })).toEqual({ mode: "gmail", gmail: GMAIL });
-    const missing = shownContactAddressSchema.safeParse({ mode: "both", gmail: "" });
-    expect(missing.success).toBe(false);
-    expect(missing.error?.issues[0].path).toEqual(["gmail"]);
+    // The Gmail is no longer typed, so a mode without one parses; the configuration supplies it.
+    expect(shownContactAddressSchema.parse({ mode: "both", gmail: "" })).toEqual({ mode: "both", gmail: null });
     expect(shownContactAddressSchema.safeParse({ mode: "gmail", gmail: "club at gmail" }).success).toBe(false);
     expect(shownContactAddressSchema.safeParse({ mode: "everything", gmail: GMAIL }).success).toBe(false);
     expect(shownContactAddressSchema.safeParse({ mode: "gmail", gmail: GMAIL, extra: 1 }).success).toBe(false);
@@ -50,6 +85,23 @@ describe("the shown contact address, three modes", () => {
     expect(joinContactAddresses([GMAIL, MAILBOX], "en")).toBe(`${GMAIL} or ${MAILBOX}`);
     expect(replyToHeader([GMAIL, MAILBOX])).toBe(`${GMAIL}, ${MAILBOX}`);
     expect(replyToHeader([])).toBeUndefined();
+  });
+});
+
+describe("the panel's words for the configured Gmail, both languages", () => {
+  const words = (locale: "ro" | "en") => (locale === "ro" ? ro : en).Admin.emails.shownAddress;
+
+  it("names the Gmail from configuration, read-only, in Romanian and English", () => {
+    expect(words("ro").modes.gmail).toBe("Gmail-ul clubului (din configurație): {gmail} — implicit");
+    expect(words("en").modes.gmail).toBe("The club's Gmail (from configuration): {gmail} — default");
+    expect(words("ro").gmailConfigured).toContain("Gmail-ul clubului (din configurație): {gmail}");
+    expect(words("en").gmailConfigured).toContain("The club's Gmail (from configuration): {gmail}");
+    for (const locale of ["ro", "en"] as const) {
+      expect(words(locale).modes.both).toContain("{gmail}");
+      expect(words(locale).gmailMissing).toContain("CONTACT_SMTP_USER");
+      // No typed field any more.
+      expect(words(locale)).not.toHaveProperty("gmailHelp");
+    }
   });
 });
 

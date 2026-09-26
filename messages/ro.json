@@ -26,6 +26,7 @@
       "events": "Evenimente",
       "calendar": "Calendar",
       "gallery": "Galerie",
+      "team": "Echipa",
       "more": "Meniu",
       "contact": "Contact"
     },
@@ -53,7 +54,6 @@
       "label": "Filtrele evenimentelor",
       "button": "Filtre",
       "buttonCount": "Filtre ({count})",
-      "help": "Într-un grup ajunge oricare bifă; între grupuri trebuie să se potrivească toate.",
       "groups": {
         "type": "Tipul",
         "surface": "Terenul",
@@ -270,9 +270,11 @@
         "few": "Mai sunt {count} locuri pe lista de așteptare",
         "other": "Mai sunt {count} de locuri pe lista de așteptare"
       },
-      "opensOn": "Înscrierile se deschid pe {date}.",
-      "opensOnShort": "Înscrierile se deschid pe {date}",
-      "openUntilShort": "Înscrieri deschise până pe {date}",
+      "opensOn": "Înscrierile se deschid {date}.",
+      "opensOnShort": "Înscrierile se deschid {date}",
+      "opensSoon": "Înscrierile se deschid în curând.",
+      "opensSoonShort": "Înscrierile se deschid în curând",
+      "openUntilShort": "Înscrieri deschise până {date}",
       "freeOf": {
         "one": "{count} loc liber din {places}",
         "few": "{count} locuri libere din {places}",
@@ -323,7 +325,7 @@
       "movedMark": "Nu în locul obișnuit: {place}",
       "retimedMark": "Nu la ora obișnuită: {time}",
       "atTime": "{sentence}, la {time}",
-      "dates": "{dates}, până pe {last}",
+      "dates": "{dates}, până {last}",
       "count": {
         "one": "{count} dată",
         "few": "{count} date",
@@ -432,7 +434,8 @@
         "turnOn": "Pornește honeypot-ul"
       },
       "savedHoneypotOn": "Honeypot-ul este pornit.",
-      "savedHoneypotOff": "Honeypot-ul este oprit."
+      "savedHoneypotOff": "Honeypot-ul este oprit.",
+      "readOnly": "Verificarea anti-robot o schimbă Superadministratorul: oprită, formularul e deschis roboților; pornită greșit, poate refuza oameni reali. Starea de mai sus e la zi și pentru tine."
     },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
@@ -622,7 +625,7 @@
       "filterAutoFeatured": "Evenimentul principal: {event}",
       "filterAutoSearch": "Toate evenimentele, pentru căutarea după nume",
       "resubmittedChip": "Reînscriere ×{count} · {date}",
-      "resubmittedHint": "Formularul a fost trimis din nou cu aceeași adresă ({count}), ultima dată pe {date}. Fiecare trimitere este în cronologia înscrierii.",
+      "resubmittedHint": "Formularul a fost trimis din nou cu aceeași adresă ({count}), ultima dată {date}. Fiecare trimitere este în cronologia înscrierii.",
       "resubmittedSent": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”",
       "resubmittedNothing": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — nu era nimic de retrimis",
       "resendShort": "Retrimite",
@@ -662,9 +665,9 @@
       "emailVouched": "adresă garantată de {who}",
       "journey": {
         "title": "Parcursul înscrierii",
-        "held": "până la {until}",
+        "held": "până {until}",
         "heldKept": "termen depășit, locul se ține cât nu așteaptă nimeni",
-        "offered": "loc oferit, până la {until}",
+        "offered": "loc oferit, până {until}",
         "waitlisted": "pe lista de așteptare",
         "bib": "nr. {number}",
         "pickedUp": "a ridicat nr. {number}",
@@ -686,13 +689,13 @@
       "bibNone": "Nu are încă un număr de concurs.",
       "bibChange": "Schimbă numărul",
       "bibPrinted": "BID printat",
-      "bibPrintedOn": "BID printat pe {date}",
+      "bibPrintedOn": "BID printat {date}",
       "bibMarkPrinted": "Marchează BID-ul ca printat",
       "bibMarkUnprinted": "BID-ul nu e printat",
       "bibsPrintedCount": "BID-uri: {printed} din {total} printate — doar înscrierile confirmate",
       "bibsVoid": "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc ({count}):",
-      "bibsVoidCancelled": "Numărul {number}: {name}, înscriere anulată pe {date}",
-      "bibsVoidExpired": "Numărul {number}: {name}, înscriere expirată pe {date}",
+      "bibsVoidCancelled": "Numărul {number}: {name}, înscriere anulată {date}",
+      "bibsVoidExpired": "Numărul {number}: {name}, înscriere expirată {date}",
       "bibVoid": "BID {number} tipărit — de retras",
       "bibsDownloadUnprinted": "Descarcă BID-urile neprintate ({count})",
       "bibsDownloadAll": "Descarcă toate BID-urile ({count})",
@@ -744,7 +747,7 @@
       "registrationModeTitle": "Modul de înscriere, din setările evenimentului",
       "columnDate": "Data",
       "seriesDates": "Datele acestei serii",
-      "seriesRenewsUntil": "Se reînnoiește automat: platforma creează datele mereu cu {horizon} înainte, până pe {until}.",
+      "seriesRenewsUntil": "Se reînnoiește automat: platforma creează datele mereu cu {horizon} înainte, până {until}.",
       "seriesRenewsForever": "Se reînnoiește automat: platforma creează datele mereu cu {horizon} înainte, la nesfârșit.",
       "seriesEdit": "Editează următoarea dată",
       "seriesDeleteNote": "O serie se șterge din bara de deasupra listei: bifeaz-o, apoi „Șterge cele bifate”.",
@@ -768,8 +771,8 @@
       },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
-      "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până pe {until} — următoarele {horizon}. Restul le creează platforma singură, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
-      "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până pe {until} — următoarele {horizon}. Restul le creează platforma singură, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
+      "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până {until} — următoarele {horizon}. Restul le creează platforma singură, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
+      "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până {until} — următoarele {horizon}. Restul le creează platforma singură, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
       "seriesDraftsOne": "{dates} în ciornă, nu e pe site:",
       "seriesDraftsMany": "{dates} în ciornă, nu sunt pe site:",
       "seriesNewDates": {
@@ -941,6 +944,9 @@
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
       "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
+      "INVALID_ADDRESSES": "Nu sunt adrese de email: {addresses}. Scrie adresele despărțite prin virgulă, spațiu sau pe rânduri separate. Nu s-a salvat nimic.",
+      "TOO_MANY_ADDRESSES": "Cel mult {max} adrese într-o căsuță. Nu s-a salvat nimic.",
+      "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
@@ -1072,9 +1078,9 @@
         "auto": "Automat (după apus)",
         "yes": "Da",
         "no": "Nu",
-        "autoLine": "Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}",
-        "autoLineDawn": "Automat: pe {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}",
-        "autoLineNoTime": "Automat: pe {day}, apusul la {sunset} — alege ora startului",
+        "autoLine": "Automat: {day}, începe la {start}, apusul la {sunset} — {verdict}",
+        "autoLineDawn": "Automat: {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}",
+        "autoLineNoTime": "Automat: {day}, apusul la {sunset} — alege ora startului",
         "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
         "verdictNight": "eveniment de noapte",
         "verdictDay": "nu e eveniment de noapte",
@@ -1092,6 +1098,8 @@
       "waitlistCapacity": "Lungimea maximă a listei de așteptare",
       "waitlistCapacityHelp": "Lasă gol pentru nelimitat. 0 înseamnă fără listă de așteptare: când locurile se termină, înscrierile se opresc. Contează doar cu un număr de locuri. Coborâtă sub câți așteaptă deja, nu scoate pe nimeni de pe listă — doar nu mai primește alții.",
       "registrationOpensAt": "Înscrierile se deschid",
+      "registrationOpensSoon": "Înscrierile se deschid în curând (fără dată)",
+      "registrationOpensSoonHelp": "Bifat, pagina, cardul și calendarul spun „Înscrierile se deschid în curând”, iar formularul rămâne închis. Lasă data deschiderii goală. Când deschizi înscrierile, debifează: ele pornesc la salvare sau la data pe care o scrii atunci, iar cei de la „Anunță-mă” primesc emailul.",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
@@ -1127,7 +1135,7 @@
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
       "repeatRuleForever": "{sentence} — la nesfârșit",
       "repeatRuleUntil": "{sentence} — până la {until}",
-      "repeatRuleEnded": "{sentence} — seria s-a încheiat pe {until}",
+      "repeatRuleEnded": "{sentence} — seria s-a încheiat {until}",
       "repeatStop": "Oprește recurența",
       "repeatStopHelp": "Nu se mai creează date noi; cele deja create rămân — le ștergi din lista de evenimente.",
       "repeatStopped": "Seria e oprită: nu se mai creează date noi.",
@@ -1588,6 +1596,7 @@
           "window": {
             "range": "{from} – {to}",
             "fromPublication": "De la publicare",
+            "soon": "Se deschid în curând",
             "untilStart": "până la start"
           },
           "conditions": {
@@ -1781,8 +1790,8 @@
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
-        "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
-        "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
+        "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
+        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date, verificarea anti-robot) și numirea altui Superadministrator."
       },
       "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
@@ -1802,7 +1811,8 @@
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
       "inviting": "Se adaugă…",
       "inviteAsideSends": "contul și invitația, într-un pas",
-      "inviteAsideManual": "lista și invitația; contul, din consola Zitadel"
+      "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
+      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator."
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -1818,7 +1828,7 @@
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
       "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
-      "offered": "ofertă până la {until}",
+      "offered": "ofertă până {until}",
       "since": "din {when}",
       "interestTitle": "Adrese care așteaptă anunțul deschiderii: {count}",
       "interestHelp": "Lăsate la „Anunță-mă” pe pagina evenimentului. Primesc un singur email la prima rulare a jobului după ce se deschid înscrierile și se șterg odată cu el. Dacă cineva îți scrie că nu mai vrea mesajul, tastează adresa lui aici: dispare din listă. Adresele nu se afișează.",
@@ -1877,7 +1887,7 @@
         "version": "Versiunea {version}",
         "effectiveFrom": "În vigoare din {date}",
         "draftNotice": "CIORNĂ — versiune neaprobată. Textul de mai jos nu are efect până la aprobare și poate fi încă modificat.",
-        "generatedOn": "Generat pe {date}",
+        "generatedOn": "Generat {date}",
         "page": "Pagina {n} din {total}"
       },
       "newFromIntro": "Precompletat din versiunea {version}. Schimbă ce trebuie schimbat, salvează ciorna, citește-o, apoi aprob-o. Versiunea {version} rămâne neschimbată.",
@@ -1938,8 +1948,8 @@
       "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
       "withdrawBlockedReferenced": "Nu se poate retrage: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "withdrawn": "Retrasă",
-      "withdrawnOn": "Retrasă pe {date}",
-      "withdrawnNotice": "Versiunea a fost retrasă pe {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
+      "withdrawnOn": "Retrasă {date}",
+      "withdrawnNotice": "Versiunea a fost retrasă {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
       "showWithdrawn": "Arată și versiunile retrase ({count})",
       "hideWithdrawn": "Ascunde versiunile retrase",
       "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
@@ -1969,7 +1979,8 @@
         "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”). La un eveniment fără vârstă minimă — la o alergare de grup, una de cel mult 18 ani — propoziția care o conține lipsește din declarație",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
         "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
-        "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă."
+        "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă.",
+        "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -1985,7 +1996,7 @@
         "nothingDepends": "Se poate șterge pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este textul în vigoare acum.",
         "termsNobodyAccepted": "Se poate șterge pentru că nimeni nu a acceptat-o: a fost în vigoare {window} și în acest timp nu s-a trimis nicio înscriere și nu s-a semnat nicio declarație — iar acum nu mai este textul în vigoare.",
         "termsNeverInForce": "Se poate șterge pentru că nimeni nu a acceptat-o: nu a fost niciodată textul în vigoare.",
-        "alreadyWithdrawn": "Ai retras deja această versiune, pe {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
+        "alreadyWithdrawn": "Ai retras deja această versiune, {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
         "notWithdrawn": "Această versiune nu a fost retrasă. Dacă vrei doar să nu mai fie oferită nicăieri, retrage-o din listă: rămâne în evidență, cu textul și numărul ei. Ștergerea nu se poate anula.",
         "phraseLabel": "Confirmarea",
         "phraseHelp": "Scrie exact „{phrase}”, ca să confirmi. Orice altceva oprește ștergerea.",
@@ -2057,7 +2068,7 @@
         "estimate": "Cifrele sunt estimări din consumul citit de la Neon; factura o face Neon, cu spațiul și istoricul de restaurare în plus.",
         "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul de rezervă, când Neon nu răspunde",
-        "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate pe {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
+        "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
         "option": {
           "FREE": "{name} — {cuHours} ore-CU și {storageMb} MB pe lună pe proiect, gratuit; peste, baza de date se oprește",
           "LAUNCH": "{name} — pe consum: {rate} $/oră-CU, {storageRate} $/GB-lună, fără abonament"
@@ -2089,12 +2100,12 @@
         "quotaNone": "fără",
         "quotaSet": "{hours} ore-CU pe perioadă",
         "price": "La tariful Launch ({rate} $/oră-CU), la mărimea maximă: cel mult {perHour} $ pe oră cât e trează, adică {perMonth} $ pe lună dacă ar sta trează la maxim tot timpul. Factura obișnuită o dă timpul cât e trează: în medie baza folosește ≈ 0,25 CU.",
-        "usage": "În perioada aceasta: {used} ore-CU consumate, {active} ore trează; perioada se încheie pe {end}.",
+        "usage": "În perioada aceasta: {used} ore-CU consumate, {active} ore trează; perioada se încheie {end}.",
         "defaults": "Un calcul creat din nou primește implicit {min}–{max} CU (setarea proiectului).",
         "defaultsUnset": "Proiectul nu are o mărime implicită pentru un calcul nou; la salvare o primește pe cea aleasă mai jos.",
         "manyComputes": "Proiectul are {count} calcule read-write: se arată cea mai mare mărime, iar salvarea le schimbă pe toate.",
-        "quotaActive": "Limită activă: {hours} ore-CU, din care {used} consumate. Când e atinsă, Neon oprește baza de date până pe {end}.",
-        "readOnly": "Limitele le schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "quotaActive": "Limită activă: {hours} ore-CU, din care {used} consumate. Când e atinsă, Neon oprește baza de date până {end}.",
+        "readOnly": "Limitele le schimbă Superadministratorul: una greșită poate opri site-ul. Cifrele de mai sus sunt la zi și pentru tine.",
         "maxCu": "Mărimea maximă a bazei de date",
         "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare. Minimul rămâne {min} CU. Lângă fiecare mărime, cel mai rău caz la tariful Launch: o oră trează la acea mărime și o lună întreagă trează.",
         "choose": "— alege o mărime —",
@@ -2111,7 +2122,7 @@
         "quotaCuHoursHelp": "O limită nouă: cel puțin {smallest}. Nu contează la „Fără limită”.",
         "floor": "Consumate în perioada aceasta: {used} ore-CU. O limită nouă trebuie să fie de cel puțin {smallest} ore-CU (consumul plus {margin} de marjă): una mai mică ar opri baza de date chiar la salvare. Limita în vigoare, lăsată cum e, rămâne exact cum o ține Neon.",
         "confirmField": "Confirmarea schimbării limitei",
-        "confirm": "Înțeleg ce schimb la limita producției: cu o limită, baza de date se oprește când e atinsă și site-ul nu mai funcționează până pe {end}; „Fără limită” lasă producția fără niciun plafon de cheltuieli.",
+        "confirm": "Înțeleg ce schimb la limita producției: cu o limită, baza de date se oprește când e atinsă și site-ul nu mai funcționează până {end}; „Fără limită” lasă producția fără niciun plafon de cheltuieli.",
         "writeNote": "Salvarea trimite mărimea la calculul bazei de date și la setarea implicită a proiectului (ca un calcul creat din nou să o moștenească), iar limita la proiect — doar ce diferă de cifrele de la Neon — apoi pagina citește din nou de la Neon. Cheia din NEON_API_KEY trebuie să aibă drept de modificare pe proiect, pe care o cheie „Project-scoped” îl are.",
         "save": "Salvează limitele",
         "saving": "Se trimite la Neon…",
@@ -2131,7 +2142,7 @@
       },
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
-        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure pe {resumesAt} (ora României); nimic nu s-a pierdut.",
+        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
         "failed": "Mesaje care nu au putut fi trimise în ultimele 7 zile: {count} — motivul dat de Mailgun: „{reason}”. Deschide Mailgun → Sending → Logs; dacă domeniul sau cheia s-au schimbat, actualizează variabilele MAILGUN_* în Vercel.",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
@@ -2202,7 +2213,7 @@
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
           "done": "Echipa are conturi.",
           "how": [
-            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele), Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină) sau Superadministrator (și setările platformei; rolul îl dă doar alt Superadministrator).",
             "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
@@ -2305,9 +2316,9 @@
         },
         "domainRenewal": {
           "title": "Reînnoirea domeniului .com",
-          "todo": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}). Galben cu 90 de zile înainte, roșu cu 30 — și atunci /api/health anunță monitorul. Un domeniu expirat oprește site-ul, linkurile din emailuri și trimiterea emailurilor, toate odată.",
-          "done": "Domeniul expiră pe {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}) — e timp destul.",
-          "expired": "Domeniul a expirat pe {domainExpiresOn}. Reînnoiește-l azi la registrar: până atunci site-ul și emailurile pot să nu mai meargă.",
+          "todo": "Domeniul expiră {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}). Galben cu 90 de zile înainte, roșu cu 30 — și atunci /api/health anunță monitorul. Un domeniu expirat oprește site-ul, linkurile din emailuri și trimiterea emailurilor, toate odată.",
+          "done": "Domeniul expiră {domainExpiresOn} (ani plătiți de la înregistrare: {renewalYears}) — e timp destul.",
+          "expired": "Domeniul a expirat {domainExpiresOn}. Reînnoiește-l azi la registrar: până atunci site-ul și emailurile pot să nu mai meargă.",
           "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire.",
           "how": [
             "Reînnoiește pe mai mulți ani la registrar; apoi actualizează DOMAIN_RENEWAL_YEARS.",
@@ -2358,6 +2369,16 @@
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
             "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
+        },
+        "teamPageNotice": {
+          "title": "Nota de confidențialitate: pagina Echipa",
+          "todo": "Nota în vigoare nu descrie încă pagina Echipa, care arată numele și fotografiile oamenilor din echipă și ale voluntarilor. Aprobă o notă nouă înainte să publici pagina.",
+          "done": "Nota în vigoare descrie pagina Echipa: ce arată, pe ce temei și cum se scoate un card.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea 4 descrie pagina Echipa.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
+            "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”."
+          ]
         }
       },
       "freeVerdict": {
@@ -2384,9 +2405,9 @@
       },
       "currencyNote": "Sumele sunt scrise în moneda în care cere fiecare firmă, fără să le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Domeniul este facturat de firma de la care se cumpără, în moneda ei. TVA în România este {vat}%.",
       "freshness": {
-        "fresh": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt destul de recente ca să te bazezi pe ele.",
-        "ageing": "Prețurile au fost verificate pe {checked}, acum {days} zile. Încep să fie vechi — întreabă din nou înainte să plătești ceva.",
-        "stale": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt prea vechi ca să le mai crezi: cere-i dezvoltatorului să le verifice înainte de orice decizie."
+        "fresh": "Prețurile au fost verificate {checked}, acum {days} zile. Sunt destul de recente ca să te bazezi pe ele.",
+        "ageing": "Prețurile au fost verificate {checked}, acum {days} zile. Încep să fie vechi — întreabă din nou înainte să plătești ceva.",
+        "stale": "Prețurile au fost verificate {checked}, acum {days} zile. Sunt prea vechi ca să le mai crezi: cere-i dezvoltatorului să le verifice înainte de orice decizie."
       },
       "servicesTitle": "Serviciile, pe rând",
       "servicesIntro": "Câte un rând pentru fiecare serviciu de care depinde site-ul: pe ce plan suntem, cât costă azi, ce primim gratuit, care este limita pe care o vom atinge prima, cât de aproape suntem chiar acum, ce se întâmplă când o depășim și cât costă pasul următor.",
@@ -2404,7 +2425,7 @@
       },
       "planNone": "încă nu am ales de unde",
       "nextPlanNone": "nu are pas următor",
-      "checkedOn": "Sume verificate pe {checked}.",
+      "checkedOn": "Sume verificate {checked}.",
       "bump": {
         "temporary": "se ia temporar",
         "permanent": "rămâne pentru totdeauna"
@@ -2540,7 +2561,7 @@
         "lastPingRan": "ultimul ping: {when}, a rulat",
         "lastPingSkipped": "ultimul ping: {when}, sărit fără bază de date",
         "updatedAt": "Setat {when}.",
-        "readOnly": "Intervalul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "readOnly": "Intervalul îl schimbă Superadministratorul: unul greșit întârzie toate joburile. Cifrele de mai sus sunt la zi și pentru tine.",
         "field": "Cel mult o dată la",
         "fieldHelp": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut. „La nevoie” înseamnă doar regula „când e ceva de făcut” și verificarea de siguranță de {cap} min.",
         "option": {
@@ -2674,9 +2695,24 @@
       "imageAlignRight": "Dreapta",
       "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea.",
       "imageCrop": "Decupaj — ce se vede din fotografie",
-      "imageCropHelp": "Trage un dreptunghi peste fotografie: exact atât se vede pe pagină și pe card. Trage în interiorul lui ca să-l muți; săgețile îl mută, Shift cu ele îl redimensionează.",
+      "imageCropHelp": "Alege un format sau trage un dreptunghi peste fotografie: exact atât se vede pe pagină. Un format își păstrează forma cât tragi. Trage în interiorul dreptunghiului ca să-l muți; săgețile îl mută, Shift cu ele îl redimensionează.",
       "imageCropReset": "Fără decupaj",
       "imageCropPosition": "{w}% × {h}% din fotografie, de la stânga {x}%, de sus {y}%",
+      "imageShapes": "Format",
+      "imageShapeFree": "Liber",
+      "imageShape169": "16:9",
+      "imageShape43": "4:3",
+      "imageShape11": "1:1",
+      "imageShape45": "4:5",
+      "imageCropTarget": "Ce alegi atingând fotografia",
+      "imageCropTargetCrop": "Decupajul",
+      "imageCropTargetFocus": "Centrul pe card",
+      "imageFocusHelp": "Pe cardurile din listă, fiecare poză stă în același cadru 16:9 — conturul punctat. Alege «Centrul pe card» și atinge subiectul: cadrul se mută acolo, în interiorul decupajului. Săgețile îl mută.",
+      "imageFocusReset": "Mijlocul decupajului",
+      "imageFocusPosition": "Centrul pe card: {x}% de la stânga, {y}% de sus",
+      "imageCardPreview": "Așa apare pe card",
+      "imageUploadShapeHelp": "«Liber» păstrează toată fotografia. Un format o decupează din mijloc, fără să-i schimbe fișierul; îl muți sau îl schimbi din panoul pozei.",
+      "imageUploadCropped": "decupat {shape} din mijloc (fișierul rămâne întreg)",
       "table": "Tabel",
       "tableAddRow": "Adaugă un rând",
       "tableAddColumn": "Adaugă o coloană",
@@ -2750,7 +2786,9 @@
         "seoDescription": "Descriere SEO"
       },
       "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
-      "bothOrNeither": "scrie-l în ambele limbi sau în niciuna"
+      "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
+      "tabPages": "Paginile clubului",
+      "tabTeam": "Pagina Echipa"
     },
     "pictures": {
       "title": "Imagini",
@@ -2773,7 +2811,8 @@
       "deleteBody": "„{name}” se șterge definitiv, din bibliotecă și din spațiul de stocare. Nu se poate anula.",
       "tableCaption": "Imaginile încărcate, cele mai noi primele",
       "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
-      "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți."
+      "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți.",
+      "usedInTeam": "Pe pagina Echipa: {title}"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -2870,7 +2909,7 @@
       "send": "Trimite mulțumirile",
       "confirmTitle": "Trimiți mulțumirile?",
       "confirmBody": "Un email tuturor celor marcați prezenți. Se poate trimite o singură dată pe eveniment.",
-      "sentOn": "Mulțumirile au fost trimise pe {date}."
+      "sentOn": "Mulțumirile au fost trimise {date}."
     },
     "bibs": {
       "title": "Numere de concurs (BIB)",
@@ -3003,8 +3042,8 @@
       "confirmOnPaper": "Confirmă pe hârtie",
       "showBib": "Vezi numărul de concurs (BID)",
       "bibAlt": "Numărul de concurs (BID) {number}",
-      "voidCancelled": "Înscriere anulată pe {date}",
-      "voidExpired": "Înscriere expirată pe {date}",
+      "voidCancelled": "Înscriere anulată {date}",
+      "voidExpired": "Înscriere expirată {date}",
       "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc.",
       "handedBib": "Numărul dat acum",
       "handedBibHelp": "Propus: următorul număr de rezervă liber. Schimbă-l dacă dai alt număr din cutie; lasă-l gol și platforma alege singură unul.",
@@ -3116,6 +3155,9 @@
         "aside": "Adrese care primesc copii: {count}",
         "intro": "Cine primește, la club, copia unei declarații semnate, cine află când cineva își confirmă înscrierea și cine primește o copie ascunsă a emailurilor către participanți. Adrese ale clubului, nu ale participanților.",
         "participantsInForce": "Copie ascunsă la emailurile către participanți: {bcc}.",
+        "asideNames": "Adrese care primesc copii: {count} — {addresses}",
+        "confirmationsInForce": "Anunțul că cineva a confirmat merge la: {to}.",
+        "declarationCopiesIdle": "Copiile declarațiilor sunt salvate — Cc: {cc}; Bcc: {bcc} —, dar nu pleacă: o copie are nevoie de o adresă la „Declarațiile semnate merg la”. Scrie cutia de arhivă acolo ca să plece și copiile.",
         "source": {
           "setting": "În vigoare: declarațiile merg la {to}; copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
           "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
@@ -3125,14 +3167,14 @@
         "declarationsTo": "Declarațiile semnate merg la",
         "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
         "declarationsCc": "Copie vizibilă (Cc)",
-        "declarationsCcHelp": "Adrese separate prin virgulă. Toți destinatarii se văd între ei.",
+        "declarationsCcHelp": "Adrese separate prin virgulă, spațiu sau rând nou. Toți destinatarii se văd între ei.",
         "declarationsBcc": "Copie ascunsă (Bcc)",
-        "declarationsBccHelp": "Adrese separate prin virgulă. Nu apar în mesaj.",
+        "declarationsBccHelp": "Adrese separate prin virgulă, spațiu sau rând nou. Nu apar în mesaj.",
         "bccWarning": "Declarația conține numele participantului și semnătura lui; în copia clubului, seria și numărul actului de identitate apar mascate (de exemplu „BV ••••56”). O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
         "confirmationsTo": "Anunță-ne când cineva confirmă",
-        "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
+        "confirmationsToHelp": "Adrese separate prin virgulă, spațiu sau rând nou. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
         "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
-        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, separat și fără ca participantul să afle, o copie pentru club a fiecărui email trimis unui participant real — declarația, confirmarea, reminderul, numărul dat de mână —, cu „[Copie club]” în subiect. Nu și a verificării adresei sau a linkului pentru altă persoană, care merg la o adresă încă neconfirmată; iar dintr-un mesaj către toți înscrișii (mesajul organizatorilor, detaliile actualizate), o singură copie pe trimitere, cu numărul destinatarilor și fără nume. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
+        "participantsBccHelp": "Adrese separate prin virgulă, spațiu sau rând nou. Fiecare primește, separat și fără ca participantul să afle, o copie pentru club a fiecărui email trimis unui participant real — declarația, confirmarea, reminderul, numărul dat de mână —, cu „[Copie club]” în subiect. Nu și a verificării adresei sau a linkului pentru altă persoană, care merg la o adresă încă neconfirmată; iar dintr-un mesaj către toți înscrișii (mesajul organizatorilor, detaliile actualizate), o singură copie pe trimitere, cu numărul destinatarilor și fără nume. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
         "participantsBccWarning": "Copia pentru club nu are linkurile personale ale participantului (confirmarea adresei, semnarea declarației, „nu mai pot veni”), codul QR sau atașamentele, așa că nimeni nu poate face un pas în locul lui din acea cutie poștală. Are totuși numele lui, evenimentul și numărul de concurs: doar o cutie poștală a clubului, ca decizie a clubului.",
         "save": "Salvează",
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
@@ -3233,7 +3275,7 @@
         },
         "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul pe care e contul Mailgun",
-        "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate pe {checkedOn}. Basic ajunge pentru un sezon întreg.",
+        "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate {checkedOn}. Basic ajunge pentru un sezon întreg.",
         "option": "{name} — {ceiling}, {price}",
         "perDay": "{count} mesaje pe zi",
         "perMonth": "{count} mesaje pe lună",
@@ -3291,7 +3333,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "Confirmarea abonării, newsletterul scris în meniul „Newsletter” și anunțul de eveniment nou, către cei abonați de pe pagina de contact. Newsletterul și anunțul pleacă ultimele și, prin Mailgun, doar din ce rămâne după rezerva pentru înscrieri. Recomandat: Gmail."
+            "help": "Confirmarea abonării, newsletterul scris în meniul „Newsletter” și anunțul de eveniment nou, către cei abonați de pe pagina de contact. Newsletterul și anunțul pleacă ultimele și, prin Mailgun, doar din ce rămâne după rezerva pentru înscrieri. Recomandat: Mailgun — un mesaj către multe adrese dintr-un Gmail personal e tiparul de trimitere în masă pe care Google îl restricționează."
           }
         },
         "messages": "Mesajele din grup: {names}",
@@ -3358,7 +3400,7 @@
         "intro": "Cât durează fiecare termen pe care platforma îl dă unui participant. Se aplică de la salvare înainte: un link, un loc ținut sau o ofertă deja date își păstrează termenul primit. Numerele apar singure oriunde sunt scrise — în emailuri, pe formular și în cei cinci pași, în ghid, pe această pagină și în textele legale aprobate din șablonul nou.",
         "aside": "Link {confirmation} · loc ținut {hold} · ofertă {offer} · reminder {reminder}",
         "reminderOff": "fără",
-        "bounds": "Între {min} și {max}; implicit {default}.",
+        "bounds": "Recomandat: {recommended}. Între {min} și {max}.",
         "fields": {
           "confirmationHours": "Linkul de confirmare a adresei e valabil (ore)",
           "holdMinutes": "Locul e ținut pentru semnarea declarației (minute)",
@@ -3384,6 +3426,8 @@
         "save": "Salvează termenele",
         "saving": "Se salvează…",
         "saved": "Termenele au fost salvate; se aplică de acum înainte.",
+        "differs": "diferit de recomandat",
+        "fillRecommended": "Completează valorile recomandate",
         "readOnly": "Termenele le schimbă Administratorul; tu vezi valorile în vigoare."
       },
       "forecast": {
@@ -3453,13 +3497,14 @@
         "preview": "Pe site: {shown} · Răspunde la: {replyTo}",
         "legend": "Ce adresă arătăm",
         "modes": {
-          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit",
-          "gmail": "Gmail-ul clubului",
-          "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
+          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit doar dacă serverul nu are un Gmail",
+          "gmail": "Gmail-ul clubului (din configurație): {gmail} — implicit",
+          "both": "Amândouă (întâi {gmail}, apoi {mailbox})"
         },
         "noMailbox": "nesetată pe server",
-        "gmail": "Gmail-ul clubului",
-        "gmailHelp": "Obligatoriu pentru „Gmail-ul clubului” și „Amândouă”. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "noGmail": "nesetat pe server",
+        "gmailConfigured": "Gmail-ul clubului (din configurație): {gmail}. Este contul prin care pleacă formularul de contact; nu se scrie aici.",
+        "gmailMissing": "Serverul nu are un Gmail configurat (CONTACT_SMTP_USER), așa că rămâne doar căsuța de pe domeniul Mailgun.",
         "updatedAt": "Setat {when}.",
         "readOnly": "Adresa afișată o stabilește Administratorul; tu vezi alegerea în vigoare.",
         "save": "Salvează adresa",
@@ -3473,7 +3518,7 @@
     },
     "guide": {
       "title": "Ghid de utilizare",
-      "intro": "Fiecare treabă are pașii ei, numerotați. Ce e scris «așa», îngroșat, este exact ce scrie pe buton sau pe ecran — caută acele cuvinte. Secțiunile rolului tău sunt primele și deschise; apasă pe o treabă ca să-i vezi pașii. Dacă un buton lipsește, nu ai rolul pentru el: cere-l unui Superadministrator sau roagă pe cineva cu rolul acela.",
+      "intro": "Fiecare treabă are pașii ei, numerotați. Ce e scris «așa», îngroșat, este exact ce scrie pe buton sau pe ecran — caută acele cuvinte. Secțiunile rolului tău sunt primele și deschise; apasă pe o treabă ca să-i vezi pașii. Dacă un buton lipsește, nu ai rolul pentru el: cere-l unui Administrator sau roagă pe cineva cu rolul acela.",
       "sections": [
         {
           "title": "Primii pași",
@@ -3493,7 +3538,7 @@
                 "Prima dată: deschide emailul de invitație primit de la club și alege-ți parola din el.",
                 "Deschide site-ul clubului și scrie la sfârșitul adresei /ro/admin.",
                 "Pe pagina «Autentificare echipă» apasă «Autentificare» și intră cu adresa de email la care ai primit invitația și parola ta.",
-                "Sus scrie «Autentificat ca» cu numele și rolul tău. Dacă rolul nu e cel așteptat, spune-i unui Superadministrator.",
+                "Sus scrie «Autentificat ca» cu numele și rolul tău. Dacă rolul nu e cel așteptat, spune-i unui Administrator.",
                 "Pe un calculator care nu e al tău, la final apasă «Ieși din cont»."
               ]
             },
@@ -3526,8 +3571,8 @@
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
                 "Organizatorul: vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților. Nu scrie textele, nu publică, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
                 "Rolul Tehnic: pagina de configurație a platformei, ca să depaneze; poate corecta setările unui eveniment. Nu vede înscrierile.",
-                "Administratorul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene» și planul Mailgun. Citește documentele legale, dar nu le scrie și nu le aprobă, și nu vede «Echipa».",
-                "Superadministratorul: tot ce face Administratorul, plus documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul). O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă sau să ți-l dea."
+                "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
+                "Superadministratorul: tot ce face Administratorul, plus setările platformei care pot opri serviciul — «Cât de des verifică platforma», «Limitele bazei de date», pragurile din «Bugetul lunii» și «Anti-robot» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
               ]
             },
             {
@@ -3777,7 +3822,7 @@
                 "Tipărește numerele (vezi mai sus).",
                 "«Evenimente» → «Editează» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
-                "Voluntarii: roagă un Superadministrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
+                "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
               ]
             },
@@ -3972,13 +4017,13 @@
               "title": "Ce mai are clubul de făcut",
               "steps": [
                 "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
-                "«Costuri»: ce plătește clubul și limitele bazei de date."
+                "«Costuri»: ce plătește clubul și limitele bazei de date. Frânele platformei de acolo le schimbă un Superadministrator (secțiunea lui din ghid)."
               ]
             },
             {
-              "title": "Conturi pentru voluntari și colegi (Superadministrator)",
+              "title": "Conturi pentru voluntari și colegi",
               "steps": [
-                "Rol necesar: Superadministrator. «Echipa» apare doar pentru el; un Administrator nu o vede și îi cere lui.",
+                "«Echipa» e a Administratorului și a Superadministratorului. Rolul Superadministrator și rândul unui Superadministrator le schimbă doar un Superadministrator.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
@@ -3988,8 +4033,57 @@
           ]
         },
         {
+          "title": "Superadministrator — setările platformei",
+          "who": "Rol: Superadministrator. Tot ce face Administratorul, plus setările care pot opri serviciul.",
+          "roles": [
+            "SUPERADMIN"
+          ],
+          "tasks": [
+            {
+              "title": "Frâna joburilor programate",
+              "steps": [
+                "Rol necesar: Superadministrator. Un Administrator vede cifrele la zi, dar nu schimbă intervalul.",
+                "«Sarcini» → «Costuri» → «Cât de des verifică platforma».",
+                "„La nevoie” e implicit — platforma trezește baza de date doar când are ceva de făcut. Un interval mai lung scade factura Neon, dar întârzie fiecare predare a unui loc de pe lista de așteptare și fiecare email trimis de joburi."
+              ]
+            },
+            {
+              "title": "Limitele bazei de date",
+              "steps": [
+                "Rol necesar: Superadministrator. O limită greșită poate opri site-ul; un Administrator o vede, dar nu o schimbă.",
+                "«Sarcini» → «Costuri» → «Limitele bazei de date».",
+                "Frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu, cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă."
+              ]
+            },
+            {
+              "title": "Pragurile bugetului lunii",
+              "steps": [
+                "Rol necesar: Superadministrator. Un Administrator vede bugetul și ce face platforma, dar nu schimbă pragurile.",
+                "«Sarcini» → «Costuri» → «Bugetul lunii» → «Salvează pragurile».",
+                "Pragurile spun de la ce parte din limita lunară platforma trece pe galben și pe roșu și se frânează singură. Unul prea jos o frânează degeaba; unul prea sus o lasă să ajungă la limită, iar atunci Neon oprește baza de date."
+              ]
+            },
+            {
+              "title": "Verificarea anti-robot",
+              "steps": [
+                "Rol necesar: Superadministrator. Un Administrator vede starea, dar nu o schimbă.",
+                "«Sarcini» → «Anti-robot»: verificarea Cloudflare Turnstile și capcana ascunsă (honeypot).",
+                "Oprită, formularul e deschis roboților; pornită cu o cheie greșită, poate refuza oameni reali. Se oprește în ziua în care caseta refuză oameni și se pornește la loc după."
+              ]
+            },
+            {
+              "title": "Un alt Superadministrator",
+              "steps": [
+                "Rol necesar: Superadministrator.",
+                "«Echipa»: doar un Superadministrator face pe altcineva Superadministrator, îi schimbă rolul unui Superadministrator sau îi retrage accesul.",
+                "Ultimul Superadministrator nu poate fi retrogradat sau scos — cine preia platforma trebuie numit întâi."
+              ]
+            }
+          ]
+        },
+        {
           "title": "Documente legale și date personale (GDPR)",
-          "who": "Rol: Administrator citește; scrierea, aprobarea, retragerea și ștergerea textelor cer Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
+          "who": "Rol: Administrator sau Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3998,7 +4092,6 @@
             {
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
-                "Rol necesar: Superadministrator. Doar el vede «Versiune nouă» și aprobă; un Administrator citește textele și PDF-urile, dar nu scrie, nu aprobă și nu retrage o versiune.",
                 "«Documente legale» → «Versiune nouă».",
                 "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
@@ -4011,7 +4104,7 @@
             {
               "title": "Cele cinci texte, înainte de publicarea cursei",
               "steps": [
-                "Rol necesar: Superadministrator. Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
+                "Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
                 "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
               ]
@@ -4377,6 +4470,71 @@
       "previewEn": "Previzualizează în engleză",
       "previewLoading": "Se pregătește previzualizarea…",
       "previewUnavailable": "Previzualizarea nu e disponibilă acum. Mesajul se poate trimite oricum."
+    },
+    "team": {
+      "title": "Pagina «Echipa»",
+      "intro": "Oamenii clubului, câte un card: fotografie, nume, ce face în club, câteva cuvinte și, dacă vrea, o legătură. Pagina este a platformei, ca pagina de contact: aici o publici, îi scrii introducerea și cardurile. Un card nou stă ascuns până îl pune pe site un Administrator. Cere acordul persoanei înainte să-i pui numele și fotografia pe site.",
+      "shownCount": "Pe site: {count} din {total} carduri.",
+      "noneShown": "Niciun card nu este pe site, așa că pagina nu apare în meniul site-ului.",
+      "viewPublic": "Vezi pagina",
+      "readOnly": "Poți citi cardurile; le scrie Redactorul sau Administratorul.",
+      "showIsAdmin": "Scrii și pregătești cardurile; le pune pe site Administratorul.",
+      "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se pot adăuga fotografii.",
+      "add": "Adaugă o persoană",
+      "create": "Adaugă cardul",
+      "empty": "Nu există încă niciun card.",
+      "listLabel": "Cardurile echipei, în ordinea de pe pagină",
+      "visible": "Pe site",
+      "hidden": "Ascuns",
+      "noPhoto": "Fără fotografie",
+      "oneLanguage": "Text într-o singură limbă",
+      "moveUpNamed": "Mută mai sus: {name}",
+      "moveDownNamed": "Mută mai jos: {name}",
+      "show": "Pune pe site",
+      "hide": "Scoate de pe site",
+      "showTitle": "Pui pe site cardul „{name}”?",
+      "showBody": "Cardul apare pe pagina Echipa cât timp pagina este publicată. Ai acordul persoanei pentru nume și fotografie?",
+      "hideTitle": "Scoți de pe site cardul „{name}”?",
+      "hideBody": "Cardul rămâne aici, ascuns; îl poți pune la loc oricând.",
+      "delete": "Șterge cardul",
+      "deleteTitle": "Ștergi cardul „{name}”?",
+      "deleteBody": "Cardul dispare de tot. Fotografia rămâne o săptămână în Imagini și se șterge apoi singură, dacă nu o mai folosește nimic.",
+      "edit": "Editează cardul",
+      "name": "Numele",
+      "nameHelp": "Cum vrea persoana să apară: prenume și nume, sau doar prenumele.",
+      "roleRo": "Ce face în club (Română)",
+      "roleEn": "Ce face în club (English)",
+      "roleHelp": "De exemplu „Antrenor” și „Coach”. Opțional.",
+      "bioRo": "Câteva cuvinte (Română)",
+      "bioEn": "Câteva cuvinte (English)",
+      "bioHelp": "Opțional, cel mult {max} de caractere.",
+      "bothOrNeither": "Scrie în ambele limbi sau în niciuna.",
+      "photo": "Fotografia",
+      "photoChoose": "Alege o fotografie",
+      "photoReplace": "Schimbă fotografia",
+      "photoRemove": "Scoate fotografia",
+      "photoUploading": "Se încarcă…",
+      "photoFailed": "Fotografia nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
+      "photoNone": "Fără fotografie",
+      "photoHelp": "Arată cel mai bine o fotografie pătrată sau de portret: pe site se decupează pătrat, cu fața în partea de sus. Se păstrează când salvezi cardul.",
+      "pageHeading": "Pagina",
+      "pagePublished": "Publicată",
+      "pageDraft": "Ciornă",
+      "pagePublishedHelp": "Pagina este pe site, în ambele limbi: {ro} și {en}. Apare în meniu cât timp are cel puțin un card pe site.",
+      "pageDraftHelp": "Pagina nu este pe site: adresa ei răspunde „nu există”, iar meniul nu o arată. Pregătește cardurile, apoi publică pagina.",
+      "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă pagina Echipa, care arată nume și fotografii. Aprobă întâi o notă nouă din /admin/legal („pornește de la textul platformei”), apoi publică pagina.",
+      "publish": "Publică pagina",
+      "unpublish": "Retrage pagina",
+      "publishTitle": "Publici pagina Echipa?",
+      "publishBody": "Pagina intră pe site în ambele limbi deodată, la {ro} și {en}, cu toate cardurile puse pe site. Ai acordul fiecărei persoane de pe carduri?",
+      "unpublishTitle": "Retragi pagina Echipa?",
+      "unpublishBody": "Pagina iese de pe site în ambele limbi și dispare din meniu. Cardurile rămân aici; o poți publica din nou oricând.",
+      "introFold": "Introducerea paginii",
+      "introRo": "Introducerea (Română)",
+      "introEn": "Introducerea (English)",
+      "introHelp": "Opțional, cel mult {max} de caractere. Goală, pagina folosește textul platformei.",
+      "link": "Legătura (opțional)",
+      "linkHelp": "O singură adresă https://, de exemplu profilul de Strava sau de Instagram. Aceeași în ambele limbi."
     }
   },
   "NotFound": {
@@ -4704,9 +4862,9 @@
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
-      "deadline": "Locul tău este rezervat până la {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
+      "deadline": "Locul tău este rezervat până {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
       "deadlineAtStart": "Locul tău este rezervat până la start, {deadline}: nu expiră înainte. Înscrierea e completă doar cu declarația semnată.",
-      "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
+      "deadlinePassed": "Termenul, {deadline}, a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
       "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment, iar în copia clubului apar mascate (rămân cel mult primele două și ultimele două caractere); nu păstrăm o copie a actului.",
@@ -4816,7 +4974,7 @@
       "eventCancelledChip": "Eveniment anulat",
       "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
       "runner": "Înscris: {name}",
-      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până la {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
+      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
     },
     "manage": {
       "title": "Gestionează înscrierea",
@@ -4922,10 +5080,10 @@
     "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
     "weather": {
       "title": "Prognoza vremii",
-      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
+      "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
       "failed": "Open-Meteo (public, fără cheie) — nu a răspuns ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
-      "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns la {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
-      "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns la {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",
+      "failedAt": "Open-Meteo (public, fără cheie) — nu a răspuns {when} ({reason}). Paginile și reamintirile nu arată vremea până răspunde.",
+      "stale": "Open-Meteo (public, fără cheie) — ultimul răspuns {when}, prea vechi pentru a fi arătat. Paginile și reamintirile nu arată vremea până răspunde.",
       "stub": "prognoza de test (E2E_WEATHER_STUB) — aceeași oră fixă, fără nicio cerere către Open-Meteo.",
       "off": "oprită în acest mediu."
     },
@@ -5010,8 +5168,8 @@
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
       "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
-      "ADMIN": "plus înscrieri, participanți, export, texte legale, ștergerea unui eveniment",
-      "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
+      "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
+      "SUPERADMIN": "plus setările platformei care pot opri serviciul și numirea altui Superadministrator"
     },
     "settings": "Setări",
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
@@ -5124,7 +5282,7 @@
       "size": "Spațiu ocupat: {used} MB din {of} MB ({percent}%).",
       "sizeUnknown": "Spațiul ocupat nu a putut fi citit.",
       "intro": "Consumul proiectului în perioada curentă, citit din Neon. Planul gratuit dă {of} ore-CU pe lună pe proiect; când se termină, baza de date se oprește până la începutul lunii următoare.",
-      "introLaunch": "Consumul proiectului în perioada curentă, citit din Neon. Planul Launch e plătit pe consum: fără plafon de ore și fără oprire. Cifrele de mai jos sunt estimări la tarifele de pe neon.com/pricing, verificate pe {checkedOn}; factura o face Neon, la sfârșitul perioadei.",
+      "introLaunch": "Consumul proiectului în perioada curentă, citit din Neon. Planul Launch e plătit pe consum: fără plafon de ore și fără oprire. Cifrele de mai jos sunt estimări la tarifele de pe neon.com/pricing, verificate {checkedOn}; factura o face Neon, la sfârșitul perioadei.",
       "plan": {
         "FREE": "Planul setat: Free.",
         "LAUNCH": "Planul setat: Launch."
@@ -5140,7 +5298,7 @@
       "usedLaunch": "Ore de calcul în perioada aceasta: {used} ore-CU; cost estimat: {usd} $ ({rate} $/oră-CU).",
       "estimate": "Estimare, nu factură: Neon adaugă spațiul și istoricul de restaurare ({restoreRate} $/GB-lună) pe toată perioada și rotunjește la final.",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
-      "period": "Perioada se încheie pe {date}",
+      "period": "Perioada se încheie {date}",
       "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id '<id>'`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/'<id>') sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
@@ -5199,6 +5357,7 @@
       "bodyTo": "Îți răspundem pe {email}.",
       "body": "Îți răspundem pe adresa ta de e-mail."
     },
+    "direct": "Sau scrie-ne direct la",
     "off": {
       "writeTo": "Scrie-ne la",
       "none": "Formularul de contact nu este disponibil momentan.",
@@ -5247,7 +5406,7 @@
     "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
     "pace": "Ritmul: {perDay} ore-CU pe zi; așa, perioada ajunge la {projected} ore-CU.",
     "paceNoLimit": "Ritmul: {perDay} ore-CU pe zi.",
-    "runsOut": "Limita s-ar atinge pe {date}.",
+    "runsOut": "Limita s-ar atinge {date}.",
     "effectLead": "Ce face platforma acum:",
     "effect": {
       "none": "nimic în plus — lucrările programate rulează când au ceva de făcut.",
@@ -5278,7 +5437,7 @@
   },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
-    "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până pe {until}. Mulțumim pentru răbdare!",
+    "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou",
     "reloadingTitle": "Pagina se reîncarcă în câteva minute",
@@ -5531,7 +5690,16 @@
       },
       "newsletterDuplicate": "Acest newsletter fusese deja trimis.",
       "newsletterWithdrawn": "Adresa a fost scoasă din newsletter.",
-      "newsletterNotFound": "Adresa nu era în newsletter."
+      "newsletterNotFound": "Adresa nu era în newsletter.",
+      "teamMemberCreated": "Cardul a fost adăugat, ascuns până este pus pe site.",
+      "teamMemberSaved": "Cardul a fost salvat.",
+      "teamMemberShown": "Cardul este pe site.",
+      "teamMemberHidden": "Cardul a fost scos de pe site.",
+      "teamMemberMoved": "Ordinea cardurilor a fost schimbată.",
+      "teamMemberDeleted": "Cardul a fost șters.",
+      "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
+      "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
+      "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site."
     }
   },
   "Network": {
@@ -5669,5 +5837,12 @@
       "goneBody": "Ți-am șters adresa din lista de noutăți. Poți reveni oricând de pe pagina de contact.",
       "invalidBody": "A expirat sau abonamentul nu mai există. Fiecare email nou de la noi are un link nou; te poți și abona din nou de pe pagina de contact."
     }
+  },
+  "Team": {
+    "title": "Echipa",
+    "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
+    "empty": "Echipa clubului apare aici în curând.",
+    "listLabel": "Oamenii echipei",
+    "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
   }
 }

@@ -93,6 +93,11 @@ export type EventForRegistration = {
   registrationMode: "NONE" | "INTERNAL" | "EXTERNAL";
   startsAt: Date;
   registrationOpensAt: Date | null;
+  /**
+   * «Se deschid în curând» (§451): while true nobody registers outside the desk. Every caller that
+   * reads the row passes it; absent on a partial row (a fixture) is the column's default, false.
+   */
+  registrationOpensSoon?: boolean;
   registrationClosesAt: Date | null;
   capacity: number | null;
   raceId: string | null;
@@ -172,6 +177,7 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
       eventStatus: event.eventStatus,
       startsAt: event.startsAt,
       registrationOpensAt: event.registrationOpensAt,
+      registrationOpensSoon: event.registrationOpensSoon ?? false,
       registrationClosesAt: event.registrationClosesAt,
       publishedAt: event.publishedAt,
     },

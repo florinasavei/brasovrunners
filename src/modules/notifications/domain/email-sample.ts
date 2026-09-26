@@ -73,10 +73,30 @@ export const EMAIL_SAMPLE_EVENT = {
 /**
  * One of the sample's moments as a message writes it inside a sentence (§349), through the same
  * `formatDay` call the send path makes (`render.ts`, `formatInSentence`): "duminică, 4 oct. 2026,
- * 09:00", "Sunday, 4 Oct 2026, 09:00".
+ * la 09:00", "Sunday, 4 Oct 2026, at 09:00" (§452).
  */
 function sampleMoment(at: Date, locale: EmailLocale): string {
   return formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
+}
+
+/**
+ * The same moment as it read between §349 and §452, the hour bare after the comma — "duminică, 4
+ * oct. 2026, 09:00". A text saved from the editor in that time carries this form, so the guard
+ * still finds it.
+ */
+function sampleMomentBareHour(at: Date, locale: EmailLocale): string {
+  return formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "continues" });
+}
+
+/**
+ * Every former value the sample gave a moment field: the start before §349 and all three moments
+ * before §452 put "la" / "at" before the hour.
+ */
+export function emailSampleFormerValuesOf(name: EmailCopyPlaceholder, locale: EmailLocale): readonly string[] {
+  if (name === "eventStartsAtFormatted") return EMAIL_SAMPLE_FORMER_WHEN[locale];
+  if (name === "holdExpiresAtFormatted") return [sampleMomentBareHour(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale)];
+  if (name === "signedAtFormatted") return [sampleMomentBareHour(EMAIL_SAMPLE_SIGNED_AT, locale)];
+  return [];
 }
 
 /** The sample start as a message writes it inside a sentence (§349): "duminică, 4 oct. 2026, 09:00". */
@@ -208,11 +228,12 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
 
 /**
  * How the sample's start read before §349 gave every date its weekday's comma and a short month.
- * A text saved from the editor between §247 and §349 carries this form, not today's.
+ * A text saved from the editor between §247 and §349 carries this form, not today's; one saved
+ * between §349 and §452 carries the bare hour, before "la" / "at" came in front of it.
  */
 export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly string[]>> = {
-  ro: ["duminică, 4 octombrie 2026, 09:00"],
-  en: ["Sunday, 4 October 2026, 09:00"],
+  ro: ["duminică, 4 octombrie 2026, 09:00", "duminică, 4 oct. 2026, 09:00"],
+  en: ["Sunday, 4 October 2026, 09:00", "Sunday, 4 Oct 2026, 09:00"],
 };
 
 /**
@@ -290,7 +311,9 @@ export const EMAIL_SAMPLE_LITERALS: readonly EmailSampleLiteral[] = dedupe([
     { value: EMAIL_SAMPLE[locale].eventChecklist, placeholder: "eventChecklist" },
     // Every value added to the sample is one the guard refuses (the note at the top of this file).
     { value: EMAIL_SAMPLE[locale].holdExpiresAtFormatted, placeholder: "holdExpiresAtFormatted" },
+    ...emailSampleFormerValuesOf("holdExpiresAtFormatted", locale).map((value): EmailSampleLiteral => ({ value, placeholder: "holdExpiresAtFormatted" })),
     { value: EMAIL_SAMPLE[locale].signedAtFormatted, placeholder: "signedAtFormatted" },
+    ...emailSampleFormerValuesOf("signedAtFormatted", locale).map((value): EmailSampleLiteral => ({ value, placeholder: "signedAtFormatted" })),
     { value: EMAIL_SAMPLE[locale].staffRole, placeholder: "staffRole", only: ["STAFF_INVITATION"] },
     { value: EMAIL_SAMPLE[locale].inviterName, placeholder: "inviterName" },
   ]),

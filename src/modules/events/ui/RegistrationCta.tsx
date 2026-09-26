@@ -125,7 +125,10 @@ export default async function RegistrationCta({
         ? raceWeek
           ? t("cta.closedRaceWeek")
           : t("cta.closed")
-        : t("cta.opensOn", {
+        : cta.opensAt === null
+          ? // Announced with no date (§451): the same big blue line, saying "soon".
+            t("cta.opensSoon")
+          : t("cta.opensOn", {
             // The event's own timezone, like every other time on the page: registration for a
             // Brașov race opens at a Brașov hour wherever the page is read.
             // Inside the sentence, so the weekday keeps its lower case (§349).
