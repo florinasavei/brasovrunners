@@ -925,7 +925,10 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
       "Adresa scrisă a doua oară",
       "Declarația că ești apt medical",
       "Nota de confidențialitate",
-      RULES_MISSING,
+      // The featured race carries no rules of its own (see `createRulesEvent`'s comment), so its
+      // box is the plain one linking to the event page — the field's own name, not RULES_MISSING,
+      // which only the read-and-tick panel (an event that did write rules) shows (review finding 1).
+      "Condițiile concursului",
       "Acceptarea termenilor și condițiilor",
     ]) {
       const item = missing.getByRole("link", { name, exact: true });
