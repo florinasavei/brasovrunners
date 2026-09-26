@@ -839,6 +839,20 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
 
     await fillDateField(page, "Începutul evenimentului", "2027-09-30");
     await fillTimeField(page, "Ora", "19:00");
+    // Typed by hand, key by key, the box keeps every keystroke as typed — no colon of its own
+    // (the review of §NNN: an auto-colon made «19:00» into «19::0») — and reads «1930» as 19:30
+    // on leaving it.
+    const timeBox = field("event.startsAtTime");
+    await timeBox.fill("");
+    await timeBox.pressSequentially("19:00");
+    await expect(timeBox).toHaveValue("19:00");
+    await timeBox.fill("");
+    await timeBox.pressSequentially("1930");
+    await expect(timeBox).toHaveValue("1930");
+    await timeBox.blur();
+    await expect(timeBox).toHaveValue("19:30");
+    await timeBox.fill("");
+    await timeBox.pressSequentially("19:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Ceas 24h ${suffix}`);

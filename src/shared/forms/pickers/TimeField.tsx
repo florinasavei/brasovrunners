@@ -6,7 +6,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useTranslations } from "next-intl";
-import type { KeyboardEvent, SyntheticEvent } from "react";
+import type { KeyboardEvent } from "react";
 import { useRef } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import { normalizeTypedTime, TIME_PATTERN } from "./wall-values";
@@ -47,8 +47,9 @@ function announce(input: HTMLInputElement) {
  * a plain MUI `TextField` that shows exactly the characters it posts: `19:00`.
  *
  * **Typing it.** A numeric keypad on a phone (`inputMode="numeric"`), at most five characters,
- * and a colon added after a valid two-digit hour as it is typed ("19" → "19:"). On leaving the
- * box or pressing Enter in it, `normalizeTypedTime` reads the usual shapes — "1900", "19.00", "930", "9:30", "7" — as
+ * and no keystroke is ever rewritten — no colon added as the hour is typed, so «19:00» typed by
+ * hand is «19:00». On leaving the box or pressing Enter in it, `normalizeTypedTime` reads the
+ * usual shapes — "1900", "19.00", "930", "9:30", "7" — as
  * `HH:mm`; what it cannot read stays as typed for `pattern` (with JavaScript or without) and the
  * server (`isTimeValue`) to refuse. No AM/PM is ever read or shown.
  *
@@ -71,15 +72,6 @@ export default function TimeField({ name, label, defaultValue = "", required = f
     input.value = "";
     announce(input);
     input.focus();
-  }
-
-  // The colon after a whole hour, typed forward only: a backspace over it must be able to take
-  // it away, so a deletion never adds it back.
-  function onInput(event: SyntheticEvent) {
-    const input = field.current;
-    if (!input || event.target !== input) return;
-    if ((event.nativeEvent as InputEvent).inputType !== "insertText") return;
-    if (/^([01]\d|2[0-3])$/.test(input.value)) input.value = `${input.value}:`;
   }
 
   function normalize() {
@@ -111,7 +103,6 @@ export default function TimeField({ name, label, defaultValue = "", required = f
       helperText={help}
       size={size}
       sx={sx}
-      onInput={onInput}
       onBlur={normalize}
       onKeyDown={onKeyDown}
       slotProps={{
