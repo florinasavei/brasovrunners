@@ -18,7 +18,11 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * "Cost" (§343, §356, §394, §398, §406): its own card, where the page draws its own row — after the
+ * "Cost" (§343, §356, §394, §398, §406, §NNN): a named card inside the first box, «Ce fel de
+ * eveniment» (`KindBox`), since §NNN (the owner, 2026-09-26: "cardul 7. Cost poate fi inclus în
+ * cardul 1. la ce fel de eveniment"). It keeps its id, `box-cost`, and its heading «7 · Cost»:
+ * the page still draws the row after the course, and the map's chip opens the first box and this
+ * card inside it (`openFoldsAround`). Before §NNN it was its own card, where the page draws its own row — after the
  * course, before who may enter and the button (`page-sections.ts`). It was the top of "Participare
  * și înscrieri" and moved whole: the same select, the same names, the same `CostFields`, the same
  * discount-note strip. The owner, 2026-09-25: "am nevoie de mai multe căsuțe la editor ca să văd
@@ -64,7 +68,7 @@ export default async function CostBox({
   const costLabel = initialCostType
     ? `${t(`editor.costValues.${initialCostType}`)}${costAmount ? `, ${costAmount}` : ""}${discounted ? `, ${t("editor.discountSummary")}` : ""}`
     : null;
-  const card = { id: "box-cost", title: heading ?? t("editor.boxes.cost.title"), aside: costLabel ?? t("editor.notStated") } as const;
+  const card = { id: "box-cost", level: 3, title: heading ?? t("editor.boxes.cost.title"), aside: costLabel ?? t("editor.notStated") } as const;
 
   // One strip, used inside `CostFields` for a settings editor and on its own for a words-only reader.
   const discountNotePanels = (

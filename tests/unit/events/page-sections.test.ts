@@ -119,7 +119,6 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<WhenBox ", "when"],
   ["<PlaceBox ", "place"],
   ["<CourseBox ", "course"],
-  ["<CostBox ", "cost"],
   ["<RegistrationBox", "registration"],
   ["<CoHostsBox ", "coHosts"],
   ["<AutomaticSection ", "share"],
@@ -142,7 +141,10 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
         expect(source.split(needle).length - 1, `${name}: ${needle} once`).toBe(1);
         return { index, id };
       });
-      expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids);
+      // The cost's card is inside the first box since §NNN: the page still draws it seventh.
+      expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => id !== "cost"));
+      expect(source).not.toContain("<CostBox");
+      expect(source.slice(source.indexOf("<KindBox "), source.indexOf("/>", source.indexOf("<KindBox ")))).toContain("costHeading={flow.headings.cost}");
       for (const [needle, id] of EDITOR_CARDS) {
         if (id === "share") continue;
         const start = source.indexOf(needle);

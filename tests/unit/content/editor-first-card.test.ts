@@ -167,10 +167,12 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
 }
 
 describe("§448 the first box holds the type and the status, and its line says both", () => {
-  it("holds the status as a named card inside it — and neither the course nor the links", async () => {
+  it("holds the status and the cost as named cards inside it — and neither the course nor the links (§NNN)", async () => {
     const { kind } = await boxes(EVENT);
-    expect(namedFolds(kind)).toEqual(["box-kind", "box-status"]);
+    expect(namedFolds(kind)).toEqual(["box-kind", "box-status", "box-cost"]);
     expect(foldsAround(kind, "box-status")).toEqual(["box-kind"]);
+    expect(foldsAround(kind, "box-cost")).toEqual(["box-kind"]);
+    expect(kind).toContain('name="event.costType"');
     for (const id of ["box-course", "box-links"]) expect(kind).not.toContain(`id="${id}"`);
     expect(isOpen(foldTags(kind)[0])).toBe(false);
     expect(kind).toMatch(/<h3[^>]*>Starea evenimentului<span[^>]*>Programat<\/span>/);

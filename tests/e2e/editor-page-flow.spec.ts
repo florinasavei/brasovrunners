@@ -160,11 +160,9 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     const order = await page.locator("details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
     expect(order.indexOf("box-rules")).toBeLessThan(order.indexOf("box-video"));
     expect(order.indexOf("box-video")).toBeLessThan(order.indexOf("box-start-list"));
-    // The cost between the course and the registration, as the page draws its row.
-    expect(order.indexOf("box-course")).toBeLessThan(order.indexOf("box-cost"));
-    expect(order.indexOf("box-cost")).toBeLessThan(order.indexOf("box-registration"));
-    // The status is a card inside the first box since §448, the declaration one inside the rules.
+    // The status (§448) and the cost (§NNN) are cards inside the first box, the declaration one inside the rules.
     await expect(page.locator("#box-kind #box-status")).toHaveCount(1);
+    await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.locator("#box-rules #box-declaration")).toHaveCount(1);
   });
 });
