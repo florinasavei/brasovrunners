@@ -83,6 +83,11 @@ export type DayOptions = {
    * the year: a listing card's phone width (§366). Everywhere else a date carries its year.
    */
   year?: boolean;
+  /**
+   * "long" writes the month in full ("5 noiembrie 1990") — only the typed birth date read back in
+   * words (§NNN); every other date keeps the abbreviated month.
+   */
+  month?: "short" | "long";
   /** "start" capitalises the first letter (the default); "inline" keeps Romanian's lower case. */
   position?: Position;
 };
@@ -113,7 +118,7 @@ function compose(instant: Date, timeZone: string, options: Omit<DayOptions, "tim
   const weekday = formatter(intl, { weekday: options.style ?? "long", timeZone }).format(instant);
   const day = formatter(intl, {
     day: "numeric",
-    month: "short",
+    month: options.month ?? "short",
     ...(options.year === false ? {} : { year: "numeric" }),
     timeZone,
   }).format(instant);

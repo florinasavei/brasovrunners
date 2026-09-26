@@ -5,8 +5,8 @@ import { birthDateEchoText } from "./birth-date-echo";
 import { useBirthDateValue } from "./use-birth-date-minor";
 
 /**
- * The typed birth date read back in words, with the age on the event's day (§449): "Vineri,
- * 3 apr. 1990 · 36 de ani în ziua evenimentului". A native date box shows the date in the
+ * The typed birth date read back in words, with the age on the event's day (§NNN): "Marți,
+ * 3 aprilie 1990 · 36 de ani în ziua evenimentului". A native date box shows the date in the
  * browser's own order — "03/04/1990" is April to one reader and March to another — so the line
  * under it says which day was meant. Nothing before a full date is typed, and nothing without
  * JavaScript (the box itself still works; the server's refusal still says the rule).

@@ -790,7 +790,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   htmlInput: { min: earliestBirthDate, max: latestBirthDate },
                 }}
               />
-              {/* The typed date in words, with the age on race day (§449): a date box shows
+              {/* The typed date in words, with the age on race day (§NNN): a date box shows
                   "03/04/1990" in whichever order the browser likes, so the runner reads back
                   what they meant. */}
               <BirthDateEcho
@@ -800,7 +800,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 template={t("birthDateEcho", { date: "{date}", age: "{age}" })}
               />
 
-              {/* The city, required and right after the birth date (§449; the owner, 2026-09-26:
+              {/* The city, required and right after the birth date (§NNN; the owner, 2026-09-26:
                   "orașul ar trebui să fie obligatoriu, pune după data nașterii"), reversing
                   §322's optional fold. */}
               <TextField

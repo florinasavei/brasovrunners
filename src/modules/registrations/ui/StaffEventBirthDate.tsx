@@ -185,7 +185,7 @@ export function StaffGuardian({ children }: { children: ReactNode }) {
 }
 
 /**
- * The public form's read-back under the desk's birth-date box (§449): the typed day in words and
+ * The public form's read-back under the desk's birth-date box (§NNN): the typed day in words and
  * the age on the chosen event's own day, following the event select. Re-mounted with every
  * refusal, as `StaffGuardian` is, because the kept form re-mounts its boxes then (§315).
  */

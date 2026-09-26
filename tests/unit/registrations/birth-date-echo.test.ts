@@ -9,8 +9,12 @@ describe("BR-REQ-031-04 birth date echo", () => {
 
   it("says the day in words and the age on the event's day", () => {
     const line = echoText("1990-04-03", "2026-11-21", "en", template);
-    expect(line).toContain("1990");
+    expect(line).toContain("Tuesday, 3 April 1990");
     expect(line).toContain("36 years on the event day");
+  });
+
+  it("writes the month in full in Romanian", () => {
+    expect(echoText("1990-11-05", "2026-11-21", "ro", "{date}")).toBe("Luni, 5 noiembrie 1990");
   });
 
   it("counts the birthday not yet reached on the event day", () => {
