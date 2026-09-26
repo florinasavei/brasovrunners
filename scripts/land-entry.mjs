@@ -1,7 +1,7 @@
 /**
  * What `yarn docs:land` makes of one item's saved results — its DECISIONS title and body, its
  * CHANGELOG bullet, its SPECS criteria — kept apart from `land-batch.mjs`, which writes files on
- * import, so the rules are testable (§NNN).
+ * import, so the rules are testable (§426).
  *
  * The rules came from landings that went wrong (BR-V1.91's among them):
  *
@@ -211,10 +211,10 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
 }
 
 /**
- * A literal `§N` a fixer or implementer typed instead of the `§NNN` placeholder — guessing at a
+ * A literal `§N` a fixer or implementer typed instead of the `§426` placeholder — guessing at a
  * number `land-batch.mjs` has not assigned yet. Above `threshold` (the last number already in
  * DECISIONS.md, before this batch's own numbers are handed out) it cannot be a citation of an
- * existing decision, so it is rewritten to `§NNN` before step 4's numbering gives it the real one;
+ * existing decision, so it is rewritten to `§426` before step 4's numbering gives it the real one;
  * `§N` at or below `threshold` is left alone, since it names a decision that already exists.
  *
  * Rewrites every one of `entry`'s landed fields (title, body, changelog, each criterion's text) in
@@ -226,8 +226,8 @@ export function rewriteFreeSectionRefs(entry, threshold) {
   const fix = (text) =>
     String(text ?? "").replace(tooHigh, (whole, n) => {
       if (Number(n) <= threshold) return whole;
-      rewrites.push(`§${n} → §NNN`);
-      return "§NNN";
+      rewrites.push(`§${n} → §426`);
+      return "§426";
     });
   entry.title = fix(entry.title);
   entry.body = fix(entry.body);

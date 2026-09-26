@@ -4,7 +4,7 @@ import type { EventForecast, WeatherReading } from "@/modules/weather/domain/for
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-011-01 / §NNN (fix round on §401's weather chip: the rain-likely rule also applies to
+ * BR-REQ-011-01 / §429 (fix round on §401's weather chip: the rain-likely rule also applies to
  * the featured hero's «Vremea» line and the event page's weather block — an umbrella beside the
  * rain percentage, and "ploaie probabilă" / "rain likely" in the accessible text, exactly as
  * `CardWeather` already draws it on the listing card).
@@ -94,7 +94,7 @@ const forecast = (start: WeatherReading): EventForecast => ({ start, hours: [sta
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 
-/** The umbrella's phrase follows the rain phrase and comes before the wind (§NNN), never after it. */
+/** The umbrella's phrase follows the rain phrase and comes before the wind (§429), never after it. */
 function expectUmbrellaBetweenRainAndWind(line: string, rain = "60% șanse de ploaie", likely = "ploaie probabilă", wind = "vânt") {
   const at = line.indexOf(likely);
   expect(line.indexOf(rain), line).toBeGreaterThanOrEqual(0);
@@ -109,7 +109,7 @@ const eventWeatherSummary = (html: string) => {
   return text(end >= 0 ? block.slice(0, end) : block);
 };
 
-describe("the hero's «Vremea» line wears the umbrella when rain is likely (§NNN)", () => {
+describe("the hero's «Vremea» line wears the umbrella when rain is likely (§429)", () => {
   it("adds no umbrella below the rain-likely threshold", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(
@@ -169,7 +169,7 @@ describe("the hero's «Vremea» line wears the umbrella when rain is likely (§N
   });
 });
 
-describe("the event page's weather block wears the umbrella when rain is likely (§NNN)", () => {
+describe("the event page's weather block wears the umbrella when rain is likely (§429)", () => {
   it("adds no umbrella below the threshold", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(

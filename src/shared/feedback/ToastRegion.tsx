@@ -11,7 +11,7 @@ export type DrawnToast = { id: number; kind: NoticeKind; sentence: string };
 
 /**
  * The toast as drawn, and the live region around it (`DECISIONS.md` §384) — one component for
- * the backoffice's `ToastProvider` and the public site's `FlashToast` (§NNN), so a toast looks,
+ * the backoffice's `ToastProvider` and the public site's `FlashToast` (§427), so a toast looks,
  * sits and is announced the same wherever it appears.
  *
  * `role="status"`: a polite live region, mounted empty with its island and filled afterwards —

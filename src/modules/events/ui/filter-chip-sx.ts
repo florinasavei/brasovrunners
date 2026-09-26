@@ -1,7 +1,7 @@
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * The listing's «Filtre» button and its boxes, drawn as small chips (§NNN, amending §413's 44-pixel
+ * The listing's «Filtre» button and its boxes, drawn as small chips (§424, amending §413's 44-pixel
  * outlined button and 32-pixel pills — the owner, 2026-09-26: "Butonul de filtre e mult prea mare").
  *
  * The same split §133 made for the kind chips: the **tap area** is 44 pixels tall (BR-REQ-041-01
@@ -12,7 +12,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
  * Plain objects in a module of their own so a unit test can hold the two numbers apart without
  * rendering a Server Component.
  *
- * **Not on `src/theme/density.ts`'s scale, on purpose (§NNN, a fix round on this same section).**
+ * **Not on `src/theme/density.ts`'s scale, on purpose (§424, a fix round on this same section).**
  * §380's steps are phone-only overrides of an `sm`-and-up value a page already had; a flat
  * 24-pixel chip is not that shape — it is the *same* height at every width, matching the
  * active-filter `ChipLink`s (also a flat MUI-small 24 px, not density-scaled) that sit in the
@@ -34,7 +34,7 @@ export const FILTER_BUTTON_SX = {
   cursor: "pointer",
   listStyle: "none",
   userSelect: "none",
-  // The suppression lives next to its own replacement (§NNN, a fix round): if the `> span` rule
+  // The suppression lives next to its own replacement (§424, a fix round): if the `> span` rule
   // below it ever stops applying, the `<summary>` keeps its native ring rather than losing focus
   // visibility outright.
   "&:focus-visible": { outline: "none" },

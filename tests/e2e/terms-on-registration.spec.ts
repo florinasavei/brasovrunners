@@ -4,7 +4,7 @@ import pg from "pg";
 import { FEATURED, signIn } from "./support/featured-event";
 
 /**
- * §NNN — the terms a runner accepted expressly on the form (§421), where the club reads them: a
+ * §425 — the terms a runner accepted expressly on the form (§421), where the club reads them: a
  * line on the registration's page in the same shape as the privacy notice's, and the export's
  * last two columns. A staff entry says the paper carries the terms, and its cells are blank.
  *
@@ -93,7 +93,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§NNN the accepted terms on the registration's page and in the export", () => {
+test.describe("§425 the accepted terms on the registration's page and in the export", () => {
   test("the page names the notice's and the terms' versions; the CSV carries the terms in its last two columns", async ({ page }) => {
     test.setTimeout(90_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);

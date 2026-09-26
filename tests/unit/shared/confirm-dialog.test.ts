@@ -65,7 +65,7 @@ describe("§384 ConfirmDialog", () => {
 
 describe("§384 ToastProvider", () => {
   const source = read("src/shared/feedback/ToastProvider.tsx");
-  // The drawing itself, shared with the public site's toast since §NNN.
+  // The drawing itself, shared with the public site's toast since §427.
   const region = read("src/shared/feedback/ToastRegion.tsx");
   const messages = JSON.parse(readFileSync(path.join(ROOT, "messages/ro.json"), "utf8")) as { Feedback: Record<string, unknown> };
 

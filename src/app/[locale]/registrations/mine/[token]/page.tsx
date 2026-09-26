@@ -69,7 +69,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
           {t("mine.cancelledTitle")}
         </Typography>
         <Alert severity="success">{t("mine.cancelled")}</Alert>
-        {/* The toast the cancel flashed (§NNN), on this outcome only. */}
+        {/* The toast the cancel flashed (§427), on this outcome only. */}
         <PublicFlash accept={["unregistered"]} />
         <Typography sx={{ mt: 2 }}>
           <Link href="/registrations/mine">{t("mine.newLink")}</Link>

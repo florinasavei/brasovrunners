@@ -71,7 +71,7 @@ describe("§414 the ladder", () => {
   });
 });
 
-describe("§NNN an older picture's prefix, before and after its ladder", () => {
+describe("§430 an older picture's prefix, before and after its ladder", () => {
   const older = new RegExp(FORMER_KEY_PREFIX_PATTERN);
 
   it("reads a version-4 UUID as an older picture, and neither a ladder nor a YouTube poster", () => {

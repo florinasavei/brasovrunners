@@ -224,7 +224,7 @@ export function allowedTransitions(
 }
 
 /**
- * The verbs an event's editor offers (§NNN): the table's, and «Publică» on a draft for a role
+ * The verbs an event's editor offers (§423): the table's, and «Publică» on a draft for a role
  * that may publish — first, the page's own verb, beside "Trimite spre verificare". The create
  * page's «Creează și publică» (§315) and the list's «Publică» (§351) already take a draft live in
  * one press; the draft's own editor now does too, and the service walks DRAFT → IN_REVIEW →

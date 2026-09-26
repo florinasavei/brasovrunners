@@ -138,7 +138,7 @@ const sameRows = (a: readonly NightProgrammeRow[], b: readonly NightProgrammeRow
  * checkbox): Automat (după apus) / Da / Nu, and under it the automatic answer for the date in the
  * "Data și ora" card — recomputed as the date, the time or the zone is changed, so the organizer
  * sees what "Automat" will say before saving. A client island because it follows other boxes of the
- * form; the coordinates come from the server (the saved event's own place, `nightPlace`, §NNN;
+ * form; the coordinates come from the server (the saved event's own place, `nightPlace`, §428;
  * `CLUB_COORDINATES` on the create page), the words too.
  *
  * On a series (the editor's `inSeries`, or the create page's "Se repetă" ticked) one more sentence

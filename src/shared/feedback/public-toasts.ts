@@ -1,5 +1,5 @@
 /**
- * The public site's toasts (§NNN): the three flows a visitor finishes on a page of the site
+ * The public site's toasts (§427): the three flows a visitor finishes on a page of the site
  * rather than in the backoffice — the contact form sent (§149), a registration cancelled from
  * the participant's own link (§77, BR-REQ-036-01), and the declaration signed, which is the
  * participation confirmation (§86, §104) — say their outcome in a toast, through the same flash

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.01-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.02-2026-09-26 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.01-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.02-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -17218,3 +17218,259 @@ It is one mechanism, not a second watcher. On the registration form it replaces 
 Tests: e2e `registration-form.spec.ts`, «what is still missing is listed above the send button» and «the race's conditions: the box is inside the read button». The second test creates its own race with rules in both languages and walks the whole gate: the row geometry, the 44 px targets, the box opening the text, agree disabled until the scroll, the tick, the list, the tick kept after a too-fast refusal, and the entry going through.
 
 Baseline `BR-V2.01-2026-09-26`.
+
+## 423. «Publică» on a draft's own editor, in one press, like «Creează și publică» (after §406)
+
+**Context.** The owner, 2026-09-25, of §406: "I am missing the create and publish for some new events… this should be consistent!" A brief asked to verify that create-and-publish is offered the same way for every event type and for a series, and to fix only what was not.
+
+**Verified, unchanged.** On the create page, «Creează și publică» sits in the always-open Salvare card for every role that may publish. `canCreateEvent` and publishing are both Administrator-and-above, so whoever sees the page sees the button. No `OnlyForType` / `OnlyForMode` wrapper and no repeat tick touches it. The press is gated by `missingForPublish`, which does not look at the type: the title and summary in every language, the meeting point unless it is to be announced, and the address. `createEventAndPublish` runs `transitionEvent`'s guard for every type, with or without a series (§315, §350). The list's series line has «Publică» (§351).
+
+**What was not consistent.** An event that already exists as a draft offered only "Trimite spre verificare" on its editor, and «Publică» one press later. That covers an event saved with the plain create, a duplicate, and a date a series made as a draft. The create page, the list's «Publică» on a series' drafts and the bulk publish all take a draft live in one press.
+
+**Decision.**
+- `eventEditorTransitions` (`roles.ts`) is the table's verbs, plus «Publică» first on a DRAFT for a role that may publish (`canTransition(role, IN_REVIEW, PUBLISHED)`). "Trimite spre verificare" and "Arhivează" stay beside it. Every other state and every other role gets exactly `allowedTransitions`.
+- The button is the existing `PublishGateButton`, gated on the saved event's gaps (§406). The confirmation is the existing «Publici „…”?».
+- `transitionEventAction` sends `to=PUBLISHED` to `publishEvent` (service). It refuses a role that may not publish before anything moves. It walks DRAFT → IN_REVIEW → PUBLISHED through `transitionEvent` in one transaction, with the version the page was loaded with (a colleague's save in between is a CONFLICT) and the same publication guard. A refusal leaves the draft a draft, never a submission nobody asked for. From IN_REVIEW it is the plain transition.
+- The transition table is unchanged: DRAFT still never reaches PUBLISHED as one move, and the one press walks the review step, as §315's one press does. Standing pages and albums keep the plain table.
+
+**Not changed.** Publishing a series' draft source from its editor publishes the source only. The draft dates already made stay drafts, even with «Publică datele noi automat» on (§350: the rule waits for the source). The list's §351 line then offers «Publică» for them.
+
+Tests:
+- unit: `content/publish-from-draft.test.ts` (the verbs per role and state; the editor draws them; the action routes PUBLISHED to `publishEvent`; pages and albums untouched);
+- integration: `cms/publish-from-draft.test.ts` (a group run, a race and an external event from their drafts; a series' draft date; from review; a refused publication keeps the draft; a stale version is a CONFLICT; an Organizer and a Redactor are refused with nothing moved);
+- e2e: `cms-publish.spec.ts` (the unpublished create-and-publish event goes live again from its draft in one press), `editor-page-flow.spec.ts` («Publică» on a draft with gaps opens the summary and posts nothing).
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 424. The «Filtre» button and its boxes are small chips inside a 44-pixel target (amending §413)
+
+The owner, 2026-09-26: "Butonul de filtre e mult prea mare". This amends §413's look, not its mechanism.
+
+**What was too big.** §413 made the button an outlined 44-pixel control, with a 0.9375rem word and 20-pixel glyphs. Each box was a 32-pixel pill. So the button was heavier than the 24-pixel active-filter chips (`ChipLink`) that follow it, and heavier than the route pills on the cards under it.
+
+**Decision.** This is §133's split, applied to the panel: the **tap area** is 44 pixels and the **pill** is small.
+- The `<summary>` is a transparent 44-pixel target (BR-REQ-041-01 criterion 6) with no border of its own. Inside it is one outlined pill 24 pixels tall: MUI's small-chip height, 0.8125rem, weight 600. It holds the FilterList glyph and the caret at 16 pixels. Hover and the focus ring are drawn on the pill, not on the target.
+- Each box's `<label>` stays 44 pixels. Its pill goes from 32 to 24 pixels, with a 16-pixel glyph and a 14-pixel checkbox. It still fills in the brand colour through `:has(input:checked)`.
+- Nothing else changes: the fold, the form, the island, the address, the groups, the «Aplică» button and the gap around the block (`DENSITY.sectionGap`).
+
+The styles live in `events/ui/filter-chip-sx.ts` (`FILTER_BUTTON_SX`, `FILTER_OPTION_SX`, `FILTER_CHIP_HEIGHT`), plain objects, so a unit test can check the pill and the target separately without rendering a Server Component.
+
+*Rejected:*
+- Shrinking the `<summary>` itself to a chip. The e2e suite measures criterion 6 on it, and a thumb is the same size on a filter button as on a card (§133).
+- MUI `Chip` as the summary's content. It is a client component with no gain here, and the pill is a styled span either way.
+
+**Consequences.** `events/ui/ListingFilterPanel.tsx`, the new `events/ui/filter-chip-sx.ts`. Tests: unit `events/filter-chip-sx.test.ts`; e2e `listing-filters.spec.ts` now also checks that each pill is at most 26 pixels, beside its 44-pixel target.
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 425. The accepted terms version on the registration's page and in the export
+
+**2026-09-26. Follows §421; touches §316 and AGENTS.md §15.10.** Since §421 the form records which terms version a runner accepted expressly, and when (`registrations.terms_version`, `terms_accepted_at`, migration `0081`). Nothing in the backoffice read it back. "Which terms did this person agree to" needed a database query, and the file the club takes away carried neither value.
+
+**Decision.**
+- **The registration's page** (`/admin/registrations/[id]`) gets two lines in its timeline, right under «Trimisă», in one shape: «Nota de informare luată la cunoștință: {date} (v{N})» and «Termenii și condițiile acceptați expres: {date} (v{N})».
+  - The notice's line is new as well. No backoffice screen showed `privacy_notice_version`, and the terms line is meant to read like it.
+  - Its moment is `privacy_acknowledged_at`, which a restart rewrites together with both versions.
+  - A staff or desk entry records no terms, because the paper carries them (§67, AGENTS.md §15.11). Its line says so: «pe hârtie — înscriere adăugată de echipă».
+  - A public row sent before the column existed says «nicio versiune înregistrată». §316's in-force window on `/admin/legal` answers for those rows, as before.
+- **The export** ends with two columns, `Terms version` and `Terms accepted`. The CSV writes the moment as ISO 8601, like its other timestamps. The spreadsheet, which the button downloads (§172), writes the version as a number and the moment as a date.
+  - They are appended last, so a script that reads the CSV by position still finds every earlier column.
+  - A row with nothing recorded has two blank cells, never 0.
+  - Both values are about the contract, not about the person. Neither is an emergency or health column (BR-REQ-031-05 criterion 4 still holds).
+- The reads are the existing queries with more columns: `findRegistrationDetailForAdmin` adds `privacyNoticeVersion`, `termsVersion` and `termsAcceptedAt`, and `listRegistrationsForAdmin` adds the two terms fields. There is no new query, no migration and no new role gate: whoever may read the registrations (§289) reads these too.
+
+*Rejected:*
+- **A column in the registrations list.** The list is the dense start-list view, and the version matters when somebody asks about one person. That is the registration's page, and it is the file.
+- **Inferring the version for older rows from §316's window.** That would print a guess as if it were a record. The page says nothing was recorded, and `/admin/legal` keeps the inference where it belongs.
+
+**Tests.**
+- Unit, `registrations/csv.test.ts`: the header and the positions, the version and the moment, blank for a staff row and for an older row.
+- Unit, `registrations/workbook.test.ts`: the last two headers, and the version as a numeric cell.
+- Integration, `registrations/terms-acceptance.test.ts`: the detail and list queries hand over the terms version and moment and the notice's version, and a staff entry reads as none.
+- E2E, `terms-on-registration.spec.ts`, on both projects against a production build: both timeline lines, the staff line, and the CSV's last two cells.
+
+Round two on feat/terms-version-on-row-and-csv (§421 follow-up), per review: the terms-on-registration e2e spec now removes its two seeded rows from the featured event in a finally block, so other specs' free-place counts on that event stay accurate; the terms-accepted and privacy-notice timeline lines were reworded to "Label (v{version}): {date}" in both languages, replacing the earlier "Label accepted expressly: {date} (v{version})" phrasing; and the registration detail page's three terms-line branches (accepted, on paper, not recorded) were pulled into a pure `termsLineKindFor` helper with its own unit test.
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 426. The tooling chores: ship judges settled checks, docs:land refuses blanks and a fixer's housekeeping, dropped indexes and constraints are contracts, and the next-dev walk runs nightly on qa
+
+**Amends §368, §370 and §374 (2026-09-26).** Four chores `docs/QUEUE.md` carried under "Later", found while running the dispatcher and in §390.
+
+**`yarn ship` judges settled checks.** Step 2 used to judge the batch PR the moment `gh pr checks --watch` returned. `--watch` returns as soon as nothing it can see is running: before a workflow has registered its checks ("no checks reported"), or between one job finishing and the next one (the e2e job, a Vercel deployment) appearing. So a PR with nothing red on it could be stopped as "not green". Step 5 merged the release PR after `--watch` returned and only logged the checks, so it could merge with checks still running. Now `scripts/ship-checks.mjs` (pure, tested) reads `gh pr checks --json name,state,bucket` every 30 seconds. It judges only when no check is pending and the same checks, in the same buckets, have been read twice in a row. It gives up after ten minutes with no check and after ninety with one still pending.
+- Green is every check passed or skipped (a job whose `if:` was false).
+- The batch PR stops on any failed or cancelled check.
+- The release PR now stops on red too, except a Vercel deployment check (a name starting "Vercel"). That red is printed and not stopped on. On Hobby it can mean the daily deploy limit rather than the code, and the qa run on the same commit has already judged the code, with its one rerun for the Google Fonts flake.
+
+**`yarn docs:land` refuses blanks and never lands a fixer's housekeeping.** Each item's entry now comes from `scripts/land-entry.mjs` (pure, tested). BR-V1.91's landing had three defects, and the text that closes §411 is a fourth:
+- **A blank fix report is refused.** This is a round whose result has no `fixed`, or a fix with no summary; before, it was skipped in silence and the item landed as if the fix had happened. A round that committed nothing is skipped and the dry run says so.
+- **The CHANGELOG bullet is the implementer's**, or the manifest item's own `changelog` when the dispatcher rewrote it. A fixer's `changelogLine` is never taken, because fixers wrote it about their round rather than about what a person sees. The dry run prints it as a proposal.
+- **A blank `decisionsTitle` is refused.** The title is the fixer's when it has a real one, else the implementer's, else the manifest item's own `title`; if all are blank, nothing lands.
+- **A fixer's housekeeping is dropped:**
+  - a rewritten section that says nothing ("Carried forward from the implementer, unchanged.", "Unchanged.", "N/A") keeps the implementer's section;
+  - a sentence that names a landing artifact (DECISIONS/CHANGELOG/SPECS, the baseline marker, `changelogLine`, `specsCriteria`) and says it was not edited or is for the orchestrator is removed from the text around it;
+  - an empty SPECS criterion is dropped before the merge, so it cannot replace a real one for its requirement.
+
+  Every dropped sentence is printed, so the dry run shows it. The rule is narrow on purpose. "§372 did not say what changed" is the fix itself and stays, and so does a queue rule that "carries a deadline forward"; the tests hold both.
+
+A blank bullet is refused too. The refusals come before anything is written. The fix prompts in `br-chain.js` and `br-fix-round.js` now tell fixers the same thing: the whole text, never a note like "carried forward"; the summary is never empty; the bullet is a proposal the dispatcher decides on.
+
+**`yarn migrations:check` counts `DROP INDEX` and `DROP CONSTRAINT` as contracts.** Migration 0073 dropped the unique index that held one registration per address, which the serving code relied on. It passed as neither expand nor contract and carried its `-- contract:` note only because its author wrote it by hand (§390). A dropped uniqueness, foreign key or index can break the code still serving: an `ON CONFLICT` whose target is gone, a query that reads "one row" and now gets two, a cascade that no longer happens. The check now reads both forms, quoted or bare, schema-qualified, with `IF EXISTS` and `CONCURRENTLY`. Two drops are not contracts, because they take nothing from the serving code:
+- a name the same file creates again. Migration 0080 drops and recreates `email_action_tokens_one_active_per_registration_purpose` with a looser predicate; the creation is classified as what it is, an expand.
+- a CHECK constraint an earlier migration created. Migration 0024 drops `registrations_bib_number_not_assigned_in_m1`, which 0006 created as a CHECK, and a CHECK only refuses rows. To know this, the script now reads every migration in order, the history before 0024 included, and records each constraint's kind.
+
+All 58 checked migrations still pass. Any other drop in a file that also adds something is refused as "expands and contracts", and a file that only drops needs its `-- contract:` line.
+
+**The `next dev` walk runs nightly on qa.** §370 kept `yarn test:e2e:dev` out of CI because it takes minutes (every route compiles on its first request), and a pull request should not wait on it. `.github/workflows/e2e-dev-nightly.yml` runs it at 01:37 UTC every night and by hand (`workflow_dispatch`). It checks out `qa`, because that is where the next release is assembled. It uses its own PostgreSQL service, migrates and seeds (the seed gives the walk its ids), and runs with `--retries=0`: a page that fails once under `next dev` and passes on the retry is exactly the defect the walk requests every address twice to find. Its timeout is 75 minutes, and it uploads the report on failure. It reads no secret. GitHub runs a schedule from the default branch's copy of the file, so it starts the night after the release carrying it reaches `main`. A failed run is GitHub's own email to whoever last changed the schedule. Pull requests are unchanged: the walk is still not in `docs-check`. Measured locally with `CI=1` and `APP_ENV=test` on its own database: 2 passed in 7.4 minutes on qa at 0ec52bd8.
+
+chore/tooling-ship-land-migrations-nightly's fix round answered the re-review: `withoutHousekeeping`'s carried-forward match now covers every tense of "carry … forward" (carried/carries/carry/carrying), not only the past tense, closing a gap where an ordinary fixer phrasing could still let the V1.91 defect land; and it now tests a sentence's ';'-separated clauses independently, so a housekeeping clause sharing a sentence with real substance drops alone instead of taking the substance with it. The nightly `next dev` workflow's documented filename/cron deviation from the brief was accepted as-is, per the review's own note.
+
+This round answered the review of `chore/tooling-ship-land-migrations-nightly`'s three findings. The pattern now also accepts "the implementer's <noun>" and "the text" as the object named *after* "forward", while still requiring that object to be the document text itself — a sentence whose object sits *between* "carry" and "forward" (e.g. "carries the runner's place forward"), or whose object after "forward" names something other than the document, is still kept as the fix's real substance, exactly as before. Separately, the dry run's notes now mark a dropped housekeeping sentence with an uppercase `DROPPED from <who>: "…"` prefix rather than lowercase `dropped from …`, so it reads as a flag in the printed list rather than blending into an ordinary sentence. And `docs/DEVELOPMENT.md`'s one-line description of `yarn test:e2e:dev` — previously "minutes; not in CI" — now names the workflow that runs it, `.github/workflows/e2e-dev-nightly.yml`, once a night at 01:37 UTC on `qa`, matching the sentence README.md already carries for that same workflow's row.
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 427. The public site's three finishing flows say their outcome in a toast, through the backoffice's flash
+
+**2026-09-26.** Every backoffice action has confirmed its success in a toast since §384. The public site's own finishing flows still ended on a banner and nothing else. `docs/QUEUE.md` listed them under "Later": the contact form's sent state, self-unregistration, and the participation confirmation.
+
+**Decision.** Three public flows flash their outcome through §384's `br-flash` cookie and show it in a toast on the page their redirect lands on. The page's own banner stays exactly where it was.
+
+- **The contact form sent** (§149). The toast reads «Mesaj trimis clubului.» / "Message sent to the club." It is flashed for a delivered message, a message marked «[posibil spam]» and an ignored bot post alike (§310, BR-REQ-031-01 criterion 3), so the toast is no oracle.
+- **A registration cancelled by its participant**, from the manage link (BR-REQ-036-01) or from "my registrations" (§77). The toast reads «Gata: înscrierea ta e anulată.» / "Done: your registration is cancelled." It is flashed only when the link did the cancel. A refused link or an event that has started says so on the page, never in a toast (§384: a refusal is never a toast).
+- **The declaration signed**, which is the participation confirmation (§86, §104). Confirmed reads «Declarație semnată: înscrierea ta e confirmată.» and on the waiting list reads «Declarație semnată: ești pe lista de așteptare.», in both languages.
+
+**How, and why this way.**
+
+- **Translated on the server, drawn by a string-only island.** The backoffice's `ToastProvider` translates a `saved` code in the browser from the whole `Feedback` namespace. A public page carries only its islands' words (§353), and shipping that namespace to every visitor is what §353 removed. So the action flashes a key from `PUBLIC_TOAST_KEYS` (`shared/feedback/public-toasts.ts`), and `PublicFlash` (a Server Component) translates `Feedback.public.<key>` in the page's language. `FlashToast` receives the sentence and the close label as strings. The client-messages lists are unchanged.
+- **One drawing.** The live region, the Snackbar, the 44 px close button and the position above the footer's bar moved out of `ToastProvider` into `ToastRegion`, which both the provider and `FlashToast` use. A toast therefore looks, sits and is announced the same way on both sides of the site.
+- **Mounted only where a flow lands.** `PublicFlash` is rendered in the success branch of four pages (contact, the declaration, the manage link, "my registrations") and in no layout. Every other page ships none of it. A unit test holds the list of importers.
+- **Never twice.** The island shows the toast only while `document.cookie` still holds the flash, and clears it as it shows it. A refresh finds no cookie on the server. A page restored from the router's cache finds none in the browser.
+- **Each flash to its own page.** A public flash and a backoffice flash are read by different readers (`readPublicFlash`, `readFlash`) and no key is in both lists. A visitor with JavaScript off leaves the cookie in the browser for its minute, and a staff page opened in that minute must not turn it into a generic «Salvat.».
+- **What the cookie carries.** The key and nothing else: no count, no name, no address. A slot accepts only the keys its branch can have been sent, and the declaration page accepts the one that matches its `done` value.
+- **Accessibility.** The region is mounted empty and filled after the paint, so a screen reader announces the sentence. Nothing takes the focus, and nothing runs inside the press (§371). Without JavaScript the island never runs and the banner is the whole answer, as it always was.
+
+**Refused.**
+- Mounting the backoffice provider in the root layout: it would ship the `Feedback` namespace to every visitor and put a client island on every page.
+- Toasting the registration form's "check your email" (`?submitted=1`) and the email-confirmation link (`/confirmare`): the queue named three flows, and both pages are already a full-page next step. Left to the owner.
+- Toasting a refusal: §47's summary is where a refusal belongs.
+
+**Verification.**
+- Unit, `tests/unit/shared/public-toasts.test.ts`: the sentences exist in both catalogues; the flash carries the key only; the two readers never cross; the cookie-present rule; an empty region on the server; mounted only in the four pages and never in a layout; the island reads no catalogue. `confirm-dialog.test.ts` now reads the drawing from `ToastRegion`.
+- e2e: `contact.spec.ts` checks the toast, its 44 px close button and that a refresh repeats nothing. `declaration-signature.spec.ts` signs, sees the toast, reloads, then cancels from a minted manage link and sees the cancellation toast, which also gives the place back.
+
+No migration, no dependency, no rule changed.
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 428. The night times to the minute, at the event's own place; the pill says «Noapte» under a crescent
+
+Amending §394, §382 and §415. The owner, 2026-09-26: "Sunset is now at 19:07 actually, do make sure this data is accurate, and change that flashlight icon".
+
+**The value was right to the second; the print was not.** §394's NOAA computation (`sun.ts`) was checked against the US Naval Observatory's one-day tables (`aa.usno.navy.mil/api/rstt/oneday`), read on 2026-09-26: 86 times covering civil dawn, sunrise, sunset and civil dusk.
+- Brașov across a year, including both clock changes.
+- Bucharest at both solstices, Cluj, Constanța, London.
+- The Tromsø polar night.
+
+Every instant is within five seconds of USNO's. But `wallClockTime` prints "HH:MM" by cutting off the seconds, so every time with 30 seconds or more read one minute early. On 26 September 2026 the sun sets over Brașov's centre at 19:07:51. That printed "19:07", while USNO, NOAA's calculator and meteogram.org all print 19:08.
+
+**Decision: every sun instant is rounded to the nearest minute**, in `sunTimes`, before anything reads it. The instant is rounded, not only its print, so the verdict and the sentence stay on the same minute. For example, civil dusk on 30 September is 19:29:41 and prints 19:30, and a 19:30 start is a night start by that same 19:30. `sunTimes(…, "exact")` exists only for the reference test.
+
+With rounding, 81 of the 86 times print exactly as USNO does. The other five each lie within four seconds of a half minute: 07:32:29, 07:36:28, 06:48:26, 17:30:30 and 06:36:28. Two independent calculators a few seconds apart round those in opposite directions. The test names all five.
+
+The owner's 19:07 was that day's sunset. The pill he looked at belongs to the Wednesday run of 30 September, whose sunset really is 19:00: the sun sets about two minutes earlier each day (19:08, 19:06, 19:04, 19:02, 19:00). A test pins this sequence.
+
+**The event's own place.** The sun is now read where the event is, by the rule the forecast already follows (§416's `forecastPlace`):
+1. the map link's pin;
+2. else the typed «Coordonate»;
+3. else `CLUB_COORDINATES`.
+
+While the place is to be announced (§328), the club's place is used, because the public row withholds the pair and the link.
+
+One helper, `nightPlace` in `events/night-event.ts`, backs `clubNightEvent`. The editor's island gets the saved event's place from the server; the create page uses the club's. So the pill, the hero, the calendar entry, the `.ics`, the reminder and the email facts block read the same point that the forecast and the map link read. A race in Cluj on 21 November sets its sun at 16:46, not at Brașov's 16:42.
+
+**The pill's word is «Noapte» / «Night»** (`Event.night.chip`) on every type, replacing §394's «Alergare de noapte» / «Eveniment de noapte» on the pill. A pill is one fact beside «Trail», «10 km» and «Gratuit», and the card's type chip already says whether the event is a run. The tooltip (§415) still says the sunset, or the sunrise before dawn.
+
+The calendar entry, the `.ics` line and the reminder keep the full label by type inside their sentences, where no chip stands beside the word. The email facts block's «Traseu» row draws the pills, so it now ends «… · Noapte».
+
+**The glyph is a crescent moon**, Material's `ModeNight`, one file, replacing §382's lit torch (`FlashlightOn`). The torch was chosen when the mark was a stored "Necesită frontală", meaning the kit to bring. Since §394 the mark is computed from the sun and states a fact about the date, and a moon is what reads as the time.
+
+`DarkMode` was refused because it is the header's light/dark switch (`ThemeModeToggle`), and one picture meaning two things on one screen is what §318 refused. The registry name is now `night` rather than `headlamp`, and the listing filter's night chip wears it too. The route-pill slot keeps its internal name `headlamp`.
+
+*Rejected:*
+- Truncating, as before.
+- Rounding only the printed string: the verdict would then compare against a dusk that the words do not name.
+- A dependency.
+- Following short map links to find a place.
+- A separate night-only place setting: one rule already decides the forecast's place.
+
+**Tests:**
+- `tests/unit/events/sun-reference.test.ts` (new): the USNO table, the drift, the printed minute, the owner's dates, and the place rule.
+- `tests/unit/events/night-event.test.ts`: the pill word, the glyph, and Cluj's sunset through typed coordinates. The January sunrise is 07:56 and the November one 07:21, as USNO prints them.
+- `tests/unit/events/route-pills-build.test.ts`.
+- `tests/integration/notifications/render.test.ts` and `confirmation-event-facts.test.ts`.
+- `tests/e2e/night-event.spec.ts`: the crescent found by its path, no torch, «Noapte» / «Night».
+
+A fix round on the night-pill sunset sentence (amending the entries just above it): the listing hero's bare route-line word now carries the sunset through the same visually hidden span GlyphChip's own srSuffix uses (SR_ONLY_SX), since a plain line opens no tooltip to hear it from; the email facts block's Traseu row says it in parentheses after the word, for the same reason — no chip, no hover. GlyphChip itself stops describing a chip's tooltip when the tooltip repeats the srSuffix already in its name word for word (only the night pill does this today), but does so by passing the tooltip as a React node rather than a string on that one path — MUI's `describeChild={false}` otherwise sets `aria-label` to the tooltip unconditionally, which would have replaced "Noapte" itself with the sunset sentence rather than merely dropping the duplicate description.
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 429. The card's weather pill ends the route's row, and wears the umbrella when rain is likely
+
+Amending §416. The owner, 2026-09-26: the card's weather pill should sit with the route pills, and show an umbrella when rain is likely.
+
+**Where.** §416 put the pill in the card's marks row (type, special, partner, cancelled), so that no card would grow. The owner moved it: the marks row says *what the event is*, while the weather says *what the day will be like*, and that belongs beside what the route is. The pill is now the **last pill of the route's row** (`data-fact="pills"`), after the cost (§343, §375's order: surface, difficulty, distance, elevation, night, cost, then the weather). This applies to the single-date card and to the series card, where the pill is for the next date.
+- `RoutePills` takes a `trailing` node, drawn after the last `GlyphChip` in the same wrapping row. The weather is not a `Pill`: its glyph is the forecast's own, made in a Server Component (§370, §318), never a `GlyphChip` name. So the node goes from one Server Component to another and never crosses into a client component.
+- `EventFacts`' compact form takes `cardWeather` (the start's `WeatherReading`) from the card. A card with no route pill but with a forecast still gets the row, holding the weather alone, and the place link's reach counts that row as its follower.
+- The pill stays the 24-pixel outlined span of §416, and matches the route pills' height.
+- The hero's «Vremea» line, the event page's block, the reminder and the calendar are unchanged.
+
+**The umbrella.** `rainLikely(reading)` in `weather/domain/forecast.ts` is pure. It is true when the chance of rain at the start is at least `RAIN_LIKELY_PERCENT` = **50** ("likely" means more likely than not, a threshold nobody needs a legend for), *and* the hour's own glyph is not snow, snow showers, frost or the storm. Open-Meteo's `precipitation_probability` covers any precipitation, so a snowy hour's 80% is snow. Snow, frost and a storm also tell a runner something more urgent than "take an umbrella". When it is true:
+- the pill's glyph is `Umbrella` (the same file and glyph as showers, §402);
+- the visible text stays the degrees alone;
+- the accessible name gains the chance: «Vremea la start: Înnorat, 12 °C, 60% șanse de ploaie», from the existing `Weather.rain` key through a new `WeatherWords.rain`.
+
+No new catalogue key.
+
+**Rejected.**
+- *Showing «60%» on the pill.* The umbrella already says it, and every extra character widens the row on a 320-px phone.
+- *Umbrella on the hero line.* The hero already prints the word and the chance.
+- *Umbrella over snow, frost or storm.* It would hide the more important glyph.
+
+**Tests.**
+- Unit `events/listing-card.test.ts`: the pill is inside `data-fact="pills"`, after every route chip and the cost, and after the title. The marks row carries only the type and the partner. A card with no route pills renders the row for the weather alone, and a card with neither has no row. The umbrella appears at 60% (its path is the showers glyph, not the calm one), the spoken chance is present, and snow at 90% keeps its own glyph. The series card has the pill in its row.
+- Unit `weather/rain-likely.test.ts`: the threshold at 49 and 50, a null chance, every glyph name at 80%, and the phrase in both languages.
+- E2E `weather-place.spec.ts`: the pill is inside the pills row and is its last element, with no umbrella at the stub's 20%.
+
+Round 2, 2026-09-26, after the owner's «Nu vreau footer cu Open-Meteo pe main page» at 09:10. The Open-Meteo credit strip that §416 put under the listing's cards is gone, and its component, WeatherCredit, is deleted. The CC BY licence still asks for the credit, so it is now said once for the whole site as a link in the site footer's «Despre club» fold, before the build stamp: a 44-px target like its neighbours, opening in a new tab with noopener noreferrer. The event page keeps its own credit beside its forecast, and the featured hero keeps its inline «Prognoză: Open-Meteo» on its «Vremea» line; whether that one should also go is the owner's call. On the hero and the event page, the umbrella and «ploaie probabilă» / "rain likely" now come right after the chance-of-rain phrase, or after the temperature when the hour has an amount but no chance, instead of after the wind. One helper, forecastSummaryPieces, does this for both, and the hero's umbrella lost a doubled margin. WeatherWords.rain is removed: it has been unused since the card's spoken text took rainLikely. The card-height table at 320/360/390/412 px was not measured. The pill is the same 24-px pill as the route pills it joins, in a row that already wraps. The dispatcher accepted this, and a follow-up measurement is noted in EventCard.tsx.
+
+Fix round after review (2026-09-26). Open-Meteo's credit on the listing: there is no strip under the cards any more. The credit is in the site footer's «Despre club» fold, and the featured hero keeps its own inline credit on its «Vremea» line (BR-REQ-041-01), so a listing with a featured forecast shows the credit twice: once in the hero, once in the footer. This is deliberate. The owner objected to the strip under the cards, not to the hero's line, and the dispatcher has flagged that choice to him. The guard: the end-to-end check expects the number of Open-Meteo links in the page's main region to equal the hero's own count (0 or 1). It then opens the footer fold and expects the credit to be visible, with Open-Meteo's address. A unit test pins the footer link's address, `rel="noopener noreferrer"` and its place inside the fold. Where the umbrella goes on the hero and the event page: right after the rain-chance phrase and before the wind («Parțial noros, 14 °C, 60% șanse de ploaie, ☂ ploaie probabilă, vânt 11 km/h»). When there is no chance but at least 0.5 mm is forecast, it goes right after the temperature. The footer panel measured in §385 (136 px) got a fourth item, the credit, before the build stamp. The panel is expected to be about 180 px on a phone, which was not remeasured, and `footer.spec.ts` still requires it to stay under 188.
+
+Baseline `BR-V2.02-2026-09-26`.
+
+## 430. The pictures stored before §414 get their ladder from a one-off Administrator button, a batch per press
+
+**Why a button.** §414 left every older picture drawing its one large file "until it is uploaded again". The reason is that a page decides from a picture's address alone whether smaller files exist: a version-8 prefix has a ladder, a version-4 prefix does not. A body is JSON, and the renderer does not ask the database about each picture in it. So writing the rungs next to an old master changes nothing a visitor sees. Asking the club to upload every old picture again, into every page and event it sits in, would take an afternoon. The button does it in a few presses.
+
+**What a press does.** It takes at most `OLDER_PICTURES_PER_PRESS` (20) of the oldest pictures whose prefix is a version-4 UUID (`FORMER_KEY_PREFIX_PATTERN`). It starts no new picture after `OLDER_PICTURES_BUDGET_MS` (30 s); the tasks page exports `maxDuration = 60`, and a Server Action runs inside that page's function. For each picture it does three things.
+1. **The files, under the new prefix.** The new prefix is `ladderKeyPrefixOf(old)`, the same UUID with its version digit set to 8. So the new address follows from the old one, and a press cut off halfway writes the same bytes to the same keys when repeated. The master is stored byte for byte and is not encoded again, so a wide screen loads exactly the file it loaded before. The 640-pixel thumbnail and every rung are made from the master at «Normală»'s own settings (`ladderFromStoredMaster`): such a master is at most 2400 px, and a rung is drawn at its own width. The thumbnail is made again because pictures from before §176 have a 480-pixel one.
+2. **One transaction.** It moves the row to the new prefix and replaces the old prefix with the new one in every text the reference check reads (`references.ts`): a page's body, an event translation's five rich texts and the event's film poster. It adds 1 to the `version` of every row it rewrote. An editor left open on one of them is then refused at save, as for any other change made meanwhile (AGENTS.md §11.5), instead of saving the old address back. A gallery photo and an album cover reference the row by id, so moving the row is all their change needs.
+3. **The old two files stay.** The pictures page offers a picture's address for a newsletter or a post, and a browser offers any picture's address. An address copied out of the site must not turn into a broken image because the club pressed a button. The old files are not strays: `assetObjectKeys` names them for every laddered prefix through `formerKeyPrefixOf`, so they are removed when the picture is removed (the album delete, the delete by hand, the orphan sweep). For a picture uploaded with its ladder, those two keys never existed, and deleting a missing key does nothing.
+
+**What it never does.** It never touches a YouTube poster: a `yt-<id>` poster keeps YouTube's single small file on purpose (§403, §414). It never touches a picture that already has its ladder. A picture whose master is missing or unreadable counts as failed and is left exactly as it is: it was already a broken image, and the pictures page is where it gets removed. A cursor keeps a press moving past such pictures, and the next press tries them again, which costs one quick read each.
+
+**Two presses at once.** Both presses write identical files to identical keys, and the row moves only where its prefix is still the old one. A press that finds the row already moved deletes nothing. A press that finds the row gone deletes only the new prefix's own files, never the old address's.
+
+**What a press says.** It asks first (§384, `ConfirmDialog`): the question says the address changes, the old address keeps working, and an open editor will ask to be reloaded. The toast carries only the numbers (`picturesLaddered` / `picturesLadderedFailed`: converted, failed, left). Each press writes one audit row, `media.ladder_given`, with those numbers. When anything was converted, the press expires the public reads for events, pages and gallery (§333). The card sits on the task board's default panel, because it is something owed once, by the Administrator. It shows the count left and is gone at zero. The role is asserted at the action and again in the service (BR-REQ-060-01).
+
+**Rejected.**
+- Writing the rungs under the old prefix and marking the picture with a column and a body attribute. That needs a migration, a new attribute in the body schema, and a change to every renderer, which is more code than moving the address.
+- Deleting the old files right away. That breaks any address copied out of the site, for a few hundred kilobytes a picture.
+- A background job. The club presses the button once, and a job would wake the database for a task that ends (§327).
+
+No migration, no new dependency. Tests: unit `media/ladder.test.ts`; integration `cms/older-pictures.test.ts`; e2e `older-pictures.spec.ts`.
+
+Round 2 (561488f4) closed the re-review's findings. The cursor: the press's keyset cursor now carries PostgreSQL's own text of created_at — it selects `created_at::text` and compares it back as `$1::timestamptz` — instead of a JavaScript Date. A Date holds milliseconds and the column holds microseconds, so a cursor made from one sat just before its own row, and a failed picture with a microsecond time (any row written with the column's now() default) was read again on every page until the time budget ran out, inflating «failed» in the toast and the audit row. An integration case with three microsecond times inside one millisecond proves each picture is read once per press. The failed count on the card: the card on /admin/tasks states the last press's failures itself, not only in the toast that fades — the action lands on `?saved=picturesLadderedFailed&…&failed=N` and the page passes N to the card, which shows a warning in both languages (the file is missing from storage or is not a picture; upload it again where it is used) and a link to «Imagini». The page join: the pictures list's page join also matches a converted picture's former address, as the delete refusal and the orphan sweep already did, so the list can no longer show a picture as unused and then refuse to delete it. One total: the count stays one total, not split by kind — the press treats every kind alike and the Administrator's one decision (press until none are left) does not change with the split; the reason is in OlderPicturesPanel.
+
+The older-pictures batch-ladder feature (its full write-up already stands in `src/modules/media/older-pictures.ts`'s module doc comment) is amended by this review round: the audit row recorded at each press now also carries `failedIds` — up to `perPress` ids of the pictures that failed that press, so `console.warn` and the audit trail both name which picture needs a fresh upload where a missing or unreadable master, a store refusal, or a per-picture exception failed it. The task-board copy for a failed picture no longer states flatly that a second press will not help, since a store refusal or a transient database error — both counted in the same `failed` number — would in fact clear on retry; only a missing or non-picture file, the common case, genuinely needs a re-upload.
+
+Baseline `BR-V2.02-2026-09-26`.

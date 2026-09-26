@@ -4,7 +4,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
  * BR-REQ-041-01 criterion 6 — the listing's «Filtre» button and its boxes are small chips inside a
- * thumb-sized target (§NNN, amending §413; the owner, 2026-09-26: "Butonul de filtre e mult prea mare").
+ * thumb-sized target (§424, amending §413; the owner, 2026-09-26: "Butonul de filtre e mult prea mare").
  * The e2e spec measures the rendered heights; this holds the two numbers apart in the source.
  */
 describe("the filter button and its boxes: a small pill, a 44-pixel target", () => {

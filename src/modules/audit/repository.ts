@@ -161,7 +161,7 @@ export type AuditAction =
   | "registrationsPerAddress.changed"
   /**
    * One press of the one-off button that gives the pictures stored before §414 their ladder
-   * (§NNN): how many it converted, how many it could not read from the store, how many are left.
+   * (§430): how many it converted, how many it could not read from the store, how many are left.
    * About no single row — a press is a batch — so `entity_id` is null.
    */
   | "media.ladder_given"

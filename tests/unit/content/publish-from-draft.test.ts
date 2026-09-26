@@ -5,14 +5,14 @@ import { allowedTransitions, EDITORIAL_STATUSES, eventEditorTransitions, STAFF_R
 
 /**
  * BR-REQ-051-01 — «Publică» on a draft's own editor, one press, as «Creează și publică» on the
- * create page (§NNN, after §406: "I am missing the create and publish for some new events… this
+ * create page (§423, after §406: "I am missing the create and publish for some new events… this
  * should be consistent!"). The create page offered the one press on every type and every series;
  * an event saved as a draft, a copy, or a date a series made could only be sent for review from
  * its editor. These hold the verbs the editor draws; the integration test holds the service.
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 
-describe("§NNN the editor's verbs on a draft", () => {
+describe("§423 the editor's verbs on a draft", () => {
   it("offers an Administrator «Publică» first on a draft, beside the table's own verbs", () => {
     for (const role of ["ADMIN", "SUPERADMIN"] as const) {
       expect(eventEditorTransitions(role, "DRAFT", false)).toEqual(["PUBLISHED", ...allowedTransitions(role, "DRAFT", false)]);

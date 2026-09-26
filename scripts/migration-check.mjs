@@ -42,7 +42,7 @@ const NAME = String.raw`((?:"[^"]+"|\w+)(?:\s*\.\s*(?:"[^"]+"|\w+))?)`;
 const nameOf = (raw) => raw.split(".").pop().trim().replace(/^"|"$/g, "").toLowerCase();
 
 /**
- * `DROP INDEX` and `DROP CONSTRAINT` are contracts too (§NNN): migration 0073 dropped the unique
+ * `DROP INDEX` and `DROP CONSTRAINT` are contracts too (§426): migration 0073 dropped the unique
  * index that held one registration per address, which the serving code relied on, and passed as
  * neither expand nor contract because neither word was on the list above. A dropped uniqueness,
  * foreign key or index can break the code still serving — an `ON CONFLICT` whose target is gone,

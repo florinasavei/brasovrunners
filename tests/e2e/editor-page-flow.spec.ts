@@ -119,7 +119,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await hydrated(page);
     await expect(page.getByRole("heading", { name: /^6 · Traseul — apare pe pagină/ })).toBeVisible();
 
-    // «Publică» is on the draft itself (§NNN), as «Creează și publică» was on the create page, and
+    // «Publică» is on the draft itself (§423), as «Creează și publică» was on the create page, and
     // gated the same way: pressed with the summaries missing, it posts nothing.
     const onDraft = page.getByRole("button", { name: "Publică" });
     await expect(onDraft).toBeVisible();

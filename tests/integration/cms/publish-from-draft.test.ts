@@ -7,7 +7,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-051-01 — «Publică» from a draft's own editor, in one press (§NNN). «Creează și publică»
+ * BR-REQ-051-01 — «Publică» from a draft's own editor, in one press (§423). «Creează și publică»
  * (§315) walks DRAFT → IN_REVIEW → PUBLISHED for a new event of any type, with or without a
  * series; `publishEvent` walks the same two moves for an event that already exists as a draft —
  * one saved with the plain create, a copy, a date a series made. The same guard, the same
@@ -51,7 +51,7 @@ const complete = (slug: string, fields: Record<string, unknown> = {}) => ({
   },
 });
 
-describe("BR-REQ-051-01 «Publică» from a draft in one press (§NNN)", () => {
+describe("BR-REQ-051-01 «Publică» from a draft in one press (§423)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

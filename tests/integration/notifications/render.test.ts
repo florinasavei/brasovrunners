@@ -284,7 +284,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
     // Never on another message about the same night event: the sunset and the light are the
     // reminder's line alone. The confirmation's facts block draws the page's route pills, so it
-    // names the night pill, «Noapte» (§NNN) — the same `nightPill`, never the reminder's sentence.
+    // names the night pill, «Noapte» (§428) — the same `nightPill`, never the reminder's sentence.
     const confirmed = await renderOutboxMessage({ ...row, id: "row-nc", idempotencyKey: "test:nc", messageType: "REGISTRATION_CONFIRMED" }, db, NOW);
     expect(confirmed.text).not.toMatch(/Alergare de noapte: (începe|apusul)/);
     expect(confirmed.text).not.toContain("Ia o frontală");

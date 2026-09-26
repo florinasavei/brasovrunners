@@ -41,12 +41,12 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * boxes say the same thing.
  *
  * **A pill is a label.** Each option is a `<label>` 44 pixels tall (BR-REQ-041-01 criterion 6) around a
- * small pill (MUI's small chip, 24 pixels — §NNN) that holds a real checkbox, the value's glyph (§112,
+ * small pill (MUI's small chip, 24 pixels — §424) that holds a real checkbox, the value's glyph (§112,
  * drawn here — nothing crosses into a client component but a name or a string) and its word; a ticked
  * pill fills in the brand colour through `:has(input:checked)`, so it changes the instant the box
  * does, script or not.
  *
- * **The button is a chip too** (§NNN — the owner, 2026-09-26: "Butonul de filtre e mult prea mare"): the
+ * **The button is a chip too** (§424 — the owner, 2026-09-26: "Butonul de filtre e mult prea mare"): the
  * `<summary>` is the 44-pixel target, the outlined pill inside it the active-filter chips' own size.
  *
  * `keep` is what the address carries that is not a filter — the calendar's month or year, the list
@@ -146,7 +146,7 @@ export default async function ListingFilterPanel({
           aria-label={t("filter.label")}
           sx={{
             mt: 1,
-            // Tighter on a phone (§NNN, amending §380's scale — the owner: "Butonul de filtre e
+            // Tighter on a phone (§424, amending §380's scale — the owner: "Butonul de filtre e
             // mult prea mare"): the open panel is a compact block rather than the same box a
             // tablet gets, `p` and `gap` on the density scale like every other public site.
             p: { xs: DENSITY.gapSm, sm: 1.5 },

@@ -25,7 +25,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-054-01 criterion 14, BR-REQ-090-05 criterion 14 (`DECISIONS.md` §NNN) — the one-off
+ * BR-REQ-054-01 criterion 14, BR-REQ-090-05 criterion 14 (`DECISIONS.md` §430) — the one-off
  * button that gives the pictures stored before §414 their ladder.
  *
  * What is proven: a press converts the oldest pictures first, at most a batch; the master is kept
@@ -68,7 +68,7 @@ const bodyWith = (src: string, width: number) =>
     ],
   });
 
-describe("§NNN the pictures from before §414 get their ladder, a batch per press", () => {
+describe("§430 the pictures from before §414 get their ladder, a batch per press", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

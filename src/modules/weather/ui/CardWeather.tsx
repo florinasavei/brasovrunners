@@ -10,7 +10,7 @@ import { WEATHER_GLYPH } from "./glyphs";
  * route's pills (24 pixels, outlined, rounded) so it is one more fact a runner scans, not a line of
  * its own that would make every card taller.
  *
- * Where (§NNN, amending §416): the **last pill of the route's row** (`RoutePills`' trailing slot,
+ * Where (§429, amending §416): the **last pill of the route's row** (`RoutePills`' trailing slot,
  * from `EventFacts`' compact form), after the cost — what the day will be like beside what the
  * route is, no longer among the marks above the title (type, partner, cancelled), which say what
  * the event is. And when rain is likely at the start (`rainLikely`: a chance of 50% or more, *or*
@@ -25,7 +25,7 @@ import { WEATHER_GLYPH } from "./glyphs";
  * would be exactly that. A screen reader hears «Vremea la start: Parțial noros, 14 °C»; the eye
  * gets the glyph and the number. The word, the rain, the wind, the details and the credit are the
  * page's. Open-Meteo's credit is never on a card: it lives in the site footer's «Despre club»
- * fold (`SiteFooter`), and beside the forecast on the event page and the featured hero (§NNN).
+ * fold (`SiteFooter`), and beside the forecast on the event page and the featured hero (§429).
  */
 export default function CardWeather({ reading, locale }: { reading: WeatherReading; locale: "ro" | "en" }) {
   const words = weatherWords(reading, locale);

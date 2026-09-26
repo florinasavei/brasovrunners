@@ -98,7 +98,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * overline's `text.secondary`, a filled calendar entry's `primary.contrastText` — the way every
  * other glyph in this registry already does; no filter, no dark-scheme override.
  *
- * `night` is a crescent moon (§NNN, replacing §382's lit torch; the owner, 2026-09-26: "change that
+ * `night` is a crescent moon (§428, replacing §382's lit torch; the owner, 2026-09-26: "change that
  * flashlight icon"). The torch was chosen when the pill was a stored "Necesită frontală" — the kit
  * to bring. Since §394 the pill is computed from the sun and says a fact about the date, «Noapte»,
  * and a moon is what reads as the time rather than the kit. Material's `ModeNight`, one file, not

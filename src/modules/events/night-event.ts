@@ -4,7 +4,7 @@ import { nightEvent, type NightEventFacts, type NightEventSource, nightShape } f
 import type { Coordinates } from "./domain/sun";
 
 /**
- * Where an event's sun is read (§NNN, amending §394): **the event's own place**, by the one rule the
+ * Where an event's sun is read (§428, amending §394): **the event's own place**, by the one rule the
  * forecast already follows (§416's `forecastPlace`) — the map link's pin, else the typed
  * «Coordonate», else the club's place (`CLUB_COORDINATES`), and the club's while the place is still
  * to be announced (§328), since no public reader is handed the real one then. A race in Cluj sets
@@ -18,7 +18,7 @@ export function nightPlace(event: PlaceColumns): Coordinates {
 }
 
 /**
- * `nightEvent` at the event's own place (`nightPlace`, §NNN; the club's `CLUB_COORDINATES` when it
+ * `nightEvent` at the event's own place (`nightPlace`, §428; the club's `CLUB_COORDINATES` when it
  * names none, §394) — the binding every server surface calls, so the place is resolved in one
  * place. The occurrence is the row's own start unless the caller names another: a series' dates are
  * rows of their own (§113), each with its own start and so its own sunset.
@@ -53,7 +53,7 @@ export function nightTooltip(facts: NightEventFacts, t: Translate): string | nul
  * `.ics` description's (the same, then «— ia o frontală»), §394, §404: the label by type — a group
  * run is «Alergare de noapte» — then the same times `nightShape` names. The label alone when there
  * is no time to name. (The pill's tooltip is a different sentence, the sunset alone, §415; the
- * pill's own word is the short «Noapte», §NNN — a sentence keeps the longer label.)
+ * pill's own word is the short «Noapte», §428 — a sentence keeps the longer label.)
  */
 export function nightLine(facts: NightEventFacts, t: Translate, groupRun: boolean, kind: "calendar" | "ics"): string {
   const label = t(groupRun ? "night.runPill" : "night.pill");

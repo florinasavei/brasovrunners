@@ -442,12 +442,12 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Temă întunecată"')), ["min-height", "min-width"], "the switch");
     expectBarTarget(rulesOf(css, emotionClassOf(markup, "<summary")), ["min-height", "line-height"], "the summary");
     // The three marks render because the social URLs are stubbed above; carry the bar's target.
-    // By its own `aria-label`, not `target="_blank"` (§NNN gave the fold's Open-Meteo credit that
+    // By its own `aria-label`, not `target="_blank"` (§429 gave the fold's Open-Meteo credit that
     // attribute too, and it comes first in the markup, inside the fold, ahead of the bar's marks).
     expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Facebook"')), ["width", "height"], "a mark");
   });
 
-  it("carries Open-Meteo's credit in the fold: its site, a new tab that hands it nothing (§NNN)", async () => {
+  it("carries Open-Meteo's credit in the fold: its site, a new tab that hands it nothing (§429)", async () => {
     const { OPEN_METEO_SITE } = await import("@/modules/weather/domain/credit");
     const markup = markupOnly(await renderFooter());
     const anchor = /<a\b[^>]*data-testid="footer-weather-credit"[^>]*>([\s\S]*?)<\/a>/.exec(markup);

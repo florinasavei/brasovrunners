@@ -2,14 +2,14 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — the `next dev` walk (§370) runs once a night on `qa`. What it guards cannot be run on a
+ * §426 — the `next dev` walk (§370) runs once a night on `qa`. What it guards cannot be run on a
  * laptop, so the test holds the workflow to the few lines that make it that job: the schedule,
  * the branch, the seed the walk needs for its ids, and the command itself.
  */
 const workflow = readFileSync(".github/workflows/e2e-dev-nightly.yml", "utf8").replace(/\r\n/g, "\n");
 const steps = workflow.split("\n").filter((line) => /^\s+- (run|uses): /.test(line)).map((line) => line.trim());
 
-describe("§NNN the nightly next-dev walk on qa", () => {
+describe("§426 the nightly next-dev walk on qa", () => {
   it("runs on a nightly schedule and by hand", () => {
     expect(workflow).toMatch(/^on:\n {2}schedule:\n(?: {4}#.*\n)* {4}- cron: "\d{1,2} \d{1,2} \* \* \*"\n/m);
     expect(workflow).toMatch(/^ {2}workflow_dispatch:$/m);

@@ -1137,7 +1137,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
 export type PublishEventInput = Omit<TransitionEventInput, "to">;
 
 /**
- * «Publică» on the editor, from a draft as from a submission (§NNN) — the one press
+ * «Publică» on the editor, from a draft as from a submission (§423) — the one press
  * «Creează și publică» (§315), the list's «Publică» on a series' drafts (§351) and the bulk
  * publish already give a draft, now on the draft's own page too. The owner: "I am missing the
  * create and publish for some new events… this should be consistent!" (§406): an event created

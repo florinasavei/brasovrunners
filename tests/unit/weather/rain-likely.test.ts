@@ -4,12 +4,12 @@ import { WEATHER_GLYPH_NAMES } from "@/modules/weather/domain/wmo";
 import { weatherWords } from "@/modules/weather/words";
 
 /**
- * BR-REQ-041-01 (§NNN, amending §416) — a listing card's weather pill wears the umbrella when rain
+ * BR-REQ-041-01 (§429, amending §416) — a listing card's weather pill wears the umbrella when rain
  * is likely at the start: a chance of 50% or more, or a forecast amount of 0.5 mm or more already
  * falling in the hour, unless the hour's own glyph says more (snow, frost, the storm), because
  * Open-Meteo's chance is of any precipitation.
  */
-describe("BR-REQ-041-01 rain is likely at the start (§NNN)", () => {
+describe("BR-REQ-041-01 rain is likely at the start (§429)", () => {
   it("is likely from fifty percent, never below it, never without a chance or an amount", () => {
     expect(RAIN_LIKELY_PERCENT).toBe(50);
     expect(rainLikely({ precipitationProbability: 49, glyph: "partlyCloudy", precipitationMm: null })).toBe(false);

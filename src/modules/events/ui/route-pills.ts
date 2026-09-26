@@ -37,7 +37,7 @@ export type RouteFactsSource = Pick<
   | "timezone"
   | "costType"
   | "registrationMode"
-  // The event's own place, where its sun is read (§NNN, by §416's rule): the map link's pin, the
+  // The event's own place, where its sun is read (§428, by §416's rule): the map link's pin, the
   // typed pair, and whether the place is still to be announced.
   | "mapUrl"
   | "latitude"
@@ -60,7 +60,7 @@ type FormatNumber = { number(value: number, options?: { maximumFractionDigits?: 
  * card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order of this should be: terrain
  * type, difficulty, distance, elevation"): **surface, difficulty, distance, elevation**, then the
  * **night event** (§394, at the place §382 gave the headlamp — the crescent and «Noapte» since
- * §NNN, when the dark falls on that route, after what the route is) — then the cost pill after
+ * §428, when the dark falls on that route, after what the route is) — then the cost pill after
  * them wherever a caller adds one. The slot keeps its name, `headlamp`.
  *
  * One function decides the order for both surfaces that draw route pills — the listing card
@@ -115,13 +115,13 @@ export function routePillParts(
 }
 
 /**
- * «Noapte» / «Night» (§394, §NNN): the crescent moon, the one word, and the tooltip "Soarele apune
+ * «Noapte» / «Night» (§394, §428): the crescent moon, the one word, and the tooltip "Soarele apune
  * la 16:36" — the sunset alone (§415) — or null on a date that is not one. The answer is this
  * row's own date's, at the event's own place (`clubNightEvent`): a series' dates are rows of their
  * own, so the listing's one line for a series, which draws its next date, says the next date's
  * answer.
  *
- * The word is one for every type (§NNN, replacing §394's «Alergare de noapte» / «Eveniment de
+ * The word is one for every type (§428, replacing §394's «Alergare de noapte» / «Eveniment de
  * noapte» on the pill): a pill is a fact beside its neighbours — «Trail», «10 km», «Gratuit» — and
  * the card's type chip already says whether it is a run, and the tooltip — which a screen reader
  * hears as the chip's description — says the sunset. The calendar entry, the `.ics` line and the
@@ -141,7 +141,7 @@ export function nightPill(
   // focus, so a chip that is itself a plain, unfocusable `div` never lets a keyboard or
   // screen-reader user reach it (`aria-describedby` is only set while MUI's `Tooltip` is open).
   // `srSuffix` renders the same sentence as a visually hidden span inside the chip's own
-  // accessible name instead, so it is heard unconditionally (§NNN).
+  // accessible name instead, so it is heard unconditionally (§428).
   const tooltip = nightTooltip(facts, t);
   return {
     glyph: "night",

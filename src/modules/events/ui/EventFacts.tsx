@@ -190,7 +190,7 @@ export default async function EventFacts({
    */
   weather?: EventForecast | null;
   /**
-   * The compact form's weather (§416, moved by §NNN): the start's reading, drawn as the last pill of
+   * The compact form's weather (§416, moved by §429): the start's reading, drawn as the last pill of
    * the route's row (`CardWeather`) — the umbrella when rain is likely. Read by the listing for every
    * card at once; null outside the seven days or on any failure, and then the row is the route's alone.
    */
@@ -516,7 +516,7 @@ export default async function EventFacts({
 
   /*
     A forecast's summary pieces, the umbrella spliced in right after the rain phrase rather than
-    appended after the wind (review finding, §NNN): «Parțial noros, 14 °C, 60% șanse de ploaie,
+    appended after the wind (review finding, §429): «Parțial noros, 14 °C, 60% șanse de ploaie,
     ☂ ploaie probabilă, vânt 11 km/h», never «…, vânt 11 km/h, ☂ ploaie probabilă»; with no chance
     but an amount already falling, right after the temperature. Shared by the hero and
     the page, the only two places that draw this line — the card's own pill (`CardWeather`) never
@@ -586,7 +586,7 @@ export default async function EventFacts({
     // screen-reader-only organizer suffix on an `EXTERNAL`-registration `PAID` event — built in
     // that one place, so the card and the backoffice list cannot read it differently.
     const cardPills: Pill[] = buildRoutePills(event, t, format);
-    // The weather at the start, the row's last pill after the cost (§NNN, amending §416's place for
+    // The weather at the start, the row's last pill after the cost (§429, amending §416's place for
     // it among the marks above the title): what the day will be like, beside what the route is.
     const weatherPill = cardWeather ? <CardWeather reading={cardWeather} locale={locale} /> : null;
     const pillsRow = cardPills.length > 0 || weatherPill !== null;
@@ -702,12 +702,12 @@ export default async function EventFacts({
       route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
     }
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-    // The night event (§394, where §382 put the headlamp), with the pill's own crescent (§NNN) like
+    // The night event (§394, where §382 put the headlamp), with the pill's own crescent (§428) like
     // the pill it is on the card and the page, before the cost — the same pill's words, from the
     // same function. The card and the page hear the sunset through a hovered or focused tooltip
     // (`GlyphChip`'s `srSuffix`); the hero's bare word never opens one — it is a line, not a
     // chip — so the same sentence rides along as a visually hidden span, read unconditionally
-    // (§NNN, matching `GlyphChip`'s own technique, `SR_ONLY_SX`).
+    // (§428, matching `GlyphChip`'s own technique, `SR_ONLY_SX`).
     if (headlampPill)
       route.push(
         withGlyph(
@@ -805,7 +805,7 @@ export default async function EventFacts({
     */
     if (weather) {
       const words = weatherWords(weather.start, locale);
-      // No `mr` on this glyph (review finding, §NNN): the wrapping `Box` already gives it a
+      // No `mr` on this glyph (review finding, §429): the wrapping `Box` already gives it a
       // 0.5 gap from the word beside it, and `HERO_GLYPH_SX`'s own `mr` doubled that space —
       // the one glyph on the hero not seated beside a label, where the margin belongs instead.
       const umbrella = rainLikely(weather.start) ? (

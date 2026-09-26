@@ -43,7 +43,7 @@ const TOUCH_INTERVAL_HOURS = 1;
 const keyPrefixNeedle = sql`'%' || REPLACE(${mediaAssets.keyPrefix}, '_', '\\_') || '%'`;
 
 /**
- * The address a picture had before the older pictures' button moved it (§NNN), as a needle: for
+ * The address a picture had before the older pictures' button moved it (§430), as a needle: for
  * a version-8 prefix the same UUID with its version digit back at 4 (`formerKeyPrefixOf`), and
  * for any other prefix NULL, which matches nothing. A text saved with the old address after the
  * move — a new page's or a new event's form open since before the press, which has no version to
@@ -54,7 +54,7 @@ const keyPrefixNeedle = sql`'%' || REPLACE(${mediaAssets.keyPrefix}, '_', '\\_')
  */
 const formerKeyPrefixNeedle = sql`CASE WHEN ${mediaAssets.keyPrefix} ~ '^[0-9a-f]{8}-[0-9a-f]{4}-8' THEN '%' || overlay(${mediaAssets.keyPrefix} placing '4' from 15 for 1) || '%' END`;
 
-/** Whether a text names the asset, at its address or at its former one (§NNN). */
+/** Whether a text names the asset, at its address or at its former one (§430). */
 const names = (text: SQL): SQL =>
   sql`(${text} LIKE ${keyPrefixNeedle} ESCAPE '\\' OR ${text} LIKE ${formerKeyPrefixNeedle})`;
 
@@ -216,7 +216,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const inPages = await db
     .select({ assetId: mediaAssets.id, id: pageTranslations.pageId, title: pageTranslations.title, locale: pageTranslations.locale })
     .from(mediaAssets)
-    // At the address or the former one (§NNN), as the check that refuses a delete reads it: a
+    // At the address or the former one (§430), as the check that refuses a delete reads it: a
     // picture the list shows as used nowhere must not be one the delete then refuses.
     .innerJoin(pageTranslations, names(sql`${pageTranslations.bodyJson}::text`));
 

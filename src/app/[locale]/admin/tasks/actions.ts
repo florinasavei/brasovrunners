@@ -109,7 +109,7 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
 }
 
 /**
- * One press of "Fă mărimile" (§NNN): the next batch of the pictures stored before §414 gets its
+ * One press of "Fă mărimile" (§430): the next batch of the pictures stored before §414 gets its
  * ladder. Administrator at the door, the service asserting the role again and writing the audit
  * row; lands back on the card, which says how many are left and goes once none are. The toast
  * carries the numbers only — how many converted, failed and left (§384).

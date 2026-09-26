@@ -118,7 +118,7 @@ export default defineConfig({
       /**
        * Under CI's `APP_ENV=test` the server's store is a Map the specs cannot reach; this lets a
        * miss there read `.media/` on the disk, where `older-pictures.spec.ts` writes a picture as
-       * the site stored one before §414 (`env.ts`, `E2E_FAKE_MEDIA_FROM_DISK`, §NNN).
+       * the site stored one before §414 (`env.ts`, `E2E_FAKE_MEDIA_FROM_DISK`, §430).
        */
       E2E_FAKE_MEDIA_FROM_DISK: "true",
     },

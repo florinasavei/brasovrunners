@@ -52,7 +52,7 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
 }
 
 /**
- * A public flow's outcome, flashed before its redirect (§NNN): a key from `PUBLIC_TOAST_KEYS`
+ * A public flow's outcome, flashed before its redirect (§427): a key from `PUBLIC_TOAST_KEYS`
  * and nothing else — no count, no name, no address — so the cookie says what happened and never
  * to whom. The page the redirect lands on shows it through `PublicFlash`.
  */
@@ -67,7 +67,7 @@ async function readAnyFlash(): Promise<FormNotice | null> {
 
 /**
  * The backoffice's flash the last redirect left, if any — read by the admin layout; the island
- * clears it. A public flow's flash (§NNN) is not the backoffice's: a visitor with JavaScript off
+ * clears it. A public flow's flash (§427) is not the backoffice's: a visitor with JavaScript off
  * leaves it in the browser for its minute, and a staff page opened in that minute must not turn
  * it into a generic "Salvat.".
  */
@@ -76,7 +76,7 @@ export async function readFlash(): Promise<FormNotice | null> {
   return notice && !isPublicToastKey(notice.key) ? notice : null;
 }
 
-/** A public flow's flash (§NNN), if that is what the last redirect left — read by `PublicFlash`. */
+/** A public flow's flash (§427), if that is what the last redirect left — read by `PublicFlash`. */
 export async function readPublicFlash(): Promise<(FormNotice & { key: PublicToastKey }) | null> {
   const notice = await readAnyFlash();
   return notice && isPublicToastKey(notice.key) ? { ...notice, key: notice.key } : null;

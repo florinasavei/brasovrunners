@@ -430,7 +430,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
 
-    // The draft's own editor publishes in one press too (§NNN), as the create page did: «Publică»
+    // The draft's own editor publishes in one press too (§423), as the create page did: «Publică»
     // beside "Trimite spre verificare", the review step walked by the service.
     await hydrated(page);
     await expect(page.getByRole("button", { name: "Trimite spre verificare" })).toBeVisible();

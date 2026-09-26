@@ -140,7 +140,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(sheet).not.toContain("<f>");
   });
 
-  /** §NNN — the terms accepted on the form (§421), the CSV's two columns, last and in the same order. */
+  /** §425 — the terms accepted on the form (§421), the CSV's two columns, last and in the same order. */
   it("ends with the accepted terms version as a number and its moment as a date", async () => {
     expect(REGISTRATION_SHEET_HEADERS.slice(-2)).toEqual(["Terms version", "Terms accepted"]);
     const parts = unzip(

@@ -17,7 +17,7 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
 
   try {
     const result = await consumeAndCancel(token, new Date());
-    // The toast on the page it lands on (§NNN); a refused link says so on the page, never in a toast.
+    // The toast on the page it lands on (§427); a refused link says so on the page, never in a toast.
     if (result.ok) await flashPublic("unregistered");
     redirect(result.ok ? `${path}?done=1` : `${path}?invalid=1`);
   } catch (error) {

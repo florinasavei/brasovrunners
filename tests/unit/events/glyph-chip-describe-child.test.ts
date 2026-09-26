@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 
 /**
- * Found by re-review (`DECISIONS.md` §NNN): the night pill's tooltip and its `srSuffix` are the
+ * Found by re-review (`DECISIONS.md` §428): the night pill's tooltip and its `srSuffix` are the
  * same sentence — "Soarele apune la 16:42" — so `describeChild`'s `aria-describedby`, wired while
  * the tooltip is open, made a screen reader hear it twice: once as part of the chip's own name
  * (`srSuffix`) and once again as the tooltip's description. `GlyphChip` now leaves `describeChild`

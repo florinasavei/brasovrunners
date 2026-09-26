@@ -25,7 +25,7 @@ const PILL_SX = { height: "auto", minHeight: 24, maxWidth: "100%", "& .MuiChip-l
  * the other. Nothing at all when there is nothing to draw.
  *
  * `trailing` is drawn after the last pill, in the same wrapping row: the listing card's weather at
- * the start (`CardWeather`, §NNN), which is not a route pill — its glyph is the forecast's, made in
+ * the start (`CardWeather`, §429), which is not a route pill — its glyph is the forecast's, made in
  * a Server Component, never a `GlyphChip` name — but sits beside them as the row's last. A node
  * made by the Server Component that calls this one, never handed to a client component.
  */

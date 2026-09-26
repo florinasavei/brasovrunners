@@ -104,7 +104,7 @@ const BAR_HEIGHT = 44;
  * English from 390, where "Write to us" fitted beside the other two. After: 136 at 320, 360, 390
  * and 412 in both languages — three 44-pixel lines (the two links; "Scrie-ne: <address>"; the
  * stamp) and 4 pixels of padding under them. Open-Meteo's credit was added to the panel after this
- * measurement (§NNN), a fourth item before the stamp: the panel is expected around 180 pixels on a
+ * measurement (§429), a fourth item before the stamp: the panel is expected around 180 pixels on a
  * phone now, not remeasured; `footer.spec.ts` holds it under 188.
  *
  * ## The fold's panel is inside the fold, under the row
@@ -155,7 +155,7 @@ const BAR_HEIGHT = 44;
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
  * reads (§8) — and the marks only when configured. Nothing here invents an address.
  *
- * ## Open-Meteo's credit, once for the whole site (§NNN)
+ * ## Open-Meteo's credit, once for the whole site (§429)
  *
  * The listing used to repeat it under its own cards (§416); the owner, 2026-09-26: "nu vreau
  * footer cu open-weather pe main page" — no such strip on the listing. Its licence (CC BY) still
@@ -344,7 +344,7 @@ export default async function SiteFooter() {
                 )}
               </Box>
               {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
-                  cards (§NNN); the event page and the featured hero keep their own beside the
+                  cards (§429); the event page and the featured hero keep their own beside the
                   forecast. */}
               <MuiLink href={OPEN_METEO_SITE} target="_blank" rel="noopener noreferrer" data-testid="footer-weather-credit">
                 {weatherCredit}

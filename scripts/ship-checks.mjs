@@ -1,5 +1,5 @@
 /**
- * How `yarn ship` reads a pull request's checks (§NNN) — kept apart from `ship.mjs`, which runs
+ * How `yarn ship` reads a pull request's checks (§426) — kept apart from `ship.mjs`, which runs
  * `gh` on import, so the rule is testable without GitHub.
  *
  * The defect this answers: `ship` judged a pull request the moment `gh pr checks --watch`

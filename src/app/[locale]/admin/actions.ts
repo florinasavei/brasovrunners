@@ -368,7 +368,7 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
     const actor = await requireStaff();
     const to = text(form, "to") as EditorialStatus;
     const move = { actor, eventId, expectedVersion: Number(text(form, "expectedVersion")) };
-    // «Publică» is one press from a draft too (§NNN), as «Creează și publică» is: the service
+    // «Publică» is one press from a draft too (§423), as «Creează și publică» is: the service
     // walks the review step itself, for a role that may publish, or refuses before anything moves.
     if (to === "PUBLISHED") await publishEvent(getDb(), move);
     else await transitionEvent(getDb(), { ...move, to });

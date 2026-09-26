@@ -164,7 +164,7 @@ describe("§421 the terms tick", () => {
   });
 
   /**
-   * §NNN — the backoffice reads what the form recorded: the registration's page draws the terms
+   * §425 — the backoffice reads what the form recorded: the registration's page draws the terms
    * line beside the privacy notice's, and the export's two columns come from the list query. A
    * staff entry reads as none on both.
    */

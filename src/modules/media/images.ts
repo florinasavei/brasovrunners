@@ -178,7 +178,7 @@ export async function processUploadedImage(
 
 /**
  * The thumbnail and the rungs under a master, from its decoded pixels — the one ladder pipeline,
- * called by the upload and by the older pictures' button (§NNN), so a change to the thumbnail or
+ * called by the upload and by the older pictures' button (§430), so a change to the thumbnail or
  * the rungs' settings reaches both. The caller chooses the rungs' encoding (the upload's
  * «Înaltă» may be near-lossless) and owns the master.
  */
@@ -198,7 +198,7 @@ async function encodeLadder(
   return { thumb, rungs: widths.map((rung, index) => ({ width: rung, body: rungBodies[index] })) };
 }
 
-/** What a stored master becomes when it is given its ladder afterwards (§NNN). */
+/** What a stored master becomes when it is given its ladder afterwards (§430). */
 export type LadderFromMaster = {
   thumb: Buffer;
   rungs: { width: number; body: Buffer }[];
@@ -209,7 +209,7 @@ export type LadderFromMaster = {
 
 /**
  * The ladder of a picture stored before §414, made from the one file it still has: its master,
- * `web.webp` (the original was never kept, §66). The one-off button of §NNN calls it.
+ * `web.webp` (the original was never kept, §66). The one-off button of §430 calls it.
  *
  * The master itself is not re-encoded — the caller stores its bytes as they are, so the file a
  * wide screen loads is exactly the one it loaded before — and every rung and the thumbnail are
@@ -240,7 +240,7 @@ export async function ladderFromStoredMaster(master: Buffer): Promise<LadderFrom
     The header can parse while the body is cut short or corrupt: the full decode (`failOn:
     "error"`) is where that shows, as a raw `sharp` error. It is the stored file's fault, not the
     press's, so it becomes the same refusal as an unreadable header — counted as not converted and
-    skipped — rather than an exception that stops the batch on this picture for good (§NNN).
+    skipped — rather than an exception that stops the batch on this picture for good (§430).
   */
   try {
     const { data, info } = await sharp(master, { failOn: "error" })

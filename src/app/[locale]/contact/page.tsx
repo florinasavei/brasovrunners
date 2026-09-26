@@ -154,7 +154,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
             <AlertTitle>{t("sent.title")}</AlertTitle>
             {typed("email") ? t("sent.bodyTo", { email: typed("email") ?? "" }) : t("sent.body")}
           </Alert>
-          {/* The toast the send flashed (§NNN), here and on no other state of this page. */}
+          {/* The toast the send flashed (§427), here and on no other state of this page. */}
           <PublicFlash accept={["contactSent"]} />
         </>
       ) : !formAvailable ? (

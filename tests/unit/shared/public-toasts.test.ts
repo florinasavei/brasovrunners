@@ -11,7 +11,7 @@ import { decodeFlash, encodeFlash, FLASH_COOKIE } from "@/shared/feedback/notice
 import { flashCookiePresent, isPublicToastKey, PUBLIC_TOAST_KEYS } from "@/shared/feedback/public-toasts";
 
 /**
- * §NNN — the public site's three flows say their outcome in a toast, through §384's flash: the
+ * §427 — the public site's three flows say their outcome in a toast, through §384's flash: the
  * contact form sent, a registration cancelled from the participant's own link, the declaration
  * signed (confirmed, or on the waiting list).
  *
@@ -43,7 +43,7 @@ function filesUnder(directory: string, keep: (name: string) => boolean): string[
 
 const relative = (file: string) => path.relative(ROOT, file).split(path.sep).join("/");
 
-describe("§NNN the public toasts' sentences", () => {
+describe("§427 the public toasts' sentences", () => {
   type Catalogue = { Feedback: { close: string; public: Record<string, unknown> } };
   const catalogues = { ro: (ro as unknown as Catalogue).Feedback, en: (en as unknown as Catalogue).Feedback };
 
@@ -66,7 +66,7 @@ describe("§NNN the public toasts' sentences", () => {
   });
 });
 
-describe("§NNN the flash a public action writes", () => {
+describe("§427 the flash a public action writes", () => {
   it("is a key the list names and nothing else — no count, no name, no address", () => {
     for (const key of PUBLIC_TOAST_KEYS) {
       expect(isPublicToastKey(key)).toBe(true);
@@ -102,7 +102,7 @@ describe("§NNN the flash a public action writes", () => {
   });
 });
 
-describe("§NNN the flash is read by the page it was written for", () => {
+describe("§427 the flash is read by the page it was written for", () => {
   it("a public flash is the public slot's, never the backoffice's generic 'Salvat.'", async () => {
     jar.clear();
     await flashPublic("declarationConfirmed");
@@ -132,7 +132,7 @@ describe("§NNN the flash is read by the page it was written for", () => {
   });
 });
 
-describe("§NNN the toast is shown once", () => {
+describe("§427 the toast is shown once", () => {
   it("only while the browser still holds the flash cookie", () => {
     expect(flashCookiePresent(`${FLASH_COOKIE}=${encodeFlash({ kind: "success", key: "contactSent" })}`, FLASH_COOKIE)).toBe(true);
     expect(flashCookiePresent(`theme=dark; ${FLASH_COOKIE}=abc; other=1`, FLASH_COOKIE)).toBe(true);
@@ -145,7 +145,7 @@ describe("§NNN the toast is shown once", () => {
   });
 });
 
-describe("§NNN the island", () => {
+describe("§427 the island", () => {
   it("renders the live region empty on the server — the toast arrives after the paint, so it is announced", () => {
     const html = renderToStaticMarkup(createElement(FlashToast, { kind: "success", sentence: "Mesaj trimis clubului.", closeLabel: "Închide" }));
     expect(html).toBe('<div role="status" aria-live="polite" data-testid="toast-live"></div>');
@@ -159,7 +159,7 @@ describe("§NNN the island", () => {
   });
 });
 
-describe("§NNN mounted only where a flow lands", () => {
+describe("§427 mounted only where a flow lands", () => {
   const sources = filesUnder(path.join(ROOT, "src"), (name) => /\.tsx?$/.test(name));
   const importers = (module: string) =>
     sources.filter((file) => new RegExp(`from "@/shared/feedback/${module}"|from "\\./${module}"`).test(readFileSync(file, "utf8"))).map(relative).sort();

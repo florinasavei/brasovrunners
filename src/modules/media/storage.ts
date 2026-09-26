@@ -70,7 +70,7 @@ export function assetObjectKeys(keyPrefix: string): string[] {
   if (isLadderKeyPrefix(keyPrefix)) {
     keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
     /*
-      A picture that got its ladder from the one-off button (§NNN) kept its two old files at its
+      A picture that got its ladder from the one-off button (§430) kept its two old files at its
       old address, because an address may have been copied out of the site; they go when the
       picture goes. For a picture uploaded with its ladder these two keys were never written.
     */
@@ -127,7 +127,7 @@ const fakeObjects: Map<string, { body: Buffer; contentType: string }> = ((
 
 /**
  * A miss in the fake store, read from `.media/` on the disk when the end-to-end server says so
- * (`E2E_FAKE_MEDIA_FROM_DISK`, §NNN) — a spec's fixture of a picture no upload makes any more.
+ * (`E2E_FAKE_MEDIA_FROM_DISK`, §430) — a spec's fixture of a picture no upload makes any more.
  * Read-only: a put or a delete touches only the Map, so the disk holds what the spec wrote.
  */
 async function fakeObject(key: string): Promise<{ body: Buffer; contentType: string } | null> {

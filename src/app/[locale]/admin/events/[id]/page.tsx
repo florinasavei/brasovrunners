@@ -206,7 +206,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The language endonyms are shared with the public switcher.
   const tSite = await getTranslations("Site");
 
-  // The table's verbs, and «Publică» on a draft for a role that may publish (§NNN): one press,
+  // The table's verbs, and «Publică» on a draft for a role that may publish (§423): one press,
   // as «Creează și publică» on the create page, whatever the event's type or series.
   const transitions = eventEditorTransitions(
     staffUser.role,

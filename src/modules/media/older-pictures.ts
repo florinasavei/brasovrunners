@@ -15,7 +15,7 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
 
 /**
  * The pictures stored before §414, given their ladder by one Administrator button, a batch per
- * press (§NNN).
+ * press (§430).
  *
  * ## Why a button, and why it moves the picture
  *
@@ -65,7 +65,7 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
 
 /**
  * The most pictures one press converts, and the time after which it starts no new one — sized
- * from a measurement, not a guess (§NNN). `ladderFromStoredMaster` on a 2400 × 1349 «Normală»
+ * from a measurement, not a guess (§430). `ladderFromStoredMaster` on a 2400 × 1349 «Normală»
  * master (six rungs and the thumbnail) took 0.9–1.5 s on the development machine with every
  * core, and 2.5–2.6 s with `sharp` and libuv held to one thread — the honest figure for a
  * Vercel function, whose one vCPU runs the `Promise.all` of encodes one after another. Counting
@@ -138,7 +138,7 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
     The cursor's time is PostgreSQL's own text of the column, never a JavaScript `Date`: a `Date`
     holds milliseconds and `created_at` holds microseconds, so a cursor made from one sits just
     before the row it came from, and that row — a failed one, still a candidate — would be read
-    again and again until the time budget ran out (§NNN).
+    again and again until the time budget ran out (§430).
   */
   let after = null as { createdAt: string; id: string } | null;
   pages: while (converted < perPress) {
@@ -161,7 +161,7 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
         One picture's surprise is that picture's failure, never the press's: an exception here
         (a transient database error inside the move, a store that throws) would otherwise skip
         the audit row and the cache expiry for the pictures already moved, and — the press going
-        oldest first — end every later press on this same picture (§NNN).
+        oldest first — end every later press on this same picture (§430).
       */
       let outcome: Outcome;
       try {

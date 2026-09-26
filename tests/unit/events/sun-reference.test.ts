@@ -5,7 +5,7 @@ import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { nightPlace } from "@/modules/events/night-event";
 
 /**
- * BR-REQ-020-01 (`DECISIONS.md` §394, §NNN) — the sun, to the minute.
+ * BR-REQ-020-01 (`DECISIONS.md` §394, §428) — the sun, to the minute.
  *
  * The owner, 2026-09-26: "Sunset is now at 19:07 actually, do make sure this data is accurate".
  *
@@ -22,7 +22,7 @@ import { nightPlace } from "@/modules/events/night-event";
  *   only disagree on a time that falls within those seconds of a half minute (07:32:29 and
  *   07:32:31 round apart); such a time may differ by the one minute, and nothing else may.
  *
- * Before §NNN the printed minute cut the seconds off, so every time with 30 seconds or more read a
+ * Before §428 the printed minute cut the seconds off, so every time with 30 seconds or more read a
  * minute early — 19:07 for 19:07:51 on 26 September, where the table says 19:08.
  */
 
@@ -71,7 +71,7 @@ const EVENTS = ["civilDawn", "sunrise", "sunset", "civilDusk"] as const;
 const tableInstant = (day: string, time: string, zone: string) => fromWallTimeInput(`${day}T${time}`, zone)!.getTime();
 const minutesOf = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 
-describe("§NNN the sun against the US Naval Observatory's tables", () => {
+describe("§428 the sun against the US Naval Observatory's tables", () => {
   it.each(USNO)("%s — the instant within five seconds of the table's", (_name, place, zone, day, ...table) => {
     const exact = sunTimes(day, place, "exact")!;
     EVENTS.forEach((key, index) => {
@@ -133,7 +133,7 @@ describe("§NNN the sun against the US Naval Observatory's tables", () => {
   });
 });
 
-describe("§NNN what the owner saw", () => {
+describe("§428 what the owner saw", () => {
   it("today, Saturday 26 September 2026, the sun sets at 19:08 over Brașov's centre — 19:07:51, no longer printed «19:07»", () => {
     // 16:07:51 UTC is 19:07:51 in Brașov's summer time: cutting the seconds off printed "19:07".
     expect(sunTimes("2026-09-26", BRASOV, "exact")!.sunset!.toISOString().slice(0, 19)).toBe("2026-09-26T16:07:51");
@@ -153,7 +153,7 @@ describe("§NNN what the owner saw", () => {
   });
 });
 
-describe("§NNN the event's own place, by §416's rule", () => {
+describe("§428 the event's own place, by §416's rule", () => {
   it("reads the map link's pin, then the typed pair, then the club's place — the club's while the place is to be announced", () => {
     const club = DEFAULT_CLUB_COORDINATES;
     expect(nightPlace({})).toEqual(club);

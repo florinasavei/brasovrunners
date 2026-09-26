@@ -6,7 +6,7 @@ import { flashCookiePresent } from "./public-toasts";
 import ToastRegion, { type DrawnToast } from "./ToastRegion";
 
 /**
- * One flashed toast on a public page (§NNN), drawn by the backoffice's own `ToastRegion` (§384).
+ * One flashed toast on a public page (§427), drawn by the backoffice's own `ToastRegion` (§384).
  *
  * Mounted by `PublicFlash` only on the page a public action redirected to, and only when that
  * action left its flash — never in a layout, so every other page of the site ships none of it.

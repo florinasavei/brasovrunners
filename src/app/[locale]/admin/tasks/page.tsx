@@ -90,7 +90,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * A Server Action runs in the function of the page it is posted from, so this is also the older
- * pictures' button's ceiling (§NNN): a press starts no new picture after twelve seconds
+ * pictures' button's ceiling (§430): a press starts no new picture after twelve seconds
  * (`OLDER_PICTURES_BUDGET_MS`) and ends within about twenty; the upload routes' own sixty is the
  * room a slow last picture finishes in.
  */
@@ -419,13 +419,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // `Admin.errors.*`, shared by every backoffice page — `Admin.tasks.errors` does not exist.
   const tErrors = await getTranslations("Admin.errors");
   /*
-    The older pictures' button (§NNN), on the list of what is owed while anything is left to
+    The older pictures' button (§430), on the list of what is owed while anything is left to
     convert — one count, only for this panel, and nothing where there is no store to convert in.
   */
   const olderPictures = panel === "todo" && isStorageConfigured() ? await countOlderPictures(db) : 0;
   /*
     How many the press just made failed, from the address the action lands on — said on the card
-    with what to do, not only in the toast that fades (§NNN). A number and nothing else; any other
+    with what to do, not only in the toast that fades (§430). A number and nothing else; any other
     value reads as none.
   */
   const failedRaw = query.saved === "picturesLadderedFailed" ? Number(first(query.failed)) : 0;
@@ -614,7 +614,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
       {panel === "todo" && (
         <>
-        {/* A thing owed once (§NNN): the pictures from before §414 get their phone sizes. Gone at zero. */}
+        {/* A thing owed once (§430): the pictures from before §414 get their phone sizes. Gone at zero. */}
         {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
 
         {/* Who and what kind — two rows of links, no client code, each keeping the other's

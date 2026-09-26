@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { bucketOf, judgeChecks, waitForSettledChecks } from "../../../scripts/ship-checks.mjs";
 
 /**
- * §NNN — `yarn ship` judges a pull request's checks only once none is pending and the same set
+ * §426 — `yarn ship` judges a pull request's checks only once none is pending and the same set
  * has been read twice in a row. Before, it judged the moment `gh pr checks --watch` returned,
  * which is also the moment before a late check (the next job, a deployment) has registered.
  */
@@ -25,7 +25,7 @@ function script(readings: Check[][]) {
   };
 }
 
-describe("§NNN ship: the verdict on one reading", () => {
+describe("§426 ship: the verdict on one reading", () => {
   it("is none with no check, pending while any runs, green when all pass or were skipped", () => {
     expect(judgeChecks([]).verdict).toBe("none");
     expect(judgeChecks([pass("docs-check"), pending("e2e")])).toMatchObject({ verdict: "pending", pending: ["e2e"] });
@@ -52,7 +52,7 @@ describe("§NNN ship: the verdict on one reading", () => {
   });
 });
 
-describe("§NNN ship: waiting until the checks settle", () => {
+describe("§426 ship: waiting until the checks settle", () => {
   it("does not judge a green reading that a late check then joins", async () => {
     // docs-check passes before the e2e job's check registers: the old `--watch` returned here.
     const s = script([[pass("docs-check")], [pass("docs-check"), pending("e2e")], [pass("docs-check"), pass("e2e")], [pass("docs-check"), pass("e2e")]]);

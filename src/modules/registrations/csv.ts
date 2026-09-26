@@ -69,7 +69,7 @@ export type RegistrationCsvRow = {
   emailBounced: boolean;
   /**
    * The club's terms the form accepted expressly (§421): the version in force when it was sent,
-   * and the moment (§NNN). Empty for a staff or desk entry — the paper carries the terms — and for
+   * and the moment (§425). Empty for a staff or desk entry — the paper carries the terms — and for
    * a row sent before the version was recorded; §316's window is the answer for those.
    */
   termsVersion?: number | null;
@@ -101,7 +101,7 @@ const HEADER = [
   "Number settled",
   "Checked in",
   "Email bounced",
-  // Last (§NNN), so a script that reads the columns by position still finds every earlier one.
+  // Last (§425), so a script that reads the columns by position still finds every earlier one.
   "Terms version",
   "Terms accepted",
 ];

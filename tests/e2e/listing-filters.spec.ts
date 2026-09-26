@@ -35,7 +35,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(heading(page, RACE)).toBeVisible();
 
     // The button and every box are thumb-sized (criterion 6); the pill each one draws is a small
-    // chip, 24 pixels, the active-filter chips' own size (§NNN — "Butonul de filtre e mult prea mare").
+    // chip, 24 pixels, the active-filter chips' own size (§424 — "Butonul de filtre e mult prea mare").
     const summaryBox = await fold.locator("summary").boundingBox();
     expect(Math.round(summaryBox!.height * 10) / 10).toBeGreaterThanOrEqual(44);
     const buttonPill = await fold.locator("summary > span").boundingBox();

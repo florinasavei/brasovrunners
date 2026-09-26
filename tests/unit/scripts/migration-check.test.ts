@@ -54,7 +54,7 @@ DROP TYPE "public"."event_kind";`;
     }
   });
 
-  it("counts DROP INDEX and DROP CONSTRAINT as contractions (§NNN)", () => {
+  it("counts DROP INDEX and DROP CONSTRAINT as contractions (§426)", () => {
     for (const statement of [
       `ALTER TABLE "registrations" DROP CONSTRAINT "registrations_event_participant_unique";`,
       `ALTER TABLE "registrations" DROP CONSTRAINT IF EXISTS "registrations_event_id_events_id_fk";`,
@@ -67,7 +67,7 @@ DROP TYPE "public"."event_kind";`;
   });
 
   it("classifies migration 0073 as the contract it is, note and all", () => {
-    // It passed as neither expand nor contract before §NNN, and carried its note by hand.
+    // It passed as neither expand nor contract before §426, and carried its note by hand.
     const sql = readFileSync("src/db/migrations/0073_drop_registration_participant_unique.sql", "utf8");
     expect(auditMigration(sql)).toEqual({ expands: false, contracts: true, hasContractNote: true });
     expect(problemsFor("0073_drop_registration_participant_unique.sql", sql)).toEqual([]);

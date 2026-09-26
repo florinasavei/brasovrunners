@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { entryFromResults, isBlankFixReport, mergeCriteria, rewriteFreeSectionRefs, withoutHousekeeping } from "../../../scripts/land-entry.mjs";
 
 /**
- * §NNN — what `yarn docs:land` lands from one item's saved results. The cases are the defects
+ * §426 — what `yarn docs:land` lands from one item's saved results. The cases are the defects
  * BR-V1.91's landing had, and the blank fix report the dispatcher met afterwards.
  */
 const impl = {
   decisionsTitle: "The listing card's handshake",
   decisionsSection: "The owner asked for a handshake on a partnered card.\n\nIt is drawn in the card's own ink.",
-  changelogLine: "- **A handshake on a partnered card** — the listing, the calendar and the page. §NNN.",
-  specsCriteria: [{ requirement: "BR-REQ-040-01", text: "7. (new) A partnered event's card carries the handshake (2026-09-25, `DECISIONS.md` §NNN)." }],
+  changelogLine: "- **A handshake on a partnered card** — the listing, the calendar and the page. §426.",
+  specsCriteria: [{ requirement: "BR-REQ-040-01", text: "7. (new) A partnered event's card carries the handshake (2026-09-25, `DECISIONS.md` §426)." }],
 };
 const fixer = (over: Record<string, unknown> = {}) => ({
   committed: true,
@@ -17,7 +17,7 @@ const fixer = (over: Record<string, unknown> = {}) => ({
   summary: "Fixed the two should-fix findings.",
   decisionsTitle: impl.decisionsTitle,
   decisionsSection: impl.decisionsSection,
-  changelogLine: "- **Fix round**: answered the review. §NNN.",
+  changelogLine: "- **Fix round**: answered the review. §426.",
   specsCriteria: impl.specsCriteria,
   ...over,
 });
@@ -26,7 +26,7 @@ const round = (over: Record<string, unknown> = {}) => ({
   rereview: { verdict: "ship" },
 });
 
-describe("§NNN docs:land — a blank fix report is refused", () => {
+describe("§426 docs:land — a blank fix report is refused", () => {
   it("knows a blank report: no result, not an object, or no summary", () => {
     expect(isBlankFixReport(null)).toBe(true);
     expect(isBlankFixReport(undefined)).toBe(true);
@@ -51,16 +51,16 @@ describe("§NNN docs:land — a blank fix report is refused", () => {
   });
 });
 
-describe("§NNN docs:land — the CHANGELOG bullet is the implementer's", () => {
+describe("§426 docs:land — the CHANGELOG bullet is the implementer's", () => {
   it("never takes a fixer's changelogLine, from the chain or a round, and prints it for the dispatcher", () => {
-    const entry = entryFromResults({ impl, fixed: fixer() }, [round({ changelogLine: "- **Round two** fixed things. §NNN." })]);
+    const entry = entryFromResults({ impl, fixed: fixer() }, [round({ changelogLine: "- **Round two** fixed things. §426." })]);
     expect(entry.changelog).toBe(impl.changelogLine);
     expect(entry.notes.filter((n) => /proposed another CHANGELOG bullet/.test(n))).toHaveLength(2);
   });
 
   it("takes the manifest item's changelog when the dispatcher rewrote it", () => {
-    const entry = entryFromResults({ impl, fixed: fixer() }, [], { changelog: "- **The dispatcher's bullet**. §NNN." });
-    expect(entry.changelog).toBe("- **The dispatcher's bullet**. §NNN.");
+    const entry = entryFromResults({ impl, fixed: fixer() }, [], { changelog: "- **The dispatcher's bullet**. §426." });
+    expect(entry.changelog).toBe("- **The dispatcher's bullet**. §426.");
   });
 
   it("refuses a blank bullet", () => {
@@ -68,7 +68,7 @@ describe("§NNN docs:land — the CHANGELOG bullet is the implementer's", () => 
   });
 });
 
-describe("§NNN docs:land — a blank decisionsTitle is refused", () => {
+describe("§426 docs:land — a blank decisionsTitle is refused", () => {
   it("keeps the implementer's title when the fixer's is blank or a placeholder", () => {
     expect(entryFromResults({ impl, fixed: fixer({ decisionsTitle: "" }) }).title).toBe(impl.decisionsTitle);
     expect(entryFromResults({ impl, fixed: fixer({ decisionsTitle: "Unchanged" }) }).title).toBe(impl.decisionsTitle);
@@ -83,7 +83,7 @@ describe("§NNN docs:land — a blank decisionsTitle is refused", () => {
   });
 });
 
-describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
+describe("§426 docs:land — a fixer's housekeeping never lands", () => {
   it("keeps the implementer's section when the fixer's only says it carried it forward", () => {
     for (const text of ["Carried forward from the implementer, unchanged.", "(carried forward)", "Unchanged.", "N/A", ""]) {
       const entry = entryFromResults({ impl, fixed: fixer({ decisionsSection: text }) });
@@ -156,7 +156,7 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
   });
 
   it("still lets a later round's real criteria replace the earlier ones per requirement", () => {
-    const later = [{ requirement: "BR-REQ-040-01", text: "7. (amended) The card and the calendar carry it (2026-09-26, `DECISIONS.md` §NNN)." }];
+    const later = [{ requirement: "BR-REQ-040-01", text: "7. (amended) The card and the calendar carry it (2026-09-26, `DECISIONS.md` §426)." }];
     expect(entryFromResults({ impl }, [round({ specsCriteria: later })]).criteria).toEqual(later);
     expect(mergeCriteria(impl.specsCriteria, later)).toEqual(later);
   });
@@ -171,7 +171,7 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
   });
 });
 
-describe("§NNN docs:land — a committed fix report needs a commitSha", () => {
+describe("§426 docs:land — a committed fix report needs a commitSha", () => {
   it("refuses the chain's fix report when committed but the commitSha is blank", () => {
     expect(() => entryFromResults({ impl, fixed: fixer({ commitSha: "" }) }, [], {}, "feat/x")).toThrow(/feat\/x: the chain's fix report says committed with a blank commitSha/);
   });
@@ -185,7 +185,7 @@ describe("§NNN docs:land — a committed fix report needs a commitSha", () => {
   });
 });
 
-describe("§NNN docs:land — a SPECS criterion needs a full BR-REQ id", () => {
+describe("§426 docs:land — a SPECS criterion needs a full BR-REQ id", () => {
   it("drops a criterion whose requirement is not BR-REQ-NNN-NN, with a note", () => {
     const entry = entryFromResults({ impl }, [round({ specsCriteria: [{ requirement: "CI tooling", text: "Some new rule." }, { requirement: "BR-REQ-051", text: "Missing its suffix." }] })]);
     expect(entry.criteria).toEqual(impl.specsCriteria);
@@ -200,12 +200,12 @@ describe("§NNN docs:land — a SPECS criterion needs a full BR-REQ id", () => {
   });
 });
 
-describe("§NNN docs:land — a literal §N above the next free number becomes §NNN", () => {
-  it("rewrites a body's, a bullet's and a criterion's §999 to §NNN, above the threshold", () => {
+describe("§426 docs:land — a literal §N above the next free number becomes §426", () => {
+  it("rewrites a body's, a bullet's and a criterion's §999 to §426, above the threshold", () => {
     const entry = { title: "A title", body: "See §999 for the rule.", changelog: "- x §999.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §999 says so." }] };
     const rewrites = rewriteFreeSectionRefs(entry, 400);
-    expect(entry).toEqual({ title: "A title", body: "See §NNN for the rule.", changelog: "- x §NNN.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §NNN says so." }] });
-    expect(rewrites).toEqual(["§999 → §NNN", "§999 → §NNN", "§999 → §NNN"]);
+    expect(entry).toEqual({ title: "A title", body: "See §426 for the rule.", changelog: "- x §426.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §426 says so." }] });
+    expect(rewrites).toEqual(["§999 → §426", "§999 → §426", "§999 → §426"]);
   });
 
   it("leaves a §N at or below the threshold alone — it names a decision that already exists", () => {

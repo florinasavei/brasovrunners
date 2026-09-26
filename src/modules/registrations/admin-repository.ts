@@ -41,7 +41,7 @@ export type RegistrationListRow = {
   fitnessDeclaredAt: Date | null;
   /**
    * The club's terms the form accepted expressly (§421), and when — the export's two columns
-   * (§NNN). Null for a staff or desk entry and for a row sent before the column existed.
+   * (§425). Null for a staff or desk entry and for a row sent before the column existed.
    */
   termsVersion: number | null;
   termsAcceptedAt: Date | null;
@@ -542,7 +542,7 @@ export type RegistrationDetail = {
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
   cycleStartedAt: Date;
   /**
-   * The two legal texts this cycle's form was sent under (§NNN): the privacy notice every
+   * The two legal texts this cycle's form was sent under (§425): the privacy notice every
    * registration acknowledges (its moment is `cycleStartedAt`), and the terms accepted expressly
    * (§421) — null on a staff or desk entry, whose paper carries them, and on a row sent before
    * the column existed.
@@ -1080,7 +1080,7 @@ export async function listEventsForDesk<T extends Record<string, unknown>>(
  * oldest `waitlisted_at` first, `id` breaking a tie — so the panel's numbering is a promise.
  */
 /**
- * Which of the three terms lines the registration's page shows (§NNN): the version accepted
+ * Which of the three terms lines the registration's page shows (§425): the version accepted
  * expressly on the form, the paper note for a staff or desk entry, or "no version recorded" for
  * a row sent before the column existed. Pulled out of the page's JSX so a unit test can pick
  * each branch without a browser.

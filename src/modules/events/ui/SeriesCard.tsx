@@ -119,7 +119,7 @@ export default async function SeriesCard({
             pills. */}
         <Box sx={{ mt: GROUP_GAP }}>
           {/* The next date's weather at its start (§416) is the last pill of its route's row, the
-              umbrella when rain is likely (§NNN). */}
+              umbrella when rain is likely (§429). */}
           <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} cardWeather={weather} />
         </Box>
 

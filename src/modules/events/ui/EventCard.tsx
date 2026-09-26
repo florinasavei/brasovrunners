@@ -91,9 +91,9 @@ export default async function EventCard({
 
         {/* The facts, with their links: the place is the map the club pasted. The weather at the
             start, a glyph and the degrees (§416), within seven days of it, is the last pill of the
-            route's row — the umbrella when rain is likely (§NNN).
+            route's row — the umbrella when rain is likely (§429).
 
-            Card height (review finding, §NNN): the pill left the marks row above the title
+            Card height (review finding, §429): the pill left the marks row above the title
             (`CARD_CHIPS_SX`) for the last slot of this row (`RoutePills`' `trailing`), at the
             same 24px height as the route pills it now sits among (`CardWeather`) — no taller than
             a chip already there. Both rows already wrap (`flexWrap: "wrap"`), so a card's total

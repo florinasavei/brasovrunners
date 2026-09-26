@@ -3,11 +3,11 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.01-2026-09-26 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.02-2026-09-26 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
- *      in a row, so a check that registers late is not missed (§NNN) — stops unless every one is
+ *      in a row, so a check that registers late is not missed (§426) — stops unless every one is
  *      green, and merges it into `qa` — an already-merged batch PR is taken as done, and the run
  *      continues from step 3;
  *   3. opens the `qa → main` release PR, or takes the one already open;
@@ -84,7 +84,7 @@ async function until(test, every, times) {
 
 /**
  * Waits until the PR's checks have settled — none pending, the same set on two readings in a row —
- * and only then judges them (§NNN, `ship-checks.mjs`). Stops on a red that `tolerate` does not name.
+ * and only then judges them (§426, `ship-checks.mjs`). Stops on a red that `tolerate` does not name.
  */
 async function settledChecks(pr, { tolerate } = {}) {
   const read = () => JSON.parse(ghMayFail("pr", "checks", pr, "--json", "name,state,bucket") || "[]");

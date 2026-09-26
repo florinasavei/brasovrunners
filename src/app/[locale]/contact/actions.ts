@@ -101,7 +101,7 @@ export async function submitContactAction(form: FormData): Promise<void> {
     const addressOnly = new FormData();
     addressOnly.set("email", text(form, "email").trim());
     await stashFormDraft(addressOnly, path);
-    // The toast says it too (§NNN) — the same sentence whatever the classification, as the page is.
+    // The toast says it too (§427) — the same sentence whatever the classification, as the page is.
     await flashPublic("contactSent");
     redirect(`${path}?sent=1`);
   }

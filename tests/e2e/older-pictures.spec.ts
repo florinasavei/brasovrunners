@@ -9,7 +9,7 @@ import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-054-01 criterion 14, BR-REQ-090-05 criterion 14 (`DECISIONS.md` §NNN) — the one-off
+ * BR-REQ-054-01 criterion 14, BR-REQ-090-05 criterion 14 (`DECISIONS.md` §430) — the one-off
  * button on the task board that gives the pictures stored before §414 their phone sizes.
  *
  * The older picture is the setup, not the subject, so it is written the way the site wrote one
@@ -80,7 +80,7 @@ async function press(page: Page, left: number): Promise<{ saved: string; count: 
   return answer;
 }
 
-test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§NNN)", () => {
+test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§430)", () => {
   test("a picture from before the ladder, on a published page, gets its sizes from the task board; its old address still answers", async ({ page }) => {
     // Long, because the second project waits on the lock for the first.
     test.setTimeout(240_000);
@@ -178,7 +178,7 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§NNN)", 
       expect(Buffer.from(await oldAnswer.body()).equals(master)).toBe(true);
 
       // A picture whose file is gone: the press says so on the card itself, with what to do, and
-      // not only in the toast that fades (§NNN). Its row is this spec's and goes in `finally`.
+      // not only in the toast that fades (§430). Its row is this spec's and goes in `finally`.
       const gone = await db.query<{ id: string }>(
         `INSERT INTO media_assets (key_prefix, original_filename, width, height, byte_size) VALUES ($1, 'lipsa.jpg', 800, 600, 1000) RETURNING id`,
         [randomUUID()],

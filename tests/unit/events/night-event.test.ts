@@ -88,7 +88,7 @@ describe("§394 the sun — NOAA's algorithm against published tables, within fi
     Brașov. The brief quoted "≈ 21:03 / 05:31" for Brașov's solstice — those are Bucharest's, a
     degree and a quarter further south; Brașov's own are seven minutes later in the evening.
     The minute-exact proof, against the US Naval Observatory's own tables, is
-    `sun-reference.test.ts` (§NNN); this block only keeps §394's first, looser check.
+    `sun-reference.test.ts` (§428); this block only keeps §394's first, looser check.
   */
   it.each([
     ["Bucharest, the June solstice", { latitude: 44.4268, longitude: 26.1025 }, "2026-06-21", ZONE, "05:31", "21:03"],
@@ -293,7 +293,7 @@ describe("§394 orderRoutePills — the night event where §382 put the headlamp
     expect(orderRoutePills({ surface, elevation, headlamp: null })).toEqual([surface, elevation]);
   });
 
-  it("wears the crescent moon, one file from @mui/icons-material — not the torch, and not the header's light/dark switch (§NNN)", () => {
+  it("wears the crescent moon, one file from @mui/icons-material — not the torch, and not the header's light/dark switch (§428)", () => {
     expect(GLYPHS.night).toBe(ModeNightIcon);
     expect(Object.values(GLYPHS)).not.toContain(FlashlightOnIcon);
     expect(GLYPHS.night).not.toBe(DarkModeIcon);
@@ -302,7 +302,7 @@ describe("§394 orderRoutePills — the night event where §382 put the headlamp
 });
 
 describe("§394 the event page's facts", () => {
-  // `event()` defaults to `type: "GROUP_RUN"` (§394); since §NNN the pill says «Noapte» on every type.
+  // `event()` defaults to `type: "GROUP_RUN"` (§394); since §428 the pill says «Noapte» on every type.
   it("puts «Noapte» last in the route's pills, with the crescent and the sunset in its tooltip", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
@@ -312,7 +312,7 @@ describe("§394 the event page's facts", () => {
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");
     // The tooltip only opens on hover or focus, and the chip is not focusable, so the sunset
-    // sentence must also reach the chip's accessible name as a visually hidden `srSuffix` (§NNN).
+    // sentence must also reach the chip's accessible name as a visually hidden `srSuffix` (§428).
     expect(route!.dd).toContain("— Soarele apune la 16:44");
     expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
   });
@@ -325,7 +325,7 @@ describe("§394 the event page's facts", () => {
     expect(tooltips(route.dd)).toEqual(["The sun sets at 16:44"]);
   });
 
-  it("says «Noapte» on every other type too — the type chip already says what it is (§NNN)", async () => {
+  it("says «Noapte» on every other type too — the type chip already says what it is (§428)", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ type: "RACE" }), now: NOW, stacked: true }));
     const labels = pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd);
     expect(labels).toContain("Noapte");
@@ -350,7 +350,7 @@ describe("§394 the event page's facts", () => {
     expect(pillLabels(no)).not.toContain("Noapte");
   });
 
-  it("reads the sun at the event's own place — a pair typed for Cluj, not the club's Brașov (§NNN, §416's rule)", async () => {
+  it("reads the sun at the event's own place — a pair typed for Cluj, not the club's Brașov (§428, §416's rule)", async () => {
     const cluj = renderToStaticMarkup(await EventFacts({ event: event({ latitude: 46.7712, longitude: 23.6236 }), now: NOW, stacked: true }));
     // 18 November 2026: 16:44 over Brașov, 16:49 over Cluj.
     expect(tooltips(cluj)).toEqual(["Soarele apune la 16:49"]);
@@ -386,7 +386,7 @@ describe("§394 the listing card and the hero", () => {
     expect(day).not.toContain("Noapte");
   });
 
-  it("the hero's bare «Noapte» carries the sunset too, in a visually hidden span — it opens no tooltip of its own to hear it from (§NNN)", async () => {
+  it("the hero's bare «Noapte» carries the sunset too, in a visually hidden span — it opens no tooltip of its own to hear it from (§428)", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
     const route = rows(withoutStyles(html)).find((row) => row.label === "Traseu")!.dd;
     // «Noapte» itself stays visible, in front of the hidden sentence — the same order and the

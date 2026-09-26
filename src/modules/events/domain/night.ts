@@ -8,7 +8,7 @@ import { type Coordinates, isNightEvent, localDay, sunTimes, wallClockTime } fro
  * "Da" (a night event whatever the sun does — a start in a forest at 18:30 in September), `false`
  * is "Nu" (never, whatever the sun does), and `null` — the default — is "Automat": **the start
  * and the end** are compared with civil dusk and civil dawn of its own date at the event's own
- * place (`sun.ts`; the place is the caller's, `night-event.ts#nightPlace`, §NNN) — the owner,
+ * place (`sun.ts`; the place is the caller's, `night-event.ts#nightPlace`, §428) — the owner,
  * 2026-09-25: "Necesită frontală ar trebui să fie cumva eveniment de noapte setat automat" said the
  * start, but a run that starts in daylight and finishes after dusk is a night run too. A weekly run is therefore a day run in June and a night run in November
  * without anybody touching it, and every date of a series answers for itself.

@@ -64,7 +64,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           {t("manage.doneTitle")}
         </Typography>
         <Alert severity="success">{t("manage.done")}</Alert>
-        {/* The toast the cancel flashed (§NNN), on this outcome only. */}
+        {/* The toast the cancel flashed (§427), on this outcome only. */}
         <PublicFlash accept={["unregistered"]} />
       </Container>
     );

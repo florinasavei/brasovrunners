@@ -145,7 +145,7 @@ export default async function CourseBox({
           <NightEventField
             name="event.nightOverride"
             defaultChoice={nightChoiceOf(event?.nightOverride)}
-            // The saved event's own place (§NNN, §416's rule), the club's on the create page. A map
+            // The saved event's own place (§428, §416's rule), the club's on the create page. A map
             // link or a pair typed in «Locul» in this sitting is read at the next save.
             place={event ? nightPlace(event) : env.CLUB_COORDINATES}
             zone={zone}

@@ -176,7 +176,7 @@ describe("CSV formula neutralization", () => {
   });
 
   /**
-   * §NNN — the club's terms accepted expressly on the form (§421): the version and the moment, as
+   * §425 — the club's terms accepted expressly on the form (§421): the version and the moment, as
    * the last two columns, so every earlier column keeps its position for a script. A staff or desk
    * entry, and a row sent before the version was recorded, carry two empty cells — never 0.
    */

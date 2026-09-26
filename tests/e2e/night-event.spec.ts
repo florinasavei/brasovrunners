@@ -23,16 +23,16 @@ const MONTH = "2027-11";
 const JUNE = "2027-06-16";
 
 /**
- * The crescent moon (§NNN, replacing §382's lit torch), by its drawing: a production build has no
+ * The crescent moon (§428, replacing §382's lit torch), by its drawing: a production build has no
  * `data-testid="ModeNightIcon"` — MUI writes that attribute only outside production — so the glyph
  * is found by the start of its path, `@mui/icons-material/ModeNight`'s own.
  */
 const MOON = 'svg:has(path[d^="M9.5 2c-1.82 0-3.53.5-5 1.35"])';
 /** The torch it replaced, which no night pill may wear any more. */
 const TORCH = 'svg:has(path[d^="M6 2h12v3H6z"])';
-/** The pill's one word, «Noapte» / «Night», on every type (§NNN). */
+/** The pill's one word, «Noapte» / «Night», on every type (§428). */
 // The chip's accessible name now carries the sunset sentence as a visually hidden suffix
-// (§NNN), which `hasText` also sees, so the filter matches the leading word rather than the
+// (§428), which `hasText` also sees, so the filter matches the leading word rather than the
 // whole string.
 const NIGHT_RO = /^Noapte\b/;
 const NIGHT_EN = /^Night\b/;
@@ -126,7 +126,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
 
   test("the event page carries the pill in both languages, with the crescent and the sunset", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
-    // «Noapte», one word (§NNN): the type chip beside it already says it is a run.
+    // «Noapte», one word (§428): the type chip beside it already says it is a run.
     const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: NIGHT_RO });
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(MOON)).toHaveCount(1);

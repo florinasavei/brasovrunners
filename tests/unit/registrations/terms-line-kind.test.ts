@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { termsLineKindFor } from "@/modules/registrations/admin-repository";
 
 /**
- * §NNN — which of the three terms lines the registration's page shows: the version accepted
+ * §425 — which of the three terms lines the registration's page shows: the version accepted
  * expressly on the form, the paper note for a staff or desk entry, or "no version recorded" for
- * a row sent before the column existed. Pulled out of the page's JSX (§NNN's review) so this
+ * a row sent before the column existed. Pulled out of the page's JSX (§425's review) so this
  * runs without a browser.
  */
 describe("termsLineKindFor", () => {

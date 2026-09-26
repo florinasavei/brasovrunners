@@ -48,7 +48,7 @@ const FULL_ROUTE = {
   nightOverride: null,
   costType: "FREE" as const,
   registrationMode: "INTERNAL" as const,
-  // No place of its own: the club's (§NNN, §416's rule).
+  // No place of its own: the club's (§428, §416's rule).
   mapUrl: null,
   latitude: null,
   longitude: null,

@@ -779,7 +779,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.submitted")}: {dt(registration.submittedAt)}
         </Typography>
         {/*
-          The two legal texts this cycle's form was sent under (§NNN), one line each and in the same
+          The two legal texts this cycle's form was sent under (§425), one line each and in the same
           shape: the privacy notice every registration acknowledges, and the club's terms accepted
           expressly on the form (§421). A staff or desk entry records no terms — the paper carries
           them (§67) — and a row sent before the column existed has no number to show; §316's

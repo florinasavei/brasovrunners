@@ -138,7 +138,7 @@ export const envSchema = z
       .optional()
       .transform((value) => value === "true" || value === "1"),
     /**
-     * `playwright.config.ts`'s `webServer` alone (§NNN): under `APP_ENV=test` — CI's end-to-end
+     * `playwright.config.ts`'s `webServer` alone (§430): under `APP_ENV=test` — CI's end-to-end
      * job — the store is `fake`, a Map inside the server process a spec cannot reach, so a spec
      * that needs a picture stored the way the site stored one *before* an upload could (the
      * older pictures' button: a version-4 prefix no upload makes any more) had no way to put

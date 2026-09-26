@@ -184,7 +184,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     // The word is for a screen reader; the rain and the wind are the page's.
     await expect(pill).toContainText("Vremea la start: Parțial noros");
     await expect(pill).not.toContainText("ploaie");
-    // The last pill of the route's row (§NNN, amending §416), not among the marks above the title.
+    // The last pill of the route's row (§429, amending §416), not among the marks above the title.
     const row = pill.locator("xpath=ancestor::*[@data-fact='pills'][1]");
     await expect(row).toHaveCount(1);
     expect(await pill.evaluate((element) => element.nextElementSibling === null)).toBe(true);

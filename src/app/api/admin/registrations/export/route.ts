@@ -206,7 +206,7 @@ export async function GET(request: Request): Promise<Response> {
       provisionalBibNumber: row.provisionalBibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
       emailBounced: row.emailRejectedReason !== null,
-      // The terms accepted on the form (§421, §NNN): blank for a staff or desk entry.
+      // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
       termsVersion: row.termsVersion,
       termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",
     })),

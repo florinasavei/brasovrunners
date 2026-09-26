@@ -4,7 +4,7 @@ import FlashToast from "./FlashToast";
 import type { PublicToastKey } from "./public-toasts";
 
 /**
- * Where a public page says its flow's outcome in a toast (§NNN, through §384's flash).
+ * Where a public page says its flow's outcome in a toast (§427, through §384's flash).
  *
  * A Server Component the page renders in its success branch only — `?sent=1`, `?done=…` — with
  * the keys that branch can have been sent: it reads the flash the action wrote, translates it

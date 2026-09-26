@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEATURED } from "./support/featured-event";
 
 /**
- * §NNN — the public site's toasts are mounted only where a public flow lands, never in a layout.
+ * §427 — the public site's toasts are mounted only where a public flow lands, never in a layout.
  *
  * The listing and an event page are what every visitor pays for (`AGENTS.md` §1.5): neither
  * renders the toast's live region, and no script either page loads carries the toast island —
@@ -10,7 +10,7 @@ import { FEATURED } from "./support/featured-event";
  * leaves behind for its minute (`flash.ts`). The unit source-walk
  * (`tests/unit/shared/public-toasts.test.ts`) holds the imports; this holds what the browser gets.
  */
-test.describe("§NNN the listing and an event page carry no toast island", () => {
+test.describe("§427 the listing and an event page carry no toast island", () => {
   /** Every script body the page loads, collected while it loads. */
   function collectScripts(page: Page): Promise<string>[] {
     const bodies: Promise<string>[] = [];

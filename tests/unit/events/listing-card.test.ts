@@ -562,7 +562,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(text(html)).not.toContain("șanse de ploaie");
     expect(text(html)).not.toContain("rafale");
     expect(pill).not.toContain("data-rain-likely");
-    // Not among the marks above the title any more (§NNN, amending §416): in the route's row, after
+    // Not among the marks above the title any more (§429, amending §416): in the route's row, after
     // every route pill and the cost — the row's last.
     expect(html.indexOf('data-testid="card-weather"')).toBeGreaterThan(html.indexOf("<h2"));
     const row = fact(html, "pills");

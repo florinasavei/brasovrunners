@@ -22,7 +22,7 @@ type Props = {
 };
 
 /**
- * The one-off button of §NNN: the pictures stored before §414 get their ladder, a batch per press.
+ * The one-off button of §430: the pictures stored before §414 get their ladder, a batch per press.
  *
  * On the task board rather than on the pictures page because it is a thing owed once, by the
  * Administrator, and the board is where the owed things are; it disappears when nothing is left.
@@ -32,7 +32,7 @@ type Props = {
  * the service both assert the role (BR-REQ-060-01).
  *
  * One total, not a count per kind (gallery photo, picture in a text, album cover), on purpose
- * (§NNN): the press treats every kind alike, in one order, and the Administrator's one decision
+ * (§430): the press treats every kind alike, in one order, and the Administrator's one decision
  * — press until nothing is left — does not change with the split. A per-kind count would be
  * three reference joins on every load of the board for a number nobody acts on differently; the
  * pictures page already says where each one is used.
@@ -53,7 +53,7 @@ export default async function OlderPicturesPanel({ locale, left, lastFailed }: P
         {t(`tasks.olderPictures.left.${countForm(left, locale)}`, { count: left })}
       </Typography>
       {/*
-        The last press's failures, on the card itself (§NNN): the toast fades, and a picture that
+        The last press's failures, on the card itself (§430): the toast fades, and a picture that
         fails stays in the count above and is tried again on every press — the Administrator has
         to learn here that pressing again will not help, and what will.
       */}

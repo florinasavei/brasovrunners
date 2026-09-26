@@ -29,7 +29,7 @@ export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
   "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt"
 > & {
-  /** The moment the terms were accepted (§421, §NNN), a date like the others; null when not recorded. */
+  /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
   termsAcceptedAt?: Date | null;
   /** The registration's own id, so a re-import knows which row it is about — never edited. */
   id: string;
@@ -103,7 +103,7 @@ const COLUMNS: Array<{
   { header: "Checked in", width: 18, cell: (row) => ({ value: row.checkedInAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },
   { header: "Email bounced", width: 12, cell: (row) => ({ value: row.emailBounced, type: Boolean }) },
   /*
-    The terms the form accepted expressly (§421), the same two columns as the CSV (§NNN), last so
+    The terms the form accepted expressly (§421), the same two columns as the CSV (§425), last so
     every earlier column keeps its place. Blank for a staff or desk entry — the paper carries the
     terms — and for a row sent before the version was recorded.
   */

@@ -119,13 +119,13 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     await page.getByRole("button", { name: "Semnează și confirmă" }).click();
     await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
-    // §NNN: the participation confirmation is said in a toast too, once.
+    // §427: the participation confirmation is said in a toast too, once.
     await expect(page.getByTestId("toast")).toHaveText("Declarație semnată: înscrierea ta e confirmată.");
     await page.reload();
     await expect(page.getByTestId("toast-live")).toHaveCount(0);
 
     /*
-      §NNN: and cancelling it from the participant's own link says so in a toast — the third public
+      §427: and cancelling it from the participant's own link says so in a toast — the third public
       flow. It also gives the place back, so a run of this spec leaves the sample race as it found it.
     */
     await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
@@ -183,7 +183,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     }
 
     /*
-      §NNN: cancelling from «Înscrierile mele» (§77, BR-REQ-036-04) says so in a toast too, once —
+      §427: cancelling from «Înscrierile mele» (§77, BR-REQ-036-04) says so in a toast too, once —
       and gives the place back, so this case leaves the sample race as it found it.
     */
     await page.goto(`/ro/inscrieri/ale-mele/${await mintProfileLink(registration.participantId)}`);
