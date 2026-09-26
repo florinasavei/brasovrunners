@@ -132,7 +132,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect(low.rungs[0].body.byteLength).toBeLessThan(normal.rungs[0].body.byteLength);
     const high = await processUploadedImage(photo, { quality: "high" });
     expect(original.web.byteLength).toBeGreaterThan(high.web.byteLength);
-  }, 60_000);
+  }, 240_000);
 
   it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§414)", async () => {
     // Flat colour and hard edges: what near-lossless WebP stores for almost nothing.

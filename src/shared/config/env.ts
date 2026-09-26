@@ -150,6 +150,17 @@ export const envSchema = z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
+    /**
+     * `playwright.config.ts`'s `webServer` alone: under `APP_ENV=test` — CI's end-to-end job — the
+     * request that queues a message does not drain the outbox after its response
+     * (`notifications/drain.ts`), so nothing reached the capture `/devs` shows and every message
+     * stayed pending, which no laptop run (`local`, which drains) ever saw. With this flag the
+     * suite's server drains as every other environment does. Only ever consulted under `test`.
+     */
+    E2E_DRAIN_OUTBOX: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
     // project id is under the Vercel project's Settings → General; the team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),

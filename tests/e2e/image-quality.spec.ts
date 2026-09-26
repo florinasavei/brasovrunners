@@ -39,7 +39,7 @@ function candidates(srcset: string): { url: string; width: number }[] {
   });
 }
 
-test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", () => {
+test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four levels §437)", () => {
   test("a picture and a film's poster go up at «Înaltă», say what they became, and the page offers their widths", async ({ page, browser }) => {
     test.setTimeout(180_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -61,7 +61,7 @@ test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", ()
     await expect(bar.getByRole("radio", { name: "Medie (recomandat)" })).toBeChecked();
     // The help says what each choice keeps, from the same numbers the server resizes to.
     await expect(bar).toContainText("până la 2400 px");
-    await expect(bar).toContainText("până la 4000 px");
+    await expect(bar).toContainText("Mare păstrează 4000 px");
     // Four levels (§437), and the help says what the new two keep.
     for (const name of ["Minimă (fișier mic)", "Medie (recomandat)", "Mare", "Originală (fișier mare)"]) {
       await expect(bar.getByRole("radio", { name, exact: true })).toBeVisible();

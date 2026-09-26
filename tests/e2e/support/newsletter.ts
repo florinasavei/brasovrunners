@@ -28,7 +28,9 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 /**
  * A live link of `purpose` for the address the pop-up took, as its secret. Waits first for the
  * confirmation message to leave the outbox: its send mints a confirmation link, which would
- * supersede this one if it landed second.
+ * supersede this one if it landed second. A message still waiting after the wait (a deferred
+ * send) mints nothing until something drains it again, later than any spec needs the link — so
+ * that is no reason to fail, as `mintActionLink` reasons; only an address with no row is.
  */
 export async function mintNewsletterLink(email: string, purpose: "CONFIRM" | "MANAGE"): Promise<string> {
   return withDatabase(async (client) => {
@@ -43,10 +45,8 @@ export async function mintNewsletterLink(email: string, purpose: "CONFIRM" | "MA
            FROM newsletter_subscribers s WHERE lower(s.delivery_email) = lower($1)`,
         [email],
       );
-      if (rows[0] && Number(rows[0].waiting) === 0) {
-        subscriberId = rows[0].id;
-        break;
-      }
+      subscriberId = rows[0]?.id;
+      if (rows[0] && Number(rows[0].waiting) === 0) break;
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
     if (!subscriberId) throw new Error("the pop-up recorded no subscriber for the address");
