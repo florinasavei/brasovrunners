@@ -122,6 +122,26 @@ export const DEFAULT_CLUB_NOTICES: ClubNotices = {
   participants: { bcc: [] },
 };
 
+/**
+ * The form's box for each list the service validates (§NNN): the service names a refusal by the
+ * setting's own path (`participants.bcc`), the panel posts `participantsBcc`. One table, so the
+ * refusal summary links to the box and the box turns red — before this the refusal named
+ * `participants`, which is no box, and the save failed without saying where.
+ */
+export const CLUB_NOTICE_BOXES = {
+  "declarations.to": "declarationsTo",
+  "declarations.cc": "declarationsCc",
+  "declarations.bcc": "declarationsBcc",
+  "confirmations.to": "confirmationsTo",
+  "participants.bcc": "participantsBcc",
+} as const;
+
+/** The boxes a refusal names, from the service's list paths; a path with no box names the whole form. */
+export function clubNoticeBoxesOf(paths: readonly string[]): string[] {
+  const boxes = CLUB_NOTICE_BOXES as Readonly<Record<string, string>>;
+  return [...new Set(paths.flatMap((path) => (boxes[path] ? [boxes[path]] : [])))];
+}
+
 /** Where the declaration copy's "to" came from, for the sentence the task board prints. */
 export type ClubNoticeSource = "setting" | "environment" | "none";
 

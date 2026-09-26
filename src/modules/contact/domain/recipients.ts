@@ -85,13 +85,50 @@ export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], b
 /**
  * A typed line — "club@…, amalia@…" — as a list. Commas and semicolons both, because both are
  * what people type, and the empty entries a trailing separator leaves are dropped rather than
- * rejected: `env.ts`'s `allowlist` reads the same way, and the two must agree.
+ * rejected, as `env.ts`'s `allowlist` drops them.
+ *
+ * **Spaces and line breaks separate too (§NNN).** An address can never hold whitespace — the
+ * canonicalizer refuses it (`FORBIDDEN` in `canonical-email.ts`) — so "a@x.ro b@y.ro" and one
+ * address per line can only mean two addresses. Read as one entry, they were refused as "not a
+ * valid email", and the owner's hidden copies would not save ("nu pot salva aparent").
  */
 export function parseAddressList(value: string): string[] {
   return value
-    .split(/[,;]/)
+    .split(/[,;\s]+/)
     .map((entry) => entry.trim())
     .filter((entry) => entry !== "");
+}
+
+/**
+ * The typed entries no address list will accept, each once, in the order typed (§NNN) — so a
+ * refused save can say *which* entry, not only that "something is not valid". The same test the
+ * lists' own schemas apply (the canonicalizer, and §164's 320-character ceiling), so the words
+ * cannot name an entry the save would have kept, or miss one it refused.
+ */
+export function invalidAddresses(entries: readonly string[]): string[] {
+  const invalid: string[] = [];
+  for (const entry of entries) {
+    const trimmed = entry.trim();
+    if (trimmed === "" || (trimmed.length <= 320 && isValidEmail(trimmed))) continue;
+    if (!invalid.includes(trimmed)) invalid.push(trimmed);
+  }
+  return invalid;
+}
+
+/**
+ * Why a list of address boxes was refused, in words the summary can print (§NNN): the entries
+ * that are not addresses, or else the list that holds more than `max`. `null` when neither —
+ * the refusal was something else, and the generic sentence stands. The codes are `Admin.errors`
+ * keys; the values fill their `{addresses}` and `{max}` (`FormOutcome.errorValues`).
+ */
+export function addressListRefusal(
+  lists: readonly (readonly string[])[],
+  max: number,
+): { error: "INVALID_ADDRESSES"; errorValues: { addresses: string } } | { error: "TOO_MANY_ADDRESSES"; errorValues: { max: string } } | null {
+  const invalid = invalidAddresses(lists.flat());
+  if (invalid.length > 0) return { error: "INVALID_ADDRESSES", errorValues: { addresses: invalid.join(", ") } };
+  if (lists.some((list) => list.length > max)) return { error: "TOO_MANY_ADDRESSES", errorValues: { max: String(max) } };
+  return null;
 }
 
 /** The list as the form shows it back, so a save round-trips to the same text. */

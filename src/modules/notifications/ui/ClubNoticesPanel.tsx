@@ -51,17 +51,36 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
     confirmation notices and the hidden copies of the participants' messages. A mailbox on two
     lists is one mailbox, compared without case the way the lists themselves drop a repeat.
   */
-  const mailboxes = new Set(
-    [declarations.to, ...declarations.cc, ...declarations.bcc, ...notices.confirmations.to, ...notices.participants.bcc]
-      .filter((address): address is string => Boolean(address))
-      .map((address) => address.toLowerCase()),
-  ).size;
+  const mailboxes = [
+    ...new Map(
+      [declarations.to, ...declarations.cc, ...declarations.bcc, ...notices.confirmations.to, ...notices.participants.bcc]
+        .filter((address): address is string => Boolean(address))
+        .map((address) => [address.toLowerCase(), address] as const),
+    ).values(),
+  ];
+  /*
+    The declaration's Cc and Bcc are kept while nothing sends them: a copy needs an address it is
+    *for* (§244, `resolveDeclarationCopies`), and "Nicio adresă" alone read as a Bcc that had not
+    saved (§NNN). Said in words next to the lists, with the addresses.
+  */
+  const idleDeclarationCopies = declarations.to === null && declarations.cc.length + declarations.bcc.length > 0;
+  // A list box grows with what it holds, so every address typed into it is in view (§NNN).
+  const listBox = { multiline: true, minRows: 1, maxRows: 6 } as const;
 
   return (
     <Panel
       title={t("emails.clubNotices.title")}
       intro={t("emails.clubNotices.intro")}
-      aside={t("emails.clubNotices.aside", { count: mailboxes })}
+      /*
+        The closed fold names the mailboxes, not only how many (§NNN; the owner: "trebuie să pot
+        vedea pe cine am pus în BCC"): the club's own addresses, read by the roles this panel is
+        drawn for (`maySeeQueue`), so the summary may carry them.
+      */
+      aside={
+        mailboxes.length > 0
+          ? t("emails.clubNotices.asideNames", { count: mailboxes.length, addresses: formatAddressList(mailboxes) })
+          : t("emails.clubNotices.aside", { count: 0 })
+      }
       collapsible
       openWhen={openWhen}
       id="club-notices"
@@ -73,6 +92,20 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           to: declarations.to ?? "—",
           cc: formatAddressList(declarations.cc) || "—",
           bcc: formatAddressList(declarations.bcc) || "—",
+        })}
+      </Typography>
+      {idleDeclarationCopies && (
+        <Alert severity="warning" sx={{ py: 0.5, mt: 0.5 }} data-testid="club-notices-idle-copies">
+          {t("emails.clubNotices.declarationCopiesIdle", {
+            cc: formatAddressList(declarations.cc) || "—",
+            bcc: formatAddressList(declarations.bcc) || "—",
+          })}
+        </Alert>
+      )}
+      {/* Every list in force is named, the confirmation notices too, so nothing saved is only in a box (§NNN). */}
+      <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+        {t("emails.clubNotices.confirmationsInForce", {
+          to: formatAddressList(notices.confirmations.to) || "—",
         })}
       </Typography>
       {/* The hidden copies of every participant message, named in force like the lists above (2026-09-22). */}
@@ -123,6 +156,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           />
           <RecallField
             name="declarationsCc"
+            {...listBox}
             label={t("emails.clubNotices.declarationsCc")}
             defaultValue={formatAddressList(notices.declarations.cc)}
             size="small"
@@ -135,6 +169,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           </Alert>
           <RecallField
             name="declarationsBcc"
+            {...listBox}
             label={t("emails.clubNotices.declarationsBcc")}
             defaultValue={formatAddressList(notices.declarations.bcc)}
             size="small"
@@ -143,6 +178,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           />
           <RecallField
             name="confirmationsTo"
+            {...listBox}
             label={t("emails.clubNotices.confirmationsTo")}
             defaultValue={formatAddressList(notices.confirmations.to)}
             size="small"
@@ -166,6 +202,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           </Alert>
           <RecallField
             name="participantsBcc"
+            {...listBox}
             label={t("emails.clubNotices.participantsBcc")}
             defaultValue={formatAddressList(notices.participants.bcc)}
             size="small"
