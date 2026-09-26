@@ -360,16 +360,13 @@ async function PastEvents({
       <Typography
         component="summary"
         variant="h2"
-        sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 0.5 }}
+        sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 1.5 }}
       >
         {onlyOneType
           ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${sourceType}`) })
           : filtered
             ? t("pastCountFiltered", { count: cards.length })
             : t("pastCount", { count: cards.length })}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        {t("pastHelp")}
       </Typography>
       <Box
         component="ul"
