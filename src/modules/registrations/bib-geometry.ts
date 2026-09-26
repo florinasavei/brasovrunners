@@ -69,6 +69,17 @@ export const BIB_LAYOUT = {
   nameSize: 24,
   nameBlock: 44,
   nameTop: 10,
+  /**
+   * A spare bib's empty name line (§NNN): a rule centred in the name's strip, where the name's
+   * baseline would sit, long enough for a name written in marker and short of the card's edges.
+   * Under it, centred, the small mark that says what the bib is — «înscris la fața locului» —
+   * `blankMarkSize` points, its top `blankMarkTop` into the strip, inside the strip's 44.
+   */
+  blankLineWidth: 300,
+  blankLineTop: 29,
+  blankLineWeight: 1,
+  blankMarkTop: 32,
+  blankMarkSize: 9,
   /** The sponsors' strip above the small print, and the picture fitted inside it. */
   sponsorHeight: 30,
   sponsorTop: 2,

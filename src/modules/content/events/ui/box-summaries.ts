@@ -69,7 +69,7 @@ export type SummaryWords = {
   window: { range: string; fromPublication: string; untilStart: string };
   conditions: { noDeclaration: string };
   confirmation: { sentence: string; atStart: string; off: string };
-  bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
+  bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
   course: {
@@ -405,16 +405,19 @@ export function confirmationSummary(words: SummaryWords, opens: number, due: num
   return fillIn(confirmationDueAtStart({ days: due }) ? words.confirmation.atStart : words.confirmation.sentence, { opens, due });
 }
 
-/** Sub-card 8.4: `De la 100 · verde · 42 alocate, 2 de tipărit`. */
+/** Sub-card 8.4: `De la 100 · verde · rezervă 900–949 · 42 alocate, 2 de tipărit`. */
 export function bibsSummary(
   words: SummaryWords,
   start: number,
   colourLabel: string | null,
   counts: { allocated: number; unprinted: number } | null,
+  /** The desk's spares (§NNN), when the club set a band. */
+  spare: { from: number; to: number } | null = null,
 ): string {
   return join(words, [
     fillIn(words.bibs.from, { number: start }),
     colourLabel ?? words.bibs.clubColour,
+    spare ? fillIn(words.bibs.spares, { from: spare.from, to: spare.to }) : null,
     counts && counts.allocated > 0
       ? `${fillIn(words.bibs.allocated, { count: counts.allocated })}${counts.unprinted > 0 ? `, ${fillIn(words.bibs.toPrint, { count: counts.unprinted })}` : ""}`
       : null,

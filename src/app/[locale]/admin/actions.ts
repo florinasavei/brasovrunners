@@ -55,7 +55,7 @@ import {
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
-import { assignBibNumbers } from "@/modules/registrations/bibs";
+import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { eraseGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -798,6 +798,35 @@ export async function assignBibNumbersAction(_previous: FormOutcome | null, form
       notConfirmed: String(result.notConfirmed),
       test: String(result.test),
     };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  return backTo(editorPath(locale, eventId), outcome);
+}
+
+/**
+ * «Tipărește» on the spares' section (§NNN): reserve that many numbers for the desk, under the
+ * event's lock, and come back to the editor with the range — the page's banner carries the link
+ * to the sheet of exactly those numbers. Behind the confirmation that names the first number;
+ * `expectFrom` is that number, and a registration that moved it since is refused (CONFLICT) and
+ * the card, drawn again, names the new start.
+ */
+export async function reserveSpareBibsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const expected = Number(text(form, "expectFrom"));
+
+  let outcome: { error?: string; saved?: string; count?: string; from?: string; to?: string };
+  try {
+    const actor = await requireStaff();
+    const result = await reserveSpareBibs(getDb(), {
+      actor,
+      eventId,
+      // `Number("")` is 0, which the service refuses as a count, naming the box.
+      count: Number(text(form, "count")),
+      expectFrom: Number.isInteger(expected) && expected > 0 ? expected : undefined,
+    });
+    outcome = { saved: "sparesReserved", count: String(result.count), from: String(result.from), to: String(result.to) };
   } catch (error) {
     outcome = outcomeOf(error);
   }

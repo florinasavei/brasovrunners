@@ -234,6 +234,9 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(confirmationSummary(words, 2, 3)).toBe(words.confirmation.off);
     expect(bibsSummary(words, 100, "Verde", { allocated: 42, unprinted: 2 })).toBe("De la 100 · Verde · alocate: 42, de tipărit: 2");
     expect(bibsSummary(words, 1, null, null)).toBe("De la 1 · culoarea clubului");
+    // §NNN: the desk's spares, when the club set a band.
+    expect(bibsSummary(words, 1, null, null, { from: 900, to: 949 })).toBe("De la 1 · culoarea clubului · rezervă 900–949");
+    expect(bibsSummary(wordsEn, 1, null, null, { from: 900, to: 949 })).toMatch(/spares 900–949$/);
     expect(startListSummary(words, "HIDDEN")).toBe("Ascunsă");
     expect(startListSummary(words, "NAMES")).toBe(words.startList.shown);
   });

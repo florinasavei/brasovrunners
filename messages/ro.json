@@ -839,6 +839,8 @@
       "repeatPublishOnBody": "De acum, fiecare dată nouă pe care o creează seria apare singură pe site, în ambele limbi. Datele create deja rămân cum sunt.",
       "bibsTitle": "Aloci numerele de concurs?",
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
+      "sparesTitle": "Rezervi numere pentru masă?",
+      "sparesBody": "Numerele încep de la {from}, după cel mai mare număr dat sau rezervat, și rămân ale mesei: nimeni înscris online nu le mai primește. O rezervare nu se anulează; numerele nefolosite rămân nefolosite.",
       "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
       "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență.",
       "email": {
@@ -957,7 +959,9 @@
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
-      "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor."
+      "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
+      "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment (dat, rezervat sau al unei înscrieri șterse). Alege alt număr din cutie și încearcă din nou.",
+      "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1591,7 +1595,8 @@
             "from": "De la {number}",
             "clubColour": "culoarea clubului",
             "allocated": "alocate: {count}",
-            "toPrint": "de tipărit: {count}"
+            "toPrint": "de tipărit: {count}",
+            "spares": "rezervă {from}–{to}"
           },
           "bibDesign": {
             "parts": "{parts}",
@@ -2851,7 +2856,19 @@
       "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere de format A5 pe pagină A4, unul deasupra celuilalt cu o linie de tăiere între ele, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere de format A5 pe pagină A4, unul deasupra celuilalt cu o linie de tăiere între ele, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
-      "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere."
+      "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere.",
+      "downloadSpares": "Retipărește rezervele libere (PDF)",
+      "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
+      "sparesNone": "Rezervate pentru masă: {from}–{to}, date toate. Tipărește altele dacă mai e nevoie.",
+      "sparesTitle": "Numere de rezervă pentru înscrierile de la fața locului",
+      "sparesHelp": "Pentru cei care se înscriu la masă: numere tipărite dinainte, cu rândul pentru nume gol — numele se scrie cu markerul. Numerele se rezervă la tipărire: nimeni înscris online nu le primește, iar la masă formularul propune următorul liber. Între 1 și {max} odată.",
+      "sparesCount": "Câte",
+      "sparesPrint": "Tipărește",
+      "sparesNext": "Următoarea tipărire începe de la {from}.",
+      "sparesReadOnly": "Doar un administrator rezervă numere noi.",
+      "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
+      "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
+      "spareMark": "înscris la fața locului"
     },
     "emergency": {
       "title": "Fișă de urgență — confidențial. Se distruge după eveniment.",
@@ -2956,7 +2973,13 @@
       "bibAlt": "Numărul de concurs (BID) {number}",
       "voidCancelled": "Înscriere anulată pe {date}",
       "voidExpired": "Înscriere expirată pe {date}",
-      "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc."
+      "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc.",
+      "handedBib": "Numărul dat acum",
+      "handedBibHelp": "Propus: următorul număr de rezervă liber. Schimbă-l dacă dai alt număr din cutie; lasă-l gol și platforma alege singură unul.",
+      "handedBibNoSpares": "Scrie numărul pe care i-l dai, sau lasă gol și platforma alege singură unul.",
+      "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
+      "nextSpare": "Rezerva următoare: {number}",
+      "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și platforma alege singură unul."
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -5139,6 +5162,11 @@
       "repeatStopped": "Recurența a fost oprită.",
       "repeatPublishOn": "Publicarea automată e pornită.",
       "repeatPublishOff": "Publicarea automată e oprită.",
+      "sparesReserved": {
+        "one": "{count} număr rezervat pentru masă: {from}–{to}.",
+        "few": "{count} numere rezervate pentru masă: {from}–{to}.",
+        "other": "{count} de numere rezervate pentru masă: {from}–{to}."
+      },
       "bibsAssigned": {
         "one": "{count} număr de concurs alocat.",
         "few": "{count} numere de concurs alocate.",

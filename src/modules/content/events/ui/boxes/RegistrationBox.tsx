@@ -10,6 +10,7 @@ import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/doma
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
   confirmationWindow,
@@ -379,7 +380,13 @@ export default async function RegistrationBox({
                     level={3}
                     id="box-bibs"
                     title={t("editor.boxes.bibs.title")}
-                    aside={bibsSummary(words, event?.bibStartNumber ?? 1, colourLabel, bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null)}
+                    aside={bibsSummary(
+                      words,
+                      event?.bibStartNumber ?? 1,
+                      colourLabel,
+                      bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null,
+                      event ? spareBandOf(event) : null,
+                    )}
                     openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>

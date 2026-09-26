@@ -839,6 +839,8 @@
       "repeatPublishOnBody": "From now on, every new date the series creates goes on the site by itself, in both languages. The dates already created stay as they are.",
       "bibsTitle": "Assign the race numbers?",
       "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay.",
+      "sparesTitle": "Reserve numbers for the desk?",
+      "sparesBody": "The numbers start at {from}, after the highest number given or reserved, and stay the desk's: nobody who registers online gets them. A reservation is not undone; unused numbers stay unused.",
       "bulkEraseTitle": "Erase the ticked registrations for good?",
       "bulkEraseBody": "This cannot be undone. The places are released through the waiting list and the participants' data leave the record.",
       "email": {
@@ -957,7 +959,9 @@
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field the platform can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
-      "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place."
+      "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
+      "BIB_NUMBER_TAKEN": "That number is already somebody's at this event (given, held, or worn by an erased registration). Pick another number from the box and try again.",
+      "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1591,7 +1595,8 @@
             "from": "From {number}",
             "clubColour": "the club's colour",
             "allocated": "allocated: {count}",
-            "toPrint": "to print: {count}"
+            "toPrint": "to print: {count}",
+            "spares": "spares {from}–{to}"
           },
           "bibDesign": {
             "parts": "{parts}",
@@ -2851,7 +2856,19 @@
       "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
       "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
       "downloadAll": "Download every number ({count}) — a PDF to print",
-      "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one."
+      "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one.",
+      "downloadSpares": "Reprint the free spares (PDF)",
+      "sparesFree": "Reserved for the desk: {from}–{to}, {free} of {total} still free. The reprint carries only the free ones.",
+      "sparesNone": "Reserved for the desk: {from}–{to}, all given. Print more if you need them.",
+      "sparesTitle": "Spare bibs for on-the-spot entries",
+      "sparesHelp": "For people who register at the desk: numbers printed ahead with an empty name line — the name is written on in marker. The numbers are reserved when printed: nobody who registers online gets them, and at the desk the form suggests the next free one. Between 1 and {max} at a time.",
+      "sparesCount": "How many",
+      "sparesPrint": "Print",
+      "sparesNext": "The next print starts at {from}.",
+      "sparesReadOnly": "Only an administrator reserves new numbers.",
+      "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
+      "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
+      "spareMark": "on-the-spot entry"
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -2956,7 +2973,13 @@
       "bibAlt": "Race number (BID) {number}",
       "voidCancelled": "Registration cancelled on {date}",
       "voidExpired": "Registration expired on {date}",
-      "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused."
+      "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused.",
+      "handedBib": "Number given now",
+      "handedBibHelp": "Suggested: the next free spare number. Change it if you hand out another number from the box; leave it empty and the platform picks one.",
+      "handedBibNoSpares": "Type the number you hand them, or leave it empty and the platform picks one.",
+      "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
+      "nextSpare": "Next spare: {number}",
+      "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the platform picks one."
     },
     "emails": {
       "title": "The emails participants receive",
@@ -5139,6 +5162,11 @@
       "repeatStopped": "The recurrence was stopped.",
       "repeatPublishOn": "Automatic publication is on.",
       "repeatPublishOff": "Automatic publication is off.",
+      "sparesReserved": {
+        "one": "{count} number reserved for the desk: {from}–{to}.",
+        "few": "{count} numbers reserved for the desk: {from}–{to}.",
+        "other": "{count} numbers reserved for the desk: {from}–{to}."
+      },
       "bibsAssigned": {
         "one": "{count} race number assigned.",
         "few": "{count} race numbers assigned.",

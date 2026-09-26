@@ -66,6 +66,16 @@ describe("§94 the bib preview", () => {
     expect((await png({ design: { ...DEFAULT_BIB_DESIGN, showEmail: false, showPartners: false } })).byteLength).toBeGreaterThan(1000);
   });
 
+  // §NNN — a desk spare, as the sheet prints it: the number and an empty line for the name.
+  it("draws a spare with an empty name line instead of a name", async () => {
+    const spare = await png({ registeredName: null });
+    expect(spare.readUInt32BE(16)).toBe(BIB_IMAGE.width);
+    expect(spare.equals(await png())).toBe(false);
+    // The mark under the line is drawn too: the picture differs from the bare line's.
+    expect((await png({ registeredName: null, blankMark: "on-the-spot entry" })).equals(spare)).toBe(false);
+    if (process.env.BIB_IMAGE_SAMPLE_SPARE) writeFileSync(process.env.BIB_IMAGE_SAMPLE_SPARE, spare);
+  });
+
   it("writes a sample to disk for a person to look at, when asked", async () => {
     const target = process.env.BIB_IMAGE_SAMPLE;
     if (!target) return;
