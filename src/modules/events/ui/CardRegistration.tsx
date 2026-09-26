@@ -42,10 +42,22 @@ export type CardRegistrationLine = {
  * window and no number, and offers no button: it would lead to a form whose first act is the read
  * that just failed.
  *
+ * **Race week on the featured card** (§78, moved here by §NNN): the lead event's closed window says
+ * where to go instead of only "closed" — "come to the desk with the QR from your email", the one
+ * thing a registered runner needs that week. `raceWeek` is true only for the featured card inside
+ * the club's race week; every other card, and the page, keep the plain sentence.
+ *
  * Pure, over the card's translator: `EventFacts` reads the door and hands the words to the
  * synchronous component below.
  */
-export function cardRegistrationLine(say: Say, locale: string, event: PublicEvent, now: Date, door: RegistrationDoor): CardRegistrationLine {
+export function cardRegistrationLine(
+  say: Say,
+  locale: string,
+  event: PublicEvent,
+  now: Date,
+  door: RegistrationDoor,
+  raceWeek = false,
+): CardRegistrationLine {
   // Inside the sentence, so the weekday keeps its lower case (§349).
   const shortDate = (date: Date) => formatDay(date, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
   // Until when an open window stays open (§308) — the instant the button goes away.
@@ -80,6 +92,10 @@ export function cardRegistrationLine(say: Say, locale: string, event: PublicEven
       };
     case "EXTERNAL":
       return { lead: say("registrationState.EXTERNAL"), detail: null, bold: true, button };
+    case "CLOSED":
+      // Race week on the featured card: where to go, in bold — it is something to do (§78).
+      if (raceWeek) return { lead: say("cta.closedRaceWeek"), detail: null, bold: true, button: null };
+      return { lead: say(`registrationState.${registrationState(event, now)}`), detail: null, bold: false, button: null };
     default:
       // Closed, cancelled, held, or none needed: the state's own words, quiet, as before §409.
       return { lead: say(`registrationState.${registrationState(event, now)}`), detail: null, bold: false, button: null };
