@@ -9,8 +9,9 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TITLE_SX, GROUP_GAP, LINE_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TITLE_SX, LINE_GAP } from "./card-layout";
 import type { Locale } from "@/i18n/routing";
+import { DENSITY } from "@/theme/density";
 import { riseIn } from "@/theme/motion";
 import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
@@ -116,8 +117,8 @@ export default async function SeriesCard({
 
         {/* The next date's facts: "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" on one line — the
             label used to be a line of its own above them — then the place, its map link, and the
-            pills. */}
-        <Box sx={{ mt: GROUP_GAP }}>
+            pills. A group's gap above them, the density scale's short step on a phone (§NNN). */}
+        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           {/* The next date's weather at its start (§416) is the last pill of its route's row, the
               umbrella when rain is likely (§429). */}
           <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} cardWeather={weather} />

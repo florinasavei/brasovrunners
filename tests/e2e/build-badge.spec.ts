@@ -170,12 +170,12 @@ test.describe("the build badge", () => {
     // The same words as the stamp always had, and the exact build in the box's title.
     await expect(chip).toHaveText(/app-ver/);
     await expect(badge).toHaveAttribute("title", /BR-V\d+\.\d+|dev/);
-    // The chip is the 24px you see; the box around it is what a thumb hits: 44px on the bar's
-    // corner (criterion 6), and in the phone's fold the bar's own target like every link there —
-    // 24px at the mobile project's 320 — never shorter than the chip (§NNN, amending §385).
+    // The chip is the 24px you see; the box around it is the 44px a long press is aimed at, on
+    // the bar's corner (criterion 6) and in the phone's fold alike — there its line is the fold's
+    // 24px and the rest of the 44 reaches up over the line above (§NNN, amending §385).
     const box = await badge.boundingBox();
     const drawn = await chip.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(mobile ? 23.5 : 43.5);
+    expect(box!.height).toBeGreaterThanOrEqual(43.5);
     expect(drawn!.height).toBeLessThanOrEqual(box!.height + 0.5);
     expect(drawn!.x + drawn!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     // Muted ink: `text.secondary`, never the primary text colour.

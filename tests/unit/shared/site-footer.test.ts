@@ -347,7 +347,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
   });
 
-  it("condenses the fold's panel: three lines, the bar's phone targets, gapped rows, 'Scrie-ne' once, the credit and the stamp last", async () => {
+  it("condenses the fold's panel: four touching 24-pixel lines on a phone, 14-pixel words, 'Scrie-ne' once, the credit and the stamp last", async () => {
     // §385, the owner, 2026-09-25: "the info from the expanded footer must be more condensed."
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -366,17 +366,19 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const containerClass = /data-testid="footer-about-panel"[^>]*>\s*<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(markup);
     expect(containerClass, "the panel's one container").not.toBeNull();
     const container = rulesOf(css, containerClass![1]!);
-    // §NNN, amending §385: three lines set on purpose, the bar's phone gap apart.
+    // §NNN, amending §385: the lines set on purpose, touching.
     expect(container).toMatch(/flex-direction:column;/);
-    // The bar's own phone targets on every link (§372, `footer-target.ts`): 24px below 360, 28px
-    // to `sm`, 44px from `sm` (BR-REQ-041-01 criterion 6); no pseudo-element hit area overlapping a neighbour.
+    // The fold's line on every link (`FOLD_LINE`, `footer-target.ts`): 24px at every phone width,
+    // 44px from `sm` (BR-REQ-041-01 criterion 6); no pseudo-element hit area overlapping a
+    // neighbour; every link painted over the stamp's reach.
     expect(container).toMatch(/ a\{[^}]*min-height:24px;/);
-    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]* a\{[^}]*min-height:28px;/);
+    expect(container).not.toMatch(/min-height:28px;/);
     expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*a\{[^}]*min-height:44px;/);
+    expect(container).toMatch(/ a\{[^}]*position:relative;[^}]*z-index:1;/);
     expect(container).not.toMatch(/::before/);
-    // The lines the bar's phone gap apart: 4px, 6px from 360, none from `sm`.
-    expect(container).toMatch(/(^|[;{])row-gap:4px;/);
-    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]*\{[^}]*row-gap:6px;/);
+    // The lines touch: no row gap at any width, and no 360 band of their own.
+    expect(container).toMatch(/(^|[;{])row-gap:0(px)?;/);
+    expect(container).not.toMatch(/row-gap:[46]px;/);
 
     // Line one: the terms and "my registrations", and nothing else, the density scale's short step apart.
     const linksStart = panel.indexOf('data-testid="footer-panel-links"');
@@ -388,14 +390,16 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const linksRule = rulesOf(css, /data-testid="footer-panel-links"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-links"/.exec(markup)!.slice(1).find(Boolean)!);
     expect(linksRule).toMatch(/(^|[;{])column-gap:8px;/);
     expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
-    // The last line, in caption size: Open-Meteo's credit, then the stamp.
+    // The last line: Open-Meteo's credit, then the stamp, at the panel's 14 pixels — no caption
+    // size of its own (the second round of §NNN: 12 was under the floor for words a person reads).
     const metaStart = panel.indexOf('data-testid="footer-panel-meta"');
     expect(metaStart, "the credit's line").toBeGreaterThan(panel.indexOf('data-testid="footer-contact"'));
     const metaLine = panel.slice(metaStart);
     expect(metaLine.indexOf('data-testid="footer-weather-credit"')).toBeGreaterThan(-1);
     expect(metaLine.indexOf('data-testid="footer-build-badge-panel"')).toBeGreaterThan(metaLine.indexOf('data-testid="footer-weather-credit"'));
     const metaRule = rulesOf(css, /data-testid="footer-panel-meta"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-meta"/.exec(markup)!.slice(1).find(Boolean)!);
-    expect(metaRule).toMatch(/font-size:0\.75rem;/);
+    expect(metaRule).not.toMatch(/font-size/);
+    expect(container).toMatch(/(^|[;{])font-size:0\.875rem;/);
     // No stacked `spacing`, no paragraph of its own for the address.
     expect(panel).not.toMatch(/<p class="MuiTypography/);
 
@@ -452,11 +456,21 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
       expect(chipRules).toMatch(/height:auto;/);
       expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
       // The box a long press is aimed at: 44px on the bar's corner (BR-REQ-041-01 criterion 6);
-      // in the fold, the bar's own target on a phone like every other link there, 44 from `sm`
-      // (§NNN, the 360-px density pass, amending §385).
+      // in the fold, the fold's 24-pixel line on a phone with twenty more pixels of reach above it,
+      // given back as a negative margin so the line stays 24, and a plain 44 from `sm` (§NNN, the
+      // 360-px density pass, amending §385).
       const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
       if (testId === "footer-build-badge-pinned") expect(box).toMatch(/(^|[;{])min-height:44px;/);
-      else expectBarTarget(box, ["min-height"], "the fold's stamp");
+      else {
+        expect(box).toMatch(/(^|[;{])box-sizing:content-box;/);
+        expect(box).toMatch(/(^|[;{])min-height:24px;/);
+        expect(box).toMatch(/(^|[;{])padding-top:20px;/);
+        expect(box).toMatch(/(^|[;{])margin-top:-20px;/);
+        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*min-height:44px;/);
+        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*padding-top:0(px)?;/);
+        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*margin-top:0(px)?;/);
+        expect(box, "no 28px band in the fold").not.toMatch(/min-height:28px;/);
+      }
     }
   });
 

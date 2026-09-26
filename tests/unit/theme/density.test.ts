@@ -87,7 +87,7 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
   {
     file: "src/app/[locale]/gallery/[slug]/page.tsx",
     line: "gap: { xs: 1, sm: 1.5 },",
-    reason: "eight pixels between two photos, already at the listing grid's own phone step",
+    reason: "eight pixels between two photos, the listing grid's own phone step until §NNN took the cards to six",
   },
   {
     file: "src/app/[locale]/error.tsx",
@@ -157,15 +157,15 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/newsletter/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/sign-in/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The listing.
-  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2.5, xsBefore: 2.5 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapXs", sm: 2.5, xsBefore: 2.5 }, // §NNN: gapSm → gapXs, the filter row's six
   // Filter row: `mt` above it (unchanged), plus three more below it (§401 — the owner:
   // "filters still need to be a bit above the grid"), one on each of `ListingBody`'s three
   // return shapes so the grid, the empty notice and the "Alte evenimente" fold each keep the
   // same gap under the row whichever one follows it — the filter row carried no `mb` and the
   // grid no `mt` before, so this is a genuinely new gap rather than a literal being converted.
   // The filter panel's wrapper (§458, tightening §401): less space between it and the cards.
-  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 3 },
-  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 3 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "gapXs", sm: 1.5, xsBefore: 3 }, // §NNN: gapSm → gapXs
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapXs", sm: 1.5, xsBefore: 3 }, // §NNN: gapSm → gapXs
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   // One grid for the upcoming cards and the past fold since §470 (`CARD_GRID_SX`) — it was three
@@ -174,7 +174,15 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
   // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§470): the
   // lead event is a card, with a card's padding, in the grid's gap.
-  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1 },
+  // The featured facts' rows, and since §NNN (the 360-px density pass) a card's facts' rows too.
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1, count: 2 },
+  // §NNN: the card's facts a group's gap under the title or the summary — eight on a phone, the
+  // title's reach below its words exactly (§366) — on both cards; the route pills and the share
+  // row's buttons six apart.
+  { file: "src/modules/events/ui/EventCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/SeriesCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/RoutePills.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1 },
+  { file: "src/modules/events/ui/ShareLinks.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1, count: 2 },
   // The calendar.
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },

@@ -9,6 +9,15 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * - A link inside a sentence is still a 44-pixel target, pressed at its edges, and its paragraph
  *   is a whole number of lines — no line stretched to the link's height.
  * - The contact form's first box is one gap under the legend, not two.
+ * - The listing and an event page on the scale's tighter steps (the second round): the cards six
+ *   apart, a card's facts six apart and eight under the summary, the route pills six apart, the
+ *   filter row six from the intro and the grid.
+ *
+ * Measured at 360 in headless Chromium on the sample data, before → after the second round: the
+ * listing 1974.8 → 1910.8 px (cards 375.4 / 305.8 / 307.3 / 329.4 / 329.4 / 307.3 → 363.4 / 295.8
+ * / 297.3 / 319.4 / 319.4 / 297.3, the first card 416 → 412 from the top), the sample race's page
+ * 1002.9 → 965.4 (its facts 368 → 334.5: the route pills now fit one line), the open footer fold
+ * 130 → 96. At 320: the listing 2024.8 → 1960.8, the race's page 1098.9 → 1090.9.
  *
  * The phone project runs at 360 px, the width the owner reads the site at; the desktop project
  * keeps its own viewport, where the two defects were the same and the spacing is `sm`'s.
@@ -55,6 +64,35 @@ async function expectInlineTarget(page: Page, paragraph: Locator, link: Locator,
 }
 
 test.describe("§NNN the public pages at 360 px", () => {
+  test("the listing's cards, facts, pills and filter row stand on the scale's tighter steps", async ({ page }) => {
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    const cards = page.getByTestId("listing-cards").locator(":scope > li");
+    await expect(cards.first()).toBeVisible();
+    const measured = await page.evaluate(() => {
+      const list = document.querySelector("[data-testid='listing-cards']");
+      const facts = document.querySelector("[data-testid='card-facts']");
+      const pills = document.querySelector("[data-testid='card-facts'] [data-fact='pills'] > div");
+      const factsBox = facts?.parentElement;
+      return {
+        cardGap: list ? getComputedStyle(list).rowGap : null,
+        factsRowGap: facts ? getComputedStyle(facts).rowGap : null,
+        factsTop: factsBox ? getComputedStyle(factsBox).marginTop : null,
+        pillsGap: pills ? getComputedStyle(pills).rowGap : null,
+        listTop: list?.getBoundingClientRect().top ?? null,
+        filterBottom: document.querySelector("[data-testid='listing-cards']")?.previousElementSibling?.getBoundingClientRect().bottom ?? null,
+      };
+    });
+    // A phone: the tighter steps. From `sm` (the desktop project): the values the pages had.
+    const [grid, row, group, pill, around] = isPhone() ? ["6px", "6px", "8px", "6px", 6] : ["12px", "8px", "12px", "8px", 12];
+    expect(measured.cardGap, "the grid's gap between two cards").toBe(grid);
+    expect(measured.factsRowGap, "a card's facts").toBe(row);
+    expect(measured.factsTop, "the gap above a card's facts").toBe(group);
+    if (measured.pillsGap !== null) expect(measured.pillsGap, "the route pills").toBe(pill);
+    if (measured.listTop !== null && measured.filterBottom !== null) {
+      expect(Math.abs(measured.listTop - measured.filterBottom - around), "the grid under the filter row").toBeLessThanOrEqual(0.5);
+    }
+  });
+
   test("a public fold's summary is 44 pixels tall, its padding inside it", async ({ page }) => {
     await page.goto("/ro/calendar");
     const summary = page.locator("#main details > summary", { hasText: "Adresa pentru alte aplicații" });

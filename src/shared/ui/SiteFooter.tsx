@@ -10,16 +10,16 @@ import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
-import { FOOTER_GAP, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
+import { foldLineSx, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
  * The height of the bar from `sm` up, and of the fold's links and stamp from `sm` up. 44px is what
- * BR-REQ-041-01 asks of a control; the bar is one line of them. On a phone the bar's items and,
- * since §NNN (the 360-px density pass), the fold's links and stamp are the bar's own target
- * instead (`footerTargetSx`, §372): 24px below 360, 28px up to `sm`.
+ * BR-REQ-041-01 asks of a control; the bar is one line of them. On a phone the bar's items are the
+ * bar's own target instead (`footerTargetSx`, §372): 24px below 360, 28px up to `sm`; and since
+ * §NNN (the 360-px density pass) the fold's lines are 24px at every phone width (`foldLineSx`).
  */
 const BAR_HEIGHT = 44;
 
@@ -58,7 +58,7 @@ const BAR_HEIGHT = 44;
  * WCAG 2.2 SC 2.5.8's AA floor, 28 from 360, and 44 from `sm`, where nothing changed — a square,
  * except the summary and the word, which are as wide as their words. The rule is decoration, not
  * a target. It is a footer-only exception to criterion 6: since §NNN (the 360-px density pass) the
- * fold's links and stamp take the bar's target on a phone too, and 44 from `sm`.
+ * fold's lines are 24 on a phone too (`FOLD_LINE`), and 44 from `sm`.
  *
  * ## The gap, measured (§378, §385)
  *
@@ -296,11 +296,19 @@ export default async function SiteFooter() {
               Measured on the built listing at 360 pixels, in Romanian, the open panel was 188
               pixels tall and 136 after §385. §NNN (the 360-px density pass) replaced the 44-pixel
               row with the lines below: 146 with the stamp's 44-pixel box, 130 with the stamp at
-              the bar's target too — four lines of 28 and three gaps of 6. Three lines (96) would
-              need the credit and the stamp to share one, and they cannot: the credit is 122
-              pixels, the production stamp's chip about 245, the panel 260 wide at 320 and 292 at
-              360 — nor does the credit fit after the first two lines' links (226 in Romanian) or
-              after "Scrie-ne: <address>" (225).
+              the bar's target too — four lines of 28 and three gaps of 6 — and, in its second
+              round, 96: four lines of 24 (`FOLD_LINE`), abutting, the stamp's 44-pixel long-press
+              area reaching up into the credit's line rather than adding a line's height. At 320
+              it is 96 too with the production stamp (one line of chip, 245 pixels in a 260-pixel
+              panel), and 111 where the stamp carries its environment ("local · " or "test · ",
+              about 280 pixels, so its chip wraps onto a second line).
+
+              Four lines, not three: the credit is 142 pixels of 14-pixel Roboto (122 at the 12 it
+              was) and the production stamp's chip about 250, in a panel 260 wide at 320 and 292
+              at 360 — the two never share a line on a phone — nor does the credit fit after the
+              first two lines' links (226 in Romanian) or after "Scrie-ne: <address>" (225). A
+              shorter stamp would share it, and would drop what `build-badge.spec.ts` holds it to:
+              the environment, `app-ver` and the date with its minute.
             */}
             <Box
               sx={{
@@ -313,20 +321,19 @@ export default async function SiteFooter() {
                 // <address>" on one line at 320 and the stamp on one line at 360. From `sm` as
                 // before: the widest switch, a scrollbar and a margin, capped at 40rem.
                 width: { xs: "calc(100vw - 60px)", sm: "min(40rem, calc(100vw - 80px))" },
-                [PHONE_WIDE]: { width: "calc(100vw - 68px)", rowGap: `${FOOTER_GAP.phoneWide}px` },
+                [PHONE_WIDE]: { width: "calc(100vw - 68px)" },
                 // §NNN, amending §385 (the owner, 2026-09-26: "Informațiile din footer sunt mult
-                // prea spațiate"): three lines, set on purpose — the terms and "my registrations",
-                // "Scrie-ne" with the address, then the weather credit and the stamp in caption
-                // size (which wraps to a line of its own on a phone: the two do not fit side by
-                // side, the numbers above). On a phone every link and the stamp's box are the bar's
-                // own target (`footer-target.ts`, §372): 24 pixels below 360, 28 up to `sm`, the
-                // lines the bar's phone gap apart (4, then 6), so two targets never overlap and a
-                // tap between them lands on neither. From `sm` they are 44 tall as before
-                // (BR-REQ-041-01 criterion 6), no gap.
+                // prea spațiate"): the lines set on purpose — the terms and "my registrations",
+                // "Scrie-ne" with the address, then the weather credit and the stamp, every word at
+                // the panel's 14 pixels (the second round: the credit's 12 was under the site's
+                // floor for words a person reads). On a phone every line is `FOLD_LINE`, 24 pixels
+                // (`footer-target.ts`), the lines touching and never overlapping — a press is on
+                // one link or the next, never on two. From `sm` they are 44 tall as before
+                // (BR-REQ-041-01 criterion 6).
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                rowGap: { xs: `${FOOTER_GAP.xs}px`, sm: 0 },
+                rowGap: 0,
                 pt: 0,
                 pb: { xs: 0, sm: 0.5 },
                 // Indented to where the summary's words start, so it reads as the fold's body.
@@ -334,7 +341,10 @@ export default async function SiteFooter() {
                 // The address's own size before (`body2`), for every link now: 14 pixels rather
                 // than 16, so the terms and "my registrations" share a line at 320.
                 fontSize: "0.875rem",
-                "& a": { display: "inline-flex", alignItems: "center", ...footerTargetSx(["minHeight"]) },
+                // Every link paints over the stamp's long-press reach (`BuildBadge`, `phoneTarget`),
+                // which runs up into the line above it: a press on a link is the link's; only the
+                // empty part of that line is the stamp's.
+                "& a": { display: "inline-flex", alignItems: "center", position: "relative", zIndex: 1, ...foldLineSx(["minHeight"]) },
               }}
             >
               <Box
@@ -370,10 +380,11 @@ export default async function SiteFooter() {
                   </Box>
                 ))}
               </Box>
-              {/* The last line, in caption size (§NNN, amending §385): Open-Meteo's credit and the stamp. */}
+              {/* The last line (§NNN, amending §385): Open-Meteo's credit and the stamp, side by side
+                  from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box
                 data-testid="footer-panel-meta"
-                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1, ...footerGapSx(["rowGap"], 0), maxWidth: "100%", fontSize: "0.75rem" }}
+                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1, rowGap: 0, maxWidth: "100%" }}
               >
                 {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
                     cards (§429); the event page and the featured hero keep their own beside the

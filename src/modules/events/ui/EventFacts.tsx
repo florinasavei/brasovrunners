@@ -572,9 +572,10 @@ export default async function EventFacts({
       the line is as tall as its words — or the sentence while it is to be announced (§328), whose
       query has already withheld the name, the address and the map.
 
-      Tight both ways only when the pills follow it, a group's gap (twelve pixels) under the line,
-      more than the ten the link reaches below its words. Anything else after it is nearer — the
-      state of registration a line's gap (eight) under it, or, when the place is the card's last
+      Tight both ways only when the pills follow it, a group's gap (twelve pixels; ten on a phone
+      since §NNN, the facts' six and the pills' four) under the line, never less than the ten the
+      link reaches below its words. Anything else after it is nearer — the state of registration
+      a line's gap (eight; six on a phone) under it, or, when the place is the card's last
       fact, the door four pixels under the facts and a series card's fold right on them — and
       would take the bottom of the link, since what comes later paints over it (§366). There it
       gives back only the ten above, and keeps the ten below inside the facts, where nothing sits.
@@ -613,7 +614,11 @@ export default async function EventFacts({
     );
 
     return (
-      <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
+      /* A line's gap between two facts — the density scale's tightest step on a phone (§NNN, the
+         360-px density pass: 8px to 6), `LINE_GAP` from `sm`. The pills keep their own four above
+         that, so on a phone they sit ten under the place: exactly the place link's reach below
+         its words, never nearer (the comment on `reach`, above). */
+      <Box data-testid="card-facts" sx={{ display: "grid", rowGap: { xs: DENSITY.gapXs, sm: 1 }, minWidth: 0 }}>
         {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113);
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
