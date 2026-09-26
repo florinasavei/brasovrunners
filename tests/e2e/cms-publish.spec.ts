@@ -121,7 +121,12 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     // and the words are theirs (§387).
     await expect(kind.locator(":scope > summary")).toContainText("·");
     await expect(page.locator("#box-status")).toHaveCount(0);
-    for (const card of ["Cost", "Linkuri și fișiere", "Lista publică a participanților"]) {
+    // The cost is a card inside the first box since §466 (the owner: «cardul 7. Cost poate fi inclus în
+    // cardul 1»): for this reader its level-3 heading and its line, nothing to open.
+    const cost = kind.locator("#box-cost");
+    await expect(cost.getByRole("heading", { level: 3, name: /Cost/ })).toBeVisible();
+    await expect(cost.locator("summary")).toHaveCount(0);
+    for (const card of ["Linkuri și fișiere", "Lista publică a participanților"]) {
       const heading = page.getByRole("heading", { level: 2, name: new RegExp(`^(?:\\d+ · )?${card}`) });
       await expect(heading).toBeVisible();
       await expect(page.locator("section").filter({ has: heading })).toHaveCount(1);
