@@ -122,6 +122,11 @@ describe("§403 the embed address after the click", () => {
     expect(src).toContain("origin=https%3A%2F%2Fapp.example.test");
     expect(src).toContain("rel=0");
   });
+
+  it("asks for HD from the start (§NNN): the embed's vq hint", () => {
+    const src = youtubeEmbedUrl("dQw4w9WgXcQ", "https://app.example.test");
+    expect(new URL(src).searchParams.get("vq")).toBe("hd1080");
+  });
 });
 
 describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: this had no unit test)", () => {
@@ -138,6 +143,17 @@ describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: 
   it("is hidden (not absent) until its disclosure opens — present in the markup so hydration and hotkeys never depend on a remount", () => {
     const html = renderToStaticMarkup(createElement(VideoVolumeBar, { frameId: "video-frame-2", labels: { mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" } }));
     expect(html).toContain('aria-pressed');
+  });
+
+  it("is a corner glyph, not a bar (§NNN): the glyph at its small size, the slider folded beside it and still in the markup for Tab to reach", () => {
+    const html = renderToStaticMarkup(
+      createElement(VideoVolumeBar, { frameId: "video-frame-3", labels: { mute: "Fără sunet", unmute: "Cu sunet", volume: "Volum" } }),
+    );
+    expect(html).toContain("data-volume-control");
+    expect(html).toContain("MuiSvgIcon-fontSizeSmall");
+    expect(html).toContain('class="volume-slider');
+    // The slider sits before the glyph, so it unfolds leftwards from the corner.
+    expect(html.indexOf('aria-label="Volum"')).toBeLessThan(html.indexOf('aria-label="Fără sunet"'));
   });
 });
 
