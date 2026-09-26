@@ -27,6 +27,9 @@ const SECTIONS = [
   // grid of squares belongs a press away rather than above the next run.
   { segment: "calendar", href: "/calendar" },
   { segment: "gallery", href: "/gallery" },
+  // «Echipa» (§NNN): a page this application ships, like the gallery, so it sits with the
+  // sections and not with the club's pages — offered while a card is on the site (`showTeam`).
+  { segment: "team", href: "/team" },
   { segment: "contact", href: "/contact" },
 ] as const;
 
@@ -97,10 +100,12 @@ type Item =
 export default function SiteNav({
   pages = [],
   showGallery = false,
+  showTeam = false,
   showContact = false,
 }: {
   pages?: readonly NavPage[];
   showGallery?: boolean;
+  showTeam?: boolean;
   showContact?: boolean;
 }) {
   const t = useTranslations("Site.nav");
@@ -109,7 +114,10 @@ export default function SiteNav({
 
   const items: Item[] = [
     ...SECTIONS.filter(
-      (section) => (section.segment !== "gallery" || showGallery) && (section.segment !== "contact" || showContact),
+      (section) =>
+        (section.segment !== "gallery" || showGallery) &&
+        (section.segment !== "team" || showTeam) &&
+        (section.segment !== "contact" || showContact),
     ).map((section) => ({
       key: section.segment,
       href: section.href as Href,

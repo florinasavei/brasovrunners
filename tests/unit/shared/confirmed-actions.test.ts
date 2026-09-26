@@ -96,6 +96,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deletePictureAction: [],
   transitionPageAction: [],
   deletePageAction: [],
+  // «Echipa» (§NNN): a card put on the site or taken off it, and a card deleted.
+  setTeamMemberVisibleAction: [],
+  deleteTeamMemberAction: [],
   // The team.
   inviteStaffAction: [],
   changeStaffRoleAction: [],
@@ -132,6 +135,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   createPageAction: "an editorial save: a draft page nobody sees until its own publish, which asks",
   savePageAction: "an editorial save, like the event's without a notice; publishing and deleting ask",
   movePageAction: "reorders the pages, undone by moving back",
+  createTeamMemberAction: "adds a hidden card nobody sees until an Administrator shows it, which asks",
+  saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
+  moveTeamMemberAction: "reorders the team's cards, undone by moving back",
   createLegalVersionAction: "a draft, never in force until approved, which asks",
   updateLegalVersionAction: "a draft, never in force until approved, which asks",
   markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",

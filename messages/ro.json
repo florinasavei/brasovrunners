@@ -26,6 +26,7 @@
       "events": "Evenimente",
       "calendar": "Calendar",
       "gallery": "Galerie",
+      "team": "Echipa",
       "more": "Meniu",
       "contact": "Contact"
     },
@@ -2614,7 +2615,56 @@
         "seoDescription": "Descriere SEO"
       },
       "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
-      "bothOrNeither": "scrie-l în ambele limbi sau în niciuna"
+      "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
+      "tabPages": "Paginile clubului",
+      "tabTeam": "Pagina Echipa"
+    },
+    "team": {
+      "title": "Pagina «Echipa»",
+      "intro": "Oamenii clubului, câte un card: fotografie, nume, ce face în club și câteva cuvinte. Pagina este a platformei, ca pagina de contact: aici scrii doar cardurile. Un card nou stă ascuns până îl pune pe site un Administrator. Cere acordul persoanei înainte să-i pui numele și fotografia pe site.",
+      "shownCount": "Pe site: {count} din {total} carduri.",
+      "noneShown": "Niciun card nu este pe site, așa că pagina nu apare în meniul site-ului.",
+      "viewPublic": "Vezi pagina",
+      "readOnly": "Poți citi cardurile; le scrie Redactorul sau Administratorul.",
+      "showIsAdmin": "Scrii și pregătești cardurile; le pune pe site Administratorul.",
+      "noStorage": "Stocarea imaginilor nu este configurată aici, așa că nu se pot adăuga fotografii.",
+      "add": "Adaugă o persoană",
+      "create": "Adaugă cardul",
+      "empty": "Nu există încă niciun card.",
+      "listLabel": "Cardurile echipei, în ordinea de pe pagină",
+      "visible": "Pe site",
+      "hidden": "Ascuns",
+      "noPhoto": "Fără fotografie",
+      "oneLanguage": "Text într-o singură limbă",
+      "moveUpNamed": "Mută mai sus: {name}",
+      "moveDownNamed": "Mută mai jos: {name}",
+      "show": "Pune pe site",
+      "hide": "Scoate de pe site",
+      "showTitle": "Pui pe site cardul „{name}”?",
+      "showBody": "Cardul apare pe pagina Echipa, iar pagina apare în meniul site-ului dacă este primul card de pe site. Ai acordul persoanei pentru nume și fotografie?",
+      "hideTitle": "Scoți de pe site cardul „{name}”?",
+      "hideBody": "Cardul rămâne aici, ascuns; îl poți pune la loc oricând.",
+      "delete": "Șterge cardul",
+      "deleteTitle": "Ștergi cardul „{name}”?",
+      "deleteBody": "Cardul dispare de tot. Fotografia rămâne o săptămână în Imagini și se șterge apoi singură, dacă nu o mai folosește nimic.",
+      "edit": "Editează cardul",
+      "name": "Numele",
+      "nameHelp": "Cum vrea persoana să apară: prenume și nume, sau doar prenumele.",
+      "roleRo": "Ce face în club (Română)",
+      "roleEn": "Ce face în club (English)",
+      "roleHelp": "De exemplu „Antrenor” și „Coach”. Opțional.",
+      "bioRo": "Câteva cuvinte (Română)",
+      "bioEn": "Câteva cuvinte (English)",
+      "bioHelp": "Opțional, cel mult {max} de caractere.",
+      "bothOrNeither": "Scrie în ambele limbi sau în niciuna.",
+      "photo": "Fotografia",
+      "photoChoose": "Alege o fotografie",
+      "photoReplace": "Schimbă fotografia",
+      "photoRemove": "Scoate fotografia",
+      "photoUploading": "Se încarcă…",
+      "photoFailed": "Fotografia nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
+      "photoNone": "Fără fotografie",
+      "photoHelp": "Arată cel mai bine o fotografie pătrată sau de portret: pe site se decupează pătrat, cu fața în partea de sus. Se păstrează când salvezi cardul."
     },
     "pictures": {
       "title": "Imagini",
@@ -2629,6 +2679,7 @@
       "usedInAlbum": "Album: {title}",
       "usedInPage": "Pagină: {title}",
       "usedInEvent": "Eveniment: {title}",
+      "usedInTeam": "Pe pagina Echipa: {title}",
       "untitled": "(fără titlu)",
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Șterge",
@@ -4269,6 +4320,13 @@
     "emailConfirm": "Scrie adresa încă o dată",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
+  "Team": {
+    "title": "Echipa",
+    "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
+    "empty": "Echipa clubului apare aici în curând.",
+    "listLabel": "Oamenii echipei",
+    "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
+  },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
@@ -4480,7 +4538,13 @@
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
-      "groupRunDeclarationErased": "Declarația a fost ștearsă."
+      "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "teamMemberCreated": "Cardul a fost adăugat, ascuns până este pus pe site.",
+      "teamMemberSaved": "Cardul a fost salvat.",
+      "teamMemberShown": "Cardul este pe site.",
+      "teamMemberHidden": "Cardul a fost scos de pe site.",
+      "teamMemberMoved": "Ordinea cardurilor a fost schimbată.",
+      "teamMemberDeleted": "Cardul a fost șters."
     }
   }
 }

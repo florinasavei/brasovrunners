@@ -15,6 +15,7 @@ import * as participantsSchema from "./schema/participants";
 import * as rateLimitSchema from "./schema/rate-limit";
 import * as registrationsSchema from "./schema/registrations";
 import * as staffUsersSchema from "./schema/staff-users";
+import * as teamSchema from "./schema/team";
 
 export const schema = {
   ...eventsSchema,
@@ -31,6 +32,7 @@ export const schema = {
   ...jobRunsSchema,
   ...auditLogsSchema,
   ...rateLimitSchema,
+  ...teamSchema,
 };
 type Schema = typeof schema;
 

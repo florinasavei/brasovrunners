@@ -26,6 +26,7 @@
       "events": "Events",
       "calendar": "Calendar",
       "gallery": "Gallery",
+      "team": "Team",
       "more": "Menu",
       "contact": "Contact"
     },
@@ -2614,7 +2615,56 @@
         "seoDescription": "SEO description"
       },
       "seoHelp": "Optional, for search engines — in both languages or neither.",
-      "bothOrNeither": "write it in both languages or neither"
+      "bothOrNeither": "write it in both languages or neither",
+      "tabPages": "The club's pages",
+      "tabTeam": "The team page"
+    },
+    "team": {
+      "title": "The «Team» page",
+      "intro": "The club's people, one card each: a photo, the name, what they do for the club and a few words. The page belongs to the platform, like the contact page: here you only write the cards. A new card stays hidden until an Administrator puts it on the site. Ask the person before you put their name and photo on the site.",
+      "shownCount": "On the site: {count} of {total} cards.",
+      "noneShown": "No card is on the site, so the page is not in the site's menu.",
+      "viewPublic": "View the page",
+      "readOnly": "You can read the cards; the Copywriter or the Administrator writes them.",
+      "showIsAdmin": "You write and prepare the cards; the Administrator puts them on the site.",
+      "noStorage": "Picture storage is not configured here, so no photo can be added.",
+      "add": "Add a person",
+      "create": "Add the card",
+      "empty": "There are no cards yet.",
+      "listLabel": "The team's cards, in the page's order",
+      "visible": "On the site",
+      "hidden": "Hidden",
+      "noPhoto": "No photo",
+      "oneLanguage": "Text in one language only",
+      "moveUpNamed": "Move up: {name}",
+      "moveDownNamed": "Move down: {name}",
+      "show": "Put on the site",
+      "hide": "Take off the site",
+      "showTitle": "Put “{name}” on the site?",
+      "showBody": "The card appears on the team page, and the page appears in the site's menu if this is the first card on the site. Do you have the person's consent for the name and the photo?",
+      "hideTitle": "Take “{name}” off the site?",
+      "hideBody": "The card stays here, hidden; you can put it back at any time.",
+      "delete": "Delete the card",
+      "deleteTitle": "Delete the card “{name}”?",
+      "deleteBody": "The card is gone for good. The photo stays in Pictures for a week and is then deleted on its own, if nothing uses it any more.",
+      "edit": "Edit the card",
+      "name": "Name",
+      "nameHelp": "As the person wants to appear: first and last name, or the first name only.",
+      "roleRo": "What they do for the club (Română)",
+      "roleEn": "What they do for the club (English)",
+      "roleHelp": "For example “Antrenor” and “Coach”. Optional.",
+      "bioRo": "A few words (Română)",
+      "bioEn": "A few words (English)",
+      "bioHelp": "Optional, at most {max} characters.",
+      "bothOrNeither": "Write it in both languages or in neither.",
+      "photo": "Photo",
+      "photoChoose": "Choose a photo",
+      "photoReplace": "Change the photo",
+      "photoRemove": "Remove the photo",
+      "photoUploading": "Uploading…",
+      "photoFailed": "The photo did not upload. Try again or choose another file (JPEG, PNG or WebP).",
+      "photoNone": "No photo",
+      "photoHelp": "A square or portrait photo looks best: the site crops it square, keeping the face near the top. It is kept when you save the card."
     },
     "pictures": {
       "title": "Pictures",
@@ -2629,6 +2679,7 @@
       "usedInAlbum": "Album: {title}",
       "usedInPage": "Page: {title}",
       "usedInEvent": "Event: {title}",
+      "usedInTeam": "On the team page: {title}",
       "untitled": "(untitled)",
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Delete",
@@ -4269,6 +4320,13 @@
     "emailConfirm": "Type the address once more",
     "emailMismatch": "The two addresses are not the same — check the letters."
   },
+  "Team": {
+    "title": "The team",
+    "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
+    "empty": "The club's team will be introduced here soon.",
+    "listLabel": "The team's people",
+    "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>."
+  },
   "Offline": {
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
     "capacityUnknown": "We cannot check how many places are left right now.",
@@ -4480,7 +4538,13 @@
       "addressCap": "Limit per address saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed.",
-      "groupRunDeclarationErased": "The declaration was erased."
+      "groupRunDeclarationErased": "The declaration was erased.",
+      "teamMemberCreated": "The card was added, hidden until it is put on the site.",
+      "teamMemberSaved": "The card was saved.",
+      "teamMemberShown": "The card is on the site.",
+      "teamMemberHidden": "The card was taken off the site.",
+      "teamMemberMoved": "The order of the cards was changed.",
+      "teamMemberDeleted": "The card was deleted."
     }
   }
 }
