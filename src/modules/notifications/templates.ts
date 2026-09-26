@@ -672,6 +672,12 @@ export type TemplateData = {
    */
   familyEntryGone?: boolean;
   /**
+   * The declaration request of one person on an address that holds others still to sign at the
+   * event (§NNN): their names as "Maria P.", read at send time. The line says the one link signs
+   * them all, one after the other. Absent for a person alone, and on a club copy.
+   */
+  familyToSign?: string[];
+  /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
    * message greets them and says whose registration it is about (§419) — the address is theirs.
    */
@@ -1232,6 +1238,9 @@ const T = {
     familyDecline: "Nu înscriu această persoană",
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
+    /** After the body of a declaration request, on an address with more to sign (§NNN): the one link signs them all. */
+    familyToSign: (names: readonly string[]) =>
+      `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -1628,6 +1637,9 @@ const T = {
     ],
     familyDecline: "I am not registering this person",
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
+    /** After the body of a declaration request, on an address with more to sign (§NNN): the one link signs them all. */
+    familyToSign: (names: readonly string[]) =>
+      `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -2006,6 +2018,13 @@ export function buildTemplateContent(
       */
       ...(guardianName && (messageType === "COMPLETE_DECLARATION" || messageType === "WAITLIST_SPOT_OFFER")
         ? [copy.minorSigners(data.participantName, data.minorSigns === true)]
+        : []),
+      /*
+        The family's other declarations (§NNN): that the one link signs them all, one after the other
+        — a fact of this send, after the body whoever wrote it, and only when the renderer found some.
+      */
+      ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
+        ? [copy.familyToSign(data.familyToSign)]
         : []),
       /*
         A group run's signer's copy (§419): that the document is masked in it, when the text asked

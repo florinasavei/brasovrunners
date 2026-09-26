@@ -1,10 +1,11 @@
-import { and, asc, eq, gt, inArray, lte, min } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lte, min, ne } from "drizzle-orm";
 import { pendingFamilyEntries, type PendingFamilyEntry } from "@/db/schema/family-entries";
 import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { adultOnTheFamilyForm, withoutAnotherAdultsConsents } from "./fields";
 import { composeLegalName } from "./names";
+import { SIGNABLE_STATUSES } from "./domain/family-signing";
 
 /**
  * Another person's registration waiting for the address's confirmation (§446, amending §389):
@@ -152,6 +153,33 @@ export async function registeredOnAddress<T extends Record<string, unknown>>(db:
         eq(registrations.eventId, eventId),
         eq(registrations.participantId, participantId),
         inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+      ),
+    )
+    .orderBy(asc(registrations.createdAt));
+  return rows.map(shortRunnerName);
+}
+
+/**
+ * The address's other declarations still to sign at the event (§NNN): the registrations of this
+ * participant there, other than `exceptId`, in a state a declaration is signed from — named as
+ * `registeredOnAddress` names them, first name and initial. The declaration request says them, so
+ * a parent knows the one link signs them all, one after the other.
+ */
+export async function awaitingSignatureOnAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  participantId: string,
+  exceptId: string,
+): Promise<string[]> {
+  const rows = await db
+    .select({ firstName: registrations.firstName, lastName: registrations.lastName, displayName: registrations.displayName })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.participantId, participantId),
+        ne(registrations.id, exceptId),
+        inArray(registrations.status, [...SIGNABLE_STATUSES]),
       ),
     )
     .orderBy(asc(registrations.createdAt));

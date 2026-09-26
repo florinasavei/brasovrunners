@@ -10,6 +10,8 @@ import {
   checkInSelfFromMyRegistrations,
   consumeAndCancelFromMyRegistrations,
 } from "@/modules/registrations/my-registrations";
+import { writeFamilySigningPass } from "@/modules/registrations/family-signing";
+import { startFamilySigningFromMine } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 
@@ -93,4 +95,31 @@ export async function withdrawFromMyRegistrationsAction(form: FormData): Promise
     if (isDomainError(error)) redirect(`${path}?withdrawFailed=${encodeURIComponent(registrationId)}`);
     throw error;
   }
+}
+
+/**
+ * «Semnează declarațiile» (§NNN, over §77): the address's declarations still to sign at one event,
+ * as the declaration page's wizard. The link is read, not spent, and exchanged on the server for
+ * the wizard's pass (`startFamilySigningFromMine`) — no new token goes in any URL. The wizard opens
+ * on the declaration page under this same link, which is where the pass travels and nowhere else.
+ */
+export async function startFamilySigningFromMyRegistrationsAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const eventId = String(form.get("eventId") ?? "");
+  const now = new Date();
+
+  const result = await startFamilySigningFromMine(token, eventId, now);
+  /*
+    Refused (§NNN, nit found in review): a dead link says so on the page, as every press here does;
+    an address with nobody left to walk lands back on the list, and a toast names why — nobody left
+    to sign, or one person alone, whose own emailed link signs them.
+  */
+  if (!result.ok && result.reason === "LINK") redirect(`${pagePath(locale, token)}?invalid=1`);
+  if (!result.ok) {
+    await flashPublic(result.reason === "ONE_LEFT" ? "familySignOneLeft" : "familySignNothingLeft");
+    redirect(pagePath(locale, token));
+  }
+  await writeFamilySigningPass(result.pass, token, now);
+  redirect(getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } }));
 }

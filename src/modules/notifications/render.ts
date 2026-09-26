@@ -39,6 +39,7 @@ import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import {
+  awaitingSignatureOnAddress,
   findFamilyEntryById,
   linkFamilyEntryToken,
   personOfEntry,
@@ -319,6 +320,16 @@ async function renderRow(
     if (row.messageType === "COMPLETE_DECLARATION" || row.messageType === "WAITLIST_SPOT_OFFER") {
       data.minorSigns = await declarationAsksMinorToSign(db, registration.locale as Locale, now);
     }
+  }
+  /*
+    A family on one address (§NNN): the declaration request names the address's other declarations
+    still to sign at the event, first name and initial, because the one link signs them all, one
+    after the other. Read at send time, like every fact of the message. The inbox's alone: a club
+    copy carries no link to sign with.
+  */
+  if (row.messageType === "COMPLETE_DECLARATION" && registration && !clubCopy) {
+    const others = await awaitingSignatureOnAddress(db, registration.eventId, registration.participantId, registration.id);
+    if (others.length > 0) data.familyToSign = others;
   }
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   /*
