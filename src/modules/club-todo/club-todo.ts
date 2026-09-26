@@ -121,7 +121,9 @@ function auditMetadata(op: ClubTodoOp, result: ClubTodoResult): Record<string, u
  * One change to the list, by one staff member. Refuses a role that may only read it (FORBIDDEN),
  * a line typed wrong (VALIDATION_ERROR, naming the box), and a line a colleague has just deleted
  * (NOT_FOUND). A change that changes nothing — a tick on a ticked line, a move at the end —
- * writes nothing and records nothing: the trail records changes, not presses (§377's rule).
+ * records nothing: the trail records changes, not presses (§377's rule). The first write of any
+ * kind still stores the starting list under the row's lock (`onConflictDoNothing`), whether or
+ * not that particular press changed anything, so later reads and writes find a row to lock.
  */
 export async function changeClubTodo<T extends Record<string, unknown>>(
   db: Database<T>,

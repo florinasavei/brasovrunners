@@ -132,7 +132,7 @@ describe("§NNN the club's checklist, stored", () => {
     expect(items).toHaveLength(18);
   });
 
-  it("writes nothing and records nothing when nothing changes", async () => {
+  it("records nothing in the audit trail when nothing changes", async () => {
     const admin = await staff("ADMIN");
     await changeClubTodo(db, admin, { kind: "move", id: "start-amalia-01", direction: "up" }, NOW);
     await changeClubTodo(db, admin, { kind: "setDone", id: "start-amalia-01", done: false }, NOW);

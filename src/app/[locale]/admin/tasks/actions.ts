@@ -235,30 +235,35 @@ export async function editClubTodoAction(_previous: FormOutcome | null, form: Fo
  */
 export async function setClubTodoDoneAction(form: FormData): Promise<void> {
   const done = field(form, "done") === "1";
+  let changed: boolean;
   try {
-    await runClubTodo({ kind: "setDone", id: field(form, "itemId"), done });
+    const result = await runClubTodo({ kind: "setDone", id: field(form, "itemId"), done });
+    changed = result.changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToClubTodo(form, { error: error.code });
   }
+  if (!changed) return backToClubTodo(form, { saved: "clubTodoUnchanged" });
   return backToClubTodo(form, done ? { saved: "clubTodoDone" } : { saved: "clubTodoReopened" });
 }
 
 /** ↑ / ↓: among the open lines the reader sees — the owner filter's, when one is on. */
 export async function moveClubTodoAction(form: FormData): Promise<void> {
   const owner = field(form, "for").trim();
+  let changed: boolean;
   try {
-    await runClubTodo({
+    const result = await runClubTodo({
       kind: "move",
       id: field(form, "itemId"),
       direction: field(form, "direction") === "up" ? "up" : "down",
       ...(owner ? { owner } : {}),
     });
+    changed = result.changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToClubTodo(form, { error: error.code });
   }
-  return backToClubTodo(form, { saved: "clubTodoMoved" });
+  return backToClubTodo(form, { saved: changed ? "clubTodoMoved" : "clubTodoUnchanged" });
 }
 
 /** «Șterge»: asks first (§384) — a deleted line is gone, and the audit row keeps its words. */

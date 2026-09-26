@@ -78,13 +78,16 @@ describe("§NNN the starting list — the owner's two messages of 2026-09-26", (
     expect(items.some((item) => item.text.includes("adresa de Gmail a clubului"))).toBe(true);
   });
 
-  it("dates the two «după 10 octombrie» lines, and only those", () => {
+  it("dates the Mailgun line and the two «după 10 octombrie» lines, and only those", () => {
     const dated = items.filter((item) => item.due !== null);
     expect(dated.map((item) => [item.id, item.due])).toEqual([
+      ["start-amalia-04", "2026-11-01"],
       ["start-amalia-12", "2026-10-10"],
       ["start-dani-07", "2026-10-10"],
     ]);
-    for (const item of dated) expect(item.text).toMatch(/^După 10 octombrie/);
+    const afterTheTenth = dated.filter((item) => item.due === "2026-10-10");
+    expect(afterTheTenth).toHaveLength(2);
+    for (const item of afterTheTenth) expect(item.text).toMatch(/^După 10 octombrie/);
   });
 
   it("starts with every line open, and every line valid by the stored schema", () => {

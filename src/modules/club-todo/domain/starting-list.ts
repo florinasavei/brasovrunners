@@ -8,7 +8,8 @@ import type { ClubTodoItem } from "./club-todo";
  * wrote it, with two things taken out because this repository is public: **no address** (the
  * club's Gmail is «adresa de Gmail a clubului») and **no URL** (a page is named by its path in the
  * backoffice, `/ro/admin`, never by its host — AGENTS.md §8). The lines that say "after 10
- * October" carry that day as their due date.
+ * October" carry that day as their due date, and the Mailgun-plan line carries the date the
+ * owner named for the switch to the paid plan.
  *
  * Read only while the `clubTodo` row does not exist: the first write stores this list with the
  * change on it, and from then on the row is the list — a deleted starting line never comes back.
@@ -22,6 +23,7 @@ export const CLUB_TODO_OWNER_SUGGESTIONS: readonly string[] = ["Amalia", "Dani",
 /** When the lists were written: the `createdAt` of every starting line. */
 const WRITTEN_AT = "2026-09-26T12:00:00.000Z";
 const AFTER_THE_TENTH = "2026-10-10";
+const MAILGUN_PLAN_SWITCH = "2026-11-01";
 
 const AMALIA: ReadonlyArray<readonly [text: string, due?: string]> = [
   ["Intră în backoffice (/ro/admin) cu contul tău. Dacă nu merge, îmi scrii."],
@@ -31,6 +33,7 @@ const AMALIA: ReadonlyArray<readonly [text: string, due?: string]> = [
   ["Ai deja o invitație trimisă de mine — trebuie doar să o accepți."],
   [
     "Mailgun (emailurile platformei): ținem costurile la minim — planul plătit (Basic, 15 $) doar între 1 și 30 noiembrie, cursa fiind pe 21. Pe 1 noiembrie: plata în contul Mailgun (îți dau accesul), apoi în backoffice → Emailuri → «Planul Mailgun» alegi «Basic»; pe 30 noiembrie înapoi la «Free».",
+    MAILGUN_PLAN_SWITCH,
   ],
   [
     "Textele — le citești și le aprobi: (a) descrierile evenimentelor, copiate de pe Facebook: backoffice → Evenimente → fiecare eveniment → «Rezumat» și «Descrierea evenimentului», română și engleză → «Salvează»; (b) textele legale din backoffice → Legal (termeni, nota de confidențialitate, declarațiile) — scrise cu AI, notează ce ți se pare greșit; ideal, un avocat citește paragraful de răspundere și §5 din termeni; (c) după release-ul de azi (îți scriu când e gata): aprobi cele cinci texte noi, într-o singură ședință: backoffice → Legal → «Versiune nouă» → «pornește de la textul platformei» → completezi cele patru date ale clubului → «Aprobă». De cinci ori: termeni, nota de confidențialitate, declarația de cursă, declarația pentru asfalt, declarația pentru trail. Până atunci lista publică de participanți arată doar confirmații.",
