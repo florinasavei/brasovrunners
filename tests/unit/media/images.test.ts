@@ -105,7 +105,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     const noise = Buffer.alloc(600 * 400 * 3);
     for (let index = 0; index < noise.length; index += 1) noise[index] = (index * 2654435761) % 251;
     const photo = await sharp(noise, { raw: { width: 600, height: 400, channels: 3 } })
-      .resize({ width: 4800, height: 3200 })
+      .resize({ width: 4200, height: 2800 })
       .jpeg({ quality: 90 })
       .toBuffer();
 
@@ -114,9 +114,9 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect(low.rungs.map((rung) => rung.width)).toEqual([480, 640, 960]);
 
     const original = await processUploadedImage(photo, { quality: "original" });
-    // Nothing resized: 4800 is under «Originală»'s 6000.
-    expect([original.width, original.height, original.quality]).toEqual([4800, 3200, "original"]);
-    expect((await sharp(original.web).metadata()).width).toBe(4800);
+    // Nothing resized: 4200 is — above «Mare»'s 4000 — under «Originală»'s 6000.
+    expect([original.width, original.height, original.quality]).toEqual([4200, 2800, "original"]);
+    expect((await sharp(original.web).metadata()).width).toBe(4200);
     // A master wider than 4000 exists only at «Originală», so only it gets the 3200 rung.
     expect(original.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400, 3200]);
     expect((await sharp(original.rungs[original.rungs.length - 1].body).metadata()).width).toBe(3200);
@@ -124,7 +124,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect(original.encoding).toBe("lossy");
 
     // And a picture wider than 6000 is brought down to it.
-    const huge = await sharp({ create: { width: 7000, height: 3500, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
+    const huge = await sharp({ create: { width: 6200, height: 800, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
     expect((await processUploadedImage(huge, { quality: "original" })).width).toBe(ORIGINAL_WEB_MAX);
 
     // The same rung is lighter at «Minimă» than at «Medie», and the master heavier at «Originală» than at «Mare».
@@ -132,7 +132,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect(low.rungs[0].body.byteLength).toBeLessThan(normal.rungs[0].body.byteLength);
     const high = await processUploadedImage(photo, { quality: "high" });
     expect(original.web.byteLength).toBeGreaterThan(high.web.byteLength);
-  }, 240_000);
+  }, 120_000);
 
   it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§414)", async () => {
     // Flat colour and hard edges: what near-lossless WebP stores for almost nothing.

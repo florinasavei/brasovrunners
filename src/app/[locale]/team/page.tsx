@@ -9,7 +9,11 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
+import RichText from "@/modules/content/rich-text/ui/RichText";
+import { teamLinkHost, type TeamLinkKind } from "@/modules/content/team/links";
+import { type PublicTeamLink, type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
+import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
+import TeamLinkGlyph from "@/modules/content/team/ui/TeamLinkGlyph";
 import { coverMagnification, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { cachedTeamPage } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
@@ -27,6 +31,27 @@ export const dynamic = "force-dynamic";
 
 /** The card's smaller type on a phone, where two cards share a row. */
 const SMALL_TEXT = { xs: "0.8125rem", sm: "0.875rem" } as const;
+
+/**
+ * The words about a person (§474) drawn by the page's own renderer, at the card's size: the
+ * paragraphs and lists in the card's small type, a heading one step above it, and every picture a
+ * band across the card — a floated third of a column two to a row would be a thumbnail, so the
+ * chosen width and side are overridden one class more specifically, as the listing card does (§417).
+ */
+const BIO_SX = {
+  color: "text.secondary",
+  overflowWrap: "anywhere",
+  "& p, & li": { fontSize: SMALL_TEXT, lineHeight: 1.45 },
+  "& p": { mb: 1 },
+  "& p:last-child": { mb: 0 },
+  "& h2, & h3": { fontSize: { xs: "0.875rem", sm: "0.9375rem" }, mt: 1.5, mb: 0.5 },
+  "& ul, & ol": { pl: 2.5, mb: 1 },
+  "& figure": { width: "100%", my: 1, float: "none", marginLeft: "auto", marginRight: "auto" },
+  "& figcaption": { textAlign: "center" },
+} as const;
+
+/** The club's introduction (§474): the page's lead, in the renderer's own type, a little quieter. */
+const INTRO_SX = { color: "text.secondary", mb: { xs: DENSITY.sectionGap, sm: 3 }, "& > :last-child": { mb: 0 } } as const;
 
 /**
  * The page's state and cards, or null when the database cannot say. A DRAFT page is a 404, as an
@@ -50,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await teamOrNull(locale);
   return {
     title: t("title"),
-    description: page?.intro ?? t("lead", { club: CLUB_NAME }),
+    description: page?.introText ?? t("lead", { club: CLUB_NAME }),
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/team")),
     // An address with nobody on it is not for a search engine; the sitemap leaves it out too.
     ...(page && teamPageOnSite(page) ? {} : { robots: { index: false, follow: true } }),
@@ -59,13 +84,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /**
  * «Echipa» / "The team" (§459): the people who run the club, one card each — a photograph, the
- * name, what they do, a few words, and one link if they want it.
+ * name, what they do, the words about them in the editor every page uses, and their links (§474).
  *
  * A platform page, like the contact form: its address and title are the platform's. The club keeps
  * the cards, the page's switch and, if it wants one, its own introduction in both languages, in
  * `/admin/pages/team` — without one the page reads the catalogue's sentence. A DRAFT page is a 404.
  * Each card reads the page's own language alone — a pair written in one language only reads as
- * none on both pages (§352). A Server Component with no island: nothing here is interactive.
+ * none on both pages (§352). A Server Component with no island of its own; a film in a text brings the renderer's (§403).
  */
 export default async function TeamPage({ params }: Props) {
   const { locale } = await params;
@@ -76,15 +101,23 @@ export default async function TeamPage({ params }: Props) {
   const page = await teamOrNull(locale);
   if (page && !page.published) notFound();
   const members = page?.members ?? [];
+  const kindWords = await teamLinkKindWords();
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={headingRule}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 }, whiteSpace: "pre-line" }}>
-        {page?.intro ?? t("lead", { club: CLUB_NAME })}
-      </Typography>
+      {page?.intro ? (
+        // The club's own introduction, written in the editor every page uses (§474).
+        <Box sx={INTRO_SX} data-testid="team-intro">
+          <RichText body={page.intro} />
+        </Box>
+      ) : (
+        <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
+          {t("lead", { club: CLUB_NAME })}
+        </Typography>
+      )}
 
       {members.length === 0 ? (
         <Typography variant="body1">{t("empty")}</Typography>
@@ -129,21 +162,13 @@ export default async function TeamPage({ params }: Props) {
                   </Typography>
                 )}
                 {member.bio && (
-                  // Plain text with its line breaks, never markup the club did not type.
-                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-line", overflowWrap: "anywhere", fontSize: SMALL_TEXT }}>
-                    {member.bio}
-                  </Typography>
+                  // Through the renderer's allowlist, never markup the club did not type (§11.3).
+                  <Box sx={BIO_SX} data-testid="team-bio">
+                    <RichText body={member.bio} pictures="tile" />
+                  </Box>
                 )}
-                {member.link && (
-                  // The person's own link, checked `https://` at the save; a new tab, no referrer.
-                  <MuiLink
-                    href={member.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, overflowWrap: "anywhere", fontSize: SMALL_TEXT }}
-                  >
-                    {linkLabel(member.link)}
-                  </MuiLink>
+                {member.links.length > 0 && (
+                  <MemberLinks links={member.links} label={t("linksLabel", { name: member.name })} kindWords={kindWords} />
                 )}
               </CardContent>
             </Card>
@@ -158,13 +183,35 @@ export default async function TeamPage({ params }: Props) {
   );
 }
 
-/** A link's words on the card: its host without `www.` — "strava.com", "instagram.com". */
-function linkLabel(link: string): string {
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return link;
-  }
+/**
+ * A person's links (§474), one row each in the club's order: the network's mark (§90), the club's
+ * label in this language — or, without one, the network's name, and for a site or anything else
+ * its host ("ana-alearga.ro"), so nobody is surprised by what opens. Every row is at least 44
+ * pixels tall (BR-REQ-041-01 criterion 6) and opens in a new tab with no referrer: the address is
+ * whatever the club pasted, checked `https://` at the save.
+ */
+function MemberLinks({ links, label, kindWords: words }: { links: readonly PublicTeamLink[]; label: string; kindWords: Record<TeamLinkKind, string> }) {
+  return (
+    // `role="list"` restated for WebKit, which drops it from a list with no markers (§169).
+    <Box component="ul" role="list" aria-label={label} data-testid="team-links" sx={{ listStyle: "none", m: 0, mt: 0.5, p: 0 }}>
+      {links.map((link, index) => (
+        <Box component="li" role="listitem" key={index}>
+          <MuiLink
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-link-kind={link.kind}
+            sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 44, overflowWrap: "anywhere", fontSize: SMALL_TEXT }}
+          >
+            <TeamLinkGlyph kind={link.kind} size={18} />
+            <Box component="span" sx={{ minWidth: 0 }}>
+              {link.label ?? (link.kind === "WEBSITE" || link.kind === "OTHER" ? teamLinkHost(link.url) : words[link.kind])}
+            </Box>
+          </MuiLink>
+        </Box>
+      ))}
+    </Box>
+  );
 }
 
 /**

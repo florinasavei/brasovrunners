@@ -2,10 +2,12 @@ import { and, desc, eq, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import { canEditEventFields, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./storage";
@@ -71,6 +73,15 @@ const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`
     OR ${names(sql`${eventTranslations.scheduleJson}::text`)}
     OR ${names(sql`${eventTranslations.routeDescriptionJson}::text`)})`;
 
+/** Whether a card of «Echipa» carries the asset in the words about the person, either language (§474). */
+const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(sql`${teamMembers.bioEnJson}::text`)})`;
+
+/**
+ * Whether the team page's introduction carries the asset (§474): the one `platform_settings` row
+ * of the page, whose value holds both languages' documents. Read as its text, like a body.
+ */
+const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
+
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
@@ -83,6 +94,10 @@ const referencedSomewhere = sql`(
   -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
   -- is a card somebody is about to show.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})
+  -- A picture in the words about a person (§474), by address, as every other text is read.
+  OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
+  -- A picture in the team page's introduction (§474), kept in its platform setting.
+  OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -149,7 +164,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-export type MediaReference = { kind: "album" | "page" | "event" | "team"; id: string; title: string | null };
+export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -234,6 +249,16 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(teamMembers)
     .where(isNotNull(teamMembers.photoMediaAssetId));
 
+  // A picture in the words about a person, and in the page's introduction (§474).
+  const inTeamBios = await db
+    .select({ assetId: mediaAssets.id, id: teamMembers.id, title: teamMembers.name })
+    .from(mediaAssets)
+    .innerJoin(teamMembers, inTeamBio);
+  const inTeamIntros = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .innerJoin(platformSettings, inTeamIntro);
+
   const references = new Map<string, MediaReference[]>();
   const add = (assetId: string, reference: MediaReference) => {
     const list = references.get(assetId) ?? [];
@@ -255,6 +280,8 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     add(row.assetId, { kind: "event", id: row.id, title: row.title });
   }
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });
+  for (const row of inTeamBios) add(row.assetId, { kind: "team", id: row.id, title: row.title });
+  for (const row of inTeamIntros) add(row.assetId, { kind: "teamIntro", id: TEAM_PAGE_SETTING_KEY, title: null });
 
   return assets.map((asset) => ({
     ...asset,

@@ -11,10 +11,15 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { TEAM_BIO_MAX, TEAM_LINK_MAX, TEAM_NAME_MAX, TEAM_ROLE_MAX } from "@/modules/content/team/fields";
-import { readTeamPageSettings, TEAM_INTRO_MAX, type TeamPageSettings } from "@/modules/content/team/page-settings";
+import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import { TEAM_BIO_MAX, TEAM_NAME_MAX, TEAM_ROLE_MAX } from "@/modules/content/team/fields";
+import { MAX_TEAM_LINKS, type TeamLinkKind } from "@/modules/content/team/links";
+import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
+import { readTeamPageSettings, TEAM_INTRO_MAX, teamIntroDocs, type TeamPageSettings } from "@/modules/content/team/page-settings";
 import { type AdminTeamMember, listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
+import TeamLinkRowsEditor, { type TeamLinkRowsLabels } from "@/modules/content/team/ui/TeamLinkRowsEditor";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
 import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -59,10 +64,12 @@ export const dynamic = "force-dynamic";
  * While the privacy notice in force does not describe the page (`{{teamPage}}`), a warning says so
  * beside the switch; `/admin/tasks` carries the same row.
  *
- * One page and no editor route: a card is five boxes and a photo, so it is written in a fold on
- * its own row — closed, with its words on the line, until somebody opens it (§336) — rather than
- * behind a second screen. Each form carries a scope, so the ids the refusal summary links to are
- * never shared between two cards.
+ * One page and no editor route: a card is a name, a role, the words about the person, their links
+ * and a photo, so it is written in a fold on its own row — closed, with its words on the line,
+ * until somebody opens it (§336) — rather than behind a second screen. The words are the rich-text
+ * editor's, each language in a fold of its own that mounts the editor only when opened (§96,
+ * §474), so a screen of twenty cards starts no editor at all. Each form carries a scope, so the ids
+ * the refusal summary links to are never shared between two cards.
  */
 export default async function AdminTeamPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -87,16 +94,39 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
   const shown = members.filter((member) => member.visible).length;
   const publicHref = getPathname({ locale, href: "/team" });
 
+  const editing: Editing = {
+    rich: richTextEditorLabels(await getTranslations("Admin.richText")),
+    links: {
+      kind: t("team.linkRows.kind"),
+      url: t("team.linkRows.url"),
+      labelRo: t("team.linkRows.labelRo"),
+      labelEn: t("team.linkRows.labelEn"),
+      add: t("team.linkRows.add"),
+      remove: t("team.linkRows.remove"),
+      moveUp: t("team.linkRows.moveUp"),
+      moveDown: t("team.linkRows.moveDown"),
+      row: t("team.linkRows.row"),
+    },
+    // The card's own words for each kind — what the page shows when a link has no label (§474).
+    kinds: await teamLinkKindWords(),
+  };
+  // Each link row's four boxes by the name the editor posts, so the summary says "Linkul 2: adresa".
+  const linkBoxes = Object.fromEntries(
+    Array.from({ length: MAX_TEAM_LINKS }, (_, index) =>
+      (["kind", "url", "labelRo", "labelEn"] as const).map((box) => [`links[${index}].${box}`, `${editing.links.row} ${index + 1}: ${editing.links[box]}`]),
+    ).flat(),
+  );
   const messages = await refusalMessages({
     name: t("team.name"),
     roleRo: t("team.roleRo"),
     roleEn: t("team.roleEn"),
-    bioRo: t("team.bioRo"),
-    bioEn: t("team.bioEn"),
-    link: t("team.link"),
+    bioRoBody: t("team.bioRo"),
+    bioEnBody: t("team.bioEn"),
+    links: t("team.links"),
+    ...linkBoxes,
     photoAssetId: t("team.photo"),
-    introRo: t("team.introRo"),
-    introEn: t("team.introEn"),
+    introRoBody: t("team.introRo"),
+    introEnBody: t("team.introEn"),
   });
   const photoLabels: TeamPhotoLabels = {
     legend: t("team.photo"),
@@ -159,6 +189,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
         words={t}
         cancel={words.cancel}
         messages={messages}
+        editing={editing}
         mayEdit={mayEdit}
         mayShow={mayShow}
       />
@@ -168,7 +199,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
           <summary>{t("team.add")}</summary>
           <ActionForm action={createTeamMemberAction} messages={messages} scope="new" data-testid="team-create-form">
             <input type="hidden" name="uiLocale" value={locale} />
-            <MemberFields scope="new" member={null} words={t} photoLabels={photoLabels} storage={storage} />
+            <MemberFields scope="new" member={null} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("team.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
             </Box>
@@ -191,6 +222,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
               cancel={words.cancel}
               messages={messages}
               photoLabels={photoLabels}
+              editing={editing}
               mayEdit={mayEdit}
               mayShow={mayShow}
               storage={storage}
@@ -204,6 +236,13 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
+/** What the rich-text editors and the links' rows need, translated once on the server (§474). */
+type Editing = {
+  rich: ReturnType<typeof richTextEditorLabels>;
+  links: TeamLinkRowsLabels;
+  kinds: Record<TeamLinkKind, string>;
+};
+
 /**
  * The page as a whole: whether it is on the site, the switch that puts it there or takes it off
  * (the Administrator's, asked first), and the club's introduction in both languages or neither.
@@ -215,6 +254,7 @@ function PageCard({
   words: t,
   cancel,
   messages,
+  editing,
   mayEdit,
   mayShow,
 }: {
@@ -224,10 +264,12 @@ function PageCard({
   words: Words;
   cancel: string;
   messages: RefusalMessages;
+  editing: Editing;
   mayEdit: boolean;
   mayShow: boolean;
 }) {
   const published = settings.status === "PUBLISHED";
+  const intro = teamIntroDocs(settings);
   const ro = getPathname({ locale: "ro", href: "/team" });
   const en = getPathname({ locale: "en", href: "/team" });
   return (
@@ -270,28 +312,30 @@ function PageCard({
             <summary>{t("team.introFold")}</summary>
             <ActionForm action={saveTeamPageIntroAction} messages={messages} scope="intro" data-testid="team-intro-form">
               <input type="hidden" name="uiLocale" value={locale} />
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
-                <RecallField
-                  name="introRo"
+              {/* The page's own column, so the whole toolbar: a picture, a film, a table (§474). */}
+              <Stack spacing={1.5}>
+                <LazyRichTextEditor
+                  name="introRoBody"
                   label={t("team.introRo")}
-                  fullWidth
-                  multiline
-                  minRows={3}
-                  defaultValue={settings.introRo ?? ""}
-                  helperText={t("team.introHelp", { max: TEAM_INTRO_MAX })}
-                  slotProps={{ htmlInput: { maxLength: TEAM_INTRO_MAX, lang: "ro" } }}
+                  summary={t("team.introRo")}
+                  emptyHint={t("team.textEmpty")}
+                  initialBody={intro.ro}
+                  accessibleSuffix="RO"
+                  labels={editing.rich}
                 />
-                <RecallField
-                  name="introEn"
+                <LazyRichTextEditor
+                  name="introEnBody"
                   label={t("team.introEn")}
-                  fullWidth
-                  multiline
-                  minRows={3}
-                  defaultValue={settings.introEn ?? ""}
-                  helperText={t("team.bothOrNeither")}
-                  slotProps={{ htmlInput: { maxLength: TEAM_INTRO_MAX, lang: "en" } }}
+                  summary={t("team.introEn")}
+                  emptyHint={t("team.textEmpty")}
+                  initialBody={intro.en}
+                  accessibleSuffix="EN"
+                  labels={editing.rich}
                 />
-              </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+                  {t("team.introHelp", { max: TEAM_INTRO_MAX })}
+                </Typography>
+              </Stack>
               <Box sx={{ mt: 2 }}>
                 <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
               </Box>
@@ -313,6 +357,7 @@ function MemberCard({
   cancel,
   messages,
   photoLabels,
+  editing,
   mayEdit,
   mayShow,
   storage,
@@ -325,6 +370,7 @@ function MemberCard({
   cancel: string;
   messages: RefusalMessages;
   photoLabels: TeamPhotoLabels;
+  editing: Editing;
   mayEdit: boolean;
   mayShow: boolean;
   storage: boolean;
@@ -366,6 +412,7 @@ function MemberCard({
           <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
             <Chip size="small" color={member.visible ? "success" : "default"} label={member.visible ? t("team.visible") : t("team.hidden")} />
             {!member.photo && <Chip size="small" variant="outlined" label={t("team.noPhoto")} />}
+            {member.links.length > 0 && <Chip size="small" variant="outlined" label={t("team.linkCount", { count: member.links.length })} />}
             {oneSided(member) && <Chip size="small" variant="outlined" color="warning" label={t("team.oneLanguage")} />}
           </Stack>
         </Box>
@@ -429,7 +476,7 @@ function MemberCard({
           <ActionForm action={saveTeamMemberAction} messages={messages} scope={scope} data-testid={`team-save-${member.id}`}>
             {hidden}
             <RecallHidden name="expectedVersion" value={member.version} />
-            <MemberFields scope={scope} member={member} words={t} photoLabels={photoLabels} storage={storage} />
+            <MemberFields scope={scope} member={member} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
             </Box>
@@ -443,25 +490,28 @@ function MemberCard({
 /** A pair with one side written (only a hand-made or older row can hold one): the next save refuses it. */
 function oneSided(member: AdminTeamMember): boolean {
   const written = (value: string | null) => (value ?? "").trim() !== "";
-  return written(member.roleRo) !== written(member.roleEn) || written(member.bioRo) !== written(member.bioEn);
+  return written(member.roleRo) !== written(member.roleEn) || (member.bioRo === null) !== (member.bioEn === null);
 }
 
 /**
- * The boxes of a card, for adding one and for writing one: the name, then each pair Română and
+ * The boxes of a card, for adding one and for writing one: the name, then the role Română and
  * English side by side from `sm` — both or neither, the partner description's pattern (§352) —
- * then the photo.
+ * then the words about the person in the rich-text editor, one fold per language (§474), the
+ * person's links, and the photo.
  */
 function MemberFields({
   scope,
   member,
   words: t,
   photoLabels,
+  editing,
   storage,
 }: {
   scope: string;
   member: AdminTeamMember | null;
   words: Words;
   photoLabels: TeamPhotoLabels;
+  editing: Editing;
   storage: boolean;
 }) {
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
@@ -494,37 +544,49 @@ function MemberFields({
           slotProps={{ htmlInput: { maxLength: TEAM_ROLE_MAX, lang: "en" } }}
         />
       </Box>
-      <Box sx={pairSx}>
-        <RecallField
-          name="bioRo"
+      {/*
+        The words about the person in the editor every page uses (§474): paragraphs, a list, a link
+        in the text, a picture. No table — a card two to a row on a phone has no room for one, and
+        the save refuses it. Folded, so a screen of cards mounts no editor until one is opened (§96).
+      */}
+      <Stack spacing={1.5}>
+        <LazyRichTextEditor
+          name="bioRoBody"
           label={t("team.bioRo")}
-          fullWidth
-          multiline
-          minRows={3}
-          defaultValue={member?.bioRo ?? ""}
-          helperText={t("team.bioHelp", { max: TEAM_BIO_MAX })}
-          slotProps={{ htmlInput: { maxLength: TEAM_BIO_MAX, lang: "ro" } }}
+          summary={t("team.bioRo")}
+          emptyHint={t("team.textEmpty")}
+          initialBody={member?.bioRo ?? null}
+          accessibleSuffix="RO"
+          features={{ media: true, tables: false }}
+          labels={editing.rich}
         />
-        <RecallField
-          name="bioEn"
+        <LazyRichTextEditor
+          name="bioEnBody"
           label={t("team.bioEn")}
-          fullWidth
-          multiline
-          minRows={3}
-          defaultValue={member?.bioEn ?? ""}
-          helperText={t("team.bothOrNeither")}
-          slotProps={{ htmlInput: { maxLength: TEAM_BIO_MAX, lang: "en" } }}
+          summary={t("team.bioEn")}
+          emptyHint={t("team.textEmpty")}
+          initialBody={member?.bioEn ?? null}
+          accessibleSuffix="EN"
+          features={{ media: true, tables: false }}
+          labels={editing.rich}
         />
-      </Box>
-      <RecallField
-        name="link"
-        label={t("team.link")}
-        type="url"
-        fullWidth
-        defaultValue={member?.link ?? ""}
-        helperText={t("team.linkHelp")}
-        slotProps={{ htmlInput: { maxLength: TEAM_LINK_MAX, inputMode: "url" } }}
-      />
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+          {t("team.bioHelp", { max: TEAM_BIO_MAX })}
+        </Typography>
+      </Stack>
+      <Stack spacing={1}>
+        <Typography variant="subtitle2" component="p">
+          {t("team.links")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("team.linksHelp", { max: MAX_TEAM_LINKS })}
+        </Typography>
+        <TeamLinkRowsEditor
+          initial={(member?.links ?? []).map((link) => ({ kind: link.kind, url: link.url, labelRo: link.labelRo ?? "", labelEn: link.labelEn ?? "" }))}
+          labels={editing.links}
+          kindLabels={editing.kinds}
+        />
+      </Stack>
       {storage ? (
         <TeamPhotoField
           assetId={member?.photoAssetId ?? null}

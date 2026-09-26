@@ -3,16 +3,23 @@ import { mediaAssets } from "@/db/schema/gallery";
 import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { getStorage, objectKey } from "@/modules/media/storage";
+import { storedTeamDoc } from "./fields";
+import { readTeamLinks, type TeamLink, type TeamLinkKind, teamLinkLabel } from "./links";
 import { readTeamPageSettings, teamIntroFor } from "./page-settings";
 
 /**
- * Reads for «Echipa» (§459), public and backoffice.
+ * Reads for «Echipa» (§459, grown by §474), public and backoffice.
  *
  * The public read names its columns (BR-REQ-070-01), reads only the cards shown on the site, and
  * gives each card the words of the page's own language alone: what the person does and the words
  * about them are a pair written in both languages or in neither (§352), and a stored half pair —
  * only a hand-made row can hold one — reads as none on both pages, never the other language's text.
+ *
+ * The words about a person are a rich-text document since §474 (`bio_*_json`); a row from before
+ * reads its plain `bio_*` as paragraphs (`storedTeamDoc`). The links are a list since §474
+ * (`links`); a row from before reads its one `link` as a row of its guessed kind (`readTeamLinks`).
  */
 
 export type TeamPhoto = {
@@ -23,21 +30,27 @@ export type TeamPhoto = {
   height: number;
 };
 
+/** One of a person's links as the page draws it: the club's label in this language, or null for the kind's word. */
+export type PublicTeamLink = { kind: TeamLinkKind; url: string; label: string | null };
+
 export type PublicTeamMember = {
   id: string;
   name: string;
   role: string | null;
-  bio: string | null;
-  /** The one `https://` link the person shares, or null. */
-  link: string | null;
+  /** The words about them in this language, as a document, or null. */
+  bio: RichTextDoc | null;
+  /** The person's links, in the club's order — none, one or up to six. */
+  links: PublicTeamLink[];
   photo: TeamPhoto | null;
 };
 
 /** What the public page, the header and the sitemap need: the page's state, its words, its cards. */
 export type PublicTeamPage = {
   published: boolean;
-  /** The club's introduction in this language, or null for the platform's sentence. */
-  intro: string | null;
+  /** The club's introduction in this language as a document, or null for the platform's sentence. */
+  intro: RichTextDoc | null;
+  /** The same introduction's words, for the page's description to search engines; null with it. */
+  introText: string | null;
   members: PublicTeamMember[];
 };
 
@@ -46,9 +59,10 @@ export type AdminTeamMember = {
   name: string;
   roleRo: string | null;
   roleEn: string | null;
-  bioRo: string | null;
-  bioEn: string | null;
-  link: string | null;
+  /** The words about them as the editor opens them: the stored document, or the plain words as paragraphs. */
+  bioRo: RichTextDoc | null;
+  bioEn: RichTextDoc | null;
+  links: TeamLink[];
   photoAssetId: string | null;
   photo: TeamPhoto | null;
   position: number;
@@ -64,7 +78,10 @@ const COLUMNS = {
   roleEn: teamMembers.roleEn,
   bioRo: teamMembers.bioRo,
   bioEn: teamMembers.bioEn,
+  bioRoJson: teamMembers.bioRoJson,
+  bioEnJson: teamMembers.bioEnJson,
   link: teamMembers.link,
+  links: teamMembers.links,
   photoAssetId: teamMembers.photoMediaAssetId,
   photoKeyPrefix: mediaAssets.keyPrefix,
   photoWidth: mediaAssets.width,
@@ -93,6 +110,12 @@ export function pairFor(locale: Locale, ro: string | null, en: string | null): s
   return locale === "ro" ? ro : en;
 }
 
+/** A rich pair's side for this page, or null unless both sides hold something (§352). */
+export function docPairFor(locale: Locale, ro: RichTextDoc | null, en: RichTextDoc | null): RichTextDoc | null {
+  if (!ro || !en) return null;
+  return locale === "ro" ? ro : en;
+}
+
 /** Every card on the site, in the club's order, in this language. */
 export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -109,8 +132,8 @@ export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
     id: row.id,
     name: row.name,
     role: pairFor(locale, row.roleRo, row.roleEn),
-    bio: pairFor(locale, row.bioRo, row.bioEn),
-    link: row.link,
+    bio: docPairFor(locale, storedTeamDoc(row.bioRoJson, row.bioRo), storedTeamDoc(row.bioEnJson, row.bioEn)),
+    links: readTeamLinks(row.links, row.link).map((link) => ({ kind: link.kind, url: link.url, label: teamLinkLabel(link, locale) })),
     photo: photoOf(row),
   }));
 }
@@ -121,8 +144,9 @@ export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
  */
 export async function readPublicTeamPage<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<PublicTeamPage> {
   const settings = await readTeamPageSettings(db);
-  if (settings.status !== "PUBLISHED") return { published: false, intro: null, members: [] };
-  return { published: true, intro: teamIntroFor(locale, settings), members: await listVisibleTeamMembers(db, locale) };
+  if (settings.status !== "PUBLISHED") return { published: false, intro: null, introText: null, members: [] };
+  const intro = teamIntroFor(locale, settings);
+  return { published: true, intro: intro.doc, introText: intro.text, members: await listVisibleTeamMembers(db, locale) };
 }
 
 /** Whether the page is on the site with somebody on it — the header's entry and the sitemap's. */
@@ -138,8 +162,11 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
     .leftJoin(mediaAssets, eq(mediaAssets.id, teamMembers.photoMediaAssetId))
     .orderBy(asc(teamMembers.position), asc(teamMembers.createdAt));
 
-  return rows.map(({ photoKeyPrefix, photoWidth, photoHeight, ...row }) => ({
+  return rows.map(({ photoKeyPrefix, photoWidth, photoHeight, bioRo, bioEn, bioRoJson, bioEnJson, link, links, ...row }) => ({
     ...row,
+    bioRo: storedTeamDoc(bioRoJson, bioRo),
+    bioEn: storedTeamDoc(bioEnJson, bioEn),
+    links: readTeamLinks(links, link),
     photo: photoOf({ photoKeyPrefix, photoWidth, photoHeight }),
   }));
 }
