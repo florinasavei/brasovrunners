@@ -15,6 +15,7 @@ import {
 } from "@/modules/content/rich-text/domain/picture-frame";
 import { parseRichText, type ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import { CARD_FRAME_SX, cardCoverSx, cardFrameGeometry } from "@/modules/content/rich-text/ui/image-layout";
 
 /**
@@ -210,6 +211,45 @@ describe("§NNN the card draws the frame, the page does not", () => {
     const page = renderToStaticMarkup(createElement(RichText, { body: doc }));
     expect(page).not.toContain("card-picture");
     expect(page).toContain('height="4000"');
+  });
+
+  it("gives a portrait and a landscape photograph the same frame, the pull alone differing", () => {
+    const shaped = (intrinsic: { width: number; height: number }) =>
+      renderToStaticMarkup(
+        createElement(RichText, {
+          body: {
+            type: "doc",
+            content: [{ type: "image", attrs: { src: "/api/media/aaaaaaaa-1111-2222-3333-444444444444/web.webp", alt: "x", ...intrinsic } }],
+          },
+          links: false,
+          pictures: "card",
+        }),
+      );
+    const frameOf = (html: string) => /<style[^>]*>([^<]*aspect-ratio:[^<]*)<\/style><div class="rt-card-frame/.exec(html)?.[1] ?? "";
+    const imageOf = (html: string) => /<style[^>]*>([^<]*position:absolute[^<]*)<\/style><img/.exec(html)?.[1] ?? "";
+    const portrait = shaped(PORTRAIT);
+    const landscape = shaped(LANDSCAPE);
+    for (const html of [portrait, landscape]) {
+      expect(html).toContain('data-testid="card-picture"');
+      expect(frameOf(html)).toContain("aspect-ratio:16/9");
+      expect(imageOf(html)).toContain("width:100%");
+      expect(imageOf(html)).toContain("left:0%");
+    }
+    // The same frame, so the same box around the image: only where the photograph is pulled to differs.
+    expect(frameOf(portrait).replace(/css-\w+/g, "")).toBe(frameOf(landscape).replace(/css-\w+/g, ""));
+    const top = (html: string) => /top:(-?[\d.]+)%/.exec(imageOf(html))?.[1];
+    expect(top(portrait)).not.toBe(top(landscape));
+    expect(imageOf(portrait).replace(/top:[^;]+;|css-\w+/g, "")).toBe(imageOf(landscape).replace(/top:[^;]+;|css-\w+/g, ""));
+  });
+
+  it("frames the featured hero's summary too, and never the event page's", () => {
+    const hero = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null, place: "hero" }));
+    expect(hero).toContain('data-testid="card-picture"');
+    expect(hero).toContain("aspect-ratio:16/9");
+    const page = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null }));
+    expect(page).not.toContain("card-picture");
+    const heroSource = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "FeaturedEventHero.tsx"), "utf8");
+    expect(heroSource).toContain('<EventExcerpt place="hero"');
   });
 
   it("is drawn by one function, shared with the editor's preview", () => {

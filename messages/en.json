@@ -2584,6 +2584,7 @@
       "imageFocusPosition": "The card's centre: {x}% from the left, {y}% from the top",
       "imageCardPreview": "How the card shows it",
       "imageUploadShapeHelp": "\"Free\" keeps the whole photograph. A shape crops it from the middle without changing the file; move or change it in the picture's panel.",
+      "imageUploadCropped": "cropped {shape} from the middle (the file stays whole)",
       "table": "Table",
       "tableAddRow": "Add a row",
       "tableAddColumn": "Add a column",

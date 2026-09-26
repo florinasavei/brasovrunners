@@ -12,9 +12,11 @@ import { LINE_GAP } from "./card-layout";
 
 /**
  * Where the short description is read: the event page and the hero give it the column, a
- * listing card gives it a card's worth of room.
+ * listing card gives it a card's worth of room. The hero is the page's column too, but its
+ * pictures are the listing's 16∶9 frame at their focal point (§NNN): it is the first card of the
+ * listing, and a portrait poster in it stood as tall as the screen.
  */
-export type ExcerptPlace = "page" | "card";
+export type ExcerptPlace = "page" | "hero" | "card";
 
 /** The excerpt as the page and the hero render it: the body's own type, the column's width. */
 export const PAGE_EXCERPT_SX = {
@@ -156,15 +158,15 @@ export default function EventExcerpt({
 }: {
   excerptJson: unknown;
   excerpt: string | null;
-  /** `card` constrains the picture to the card and clamps the words alone; see `CARD_EXCERPT_SX`. */
+  /** `card` constrains the picture to the card and clamps the words alone (`CARD_EXCERPT_SX`); `hero` frames the pictures alone. */
   place?: ExcerptPlace;
 }) {
   const doc = excerptJson ? readRichText(excerptJson) : fromPlainText(excerpt);
   if (!hasRichTextContent(doc)) return null;
-  if (place === "page") {
+  if (place !== "card") {
     return (
       <Box sx={PAGE_EXCERPT_SX}>
-        <RichText body={doc} />
+        <RichText body={doc} framed={place === "hero"} />
       </Box>
     );
   }

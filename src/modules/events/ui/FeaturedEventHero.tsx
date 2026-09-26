@@ -100,7 +100,7 @@ export default async function FeaturedEventHero({
         {event.title}
       </Typography>
 
-      <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />
+      <EventExcerpt place="hero" excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       {week && (
         <Typography

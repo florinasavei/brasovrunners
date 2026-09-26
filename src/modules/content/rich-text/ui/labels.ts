@@ -120,6 +120,8 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       cardPreview: rt("imageCardPreview"),
     },
     imageUploadShapeHelp: rt("imageUploadShapeHelp"),
+    // Raw, with its placeholder: the island names the shape itself.
+    imageUploadCropped: rt.raw("imageUploadCropped") as string,
     imageRemove: rt("imageRemove"),
     imageDone: rt("imageDone"),
     imageClose: rt("imageClose"),

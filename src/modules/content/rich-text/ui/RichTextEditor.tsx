@@ -262,6 +262,8 @@ function RichTextEditorIsland({
      */
     imageShapes: Omit<ImageCropLabels, "title" | "help" | "reset" | "position">;
     imageUploadShapeHelp: string;
+    /** After the stored facts, the shape the upload went in with (§NNN); raw, `{shape}` substituted here. */
+    imageUploadCropped: string;
     imageRemove: string;
     imageDone: string;
     /** The ✕ on the picture's panel, and the panel's own heading (§258). */
@@ -315,6 +317,8 @@ function RichTextEditorIsland({
   const [imageBarOpen, setImageBarOpen] = useState(false);
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
+  /** The shape the last upload went in with, said after its stored facts (§NNN). */
+  const [storedShape, setStoredShape] = useState<CropPreset>("free");
   /**
    * The shape a new upload starts in (§NNN): «Liber», the whole photograph as before, or one of
    * the presets, stored as §241's crop and changeable afterwards in the picture's panel. Mirrored
@@ -567,6 +571,7 @@ function RichTextEditorIsland({
       // The shape chosen in the bar, as a crop of the stored photograph (§NNN); «Liber» is none.
       const shape = uploadShapeRef.current;
       const crop = shape === "free" ? null : presetCrop(shape, { width: uploaded.width, height: uploaded.height });
+      setStoredShape(crop ? shape : "free");
       // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
       // and an empty alt is what the nag under the editor counts.
       editor
@@ -1005,6 +1010,8 @@ function RichTextEditorIsland({
         {imageState === "idle" && stored && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-stored">
             {describeStoredImage(stored, labels.imageStored, document.documentElement.lang || "ro")}
+            {/* The file is the whole photograph; the shape is a crop over it, and the line says so (§NNN). */}
+            {storedShape !== "free" && ` · ${labels.imageUploadCropped.replace("{shape}", labels.imageShapes.preset[storedShape])}`}
           </Typography>
         )}
 

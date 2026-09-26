@@ -2584,6 +2584,7 @@
       "imageFocusPosition": "Centrul pe card: {x}% de la stânga, {y}% de sus",
       "imageCardPreview": "Așa apare pe card",
       "imageUploadShapeHelp": "«Liber» păstrează toată fotografia. Un format o decupează din mijloc, fără să-i schimbe fișierul; îl muți sau îl schimbi din panoul pozei.",
+      "imageUploadCropped": "decupat {shape} din mijloc (fișierul rămâne întreg)",
       "table": "Tabel",
       "tableAddRow": "Adaugă un rând",
       "tableAddColumn": "Adaugă o coloană",
