@@ -9,7 +9,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
-  DEFAULT_SHOWN_CONTACT_ADDRESS,
+  defaultShownContactAddress,
   resolveShownContactAddresses,
   replyToHeader,
   type ShownContactAddress,
@@ -28,32 +28,41 @@ export const SHOWN_CONTACT_ADDRESS_SETTING_ENTITY_ID = "00000000-0000-4000-8000-
 
 export type ShownContactAddressState = ShownContactAddress & { updatedAt: Date | null };
 
+/**
+ * The setting in force. With no row — the club has not chosen — it is the configured Gmail
+ * (`CONTACT_SMTP_USER`), or the mailbox where there is none (§NNN, `defaultShownContactAddress`);
+ * `updatedAt: null` says it is the default. `configuredGmail` is the environment's unless a test
+ * passes its own.
+ */
 export async function readShownContactAddress<T extends Record<string, unknown>>(
   db: Database<T>,
+  configuredGmail: string | null | undefined = env.CONTACT_SMTP_USER,
 ): Promise<ShownContactAddressState> {
   const [row] = await db
     .select()
     .from(platformSettings)
     .where(eq(platformSettings.key, SHOWN_CONTACT_ADDRESS_SETTING_KEY))
     .limit(1);
-  if (!row) return { ...DEFAULT_SHOWN_CONTACT_ADDRESS, updatedAt: null };
-  // A value this code can no longer read is the default — the environment's mailbox, as before.
+  const fallback = defaultShownContactAddress(configuredGmail);
+  if (!row) return { ...fallback, updatedAt: null };
+  // A value this code can no longer read is the default.
   const parsed = shownContactAddressSchema.safeParse(row.value);
-  return parsed.success
-    ? { ...parsed.data, updatedAt: row.updatedAt }
-    : { ...DEFAULT_SHOWN_CONTACT_ADDRESS, updatedAt: row.updatedAt };
+  return parsed.success ? { ...parsed.data, updatedAt: row.updatedAt } : { ...fallback, updatedAt: row.updatedAt };
 }
 
 /**
  * The addresses in force, straight from the database, for a caller that already holds one — the
- * outbox's senders, the legal prefill. A database that cannot answer gives the environment's
- * mailbox: the Reply-To every email carried before §NNN.
+ * outbox's senders, the legal prefill. A database that cannot answer gives the default: the
+ * configured Gmail, else the environment's mailbox (§NNN).
  */
-export async function shownContactAddresses<T extends Record<string, unknown>>(db: Database<T>): Promise<string[]> {
+export async function shownContactAddresses<T extends Record<string, unknown>>(
+  db: Database<T>,
+  configuredGmail: string | null | undefined = env.CONTACT_SMTP_USER,
+): Promise<string[]> {
   try {
-    return resolveShownContactAddresses(await readShownContactAddress(db), env.EMAIL_REPLY_TO);
+    return resolveShownContactAddresses(await readShownContactAddress(db, configuredGmail), env.EMAIL_REPLY_TO);
   } catch {
-    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO);
+    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, configuredGmail);
   }
 }
 
@@ -67,7 +76,7 @@ export async function shownContactAddressesOrDefault(): Promise<string[]> {
   try {
     return await shownContactAddresses(getDb());
   } catch {
-    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO);
+    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);
   }
 }
 

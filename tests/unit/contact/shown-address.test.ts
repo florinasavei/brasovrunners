@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   DEFAULT_SHOWN_CONTACT_ADDRESS,
+  defaultShownContactAddress,
   joinContactAddresses,
   replyToHeader,
   resolveShownContactAddresses,
@@ -18,10 +19,25 @@ const MAILBOX = "contact@mail.example.test";
 const GMAIL = "club@gmail.example.test";
 
 describe("the shown contact address, three modes", () => {
-  it("defaults to the environment's mailbox, and to nothing without it", () => {
+  it("defaults to the environment's mailbox where no Gmail is configured, and to nothing without it", () => {
     expect(DEFAULT_SHOWN_CONTACT_ADDRESS.mode).toBe("mailbox");
     expect(resolveShownContactAddresses(null, MAILBOX)).toEqual([MAILBOX]);
+    expect(resolveShownContactAddresses(null, MAILBOX, null)).toEqual([MAILBOX]);
     expect(resolveShownContactAddresses(null, undefined)).toEqual([]);
+  });
+
+  it("§NNN: defaults to the configured Gmail (CONTACT_SMTP_USER) until the club chooses", () => {
+    expect(defaultShownContactAddress(GMAIL)).toEqual({ mode: "gmail", gmail: GMAIL });
+    expect(defaultShownContactAddress(`  ${GMAIL} `)).toEqual({ mode: "gmail", gmail: GMAIL });
+    expect(resolveShownContactAddresses(null, MAILBOX, GMAIL)).toEqual([GMAIL]);
+    expect(replyToHeader(resolveShownContactAddresses(null, MAILBOX, GMAIL))).toBe(GMAIL);
+    // No Gmail, or one that is not an address: the mailbox, as before.
+    expect(defaultShownContactAddress(undefined)).toEqual(DEFAULT_SHOWN_CONTACT_ADDRESS);
+    expect(defaultShownContactAddress("")).toEqual(DEFAULT_SHOWN_CONTACT_ADDRESS);
+    expect(defaultShownContactAddress("not an address")).toEqual(DEFAULT_SHOWN_CONTACT_ADDRESS);
+    // A saved choice wins over the default, the mailbox included.
+    expect(resolveShownContactAddresses({ mode: "mailbox", gmail: null }, MAILBOX, GMAIL)).toEqual([MAILBOX]);
+    expect(resolveShownContactAddresses({ mode: "both", gmail: GMAIL }, MAILBOX, "other@gmail.example.test")).toEqual([GMAIL, MAILBOX]);
   });
 
   it("shows the Gmail alone, or the Gmail first and then the mailbox", () => {

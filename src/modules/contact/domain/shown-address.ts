@@ -7,10 +7,14 @@ import { z } from "zod";
  *
  * Pure: no database, no environment. Three modes:
  *
- * - `mailbox` — the deployment's own mailbox, `EMAIL_REPLY_TO` (the `mail.` subdomain's). The
- *   default, so a database with no row behaves exactly as before.
+ * - `mailbox` — the deployment's own mailbox, `EMAIL_REPLY_TO` (the `mail.` subdomain's).
  * - `gmail` — the club's Gmail, typed on `/admin/emails`.
  * - `both` — the Gmail first, then the mailbox.
+ *
+ * Until the club chooses (no row), the default is the club's Gmail — the account the deployment
+ * sends the contact form through, `CONTACT_SMTP_USER` — and the mailbox only where no Gmail is
+ * configured (§NNN; the owner, 2026-09-26: "I want the Mailgun reply-to to be the club's Gmail").
+ * A reply then reaches the inbox people read, without the forward the `mail.` mailbox needs.
  *
  * The one list this resolves to is used wherever the address is shown (the footer, the contact
  * page, the legal club-email placeholder, the bib's small print) and as every email's Reply-To.
@@ -25,7 +29,17 @@ export type ContactAddressMode = (typeof CONTACT_ADDRESS_MODES)[number];
 
 export type ShownContactAddress = { mode: ContactAddressMode; gmail: string | null };
 
+/** The default where the deployment has no Gmail of its own: the mailbox, as before §NNN. */
 export const DEFAULT_SHOWN_CONTACT_ADDRESS: ShownContactAddress = { mode: "mailbox", gmail: null };
+
+/**
+ * The choice in force before the club saves one (§NNN): the configured Gmail (`CONTACT_SMTP_USER`)
+ * when there is a valid one, the mailbox otherwise. Saving any mode on `/admin/emails` overrides it.
+ */
+export function defaultShownContactAddress(configuredGmail: string | null | undefined): ShownContactAddress {
+  const gmail = configuredGmail?.trim() || null;
+  return gmail && isValidEmail(gmail) ? { mode: "gmail", gmail } : DEFAULT_SHOWN_CONTACT_ADDRESS;
+}
 
 export const shownContactAddressSchema = z
   .object({
@@ -52,13 +66,15 @@ export const shownContactAddressSchema = z
  *
  * `mailbox` is `EMAIL_REPLY_TO`. A mode whose address is missing falls back to what exists —
  * a `both` on a deployment without the mailbox is the Gmail alone, a `mailbox` without the
- * variable is nothing (as before). Repeats are dropped by spelling, case-insensitively.
+ * variable is nothing (as before). Repeats are dropped by spelling, case-insensitively. No setting
+ * (`null`) is the default of `defaultShownContactAddress(configuredGmail)`.
  */
 export function resolveShownContactAddresses(
   setting: ShownContactAddress | null,
   mailbox: string | null | undefined,
+  configuredGmail?: string | null,
 ): string[] {
-  const chosen = setting ?? DEFAULT_SHOWN_CONTACT_ADDRESS;
+  const chosen = setting ?? defaultShownContactAddress(configuredGmail);
   const box = mailbox?.trim() || null;
   const gmail = chosen.gmail?.trim() || null;
   const list =

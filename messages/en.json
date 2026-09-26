@@ -3249,7 +3249,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "No messages in this group yet: the newsletter has its own backoffice menu, in progress. The road chosen here applies from the first newsletter. Recommended: Gmail."
+            "help": "No messages in this group yet: the newsletter has its own backoffice menu, in progress. The road chosen here applies from the first newsletter. Recommended: Mailgun — one message to many addresses from a personal Gmail is the bulk pattern Google restricts."
           }
         },
         "messages": "Messages in this group: {names}",
@@ -3407,8 +3407,8 @@
         "preview": "On the site: {shown} · Replies to: {replyTo}",
         "legend": "Which address we show",
         "modes": {
-          "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default",
-          "gmail": "The club's Gmail",
+          "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default only when the server has no Gmail",
+          "gmail": "The club's Gmail — default",
           "both": "Both (the Gmail first, then {mailbox})"
         },
         "noMailbox": "not set on the server",

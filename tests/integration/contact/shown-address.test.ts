@@ -33,19 +33,31 @@ describe("the shown contact address setting", () => {
     [organizer] = await db.insert(staffUsers).values({ email: "org@dev.test", displayName: "Org", role: "MODERATOR" }).returning();
   });
 
-  it("is the environment's mailbox until the club chooses, then the choice, with an audit row", async () => {
-    expect(await readShownContactAddress(db)).toEqual({ mode: "mailbox", gmail: null, updatedAt: null });
+  it("is the environment's mailbox until the club chooses where no Gmail is configured, then the choice, with an audit row", async () => {
+    expect(await readShownContactAddress(db, null)).toEqual({ mode: "mailbox", gmail: null, updatedAt: null });
     const mailbox = env.EMAIL_REPLY_TO ? [env.EMAIL_REPLY_TO] : [];
-    expect(await shownContactAddresses(db)).toEqual(mailbox);
+    expect(await shownContactAddresses(db, null)).toEqual(mailbox);
 
     await updateShownContactAddress(db, admin, { mode: "both", gmail: GMAIL }, NOW);
-    expect(await readShownContactAddress(db)).toMatchObject({ mode: "both", gmail: GMAIL });
-    expect(await shownContactAddresses(db)).toEqual([GMAIL, ...mailbox.filter((address) => address !== GMAIL)]);
+    expect(await readShownContactAddress(db, null)).toMatchObject({ mode: "both", gmail: GMAIL });
+    expect(await shownContactAddresses(db, null)).toEqual([GMAIL, ...mailbox.filter((address) => address !== GMAIL)]);
 
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "shown_contact_address.changed"));
     expect(audit.actorStaffUserId).toBe(admin.id);
     expect(audit.entityType).toBe("platform_setting");
     expect(audit.metadataJson).toMatchObject({ from: { mode: "mailbox", gmail: null }, to: { mode: "both", gmail: GMAIL } });
+  });
+
+  it("§NNN: replies go to the configured Gmail (CONTACT_SMTP_USER) until the club chooses otherwise", async () => {
+    const configured = "configured@gmail.example.test";
+    expect(await readShownContactAddress(db, configured)).toEqual({ mode: "gmail", gmail: configured, updatedAt: null });
+    expect(await shownContactAddresses(db, configured)).toEqual([configured]);
+
+    // Choosing the mailbox is a choice: the configured Gmail no longer applies.
+    await updateShownContactAddress(db, admin, { mode: "mailbox", gmail: null }, NOW);
+    expect(await readShownContactAddress(db, configured)).toMatchObject({ mode: "mailbox", gmail: null });
+    const mailbox = env.EMAIL_REPLY_TO ? [env.EMAIL_REPLY_TO] : [];
+    expect(await shownContactAddresses(db, configured)).toEqual(mailbox);
   });
 
   it("is refused to anybody but an Administrator, and for a missing or malformed Gmail", async () => {

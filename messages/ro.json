@@ -3249,7 +3249,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "Încă nu există mesaje în acest grup: newsletterul are meniul lui în backoffice, în lucru. Drumul ales aici se aplică de la primul newsletter. Recomandat: Gmail."
+            "help": "Încă nu există mesaje în acest grup: newsletterul are meniul lui în backoffice, în lucru. Drumul ales aici se aplică de la primul newsletter. Recomandat: Mailgun — un mesaj către multe adrese dintr-un Gmail personal e tiparul de trimitere în masă pe care Google îl restricționează."
           }
         },
         "messages": "Mesajele din grup: {names}",
@@ -3407,8 +3407,8 @@
         "preview": "Pe site: {shown} · Răspunde la: {replyTo}",
         "legend": "Ce adresă arătăm",
         "modes": {
-          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit",
-          "gmail": "Gmail-ul clubului",
+          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit doar dacă serverul nu are un Gmail",
+          "gmail": "Gmail-ul clubului — implicit",
           "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
         },
         "noMailbox": "nesetată pe server",
