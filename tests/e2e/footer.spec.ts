@@ -329,26 +329,26 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             const terms = fold.getByRole("link", { name: /termeni|racing tos/i });
             await terms.click({ trial: true });
 
-            // Condensed (§385), then compact (§NNN, amending §385): every link keeps a 44px hit
-            // area (BR-REQ-041-01 criterion 6) — its own box from `sm`, its `::before` on a
-            // phone, where the line is 24px — and the stamp its 44px box; "Scrie-ne" once.
+            // Condensed (§385), then compact (§NNN, amending §385): every link is the bar's own
+            // target (§372) — 24px below 360, 28px to `sm`, 44px from `sm` — no two overlapping,
+            // and the stamp its 44px box; "Scrie-ne" once.
             const panelLinks = panelContent(fold).locator("a");
             const tops: number[] = [];
             for (let i = 0; i < (await panelLinks.count()); i++) {
               const link = panelLinks.nth(i);
               const box = await boxOf(link, `the panel's link ${i}`);
-              const hit = await link.evaluate((el) => Math.max(el.getBoundingClientRect().height, parseFloat(getComputedStyle(el, "::before").height) || 0));
-              expect(hit, `the panel's link ${i} has a 44px hit area at ${width}px`).toBeGreaterThanOrEqual(43.5);
-              expect(box.height, `the panel's link ${i} is a ${width >= SM ? 44 : 24}px line at ${width}px`).toBeGreaterThanOrEqual((width >= SM ? 44 : 24) - 0.5);
+              const target = width >= SM ? 44 : width >= 360 ? 28 : 24;
+              expect(box.height, `the panel's link ${i} is a ${target}px target at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+              expect(await link.evaluate((el) => getComputedStyle(el, "::before").content), `no pseudo-element hit area on link ${i}`).toMatch(/^(none|normal)$/);
               tops.push(Math.round(box.y));
             }
             const stamp = await boxOf(panelContent(fold).getByTestId("footer-build-badge-panel"), "the stamp");
             expect(stamp.height, `the stamp's long-press box is 44px at ${width}px`).toBeGreaterThanOrEqual(43.5);
             // The terms and "my registrations" share the first line.
             expect(Math.abs(tops[0]! - tops[1]!), `the first two links share a line at ${width}px`).toBeLessThanOrEqual(1);
-            // Measured on the real render: two 24px lines (three with a wrapped address) and the
-            // credit's line with the 44px stamp — 116px at most, against §385's 136px at 360.
-            if (width < SM) expect(panel.height, `the compact panel's height at ${width}px`).toBeLessThanOrEqual(117);
+            // Link lines of the phone's target, the phone's gap apart, and the credit's line with
+            // the 44px stamp — four lines (a wrapped address) at most at 28 + 6.
+            if (width < SM) expect(panel.height, `the compact panel's height at ${width}px`).toBeLessThanOrEqual(3 * 34 + 44 + 1);
             else expect(panel.height, `the panel's height at ${width}px`).toBeLessThan(188);
             const panelText = await panelContent(fold).evaluate((el) => el.textContent ?? "");
             expect(panelText.match(/Scrie-ne|Write to us/g), `"Scrie-ne" once at ${width}px`).toHaveLength(1);

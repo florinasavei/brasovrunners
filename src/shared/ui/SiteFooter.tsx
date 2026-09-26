@@ -10,7 +10,7 @@ import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
-import { footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
+import { FOOTER_GAP, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
@@ -304,21 +304,18 @@ export default async function SiteFooter() {
                 // <address>" on one line at 320 and the stamp on one line at 360. From `sm` as
                 // before: the widest switch, a scrollbar and a margin, capped at 40rem.
                 width: { xs: "calc(100vw - 60px)", sm: "min(40rem, calc(100vw - 80px))" },
-                [PHONE_WIDE]: { width: "calc(100vw - 68px)" },
+                [PHONE_WIDE]: { width: "calc(100vw - 68px)", rowGap: `${FOOTER_GAP.phoneWide}px` },
                 // §NNN, amending §385 (the owner, 2026-09-26: "Informațiile din footer sunt mult
                 // prea spațiate"): three lines, set on purpose — the terms and "my registrations",
                 // "Scrie-ne" with the address, then the weather credit and the stamp in caption
-                // size. No margin between them. On a phone a line of links is 24 pixels, not 44:
-                // every link keeps a 44-pixel hit area (BR-REQ-041-01 criterion 6) through a
-                // transparent `::before` 44 tall, centred on the words, which reaches over the
-                // ten pixels above and below — the targets are not shrunk, the rows are closer.
-                // From `sm` the links are 44 tall as before. Measured on the built
-                // listing at 360 pixels in Romanian with two addresses shown (the contact line wraps):
-                // the open panel was 136 pixels and is 116 (24 + 24 + 24 + the stamp's 44).
+                // size. On a phone every link is the bar's own target (`footer-target.ts`, §372):
+                // 24 pixels below 360, 28 up to `sm`, the lines the bar's phone gap apart (4, then
+                // 6), so two targets never overlap and a tap between them lands on neither. From
+                // `sm` the links are 44 tall as before (BR-REQ-041-01 criterion 6), no gap.
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                rowGap: 0,
+                rowGap: { xs: `${FOOTER_GAP.xs}px`, sm: 0 },
                 pt: 0,
                 pb: { xs: 0, sm: 0.5 },
                 // Indented to where the summary's words start, so it reads as the fold's body.
@@ -326,20 +323,14 @@ export default async function SiteFooter() {
                 // The address's own size before (`body2`), for every link now: 14 pixels rather
                 // than 16, so the terms and "my registrations" share a line at 320.
                 fontSize: "0.875rem",
-                "& a": {
-                  position: "relative",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  minHeight: { xs: 24, sm: 44 },
-                  "&::before": { content: '""', position: "absolute", left: 0, right: 0, top: "50%", height: 44, transform: "translateY(-50%)" },
-                },
+                "& a": { display: "inline-flex", alignItems: "center", ...footerTargetSx(["minHeight"]) },
               }}
             >
               <Box
                 data-testid="footer-panel-links"
                 // Two links on one line are the density scale's short step apart on a phone (§380),
                 // 16 pixels from `sm`; a column gap, so a wrapped link starts flush.
-                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: { xs: DENSITY.gapSm, sm: 2 }, rowGap: 0, maxWidth: "100%" }}
+                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: { xs: DENSITY.gapSm, sm: 2 }, ...footerGapSx(["rowGap"], 0), maxWidth: "100%" }}
               >
                 {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
                 <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
@@ -355,7 +346,7 @@ export default async function SiteFooter() {
               <Box
                 component="span"
                 data-testid="footer-contact"
-                sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, minWidth: 0, maxWidth: "100%" }}
+                sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, ...footerGapSx(["rowGap"], 0), minWidth: 0, maxWidth: "100%" }}
               >
                 <Link href="/contact">{contacts.length > 0 ? footer("about.contact") : footer("contactPage")}</Link>
                 {/* The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …». */}
@@ -371,7 +362,7 @@ export default async function SiteFooter() {
               {/* The last line, in caption size (§NNN, amending §385): Open-Meteo's credit and the stamp. */}
               <Box
                 data-testid="footer-panel-meta"
-                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1, rowGap: 0, maxWidth: "100%", fontSize: "0.75rem" }}
+                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1, ...footerGapSx(["rowGap"], 0), maxWidth: "100%", fontSize: "0.75rem" }}
               >
                 {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
                     cards (§429); the event page and the featured hero keep their own beside the

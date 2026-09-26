@@ -347,7 +347,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
   });
 
-  it("condenses the fold's panel: three lines, 44px hit areas on 28px lines, 'Scrie-ne' once, the credit and the stamp last", async () => {
+  it("condenses the fold's panel: three lines, the bar's phone targets, gapped rows, 'Scrie-ne' once, the credit and the stamp last", async () => {
     // §385, the owner, 2026-09-25: "the info from the expanded footer must be more condensed."
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -366,15 +366,17 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const containerClass = /data-testid="footer-about-panel"[^>]*>\s*<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(markup);
     expect(containerClass, "the panel's one container").not.toBeNull();
     const container = rulesOf(css, containerClass![1]!);
-    // §NNN, amending §385: three lines set on purpose, stacked with no margin between them.
+    // §NNN, amending §385: three lines set on purpose, the bar's phone gap apart.
     expect(container).toMatch(/flex-direction:column;/);
-    expect(container, "no margin between two lines").toMatch(/row-gap:0(px)?;/);
-    // Every link a 24px line on a phone, 44px from `sm`, and a 44px hit area at every width
-    // through its `::before` (BR-REQ-041-01 criterion 6): the rows are closer, the targets are not smaller.
-    expect(container).toMatch(/ a\{[^}]*position:relative;/);
-    expect(container).toMatch(/@media \(min-width:0px\)\{[^{]* a\{[^}]*min-height:24px;/);
+    // The bar's own phone targets on every link (§372, `footer-target.ts`): 24px below 360, 28px
+    // to `sm`, 44px from `sm` (BR-REQ-041-01 criterion 6); no pseudo-element hit area overlapping a neighbour.
+    expect(container).toMatch(/ a\{[^}]*min-height:24px;/);
+    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]* a\{[^}]*min-height:28px;/);
     expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*a\{[^}]*min-height:44px;/);
-    expect(container).toMatch(/ a::before\{[^}]*position:absolute;[^}]*height:44px;/);
+    expect(container).not.toMatch(/::before/);
+    // The lines the bar's phone gap apart: 4px, 6px from 360, none from `sm`.
+    expect(container).toMatch(/(^|[;{])row-gap:4px;/);
+    expect(container).toMatch(/@media \(min-width:360px\) and \(max-width:599\.95px\)\{[^{]*\{[^}]*row-gap:6px;/);
 
     // Line one: the terms and "my registrations", and nothing else, the density scale's short step apart.
     const linksStart = panel.indexOf('data-testid="footer-panel-links"');
