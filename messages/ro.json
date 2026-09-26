@@ -1176,8 +1176,10 @@
         "7": "Du"
       },
       "createdWithSeries": "Evenimentul și {dates} au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
-      "durationMinutes": "Durata (minute)",
-      "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
+      "duration": "Durata",
+      "durationHours": "Ore",
+      "durationMinutesPart": "Minute",
+      "durationHelp": "Cât durează — de exemplu 1 oră și 30 de minute. Sfârșitul se calculează singur. Lasă ambele goale dacă nu s-a anunțat.",
       "coHostRows": {
         "add": "Adaugă un partener",
         "remove": "Șterge partenerul",
@@ -1523,7 +1525,7 @@
           "when": {
             "none": "Data nu e aleasă încă",
             "raceStart": "startul cursei {time}",
-            "duration": "{minutes} min"
+            "duration": "{duration}"
           },
           "timezone": {
             "home": "{zone} — ora României"

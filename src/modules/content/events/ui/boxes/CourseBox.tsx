@@ -13,6 +13,7 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
+import { savedDurationMinutes } from "../../duration";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
 import GroupRunDeclarationField from "../GroupRunDeclarationField";
@@ -56,7 +57,7 @@ export default async function CourseBox({
   const wall = toWallTimeInput(event?.startsAt ?? null, zone);
   // The span's end for the first paint, by the server's rule (§394): «Durata» (the saved end), else
   // the programme's rows on the event's clock — the island reads both from the form after.
-  const savedMinutes = event?.endsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : null;
+  const savedMinutes = savedDurationMinutes(event?.startsAt, event?.endsAt);
   const savedProgramme = readScheduleItems(event?.scheduleItems).map((row) => {
     const from = toWallTimeInput(new Date(row.startsAt), zone);
     return { date: from.slice(0, 10), time: from.slice(11, 16), endTime: row.endsAt ? toWallTimeInput(new Date(row.endsAt), zone).slice(11, 16) : "" };

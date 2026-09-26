@@ -35,7 +35,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.endsAtTime": inBox("when", t("editor.endsAt")),
     "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
     "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
-    "event.durationMinutes": inBox("when", t("editor.durationMinutes")),
+    // «Durata» as hours and minutes (§NNN); a refusal of the total names the hours box.
+    "event.durationHours": inBox("when", `${t("editor.duration")} › ${t("editor.durationHours")}`),
+    "event.durationMinutesPart": inBox("when", `${t("editor.duration")} › ${t("editor.durationMinutesPart")}`),
     // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.
     "event.locationName": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
     "event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`),

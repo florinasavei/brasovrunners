@@ -1176,8 +1176,10 @@
         "7": "Su"
       },
       "createdWithSeries": "The event and {dates} were created, as drafts. Tick them in the events list and publish them together.",
-      "durationMinutes": "Duration (minutes)",
-      "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
+      "duration": "Duration",
+      "durationHours": "Hours",
+      "durationMinutesPart": "Minutes",
+      "durationHelp": "How long it lasts — 1 hour 30 minutes, say. The end is worked out from it. Leave both empty if none was announced.",
       "coHostRows": {
         "add": "Add a partner",
         "remove": "Remove partner",
@@ -1523,7 +1525,7 @@
           "when": {
             "none": "No date chosen yet",
             "raceStart": "race start {time}",
-            "duration": "{minutes} min"
+            "duration": "{duration}"
           },
           "timezone": {
             "home": "{zone} — Romanian time"
