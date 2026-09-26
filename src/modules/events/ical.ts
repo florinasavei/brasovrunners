@@ -52,7 +52,8 @@ function qaMarked(value: string): string {
 /** Where registration stands for the calendar's reader, decided by `calendarRegistration`. */
 export type CalendarRegistration =
   | { kind: "OPEN"; url: string }
-  | { kind: "NOT_YET_OPEN"; opensAt: Date; url: string }
+  /** `opensAt` is null for an opening announced "soon" with no date (§NNN). */
+  | { kind: "NOT_YET_OPEN"; opensAt: Date | null; url: string }
   | { kind: "CLOSED" }
   | { kind: "EXTERNAL"; url: string | null };
 
@@ -288,6 +289,8 @@ export function calendarRegistration(
     case "OPEN":
       return { kind: "OPEN", url: registerUrl };
     case "NOT_YET_OPEN": {
+      // «Se deschid în curând» (§NNN): the fact without a date.
+      if (event.registrationOpensSoon) return { kind: "NOT_YET_OPEN", opensAt: null, url: registerUrl };
       const opensAt = event.registrationOpensAt ?? event.publishedAt;
       return opensAt ? { kind: "NOT_YET_OPEN", opensAt, url: registerUrl } : null;
     }
@@ -310,7 +313,8 @@ export function calendarRegistration(
 export function calendarStamp(event: RegistrationWindowInput & { updatedAt: Date | null }, now: Date): Date | null {
   const boundaries =
     event.registrationMode === "INTERNAL" && event.eventStatus === "SCHEDULED"
-      ? [event.registrationOpensAt ?? event.publishedAt, event.registrationClosesAt ?? event.startsAt]
+      ? // An opening "soon" (§NNN) has no boundary; the save that opens it moves `updatedAt`.
+        [event.registrationOpensSoon ? null : (event.registrationOpensAt ?? event.publishedAt), event.registrationClosesAt ?? event.startsAt]
       : [];
   return boundaries.reduce<Date | null>((latest, at) => (at && at <= now && (!latest || at > latest) ? at : latest), event.updatedAt);
 }
@@ -434,6 +438,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     if (!r) return null;
     if (r.kind === "OPEN") return { text: t("registrationState.OPEN"), url: r.url, separator: " — " };
     if (r.kind === "NOT_YET_OPEN") {
+      if (r.opensAt === null) return { text: t("cta.opensSoonShort"), url: r.url, separator: " — " };
       // Human text in the DESCRIPTION, so the one long form, inside the sentence (§349); the
       // DTSTART/DTEND stay the machine's.
       const date = formatDay(r.opensAt, { locale, timeZone, style: "long", withTime: true, position: "inline" });

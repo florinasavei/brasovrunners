@@ -272,6 +272,8 @@
       },
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
+      "opensSoon": "Registration opens soon.",
+      "opensSoonShort": "Registration opens soon",
       "openUntilShort": "Registration open until {date}",
       "freeOf": {
         "one": "{count} place left out of {places}",
@@ -1078,6 +1080,8 @@
       "waitlistCapacity": "Maximum waiting-list length",
       "waitlistCapacityHelp": "Leave empty for unlimited. 0 means no waiting list: once the places are gone, registration stops. It only counts with a number of places. Lowered below how many already wait, it removes nobody from the list — it only takes nobody new.",
       "registrationOpensAt": "Registration opens",
+      "registrationOpensSoon": "Registration opens soon (no date yet)",
+      "registrationOpensSoonHelp": "Ticked, the page, the card and the calendar say “Registration opens soon” and the form stays closed. Leave the opening date empty. When you open registration, untick it: it opens when you save, or at the date you type then, and the people who asked to be told get the email.",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
@@ -1567,6 +1571,7 @@
           "window": {
             "range": "{from} – {to}",
             "fromPublication": "From publication",
+            "soon": "Opens soon",
             "untilStart": "until the start"
           },
           "conditions": {

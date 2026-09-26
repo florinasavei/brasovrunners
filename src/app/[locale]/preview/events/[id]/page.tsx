@@ -120,6 +120,7 @@ export default async function PreviewEventPage({ params }: Props) {
     offersGroupRunDeclaration: event.offersGroupRunDeclaration,
     registrationMode: event.registrationMode,
     registrationOpensAt: event.registrationOpensAt,
+    registrationOpensSoon: event.registrationOpensSoon,
     registrationClosesAt: event.registrationClosesAt,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,

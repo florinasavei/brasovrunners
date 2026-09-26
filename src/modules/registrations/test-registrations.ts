@@ -81,6 +81,7 @@ async function loadEvent<T extends Record<string, unknown>>(
     registrationMode: event.registrationMode,
     startsAt: event.startsAt,
     registrationOpensAt: event.registrationOpensAt,
+    registrationOpensSoon: event.registrationOpensSoon,
     registrationClosesAt: event.registrationClosesAt,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,

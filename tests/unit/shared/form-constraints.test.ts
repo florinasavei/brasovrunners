@@ -44,6 +44,8 @@ const NOT_A_BOX = new Set([
   "links",
   "locationAddress",
   "locationToBeAnnounced",
+  // «Înscrierile se deschid în curând» (§NNN): a tick in the registration window's card.
+  "registrationOpensSoon",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

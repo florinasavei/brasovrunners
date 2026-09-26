@@ -65,7 +65,7 @@ export type SummaryWords = {
     external: string;
     externalUnnamed: string;
   };
-  window: { range: string; fromPublication: string; untilStart: string };
+  window: { range: string; fromPublication: string; soon: string; untilStart: string };
   conditions: { noDeclaration: string };
   confirmation: { sentence: string; atStart: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
@@ -368,15 +368,21 @@ export function registrationSummary(
   ]);
 }
 
-type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClosesAt" | "timezone">;
+type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClosesAt" | "timezone"> &
+  Partial<Pick<EditableEvent, "registrationOpensSoon">>;
 
 /**
  * Sub-card 8.1: `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, or `De la publicare – până
- * la start`. The second date continues the first, so it keeps the language's own case, as
- * `formatDayRange` writes a span.
+ * la start`, or `Se deschid în curând – până la start` while the opening has no date (§NNN). The
+ * second date continues the first, so it keeps the language's own case, as `formatDayRange`
+ * writes a span.
  */
 export function registrationWindowSummary(words: SummaryWords, event: WindowEvent | null, locale: string): string {
-  const from = event?.registrationOpensAt ? summaryDateTime(event.registrationOpensAt, event.timezone, locale) : words.window.fromPublication;
+  const from = event?.registrationOpensSoon
+    ? words.window.soon
+    : event?.registrationOpensAt
+      ? summaryDateTime(event.registrationOpensAt, event.timezone, locale)
+      : words.window.fromPublication;
   const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "inline") : words.window.untilStart;
   return fillIn(words.window.range, { from, to });
 }

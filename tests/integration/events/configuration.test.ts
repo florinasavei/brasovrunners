@@ -65,6 +65,7 @@ describe("BR-REQ-011-01 event configuration", () => {
             eventStatus: "SCHEDULED",
             startsAt: START,
             registrationOpensAt: null,
+            registrationOpensSoon: false,
             registrationClosesAt: null,
             publishedAt: new Date("2026-09-01T00:00:00Z"),
           },

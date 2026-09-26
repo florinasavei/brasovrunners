@@ -272,6 +272,8 @@
       },
       "opensOn": "Înscrierile se deschid pe {date}.",
       "opensOnShort": "Înscrierile se deschid pe {date}",
+      "opensSoon": "Înscrierile se deschid în curând.",
+      "opensSoonShort": "Înscrierile se deschid în curând",
       "openUntilShort": "Înscrieri deschise până pe {date}",
       "freeOf": {
         "one": "{count} loc liber din {places}",
@@ -1078,6 +1080,8 @@
       "waitlistCapacity": "Lungimea maximă a listei de așteptare",
       "waitlistCapacityHelp": "Lasă gol pentru nelimitat. 0 înseamnă fără listă de așteptare: când locurile se termină, înscrierile se opresc. Contează doar cu un număr de locuri. Coborâtă sub câți așteaptă deja, nu scoate pe nimeni de pe listă — doar nu mai primește alții.",
       "registrationOpensAt": "Înscrierile se deschid",
+      "registrationOpensSoon": "Înscrierile se deschid în curând (fără dată)",
+      "registrationOpensSoonHelp": "Bifat, pagina, cardul și calendarul spun „Înscrierile se deschid în curând”, iar formularul rămâne închis. Lasă data deschiderii goală. Când deschizi înscrierile, debifează: ele pornesc la salvare sau la data pe care o scrii atunci, iar cei de la „Anunță-mă” primesc emailul.",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
@@ -1567,6 +1571,7 @@
           "window": {
             "range": "{from} – {to}",
             "fromPublication": "De la publicare",
+            "soon": "Se deschid în curând",
             "untilStart": "până la start"
           },
           "conditions": {

@@ -90,8 +90,9 @@ export async function registerInterest<T extends Record<string, unknown>>(
       createdAt: now,
     })
     .onConflictDoNothing({ target: [registrationInterests.eventId, registrationInterests.canonicalEmail] });
-  // The announcement is due when the window opens; the job is told if that is soon (§334).
-  wakeJobs("registration-maintenance", event.registrationOpensAt ?? event.publishedAt ?? now, now);
+  // The announcement is due when the window opens; the job is told if that is soon (§334). An
+  // opening "soon" with no date (§NNN) has nothing to wake for: the save that opens it wakes the job.
+  if (!event.registrationOpensSoon) wakeJobs("registration-maintenance", event.registrationOpensAt ?? event.publishedAt ?? now, now);
 }
 
 /** How many addresses wait for one event's announcement — the count the organizer sees. */
@@ -149,6 +150,7 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
       editorialStatus: events.editorialStatus,
       startsAt: events.startsAt,
       registrationOpensAt: events.registrationOpensAt,
+      registrationOpensSoon: events.registrationOpensSoon,
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
     })

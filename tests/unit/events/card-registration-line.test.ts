@@ -84,6 +84,13 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(closed).toEqual({ lead: "Înscrierile s-au închis", detail: null, bold: false, button: null });
   });
 
+  it("says «soon», bold and with no button, when the opening has no date yet (§NNN)", () => {
+    const ro = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "NOT_YET_OPEN", opensAt: null }));
+    expect(ro).toEqual({ lead: "Înscrierile se deschid în curând", detail: null, bold: true, button: null });
+    const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "NOT_YET_OPEN", opensAt: null }));
+    expect(en.lead).toBe("Registration opens soon");
+  });
+
   it("sends an event registered elsewhere to the organizer's page, in the page's words", () => {
     const event = race({ registrationMode: "EXTERNAL", externalRegistrationUrl: "https://entries.example.test/cros", externalProvider: "Entries" });
     const line = cardRegistrationLine(translator("ro"), "ro", event, NOW, known({ kind: "EXTERNAL", url: "https://entries.example.test/cros", provider: "Entries" }));

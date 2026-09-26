@@ -108,6 +108,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
             registrationMode: event.registrationMode,
             startsAt: event.startsAt,
             registrationOpensAt: event.registrationOpensAt,
+            registrationOpensSoon: event.registrationOpensSoon,
             registrationClosesAt: event.registrationClosesAt,
             confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
             confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
