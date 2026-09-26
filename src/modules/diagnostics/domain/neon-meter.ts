@@ -132,6 +132,57 @@ export function meteredCuSeconds(body: unknown, projectId: string, periodStart: 
 }
 
 /**
+ * The billing period before the one starting at `periodStart`, from a consumption answer asked
+ * from the first of the calendar month before (§NNN): the latest period whose own `period_start`
+ * is before this one's (less the minute Neon rounds), its `compute_unit_seconds` summed, and that
+ * `period_start` as the period's start — so a period that begins on the 16th reads as the 16th,
+ * and the tail of the one before it in the same answer is not counted. When the answer names no
+ * `period_start` for this project, every entry it carries counts and the period starts at
+ * `fallbackStart` (the first of the month before). Null when the answer has no figure for this project.
+ */
+export function previousPeriodCuSeconds(
+  body: unknown,
+  projectId: string,
+  periodStart: Date,
+  fallbackStart: Date,
+): { seconds: number; start: Date } | null {
+  const projects = isRecord(body) && Array.isArray(body.projects) ? body.projects : null;
+  if (!projects) return null;
+  const project = projects.find((candidate) => isRecord(candidate) && candidate.project_id === projectId);
+  if (!isRecord(project) || !Array.isArray(project.periods)) return null;
+  const before = periodStart.getTime() - 60_000;
+  let latest: { start: number; period: Record<string, unknown> } | null = null;
+  for (const period of project.periods) {
+    if (!isRecord(period) || typeof period.period_start !== "string") continue;
+    const start = Date.parse(period.period_start);
+    if (!Number.isFinite(start) || start >= before) continue;
+    if (latest === null || start > latest.start) latest = { start, period };
+  }
+  // No period named its start: every entry the answer carries is the month before's.
+  const seconds = sumCuSeconds(latest === null ? project.periods : [latest.period]);
+  return seconds === null ? null : { seconds, start: latest === null ? fallbackStart : new Date(latest.start) };
+}
+
+/** The `compute_unit_seconds` of the given periods' entries, or null when none carried one. */
+function sumCuSeconds(periods: readonly unknown[]): number | null {
+  let seconds = 0;
+  let found = false;
+  for (const period of periods) {
+    if (!isRecord(period) || !Array.isArray(period.consumption)) continue;
+    for (const entry of period.consumption) {
+      if (!isRecord(entry) || !Array.isArray(entry.metrics)) continue;
+      for (const metric of entry.metrics) {
+        if (isRecord(metric) && metric.metric_name === "compute_unit_seconds" && typeof metric.value === "number" && Number.isFinite(metric.value)) {
+          seconds += metric.value;
+          found = true;
+        }
+      }
+    }
+  }
+  return found ? seconds : null;
+}
+
+/**
  * The three readings, and the one the pages use: the larger of the two live sources that answered
  * — `metered` and `operations` — and the legacy counter **only when neither did**, labelled as
  * such. The counter stopped updating on 2026-09-24 and nobody knows whether it resets when a

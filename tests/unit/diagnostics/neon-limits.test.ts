@@ -8,12 +8,14 @@ import {
   NEON_MAX_CU_STEPS,
   NEON_QUOTA_MARGIN_CU_HOURS,
   type NeonLimitsReading,
+  neonLimitsMoney,
   offeredCeilings,
   parseNeonLimitsRequest,
   priceCeiling,
   quotaBoxValue,
   recommendedNeonQuotaCuHours,
   secondsToCuHours,
+  suspendModeOf,
 } from "@/modules/diagnostics/domain/neon-limits";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import { NEON_FAILURE_KINDS } from "@/modules/diagnostics/neon";
@@ -83,11 +85,11 @@ describe("BR-REQ-090-07 what the form may post", () => {
   it("accepts one of the six ceilings and a positive limit, with a decimal comma", () => {
     expect(parseNeonLimitsRequest({ maxCu: "0.5", quotaMode: "none", quotaCuHours: "999", confirmSuspension: false })).toEqual({
       ok: true,
-      request: { maxCu: 0.5, quotaCuHours: null, confirmSuspension: false },
+      request: { maxCu: 0.5, minCu: 0.25, suspendMode: null, quotaCuHours: null, confirmSuspension: false },
     });
     expect(parseNeonLimitsRequest({ maxCu: "2", quotaMode: "limit", quotaCuHours: "50,5", confirmSuspension: true })).toEqual({
       ok: true,
-      request: { maxCu: 2, quotaCuHours: 50.5, confirmSuspension: true },
+      request: { maxCu: 2, minCu: 0.25, suspendMode: null, quotaCuHours: 50.5, confirmSuspension: true },
     });
   });
 
@@ -103,7 +105,7 @@ describe("BR-REQ-090-07 what the form may post", () => {
 });
 
 describe("BR-REQ-090-07 the rules against what Neon says now", () => {
-  const request = (quotaCuHours: number | null, confirmSuspension = false, maxCu: 0.25 | 0.5 | 1 | 2 | 4 | 8 = 1) => ({ maxCu, quotaCuHours, confirmSuspension });
+  const request = (quotaCuHours: number | null, confirmSuspension = false, maxCu: 0.25 | 0.5 | 1 | 2 | 4 | 8 = 1) => ({ maxCu, minCu: 0.25 as const, suspendMode: null, quotaCuHours, confirmSuspension });
 
   it("refuses a new limit at or below what is spent plus the margin — it would suspend the database on saving", () => {
     const context = { usedCuHours: 12.34, quotaCuHours: null, plan: "LAUNCH" as const, appEnv: "qa" as const };
@@ -210,5 +212,49 @@ describe("BR-REQ-090-07 the card's words, in both languages", () => {
       expect(catalogue.Admin.tasks.neonLimits.recommend, `${locale} recommend`).toContain("{hours}");
       expect(catalogue.Admin.tasks.neonLimits.recommendConfirm, `${locale} recommendConfirm`).toBeTruthy();
     }
+  });
+});
+
+describe("§NNN the floor and scale to zero", () => {
+  it("parses the floor from the same steps, never above the ceiling, and keeps 0.25 when none is posted", () => {
+    expect(parseNeonLimitsRequest({ maxCu: "2", minCu: "0,5", suspendMode: "never", quotaMode: "none" })).toEqual({
+      ok: true,
+      request: { maxCu: 2, minCu: 0.5, suspendMode: "never", quotaCuHours: null, confirmSuspension: false },
+    });
+    expect(parseNeonLimitsRequest({ maxCu: "1", minCu: "", quotaMode: "none" })).toMatchObject({ ok: true, request: { minCu: 0.25, suspendMode: null } });
+    expect(parseNeonLimitsRequest({ maxCu: "0.5", minCu: "1", quotaMode: "none" })).toEqual({ ok: false, fields: ["minCu"] });
+    expect(parseNeonLimitsRequest({ maxCu: "1", minCu: "0.3", quotaMode: "none" })).toEqual({ ok: false, fields: ["minCu"] });
+    expect(parseNeonLimitsRequest({ maxCu: "1", suspendMode: "sometimes", quotaMode: "none" })).toEqual({ ok: false, fields: ["suspendMode"] });
+  });
+
+  it("refuses «never» on Free, where Neon's five minutes cannot be switched off", () => {
+    const request = { maxCu: 1 as const, minCu: 0.25 as const, suspendMode: "never" as const, quotaCuHours: null, confirmSuspension: false };
+    expect(checkNeonLimits(request, { usedCuHours: 1, quotaCuHours: null, plan: "FREE", appEnv: "qa" })).toEqual({ code: "VALIDATION_ERROR", field: "suspendMode" });
+    expect(checkNeonLimits(request, { usedCuHours: 1, quotaCuHours: null, plan: "LAUNCH", appEnv: "qa" })).toBeNull();
+  });
+
+  it("prices a change at Launch's rate over the thirty-day month", () => {
+    const money = neonLimitsMoney({ minCu: 0.25, maxCu: 1, suspendMode: "auto" }, { minCu: 0.5, maxCu: 2, suspendMode: "never" }, "LAUNCH");
+    const rate = NEON_PLANS.LAUNCH.usdPerCuHour;
+    expect(money.ceiling.deltaCu).toBe(1);
+    expect(money.ceiling.deltaUsdPerMonth).toBeCloseTo(rate * 720, 9);
+    expect(money.floor.deltaUsdPerMonth).toBeCloseTo(0.25 * rate * 720, 9);
+    expect(money.idleMonth).toEqual({ beforeUsd: 0, afterUsd: 0.5 * rate * 720 });
+    expect(suspendModeOf(-1)).toBe("never");
+    expect(suspendModeOf(0)).toBe("auto");
+    expect(suspendModeOf(300)).toBe("auto");
+    expect(suspendModeOf(undefined)).toBe("auto");
+  });
+
+  it("prices a change at nothing on Free, and at Launch when the plan is unknown", () => {
+    const before = { minCu: 0.25, maxCu: 1, suspendMode: "auto" as const };
+    const after = { minCu: 0.5, maxCu: 2, suspendMode: "auto" as const };
+    const free = neonLimitsMoney(before, after, "FREE");
+    expect(free.plan).toBe("FREE");
+    expect(free.ceiling).toEqual({ deltaCu: 1, deltaUsdPerMonth: 0 });
+    expect(free.floor).toEqual({ deltaCu: 0.25, deltaUsdPerMonth: 0 });
+    const unknown = neonLimitsMoney(before, after, null);
+    expect(unknown.plan).toBe("LAUNCH");
+    expect(unknown.ceiling.deltaUsdPerMonth).toBeCloseTo(NEON_PLANS.LAUNCH.usdPerCuHour * 720, 9);
   });
 });

@@ -199,6 +199,16 @@ export function totalMediaBytes(rows: readonly Pick<MediaAssetRow, "byteSize">[]
 }
 
 /**
+ * The same sum, asked of the database in one aggregate, for a page that does not list the rows —
+ * Costuri's R2 line (§NNN). A lower bound for the same reason as above: the recorded size is one
+ * variant per picture, not every object the bucket holds for it.
+ */
+export async function storedMediaBytes<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
+  const [row] = await db.select({ total: sql<string | null>`coalesce(sum(${mediaAssets.byteSize}), 0)` }).from(mediaAssets);
+  return Number(row?.total ?? 0);
+}
+
+/**
  * Every stored picture, newest first, with everywhere it is used — so an organizer can see
  * what a picture is and where before deciding anything about it. Four queries and a merge:
  * the assets, then each kind of reference joined to its title in the reader's locale.

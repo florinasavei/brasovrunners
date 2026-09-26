@@ -26,8 +26,38 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * advice against the limit.
  */
 
-/** The floor stays where it is: the site idles at the smallest compute Neon has. */
+/**
+ * The smallest compute Neon has, and the floor a form that does not name one keeps. Since §NNN the
+ * Superadministrator may raise the floor (`minCu`) — a larger compute from the first query after a
+ * wake, paid for every hour awake — from the same steps as the ceiling.
+ */
 export const NEON_MIN_CU = 0.25;
+
+/**
+ * Scale to zero (Neon's "autosuspend", `suspend_timeout_seconds` on a compute): the two choices
+ * the club's plans allow (neon.com/pricing, checked 2026-09-27) — Neon's own five idle minutes
+ * (`auto`; Free and Launch cannot set another number, and 0 is Neon's word for "the default"), or
+ * never (`never`, -1: always on, Launch only). Always on is the one change here that costs money
+ * with nobody on the site: the floor, every hour of the month.
+ */
+export const NEON_SUSPEND_MODES = ["auto", "never"] as const;
+export type NeonSuspendMode = (typeof NEON_SUSPEND_MODES)[number];
+export const NEON_SUSPEND_AUTO_SECONDS = 300;
+/** Neon's value for "never suspend". */
+export const NEON_SUSPEND_NEVER_SECONDS = -1;
+
+/** Which plans may switch scale to zero off: Free may not (neon.com/pricing, 2026-09-27). */
+export const NEON_ALWAYS_ON_ALLOWED: Record<NeonPlanId, boolean> = { FREE: false, LAUNCH: true };
+
+/** The mode a compute's `suspend_timeout_seconds` means: negative is never; 0 (the default) or any positive number suspends. */
+export function suspendModeOf(seconds: number | null | undefined): NeonSuspendMode {
+  return typeof seconds === "number" && seconds < 0 ? "never" : "auto";
+}
+
+/** The seconds a mode is written as: 0 (Neon's default, five minutes) or -1. */
+export function suspendSecondsOf(mode: NeonSuspendMode): number {
+  return mode === "never" ? NEON_SUSPEND_NEVER_SECONDS : 0;
+}
 
 /**
  * The ceilings on offer. Neon moves in quarter-CU steps and allows at most 8 CU between the
@@ -92,10 +122,14 @@ export const NEON_MONTH_HOURS = 30 * 24;
 
 /** What Neon says about the project's brakes, read by `readNeonLimits` (`neon.ts`). */
 export type NeonLimitsReading = {
-  /** The read-write computes, one per branch — the club has one. Read replicas are not brakes. */
-  computes: ReadonlyArray<{ id: string; minCu: number; maxCu: number }>;
+  /**
+   * The read-write computes, one per branch — the club has one. Read replicas are not brakes.
+   * `suspendTimeoutSeconds` is Neon's own number (0 the default five minutes, -1 never), absent
+   * when Neon's answer carried none.
+   */
+  computes: ReadonlyArray<{ id: string; minCu: number; maxCu: number; suspendTimeoutSeconds?: number }>;
   /** What a compute created again would get (`default_endpoint_settings`), or null when unset. */
-  defaults: { minCu: number | null; maxCu: number | null };
+  defaults: { minCu: number | null; maxCu: number | null; suspendTimeoutSeconds?: number | null };
   /** The period's compute-time limit in CU-hours, or null when there is none (absent or zero). */
   quotaCuHours: number | null;
   usedCuHours: number;
@@ -142,6 +176,10 @@ export function offeredCeilings(plan: NeonPlanId | null): NeonCeilingPrice[] {
  */
 export type NeonLimitsModel = {
   maxCu: number | null;
+  /** The floor in force: the largest among the read-write computes, or null with none. */
+  minCu: number | null;
+  /** Whether any read-write compute is always on (§NNN). */
+  suspendMode: NeonSuspendMode;
   price: NeonCeilingPrice | null;
   computeCount: number;
   defaults: { minCu: number | null; maxCu: number | null };
@@ -158,9 +196,12 @@ export type NeonLimitsModel = {
 export function describeNeonLimits(reading: NeonLimitsReading): NeonLimitsModel {
   const maxes = reading.computes.map((compute) => compute.maxCu);
   const maxCu = maxes.length > 0 ? Math.max(...maxes) : null;
+  const mins = reading.computes.map((compute) => compute.minCu);
   const ceilings = new Set([...maxes, ...(reading.defaults.maxCu === null ? [] : [reading.defaults.maxCu])]);
   return {
     maxCu,
+    minCu: mins.length > 0 ? Math.max(...mins) : null,
+    suspendMode: reading.computes.some((compute) => suspendModeOf(compute.suspendTimeoutSeconds) === "never") ? "never" : "auto",
     price: maxCu === null ? null : priceCeiling(maxCu),
     computeCount: reading.computes.length,
     defaults: reading.defaults,
@@ -190,6 +231,10 @@ function smallestQuota(usedCuHours: number): number {
 export const neonLimitsFormSchema = z
   .object({
     maxCu: z.union([z.string(), z.number()]),
+    /** Absent keeps the platform's floor, as every form did before §NNN. */
+    minCu: z.union([z.string(), z.number()]).nullish(),
+    /** Absent leaves Neon's scale-to-zero setting as it is. */
+    suspendMode: z.enum(NEON_SUSPEND_MODES).nullish(),
     quotaMode: z.enum(["none", "limit"]),
     quotaCuHours: z.union([z.string(), z.number()]).nullish(),
     confirmSuspension: z.boolean().default(false),
@@ -198,6 +243,10 @@ export const neonLimitsFormSchema = z
 
 export type NeonLimitsRequest = {
   maxCu: NeonMaxCu;
+  /** The floor, one of the same steps and never above the ceiling. */
+  minCu: NeonMaxCu;
+  /** Scale to zero, or null to leave it as Neon holds it. */
+  suspendMode: NeonSuspendMode | null;
   /** CU-hours for the period, or null for no limit. */
   quotaCuHours: number | null;
   confirmSuspension: boolean;
@@ -223,18 +272,31 @@ export function parseNeonLimitsRequest(raw: unknown): { ok: true; request: NeonL
   const fields: string[] = [];
   const maxCu = decimal(parsed.data.maxCu);
   if (maxCu === null || !(NEON_MAX_CU_STEPS as readonly number[]).includes(maxCu)) fields.push("maxCu");
+  const minText = parsed.data.minCu;
+  const minCu = minText === null || minText === undefined || String(minText).trim() === "" ? NEON_MIN_CU : decimal(minText);
+  if (minCu === null || !(NEON_MAX_CU_STEPS as readonly number[]).includes(minCu) || (maxCu !== null && minCu > maxCu)) fields.push("minCu");
   let quotaCuHours: number | null = null;
   if (parsed.data.quotaMode === "limit") {
     quotaCuHours = decimal(parsed.data.quotaCuHours);
     if (quotaCuHours === null || quotaCuHours <= 0 || quotaCuHours > NEON_QUOTA_MAX_CU_HOURS) fields.push("quotaCuHours");
   }
   if (fields.length > 0) return { ok: false, fields };
-  return { ok: true, request: { maxCu: maxCu as NeonMaxCu, quotaCuHours, confirmSuspension: parsed.data.confirmSuspension } };
+  return {
+    ok: true,
+    request: {
+      maxCu: maxCu as NeonMaxCu,
+      minCu: minCu as NeonMaxCu,
+      suspendMode: parsed.data.suspendMode ?? null,
+      quotaCuHours,
+      confirmSuspension: parsed.data.confirmSuspension,
+    },
+  };
 }
 
 /** Why a well-formed request is still refused, as the code the backoffice translates (`Admin.errors`). */
 export type NeonLimitsRuleRefusal =
   | { code: "VALIDATION_ERROR"; field: "maxCu" }
+  | { code: "VALIDATION_ERROR"; field: "suspendMode" }
   | { code: "NEON_QUOTA_BELOW_USAGE"; field: "quotaCuHours" }
   | { code: "NEON_QUOTA_UNCONFIRMED"; field: "confirmSuspension" }
   | { code: "NEON_QUOTA_REMOVAL_UNCONFIRMED"; field: "confirmSuspension" };
@@ -263,6 +325,8 @@ export function checkNeonLimits(
   context: { usedCuHours: number; quotaCuHours: number | null; plan: NeonPlanId | null; appEnv: AppEnvironment },
 ): NeonLimitsRuleRefusal | null {
   if (context.plan && request.maxCu > NEON_AUTOSCALING_CEILING_CU[context.plan]) return { code: "VALIDATION_ERROR", field: "maxCu" };
+  // Always on is a paid plan's switch: Free keeps Neon's five minutes whatever is sent (§NNN).
+  if (request.suspendMode === "never" && context.plan && !NEON_ALWAYS_ON_ALLOWED[context.plan]) return { code: "VALIDATION_ERROR", field: "suspendMode" };
   const quotaChanges = cuHoursToSeconds(request.quotaCuHours) !== cuHoursToSeconds(context.quotaCuHours);
   if (request.quotaCuHours !== null && quotaChanges) {
     if (request.quotaCuHours <= context.usedCuHours + NEON_QUOTA_MARGIN_CU_HOURS) {
@@ -296,4 +360,47 @@ export function secondsToCuHours(seconds: unknown): number | null {
  */
 export function quotaBoxValue(quotaCuHours: number | null): string {
   return quotaCuHours === null ? "" : String(Number(quotaCuHours.toFixed(4)));
+}
+
+/**
+ * What a change of the compute's settings does to the month's bill (§NNN), at the rate of the plan
+ * Neon reports from the one catalogue (Launch when it reports none) over the thirty-day month the cost row prices (`NEON_MONTH_HOURS`) — the
+ * figures the confirmation names before the save, in the owner's words: «0,5 CU în plus ≈ X pe lună
+ * la 100 % utilizare».
+ *
+ * - `ceiling`: the ceiling's change, and what it changes at 100 % utilisation — the compute at the
+ *   ceiling every hour of the month, the worst case a ceiling bounds.
+ * - `floor`: the floor's change, and the same at 100 % utilisation — awake every hour at the floor.
+ * - `alwaysOn`: what a month with nobody on the site costs — the floor every hour when scale to
+ *   zero is off, nothing when it is on — before and after, so a switch either way is named.
+ *
+ * Amounts unrounded; the page prints them to the cent.
+ */
+export type NeonComputeSettings = { minCu: number; maxCu: number; suspendMode: NeonSuspendMode };
+
+export type NeonLimitsMoney = {
+  /** The plan the figures are priced at: the one Neon reported, or Launch when the page knows none. */
+  plan: NeonPlanId;
+  ceiling: { deltaCu: number; deltaUsdPerMonth: number };
+  floor: { deltaCu: number; deltaUsdPerMonth: number };
+  idleMonth: { beforeUsd: number; afterUsd: number };
+};
+
+/**
+ * Priced at the plan the page knows (`reportedPlan`): Free bills nothing — its hours are included
+ * and then refused — so every figure is zero there; Launch bills its rate. A plan the page does not
+ * know is priced at Launch, the only plan that bills, so the dialog never says "free" of a change
+ * that may cost money.
+ */
+export function neonLimitsMoney(before: NeonComputeSettings, after: NeonComputeSettings, reportedPlan: NeonPlanId | null): NeonLimitsMoney {
+  const plan: NeonPlanId = reportedPlan ?? "LAUNCH";
+  const rate = NEON_PLANS[plan].usdPerCuHour;
+  const month = (cu: number) => cu * rate * NEON_MONTH_HOURS;
+  const idle = (settings: NeonComputeSettings) => (settings.suspendMode === "never" ? month(settings.minCu) : 0);
+  return {
+    plan,
+    ceiling: { deltaCu: after.maxCu - before.maxCu, deltaUsdPerMonth: month(after.maxCu - before.maxCu) },
+    floor: { deltaCu: after.minCu - before.minCu, deltaUsdPerMonth: month(after.minCu - before.minCu) },
+    idleMonth: { beforeUsd: idle(before), afterUsd: idle(after) },
+  };
 }

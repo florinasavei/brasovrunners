@@ -39,6 +39,7 @@ import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { countOlderPictures } from "@/modules/media/older-pictures";
+import { storedMediaBytes } from "@/modules/media/references";
 import { isStorageConfigured } from "@/modules/media/storage";
 import OlderPicturesPanel from "@/modules/media/ui/OlderPicturesPanel";
 import { readBotCheck } from "@/modules/registrations/bot-check";
@@ -46,6 +47,7 @@ import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import BotCheckPanel from "@/modules/registrations/ui/BotCheckPanel";
 import {
   annualCostToday,
+  DOMAIN_PRICE_USD_PER_YEAR,
   freeTierVerdict,
   moneyDecisions,
   NEON_LAUNCH_USD_PER_CU_HOUR,
@@ -60,26 +62,30 @@ import {
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
-import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon";
+import { readNeonConsumption, readNeonLimits, readNeonPreviousPeriod } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { readMonthCosts } from "@/modules/diagnostics/month-costs-read";
+import MonthCostsPanel from "@/modules/diagnostics/ui/MonthCostsPanel";
 import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
+import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import Panel from "@/shared/ui/Panel";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
 import type { JobName } from "@/modules/jobs/schedule";
 import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { isTranslationConfigured } from "@/infrastructure/translate/translator";
-import { charactersTranslatedToday, readTranslationBudget } from "@/modules/translate/budget";
+import { charactersTranslatedSince, charactersTranslatedToday, readTranslationBudget } from "@/modules/translate/budget";
 import TranslationBudgetPanel from "@/modules/translate/ui/TranslationBudgetPanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
-import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { mailgunMessagesSentBetween, readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { canManageClubSettings, canManagePlatform, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -123,7 +129,9 @@ export const maxDuration = 60;
  *   `modules/club-todo`), for every role from the Redactor up.
  * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
  *   club must be able to switch it off on the day it refuses real people.
- * - `costs` — what the club pays today and what the next thing to cost anything would cost.
+ * - `costs` — the club's money page (§NNN): this month per provider and projected to its end,
+ *   the database's configuration in one card, then what the club pays a year and what the next
+ *   thing to cost anything would cost.
  * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §397).
  *
  * A query parameter, not five routes: each panel needs the same session and the same reading of
@@ -561,6 +569,42 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     panel === "costs"
       ? await Promise.all([readTranslationBudget(db), charactersTranslatedToday(db, now)]).then(([state, usedToday]) => ({ state, usedToday }))
       : null;
+  /*
+    «Luna aceasta» (§NNN): each provider's month so far and projected to its end, from the readings
+    this page already holds — Neon's meter (§447), the outbox's month (§100), the domain's expiry
+    (§435) — plus the readers only this card needs: Vercel's month (§101, cached an hour here;
+    `/devs` keeps its live read), the month's translated characters (§464), last month's outbox,
+    Neon's previous period and the pictures' bytes on R2. `readMonthCosts` does the mapping, and
+    is tested with a fake for every reader. Only for the panel that shows it.
+  */
+  const month =
+    panel === "costs"
+      ? await readMonthCosts(
+          {
+            now,
+            neonPlan: neonInForce.plan,
+            neon: neon.ok ? { ok: true, meter: neon.consumption.meter } : { ok: false, reason: neon.reason },
+            databaseBytes,
+            mailgun: {
+              planName: volume.planName,
+              planId: emailPlan.plan,
+              usdPerMonth: emailPlanCeilings.usdPerMonth,
+              sentThisMonth: volume.sentThisMonth,
+              monthlyAllowance: emailPlanCeilings.monthlyAllowance,
+              dailyAllowance: emailPlanCeilings.dailyAllowance,
+            },
+            vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+            domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: domain.status === "unknown" ? null : domain.expiresOn },
+          },
+          {
+            vercelMonth: () => readVercelMonthForCosts(env, now),
+            charactersSince: (since) => charactersTranslatedSince(db, since),
+            mailgunSentBetween: (start, end) => mailgunMessagesSentBetween(db, start, end),
+            neonPreviousPeriod: (periodStart) => readNeonPreviousPeriod(env, periodStart),
+            mediaBytes: () => storedMediaBytes(db),
+          },
+        )
+      : null;
   const facts = {
     databaseBytes,
     neonPlan: neonInForce.plan,
@@ -824,23 +868,68 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         <Divider />
 
         {/*
-          The one setting on this panel (§280's follow-up): which Neon plan the account is on.
-          Above the figures that follow it, so a plan set wrong shows here before it shows on
-          the invoice. A club setting (`canManageClubSettings`, the Administrator's); the prop
-          stays for the same reason the Mailgun panel carries it (§291).
+          The club's money page (§NNN): the month first — each provider so far and projected to the
+          month's end, the total above them — because that is what a treasurer opens Costuri for.
         */}
-        <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageClubSettings(actor.role)} />
+        {month && (
+          <MonthCostsPanel
+            locale={locale}
+            lines={month.lines}
+            totals={month.totals}
+            reasons={month.reasons}
+            deeplConfigured={isTranslationConfigured(env)}
+          />
+        )}
 
-        {/* How often the platform may wake the database for its scheduled work (§334) — the
-            throttle the owner asked for, beside the plan that bills each wake. The
-            Superadministrator's since §450; an Administrator reads the figures and no form. */}
-        <JobCadencePanel
-          locale={locale}
-          cadence={jobCadence}
-          jobs={jobOverviews}
-          mayEdit={canManagePlatform(actor.role)}
-          emailTiming={deliveryTiming.timing}
-        />
+        {/*
+          The database's configuration in one card (§NNN): the plan, the month's budget, the brakes
+          and the jobs' interval were four cards among the rest of Costuri, each explaining the
+          other three. One card now, the four inside it in the order a change is reasoned about —
+          which plan, where the month stands, what Neon will allow, how often the platform wakes
+          it — every door unchanged: each card keeps its own `mayEdit` and each action asserts it.
+          A section rather than a fold: the forms inside must never sit in a shut box.
+        */}
+        <Panel title={t("database.title")} intro={t("database.intro")} data-testid="database-config">
+          <Stack spacing={2}>
+            {/*
+              Which Neon plan the account is on (§280's follow-up, §326), above the figures that
+              follow it, so a plan set wrong shows here before it shows on the invoice. A club
+              setting (`canManageClubSettings`, the Administrator's).
+            */}
+            <NeonPlanPanel level={3} locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageClubSettings(actor.role)} />
+
+            {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.
+                Its thresholds are a platform setting since §450, the Superadministrator's like the brakes. */}
+            <NeonBudgetPanel level={3} locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} />
+
+            {/*
+              The database's brakes (§335): the compute's size ceiling and the period's CU-hour
+              limit, read from Neon and written to Neon. A quota reached suspends the site, so
+              writing it is the Superadministrator's (§450); `updateNeonLimits` asserts the role again.
+            */}
+            {neonLimits && (
+              <NeonLimitsPanel
+                level={3}
+                locale={locale}
+                reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
+                appEnv={env.APP_ENV}
+                mayEdit={canManagePlatform(actor.role)}
+              />
+            )}
+
+            {/* How often the platform may wake the database for its scheduled work (§334) — the
+                throttle the owner asked for, beside the plan that bills each wake. The
+                Superadministrator's since §450; an Administrator reads the figures and no form. */}
+            <JobCadencePanel
+              level={3}
+              locale={locale}
+              cadence={jobCadence}
+              jobs={jobOverviews}
+              mayEdit={canManagePlatform(actor.role)}
+              emailTiming={deliveryTiming.timing}
+            />
+          </Stack>
+        </Panel>
 
         {/* «Tradu din română»'s daily allowance (§464): what DeepL Free may spend a day, and today's spend. */}
         {translation && (
@@ -850,25 +939,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             usedToday={translation.usedToday}
             configured={isTranslationConfigured(env)}
             mayEdit={canManageClubSettings(actor.role)}
-          />
-        )}
-
-        {/*
-          The database's brakes (§335), beside the plan they are priced against: the compute's size
-          ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
-          door as the plan, and a higher `mayEdit` since §450 — a quota reached suspends the site,
-          so writing it is the Superadministrator's; `updateNeonLimits` asserts the role again.
-        */}
-        {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.
-            Its thresholds are a platform setting since §450, the Superadministrator's like the brakes. */}
-        <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} />
-
-        {neonLimits && (
-          <NeonLimitsPanel
-            locale={locale}
-            reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
-            appEnv={env.APP_ENV}
-            mayEdit={canManagePlatform(actor.role)}
           />
         )}
 
