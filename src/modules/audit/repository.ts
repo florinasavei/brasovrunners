@@ -167,6 +167,8 @@ export type AuditAction =
   | "neon_limits.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
+  /** «Adresa de contact afișată»: the mailbox, the club's Gmail, or both (§NNN). */
+  | "shown_contact_address.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
   | "bot_check.changed"
   /** A message's own words, rewritten by the club (§247). */

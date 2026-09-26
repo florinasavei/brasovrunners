@@ -4,6 +4,7 @@ import type { Database } from "@/db/types";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { replyToInForce } from "@/modules/contact/shown-address";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -68,12 +69,14 @@ export async function sendOutboxNow(
   let batches = 0;
   let volume = await readEmailVolumeToday(db, now);
 
-  const { sender } = createEmailSenderForEnvironment(env);
+  // The Reply-To the club chose to show (§NNN).
+  const replyTo = await replyToInForce(db);
+  const { sender } = createEmailSenderForEnvironment(env, { replyTo });
   while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
       // A renderer per batch, so each event's words are read once per batch (§373, email follow-up).
-      render: createOutboxRenderer(),
+      render: createOutboxRenderer({ replyTo }),
       now,
       // Never past what the day still allows: the counter is the ceiling, not a display.
       batchSize: Math.min(20, volume.remaining ?? 20),

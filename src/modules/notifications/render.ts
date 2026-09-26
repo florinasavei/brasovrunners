@@ -124,8 +124,12 @@ export type EventRowsReader = (db: RendererDb, eventId: string) => Promise<reado
  * (`AGENTS.md` §16.1, `processOutboxBatch`).
  *
  * `readEventRows` is the seam a test counts reads through; the send path passes nothing.
+ *
+ * `replyTo` is the Reply-To the sender sets (§NNN, «Adresa de contact afișată»), so the line
+ * "or reply to this email" is there exactly when a reply reaches somebody. Absent, `EMAIL_REPLY_TO`.
  */
-export function createOutboxRenderer(options: { readEventRows?: EventRowsReader } = {}): EmailRenderer {
+export function createOutboxRenderer(options: { readEventRows?: EventRowsReader; replyTo?: string } = {}): EmailRenderer {
+  const replyTo = options.replyTo ?? env.EMAIL_REPLY_TO ?? undefined;
   const read: EventRowsReader = options.readEventRows ?? ((db, eventId) => findEventNotificationRows(db, eventId));
   const byEvent = new Map<string, Promise<readonly EventNotificationRow[]>>();
   const eventRows = (db: RendererDb, eventId: string) => {
@@ -137,7 +141,7 @@ export function createOutboxRenderer(options: { readEventRows?: EventRowsReader 
     }
     return rows;
   };
-  return (row, db, now) => renderRow(row, db, now, eventRows);
+  return (row, db, now) => renderRow(row, db, now, eventRows, replyTo);
 }
 
 /** One message on its own — a renderer whose batch is this one row (tests, one-off callers). */
@@ -148,12 +152,13 @@ async function renderRow(
   db: RendererDb,
   now: Date,
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+  replyTo: string | undefined,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
 
   // A group run's self-declaration (§393) is about no registration: its own, shorter path.
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
-    return renderGroupRunDeclarationRow(row, db, now, eventRows);
+    return renderGroupRunDeclarationRow(row, db, now, eventRows, replyTo);
   }
 
   /*
@@ -238,8 +243,8 @@ async function renderRow(
     // The other language's own words, for the bilingual message's second half — never the first
     // half's language repeated under the other language's sentence (§373, email follow-up).
     currentStatusOther: registration ? registrationStatusWords(registration.status, otherLocale(locale)) : undefined,
-    // The footer line is there whenever somebody can answer (§81).
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    // The footer line is there whenever somebody can answer (§81) — the Reply-To in force (§NNN).
+    replyTo,
     // The event's own page, for the deep link every message carries (§96).
     eventUrl: eventDetails?.slug
       ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
@@ -793,6 +798,7 @@ async function renderGroupRunDeclarationRow(
   db: RendererDb,
   now: Date,
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+  replyTo: string | undefined,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
   const archive = row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE";
@@ -815,7 +821,7 @@ async function renderGroupRunDeclarationRow(
     eventStartsAtFormattedOther: formatEventStart(eventDetails, otherLocale(locale)),
     signedAtFormatted: formatInSentence(signed.acceptedAt, zone, locale),
     signedAtFormattedOther: formatInSentence(signed.acceptedAt, zone, otherLocale(locale)),
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    replyTo,
     eventUrl: eventDetails?.slug
       ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
       : undefined,

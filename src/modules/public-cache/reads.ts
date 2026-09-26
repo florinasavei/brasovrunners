@@ -4,6 +4,8 @@ import { parseLocalizedPath } from "@/i18n/alternate-path";
 import { routing, type Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
+import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
+import { readShownContactAddress } from "@/modules/contact/shown-address";
 import {
   findPublishedAlbumBySlug,
   findPublishedAlbumTranslations,
@@ -396,6 +398,21 @@ export async function cachedContactFormReaches(): Promise<boolean> {
     );
   } catch {
     return contactFormReaches(env, null);
+  }
+}
+
+/**
+ * The club's address as readers are shown it (§NNN): the footer, the header's "Contact" entry and
+ * the contact page. Addresses the site prints anyway, so the list itself is cached. When the
+ * database cannot answer, the environment's mailbox — what every page showed before.
+ */
+export async function cachedShownContactAddresses(): Promise<string[]> {
+  try {
+    return await publicRead(["settings.shown-contact-address"], ["settings"], async () =>
+      resolveShownContactAddresses(await readShownContactAddress(getDb()), env.EMAIL_REPLY_TO),
+    );
+  } catch {
+    return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO);
   }
 }
 

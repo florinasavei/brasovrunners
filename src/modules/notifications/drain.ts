@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { getDb } from "@/db/client";
 import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
+import { replyToInForce } from "@/modules/contact/shown-address";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
 
@@ -60,9 +61,11 @@ export function drainOutboxAfterResponse(): void {
           return;
         }
 
-        const { sender } = createEmailSenderForEnvironment(env);
+        // The Reply-To the club chose to show (§NNN), read once per drain.
+        const replyTo = await replyToInForce(db);
+        const { sender } = createEmailSenderForEnvironment(env, { replyTo });
         // One renderer per batch: each event's words are read once for it (§373, email follow-up).
-        await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now: new Date() });
+        await processOutboxBatch(db, { sender, render: createOutboxRenderer({ replyTo }), now: new Date() });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job

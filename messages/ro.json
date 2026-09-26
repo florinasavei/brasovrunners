@@ -913,7 +913,9 @@
       "neonLimitsTitle": "Salvezi limitele Neon?",
       "neonLimitsBody": "Un proiect care își atinge cota lunară este suspendat până la perioada următoare — site-ul nu răspunde până atunci.",
       "neonPlanTitle": "Schimbi planul Neon?",
-      "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul."
+      "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
+      "shownAddressTitle": "Schimbi adresa de contact afișată?",
+      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -3187,6 +3189,27 @@
           "few": "{count} persoane",
           "other": "{count} de persoane"
         }
+      },
+      "shownAddress": {
+        "title": "Adresa de contact afișată",
+        "intro": "Ce adresă văd oamenii pe site — subsolul, pagina de contact, numerele de concurs, textele legale pornite din textul platformei — și unde ajunge un răspuns la orice email trimis de platformă. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "aside": "Pe site: {shown}",
+        "preview": "Pe site: {shown} · Răspunde la: {replyTo}",
+        "legend": "Ce adresă arătăm",
+        "modes": {
+          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit",
+          "gmail": "Gmail-ul clubului",
+          "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
+        },
+        "noMailbox": "nesetată pe server",
+        "gmail": "Gmail-ul clubului",
+        "gmailHelp": "Obligatoriu pentru „Gmail-ul clubului” și „Amândouă”. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "updatedAt": "Setat {when}.",
+        "readOnly": "Adresa afișată o stabilește Administratorul; tu vezi alegerea în vigoare.",
+        "save": "Salvează adresa",
+        "saving": "Se salvează…",
+        "saved": "Adresa de contact afișată a fost salvată.",
+        "sender": "Emailurile pleacă în continuare de pe domeniul Mailgun: un expeditor Gmail trimis prin Mailgun nu trece verificarea DMARC și ajunge în spam sau e refuzat. Se schimbă doar adresa la care se răspunde (Reply-To). Formularul de contact nu se schimbă."
       }
     },
     "guide": {
@@ -3457,7 +3480,8 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
-      "contact": "Scrie-ne:"
+      "contact": "Scrie-ne:",
+      "or": "sau"
     },
     "contactPage": "Scrie-ne"
   },
@@ -4243,7 +4267,8 @@
     },
     "off": {
       "writeTo": "Scrie-ne la",
-      "none": "Formularul de contact nu este disponibil momentan."
+      "none": "Formularul de contact nu este disponibil momentan.",
+      "or": "sau"
     },
     "fieldNames": {
       "name": "Numele",
@@ -4480,7 +4505,8 @@
       "addressCap": "Limită pe adresă salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
-      "groupRunDeclarationErased": "Declarația a fost ștearsă."
+      "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "shownContactAddress": "Adresa de contact afișată a fost salvată."
     }
   }
 }

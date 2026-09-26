@@ -62,6 +62,12 @@ export function createEmailSenderForEnvironment(
     | "EMAIL_FROM_NAME"
     | "EMAIL_REPLY_TO"
   >,
+  /**
+   * The Reply-To in force (§NNN): «Adresa de contact afișată» on `/admin/emails` — the mailbox,
+   * the club's Gmail, or both, comma-separated. Absent, `EMAIL_REPLY_TO` as before. Only the
+   * Reply-To follows the setting; the From stays on the Mailgun domain (a Gmail From fails DMARC).
+   */
+  overrides: { replyTo?: string } = {},
 ): { sender: EmailSender; capture: CaptureAdapter } {
   const capture = sharedCapture;
 
@@ -85,7 +91,7 @@ export function createEmailSenderForEnvironment(
         domain: config.MAILGUN_DOMAIN ?? "",
         apiBaseUrl: config.MAILGUN_API_BASE_URL ?? "",
         from: formatSenderIdentity(config),
-        replyTo: config.EMAIL_REPLY_TO,
+        replyTo: overrides.replyTo ?? config.EMAIL_REPLY_TO,
       }),
   });
 

@@ -5,6 +5,7 @@ import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import {
   cachedContactFormReaches,
+  cachedShownContactAddresses,
   cachedPublishedAlbums,
   cachedPublishedPages,
 } from "@/modules/public-cache/reads";
@@ -120,7 +121,9 @@ export default async function SiteHeader() {
   const showContact =
     Boolean(env.EMAIL_REPLY_TO) ||
     contactFormReaches(env, null) ||
-    (await cachedContactFormReaches());
+    (await cachedContactFormReaches()) ||
+    // The club's Gmail alone is an address to write to as well (§NNN).
+    (await cachedShownContactAddresses()).length > 0;
 
   return (
     <>

@@ -8,6 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
+import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { updateDeadlines } from "@/modules/deadlines/deadlines";
@@ -93,6 +94,31 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
   revalidatePath(path);
   await flashOutcome({ saved: "contactRecipients" });
   redirect(`${path}?saved=contactRecipients#admin-alert`);
+}
+
+/**
+ * «Adresa de contact afișată» (§NNN): the mailbox, the club's Gmail, or both — shown on the site
+ * and set as every email's Reply-To. Administrator at the door, the service asserting it again.
+ */
+export async function updateShownContactAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/emails" });
+  const gmail = form.get("gmail");
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateShownContactAddress(
+      getDb(),
+      actor,
+      { mode: form.get("mode"), gmail: typeof gmail === "string" ? gmail : null },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "shownContactAddress" });
+  redirect(`${path}?saved=shownContactAddress#admin-alert`);
 }
 
 /**

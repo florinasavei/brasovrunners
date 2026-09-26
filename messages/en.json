@@ -913,7 +913,9 @@
       "neonLimitsTitle": "Save the Neon limits?",
       "neonLimitsBody": "A project that reaches its monthly quota is suspended until the next period — the site does not answer until then.",
       "neonPlanTitle": "Change the Neon plan?",
-      "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan."
+      "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
+      "shownAddressTitle": "Change the contact address shown?",
+      "shownAddressBody": "The site (the footer, the contact page, the race numbers) shows the chosen address from now on, and every email the platform sends takes replies there. Legal texts already approved keep the address they were approved with."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -3187,6 +3189,27 @@
           "few": "{count} people",
           "other": "{count} people"
         }
+      },
+      "shownAddress": {
+        "title": "Contact address shown",
+        "intro": "Which address people see on the site — the footer, the contact page, the race numbers, the legal texts started from the platform's text — and where a reply to any email the platform sends goes. Mailgun has a daily cap; Gmail does not.",
+        "aside": "On the site: {shown}",
+        "preview": "On the site: {shown} · Replies to: {replyTo}",
+        "legend": "Which address we show",
+        "modes": {
+          "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default",
+          "gmail": "The club's Gmail",
+          "both": "Both (the Gmail first, then {mailbox})"
+        },
+        "noMailbox": "not set on the server",
+        "gmail": "The club's Gmail",
+        "gmailHelp": "Required for “The club's Gmail” and “Both”. Mailgun has a daily cap; Gmail does not.",
+        "updatedAt": "Set {when}.",
+        "readOnly": "The Administrator sets the address shown; you see the choice in force.",
+        "save": "Save the address",
+        "saving": "Saving…",
+        "saved": "The contact address shown was saved.",
+        "sender": "Emails still leave from the Mailgun domain: a Gmail sender sent through Mailgun fails the DMARC check and lands in spam or is refused. Only the reply address (Reply-To) changes. The contact form does not change."
       }
     },
     "guide": {
@@ -3457,7 +3480,8 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
-      "contact": "Write to us:"
+      "contact": "Write to us:",
+      "or": "or"
     },
     "contactPage": "Write to us"
   },
@@ -4243,7 +4267,8 @@
     },
     "off": {
       "writeTo": "Write to us at",
-      "none": "The contact form is not available at the moment."
+      "none": "The contact form is not available at the moment.",
+      "or": "or"
     },
     "fieldNames": {
       "name": "Name",
@@ -4480,7 +4505,8 @@
       "addressCap": "Limit per address saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed.",
-      "groupRunDeclarationErased": "The declaration was erased."
+      "groupRunDeclarationErased": "The declaration was erased.",
+      "shownContactAddress": "The contact address shown was saved."
     }
   }
 }

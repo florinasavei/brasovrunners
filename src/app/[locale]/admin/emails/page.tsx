@@ -23,6 +23,9 @@ import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import DeadlinesPanel from "@/modules/deadlines/ui/DeadlinesPanel";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
+import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
+import { readShownContactAddress } from "@/modules/contact/shown-address";
+import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { copyFor } from "@/modules/notifications/domain/email-copy";
@@ -124,7 +127,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, volume, recipients, queue, notices, written, deadlines, forecast, addressCap] = await Promise.all([
+  const [plan, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -148,6 +151,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
     // How many registrations one address may carry at an event (§389), straight through like the deadlines.
     readAddressCap(db),
+    // «Adresa de contact afișată» (§NNN): what the site shows and every email's Reply-To.
+    readShownContactAddress(db),
   ]);
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
@@ -235,6 +240,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
+        {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
         {saved === "outboxSent" && <Alert severity="success">{t("outbox.sentNow", { count: sent ?? "0" })}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
@@ -281,6 +287,16 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         resolved={resolvedRecipients}
         mayEdit={mayEditEmail}
         openWhen={{ saved: saved === "contactRecipients" }}
+      />
+
+      {/* «Adresa de contact afișată» (§NNN), beside who receives the form: both are "where the club is written to". */}
+      <ShownAddressPanel
+        locale={locale}
+        state={shownAddress}
+        mailbox={env.EMAIL_REPLY_TO ?? null}
+        resolved={resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO)}
+        mayEdit={mayEditEmail}
+        openWhen={{ saved: saved === "shownContactAddress" }}
       />
 
       {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
