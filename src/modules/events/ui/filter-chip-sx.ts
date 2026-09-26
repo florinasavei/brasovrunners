@@ -11,9 +11,19 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
  *
  * Plain objects in a module of their own so a unit test can hold the two numbers apart without
  * rendering a Server Component.
+ *
+ * **Not on `src/theme/density.ts`'s scale, on purpose (§NNN, a fix round on this same section).**
+ * §380's steps are phone-only overrides of an `sm`-and-up value a page already had; a flat
+ * 24-pixel chip is not that shape — it is the *same* height at every width, matching the
+ * active-filter `ChipLink`s (also a flat MUI-small 24 px, not density-scaled) that sit in the
+ * same row once the panel is closed. Giving the button its own breakpoint height — 28 on a
+ * phone, 32 from `sm`, as §380's spirit would suggest for a fresh pill — would make it the one
+ * chip in the row that changes size against the others and against the active chips it turns
+ * into on submit. Kept flat; see `questionsForOwner` on whether the owner wants the row's chips
+ * — this one included — to grow with `density.ts` instead.
  */
 
-/** A small chip's height, MUI's own `size="small"`. */
+/** A small chip's height, MUI's own `size="small"` — flat at every width, see above. */
 export const FILTER_CHIP_HEIGHT = 24;
 
 /** The `<summary>`: a transparent 44-pixel target around the button's small pill (`> span`). */
@@ -24,7 +34,10 @@ export const FILTER_BUTTON_SX = {
   cursor: "pointer",
   listStyle: "none",
   userSelect: "none",
-  outline: "none",
+  // The suppression lives next to its own replacement (§NNN, a fix round): if the `> span` rule
+  // below it ever stops applying, the `<summary>` keeps its native ring rather than losing focus
+  // visibility outright.
+  "&:focus-visible": { outline: "none" },
   "&::-webkit-details-marker": { display: "none" },
   "&::marker": { content: '""' },
   "& > span": {

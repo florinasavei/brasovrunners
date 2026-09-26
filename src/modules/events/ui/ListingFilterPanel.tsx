@@ -20,6 +20,7 @@ import {
 } from "@/modules/events/domain/listing-filter";
 import ChipLink from "@/shared/ui/ChipLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { DENSITY } from "@/theme/density";
 import FilterAutoApply from "./FilterAutoApply";
 import { FILTER_BUTTON_SX, FILTER_OPTION_SX } from "./filter-chip-sx";
 import { GLYPHS, type GlyphName } from "./glyphs";
@@ -145,13 +146,16 @@ export default async function ListingFilterPanel({
           aria-label={t("filter.label")}
           sx={{
             mt: 1,
-            p: 1.5,
+            // Tighter on a phone (§NNN, amending §380's scale — the owner: "Butonul de filtre e
+            // mult prea mare"): the open panel is a compact block rather than the same box a
+            // tablet gets, `p` and `gap` on the density scale like every other public site.
+            p: { xs: DENSITY.gapSm, sm: 1.5 },
             border: 1,
             borderColor: "divider",
             borderRadius: 2,
             bgcolor: "background.paper",
             display: "grid",
-            gap: 1,
+            gap: { xs: DENSITY.gapXs, sm: 1 },
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
             "&[data-enhanced] [data-apply]": { display: "none" },
           }}
