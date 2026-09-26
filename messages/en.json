@@ -3587,7 +3587,6 @@
     "nationality": "Citizenship",
     "city": "City",
     "originHelp": "Optional. Tells the club where its events' participants come from.",
-    "nationalityNone": "Prefer not to say",
     "preferredLocale": "The language for your emails and the declaration",
     "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
     "preferredLocaleOptions": {
@@ -3701,7 +3700,7 @@
     },
     "disclosure": {
       "race": "{club} member, club and t-shirt — optional",
-      "origin": "Where you're from — optional",
+      "origin": "Your city — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"

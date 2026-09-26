@@ -55,12 +55,12 @@ const submissionFields = z.object({
   /**
    * ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists.
    *
-   * Optional since §322, with the city beside it. Nothing the club does with a registration
-   * needs either — no place, no category, no message — and the notice had to say why they were
-   * compulsory and could not: "ne arată de unde vin participanții" is a reason to *ask*, not to
-   * insist. The form offers them in the optional column, and blank is absent.
+   * Required on the public form again since §NNN (the owner, 2026-09-26: "cetățenia ar trebui să
+   * fie obligatorie; by default pune Român"), reversing §322's optional: the form asks it beside
+   * the birth date, pre-chosen on `RO`, so a Romanian runner leaves it. Optional for a staff entry
+   * (paper), relaxed below; older rows without it stay blank. The city stays optional (§322).
    */
-  nationality: z.string().trim().length(2).toUpperCase().optional(),
+  nationality: z.string().trim().length(2).toUpperCase(),
   city: z.string().trim().min(1).max(120).optional(),
 
   /**
@@ -419,6 +419,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .partial({
     birthDate: true,
     sex: true,
+    // Citizenship is required on the public form only (§NNN): a paper entry may not have it.
+    nationality: true,
     phone: true,
     emergencyContactName: true,
     emergencyContactPhone: true,

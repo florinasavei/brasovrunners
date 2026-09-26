@@ -104,6 +104,7 @@ function form(firstName: string): FormData {
     phoneCountry: "RO",
     emergencyContactName: "Ion Vecinul",
     emergencyContactPhone: "0722222222",
+    nationality: "RO",
     emergencyContactPhoneCountry: "RO",
     fitnessDeclared: "on",
     // The family form's tick for another adult (§421); the ordinary form ignores it.

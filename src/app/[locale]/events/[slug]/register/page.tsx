@@ -827,6 +827,39 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     </Box>
                   </MenuItem>
                 </TextField>
+                {/*
+                  Citizenship, required and pre-chosen on Romania (§NNN; the owner, 2026-09-26:
+                  "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
+                  are, so a Romanian runner just leaves it. It was optional in the fold on the
+                  right (§322); the server now refuses a public form without it.
+                */}
+                <TextField
+                  {...field("nationality")}
+                  label={t("nationality")}
+                  select
+                  required
+                  fullWidth
+                  // A blank from an older draft comes back as Romania too, never an empty select.
+                  defaultValue={prefill("nationality") || "RO"}
+                  sx={SELECT_WITH_GLYPHS_SX}
+                >
+                  {/*
+                    The flag before the name (§171), from the set `scripts/sync-flags.mjs` copies
+                    into `public/flags/`, normalised to 4:3 — not the regional-indicator emoji,
+                    which Windows draws as two boxed capitals.
+                  */}
+                  {countries.map((country) => (
+                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                      {/* The fixed box keeps the flag on the name's line and every name at one x. */}
+                      <Box component="span" sx={OPTION_GLYPH_SX}>
+                        <Flag code={country.code} width={20} />
+                      </Box>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {country.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Stack>
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
@@ -1033,11 +1066,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
 
               {/*
-                Where the runner is from (§322): optional, and on this side of the form for that
-                reason. It was required on the left, and the privacy notice could not say why —
-                nothing the club does with a registration reads either answer. What it is for is
-                said above the two fields, and the country starts unanswered rather than on
-                Romania: a pre-chosen answer is an answer nobody gave.
+                The runner's city (§322): optional, and on this side of the form for that reason.
+                Citizenship left this fold for the required half beside the birth date (§NNN).
               */}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
@@ -1047,44 +1077,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Typography variant="body2" color="text.secondary">
                     {t("originHelp")}
                   </Typography>
-                  <TextField
-                    {...field("nationality")}
-                    label={t("nationality")}
-                    select
-                    fullWidth
-                    defaultValue={prefill("nationality", "")}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-                    sx={SELECT_WITH_GLYPHS_SX}
-                  >
-                    <MenuItem value="" sx={OPTION_ROW_SX}>
-                      <Box component="span" sx={OPTION_LABEL_SX}>
-                        {t("nationalityNone")}
-                      </Box>
-                    </MenuItem>
-                    {/*
-                      The flag before the name (§171), from the set `scripts/sync-flags.mjs`
-                      already copies into `public/flags/` — which that script's own comment
-                      anticipated for exactly this ("will show many when a participant can state
-                      their country"). Normalised to 4:3, so a column of two hundred names does
-                      not wobble between Romania's 2:3 and the United Kingdom's 1:2.
-
-                      Not the regional-indicator emoji, which Windows draws as two boxed capitals
-                      — and Windows is what the club's own laptop runs.
-                    */}
-                    {countries.map((country) => (
-                      <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
-                        {/* The flag is `display: block` and 20×15; the fixed box is what stops it
-                            taking a line of its own in the closed field and what keeps every
-                            country name starting at the same x. */}
-                        <Box component="span" sx={OPTION_GLYPH_SX}>
-                          <Flag code={country.code} width={20} />
-                        </Box>
-                        <Box component="span" sx={OPTION_LABEL_SX}>
-                          {country.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </TextField>
                   <TextField {...field("city")} label={t("city")} autoComplete="address-level2" />
                 </Stack>
               </Box>
