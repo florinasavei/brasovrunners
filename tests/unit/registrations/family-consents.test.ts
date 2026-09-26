@@ -18,6 +18,7 @@ const posted = (overrides: Record<string, unknown> = {}) => ({
   emergencyContactName: "Ion Vecinul",
   emergencyContactPhone: "+40722222222",
   nationality: "RO",
+  city: "Brașov",
   email: "familia.pop@example.ro",
   locale: "ro",
   privacyAcknowledged: true,

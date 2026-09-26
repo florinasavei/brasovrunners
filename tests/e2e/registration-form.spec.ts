@@ -107,9 +107,12 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§432).
     await expect(page.locator('input[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('input[name="nationality"]')).toHaveAttribute("required", "");
-    // The city is optional and on the optional side, open (§322).
+    // The city is required and asked right after the birth date (§NNN, reversing §322).
     await expect(page.locator('[name="city"]')).toBeVisible();
-    await expect(page.locator('[name="city"]')).not.toHaveAttribute("required", "");
+    await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");
+    // The birth date is read back in words with the age on the event day (§NNN).
+    await page.locator('[name="birthDate"]').fill("1990-05-17");
+    await expect(page.getByText(/1990 · \d+ de ani în ziua evenimentului/)).toBeVisible();
     // "I want to appear on the participant list" is asked only on an event whose list is switched
     // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
     await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);

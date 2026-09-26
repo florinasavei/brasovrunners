@@ -4481,6 +4481,7 @@
     "birthDate": "Date of birth",
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
+    "birthDateEcho": "{date} · {age} on the event day",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
       "minimumOnly": "Minimum age: {age}.",
@@ -4495,7 +4496,7 @@
     "sexHelp": "For category rankings; you may choose “Prefer not to say”.",
     "nationality": "Citizenship",
     "city": "City",
-    "originHelp": "Optional. Tells the club where its events' participants come from.",
+    "originHelp": "Tells the club where its events' participants come from.",
     "preferredLocale": "The language for your emails and the declaration",
     "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
     "preferredLocaleOptions": {
@@ -4609,7 +4610,6 @@
     },
     "disclosure": {
       "race": "{club} member, club and t-shirt — optional",
-      "origin": "Your city — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"

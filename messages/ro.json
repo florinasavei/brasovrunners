@@ -4481,6 +4481,7 @@
     "birthDate": "Data nașterii",
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
+    "birthDateEcho": "{date} · {age} în ziua evenimentului",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumOnly": "Vârsta minimă: {age}.",
@@ -4495,7 +4496,7 @@
     "sexHelp": "Pentru clasamentele pe categorii; poți alege „Prefer să nu spun”.",
     "nationality": "Cetățenie",
     "city": "Oraș",
-    "originHelp": "Opțional. Ne arată de unde vin participanții evenimentelor clubului.",
+    "originHelp": "Ne arată de unde vin participanții evenimentelor clubului.",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
@@ -4609,7 +4610,6 @@
     },
     "disclosure": {
       "race": "Membru {club}, club și tricou — opțional",
-      "origin": "Orașul tău — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"

@@ -18,7 +18,8 @@ import { isMinorOn } from "../domain/age";
  * On the server there is no input and nothing typed, so this answers `false` there — an adult,
  * the case the server's markup is drawn for.
  */
-export function useBirthDateSaysMinor(birthDateId: string): boolean {
+/** The birth-date box's current value: "" before anything is typed, and on the server. */
+export function useBirthDateValue(birthDateId: string): string {
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       const input = document.getElementById(birthDateId);
@@ -43,5 +44,10 @@ export function useBirthDateSaysMinor(birthDateId: string): boolean {
     () => "",
   );
 
+  return birthDate;
+}
+
+export function useBirthDateSaysMinor(birthDateId: string): boolean {
+  const birthDate = useBirthDateValue(birthDateId);
   return birthDate !== "" && isMinorOn(birthDate, new Date());
 }
