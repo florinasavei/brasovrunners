@@ -89,7 +89,7 @@ import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import { countBibs, spareCardState } from "@/modules/registrations/bibs";
-import { SPARE_BIBS_PER_PRINT } from "@/modules/registrations/domain/spare-bibs";
+import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
@@ -194,6 +194,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const spares = spareState
     ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
     : null;
+  // The range the print just reserved, for its banner (§NNN) — only two real numbers from the address.
+  const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
@@ -521,23 +523,23 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/* The spares just reserved (§NNN): the sheet of exactly those numbers, blank, one press away. */}
-          {saved === "sparesReserved" && spareFrom && spareTo && /^d{1,5}$/.test(spareFrom) && /^d{1,5}$/.test(spareTo) && (
+          {reservedRange && (
             <Alert
               severity="success"
               data-testid="spares-reserved"
               action={
                 <GlyphButton
                   icon="pdf"
-                  href={`/api/admin/events/${event.id}/bibs?${new URLSearchParams({ locale, spares: "1", from: spareFrom, to: spareTo })}`}
+                  href={`/api/admin/events/${event.id}/bibs?${new URLSearchParams({ locale, spares: "1", from: String(reservedRange.from), to: String(reservedRange.to) })}`}
                   color="inherit"
                   size="small"
                   sx={{ minHeight: 44 }}
                 >
-                  {t("bibs.sparesDownloadRange", { from: spareFrom, to: spareTo })}
+                  {t("bibs.sparesDownloadRange", { from: String(reservedRange.from), to: String(reservedRange.to) })}
                 </GlyphButton>
               }
             >
-              {t("bibs.sparesReserved", { from: spareFrom, to: spareTo })}
+              {t("bibs.sparesReserved", { from: String(reservedRange.from), to: String(reservedRange.to) })}
             </Alert>
           )}
           {saved === "created" && created && !notPublished && <Alert severity="success">{t("editor.createdWithSeries", { dates: datesWords(created) })}</Alert>}

@@ -15,7 +15,9 @@
  * next free numbers after it. So a reservation never lands on a number somebody holds, and no
  * online runner's number moves — nobody types a range that could overlap one. The event keeps the
  * reservation as a start and a count (`walk_in_bib_start`, `walk_in_bib_count`); a number inside it
- * that an online runner already held when an extension reached past it stays that runner's.
+ * that an online runner already held when an extension reached past it stays that runner's for
+ * good — the close keeps it as their final number rather than moving them out of the band — and is
+ * never a spare, not even after it is released: the print records it as skipped.
  *
  * Pure and importing nothing, so the card, the desk, the sheet and the allocator read one rule.
  */
@@ -65,6 +67,17 @@ export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<numb
  * handed a number nobody printed without being told why).
  */
 export type SpareState = { kind: "none" } | { kind: "free"; next: number } | { kind: "out" };
+
+/**
+ * Whether the desk's «Confirmă aici» carries a spare for this row (§NNN): only a real runner with no
+ * number at all — neither settled nor provisional — which is the walk-in entered at the table. An
+ * online runner holding a provisional number keeps it: the number is at the head of the row, in
+ * their inbox, and becomes their final one at the confirmation (§220); a spare there would swap it
+ * for another at the desk and release the one they were told.
+ */
+export function handsSpareAtConfirm(row: { kind: string; bibNumber: number | null; provisionalBibNumber: number | null }): boolean {
+  return row.kind === "REAL" && row.bibNumber === null && row.provisionalBibNumber === null;
+}
 
 export function spareStateOf(band: SpareBand | null, free: readonly number[]): SpareState {
   if (!band) return { kind: "none" };
@@ -117,7 +130,7 @@ export function planSpareReservation(input: {
   bibStartNumber: number;
   count: number;
 }):
-  | { ok: true; printed: number[]; walkInBibStart: number; walkInBibCount: number }
+  | { ok: true; printed: number[]; skipped: number[]; walkInBibStart: number; walkInBibCount: number }
   | { ok: false; reason: SpareRefusal } {
   if (!Number.isInteger(input.count) || input.count < 1 || input.count > SPARE_BIBS_PER_PRINT) return { ok: false, reason: "count" };
   const printed = nextSpareCandidates({ ...input, limit: input.count });
@@ -126,5 +139,29 @@ export function planSpareReservation(input: {
   const last = printed[printed.length - 1];
   const total = last - start + 1;
   if (total > SPARE_BIBS_MAX) return { ok: false, reason: "size" };
-  return { ok: true, printed, walkInBibStart: start, walkInBibCount: total };
+  /*
+    The numbers the extension stepped over (§NNN): inside the reservation from now on, and never a
+    spare. Somebody held each when the print reached past it, so none is on the blank sheet; the
+    print's audit row keeps them, and `bibs.ts#skippedSpareNumbers` reads them back as taken for
+    good — released later (an expired hold), such a number is nobody's rather than a "free spare"
+    the desk would suggest with no bib printed for it. A first print skips nothing: it starts
+    above every number taken.
+  */
+  const printedSet = new Set(printed);
+  const skipped: number[] = [];
+  if (input.band) {
+    for (let number = input.band.to + 1; number < last; number += 1) if (!printedSet.has(number)) skipped.push(number);
+  }
+  return { ok: true, printed, skipped, walkInBibStart: start, walkInBibCount: total };
+}
+
+/**
+ * The range the print's banner names (§NNN), from the address it redirected to: two whole numbers
+ * of one to five digits, the first not above the second — or null, and no banner. The query
+ * string is typed by anybody, and the banner's link and sentence carry these numbers.
+ */
+export function spareRangeOfQuery(from: string | undefined, to: string | undefined): SpareBand | null {
+  if (from === undefined || to === undefined || !/^\d{1,5}$/.test(from) || !/^\d{1,5}$/.test(to)) return null;
+  const range = { from: Number(from), to: Number(to) };
+  return range.from >= 1 && range.from <= range.to ? range : null;
 }

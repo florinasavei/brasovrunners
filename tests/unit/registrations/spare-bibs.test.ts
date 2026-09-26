@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   BIB_NUMBER_MAX,
@@ -10,6 +11,8 @@ import {
   spareBandOf,
   spareNumbersOf,
   spareStateOf,
+  handsSpareAtConfirm,
+  spareRangeOfQuery,
 } from "@/modules/registrations/domain/spare-bibs";
 
 /**
@@ -56,10 +59,17 @@ describe("§NNN what a print reserves", () => {
 
   it("plans the reservation: the same start on an extension, the count grown to the last new number", () => {
     const first = planSpareReservation({ band: null, taken: new Set([1, 2]), bibStartNumber: 1, count: 3 });
-    expect(first).toEqual({ ok: true, printed: [3, 4, 5], walkInBibStart: 3, walkInBibCount: 3 });
+    expect(first).toEqual({ ok: true, printed: [3, 4, 5], skipped: [], walkInBibStart: 3, walkInBibCount: 3 });
     const second = planSpareReservation({ band: { from: 3, to: 5 }, taken: new Set([1, 2, 6]), bibStartNumber: 1, count: 2 });
-    // 6 was an online runner's before the extension reached it: it stays theirs, inside the range.
-    expect(second).toEqual({ ok: true, printed: [7, 8], walkInBibStart: 3, walkInBibCount: 6 });
+    // 6 was an online runner's before the extension reached it: it stays theirs, inside the range,
+    // and the plan names it as stepped over — never a spare, since no blank bib carries it.
+    expect(second).toEqual({ ok: true, printed: [7, 8], skipped: [6], walkInBibStart: 3, walkInBibCount: 6 });
+  });
+
+  it("names every number an extension stepped over, and none past the last it printed", () => {
+    // Reserved 2–3; online runners hold 4, 5 and 8; three more spares: 6, 7, 9 — 4, 5, 8 skipped.
+    const plan = planSpareReservation({ band: { from: 2, to: 3 }, taken: new Set([1, 4, 5, 8, 12]), bibStartNumber: 1, count: 3 });
+    expect(plan).toEqual({ ok: true, printed: [6, 7, 9], skipped: [4, 5, 8], walkInBibStart: 2, walkInBibCount: 8 });
   });
 
   it("refuses a count outside one to the per-print maximum, a reservation past its ceiling, and no room under 99 999", () => {
@@ -75,5 +85,51 @@ describe("§NNN what a print reserves", () => {
       ok: false,
       reason: "ceiling",
     });
+  });
+});
+
+describe("§NNN the print's banner", () => {
+  it("reads a numeric range from the address, so the banner and its sheet link render", () => {
+    // The redirect after «Tipărește» carries `from` and `to` as digits: the banner must appear.
+    expect(spareRangeOfQuery("900", "949")).toEqual({ from: 900, to: 949 });
+    expect(spareRangeOfQuery("7", "7")).toEqual({ from: 7, to: 7 });
+    expect(spareRangeOfQuery("1", "99999")).toEqual({ from: 1, to: 99_999 });
+  });
+
+  it("shows nothing for a range that is not two numbers, or runs backwards", () => {
+    expect(spareRangeOfQuery(undefined, "949")).toBeNull();
+    expect(spareRangeOfQuery("900", undefined)).toBeNull();
+    // The letter the lost backslash matched, and anything that is not digits alone.
+    expect(spareRangeOfQuery("d", "d")).toBeNull();
+    expect(spareRangeOfQuery("9a", "949")).toBeNull();
+    expect(spareRangeOfQuery("900", "123456")).toBeNull();
+    expect(spareRangeOfQuery("0", "5")).toBeNull();
+    expect(spareRangeOfQuery("949", "900")).toBeNull();
+  });
+
+  it("is what the event page's banner is gated on", () => {
+    const page = readFileSync("src/app/[locale]/admin/events/[id]/page.tsx", "utf8");
+    expect(page).toContain('saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null');
+    expect(page).toMatch(/\{reservedRange && \(\s*<Alert[\s\S]*?data-testid="spares-reserved"/);
+  });
+});
+
+describe("§NNN «Confirmă aici» hands a spare only to a walk-in", () => {
+  it("suggests the spare to a walk-in: a real runner with no number, settled or provisional", () => {
+    expect(handsSpareAtConfirm({ kind: "REAL", bibNumber: null, provisionalBibNumber: null })).toBe(true);
+  });
+
+  it("leaves an online runner's provisional number theirs: no spare box, the confirmation adopts it", () => {
+    expect(handsSpareAtConfirm({ kind: "REAL", bibNumber: null, provisionalBibNumber: 57 })).toBe(false);
+    // A settled number is never swapped either, and a test registration wears none.
+    expect(handsSpareAtConfirm({ kind: "REAL", bibNumber: 57, provisionalBibNumber: null })).toBe(false);
+    expect(handsSpareAtConfirm({ kind: "TEST", bibNumber: null, provisionalBibNumber: null })).toBe(false);
+  });
+
+  it("is what the desk row's spare box and its «out» sentence are gated on", () => {
+    const desk = readFileSync("src/modules/registrations/ui/DeskRow.tsx", "utf8");
+    expect(desk).toContain('spare.kind !== "none" && handsSpareAtConfirm(row) && (');
+    expect(desk).toContain("sparesOut && handsSpareAtConfirm(row) &&");
+    expect(desk).not.toContain('row.bibNumber === null && row.kind === "REAL"');
   });
 });

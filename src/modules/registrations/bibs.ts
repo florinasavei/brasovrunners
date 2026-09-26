@@ -45,8 +45,9 @@ async function bandOf<T extends Record<string, unknown>>(
 }
 
 /**
- * Every number this event has on somebody — settled, provisional, and erased (§214, §311) — as one
- * set, for the checks that ask "is this one free" rather than "which is the next".
+ * Every number this event has on somebody — settled, provisional, and erased (§214, §311) — and
+ * every number a print stepped over (§NNN, `skippedSpareNumbers`), as one set, for the checks that
+ * ask "is this one free" rather than "which is the next".
  */
 async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Set<number>> {
   const rows = await db
@@ -59,7 +60,31 @@ async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, 
     if (row.provisional !== null) taken.add(row.provisional);
   }
   for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
+  for (const number of await skippedSpareNumbers(db, eventId)) taken.add(number);
   return taken;
+}
+
+/**
+ * The numbers inside the desk's reservation that were never printed blank (§NNN): an extension
+ * reached past them while a runner held them, so the print stepped over them and wrote them in its
+ * audit row (`planSpareReservation`, `skipped`). Such a number stays its runner's — the close keeps
+ * it — and when it is released (a hold that lapsed) it is nobody's: inside the band, so no draw
+ * gives it, and never a spare, because no blank bib carries it. Read from the audit rows, as the
+ * erased numbers are (§311): a fact about a past print, not a column on the event.
+ */
+async function skippedSpareNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
+  const rows = await db
+    .select({ metadata: auditLogs.metadataJson })
+    .from(auditLogs)
+    .where(and(eq(auditLogs.action, "registration.bib_spares_reserved"), eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId)));
+  const skipped: number[] = [];
+  for (const row of rows) {
+    const list = (row.metadata as { skipped?: unknown } | null)?.skipped;
+    if (!Array.isArray(list)) continue;
+    // Whole numbers only: a malformed row is skipped, never turns the desk into an error.
+    for (const number of list) if (Number.isInteger(number)) skipped.push(number as number);
+  }
+  return skipped;
 }
 
 /**
@@ -413,25 +438,47 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
   // a spare is printed blank for a walk-in, and the settled sequence is printed with names.
   const { spare } = await bandOf(tx, input.eventId, input.bibStartNumber);
 
+  /*
+    A provisional number inside the desk's reservation is its holder's for good (§NNN): an extension
+    of the reservation reached past it while they held it, and the print stepped over it, so no
+    blank bib carries it. Moved out of the band here, it would be counted a free spare nobody
+    printed — the desk would suggest it. So it becomes the final number as it is, taken before the
+    run closes around the rest; only a collision (which the draws make impossible) falls back to
+    the run.
+  */
+  const keptInBand = new Set<string>();
+  for (const row of waiting) {
+    if (row.provisional !== null && isSpareNumber(spare, row.provisional) && !taken.has(row.provisional)) {
+      taken.add(row.provisional);
+      keptInBand.add(row.id);
+    }
+  }
+
   const settled: SettledBib[] = [];
   let candidate = input.bibStartNumber;
   for (const row of waiting) {
-    while (taken.has(candidate) || isSpareNumber(spare, candidate)) candidate += 1;
-    taken.add(candidate);
+    let number: number;
+    if (keptInBand.has(row.id)) {
+      number = row.provisional as number;
+    } else {
+      while (taken.has(candidate) || isSpareNumber(spare, candidate)) candidate += 1;
+      number = candidate;
+      taken.add(number);
+      candidate += 1;
+    }
     await tx
       .update(registrations)
       // The provisional number goes with it: one number per runner, and the column that said
       // "this can still change" must not be left behind saying something else.
-      .set({ bibNumber: candidate, provisionalBibNumber: null, updatedAt: input.now })
+      .set({ bibNumber: number, provisionalBibNumber: null, updatedAt: input.now })
       .where(eq(registrations.id, row.id));
     settled.push({
       registrationId: row.id,
       participantId: row.participantId,
       locale: row.locale,
       recipientEmail: row.recipientEmail,
-      bibNumber: candidate,
+      bibNumber: number,
     });
-    candidate += 1;
   }
 
   await tx.update(events).set({ bibsSettledAt: input.now }).where(eq(events.id, input.eventId));
@@ -688,7 +735,8 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
       action: "registration.bib_spares_reserved",
       entityType: "event",
       entityId: input.eventId,
-      metadata: { from, to, count: plan.printed.length, reservedFrom: plan.walkInBibStart, reservedCount: plan.walkInBibCount },
+      // `skipped`: the numbers inside the range somebody held, never a spare (`skippedSpareNumbers`).
+      metadata: { from, to, count: plan.printed.length, reservedFrom: plan.walkInBibStart, reservedCount: plan.walkInBibCount, skipped: plan.skipped },
       now,
     });
     return {
@@ -734,7 +782,9 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
   eventId: string,
   number: number,
 ): Promise<boolean> {
-  return isSpareNumber((await bandOf(db, eventId)).spare, number);
+  if (!isSpareNumber((await bandOf(db, eventId)).spare, number)) return false;
+  // Inside the band but stepped over by a print (§NNN): no blank bib carries it.
+  return !(await skippedSpareNumbers(db, eventId)).includes(number);
 }
 
 export type BibRow = { id: string; bibNumber: number; registeredName: string };

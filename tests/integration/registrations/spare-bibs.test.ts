@@ -189,8 +189,8 @@ describe("§NNN the print reserves the spares", () => {
 
     const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.bib_spares_reserved"));
     expect(audits.map((audit) => audit.metadataJson)).toEqual([
-      { from: 41, to: 43, count: 3, reservedFrom: 41, reservedCount: 3 },
-      { from: 44, to: 45, count: 2, reservedFrom: 41, reservedCount: 5 },
+      { from: 41, to: 43, count: 3, reservedFrom: 41, reservedCount: 3, skipped: [] },
+      { from: 44, to: 45, count: 2, reservedFrom: 41, reservedCount: 5, skipped: [] },
     ]);
   });
 
@@ -258,6 +258,61 @@ describe("§NNN BR-REQ-038-01 the allocator never draws a desk spare", () => {
       settleBibNumbers(tx, { eventId: event.id, bibStartNumber: 1, bibsSettledAt: null, now: later(10) }),
     );
     expect(settled.map((row) => row.bibNumber)).toEqual([1, 4, 5]);
+  });
+
+  it("keeps an online runner's number the extension reached as theirs at the close, and never suggests an unprinted number as a spare", async () => {
+    const event = await createRace({ spare: null });
+    const a = await enter(event, "a@example.org");
+    // First print: 2–3, blank.
+    const first = await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: later(1) });
+    expect([first.from, first.to]).toEqual([2, 3]);
+    // Two online runners draw provisional numbers; the draw steps over 2–3.
+    const b = await enter(event, "b@example.org", { at: later(2) });
+    const c = await enter(event, "c@example.org", { at: later(3) });
+    expect([a.provisionalBibNumber, b.provisionalBibNumber, c.provisionalBibNumber]).toEqual([1, 4, 5]);
+    // A and B confirm their address; C never does, and gives 5 back at the close (§420).
+    await confirmEmail(db, event, a.id, later(4));
+    await confirmEmail(db, event, b.id, later(4));
+
+    // Second print: the reservation grows over 4 and 5 to reach 6 and 7, and says it stepped over them.
+    const second = await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: later(5) });
+    expect(second).toEqual({ from: 6, to: 7, count: 2, band: { from: 2, to: 7 } });
+    const printed = [2, 3, 6, 7];
+    expect((await freeSpareBibNumbers(db, event.id)).free).toEqual(printed);
+
+    // The close: B keeps 4 (never moved out of the band), C's 5 is released, A keeps 1.
+    await db.update(events).set({ registrationClosesAt: later(9) }).where(eq(events.id, event.id));
+    const settled = await db.transaction((tx) =>
+      settleBibNumbers(tx, { eventId: event.id, bibStartNumber: 1, bibsSettledAt: null, now: later(10) }),
+    );
+    expect(settled.map((row) => [row.registrationId, row.bibNumber])).toEqual([
+      [a.id, 1],
+      [b.id, 4],
+    ]);
+    expect((await rowOf("c@example.org")).provisionalBibNumber).toBeNull();
+
+    // Every spare the desk is offered is one printed blank: 4 is B's, 5 was never printed.
+    const { free } = await freeSpareBibNumbers(db, event.id);
+    expect(free).toEqual(printed);
+    expect((await spareCardState(db, event.id)).free).toBe(4);
+    expect(await spareStates(db, [event.id])).toEqual({ [event.id]: { kind: "free", next: 2 } });
+
+    // A walk-in handed no number after the close draws past the whole reservation, never 5.
+    const walkIn = await enter(event, "walkin@example.org", { fastTrack: true, at: later(11) });
+    expect(walkIn.bibNumber).toBe(8);
+    // A walk-in handed the desk's spares takes them one by one, and the last spare is 7.
+    for (const [index, number] of printed.entries()) {
+      const handed = await enter(event, `spare${index}@example.org`, { fastTrack: true, bibNumber: number, at: later(12 + index) });
+      expect(handed.bibNumber).toBe(number);
+    }
+    expect(await spareStates(db, [event.id])).toEqual({ [event.id]: { kind: "out" } });
+
+    // No number worn twice.
+    const worn = (await db.select({ bib: registrations.bibNumber }).from(registrations).where(eq(registrations.eventId, event.id)))
+      .map((row) => row.bib)
+      .filter((bib): bib is number => bib !== null);
+    expect(new Set(worn).size).toBe(worn.length);
+    expect(worn.sort((x, y) => x - y)).toEqual([1, 2, 3, 4, 6, 7, 8]);
   });
 
   it("draws a number after the close past the reservation when the desk hands none", async () => {

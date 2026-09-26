@@ -16,7 +16,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
-import type { SpareState } from "../domain/spare-bibs";
+import { handsSpareAtConfirm, type SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
@@ -311,12 +311,13 @@ export default async function DeskRow({
               {hidden}
               <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                 {/*
-                  The bib handed with the paper (§NNN): the next desk spare, suggested, for a runner
-                  with no settled number — the settle's numbers are printed with names, so a walk-in
-                  or a late paper gets a pre-printed spare, never a number nobody printed. Emptied,
-                  the platform draws one as before. Only where the club set spares.
+                  The bib handed with the paper (§NNN): the next desk spare, suggested, for a walk-in —
+                  a runner with no number at all, settled or provisional — so they get a pre-printed
+                  spare, never a number nobody printed. An online runner's provisional number, shown
+                  at the head of the row, stays theirs: no box, and the confirmation adopts it (§220).
+                  Emptied, the platform draws one as before. Only where the club set spares.
                 */}
-                {spare.kind !== "none" && row.bibNumber === null && row.kind === "REAL" && (
+                {spare.kind !== "none" && handsSpareAtConfirm(row) && (
                   <RecallField
                     name="bibNumber"
                     type="number"
@@ -335,7 +336,7 @@ export default async function DeskRow({
             </ActionForm>
           )}
           {/* Every spare given (§NNN): the box above suggests nothing, and this says why. */}
-          {!readOnly && sparesOut && row.kind === "REAL" && ((canConfirm && row.bibNumber === null) || (row.status === "CONFIRMED" && number === null)) && (
+          {!readOnly && sparesOut && handsSpareAtConfirm(row) && (canConfirm || row.status === "CONFIRMED") && (
             <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }} data-testid="desk-spares-out">
               {t("desk.sparesOut")}
             </Typography>
