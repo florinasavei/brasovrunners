@@ -63,6 +63,8 @@ export async function signGroupRunDeclarationAction(form: FormData): Promise<voi
         accepted: form.get("accepted") === "on",
         typedName: text(form, "typedName"),
         idDocument,
+        // Counted against the run's minimum age and dropped (§NNN); absent when the run has none.
+        birthDate: text(form, "birthDate") || undefined,
         email: text(form, "email"),
         locale: signingLocale,
         honeypot: text(form, "honeypot") || undefined,

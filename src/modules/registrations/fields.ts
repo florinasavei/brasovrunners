@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { ageOn, isMinorOn } from "./domain/age";
+import { isMinorOn, isUnderMinimumAge } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -291,16 +291,15 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * (BR-REQ-031-04 criterion 5), and then there is nothing to count — the organizer saw or heard
  * the person, and refusing the row for a detail nobody was told would lose the registration,
  * which is the rule that criterion keeps. A malformed date is left to the schema's own message
- * (`ageOn` answers null), so the summary never gives a second, untrue reason.
+ * (`ageOn` answers null), so the summary never gives a second, untrue reason. The comparison is
+ * `isUnderMinimumAge`, the one a group run's self-declaration asks too (§NNN).
  *
  * Counted against the day of the event, where the guardian rule above counts against today:
  * the minimum is about the day somebody runs; eighteen is about who fills the form in.
  */
 export function minimumAgeRule(eventDay: string, minAge: number) {
   return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
-    if (minAge <= 0 || !value.birthDate) return;
-    const age = ageOn(value.birthDate, eventDay);
-    if (age === null || age >= minAge) return;
+    if (!value.birthDate || !isUnderMinimumAge(value.birthDate, eventDay, minAge)) return;
     ctx.addIssue({
       code: "custom",
       path: ["birthDate"],

@@ -272,8 +272,10 @@ function eventFieldsFrom(form: FormData) {
         : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
-    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`).
-    minAge: value("minAge"),
+    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). A group
+    // run's is its own box in "Traseul", beside the declaration that states it (§NNN): the race box
+    // is hidden for a group run but still posts, so the type decides which one answers.
+    minAge: value("type") === "GROUP_RUN" && form.has("event.groupRunMinAge") ? value("groupRunMinAge") : value("minAge"),
     // The event's own reminder lead (§377), only when the form carried its select: the empty
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,

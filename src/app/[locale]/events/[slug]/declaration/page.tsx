@@ -16,12 +16,13 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "@/modules/group-run-declarations/domain";
-import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid } from "@/modules/group-run-declarations/form";
+import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedBotCheckSiteKey, cachedDeadlines, cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
+import { dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { eventMergeValues } from "@/modules/registrations/signed-declaration";
@@ -125,6 +126,18 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const draftKind = ID_DOCUMENT_TYPES.find((kind) => kind === draft?.idDocumentType) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: tDeclare(`declare.idDocumentTypes.${kind}`) }));
   const fieldLabel = (field: (typeof GROUP_RUN_FORM_FIELDS)[number]) => t(`groupRunDeclaration.page.fields.${field}`);
+  /*
+    The run's own minimum age (§329, §NNN): the birth date is asked only while it has one, counted
+    on the run's day in its zone — the picker's bound is the arithmetic the service refuses with
+    (`latestBirthDateFor`, `isUnderMinimumAge`), today a bound as well. A refusal for age says the
+    number, in the summary and under the box, rather than "fill it in" (§47, as the race's §321).
+  */
+  const hasMinimumAge = event.minAge > 0;
+  const minimumAge = { age: yearsPhrase(event.minAge, locale) };
+  const tooYoung = hasMinimumAge && refusedTooYoung(invalid);
+  const today = now.toISOString().slice(0, 10);
+  const youngestAllowed = hasMinimumAge ? latestBirthDateFor(event.minAge, dayIn(event.startsAt, event.timezone)) : today;
+  const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -146,6 +159,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       <LegalDocumentBody
         body={document.body}
         values={{
+          // The run's facts, its minimum age among them (§NNN): "" on a run with none drops that sentence.
           ...(facts?.values ?? {}),
           guardian: "—",
           guardianIdDocument: "—",
@@ -174,6 +188,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {refused.map((field) => (
             <Box key={field} sx={{ mt: 0.5 }}>
               <MuiLink href={`#${field}`}>{fieldLabel(field)}</MuiLink>
+              {field === "birthDate" && tooYoung && <>: {t("groupRunDeclaration.page.tooYoung", minimumAge)}</>}
             </Box>
           ))}
         </Alert>
@@ -210,6 +225,21 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               defaultKind={draftKind}
               defaultValue={draft?.idDocument ?? ""}
               refused={refused.includes("idDocument")}
+            />
+          )}
+          {hasMinimumAge && (
+            <TextField
+              id="birthDate"
+              name="birthDate"
+              type="date"
+              label={fieldLabel("birthDate")}
+              helperText={tooYoung ? t("groupRunDeclaration.page.tooYoung", minimumAge) : t("groupRunDeclaration.page.birthDateHelp", minimumAge)}
+              defaultValue={draft?.birthDate ?? ""}
+              error={refused.includes("birthDate")}
+              required
+              autoComplete="bday"
+              slotProps={{ inputLabel: { shrink: true }, htmlInput: { max: latestBirthDate } }}
+              data-testid="group-run-declaration-birth-date"
             />
           )}
           <TextField

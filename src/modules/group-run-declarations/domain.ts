@@ -2,6 +2,8 @@
  * The pure rules of a group run's optional self-declaration (§393), shared by the run's page, the
  * signing page and the service, with no database behind them.
  */
+import { ageOn, dayIn, isUnderMinimumAge } from "@/modules/registrations/domain/age";
+import { GROUP_RUN_TOO_YOUNG } from "./form";
 
 /** How long after the start the page still takes a signature: somebody at the meeting point, late. */
 export const SIGNING_GRACE_MINUTES = 60;
@@ -17,6 +19,24 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
     event.eventStatus !== "CANCELLED" &&
     now.getTime() <= event.startsAt.getTime() + SIGNING_GRACE_MINUTES * 60_000
   );
+}
+
+/**
+ * The run's minimum age at the signing page's door (§NNN, amending §393): the event's own number
+ * (§329), counted on the run's day in the run's zone by `isUnderMinimumAge` — the rule the race's
+ * registration door asks (`minimumAgeRule`), never a second one. Nothing is asked of a run with no
+ * minimum. A missing or unreadable date names the box; a date under the minimum names the box and
+ * the marker, so the page says the number rather than "fill it in".
+ */
+export function birthDateRefusal(
+  event: { minAge: number; startsAt: Date; timezone: string },
+  birthDate: string | undefined,
+): string[] {
+  if (event.minAge <= 0) return [];
+  const day = dayIn(event.startsAt, event.timezone);
+  const value = (birthDate ?? "").trim();
+  if (ageOn(value, day) === null) return ["birthDate"];
+  return isUnderMinimumAge(value, day, event.minAge) ? ["birthDate", GROUP_RUN_TOO_YOUNG] : [];
 }
 
 /** The longest name a signature box takes, as the race's does. */

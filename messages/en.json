@@ -391,6 +391,7 @@
           "email": "Email address",
           "accepted": "I am 18 or older, I have read the declaration and I sign it",
           "typedName": "Signature: your full name",
+          "birthDate": "Date of birth",
           "captcha": "The anti-bot check"
         },
         "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the copies sent by email — yours and the club's — it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
@@ -399,6 +400,8 @@
         "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
         "accept": "I am 18 or older, I have read the declaration above and sign it on my own responsibility",
         "typedNameHelp": "Type your full name. It appears as a signature.",
+        "birthDateHelp": "For the run's minimum age: {age}, reached by the day of the run. We do not keep it and it is not in the declaration.",
+        "tooYoung": "The minimum age for this run is {age}, reached by the day of the run. The declaration cannot be signed.",
         "captcha": "The anti-bot check did not pass. Please try again.",
         "action": "Sign the declaration"
       }
@@ -1642,7 +1645,8 @@
         "label": "Optional self-declaration",
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
-        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
+        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
+        "minAgeHelp": "Reached by the day of the run; it is stated in the declaration, and the signing page refuses anyone younger. 0 means no minimum age."
       },
       "pageFlow": {
         "title": "The page, top to bottom",
@@ -1923,6 +1927,7 @@
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
+        "minimumAge": "The event's minimum age, with its unit (“16 years”). On an event with no minimum age, the sentence naming it is left out of the declaration",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself"
       },

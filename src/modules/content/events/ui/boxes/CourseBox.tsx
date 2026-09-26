@@ -17,6 +17,8 @@ import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
 import GroupRunDeclarationField from "../GroupRunDeclarationField";
 import NightEventField from "../NightEventField";
+import OnlyForType from "../OnlyForType";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
@@ -192,6 +194,21 @@ export default async function CourseBox({
             },
           }}
         />
+        {/* The group run's minimum age (§329, §NNN), beside the declaration it is stated in: the
+            event's own `min_age`, which the registration card holds for a race and hides for a group
+            run (§111). Its own name, so the hidden race box cannot answer for it — the reader picks
+            this one for a group run (`admin/actions.ts`). */}
+        <OnlyForType type="GROUP_RUN" selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+          <RecallField
+            name="event.groupRunMinAge"
+            label={t("editor.minAge")}
+            helperText={t("editor.groupRunDeclaration.minAgeHelp")}
+            defaultValue={event?.minAge ?? MIN_PARTICIPANT_AGE}
+            {...textFieldConstraints(eventInputConstraints("minAge"), { inputMode: "numeric" })}
+            sx={{ width: { sm: 220 } }}
+            data-testid="group-run-min-age"
+          />
+        </OnlyForType>
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}
