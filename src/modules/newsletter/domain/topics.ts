@@ -38,7 +38,7 @@ export function normalizeTopics(values: readonly unknown[]): NewsletterTopic[] {
 /**
  * Whether a subscriber with these topics receives a send written for those: they asked for
  * everything, or for at least one of the send's topics. The one rule the send, the alert, the
- * counts on `/admin/emails` and their SQL twin (`service.ts#receivesSql`) all mean.
+ * counts on `/admin/newsletter` and their SQL twin (`service.ts#receivesSql`) all mean.
  */
 export function receives(subscriberTopics: readonly NewsletterTopic[], sendTopics: readonly NewsletterTopic[]): boolean {
   if (subscriberTopics.includes("ALL")) return true;

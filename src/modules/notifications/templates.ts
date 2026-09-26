@@ -1983,9 +1983,11 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
 /**
  * The messages that carry the event's facts block (§392): the confirmation, the reminder, and the
  * declaration request — which, for a race with a participation window, is the participation
- * confirmation itself (§104), sent at once and again when the window opens.
+ * confirmation itself (§104), sent at once and again when the window opens. And the newsletter's
+ * new-event alert (§NNN): a subscriber deciding whether to come reads the same when, where,
+ * programme, route, cost and links as a runner who registered, from the same function.
  */
-const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION"]);
+const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION", "NEW_EVENT_ALERT"]);
 
 /**
  * The messages that are not to a participant about their own data (§323), and so carry no

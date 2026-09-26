@@ -325,7 +325,7 @@ export type NewsletterAudience = {
   byTopic: Readonly<Record<Exclude<NewsletterTopic, "ALL">, number>>;
 };
 
-/** The counts `/admin/emails` shows — numbers only, never an address. */
+/** The counts `/admin/newsletter` shows — numbers only, never an address. */
 export async function countNewsletterAudience<T extends Record<string, unknown>>(db: Database<T>): Promise<NewsletterAudience> {
   const [totals] = await db
     .select({

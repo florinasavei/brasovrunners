@@ -469,6 +469,7 @@
       "gallery": "Gallery",
       "checkin": "Race day",
       "emails": "Emails",
+      "newsletter": "Newsletter",
       "guide": "Guide",
       "registeredHint": "How many are signed up across every event still to come"
     },
@@ -2305,7 +2306,7 @@
           "how": [
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
-            "You write the newsletter in /admin/emails → “Newsletter”; the new-event announcements go by themselves."
+            "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
           ]
         }
       },
@@ -2918,7 +2919,7 @@
         "GROUP_RUN_DECLARATION_ARCHIVE": "Together with a declaration signed on a group run, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, if none is set here). No action link; in the attached PDF the identity document's series and number are masked.",
         "REGISTER_ANOTHER_PERSON": "When the public form is sent again with an address already registered for the event and another name. No registration is created, and the screen shows the same “check your email” as always. The address gets a single-use link, valid for {confirmation}, to the form with the address fixed — or, if it already has {people}, only the sentence that says so, with no link.",
         "NEWSLETTER_CONFIRM": "As soon as someone subscribes in the contact page's pop-up: the link that confirms the subscription, valid for {confirmation}. An address already subscribed gets, instead, the link to its own subscription, and nothing changes. An unconfirmed address receives nothing else.",
-        "NEWSLETTER": "Only when an organizer writes and sends a newsletter from the “Newsletter” card above. To the subscribers of the topic chosen and those who receive everything, each in their own language first, with the unsubscribe link. It leaves after every other email, and only from the part of the allowance left above the reserve kept for registrations.",
+        "NEWSLETTER": "Only when an organizer writes and sends a newsletter from the backoffice's “Newsletter” page. To the subscribers of the topic chosen and those who receive everything, each in their own language first, with the unsubscribe link. It leaves after every other email, and only from the part of the allowance left above the reserve kept for registrations.",
         "NEW_EVENT_ALERT": "Automatically, once for each new event published (never the weekly run), on the job's first run after publication: to those subscribed to new events and to the event's own topics (a race, a special event, gear testing) and those who receive everything, with the unsubscribe link."
       },
       "whenShort": {
@@ -3213,7 +3214,9 @@
           "other": "{count} people"
         }
       },
-      "perSendNewsletter": "The newsletter's text is written per send, in the “Newsletter” card above, so it has no words to edit here."
+      "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
+      "newsletterLink": "Newsletter →",
+      "newsletterLinkHelp": "The subscribers and the messages to them have their own page in the menu."
     },
     "guide": {
       "title": "How to use the platform",
@@ -3304,6 +3307,7 @@
             "Publishing: you press “Submit for review”. “Publish” is the Administrator's, as are taking a live event down and archiving one. Both languages go live together; an incomplete language blocks publishing.",
             "Registrations (Organizer, not Tehnic): you see the whole list, each registration with its history, the export (Excel or CSV), the race numbers and the signed declarations. You cannot cancel, erase, rename or resend an email — those are the Administrator's.",
             "A message to the participants (Organizer, not Tehnic): the event's page → “Registrations received” → “Send a message to participants” — bad weather, a last-minute change, a cancellation. You choose who receives it (everyone registered, only the confirmed, the waiting list or those who have not signed the declaration) and see how many they are; you write the subject and the message in Romanian and in English; you see the email exactly as it goes out, for someone registered in Romanian and for someone registered in English; you confirm. It goes through the email queue, to each in their own language; under the form stay the “Messages sent”, with the date, the subject, the group, how many and who sent it.",
+            "The newsletter (Organizer, not Tehnic): the “Newsletter” menu — see how many confirmed subscribers there are, per topic, and when the last message left. In “Write to the subscribers” choose the topic, write the subject and the text in Romanian and in English, see the email as it leaves and confirm. No address appears anywhere, only the numbers; the new-event announcements go by themselves.",
             "Race numbers: “Assign numbers”, on the event page, is the Administrator's. The sheet is yours to download: “Download the sheet (PDF)” — two per A4, with the logo — from the event page or from “Registrations”. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
             "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
             "Race numbers: at confirmation everyone gets one at random. A preferential number: the registration's page → “Race number” — the free numbers are listed beside the field, type one, save; the participant gets the number by email, with the QR code. A number somebody else already wears is refused.",
@@ -3326,6 +3330,7 @@
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
+            "“Newsletter” → “Remove an address at someone's request”: when someone asks in writing to stop receiving the news, type their address and confirm — the address is deleted, with its topics.",
             "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
             "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
           ],
@@ -3471,7 +3476,7 @@
     },
     "newsletter": {
       "title": "Subscribers",
-      "intro": "Who subscribed on the contact page, to which topics, and a message to them. No address appears here, only the numbers.",
+      "intro": "Who subscribed on the contact page and to which topics, what was sent and when. No address appears here, only the numbers.",
       "aside": {
         "one": "{count} subscriber",
         "few": "{count} subscribers",
@@ -3484,6 +3489,7 @@
       "allowanceDay": "At most {count} newsletter emails can leave today: half the daily allowance stays for registrations. What does not fit leaves over the next days, by itself.",
       "allowanceMonth": "At most {count} newsletter emails can leave this month: a fifth of the monthly allowance stays for registrations. What does not fit leaves after the reset, by itself.",
       "compose": "Write to the subscribers",
+      "composeIntro": "A message to the subscribers of one topic, in Romanian and in English: each receives it in their own language first, with the unsubscribe link.",
       "topic": "What it is about",
       "topicHelp": "The subscribers of this topic receive it, and those who receive everything the club sends.",
       "recipients": {
@@ -3505,7 +3511,6 @@
         "other": "Send the newsletter to {count} subscribers?"
       },
       "confirmBody": "Topic: {topic}. Each receives it in their own language first, with the unsubscribe link. Once sent it cannot be stopped.",
-      "readOnly": "Organizers and administrators send the newsletter.",
       "history": "Sent",
       "historyEmpty": "Nothing sent yet.",
       "historyMessage": "{when} · “{subject}” · {topics} · {count} recipients · {sender}",

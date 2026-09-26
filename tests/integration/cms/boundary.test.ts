@@ -203,6 +203,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // written here by hand.
       "/admin/legal/[id]/delete",
       "/admin/legal/new",
+      // The newsletter's own backoffice entry (§NNN): the subscribers and the composer, by hand.
+      "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
       "/admin/pages/new",

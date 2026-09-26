@@ -135,7 +135,7 @@ export type AuditAction =
    */
   | "event.participant_message_sent"
   /**
-   * A newsletter queued from `/admin/emails` (§NNN): who (the actor), the topic, how many
+   * A newsletter queued from `/admin/newsletter` (§NNN): who (the actor), the topic, how many
    * subscribers and the subject in both languages — never an address, never the body (§12.12).
    */
   | "newsletter.sent"

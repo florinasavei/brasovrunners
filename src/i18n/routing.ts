@@ -170,6 +170,12 @@ export const routing = defineRouting({
     "/admin/guide": "/admin/guide",
     /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91). */
     "/admin/emails": "/admin/emails",
+    /**
+     * «Newsletter» (§NNN): the subscribers as numbers and the composer that writes to them — the
+     * backoffice's own entry, after «Emailuri» (the owner, 2026-09-26: "un meniu suplimentar în
+     * backoffice cu «Newsletter»"). One spelling in both locales, a backoffice address.
+     */
+    "/admin/newsletter": "/admin/newsletter",
     "/admin/checkin": "/admin/checkin",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

@@ -377,6 +377,74 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(english.text).toContain("See the event");
     });
 
+    it("§NNN carries §392's facts block — Când, Unde, Program, Traseu, Cost, Linkuri — each half in its own language, as the confirmed email does", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("big@example.org", ["BIG_EVENTS"]);
+      await confirmationsSent();
+      const MAP = "https://maps.example/tractorul";
+      const PAY = "https://pay.example/cros";
+      const STRAVA = "https://www.strava.com/clubs/1/group_events/2";
+      const DOC = ["https:/", "drive.example.test", "file", "d", "doc", "view"].join("/");
+      const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+      // The confirmed email's own sample race (`confirmation-event-facts.test.ts`): Saturday 21 November, 09:00 in Brașov, the gun at 09:30.
+      const race = await seedEvent({
+        startsAt: new Date("2026-11-21T07:00:00.000Z"),
+        raceStartsAt: new Date("2026-11-21T07:30:00.000Z"),
+        timezone: "Europe/Bucharest",
+        locationAddress: "Strada Carpaților 60",
+        mapUrl: MAP,
+        scheduleItems: [{ startsAt: "2026-11-21T06:00:00.000Z", endsAt: null, label: { ro: "Ridicarea numerelor", en: "Number pickup" }, place: "Cort" }],
+        surface: "TRAIL",
+        difficulty: "HARD",
+        distanceMeters: 21_100,
+        elevationGainMeters: 900,
+        nightOverride: true,
+        costType: "PAID",
+        costAmount: "50 lei",
+        costUrl: PAY,
+        stravaEventUrl: STRAVA,
+        links: [{ kind: "DOCUMENT", url: DOC, labelRo: null, labelEn: null }],
+      });
+      await db
+        .update(eventTranslations)
+        .set({ locationName: "Parcul Tractorul", rulesJson: doc("Regulamentul."), routeDescriptionJson: doc("Apă la km 10.") })
+        .where(and(eq(eventTranslations.eventId, race.id), eq(eventTranslations.locale, "ro")));
+      await db
+        .update(eventTranslations)
+        .set({ locationName: "Tractorul Park", rulesJson: doc("The rules."), routeDescriptionJson: doc("Water at km 10.") })
+        .where(and(eq(eventTranslations.eventId, race.id), eq(eventTranslations.locale, "en")));
+
+      expect(await queueNewEventAlerts(db, NOW)).toBe(1);
+      const [row] = await outboxOf("NEW_EVENT_ALERT");
+      const message = await renderOutboxMessage(row, db, NOW);
+      const [ro, en] = message.text.split("\n— — —\n");
+      const page = `/ro/evenimente/crosul-${race.id.slice(0, 8)}`;
+      const enPage = `/en/events/cross-${race.id.slice(0, 8)}`;
+
+      expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
+      expect(ro).toContain(`Unde: Parcul Tractorul\n  Strada Carpaților 60\n  Vezi pe hartă: ${MAP}`);
+      expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
+      expect(ro).toContain(`Traseu: Trail · Greu · 21,1 km · 900 m D+ · Eveniment de noapte\n  Evenimentul pe Strava: ${STRAVA}`);
+      expect(ro).toContain(`Cost: 50 lei\n  plata pe pay.example: ${PAY}`);
+      expect(ro).toMatch(
+        new RegExp(`Linkuri:\\n  Pagina evenimentului: \\S+${page}\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`),
+      );
+      expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
+      expect(en).toContain(`Where: Tractorul Park\n  Strada Carpaților 60\n  Open the map: ${MAP}`);
+      expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
+      expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Night event");
+      expect(en).toContain(`Cost: 50 lei\n  payment on pay.example: ${PAY}`);
+      expect(en).toMatch(new RegExp(`Links:\\n  The event's page: \\S+${enPage}\\n  Programme: \\S+${enPage}#schedule`));
+      // The block took the place of the old bold line: the date and the place are said once, the page linked once.
+      expect(ro).not.toContain("Sâmbătă, 21 nov. 2026, 09:00 · Parcul Tractorul");
+      expect(ro.split("Pagina evenimentului").length - 1).toBe(1);
+      for (const anchor of ["#schedule", "#rules", "#links"]) expect(ro.split(anchor).length - 1).toBe(1);
+      expect(message.text).not.toContain(DOC);
+      expect(message.html.split('data-email-part="event-facts"').length - 1).toBe(2);
+      // And the subscriber's way out is still under the button (Legea 506/2004 art. 12(2)).
+      secretIn(message, "manage");
+    });
+
     it("announces a weekly series once, to the weekly runs, by its first event — never its dates, a draft, a cancelled event or one published long ago", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("weekly@example.org", ["WEEKLY_RUNS"]);

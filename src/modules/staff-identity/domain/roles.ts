@@ -450,6 +450,9 @@ export function canManageStaff(role: StaffRole): boolean {
  *                    or canSeeDiagnostics      for the «Aplicația» panel alone (§397)
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
+ *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
+ *                                             composer (§NNN); withdrawing an address asks
+ *                                             `canManageRegistrations` for itself
  *     staff          canManageStaff           `admin/staff/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
  *
@@ -467,6 +470,7 @@ export const ADMIN_SECTIONS = [
   "tasks",
   "legal",
   "emails",
+  "newsletter",
   "staff",
   "devs",
 ] as const;
@@ -535,6 +539,13 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
       from nowhere else (the owner: "I am missing the email templates config … in this navbar").
     */
     ...(canReadContent(role) ? (["emails"] as const) : []),
+    /*
+      «Newsletter» (§NNN; the owner, 2026-09-26: "pentru newsletter o să fie un meniu suplimentar
+      în backoffice cu «Newsletter»"): the subscribers as numbers and the composer, for whoever may
+      write to them — the Organizer, the Administrator and the Superadministrator. Not the Tehnic,
+      who writes to nobody (§38), which is the ladder's second deliberate hole beside the list.
+    */
+    ...(canSendNewsletter(role) ? (["newsletter"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
   ];

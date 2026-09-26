@@ -469,6 +469,7 @@
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
       "emails": "Emailuri",
+      "newsletter": "Newsletter",
       "guide": "Ghid",
       "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează"
     },
@@ -2305,7 +2306,7 @@
           "how": [
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
-            "Newsletterul îl scrii din /admin/emails → „Newsletter”; anunțurile de evenimente noi pleacă singure."
+            "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
         }
       },
@@ -2918,7 +2919,7 @@
         "GROUP_RUN_DECLARATION_ARCHIVE": "Odată cu declarația semnată la o alergare de grup, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici). Fără link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
         "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link.",
         "NEWSLETTER_CONFIRM": "Imediat ce cineva se abonează din pop-up-ul de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}. Unei adrese deja abonate îi trimite, în loc, linkul spre abonamentul ei, fără să schimbe nimic. Altceva nu primește o adresă neconfirmată.",
-        "NEWSLETTER": "Doar când un organizator scrie și trimite un newsletter din cardul „Newsletter” de mai sus. Către abonații temei alese și cei care primesc tot, fiecare în limba lui întâi, cu linkul de dezabonare. Pleacă după celelalte emailuri și doar din partea limitei care rămâne după rezerva pentru înscrieri.",
+        "NEWSLETTER": "Doar când un organizator scrie și trimite un newsletter din pagina „Newsletter” a backoffice-ului. Către abonații temei alese și cei care primesc tot, fiecare în limba lui întâi, cu linkul de dezabonare. Pleacă după celelalte emailuri și doar din partea limitei care rămâne după rezerva pentru înscrieri.",
         "NEW_EVENT_ALERT": "Automat, o singură dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), la prima rulare a jobului după publicare: către abonații la evenimente noi și la temele evenimentului (concurs, eveniment special, testare de echipament) și cei care primesc tot, cu linkul de dezabonare."
       },
       "whenShort": {
@@ -3213,7 +3214,9 @@
           "other": "{count} de persoane"
         }
       },
-      "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, în cardul „Newsletter” de mai sus, așa că nu are cuvinte de editat aici."
+      "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
+      "newsletterLink": "Newsletter →",
+      "newsletterLinkHelp": "Abonații și mesajele către ei au pagina lor în meniu."
     },
     "guide": {
       "title": "Ghid de utilizare",
@@ -3304,6 +3307,7 @@
             "Publicare: tu apeși „Trimite spre verificare”. „Publică” este al Administratorului, ca și retragerea de pe site și arhivarea unui eveniment deja publicat. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",
             "Înscrieri (Organizator, nu și Tehnic): vezi lista întreagă, fiecare înscriere cu istoricul ei, exportul (Excel sau CSV), numerele de concurs și declarațiile semnate. Nu poți anula, șterge, redenumi sau retrimite un email — alea sunt ale Administratorului.",
             "Un mesaj către participanți (Organizator, nu și Tehnic): pagina evenimentului → „Înscrierile primite” → „Trimite un mesaj participanților” — vreme rea, o schimbare de ultim moment, o anulare. Alegi cui îi trimiți (toți cei înscriși, doar confirmații, lista de așteptare sau cei care nu au semnat declarația) și vezi câți sunt; scrii subiectul și mesajul în română și în engleză; vezi emailul exact cum pleacă, pentru cine s-a înscris în română și pentru cine s-a înscris în engleză; confirmi. Pleacă prin coada de emailuri, fiecăruia în limba lui; sub formular rămân „Mesaje trimise”, cu data, subiectul, grupul, câți și cine l-a trimis.",
+            "Newsletterul (Organizator, nu și Tehnic): meniul „Newsletter” — vezi câți abonați confirmați sunt, pe fiecare temă, și când a plecat ultimul mesaj. În „Scrie abonaților” alegi tema, scrii subiectul și textul în română și în engleză, vezi emailul cum pleacă și confirmi. Adresele nu apar nicăieri, doar numărul; anunțurile de evenimente noi pleacă singure.",
             "Numere de concurs: „Alocă numerele”, pe pagina evenimentului, este al Administratorului. Foaia o descarci tu: „Descarcă foaia (PDF)” — două numere pe A4, cu logo — de pe pagina evenimentului sau din „Înscrieri”. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
             "În ziua cursei: „Masa de ridicare a numerelor” de pe pagina evenimentului sau „Ziua cursei” din bară. Cifrele „Confirmați / Prezenți” sunt cifrele cursei.",
             "Numere de concurs: la confirmare fiecare primește unul la întâmplare. Un număr preferențial: pagina înscrierii → „Număr de concurs” — vezi lângă câmp numerele libere, scrii unul, salvezi; participantul primește numărul pe email, cu codul QR. Un număr purtat deja de altcineva este refuzat.",
@@ -3326,6 +3330,7 @@
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
             "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
+            "„Newsletter” → „Scoate o adresă la cererea cuiva”: când cineva cere în scris să nu mai primească noutățile, scrii adresa lui și confirmi — adresa se șterge, cu temele ei.",
             "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
             "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
           ],
@@ -3471,7 +3476,7 @@
     },
     "newsletter": {
       "title": "Abonați",
-      "intro": "Cine s-a abonat de pe pagina de contact, pe ce teme, și un mesaj către ei. Adresele nu apar aici, doar numărul.",
+      "intro": "Cine s-a abonat de pe pagina de contact și pe ce teme, ce s-a trimis și când. Adresele nu apar aici, doar numărul.",
       "aside": {
         "one": "{count} abonat",
         "few": "{count} abonați",
@@ -3484,6 +3489,7 @@
       "allowanceDay": "Azi mai pot pleca cel mult {count} emailuri de newsletter: jumătate din limita zilnică rămâne pentru înscrieri. Ce nu încape pleacă în zilele următoare, singur.",
       "allowanceMonth": "Luna aceasta mai pot pleca cel mult {count} emailuri de newsletter: o cincime din limita lunară rămâne pentru înscrieri. Ce nu încape pleacă după resetare, singur.",
       "compose": "Scrie abonaților",
+      "composeIntro": "Un mesaj către abonații unei teme, în română și în engleză: fiecare îl primește în limba lui întâi, cu linkul de dezabonare.",
       "topic": "Despre ce",
       "topicHelp": "Îl primesc abonații temei alese și cei care primesc tot ce trimite clubul.",
       "recipients": {
@@ -3505,7 +3511,6 @@
         "other": "Trimiți newsletterul la {count} de abonați?"
       },
       "confirmBody": "Tema: {topic}. Fiecare îl primește în limba lui întâi, cu linkul de dezabonare. După trimitere nu mai poate fi oprit.",
-      "readOnly": "Newsletterul îl trimit organizatorii și administratorii.",
       "history": "Trimise",
       "historyEmpty": "Nimic trimis încă.",
       "historyMessage": "{when} · „{subject}” · {topics} · {count} destinatari · {sender}",

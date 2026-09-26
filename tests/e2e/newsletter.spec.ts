@@ -1,30 +1,37 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
-import { openFold } from "./support/fold";
 import { mintNewsletterLink, newsletterMessagesTo, newsletterSubscription, seedConfirmedSubscriber } from "./support/newsletter";
 
 /**
- * §NNN — the newsletter's composer on `/admin/emails`: numbers only, the topic chosen, both
- * languages, the question that names how many, and the send's banner and history line. Desktop
- * only: one outbox, and the history is the page's newest sends.
+ * §NNN — the backoffice's «Newsletter» entry (the owner, 2026-09-26: "un meniu suplimentar în
+ * backoffice cu «Newsletter»"): numbers only, the topic chosen, both languages, the question that
+ * names how many, and the send's banner and history line; `/admin/emails` keeps one line pointing
+ * here; a role that may not send is offered no tab and gets a 404. Desktop only: one outbox, and
+ * the history is the page's newest sends.
  */
-test.describe("§NNN the newsletter's composer on /admin/emails", () => {
+test.describe("§NNN the newsletter's own backoffice page", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one outbox and one history, shared by both projects");
   });
 
-  test("an Administrator writes to one topic, is asked how many, and the send is queued", async ({ page }) => {
+  test("an Administrator opens «Newsletter» from the menu, writes to one topic, is asked how many, and the send is queued", async ({ page }) => {
     const email = `e2e-news-admin-${Date.now().toString(36)}@test.invalid`;
     await seedConfirmedSubscriber(email, ["DISCOUNTS"]);
     await signIn(page, "Dev Administrator");
+    // /admin/emails holds no newsletter card any more — one line pointing at the page.
     await page.goto("/ro/admin/emails");
+    await expect(page.locator("#main").getByTestId("newsletter-panel")).toHaveCount(0);
+    await expect(page.getByTestId("newsletter-link").getByRole("link", { name: "Newsletter →" })).toHaveAttribute("href", "/ro/admin/newsletter");
+    // The menu's own entry, after «Emailuri».
+    const tab = page.getByRole("tab", { name: "Newsletter" });
+    await tab.click();
+    await expect(page).toHaveURL(/\/ro\/admin\/newsletter$/);
     await hydrated(page);
     const panel = page.locator("#main").getByTestId("newsletter-panel");
-    await openFold(panel);
     await expect(panel.getByTestId("newsletter-counts")).toContainText("Abonați confirmați:");
 
-    const compose = panel.getByTestId("newsletter-compose");
+    const compose = page.locator("#main").getByTestId("newsletter-composer").getByTestId("newsletter-compose");
     await compose.locator('input[name="topic"][value="DISCOUNTS"]').check();
     const subject = `Cod de reducere ${Date.now().toString(36)}`;
     await compose.getByLabel("Subiect (română)").fill(subject);
@@ -37,11 +44,28 @@ test.describe("§NNN the newsletter's composer on /admin/emails", () => {
     await compose.getByRole("button", { name: "Trimite newsletterul" }).click();
     await confirmDialog(page, /Trimiți newsletterul/);
 
-    await expect(page).toHaveURL(/saved=newsletterSent/, { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/ro\/admin\/newsletter\?saved=newsletterSent/, { timeout: 30_000 });
     await expect(page.getByTestId("newsletter-sent-banner")).toBeVisible();
     expect(await newsletterMessagesTo(email)).toBe(1);
-    await openFold(page.locator("#main").getByTestId("newsletter-panel"));
     await expect(page.getByTestId("newsletter-history")).toContainText(subject);
+  });
+
+  for (const who of ["Dev Copywriter", "Dev Technical"] as const) {
+    test(`offers ${who} no «Newsletter» and answers the address with a 404`, async ({ page }) => {
+      await signIn(page, who);
+      await expect(page.getByRole("tab", { name: "Newsletter" })).toHaveCount(0);
+      // 404, the answer a route that does not exist gives (BR-REQ-060-01, §376).
+      expect((await page.goto("/ro/admin/newsletter"))?.status()).toBe(404);
+    });
+  }
+
+  test("the Organizer opens «Newsletter» and finds the composer, without the Administrator's withdrawal", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
+    await expect(page.getByRole("tab", { name: "Newsletter" })).toBeVisible();
+    expect((await page.goto("/ro/admin/newsletter"))?.status()).toBe(200);
+    await expect(page.locator("#main").getByTestId("newsletter-composer")).toBeVisible();
+    // The Administrator's withdrawal is not the Organizer's.
+    await expect(page.getByTestId("newsletter-withdraw")).toHaveCount(0);
   });
 });
 

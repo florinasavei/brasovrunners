@@ -77,7 +77,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // that confirms the subscription, or, for an address already subscribed, the link to its own
   // page; nothing else is ever sent to an unconfirmed address.
   "NEWSLETTER_CONFIRM",
-  // A newsletter the club wrote on `/admin/emails`, in both languages, to the subscribers of one
+  // A newsletter the club wrote on `/admin/newsletter`, in both languages, to the subscribers of one
   // topic — its words in `newsletter_sends`, the row carrying only the send's id. The link to
   // choose topics or unsubscribe in every one.
   "NEWSLETTER",

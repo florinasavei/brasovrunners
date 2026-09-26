@@ -126,7 +126,7 @@ export const newsletterTokens = pgTable(
 );
 
 /**
- * `MESSAGE` is a newsletter an organizer wrote on `/admin/emails`; `EVENT_ALERT` is the platform's
+ * `MESSAGE` is a newsletter an organizer wrote on `/admin/newsletter`; `EVENT_ALERT` is the platform's
  * own "a new event is on the calendar", queued by the maintenance job once per event.
  */
 export const newsletterSendKind = pgEnum("newsletter_send_kind", ["MESSAGE", "EVENT_ALERT"]);

@@ -2,7 +2,7 @@ import { placeholdersIn } from "@/modules/notifications/domain/email-copy";
 import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/forms/both-languages";
 
 /**
- * A newsletter as the club writes it on `/admin/emails` (§NNN): a subject and a body, Romanian and
+ * A newsletter as the club writes it on `/admin/newsletter` (§NNN): a subject and a body, Romanian and
  * English, both required — every subscriber reads their own language first and the other under it
  * (§96), and "multi-lingual, always" is the owner's standing rule (§352).
  *

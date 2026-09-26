@@ -10,6 +10,7 @@ import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { type EventNotificationRow, eventNotificationDetailsIn } from "@/modules/events/repository";
 import { bulkCopyRecipients, isClubCopy } from "@/modules/notifications/domain/club-notices";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
+import { emailEventFacts } from "@/modules/notifications/event-facts-row";
 import { readEmailCopyForSending } from "@/modules/notifications/email-copy";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
@@ -151,9 +152,17 @@ export async function renderNewsletterRow(
     if (otherDetails) data.eventChecklistOther = otherDetails.checklist ?? null;
     data.eventMapUrl = details.mapUrl ?? undefined;
     data.eventStravaEventUrl = details.stravaEventUrl ?? undefined;
-    data.eventUrl = details.slug
-      ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: details.slug } } })}`
-      : undefined;
+    const pageOf = (language: Locale, slug: string | null | undefined) =>
+      slug ? `${env.APP_BASE_URL}${getPathname({ locale: language, href: { pathname: "/events/[slug]", params: { slug } } })}` : null;
+    data.eventUrl = pageOf(locale, details.slug) ?? undefined;
+    /*
+      The event's facts block (§392), as the confirmed email and the reminder carry it: Când, Unde,
+      Program, Traseu, Cost, Linkuri — each half from its own language's row and page, through the
+      one function those messages use, so an alert cannot describe the event differently. It takes
+      the place of the bold date-and-place line (`templates.ts`, `EVENT_FACTS_MESSAGES`).
+    */
+    data.eventFacts = emailEventFacts(details, data.eventUrl ?? null);
+    if (otherDetails) data.eventFactsOther = emailEventFacts(otherDetails, pageOf(other, otherDetails.slug));
     actionUrl = data.eventUrl;
     data.newsletterManageUrl = await manageUrl();
   }
