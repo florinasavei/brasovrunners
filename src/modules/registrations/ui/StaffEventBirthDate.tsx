@@ -4,7 +4,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { latestBirthDateFor, MIN_PARTICIPANT_AGE } from "../domain/age";
-import { BIB_NUMBER_MAX } from "../domain/spare-bibs";
+import { BIB_NUMBER_MAX, type SpareState } from "../domain/spare-bibs";
 import GuardianForMinor from "./GuardianForMinor";
 
 /**
@@ -133,18 +133,22 @@ export function StaffHandedBibField({
   label,
   spareHelp,
   noSpareHelp,
+  outHelp,
   suggestions,
 }: {
   label: string;
   /** What the box says when the chosen event has a spare to suggest. */
   spareHelp: string;
-  /** And when it has none — no band, or every spare given. */
+  /** And when it has none reserved. */
   noSpareHelp: string;
-  /** The next free spare per event id; an event missing here has none to suggest. */
-  suggestions: Readonly<Record<string, number | null>>;
+  /** And when every reserved spare is given: the box suggests nothing and says so. */
+  outHelp: string;
+  /** Where each event's spares stand, by id; an event missing here has none reserved. */
+  suggestions: Readonly<Record<string, SpareState>>;
 }) {
   const { selected } = useContext(ChoiceContext);
-  const suggestion = selected ? (suggestions[selected] ?? null) : null;
+  const state: SpareState = (selected ? suggestions[selected] : undefined) ?? { kind: "none" };
+  const suggestion = state.kind === "free" ? state.next : null;
   return (
     <RecallField
       key={selected ?? ""}
@@ -152,7 +156,7 @@ export function StaffHandedBibField({
       type="number"
       label={label}
       defaultValue={suggestion ?? ""}
-      helperText={suggestion !== null ? spareHelp : noSpareHelp}
+      helperText={state.kind === "free" ? spareHelp : state.kind === "out" ? outHelp : noSpareHelp}
       slotProps={{ htmlInput: { min: 1, max: BIB_NUMBER_MAX, step: 1, inputMode: "numeric" }, inputLabel: { shrink: true } }}
       sx={{ width: { sm: 320 } }}
     />

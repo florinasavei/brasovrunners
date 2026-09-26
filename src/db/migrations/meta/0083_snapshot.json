@@ -1,5 +1,5 @@
 {
-  "id": "283efa8f-fe46-431a-b7a9-8144ec8d8e6e",
+  "id": "b00e3442-8ec3-4d3a-ae17-770a2f3e5ca8",
   "prevId": "8117c504-b12f-4fb9-816d-12e956fd4429",
   "version": "7",
   "dialect": "postgresql",
@@ -1267,14 +1267,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "bib_spare_from": {
-          "name": "bib_spare_from",
+        "walk_in_bib_start": {
+          "name": "walk_in_bib_start",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "bib_spare_to": {
-          "name": "bib_spare_to",
+        "walk_in_bib_count": {
+          "name": "walk_in_bib_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -1624,9 +1624,9 @@
           "name": "events_bib_colour_is_hex",
           "value": "\"events\".\"bib_colour\" IS NULL OR \"events\".\"bib_colour\" ~ '^#[0-9a-fA-F]{6}$'"
         },
-        "events_bib_spare_band": {
-          "name": "events_bib_spare_band",
-          "value": "(\"events\".\"bib_spare_from\" IS NULL AND \"events\".\"bib_spare_to\" IS NULL) OR (\"events\".\"bib_spare_from\" IS NOT NULL AND \"events\".\"bib_spare_to\" IS NOT NULL AND \"events\".\"bib_spare_from\" >= 1 AND \"events\".\"bib_spare_to\" <= 99999 AND \"events\".\"bib_spare_from\" <= \"events\".\"bib_spare_to\" AND \"events\".\"bib_spare_to\" - \"events\".\"bib_spare_from\" < 500)"
+        "events_walk_in_bibs": {
+          "name": "events_walk_in_bibs",
+          "value": "(\"events\".\"walk_in_bib_start\" IS NULL AND \"events\".\"walk_in_bib_count\" IS NULL) OR (\"events\".\"walk_in_bib_start\" IS NOT NULL AND \"events\".\"walk_in_bib_count\" IS NOT NULL AND \"events\".\"walk_in_bib_start\" >= 1 AND \"events\".\"walk_in_bib_count\" >= 1 AND \"events\".\"walk_in_bib_count\" <= 500 AND \"events\".\"walk_in_bib_start\" + \"events\".\"walk_in_bib_count\" - 1 <= 99999)"
         },
         "events_map_url_is_https": {
           "name": "events_map_url_is_https",

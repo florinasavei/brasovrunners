@@ -1,6 +1,7 @@
 import { hasLocale } from "next-intl";
 import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
@@ -71,10 +72,11 @@ export async function GET(
   // The only scope besides a range: the bibs nobody has printed yet (§264).
   const only = url.searchParams.get("only") === "unprinted" ? ("unprinted" as const) : undefined;
   /*
-    The desk's spares instead of the runners (§NNN): every number of the event's spare band that
-    nobody wears, holds or wore, each with an empty line where the name goes — the walk-in's name
-    is written on at the desk. Within `from`–`to` when those are given, so a club can print the
-    first twenty now and more later; `only` means nothing here, since a spare carries no mark.
+    The desk's spares instead of the runners (§NNN): every number the event reserved for the desk
+    that nobody wears, holds or wore, each with an empty line where the name goes and «înscris la
+    fața locului» under it — the walk-in's name is written on at the desk. Within `from`–`to` when
+    those are given: that is the link the print's banner carries, the range it just reserved. A GET
+    that reserves nothing — the reservation is the print's POST (`reserveSpareBibs`).
   */
   const spares = url.searchParams.get("spares") === "1";
 
@@ -128,6 +130,8 @@ export async function GET(
     layout,
     design: event.design,
     pictures: { header, sponsors },
+    // Under a spare's empty line (§NNN), in the sheet's language.
+    ...(spares ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
   });
 
   const suffix = `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${layout === "one" ? "-one-per-page" : ""}`;

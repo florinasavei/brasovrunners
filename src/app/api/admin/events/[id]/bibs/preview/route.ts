@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { hasLocale } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
@@ -81,6 +82,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       bibNumber: bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber,
       // `blank=1` draws a desk spare (§NNN): the empty line the name is written on at the desk.
       registeredName: url.searchParams.get("blank") === "1" ? null : SAMPLE_NAME,
+      ...(url.searchParams.get("blank") === "1" ? { blankMark: (await getTranslations({ locale, namespace: "Admin" }))("bibs.spareMark") } : {}),
       eventTitle: event.title,
       eventDate,
       // As the form holds it, not as the row does: the preview follows the unsaved select too.

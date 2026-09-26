@@ -18,7 +18,7 @@ import {
   StaffGuardian,
   StaffHandedBibField,
 } from "@/modules/registrations/ui/StaffEventBirthDate";
-import { nextSpareBibNumbers } from "@/modules/registrations/bibs";
+import { spareStates } from "@/modules/registrations/bibs";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -93,7 +93,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const phoneNames = phoneCountryLabels(locale);
   // The next free desk spare per event (§NNN), suggested only to the desk — a person on the
   // telephone, entered from the list, is not standing at a table with a bib.
-  const spareSuggestions = fromDesk ? await nextSpareBibNumbers(getDb(), events.map((event) => event.id)) : {};
+  const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
 
   return (
     <Stack spacing={3}>
@@ -262,6 +262,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                   label={t("desk.handedBib")}
                   spareHelp={`${t("desk.handedBibHelp")} ${t("desk.handedBibFastTrackOnly")}`}
                   noSpareHelp={`${t("desk.handedBibNoSpares")} ${t("desk.handedBibFastTrackOnly")}`}
+                  outHelp={`${t("desk.sparesOut")} ${t("desk.handedBibFastTrackOnly")}`}
                   suggestions={spareSuggestions}
                 />
               </Box>

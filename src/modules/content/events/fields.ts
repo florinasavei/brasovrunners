@@ -308,7 +308,6 @@ function placeRule(
  * and `bibDesign` follow, and is never a reason to refuse: only a caller that *is* editing them
  * and left the required one blank is refused.
  */
-
 function costRule(
   fields: { costType?: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
   ctx: z.RefinementCtx,

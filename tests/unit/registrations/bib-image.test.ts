@@ -71,6 +71,8 @@ describe("§94 the bib preview", () => {
     const spare = await png({ registeredName: null });
     expect(spare.readUInt32BE(16)).toBe(BIB_IMAGE.width);
     expect(spare.equals(await png())).toBe(false);
+    // The mark under the line is drawn too: the picture differs from the bare line's.
+    expect((await png({ registeredName: null, blankMark: "on-the-spot entry" })).equals(spare)).toBe(false);
     if (process.env.BIB_IMAGE_SAMPLE_SPARE) writeFileSync(process.env.BIB_IMAGE_SAMPLE_SPARE, spare);
   });
 

@@ -19,23 +19,28 @@ import {
   countBibs,
   freeSpareBibNumbers,
   listBibs,
-  nextSpareBibNumbers,
+  reserveSpareBibs,
   settleBibNumbers,
+  spareCardState,
+  spareStates,
   suggestFreeBibNumbers,
 } from "@/modules/registrations/bibs";
+import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { confirmEmail, type EventForRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — spare bibs for on-the-spot entries: a band of numbers the club prints ahead with an empty
- * name line, which the allocator never hands to anybody who registered online, and which the desk
- * hands to a walk-in — suggested, the next free one.
+ * §NNN — spare bibs for on-the-spot entries: numbers the club prints ahead with an empty name line,
+ * reserved by the print, which the allocator never hands to anybody who registered online, and
+ * which the desk hands to a walk-in — suggested, the next free one.
  *
- * The property that carries the weight is the first block: every automatic draw — the provisional
- * number at submission, the recompaction at the close, a confirmation after it, the batch — steps
- * over the band. The second block is the desk: a spare handed with the paper is the runner's
- * settled number at once, marked printed, and refused when somebody else has it.
+ * The first block is the print: what it reserves, and that it never lands on a number somebody
+ * has. The second carries the weight: every automatic draw — the provisional number at submission,
+ * the recompaction at the close, a confirmation after it, the batch, the suggestions — steps over
+ * the reservation. The third is the desk: a spare handed with the paper is the runner's settled
+ * number at once, marked printed, and refused when somebody else has it. They replace the three
+ * Playwright cases the brief named (the owner cut the browser runs on 2026-09-26).
  */
 const NOW = new Date("2026-09-05T10:00:00.000Z");
 const later = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
@@ -78,6 +83,7 @@ beforeEach(async () => {
 });
 
 async function createRace(
+  /** `spare` is a reservation already made — its first and last number — as a print leaves it. */
   options: { capacity?: number | null; closed?: boolean; spare?: [number, number] | null; start?: number } = {},
 ): Promise<EventForRegistration> {
   const [event] = await db
@@ -88,8 +94,8 @@ async function createRace(
       registrationMode: "INTERNAL",
       capacity: options.capacity === undefined ? 50 : options.capacity,
       bibStartNumber: options.start ?? 1,
-      bibSpareFrom: options.spare === null ? null : (options.spare?.[0] ?? 3),
-      bibSpareTo: options.spare === null ? null : (options.spare?.[1] ?? 5),
+      walkInBibStart: options.spare ? options.spare[0] : null,
+      walkInBibCount: options.spare ? options.spare[1] - options.spare[0] + 1 : null,
       registrationClosesAt: options.closed ? new Date("2026-09-01T00:00:00.000Z") : null,
     })
     .returning();
@@ -146,7 +152,92 @@ async function refusalOf(operation: Promise<unknown>): Promise<{ code: string; f
   }
 }
 
+describe("§NNN the print reserves the spares", () => {
+  it("reserves after the highest number anybody has, prints them blank, and extends on a second print", async () => {
+    const event = await createRace({ spare: null });
+    await enter(event, "a@example.org");
+    await enter(event, "b@example.org", { at: later(1) });
+    // A number typed by hand, far up: the spares start after it, never inside the sequence.
+    const c = await enter(event, "c@example.org", { fastTrack: true, bibNumber: 40, at: later(2) });
+    expect(c.bibNumber).toBe(40);
+
+    const card = await spareCardState(db, event.id);
+    expect(card.band).toBeNull();
+    expect(card.candidates.slice(0, 3)).toEqual([41, 42, 43]);
+
+    const first = await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 3, expectFrom: 41, now: later(3) });
+    expect(first).toEqual({ from: 41, to: 43, count: 3, band: { from: 41, to: 43 } });
+    const [row] = await db.select().from(events).where(eq(events.id, event.id));
+    expect([row.walkInBibStart, row.walkInBibCount]).toEqual([41, 3]);
+
+    // The sheet the banner links to: three numbered bibs, each with an empty name line.
+    const { free } = await freeSpareBibNumbers(db, event.id);
+    expect(free).toEqual([41, 42, 43]);
+    const pdf = await renderBibSheet({
+      rows: free.map((bibNumber) => ({ bibNumber, registeredName: null })),
+      eventTitle: "Crosul",
+      eventDate: "1 octombrie 2026",
+      generatedAt: NOW,
+      blankMark: "înscris la fața locului",
+    });
+    // Three A5 bibs, two to an A4: two pages.
+    expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)).toHaveLength(2);
+
+    // A second print extends the same reservation after its end.
+    const second = await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: later(4) });
+    expect(second).toEqual({ from: 44, to: 45, count: 2, band: { from: 41, to: 45 } });
+
+    const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.bib_spares_reserved"));
+    expect(audits.map((audit) => audit.metadataJson)).toEqual([
+      { from: 41, to: 43, count: 3, reservedFrom: 41, reservedCount: 3 },
+      { from: 44, to: 45, count: 2, reservedFrom: 41, reservedCount: 5 },
+    ]);
+  });
+
+  it("steps over a number somebody took past the reservation's end when it extends", async () => {
+    const event = await createRace({ spare: null });
+    await enter(event, "a@example.org");
+    await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: later(1) });
+    // Somebody typed 4 by hand for a runner, right after the reservation 2–3.
+    const typed = await enter(event, "typed@example.org", { fastTrack: true, bibNumber: 4, at: later(2) });
+    expect(typed.bibNumber).toBe(4);
+    const more = await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: later(3) });
+    expect([more.from, more.to]).toEqual([5, 6]);
+    // 4 sits inside the reservation now and stays that runner's: never printed blank, never suggested.
+    expect((await freeSpareBibNumbers(db, event.id)).free).toEqual([2, 3, 5, 6]);
+  });
+
+  it("is the Administrator's alone, asks for one to the per-print maximum, and refuses a start that moved since the question", async () => {
+    const event = await createRace({ spare: null });
+    expect(await refusalOf(reserveSpareBibs(db, { actor: volunteer, eventId: event.id, count: 3 }))).toMatchObject({ code: "FORBIDDEN" });
+    expect(await refusalOf(reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 0 }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["spareCount"],
+    });
+    expect(await refusalOf(reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 51 }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["spareCount"],
+    });
+    // The question named 1; somebody registered in between and took it.
+    await enter(event, "a@example.org");
+    expect(await refusalOf(reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 3, expectFrom: 1 }))).toEqual({
+      code: "CONFLICT",
+      fields: ["spareFrom"],
+    });
+    const [row] = await db.select().from(events).where(eq(events.id, event.id));
+    expect(row.walkInBibStart).toBeNull();
+  });
+});
+
 describe("§NNN BR-REQ-038-01 the allocator never draws a desk spare", () => {
+  it("gives an online registration a number outside the reservation, after a print", async () => {
+    const event = await createRace({ spare: null });
+    const a = await enter(event, "a@example.org");
+    await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 3, now: later(1) });
+    const b = await enter(event, "b@example.org", { at: later(2) });
+    expect([a.provisionalBibNumber, b.provisionalBibNumber]).toEqual([1, 5]);
+  });
+
   it("steps over the band for the provisional number drawn at submission", async () => {
     const event = await createRace({ spare: [3, 5] });
     const a = await enter(event, "a@example.org");
@@ -169,47 +260,50 @@ describe("§NNN BR-REQ-038-01 the allocator never draws a desk spare", () => {
     expect(settled.map((row) => row.bibNumber)).toEqual([1, 4, 5]);
   });
 
-  it("draws a number after the close past the band when the desk hands none, and never adopts a provisional spare", async () => {
+  it("draws a number after the close past the reservation when the desk hands none", async () => {
     const event = await createRace({ spare: [1, 3] });
-    // Registered online before the close, holding a provisional number inside the band — as if
-    // drawn before the club set it.
     const late = await enter(event, "late@example.org");
     expect(late.provisionalBibNumber).toBe(4);
-    await db.update(registrations).set({ provisionalBibNumber: 2 }).where(eq(registrations.id, late.id));
     // The window shuts; confirmations draw final numbers now (§214).
     await db.update(events).set({ registrationClosesAt: new Date("2026-09-01T00:00:00.000Z") }).where(eq(events.id, event.id));
 
-    // A walk-in confirmed with no number handed: the draw's own, past the spares.
+    // A walk-in confirmed with no number handed: the draw's own, past the spares and the 4 held.
     const walkIn = await enter(event, "walkin@example.org", { fastTrack: true, at: later(1) });
     expect(walkIn.status).toBe("CONFIRMED");
-    expect(walkIn.bibNumber).toBe(4);
+    expect(walkIn.bibNumber).toBe(5);
 
-    // And the provisional spare is not adopted.
+    // The provisional 4 is its holder's.
     const confirmed = await confirmRegistrationByStaff(db, volunteer, late.id, later(2));
-    expect(confirmed.bibNumber).toBe(5);
+    expect(confirmed.bibNumber).toBe(4);
     expect(confirmed.provisionalBibNumber).toBeNull();
   });
 
-  it("does not keep a provisional spare in the batch, nor suggest a spare as a preferential number", async () => {
+  it("numbers the batch past the reservation, and never suggests a spare as a preferential number", async () => {
     const event = await createRace({ spare: [2, 4] });
     const a = await enter(event, "a@example.org", { fastTrack: true });
-    expect(a.provisionalBibNumber).toBe(1);
-    // As if the band had been set after this runner drew 3.
-    await db.update(registrations).set({ provisionalBibNumber: 3 }).where(eq(registrations.id, a.id));
-    await assignBibNumbers(db, { actor: admin, eventId: event.id, now: later(1) });
-    const [numbered] = await db.select().from(registrations).where(eq(registrations.id, a.id));
-    expect(numbered.bibNumber).toBe(1);
+    const b = await enter(event, "b@example.org", { fastTrack: true, at: later(1) });
+    expect([a.provisionalBibNumber, b.provisionalBibNumber]).toEqual([1, 5]);
+    // Nothing kept: the batch draws, and steps over 2–4 exactly as the provisional draw did.
+    await db.update(registrations).set({ provisionalBibNumber: null }).where(eq(registrations.eventId, event.id));
+    await assignBibNumbers(db, { actor: admin, eventId: event.id, now: later(2) });
+    const numbered = await db.select({ bib: registrations.bibNumber }).from(registrations).where(eq(registrations.eventId, event.id));
+    expect(numbered.map((row) => row.bib).sort()).toEqual([1, 5]);
 
-    expect(await suggestFreeBibNumbers(db, event.id, undefined, 3)).toEqual([5, 6, 7]);
+    expect(await suggestFreeBibNumbers(db, event.id, undefined, 3)).toEqual([6, 7, 8]);
   });
 });
 
 describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
-  it("suggests the lowest free spare, and none where the club set no band", async () => {
-    const event = await createRace({ spare: [900, 902] });
+  it("suggests the first spare to the walk-in, nothing where none are reserved, and says when they ran out", async () => {
+    const event = await createRace({ spare: null });
+    await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: NOW });
     const plain = await createRace({ spare: null });
-    expect(await nextSpareBibNumbers(db, [event.id, plain.id])).toEqual({ [event.id]: 900, [plain.id]: null });
+    expect(await spareStates(db, [event.id, plain.id])).toEqual({ [event.id]: { kind: "free", next: 1 }, [plain.id]: { kind: "none" } });
     expect(await freeSpareBibNumbers(db, plain.id)).toEqual({ band: null, free: [] });
+
+    await enter(event, "one@example.org", { fastTrack: true, bibNumber: 1, at: later(1) });
+    await enter(event, "two@example.org", { fastTrack: true, bibNumber: 2, at: later(2) });
+    expect(await spareStates(db, [event.id])).toEqual({ [event.id]: { kind: "out" } });
   });
 
   it("gives a walk-in the spare handed with the paper: settled at once, marked printed, audited, and the next one suggested", async () => {
@@ -229,10 +323,10 @@ describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
     expect(audit.metadataJson).toMatchObject({ to: "CONFIRMED", bibNumber: 900 });
 
     expect(await freeSpareBibNumbers(db, event.id)).toEqual({ band: { from: 900, to: 902 }, free: [901, 902] });
-    expect(await nextSpareBibNumbers(db, [event.id])).toEqual({ [event.id]: 901 });
+    expect(await spareStates(db, [event.id])).toEqual({ [event.id]: { kind: "free", next: 901 } });
   });
 
-  it("refuses a spare somebody already has before anything is written, and a number without the fast track", async () => {
+  it("refuses a spare somebody already has before anything is written, and ignores the box without the fast track", async () => {
     const event = await createRace({ spare: [900, 902] });
     await enter(event, "first@example.org", { fastTrack: true, bibNumber: 900 });
 
@@ -252,7 +346,11 @@ describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
       { eventId: event.id, firstName: "Phone", lastName: "Call", email: "phone@example.org", locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: false, bibNumber: 901 },
       later(2),
     );
-    expect(await refusalOf(unticked)).toEqual({ code: "VALIDATION_ERROR", fields: ["bibNumber", "fastTrack"] });
+    // The box is prefilled at the desk; unticking the fast track must not trap the volunteer.
+    expect(await refusalOf(unticked)).toBe("no error");
+    const phone = await rowOf("phone@example.org");
+    expect(phone.bibNumber).toBeNull();
+    expect(phone.provisionalBibNumber).not.toBe(901);
   });
 
   it("names the refusal for the desk, and tells an entry left unconfirmed apart", async () => {
@@ -330,14 +428,15 @@ describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
   });
 });
 
-describe("§NNN the band itself", () => {
-  it("is both ends or neither, in order, and at most 500 numbers, at the database", async () => {
-    const insert = (bibSpareFrom: number | null, bibSpareTo: number | null) =>
-      db.insert(events).values({ type: "RACE", startsAt: NOW, registrationMode: "INTERNAL", capacity: 10, bibSpareFrom, bibSpareTo });
+describe("§NNN the reservation itself", () => {
+  it("is a start and a count or neither, the count from 1 to 500, within five digits, at the database", async () => {
+    const insert = (walkInBibStart: number | null, walkInBibCount: number | null) =>
+      db.insert(events).values({ type: "RACE", startsAt: NOW, registrationMode: "INTERNAL", capacity: 10, walkInBibStart, walkInBibCount });
     await expect(insert(900, null)).rejects.toThrow();
-    await expect(insert(null, 900)).rejects.toThrow();
-    await expect(insert(910, 900)).rejects.toThrow();
+    await expect(insert(null, 5)).rejects.toThrow();
+    await expect(insert(900, 0)).rejects.toThrow();
     await expect(insert(1, 501)).rejects.toThrow();
+    await expect(insert(99_999, 2)).rejects.toThrow();
     await expect(insert(1, 500)).resolves.toBeDefined();
     await expect(insert(null, null)).resolves.toBeDefined();
   });

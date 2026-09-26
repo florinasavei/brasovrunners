@@ -276,6 +276,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
       await sheet(0, "one", {
         rows: [{ bibNumber: 901, registeredName: null }],
         design: { ...DEFAULT_BIB_DESIGN, showName: true, namePosition: "above" },
+        blankMark: "înscris la fața locului",
       });
       const top = (A4_PAGE.height - BIB_PAPER.height) / 2 + BIB_MARGIN;
       const y = top + BIB_LAYOUT.bandHeight + BIB_LAYOUT.blankLineTop;
@@ -288,6 +289,8 @@ describe("BR-REQ-038-01 the bib sheet", () => {
       const strings = text.mock.calls.map(([string]) => String(string));
       expect(strings).toContain("901");
       expect(strings).not.toContain("null");
+      // The small mark under the line says what the bib is, in the sheet's language.
+      expect(strings).toContain("înscris la fața locului");
 
       moveTo.mockClear();
       await sheet(0, "one", { rows: [{ bibNumber: 902, registeredName: null }], design: { ...DEFAULT_BIB_DESIGN, showName: false } });

@@ -78,6 +78,8 @@ type BibImageInput = {
   siteUrl?: string | null;
   /** What the club decided this bib shows (§249); absent is the platform's own design. */
   design?: BibDesign;
+  /** The small words under a desk spare's empty line (§NNN), as the sheet prints them. */
+  blankMark?: string;
 };
 
 /**
@@ -147,16 +149,31 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     >
       {input.registeredName === null ? (
         // A desk spare (§NNN): the sheet's rule, at the sheet's point in the strip — `nameTop` is
-        // the strip's padding here, so the rule sits `blankLineTop − nameTop` below it.
-        <div
-          style={{
-            display: "flex",
-            marginTop: px(L.blankLineTop - L.nameTop) - px(L.blankLineWeight) / 2,
-            width: px(L.blankLineWidth),
-            height: px(L.blankLineWeight),
-            background: COLOR.ink,
-          }}
-        />
+        // the strip's padding here, so the rule sits `blankLineTop − nameTop` below it — and the
+        // small mark under it, its top `blankMarkTop` into the strip as on the paper.
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              marginTop: px(L.blankLineTop - L.nameTop) - px(L.blankLineWeight) / 2,
+              width: px(L.blankLineWidth),
+              height: px(L.blankLineWeight),
+              background: COLOR.ink,
+            }}
+          />
+          {input.blankMark ? (
+            <div
+              style={{
+                ...ONE_LINE,
+                marginTop: px(L.blankMarkTop - L.blankLineTop) - px(L.blankLineWeight) / 2,
+                fontSize: px(L.blankMarkSize),
+                color: COLOR.inkMuted,
+              }}
+            >
+              {input.blankMark}
+            </div>
+          ) : null}
+        </div>
       ) : (
         <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
       )}

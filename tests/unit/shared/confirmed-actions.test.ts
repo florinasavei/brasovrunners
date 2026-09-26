@@ -63,6 +63,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
   assignBibNumbersAction: ["assignAction"],
+  // The desk's spares reserved by a print (§NNN): handed to the bib card's forms as `sparesAction`.
+  reserveSpareBibsAction: ["sparesAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],
   // Asks only when the press faces outward: the notice ticked, the status set to cancelled.

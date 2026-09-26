@@ -75,6 +75,8 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   eventCancelled: { count: "queued" },
   eventSeriesNotified: { count: "queued", values: { dates: "applied" } },
   eventSeriesCancelled: { count: "queued", values: { dates: "applied" } },
+  // The desk's spares a print reserved (§NNN): how many, and the first and last number.
+  sparesReserved: { count: "count", values: { from: "from", to: "to" } },
 };
 
 /**

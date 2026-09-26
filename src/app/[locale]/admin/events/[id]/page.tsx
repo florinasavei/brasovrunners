@@ -88,8 +88,8 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
-import { countBibs, freeSpareBibNumbers } from "@/modules/registrations/bibs";
-import { spareCountOf } from "@/modules/registrations/domain/spare-bibs";
+import { countBibs, spareCardState } from "@/modules/registrations/bibs";
+import { SPARE_BIBS_PER_PRINT } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
@@ -102,6 +102,7 @@ import {
   addTestRegistrationsAction,
   deleteEventAction,
   assignBibNumbersAction,
+  reserveSpareBibsAction,
   sendEventThanksAction,
   duplicateEventAction,
   eraseGroupRunDeclarationAction,
@@ -123,7 +124,7 @@ import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -170,7 +171,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin" }));
   // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo } = await searchParams;
   // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
@@ -188,9 +189,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const internal = event.registrationMode === "INTERNAL";
   // How many numbers this event has, and how many wait for the printer, for the bib card.
   const bibCounts = canReadRegistrations(staffUser.role) && internal ? await countBibs(db, event.id) : null;
-  // The desk's spares and how many are still free (§NNN), for the same card; nothing without a band.
-  const spareState = bibCounts ? await freeSpareBibNumbers(db, event.id) : null;
-  const spares = spareState?.band ? { ...spareState.band, free: spareState.free.length, total: spareCountOf(spareState.band) } : null;
+  // The desk's spares (§NNN): what is reserved, how much of it is free, where the next print starts.
+  const spareState = bibCounts ? await spareCardState(db, event.id) : null;
+  const spares = spareState
+    ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
+    : null;
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
@@ -517,6 +520,26 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 : t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
             </Alert>
           )}
+          {/* The spares just reserved (§NNN): the sheet of exactly those numbers, blank, one press away. */}
+          {saved === "sparesReserved" && spareFrom && spareTo && /^d{1,5}$/.test(spareFrom) && /^d{1,5}$/.test(spareTo) && (
+            <Alert
+              severity="success"
+              data-testid="spares-reserved"
+              action={
+                <GlyphButton
+                  icon="pdf"
+                  href={`/api/admin/events/${event.id}/bibs?${new URLSearchParams({ locale, spares: "1", from: spareFrom, to: spareTo })}`}
+                  color="inherit"
+                  size="small"
+                  sx={{ minHeight: 44 }}
+                >
+                  {t("bibs.sparesDownloadRange", { from: spareFrom, to: spareTo })}
+                </GlyphButton>
+              }
+            >
+              {t("bibs.sparesReserved", { from: spareFrom, to: spareTo })}
+            </Alert>
+          )}
           {saved === "created" && created && !notPublished && <Alert severity="success">{t("editor.createdWithSeries", { dates: datesWords(created) })}</Alert>}
           {/* Created and published in one press (§315), the series with it when there is one. */}
           {saved === "createdPublished" && (
@@ -575,7 +598,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased"].includes(saved) &&
+            !["bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -872,7 +895,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 </Stack>
               </ActionForm>
               {/* The bib card's two immediate actions post these, never the save above. */}
-              {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} cancelLabel={words.cancel} />}
+              {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} sparesAction={reserveSpareBibsAction} sparesFrom={spares?.nextFrom ?? null} cancelLabel={words.cancel} />}
             </>
           }
           below={

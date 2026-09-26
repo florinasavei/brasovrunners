@@ -75,6 +75,11 @@ export type BibSheetInput = {
    * coloured band exactly as before (§249).
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null };
+  /**
+   * The small words under a desk spare's empty name line (§NNN) — «înscris la fața locului» — in
+   * the sheet's language, from the caller's catalogue; absent, the line alone.
+   */
+  blankMark?: string;
 };
 
 /**
@@ -295,6 +300,18 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
           .lineWidth(L.blankLineWeight)
           .strokeColor(COLOR.ink)
           .stroke();
+        if (input.blankMark) {
+          doc
+            .font("body")
+            .fontSize(L.blankMarkSize)
+            .fillColor(COLOR.inkMuted)
+            .text(input.blankMark, left + L.inset, stripTop + L.blankMarkTop, {
+              width: BIB_CARD.width - 2 * L.inset,
+              align: "center",
+              lineBreak: false,
+              ellipsis: true,
+            });
+        }
         return;
       }
       doc

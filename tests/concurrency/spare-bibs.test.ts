@@ -12,6 +12,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { createRegistrationByStaff, handedBibRefusalCode } from "@/modules/registrations/admin-service";
+import { reserveSpareBibs } from "@/modules/registrations/bibs";
 
 /**
  * §NNN × BR-REQ-037-07 — two volunteers handing the same desk spare at once, on two connections.
@@ -24,6 +25,11 @@ import { createRegistrationByStaff, handedBibRefusalCode } from "@/modules/regis
  * A third connection holds the event row while both requests queue on it — the way
  * `desk-race.test.ts` orders its two — so both pre-checks have certainly passed before either
  * writes anything: the window, every run.
+ *
+ * The second case is the rule that cannot be broken — a number is never on two chests: a print
+ * reserving spares and online registrations drawing numbers at the same moment. Both take the
+ * event row's lock, so whichever goes second sees what the first wrote; no online runner ends up
+ * holding a reserved number.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -34,6 +40,7 @@ describe("§NNN BR-REQ-037-07 two volunteers handing one spare, on two connectio
   const NOW = new Date("2026-09-26T08:00:00.000Z");
   const createdEventIds: string[] = [];
   let staffId: string | undefined;
+  let adminId: string | undefined;
 
   beforeAll(async () => {
     for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
@@ -57,6 +64,11 @@ describe("§NNN BR-REQ-037-07 two volunteers handing one spare, on two connectio
       .values({ email: `spare.race.${Date.now()}@example.ro`, displayName: "Desk", role: "CONTRIBUTOR" })
       .returning();
     staffId = staff.id;
+    const [admin] = await db
+      .insert(staffUsers)
+      .values({ email: `spare.print.${Date.now()}@example.ro`, displayName: "Print", role: "ADMIN" })
+      .returning();
+    adminId = admin.id;
   });
 
   afterAll(async () => {
@@ -82,9 +94,10 @@ describe("§NNN BR-REQ-037-07 two volunteers handing one spare, on two connectio
       await db.delete(emailOutbox).where(inArray(emailOutbox.participantId, participantIds));
       await db.delete(participants).where(inArray(participants.id, participantIds));
     }
-    if (staffId) {
-      await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, staffId));
-      await db.delete(staffUsers).where(eq(staffUsers.id, staffId));
+    for (const id of [staffId, adminId]) {
+      if (!id) continue;
+      await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, id));
+      await db.delete(staffUsers).where(eq(staffUsers.id, id));
     }
     await pool.end();
   });
@@ -109,8 +122,8 @@ describe("§NNN BR-REQ-037-07 two volunteers handing one spare, on two connectio
         startsAt: new Date("2026-12-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
         capacity: 50,
-        bibSpareFrom: 900,
-        bibSpareTo: 909,
+        walkInBibStart: 900,
+        walkInBibCount: 10,
       })
       .returning();
     createdEventIds.push(event.id);
@@ -160,5 +173,59 @@ describe("§NNN BR-REQ-037-07 two volunteers handing one spare, on two connectio
     expect(rows.map((row) => row.status).sort()).toEqual(["CONFIRMED", "PENDING_EMAIL_CONFIRMATION"]);
     const unconfirmed = rows.find((row) => row.status !== "CONFIRMED");
     expect(unconfirmed?.bibNumber).toBeNull();
+  });
+
+  it("a print reserving spares while runners register: no reserved number on an online runner, none on two", async () => {
+    const [event] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date("2026-12-01T09:00:00.000Z"), registrationMode: "INTERNAL", capacity: 50 })
+      .returning();
+    createdEventIds.push(event.id);
+    const stamp = Date.now();
+    const online = (name: string) =>
+      createRegistrationByStaff(
+        db,
+        { id: staffId as string, role: "CONTRIBUTOR" },
+        {
+          eventId: event.id,
+          firstName: name,
+          lastName: "Pop",
+          email: `spare.online.${name.toLowerCase()}.${stamp}@example.ro`,
+          locale: "ro",
+          listOptOut: false,
+          relayedByParticipantRequest: true,
+        },
+        NOW,
+      );
+    const print = () => reserveSpareBibs(db, { actor: { id: adminId as string, role: "ADMIN" }, eventId: event.id, count: 5, now: NOW });
+
+    const holder = await pool.connect();
+    const pending: Promise<unknown>[] = [];
+    try {
+      await holder.query("BEGIN");
+      await holder.query("SELECT id FROM events WHERE id = $1 FOR UPDATE", [event.id]);
+      // Two online runners and the print queue on the event row, interleaved.
+      pending.push(online("Ana"));
+      await queuedOnEvent(1);
+      pending.push(print());
+      await queuedOnEvent(2);
+      pending.push(online("Maria"));
+      await queuedOnEvent(3);
+    } finally {
+      await holder.query("COMMIT");
+      holder.release();
+    }
+    const results = await Promise.allSettled(pending);
+    expect(results.every((result) => result.status === "fulfilled")).toBe(true);
+
+    const [row] = await db.select().from(events).where(eq(events.id, event.id));
+    expect(row.walkInBibCount).toBe(5);
+    const reserved = new Set(Array.from({ length: 5 }, (_, index) => (row.walkInBibStart as number) + index));
+    const numbers = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).flatMap((registration) =>
+      [registration.bibNumber, registration.provisionalBibNumber].filter((number): number is number => number !== null),
+    );
+    expect(numbers).toHaveLength(2);
+    expect(new Set(numbers).size).toBe(2);
+    expect(numbers.filter((number) => reserved.has(number))).toEqual([]);
   });
 });

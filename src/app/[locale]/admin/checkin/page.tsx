@@ -20,7 +20,7 @@ import {
   listEventsForDesk,
 } from "@/modules/registrations/admin-repository";
 import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
-import { nextSpareBibNumbers } from "@/modules/registrations/bibs";
+import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
@@ -82,7 +82,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const minorSigns = rows.length > 0 ? await declarationAsksMinorToSignByLocale(db, now) : { ro: false, en: false };
   // The next free desk spare of each event on the page (§NNN) — one, or two when a code found a
   // runner of another event — read once for every row.
-  const spares = rows.length > 0 ? await nextSpareBibNumbers(db, rows.map((row) => row.eventId)) : {};
+  const spares = rows.length > 0 ? await spareStates(db, rows.map((row) => row.eventId)) : {};
 
   const codeHrefTemplate = getPathname({
     locale,
@@ -215,7 +215,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
               showEvent={Boolean(byCode)}
               readOnly={closed}
               minorSigns={minorSigns}
-              spareSuggestion={spares[row.eventId] ?? null}
+              spare={spares[row.eventId]}
             />
           ))}
         </Stack>

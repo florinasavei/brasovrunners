@@ -16,6 +16,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
+import type { SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
@@ -65,7 +66,7 @@ export default async function DeskRow({
   showEvent = false,
   readOnly = false,
   minorSigns,
-  spareSuggestion = null,
+  spare = { kind: "none" },
 }: {
   row: DeskRegistration;
   locale: Locale;
@@ -83,14 +84,16 @@ export default async function DeskRow({
    */
   minorSigns: Readonly<Record<Locale, boolean>>;
   /**
-   * The event's next free desk spare (§NNN), read once by the page: suggested in the number box of
-   * a runner who has no settled number — beside "Confirmă aici" and in the number given by hand —
-   * so the volunteer hands the pre-printed bib and the screen agrees. Null when the club set no
-   * spares or every one is out: the row then behaves as it always did.
+   * Where the event's desk spares stand (§NNN), read once by the page: the next free one is
+   * suggested in the number box of a runner who has no settled number — beside "Confirmă aici" and
+   * in the number given by hand — so the volunteer hands the pre-printed bib and the screen agrees.
+   * `out` leaves the box empty and says so; `none` (no spares reserved) is the row as it always was.
    */
-  spareSuggestion?: number | null;
+  spare?: SpareState;
 }) {
   const t = await getTranslations("Admin");
+  const spareSuggestion = spare.kind === "free" ? spare.next : null;
+  const sparesOut = spare.kind === "out";
   // Every desk verb asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
   const canConfirm =
@@ -313,13 +316,14 @@ export default async function DeskRow({
                   or a late paper gets a pre-printed spare, never a number nobody printed. Emptied,
                   the platform draws one as before. Only where the club set spares.
                 */}
-                {spareSuggestion !== null && row.bibNumber === null && row.kind === "REAL" && (
+                {spare.kind !== "none" && row.bibNumber === null && row.kind === "REAL" && (
                   <RecallField
                     name="bibNumber"
                     type="number"
                     size="small"
                     label={t("desk.handedBib")}
-                    defaultValue={spareSuggestion}
+                    defaultValue={spareSuggestion ?? ""}
+                    title={sparesOut ? t("desk.sparesOut") : undefined}
                     slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
                     sx={{ width: 140, "& .MuiInputBase-root": { minHeight: 44 } }}
                   />
@@ -329,6 +333,12 @@ export default async function DeskRow({
                 </GlyphButton>
               </Stack>
             </ActionForm>
+          )}
+          {/* Every spare given (§NNN): the box above suggests nothing, and this says why. */}
+          {!readOnly && sparesOut && row.kind === "REAL" && ((canConfirm && row.bibNumber === null) || (row.status === "CONFIRMED" && number === null)) && (
+            <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }} data-testid="desk-spares-out">
+              {t("desk.sparesOut")}
+            </Typography>
           )}
           {/*
             A minor's paper is signed by two (§330) where the declaration in effect asks the minor
@@ -399,7 +409,7 @@ export default async function DeskRow({
                       size="small"
                       label={t("desk.bibField")}
                       defaultValue={spareSuggestion ?? undefined}
-                      title={spareSuggestion !== null ? t("desk.nextSpare", { number: spareSuggestion }) : undefined}
+                      title={spareSuggestion !== null ? t("desk.nextSpare", { number: spareSuggestion }) : sparesOut ? t("desk.sparesOut") : undefined}
                       slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
                       sx={{ width: 120 }}
                     />
