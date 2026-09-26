@@ -41,7 +41,7 @@ import PartnerChip from "./PartnerChip";
  * for the opposite once a picture could be cropped to the shape a card shows (§241): "on the
  * event card I wanna be able to see pictures in the preview".
  *
- * **The featured event is this card too** (§NNN, replacing the hero above the listing; the owner,
+ * **The featured event is this card too** (§470, replacing the hero above the listing; the owner,
  * 2026-09-26: "vreau doar sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3
  * carduri, dar toate cardurile trebuie sa aiba aceeasi latime"). Given `featured`, it is the first
  * card of the grid, at the grid's one width, and differs only by its frame and background
@@ -62,7 +62,7 @@ export default async function EventCard({
   now: Date;
   /** The forecast at the start (§416), read by the listing for every card at once (`forecastsForEvents`); null outside the seven days or on any failure. */
   weather?: WeatherReading | null;
-  /** The listing's lead event (§NNN): the club's race-week days (§377), read by the page from the data cache. */
+  /** The listing's lead event (§470): the club's race-week days (§377), read by the page from the data cache. */
   featured?: { raceWeekDays: number };
 }) {
   const tEvent = await getTranslations("Event");
@@ -77,20 +77,20 @@ export default async function EventCard({
       component="li"
       variant="outlined"
       data-featured={featured ? "true" : undefined}
-      /* The lead event wears its frame and background (§NNN); one the club marked special wears
+      /* The lead event wears its frame and background (§470); one the club marked special wears
          that on the whole card (§272), not only as a chip. One frame per card: the lead's wins. */
       sx={{ ...riseIn(index), ...(featured ? featuredCard : event.isSpecial ? specialCard : {}) }}
     >
       {/* The shape the series card has, from the same constants (`card-layout.ts`, §366): the door
           right after the facts, and what the row leaves over below it rather than above it. The
-          lead's body is a region named by its title (§NNN), as the hero's `<section>` was. */}
+          lead's body is a region named by its title (§470), as the hero's `<section>` was. */}
       <Box
         component={featured ? "section" : "div"}
         aria-labelledby={featured ? "featured-event-title" : undefined}
         sx={CARD_BODY_SX}
       >
         <Box sx={CARD_CHIPS_SX}>
-          {/* The one mark that says "the event the club leads with" (§NNN), first. */}
+          {/* The one mark that says "the event the club leads with" (§470), first. */}
           {tEvents && <GlyphChip glyph="featured" color="primary" label={tEvents("featured")} />}
           {/* What it is, with its glyph (§112). What it is run on is a pill with the facts below,
               said once on the card (§366). */}

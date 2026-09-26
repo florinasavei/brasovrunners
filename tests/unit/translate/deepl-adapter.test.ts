@@ -4,7 +4,7 @@ import { createDeeplTranslator, deeplBatches, deeplHostFor } from "@/infrastruct
 import { createTranslatorForEnvironment, isTranslationConfigured } from "@/infrastructure/translate/translator";
 
 /**
- * §NNN — the DeepL adapter, against a fake `fetch`: no request ever leaves a test. The host is the
+ * §464 — the DeepL adapter, against a fake `fetch`: no request ever leaves a test. The host is the
  * free one for a free key, the key goes in the header DeepL requires, rich text asks for tag
  * handling, the glossary rides as `context`, long lists are cut into DeepL's 50-text requests, and
  * each of DeepL's refusals becomes the failure the screen words.
@@ -27,7 +27,7 @@ const echo = (body: Record<string, unknown>) =>
     status: 200,
   });
 
-describe("§NNN DeepL", () => {
+describe("§464 DeepL", () => {
   it("sends a free key to the free host and a paid key to the other", () => {
     expect(deeplHostFor("abc:fx")).toBe("https://api-free.deepl.com");
     expect(deeplHostFor("abc")).toBe("https://api.deepl.com");

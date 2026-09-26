@@ -3,7 +3,7 @@ import type { Translator } from "./adapter";
 import { createDeeplTranslator } from "./deepl-adapter";
 
 /**
- * The translator this deployment has, or none (`DECISIONS.md` §NNN).
+ * The translator this deployment has, or none (`DECISIONS.md` §464).
  *
  * None is an ordinary answer, not an error: `TRANSLATE_PROVIDER=off`, or `deepl` with no
  * `DEEPL_API_KEY`. The buttons are then absent (`TranslateProvider` is told so by the layout) and

@@ -3,7 +3,7 @@ import { fillRichText } from "@/modules/content/rich-text/ui/fill-event";
 import { isRichTextField, isTranslatableEnglishField, romanianTwinCandidates } from "../domain/fields";
 
 /**
- * The boxes of a form, as «Tradu din română» reads and fills them (`DECISIONS.md` §NNN).
+ * The boxes of a form, as «Tradu din română» reads and fills them (`DECISIONS.md` §464).
  *
  * Browser-only, and by name: the editor's boxes are uncontrolled inputs posting under the names
  * `admin/actions.ts` reads (§315), so the form itself is the one place that knows what is typed

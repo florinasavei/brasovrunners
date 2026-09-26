@@ -242,13 +242,13 @@ describe("§454 the card draws the frame, the page does not", () => {
     expect(imageOf(portrait).replace(/top:[^;]+;|css-\w+/g, "")).toBe(imageOf(landscape).replace(/top:[^;]+;|css-\w+/g, ""));
   });
 
-  it("frames the featured event's summary as a card's (§NNN), and never the event page's", () => {
+  it("frames the featured event's summary as a card's (§470), and never the event page's", () => {
     const card = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null, place: "card" }));
     expect(card).toContain('data-testid="card-picture"');
     expect(card).toContain("aspect-ratio:16/9");
     const page = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null }));
     expect(page).not.toContain("card-picture");
-    // The lead event is an `EventCard` with `featured` since §NNN — one card, one summary, no third place.
+    // The lead event is an `EventCard` with `featured` since §470 — one card, one summary, no third place.
     const cardSource = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "EventCard.tsx"), "utf8");
     expect(cardSource).toContain('<EventExcerpt place="card"');
     expect(existsSync(path.join(process.cwd(), "src", "modules", "events", "ui", "FeaturedEventHero.tsx"))).toBe(false);

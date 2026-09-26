@@ -1,7 +1,7 @@
 import type { RichTextDoc } from "../domain/schema";
 
 /**
- * How a rich-text box is filled from outside it (`DECISIONS.md` §NNN, «Tradu din română»).
+ * How a rich-text box is filled from outside it (`DECISIONS.md` §464, «Tradu din română»).
  *
  * A rich text is an island — a Tiptap editor once its fold has opened, a hidden box holding the
  * stored document until then (`LazyRichTextEditor`, §96) — and neither is a value a button

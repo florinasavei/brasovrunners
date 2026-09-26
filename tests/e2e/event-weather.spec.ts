@@ -6,7 +6,7 @@ import { expect, type Page, test } from "@playwright/test";
  * (criteria 18–19, 23); `docs:land` adds it alongside `DECISIONS.md` §402.
  *
  * The suite's server answers every forecast with one fixed hour (`E2E_WEATHER_STUB`, set by
- * `playwright.config.ts`): partly cloudy, 14 °C, a 20% chance of rain, an 11 km/h wind (the page shows the word and the degrees since §NNN) — and never
+ * `playwright.config.ts`): partly cloudy, 14 °C, a 20% chance of rain, an 11 km/h wind (the page shows the word and the degrees since §469) — and never
  * reaches Open-Meteo. The seed's runs are dated from today (`db/seeds/sample-dates.ts`): the
  * interval session is the next Wednesday one to seven days ahead, the Tâmpa run the next Saturday
  * two to eight days ahead, and the anniversary cross three weeks and more away. So the spec reads

@@ -83,9 +83,9 @@ export async function openFold(fold: Locator) {
  * A card on the public events listing, found by its own heading, the one helper every spec that
  * looks up one card calls after its own `page.goto` to the listing (§411).
  *
- * Until §NNN the cards under the featured hero sat in an "other events" fold (§78,
+ * Until §470 the cards under the featured hero sat in an "other events" fold (§78,
  * `[data-testid="other-events"]`), closed on a phone past four cards, and this opened it first —
- * a spec that looked for a card by text alone found nothing in a closed fold. Since §NNN the lead
+ * a spec that looked for a card by text alone found nothing in a closed fold. Since §470 the lead
  * is the first card of one grid and there is no fold to open; the helper stays the one way specs
  * find a card.
  *

@@ -227,7 +227,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       sample.familyRegistered = [...EMAIL_SAMPLE_FAMILY.registered];
       sample.familyPersonName = EMAIL_SAMPLE_FAMILY.personName;
       sample.familyPersonBirthDate = EMAIL_SAMPLE_FAMILY.personBirthDate;
-      // The second button (§NNN), on the sample link like the first.
+      // The second button (§468), on the sample link like the first.
       sample.familyDeclineUrl = `${actionUrl}?decline=1`;
     }
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —

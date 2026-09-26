@@ -67,7 +67,7 @@ function LazyRichTextEditorIsland({
   if (!mounted && fold.open && fold.shown) setMounted(true);
   const recall = useRecall();
   /*
-    A translation that arrived while the fold was still shut (§NNN): posted by the hidden box in
+    A translation that arrived while the fold was still shut (§464): posted by the hidden box in
     place of the stored document, and the document the editor mounts from when the fold opens.
     Once the editor is mounted it takes the event itself (`RichTextEditor`), so this stops
     listening.

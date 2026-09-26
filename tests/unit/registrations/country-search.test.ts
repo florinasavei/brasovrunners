@@ -5,7 +5,7 @@ import { countryName } from "@/modules/registrations/names";
 import { DIALING_CODES, phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 
 /**
- * BR-REQ-031-04 — the telephone prefix and the citizenship are found by typing (§NNN; the owner:
+ * BR-REQ-031-04 — the telephone prefix and the citizenship are found by typing (§463; the owner:
  * "vreau searchbox să pot găsi țara"). One rule for both pickers, held here.
  */
 const citizenship = countryOptions("ro", (code) => countryName(code, "ro"));

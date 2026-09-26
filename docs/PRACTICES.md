@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V2.04-2026-09-26`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.05-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides

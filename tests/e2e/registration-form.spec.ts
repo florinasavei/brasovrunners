@@ -105,13 +105,13 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // The public-results consent is not asked (§322): there are no results to consent to.
     await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
     // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§432) — a
-    // native select the form posts, searchable once the island runs (§NNN).
+    // native select the form posts, searchable once the island runs (§463).
     await expect(page.locator('select[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('select[name="nationality"]')).toHaveAttribute("required", "");
-    // The city is required and asked right after the birth date (§NNN, reversing §322).
+    // The city is required and asked right after the birth date (§467, reversing §322).
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");
-    // The birth date is read back in words with the age on the event day (§NNN).
+    // The birth date is read back in words with the age on the event day (§467).
     await page.locator('[name="birthDate"]').fill("1990-05-17");
     await expect(page.getByText(/1990 · \d+ de ani în ziua evenimentului/)).toBeVisible();
     // "I want to appear on the participant list" is asked only on an event whose list is switched
@@ -508,7 +508,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
     });
   });
 
-  test("both country pickers search by name, English name and dialling code, and post through their selects (§NNN)", async ({ page }) => {
+  test("both country pickers search by name, English name and dialling code, and post through their selects (§463)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
@@ -548,7 +548,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       const box = phone.locator("..");
       await expect(box.locator('select[name="phoneCountry"]')).toHaveCSS("opacity", "1");
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
-      // Citizenship too is the server's native select, Romania chosen (§432, §NNN).
+      // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
       await expect(noScript.getByRole("button", { name: /^Cetățenie/ })).toHaveCount(0);
       // The mask's placeholder is in the server's HTML; the grouping itself needs the script.

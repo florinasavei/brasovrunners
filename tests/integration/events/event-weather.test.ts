@@ -191,7 +191,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the event page's weather is one line (§NNN, replacing §416's hours and details)", () => {
+describe("BR-REQ-011-01 the event page's weather is one line (§469, replacing §416's hours and details)", () => {
   const weatherDd = async (overrides: Partial<PublicEvent> = {}) => {
     const html = withoutStyles(await page(overrides));
     return rows(html).find((row) => row.label === "Vremea" || row.label === "Weather")?.dd ?? "";

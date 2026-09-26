@@ -14,7 +14,7 @@ import { protectPlaceholders, restorePlaceholders } from "./domain/placeholders"
 import { type RichTextSegment, richTextSegments, segmentCharacters, withTranslatedSegments } from "./domain/rich-text-html";
 
 /**
- * «Tradu din română» — the Romanian words of some English boxes, translated (`DECISIONS.md` §NNN).
+ * «Tradu din română» — the Romanian words of some English boxes, translated (`DECISIONS.md` §464).
  *
  * The owner, 2026-09-26: «I need to introduce the option to auto-translate from RO to EN from the
  * backoffice», then «use the free stuff, we are an ONG» — DeepL API Free.
@@ -122,7 +122,7 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
   /*
     One audit row per press that the provider billed — also when it then failed: a second request
     refused after the first was answered, or an answer that is no longer a storable document. The
-    row is the day's meter, so characters the provider counted are counted here too (§NNN, review).
+    row is the day's meter, so characters the provider counted are counted here too (§464, review).
   */
   const audit = (billed: number, outcome: "ok" | TranslatorFailure) =>
     recordAuditEvent(db, {

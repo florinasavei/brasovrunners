@@ -89,7 +89,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(closed).toEqual({ lead: "Înscrierile s-au închis", leadParts: null, detail: null, detailParts: null, bold: false, button: null });
   });
 
-  it("sends the featured card's registered runners to the desk once the window closes in race week (§78, on the card since §NNN)", () => {
+  it("sends the featured card's registered runners to the desk once the window closes in race week (§78, on the card since §470)", () => {
     const closedRace = race({ registrationClosesAt: new Date(NOW.getTime() - 1) });
     const ro = cardRegistrationLine(translator("ro"), "ro", closedRace, NOW, known({ kind: "CLOSED" }), true);
     expect(ro).toEqual({ lead: "Înscrierile s-au închis — vino la masă cu QR-ul din email.", leadParts: null, detail: null, detailParts: null, bold: true, button: null });
@@ -115,7 +115,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
   });
 });
 
-describe("§NNN CardRegistration — only the date, the hour and the free places in bold", () => {
+describe("§472 CardRegistration — only the date, the hour and the free places in bold", () => {
   const strongs = (html: string) => [...html.matchAll(/<strong[^>]*>([^<]*)<\/strong>/g)].map((m) => m[1]);
   const text = (html: string) => html.replace(/<style[^>]*>[^<]*<\/style>/g, "").replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'");
   const render = (locale: "ro" | "en", door: RegistrationDoor, event = race(), raceWeek = false) =>
@@ -156,7 +156,7 @@ describe("§NNN CardRegistration — only the date, the hour and the free places
   });
 });
 
-describe("§NNN the slot marker — printable, and in no catalogue sentence", () => {
+describe("§472 the slot marker — printable, and in no catalogue sentence", () => {
   it("is visible text, and neither catalogue carries it anywhere", () => {
     expect(SLOT).toMatch(/^[\x20-\x7e]+$/);
     expect(JSON.stringify(ro)).not.toContain(SLOT);

@@ -578,7 +578,7 @@ function RichTextEditorIsland({
   useEditorState({ editor, selector: ({ editor: current }) => editorLook(current?.state), equalityFn: sameEditorLook });
 
   /*
-    «Tradu din română» (§NNN): a translated document arrives as a window event naming this box,
+    «Tradu din română» (§464): a translated document arrives as a window event naming this box,
     and replaces the document the way a paste of the whole would — through the editor, so the
     hidden value, the word count and the tab marks follow as they do for typing. Nothing is saved.
   */
@@ -1986,7 +1986,7 @@ function countWords(text: string): number {
  * keep what it held before the press. With nothing recalled this is the island as it was.
  *
  * `override` is a document that arrived after the refusal and wins over the recalled one — a
- * translation filled into a fold that was still shut (`LazyRichTextEditor`, §NNN). Without it the
+ * translation filled into a fold that was still shut (`LazyRichTextEditor`, §464). Without it the
  * fold would open on the recalled English, and its hidden value would post that old text.
  */
 export default function RichTextEditor({

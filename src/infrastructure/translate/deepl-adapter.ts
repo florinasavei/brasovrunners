@@ -1,7 +1,7 @@
 import { type TranslateLanguage, type TranslateRequest, type Translator, TranslatorError } from "./adapter";
 
 /**
- * DeepL's text API, v2 (`DECISIONS.md` §NNN; the owner, 2026-09-26: «use the free stuff, we are
+ * DeepL's text API, v2 (`DECISIONS.md` §464; the owner, 2026-09-26: «use the free stuff, we are
  * an ONG»).
  *
  * Read from DeepL's own reference (developers.deepl.com, 2026-09-26), not from memory:

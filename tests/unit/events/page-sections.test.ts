@@ -89,7 +89,7 @@ describe("§406 the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 13 in that order, and gives the automatic share links and the nested cost none (§NNN)", () => {
+  it("numbers the cards 1 to 13 in that order, and gives the automatic share links and the nested cost none (§466)", () => {
     const numbered = numberedPageSections();
     expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 13 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
@@ -142,7 +142,7 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
         expect(source.split(needle).length - 1, `${name}: ${needle} once`).toBe(1);
         return { index, id };
       });
-      // The cost's card is inside the first box since §NNN: the page still draws it seventh.
+      // The cost's card is inside the first box since §466: the page still draws it seventh.
       expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => id !== "cost"));
       expect(source).not.toContain("<CostBox");
       expect(source).not.toContain("flow.headings.cost");

@@ -322,7 +322,7 @@ async function renderRow(
     }
   }
   /*
-    A family on one address (§NNN): the declaration request names the address's other declarations
+    A family on one address (§471): the declaration request names the address's other declarations
     still to sign at the event, first name and initial, because the one link signs them all, one
     after the other. Read at send time, like every fact of the message. The inbox's alone: a club
     copy carries no link to sign with.
@@ -650,7 +650,7 @@ async function renderRow(
       const path = getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token: issued.secret } } });
       actionUrl = `${env.APP_BASE_URL}${path}`;
       /*
-        «Nu înscriu această persoană» (§NNN): the same token, the page's "no" shape. One decision per
+        «Nu înscriu această persoană» (§468): the same token, the page's "no" shape. One decision per
         link: whichever answer is pressed spends it, and opening either changes nothing (§12.8).
       */
       data.familyDeclineUrl = `${actionUrl}?decline=1`;

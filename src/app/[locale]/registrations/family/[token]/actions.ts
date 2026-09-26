@@ -49,7 +49,7 @@ export async function confirmFamilyEntryAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Nu înscriu această persoană» (§NNN): the other answer to the same single-use link. The token is
+ * «Nu înscriu această persoană» (§468): the other answer to the same single-use link. The token is
  * spent and the kept form deleted (`declineFamilyEntry`); lands on `done=declined`, or on the one
  * generic notice when the link was spent, lapsed or unknown. Markers only in the URL (§14.5).
  */

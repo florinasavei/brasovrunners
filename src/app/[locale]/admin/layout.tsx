@@ -99,7 +99,7 @@ export default async function AdminLayout({ children, params }: Props) {
           {/* A save a network refused is offered the simple way, and the page it lands on says so (§436). */}
           <SaveFallbackGuard />
           <SaveFallbackNotice shown={savedTheSimpleWay} />
-          {/* «Tradu din română» (§NNN): offered only where a translator is configured and the
+          {/* «Tradu din română» (§464): offered only where a translator is configured and the
               reader's role writes the club's words; the action asks both again. */}
           <TranslateProvider action={isTranslationConfigured(env) && canTranslateTexts(staffUser.role) ? translateFieldAction : null}>
             <PickerProvider>{children}</PickerProvider>

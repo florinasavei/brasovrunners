@@ -119,7 +119,7 @@ export default async function RegistrationCta({
       : cta.kind === "COMPLETED"
         ? t("cta.completed")
       : cta.kind === "CLOSED"
-        ? // Race week's "come to the desk with the QR" is the featured card's line since §NNN
+        ? // Race week's "come to the desk with the QR" is the featured card's line since §470
           // (`cardRegistrationLine`); the page keeps the plain sentence, as it always did.
           t("cta.closed")
         : cta.opensAt === null

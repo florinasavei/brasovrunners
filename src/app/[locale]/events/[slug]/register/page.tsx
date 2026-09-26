@@ -309,7 +309,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
-  // The two country pickers' search words (§NNN), as plain strings for the islands (§353).
+  // The two country pickers' search words (§463), as plain strings for the islands (§353).
   const countrySearchWords = {
     search: t("countrySearch.search"),
     noMatch: t("countrySearch.noMatch"),
@@ -798,7 +798,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   htmlInput: { min: earliestBirthDate, max: latestBirthDate },
                 }}
               />
-              {/* The typed date in words, with the age on race day (§NNN): a date box shows
+              {/* The typed date in words, with the age on race day (§467): a date box shows
                   "03/04/1990" in whichever order the browser likes, so the runner reads back
                   what they meant. */}
               <BirthDateEcho
@@ -808,7 +808,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 template={t("birthDateEcho", { date: "{date}", age: "{age}" })}
               />
 
-              {/* The city, required and right after the birth date (§NNN; the owner, 2026-09-26:
+              {/* The city, required and right after the birth date (§467; the owner, 2026-09-26:
                   "orașul ar trebui să fie obligatoriu, pune după data nașterii"), reversing
                   §322's optional fold. */}
               <TextField
@@ -868,7 +868,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
                   are, so a Romanian runner just leaves it. It was optional in the fold on the
                   right (§322); the server now refuses a public form without it. A native select the
-                  server draws and the form posts, searchable once the island runs (§NNN): the
+                  server draws and the form posts, searchable once the island runs (§463): the
                   owner, "vreau searchbox să pot găsi țara".
                 */}
                 <NationalityField

@@ -19,7 +19,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 
 /**
  * The cost's closed line — «Cu taxă, 50 lei, cu reducere», «Gratuit», «Nestabilit» — the card's own
- * and, since §NNN, part of card 1's line (`KindBox`), which the card sits inside.
+ * and, since §466, part of card 1's line (`KindBox`), which the card sits inside.
  */
 export async function costLine(event: BoxProps["event"], languages: readonly LanguageEntry[]): Promise<string> {
   const t = await getTranslations("Admin");
@@ -36,12 +36,12 @@ export async function costLine(event: BoxProps["event"], languages: readonly Lan
 }
 
 /**
- * "Cost" (§343, §356, §394, §398, §406, §NNN): a named card inside the first box, «Ce fel de
- * eveniment» (`KindBox`), since §NNN (the owner, 2026-09-26: "cardul 7. Cost poate fi inclus în
+ * "Cost" (§343, §356, §394, §398, §406, §466): a named card inside the first box, «Ce fel de
+ * eveniment» (`KindBox`), since §466 (the owner, 2026-09-26: "cardul 7. Cost poate fi inclus în
  * cardul 1. la ce fel de eveniment"). It keeps its id, `box-cost`, so a deep link opens the first
  * box and this card inside it (`openFoldsAround`), but not a page number: its title is plain «Cost»,
  * the cards after it renumber and the map has no Cost chip, while the page still draws the row after
- * the course. Before §NNN it was its own card, where the page draws its own row — after the
+ * the course. Before §466 it was its own card, where the page draws its own row — after the
  * course, before who may enter and the button (`page-sections.ts`). It was the top of "Participare
  * și înscrieri" and moved whole: the same select, the same names, the same `CostFields`, the same
  * discount-note strip. The owner, 2026-09-25: "am nevoie de mai multe căsuțe la editor ca să văd

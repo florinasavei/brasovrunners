@@ -393,7 +393,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
     expect(hero).toContain('data-testid="hero-weather"');
   });
 
-  it("says the surface once on the featured card, as the first pill, never also a chip beside the type — it is a card since §NNN (§366)", () => {
+  it("says the surface once on the featured card, as the first pill, never also a chip beside the type — it is a card since §470 (§366)", () => {
     const card = readFileSync("src/modules/events/ui/EventCard.tsx", "utf8");
     expect(card).toMatch(/<EventKindChips\b[^>]*\bsurface=\{null\}[^>]*\/>/);
   });

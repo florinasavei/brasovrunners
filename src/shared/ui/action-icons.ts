@@ -156,7 +156,7 @@ export type ActionIconName =
   // Writing to an event's participants in the club's own words (§364): the loudspeaker, because
   // it is an announcement to many, not one message sent again.
   | "announce"
-  // «Tradu din română» (§NNN): the English box filled from the Romanian one, and the whole record at once.
+  // «Tradu din română» (§464): the English box filled from the Romanian one, and the whole record at once.
   | "translate"
   // People and settings.
   | "revoke"

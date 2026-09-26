@@ -11,7 +11,7 @@ import { useTranslateAction } from "./TranslateProvider";
 import { useTranslatePress } from "./use-translate-press";
 
 /**
- * «Tradu tot din română» at the top of a record's editor (`DECISIONS.md` §NNN; the owner,
+ * «Tradu tot din română» at the top of a record's editor (`DECISIONS.md` §464; the owner,
  * 2026-09-26: «I wanna override the descriptions and all from RO to EN so I have the same layout
  * and all»).
  *

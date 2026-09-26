@@ -28,7 +28,7 @@ export const PUBLIC_TOAST_KEYS = [
 export type PublicToastKey = (typeof PUBLIC_TOAST_KEYS)[number];
 
 /**
- * The public toasts that say why nothing happened rather than what did (§NNN, nit found in review):
+ * The public toasts that say why nothing happened rather than what did (§471, nit found in review):
  * «Semnează declarațiile» on «Înscrierile mele» refused because the address no longer has two
  * declarations waiting at the event. Drawn as information, never as a success.
  */

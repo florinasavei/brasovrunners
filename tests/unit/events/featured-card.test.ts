@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * §NNN — the featured event is the first card of the listing's grid, at the grid's one width.
+ * §470 — the featured event is the first card of the listing's grid, at the grid's one width.
  *
  * The owner, 2026-09-26, of the hero that stood across the page above the cards: "vreau doar sa
  * fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile
@@ -110,7 +110,7 @@ function cardRules(html: string): string {
   return [...html.matchAll(new RegExp(`\\.${cls}([^{]*)\\{([^}]*)\\}`, "g"))].map(([, selector, body]) => `${selector}{${body}}`).join("\n");
 }
 
-describe("§NNN the featured event is a card like the others", () => {
+describe("§470 the featured event is a card like the others", () => {
   it("wears the «Evenimentul principal» chip first, and is a region named by its title", async () => {
     const html = withoutStyles(await card(race(), RACE_WEEK));
     expect(chipLabels(html)[0]).toBe("Evenimentul principal");
@@ -164,7 +164,7 @@ describe("§NNN the featured event is a card like the others", () => {
   });
 });
 
-describe("§NNN the listing draws the lead as the first card of its one grid", () => {
+describe("§470 the listing draws the lead as the first card of its one grid", () => {
   const page = readFileSync("src/app/[locale]/events/page.tsx", "utf8");
   const body = page.slice(page.indexOf("async function ListingBody"));
 

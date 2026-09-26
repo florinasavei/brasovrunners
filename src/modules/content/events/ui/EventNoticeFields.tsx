@@ -218,7 +218,7 @@ function NoticeTextPair({
           />
         ))}
       </Stack>
-      {/* «Tradu din română» (§NNN): the English note or reason from the Romanian one. */}
+      {/* «Tradu din română» (§464): the English note or reason from the Romanian one. */}
       <TranslateFieldButton en={names.en} />
       <Typography id={helpId} variant="caption" color="text.secondary">
         {help}

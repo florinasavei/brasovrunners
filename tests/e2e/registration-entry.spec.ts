@@ -46,7 +46,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
 
     await page.goto("/ro/evenimente");
 
-    // The featured event is the first card of the grid since §NNN, still a region named by its title.
+    // The featured event is the first card of the grid since §470, still a region named by its title.
     const hero = page.getByRole("region", { name: new RegExp(FEATURED.title) });
     await expect(hero).toBeVisible();
     // BR-REQ-034-01: the count is a number of places, stated in words next to the button.

@@ -73,7 +73,7 @@ export default async function AlbumFieldsForm({
         </RecallField>
       </Stack>
 
-      {/* «Tradu tot din română» (§NNN): the album's English title and description from the Romanian. */}
+      {/* «Tradu tot din română» (§464): the album's English title and description from the Romanian. */}
       <TranslateAllButton />
 
       {/* One tab per language, as every other editor has (§259). */}

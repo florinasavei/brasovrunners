@@ -23,7 +23,7 @@ import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_S
  * start of the box, so a tap on the flag opens the phone's own picker, and what the eye reads is
  * one outlined field with a real flag in it.
  *
- * **And, once the island runs, a search** (§NNN; the owner: "vreau searchbox să pot găsi țara").
+ * **And, once the island runs, a search** (§463; the owner: "vreau searchbox să pot găsi țara").
  * Two hundred options *without* a search box were the scroll; with one they are a list that
  * shrinks to "Germania" after four letters, which a native select cannot do — its options start
  * with a flag, so it cannot even jump to a letter. A button then lies over the select and opens a
@@ -143,7 +143,7 @@ const COUNTRY_ADORNMENT_SX = {
     cursor: "pointer",
     fontSize: 16,
   },
-  // The search's button (§NNN), laid over the select once the island runs: the tap opens the
+  // The search's button (§463), laid over the select once the island runs: the tap opens the
   // popover with a search box rather than the phone's own list. Same box, same 44-pixel target.
   "& > button": PICKER_BUTTON_SX,
   "&:has(> select:focus-visible), &:has(> button:focus-visible)": {
@@ -236,7 +236,7 @@ function PhoneFieldIsland({
   /** What precedes the composed number once it is valid: "we will ring". */
   validLabel?: string;
   /**
-   * The search's words (§NNN). Given, the flag opens a popover with a search box once the island
+   * The search's words (§463). Given, the flag opens a popover with a search box once the island
    * runs; left out, the flag opens the native select as it always did.
    */
   searchWords?: CountrySearchWords;
@@ -406,7 +406,7 @@ function PhoneFieldIsland({
     .map((code) => ({ code, label: `${flagEmoji(code)} ${countryNames[code] ?? code} (+${DIALING_CODES[code]})` }));
 
   /*
-    The search (§NNN; the owner: "vreau searchbox să pot găsi țara"). The native select stays —
+    The search (§463; the owner: "vreau searchbox să pot găsi țara"). The native select stays —
     it is what posts, what works before hydration and without JavaScript, and what the other
     number's island listens to — but once this island runs, a button lies over it and opens a
     popover whose search box filters the countries by name, code or dialling code. A choice is

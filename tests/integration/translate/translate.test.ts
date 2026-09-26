@@ -11,7 +11,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Tradu din română», through the service with a fake provider (no request leaves a test):
+ * §464 — «Tradu din română», through the service with a fake provider (no request leaves a test):
  * it fills (answers, never saves), refuses without a translator, refuses any box that is not the
  * club's own words — a legal text, a participant's field — writes one audit row per press with
  * the characters and never the words, holds the daily budget and the per-person throttle, and
@@ -56,7 +56,7 @@ const RICH = {
   ],
 };
 
-describe("§NNN «Tradu din română»", () => {
+describe("§464 «Tradu din română»", () => {
   it("answers each box translated — plain and rich — and saves nothing but one audit row", async () => {
     const copywriter = await staff("COPYWRITER");
     const { translator, requests } = fakeTranslator();

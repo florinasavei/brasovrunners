@@ -15,11 +15,11 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
 export type CardRegistrationLine = {
   /** The state: "Înscrieri deschise până pe …", "Înscrierile se deschid pe …", "Înscrierile s-au închis". */
   lead: string;
-  /** `lead` cut around its date and hour, the one part in bold (§NNN); null when it has no date. */
+  /** `lead` cut around its date and hour, the one part in bold (§472); null when it has no date. */
   leadParts: FactParts | null;
   /** After a middle dot: "7 locuri libere din 10", or "Lista de așteptare" once the places are gone. */
   detail: string | null;
-  /** `detail` cut around "7 locuri libere", the one part in bold (§NNN); null for the waiting list. */
+  /** `detail` cut around "7 locuri libere", the one part in bold (§472); null for the waiting list. */
   detailParts: FactParts | null;
   /** Bold where there is something to do or wait for; quiet where the question is closed. */
   bold: boolean;
@@ -32,14 +32,14 @@ export type FactParts = { before: string; fact: string; after: string };
 /**
  * The marker formatted into the slot and cut at: printable, and made of braces and a word no
  * catalogue sentence carries — `tests/unit/events/card-registration-line.test.ts` holds both
- * catalogues to it (§NNN).
+ * catalogues to it (§472).
  */
 export const SLOT = "{{fact}}";
 
 /**
  * The catalogue's own sentence with `fact` in the slot `name`: the words around it come from the
  * message itself, formatted with a marker in the slot and cut there, so the order is each
- * language's own and nothing is searched for in the finished text (§NNN).
+ * language's own and nothing is searched for in the finished text (§472).
  */
 function factParts(say: Say, key: string, values: Record<string, string | number>, name: string, fact: string): FactParts {
   const framed = say(key, { ...values, [name]: SLOT });
@@ -69,7 +69,7 @@ const whole = (parts: FactParts) => parts.before + parts.fact + parts.after;
  * window and no number, and offers no button: it would lead to a form whose first act is the read
  * that just failed.
  *
- * **Race week on the featured card** (§78, moved here by §NNN): the lead event's closed window says
+ * **Race week on the featured card** (§78, moved here by §470): the lead event's closed window says
  * where to go instead of only "closed" — "come to the desk with the QR from your email", the one
  * thing a registered runner needs that week. `raceWeek` is true only for the featured card inside
  * the club's race week; every other card, and the page, keep the plain sentence.
@@ -174,7 +174,7 @@ export default function CardRegistration({ slug, line }: { slug: string; line: C
 }
 
 /**
- * Only the facts in bold (§NNN, the owner 2026-09-26: "nu vreau totul să fie bold, ci doar
+ * Only the facts in bold (§472, the owner 2026-09-26: "nu vreau totul să fie bold, ci doar
  * chestiile importante … adică doar data, ora și locurile libere"): "Înscrieri deschise până
  * **dum., 27 sept. 2026, la 07:00** · **8 locuri libere** din 10". A sentence with no date or count
  * (the waiting list full, race week, "soon", the organizer's site) has nothing in bold; it stays in

@@ -18,7 +18,7 @@ import { DENSITY } from "@/theme/density";
  *    is a row of `CONVERTED_SITES` — file, prop, step, the `sm` value the site had before this
  *    change (asserted: sm and up never move) and the xs value it had (the step must be smaller).
  *    A new conversion without a row, or a row whose site is gone, fails.
- * 3. The scale itself: seven positive steps (eight until §NNN took the hero's), each smaller than
+ * 3. The scale itself: seven positive steps (eight until §470 took the hero's), each smaller than
  *    what it replaced.
  */
 
@@ -155,11 +155,11 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
-  // One grid for the upcoming cards and the past fold since §NNN (`CARD_GRID_SX`) — it was three
+  // One grid for the upcoming cards and the past fold since §470 (`CARD_GRID_SX`) — it was three
   // copies, one per shape `ListingBody` returned and one in the fold.
   { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
-  // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§NNN): the
+  // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§470): the
   // lead event is a card, with a card's padding, in the grid's gap.
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1 },
   // The calendar.

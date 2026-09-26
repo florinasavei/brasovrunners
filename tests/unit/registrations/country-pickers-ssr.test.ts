@@ -11,7 +11,7 @@ import PhoneField from "@/modules/registrations/ui/PhoneField";
 import { fieldId } from "@/shared/forms/outcome";
 
 /**
- * BR-REQ-031-04 — the searchable country pickers (§NNN) post exactly what they posted before:
+ * BR-REQ-031-04 — the searchable country pickers (§463) post exactly what they posted before:
  * each is a native `<select>` in the server's HTML, with the current country chosen, for a reader
  * without JavaScript and before hydration. The search's button only arrives with the island.
  */

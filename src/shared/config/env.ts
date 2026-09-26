@@ -256,7 +256,7 @@ export const envSchema = z
     TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
 
     /**
-     * «Tradu din română» (`DECISIONS.md` §NNN): which engine fills an English box from the
+     * «Tradu din română» (`DECISIONS.md` §464): which engine fills an English box from the
      * Romanian one. `deepl` by default — DeepL API Free, 500 000 characters a month, the owner's
      * choice for an ONG — and live only once `DEEPL_API_KEY` is set; `off` hides every button
      * whatever keys exist. Without a key the buttons are absent and `/admin/tasks` shows the row.

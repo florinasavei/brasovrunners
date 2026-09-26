@@ -27,7 +27,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    // The map: thirteen cards and the share links (the cost is inside card 1, §NNN), in the page's order, the share links named as automatic.
+    // The map: thirteen cards and the share links (the cost is inside card 1, §466), in the page's order, the share links named as automatic.
     const map = page.getByTestId("section-map");
     await expect(map).toBeVisible();
     await expect(map.getByRole("listitem")).toHaveCount(14);
@@ -45,7 +45,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.getByRole("heading", { name: /^4 · Data și ora — apare pe pagină/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^3 · Descrierea evenimentului — gol, nu apare pe pagină/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^Starea evenimentului/ })).toBeVisible();
-    // The cost is a plain card inside card 1 since §NNN: no number, no chip; the cards after it renumber.
+    // The cost is a plain card inside card 1 since §466: no number, no chip; the cards after it renumber.
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.getByRole("heading", { name: /^\d+ · Cost/ })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: /^7 · Participare și înscrieri — gol, nu apare pe pagină/ })).toBeVisible();
@@ -161,7 +161,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     const order = await page.locator("details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
     expect(order.indexOf("box-rules")).toBeLessThan(order.indexOf("box-video"));
     expect(order.indexOf("box-video")).toBeLessThan(order.indexOf("box-start-list"));
-    // The status (§448) and the cost (§NNN) are cards inside the first box, the declaration one inside the rules.
+    // The status (§448) and the cost (§466) are cards inside the first box, the declaration one inside the rules.
     await expect(page.locator("#box-kind #box-status")).toHaveCount(1);
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.locator("#box-rules #box-declaration")).toHaveCount(1);

@@ -57,7 +57,7 @@ export default function RichText({
    * which is how the browser picks the smallest stored width that is still sharp there.
    *
    * On a listing card every picture is also in the one 16∶9 frame at its focal point (§454) rather
-   * than its natural ratio or the organizer's crop — the featured event's card too, since §NNN made
+   * than its natural ratio or the organizer's crop — the featured event's card too, since §470 made
    * it a card (the hero's summary asked for the frame on its own until then). The event page never
    * frames.
    */
@@ -300,7 +300,7 @@ function renderBlock(
 }
 
 /**
- * A picture on a listing card (§454), the featured event's included since §NNN: the same 16∶9 frame
+ * A picture on a listing card (§454), the featured event's included since §470: the same 16∶9 frame
  * on every card, over the organizer's crop, centred on the focal point the club picked
  * (`cardFrameGeometry`). The figure's column share and side are overridden by the card's own rules
  * (`CARD_EXCERPT_SX`): the whole card width, never floated. The caption stays under it.

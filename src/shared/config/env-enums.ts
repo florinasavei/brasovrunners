@@ -27,7 +27,7 @@ export const STAFF_AUTH_MODES = ["dev-switcher", "provider", "disabled"] as cons
 export type StaffAuthMode = (typeof STAFF_AUTH_MODES)[number];
 
 /**
- * «Tradu din română» (`DECISIONS.md` §NNN) — which engine fills an English box, or none. DeepL
+ * «Tradu din română» (`DECISIONS.md` §464) — which engine fills an English box, or none. DeepL
  * API Free is the only one wired; a second provider is one more value here and one file in
  * `infrastructure/translate/`.
  */

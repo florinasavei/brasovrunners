@@ -1,7 +1,7 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 
 /**
- * The declarations of a family on one address, signed as a wizard (§NNN, over §389 and §446).
+ * The declarations of a family on one address, signed as a wizard (§471, over §389 and §446).
  *
  * Each person on the address has their own registration, their own declaration and their own
  * link (§389). A parent who registered three people used to open three emails, one after the
@@ -36,7 +36,7 @@ export type FamilySigningRow = {
 };
 
 /**
- * Whether the person signed before this wizard began (§NNN, found in review): a declaration on
+ * Whether the person signed before this wizard began (§471, found in review): a declaration on
  * the row and a state it leads to — confirmed, or queued after a signature that found no place.
  * Such a person is a step shown as signed and counted in «din M», never dropped from the list.
  */
@@ -71,7 +71,7 @@ export type FamilyStepsInput = {
   signedIds: readonly string[];
   skippedIds?: readonly string[];
   /**
-   * The registrations the wizard was started over, fixed when the pass was issued (§NNN, found in
+   * The registrations the wizard was started over, fixed when the pass was issued (§471, found in
    * review): a registration added to the address afterwards is never a step of this pass. Absent
    * for a page built fresh from the link, which lists what is on the address now.
    */
@@ -125,7 +125,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
 }
 
 /**
- * The words a step's line says after the name, as a key under `declare.family.state` (§NNN): the
+ * The words a step's line says after the name, as a key under `declare.family.state` (§471): the
  * five states, and a person signed whose signature found no free place says the waiting list
  * rather than «semnată» alone. Pure, so both languages' words are unit-tested.
  */
@@ -136,7 +136,7 @@ export function familyStepWordsKey(step: Pick<FamilyStep, "state" | "status">): 
 }
 
 /**
- * «Declarația N din M» (§NNN): the current person's place in the list, counted from one, and how
+ * «Declarația N din M» (§471): the current person's place in the list, counted from one, and how
  * many people the list holds — the ones signed before or in this pass, put off and still to sign
  * all counted in M. Null when nobody is current.
  */
@@ -164,7 +164,7 @@ export function isFamilyWizard(steps: readonly FamilyStep[]): boolean {
 export const FAMILY_PASS_MINUTES = 30;
 
 /**
- * When the pass lapses (§NNN, found in review): {@link FAMILY_PASS_MINUTES} after this press, and
+ * When the pass lapses (§471, found in review): {@link FAMILY_PASS_MINUTES} after this press, and
  * never later than the earliest hold still running among the people left to sign — the wizard ends
  * with the first place that would lapse under it, and each person's own link carries on from there.
  */

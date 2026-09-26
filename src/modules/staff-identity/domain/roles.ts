@@ -401,7 +401,7 @@ export function canSendNewsletter(role: StaffRole): boolean {
 }
 
 /**
- * «Tradu din română» (§NNN): whoever writes words the club publishes or sends — the Redactor's
+ * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
  * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
  * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the
  * Superadministrator; never the volunteer, and never Tehnic, who writes no text of the club's.

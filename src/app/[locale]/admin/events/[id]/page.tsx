@@ -791,7 +791,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     gaps={storedGaps}
                   />
-                  {/* «Tradu tot din română» (§NNN): every English box of this form from its Romanian
+                  {/* «Tradu tot din română» (§464): every English box of this form from its Romanian
                       twin, the layout kept — one question naming them, nothing saved until Salvează. */}
                   <TranslateAllButton />
                   {/* The page, top to bottom (§406): each card where the page draws the first thing

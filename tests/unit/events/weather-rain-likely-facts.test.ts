@@ -179,7 +179,7 @@ describe("the event page's weather block wears the umbrella when rain is likely 
     expect(html).not.toContain('data-testid="weather-rain-likely"');
   });
 
-  it("draws the umbrella after the degrees and says «ploaie probabilă» when rain is likely — no percentage, no wind (§NNN)", async () => {
+  it("draws the umbrella after the degrees and says «ploaie probabilă» when rain is likely — no percentage, no wind (§469)", async () => {
     const html = withoutStyles(
       renderToStaticMarkup(
         await EventFacts({ event: event(), now: NOW, stacked: true, weather: forecast(reading({ precipitationProbability: 60 })) }),

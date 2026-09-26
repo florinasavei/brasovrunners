@@ -180,7 +180,7 @@ function LinkRowsEditorIsland({
                 slotProps={{ htmlInput: { ...constraints.label } }}
               />
             </Stack>
-            {/* «Tradu din română» (§NNN): the English label from the Romanian one. */}
+            {/* «Tradu din română» (§464): the English label from the Romanian one. */}
             <TranslateFieldButton en={name("labelEn")} />
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
               <IconButton aria-label={`${labels.moveUp} ${n}`} onClick={() => move(index, -1)} disabled={index === 0} sx={square}>

@@ -5,14 +5,14 @@ import { env } from "@/shared/config/env";
 import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
 
 /**
- * The family's declarations as a stepper (§NNN): one line per person on the address, in the order
+ * The family's declarations as a stepper (§471): one line per person on the address, in the order
  * they are signed — a tick for a person signed, the person signed now in bold, the others after.
  *
  * Hand-rolled like `RegistrationJourney`, for its reasons: a list and no interaction, on a Server
  * Component with no client island, and an ordered list with `aria-current="step"` is what a screen
  * reader wants. Each line says its state in words too, never by the tick or the weight alone.
  *
- * `detailed` is the last screen (§NNN, found in review): under each name, what happens next for
+ * `detailed` is the last screen (§471, found in review): under each name, what happens next for
  * that person — a confirmed person's desk code and QR (the same picture «Înscrierile mele» shows,
  * §77), the waiting list, or the link that still signs a person left for later.
  */

@@ -601,7 +601,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
         const line = card.locator('[data-fact="registration"]');
         await expect(line).toContainText(locale === "ro" ? /^Înscrieri(le sunt)? deschise.* · 12 locuri libere din 12$/ : /^Registration (is )?open.* · 12 places left out of 12$/);
         await expect(line.getByTestId("card-places")).toHaveText(locale === "ro" ? "12 locuri libere din 12" : "12 places left out of 12");
-        // Only the facts in bold (§NNN): the date with its hour, and «12 locuri libere» — not «din 12».
+        // Only the facts in bold (§472): the date with its hour, and «12 locuri libere» — not «din 12».
         expect(await line.evaluate((element) => getComputedStyle(element).fontWeight)).toBe("400");
         const bold = line.locator("strong");
         await expect(bold).toHaveCount(2);

@@ -11,7 +11,7 @@ import { useTranslateAction } from "./TranslateProvider";
 import { useTranslatePress } from "./use-translate-press";
 
 /**
- * «Tradu din română» beside one English box (`DECISIONS.md` §NNN): fills it with the Romanian
+ * «Tradu din română» beside one English box (`DECISIONS.md` §464): fills it with the Romanian
  * box's words, translated — a draft to read and correct, never saved by the press. When the
  * English box already holds words, it asks first (§384), since the press would replace them.
  *

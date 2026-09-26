@@ -14,7 +14,7 @@ import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import OnlyForType from "./OnlyForType";
 
 /**
- * «Tradu din română» under an English box (§NNN): drawn for the English language only, and by the
+ * «Tradu din română» under an English box (§464): drawn for the English language only, and by the
  * button itself only where the page offers translation.
  */
 function translateButton(translation: { locale: Locale }, name: string) {

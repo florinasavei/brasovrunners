@@ -68,7 +68,7 @@ import { spentLinkHasFamilyLeft } from "@/modules/registrations/token-actions";
 import FamilySigningSteps from "@/modules/registrations/ui/FamilySigningSteps";
 
 /**
- * The pass this browser holds, when it holds beside this page's secret (§NNN); null otherwise — no
+ * The pass this browser holds, when it holds beside this page's secret (§471); null otherwise — no
  * pass, a lapsed one, or another link's. Reads only, and charges nothing: the page charges the
  * request's one attempt itself, unless this said yes (§19.4, §202).
  */
@@ -78,7 +78,7 @@ async function heldPass(token: string, pass: FamilySigningPass | null, now: Date
 }
 
 /**
- * The family's last screen (§NNN): everybody the wizard walked, and under each name what happens
+ * The family's last screen (§471): everybody the wizard walked, and under each name what happens
  * next — a confirmed person's desk code and QR, the waiting list, or the emailed link that still
  * signs a person left for later — then «Gata», back to the event.
  */
@@ -177,7 +177,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   }
 
   const now = new Date();
-  // The family's wizard (§NNN): the pass the first signature handed this browser, if it did.
+  // The family's wizard (§471): the pass the first signature handed this browser, if it did.
   const pass = await readFamilySigningPass(now);
 
   if (done) {
@@ -222,7 +222,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * token's real purpose, and the other is the `PURPOSE_MISMATCH` that proves it.
    */
   /*
-    A browser whose pass holds beside this very link (§NNN, found in review) is not charged an
+    A browser whose pass holds beside this very link (§471, found in review) is not charged an
     attempt: the secret is one the pass was bound to on the server, so the request guesses nothing
     (§202), and a family walks this page once per person — more than the link's ten an hour would
     allow. Any other request pays, a valid pass for another link included.
@@ -243,7 +243,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const db = getDb();
 
   /*
-    The family's wizard carried on (§NNN): this browser holds the pass for this secret — the link
+    The family's wizard carried on (§471): this browser holds the pass for this secret — the link
     spent by its own person's signature, the link whose person was put off with «Semnez mai
     târziu», or «Înscrierile mele» exchanged on the server. The page is then the current person's
     step, with the same form every declaration has; with nobody left, the list of who was signed.
@@ -252,7 +252,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     put off earlier, signing now from their own email, as the skip promised.
   */
   /*
-    The fresh link wins (§NNN, nit found in review): beside a live link, only a pass whose opened
+    The fresh link wins (§471, nit found in review): beside a live link, only a pass whose opened
     person is this link's own carries the wizard on; any other is ignored and the link signs its
     own person, as it always did.
   */
@@ -265,7 +265,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
   /*
-    A spent link with no pass that holds (§NNN, nit found in review): lapsed, done elsewhere, or
+    A spent link with no pass that holds (§471, nit found in review): lapsed, done elsewhere, or
     another device. When the address still has declarations to sign at the event, one line says each
     person's own emailed link still works — rather than leaving the parent at "already used".
   */
@@ -285,7 +285,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * happened.
    */
   const blocked = !context.ok && familyCurrent === null;
-  // A form is on the page: the opened link's own person, or the family's next one (§NNN).
+  // A form is on the page: the opened link's own person, or the family's next one (§471).
   const signing = context.ok || familyCurrent !== null;
   /*
     `invalid=name` is the signature that was not the declarant's name (§314): its own refusal,
@@ -323,7 +323,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       ? await findRegistrationById(db, context.token.registrationId)
       : undefined;
   /*
-    The family's stepper (§NNN), from the opened link: everybody on the address at the event whose
+    The family's stepper (§471), from the opened link: everybody on the address at the event whose
     declaration waits, this person first. One person alone gets the page they always had.
   */
   const linkSteps =
@@ -490,7 +490,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       {journeyStep && <RegistrationJourney current={journeyStep} />}
 
       {familyMode && !familyCurrent && passSteps && walking ? (
-        /* The family's wizard with nobody left to sign (§NNN): who was signed, and nothing to press. */
+        /* The family's wizard with nobody left to sign (§471): who was signed, and nothing to press. */
         <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
@@ -515,7 +515,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/*
-            A family on one address (§NNN, over §389): the declarations as a wizard — which person
+            A family on one address (§471, over §389): the declarations as a wizard — which person
             this step is, everybody's place in the order, and, once the pass carries the wizard on,
             whose declaration was signed a moment ago. Each person's form below is the form every
             declaration has, checked against that person's own name.
@@ -650,7 +650,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
 
               <input type="hidden" name="token" value={token} />
-              {/* The family's current person (§NNN): signed through the pass, never through the link alone. */}
+              {/* The family's current person (§471): signed through the pass, never through the link alone. */}
               {familyCurrent && <input type="hidden" name="registrationId" value={familyCurrent.id} />}
               {/* The version being read, so the signature is refused against any other text
 
@@ -797,7 +797,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   />
                 </>
               )}
-              {/* «… și treci la următoarea» while another person follows (§NNN); the last one confirms. */}
+              {/* «… și treci la următoarea» while another person follows (§471); the last one confirms. */}
               <Button type="submit" variant="contained" sx={TAP_TARGET}>
                 {familySteps && hasNextFamilyStep(familySteps) ? t("declare.family.nextAction") : t("declare.action")}
               </Button>
@@ -814,7 +814,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Stack>
           </form>
           {/*
-            «Semnez mai târziu» (§NNN): its own form — a form cannot sit in another — and its own
+            «Semnez mai târziu» (§471): its own form — a form cannot sit in another — and its own
             action, which writes no registration: the person is put off in the pass, shown as
             "later", and the page moves on. Their own emailed link still signs them.
           */}

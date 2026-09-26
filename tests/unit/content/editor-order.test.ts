@@ -75,7 +75,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       expect(source, page).toMatch(/<KindBox \{\.\.\.box\}[^>]*\/>/);
       expect(source, page).not.toContain("</KindBox>");
       expect(source, page).not.toContain("<StatusBox");
-      // The cost is a card inside the first box since §NNN, drawn by the box, never by the page.
+      // The cost is a card inside the first box since §466, drawn by the box, never by the page.
       expect(source, page).not.toContain("<CostBox");
       for (const card of ["<CourseBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);

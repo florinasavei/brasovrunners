@@ -53,7 +53,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   const t = await getTranslations("Registrations");
   const tEvent = await getTranslations("Event");
 
-  // «Nu înscriu această persoană» was pressed (§NNN): the kept form is deleted and nobody registered.
+  // «Nu înscriu această persoană» was pressed (§468): the kept form is deleted and nobody registered.
   if (done === "declined") {
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -107,7 +107,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   );
 
   /*
-    «Nu înscriu această persoană» (§NNN): the email's second button opens this shape of the page. It
+    «Nu înscriu această persoană» (§468): the email's second button opens this shape of the page. It
     reads the link like the confirmation does and changes nothing (§12.8); only the press deletes.
     The way back is the same page without the marker — the link is still unspent.
   */
@@ -223,7 +223,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
           {t("family.wrongData")}
         </Typography>
 
-        {/* The other answer to the same link (§NNN), quieter than the confirmation: the kept form deleted, nobody registered. */}
+        {/* The other answer to the same link (§468), quieter than the confirmation: the kept form deleted, nobody registered. */}
         <form action={declineFamilyEntryAction}>
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="token" value={token} />

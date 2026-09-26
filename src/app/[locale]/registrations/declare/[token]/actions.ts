@@ -36,7 +36,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
 
   /*
-    The family's wizard (§NNN): a press that names a registration is the next person on the address,
+    The family's wizard (§471): a press that names a registration is the next person on the address,
     signed through the pass the first signature handed this browser — and only with it. A press
     without one is the opened link's own person, as always.
   */
@@ -79,7 +79,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     await clearFormDraft(path);
 
     /*
-      Another person on the address still to sign (§NNN): the pass is given — or moved on, with this
+      Another person on the address still to sign (§471): the pass is given — or moved on, with this
       signature added — and the page shows the next person's step. The URL carries nothing new: the
       pass is the wizard's memory, and the page reads the rest from the rows. The link's own
       signature fixes the wizard's people now (`eligibleIds`): nobody added to the address later.
@@ -108,7 +108,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     }
     const next = await nextFamilyPass(db, base, now);
     /*
-      The fresh link wins (§NNN, nit found in review): a signature by the link's own person replaces
+      The fresh link wins (§471, nit found in review): a signature by the link's own person replaces
       whatever pass this device held for the link — a done walk, or one whose person was put off —
       and where no wizard follows, the old pass is taken back rather than left to list a stale walk
       on the page this signature lands on.
@@ -213,7 +213,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Semnez mai târziu» on a family's step (§NNN): the current person is put off and the page moves
+ * «Semnez mai târziu» on a family's step (§471): the current person is put off and the page moves
  * on to the next. No registration, token or table is written — only the pass, whose next state
  * lists the person as "later" and never current again; their own emailed link still signs them.
  * The first press on a live link starts the wizard with its own person put off.

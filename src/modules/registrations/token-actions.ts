@@ -262,7 +262,7 @@ export async function consumeAndSignDeclaration(
 }
 
 /**
- * The next declaration of a family on one address, signed through the wizard's pass (§NNN).
+ * The next declaration of a family on one address, signed through the wizard's pass (§471).
  *
  * What authorizes it is the secret the pass is bound to — the opened link, spent by its own
  * signature or put off with «Semnez mai târziu», or the «Înscrierile mele» link it was exchanged
@@ -310,7 +310,7 @@ export async function consumeAndSignFamilyDeclaration(
 }
 
 /**
- * «Semnez mai târziu» (§NNN): the current person is put off — shown on the list, never current
+ * «Semnez mai târziu» (§471): the current person is put off — shown on the list, never current
  * again in this pass — and the wizard moves on. Nothing is written to any registration, token or
  * table: the answer is the pass's next state, which the caller writes. The person's own emailed
  * link is untouched and still signs them.
@@ -366,7 +366,7 @@ export async function skipFamilyDeclaration(
 }
 
 /**
- * Why «Semnează declarațiile» was refused (§NNN, nit found in review): the link itself (dead,
+ * Why «Semnează declarațiile» was refused (§471, nit found in review): the link itself (dead,
  * spent, throttled — the page says so, as for every other press there), or the address no longer
  * has declarations to walk at the event — nobody left to sign, or one person alone, who signs
  * from their own emailed link. The last two land on «Înscrierile mele» with a toast naming them.
@@ -374,7 +374,7 @@ export async function skipFamilyDeclaration(
 export type FamilySigningStartRefusal = "LINK" | "NOTHING_LEFT" | "ONE_LEFT";
 
 /**
- * «Semnează declarațiile» on «Înscrierile mele» (§NNN, over §77): the address's live link to its
+ * «Semnează declarațiile» on «Înscrierile mele» (§471, over §77): the address's live link to its
  * own registrations, exchanged on the server for the wizard's pass over that event's declarations
  * still to sign — never a new token in the URL. The link is read, not spent (one throttled attempt,
  * `readMyRegistrations`), and the pass is bound to it: cancelling from that page spends it, and the
@@ -415,7 +415,7 @@ export async function startFamilySigningFromMine(
 
 /**
  * Whether a spent declaration link's address still holds other declarations to sign at its event
- * (§NNN, nit found in review): the page then says each person's own emailed link still works, where
+ * (§471, nit found in review): the page then says each person's own emailed link still works, where
  * the wizard's pass has lapsed or was never on this device. Reads only; charges nothing — the page
  * already charged this request's one attempt.
  */
@@ -451,7 +451,7 @@ export async function consumeAndConfirmFamilyEntry(
   return confirmFamilyEntry(getDb(), secret, input, now);
 }
 
-/** «Nu înscriu această persoană» (§NNN): the token spent, the kept form deleted, nobody registered. */
+/** «Nu înscriu această persoană» (§468): the token spent, the kept form deleted, nobody registered. */
 export async function consumeAndDeclineFamilyEntry(secret: string, now: Date): Promise<FamilyDecline> {
   return declineFamilyEntry(getDb(), secret, now);
 }

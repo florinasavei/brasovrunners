@@ -67,7 +67,7 @@ describe("§347 one event form for five features, on both pages", () => {
     // Each in the box that answers its question: the cost's boxes with the cost, the partners'
     // cards in "Parteneri", the waiting list's length beside the places.
     expect(read(`${BOX_DIR}/CostBox.tsx`)).toContain("<CostFields");
-    // The cost's card is drawn by the first box since §NNN.
+    // The cost's card is drawn by the first box since §466.
     expect(read(`${BOX_DIR}/KindBox.tsx`)).toContain("await CostBox(");
     expect(read(`${BOX_DIR}/RegistrationBox.tsx`)).not.toContain("<CostFields");
     expect(read(`${BOX_DIR}/CoHostsBox.tsx`)).toContain("<CoHostRowsEditor");

@@ -13,7 +13,7 @@ import { LINE_GAP } from "./card-layout";
 /**
  * Where the short description is read: the event page gives it the column, a listing card gives
  * it a card's worth of room. The featured hero had a third place (§454) — the page's column with
- * the cards' 16∶9 frame — until §NNN made the featured event a card like the others.
+ * the cards' 16∶9 frame — until §470 made the featured event a card like the others.
  */
 export type ExcerptPlace = "page" | "card";
 

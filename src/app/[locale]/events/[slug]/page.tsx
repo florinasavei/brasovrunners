@@ -190,7 +190,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
         <Typography variant="body2">
-          {/* A left arrow before the words, and a pencil in the staff edit button (§NNN). */}
+          {/* A left arrow before the words, and a pencil in the staff edit button (§469). */}
           <Link href="/events" style={{ display: "inline-flex", alignItems: "center", gap: 4, minHeight: 44 }}>
             <ArrowBackIcon aria-hidden="true" data-testid="back-arrow" sx={{ fontSize: 18 }} />
             {t("backToEvents")}

@@ -256,7 +256,7 @@ describe("owner tasks", () => {
     ]);
   });
 
-  // «Tradu din română» (§NNN): built, open until DeepL's key is on the deployment, never blocking.
+  // «Tradu din română» (§464): built, open until DeepL's key is on the deployment, never blocking.
   it("asks for the DeepL key in its own row, open until it is set, with its steps in both languages", () => {
     expect(stateOf({ ...LAUNCHED, translationConfigured: false }, "translation")).toBe("open");
     expect(stateOf(LAUNCHED, "translation")).toBe("done");

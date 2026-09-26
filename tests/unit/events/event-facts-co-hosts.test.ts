@@ -318,7 +318,7 @@ describe("BR-REQ-011-01 criterion 16 the featured hero's mention (§344 partners
     expect(html).toMatch(/Brașov Marathon<\/a> și Salvamont/);
   });
 
-  it("is not what the featured event asks for any more: since §NNN it is a card, with the card's compact facts", () => {
+  it("is not what the featured event asks for any more: since §470 it is a card, with the card's compact facts", () => {
     const card = readFileSync("src/modules/events/ui/EventCard.tsx", "utf8");
     const call = /<EventFacts\b[^>]*\/>/.exec(card)?.[0] ?? "";
     expect(call).toContain("event={event}");

@@ -36,7 +36,7 @@ export const heroSurface = {
 
 /**
  * The featured event's card: the first card of the listing's grid, at the width of every other
- * card, told apart by its frame and its background alone (§NNN; the owner, 2026-09-26: "vreau doar
+ * card, told apart by its frame and its background alone (§470; the owner, 2026-09-26: "vreau doar
  * sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate
  * cardurile trebuie sa aiba aceeasi latime").
  *

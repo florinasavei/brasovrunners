@@ -8,7 +8,7 @@ export type TranslateAction = (input: unknown) => Promise<TranslateOutcome>;
 
 /**
  * Whether «Tradu din română» is offered on this page, and the action behind it (`DECISIONS.md`
- * §NNN): a translator is configured on this deployment and the reader's role may use it. Decided
+ * §464): a translator is configured on this deployment and the reader's role may use it. Decided
  * once, on the server, by the backoffice layout, which hands the Server Action down with the
  * answer; every button reads both and draws nothing without them — no key, no button. A courtesy
  * only: the action asks both questions again (BR-REQ-060-01).

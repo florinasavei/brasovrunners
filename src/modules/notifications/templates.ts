@@ -51,7 +51,7 @@ export type TemplateContent = {
   /** Present only when the message carries an action link. */
   action?: { label: string; url: string };
   /**
-   * A second, quieter button under the action (§NNN): an outlined one in the club's blue, for the
+   * A second, quieter button under the action (§468): an outlined one in the club's blue, for the
    * choice that is not the message's point — «Nu înscriu această persoană» under the family link's
    * «Confirm că înscriu altă persoană». Only beside an action, never on its own.
    */
@@ -97,7 +97,7 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * What the family link's facts box states (§446, §NNN): the event, who the address holds, the person
+ * What the family link's facts box states (§446, §468): the event, who the address holds, the person
  * the form named, what the button does, how long the link lives and the club's limit per address.
  */
 type FamilyFactsInput = {
@@ -116,7 +116,7 @@ type FamilyFactsInput = {
 type FamilyFact = { label: string; value: ReadonlyArray<{ text: string; bold?: boolean }> };
 
 /**
- * The family link's facts as one outlined box (§NNN, the §392 box's look): each label on its own
+ * The family link's facts as one outlined box (§468, the §392 box's look): each label on its own
  * line, its value under it in bold — the event, who the address holds, the person the button is
  * for. The plain-text half reads "Label: value", one fact per line.
  */
@@ -214,7 +214,7 @@ export function renderContent(
           `<p style="margin:20px 0"><a href="${content.action.url}" style="display:inline-block;background:${COLOR.blueInk};color:${COLOR.surface};text-decoration:none;font-weight:700;font-size:16px;padding:14px 22px;border-radius:10px">${escapeHtml(content.action.label)}</a></p>`,
         ]
       : []),
-    // The second choice (§NNN): outlined, so the eye takes the first button for the message's point.
+    // The second choice (§468): outlined, so the eye takes the first button for the message's point.
     ...(content.action && content.secondaryAction
       ? [
           `<p style="margin:-8px 0 20px"><a href="${content.secondaryAction.url}" style="display:inline-block;background:${COLOR.surface};color:${COLOR.blueInk};text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border:2px solid ${COLOR.blueInk};border-radius:10px">${escapeHtml(content.secondaryAction.label)}</a></p>`,
@@ -649,14 +649,14 @@ export type TemplateData = {
   /**
    * Another person on the address, confirmed from the inbox (§446): who the address holds at the
    * event now, as "Ana P." — its own active registrations, never anybody else's — and the person
-   * the form named, in full, with the birth date as "2012-03-12", written in words per language (§NNN). Read from the kept form at send
+   * the form named, in full, with the birth date as "2012-03-12", written in words per language (§468). Read from the kept form at send
    * time; absent at the limit or once the form is gone, and then there is no button either.
    */
   familyRegistered?: string[];
   familyPersonName?: string;
   familyPersonBirthDate?: string;
   /**
-   * The same single-use link's other answer (§NNN): the confirmation page in its "no" shape, where
+   * The same single-use link's other answer (§468): the confirmation page in its "no" shape, where
    * one press deletes the kept form. Set only beside the button, from the one token minted for it.
    */
   familyDeclineUrl?: string;
@@ -673,7 +673,7 @@ export type TemplateData = {
   familyEntryGone?: boolean;
   /**
    * The declaration request of one person on an address that holds others still to sign at the
-   * event (§NNN): their names as "Maria P.", read at send time. The line says the one link signs
+   * event (§471): their names as "Maria P.", read at send time. The line says the one link signs
    * them all, one after the other. Absent for a person alone, and on a club copy.
    */
   familyToSign?: string[];
@@ -1122,7 +1122,7 @@ const T = {
                 "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
               ]
             : [
-              // One line to open, the facts in the box above (§NNN); the consent line keeps the privacy link (§419; GDPR art. 14).
+              // One line to open, the facts in the box above (§468); the consent line keeps the privacy link (§419; GDPR art. 14).
               "Formularul a fost trimis din nou cu această adresă, pentru o altă persoană — nu am înscris-o încă: confirmă cu primul buton sau renunță cu al doilea.",
               "Dacă nu tu ai trimis formularul, ignoră mesajul: nu se înscrie nimeni, iar datele se șterg singure când linkul expiră.",
               "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
@@ -1234,11 +1234,11 @@ const T = {
         ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
         : []),
     ],
-    /** The family link's second button (§NNN): the kept form deleted, nobody registered. */
+    /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
-    /** After the body of a declaration request, on an address with more to sign (§NNN): the one link signs them all. */
+    /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
     footer: "Răspunde la acest email pentru întrebări.",
@@ -1637,7 +1637,7 @@ const T = {
     ],
     familyDecline: "I am not registering this person",
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
-    /** After the body of a declaration request, on an address with more to sign (§NNN): the one link signs them all. */
+    /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
     footer: "Reply to this email with questions.",
@@ -1979,7 +1979,7 @@ export function buildTemplateContent(
         Another person on the address (§446): who the address holds and who the form named, before
         the question — facts of this send, like "you were already registered" above, so a club that
         rewrote the words still says them. Only with the kept form in hand, as the button. One
-        outlined box, the values bold (§NNN; the owner: "trebuie să avem bold pe chestiile
+        outlined box, the values bold (§468; the owner: "trebuie să avem bold pe chestiile
         importante"), so the parent sees at a glance which event and which person the button is for.
       */
       ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyPersonName
@@ -2020,7 +2020,7 @@ export function buildTemplateContent(
         ? [copy.minorSigners(data.participantName, data.minorSigns === true)]
         : []),
       /*
-        The family's other declarations (§NNN): that the one link signs them all, one after the other
+        The family's other declarations (§471): that the one link signs them all, one after the other
         — a fact of this send, after the body whoever wrote it, and only when the renderer found some.
       */
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
@@ -2067,14 +2067,14 @@ export function buildTemplateContent(
         : []),
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
-      // In the facts box instead when the kept form is in hand (§NNN).
+      // In the facts box instead when the kept form is in hand (§468).
       ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && !data.familyPersonName && data.addressCap !== undefined
         ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],
     action: entry.action && actionUrl ? { label: typeof entry.action === "function" ? entry.action(data) : entry.action, url: actionUrl } : undefined,
     /*
-      «Nu înscriu această persoană» (§NNN): the same single-use link's other answer, under the
+      «Nu înscriu această persoană» (§468): the same single-use link's other answer, under the
       confirmation button and only beside it — never at the limit, never once the kept form is gone,
       never on a club copy (which carries no action at all, §320).
     */

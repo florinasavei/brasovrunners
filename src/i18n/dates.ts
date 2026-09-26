@@ -95,7 +95,7 @@ export type DayOptions = {
   year?: boolean;
   /**
    * "long" writes the month in full ("5 noiembrie 1990") — only the typed birth date read back in
-   * words (§NNN); every other date keeps the abbreviated month.
+   * words (§467); every other date keeps the abbreviated month.
    */
   month?: "short" | "long";
   /**
@@ -169,7 +169,7 @@ export function formatCalendarDay(date: string | Date, options: Omit<DayOptions,
 }
 
 /**
- * A birth date in words, as a person reads it (§NNN, amending §446): "3 iunie 1974" / "3 June 1974" —
+ * A birth date in words, as a person reads it (§468, amending §446): "3 iunie 1974" / "3 June 1974" —
  * never "03.06.1974". A `YYYY-MM-DD`, read as the calendar day it names; "" for anything else.
  */
 export function formatBirthDate(ymd: string, locale: string): string {

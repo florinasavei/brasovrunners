@@ -1,5 +1,5 @@
 /**
- * The club's words, for the provider (`DECISIONS.md` §NNN).
+ * The club's words, for the provider (`DECISIONS.md` §464).
  *
  * A running club's Romanian has a handful of terms a general engine gets wrong: «Alergare de grup»
  * is a group run, not a "group race"; «masa» at a race is the registration desk, not a table or a

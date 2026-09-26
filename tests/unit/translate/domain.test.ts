@@ -6,12 +6,12 @@ import { protectPlaceholders, restorePlaceholders } from "@/modules/translate/do
 import { canTranslateTexts, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §NNN — «Tradu din română»: which boxes may be filled (the club's own words, never a legal text
+ * §464 — «Tradu din română»: which boxes may be filled (the club's own words, never a legal text
  * or a participant's data), where each one's Romanian twin is, the glossary the provider reads,
  * the daily budget, and who may press.
  */
 
-describe("§NNN the boxes that may be translated", () => {
+describe("§464 the boxes that may be translated", () => {
   it("allows the club's content and message boxes in English", () => {
     for (const name of [
       "translations.en.title",
@@ -74,7 +74,7 @@ describe("§NNN the boxes that may be translated", () => {
   });
 });
 
-describe("§NNN the glossary", () => {
+describe("§464 the glossary", () => {
   it("names the club's terms and the rule for names and numbers, in the context the provider reads", () => {
     const context = glossaryContext();
     for (const [ro, en] of CLUB_GLOSSARY) {
@@ -89,7 +89,7 @@ describe("§NNN the glossary", () => {
   });
 });
 
-describe("§NNN the daily budget", () => {
+describe("§464 the daily budget", () => {
   it("is fifty thousand characters unless set, and reads anything unreadable as that", () => {
     expect(DEFAULT_TRANSLATION_BUDGET).toEqual({ dailyCharacters: 50_000 });
     expect(readTranslationBudgetValue(null)).toEqual({ dailyCharacters: 50_000 });
@@ -112,13 +112,13 @@ describe("§NNN the daily budget", () => {
   });
 });
 
-describe("§NNN who may press (BR-REQ-060-01)", () => {
+describe("§464 who may press (BR-REQ-060-01)", () => {
   it("is whoever writes the club's words: Redactor, Organizer, Administrator, Superadministrator", () => {
     expect(STAFF_ROLES.filter(canTranslateTexts)).toEqual(["COPYWRITER", "MODERATOR", "ADMIN", "SUPERADMIN"]);
   });
 });
 
-describe("§NNN placeholders never reach the provider as words", () => {
+describe("§464 placeholders never reach the provider as words", () => {
   it("swaps each {name} for a numbered marker and puts the original back byte for byte", () => {
     const source = "Salut {participantName}, {eventTitle} e mâine; {participantName} ia frontala.";
     const guarded = protectPlaceholders(source);

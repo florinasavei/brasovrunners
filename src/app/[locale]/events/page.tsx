@@ -209,7 +209,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
  *
  * The panel sits **above** the cards, the lead's included, because the lead follows the filters
  * (§413): a control under the thing it hides would jump up under the thumb that pressed it. The
- * lead event itself is no longer drawn here: since §NNN it is the first card of the grid below
+ * lead event itself is no longer drawn here: since §470 it is the first card of the grid below
  * (`ListingBody`).
  */
 async function ListingLead({
@@ -265,7 +265,7 @@ async function ListingLead({
 }
 
 /**
- * The listing's one grid of cards (§NNN): one column on a phone, two from `md`, three from `xl` —
+ * The listing's one grid of cards (§470): one column on a phone, two from `md`, three from `xl` —
  * every card the same width, the featured one included (the owner, 2026-09-26: "nu neaparat mai lat
  * pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile trebuie sa aiba aceeasi latime").
  * The upcoming list and the past fold (§267) share it, so the two cannot drift apart.
@@ -390,7 +390,7 @@ async function PastEvents({
 }
 
 /**
- * The upcoming events, as one grid of cards — the lead event first among them (§NNN).
+ * The upcoming events, as one grid of cards — the lead event first among them (§470).
  *
  * §78 drew the lead as a hero across the page and the rest under a heading, «Toate evenimentele
  * (N)», folded on a phone past four cards. The owner, 2026-09-26, of that hero beside the grid:
@@ -433,7 +433,7 @@ async function ListingBody({
     principal"): read once for every card, the lead's included — a series by its next date, the one
     whose facts it shows — each at its own place, one request per rounded place and none outside the
     seven days (`forecastsForEvents`). The lead wears the cards' pill (§429) since it is a card
-    (§NNN); the start hour's details are the event page's. Open-Meteo's credit is the site footer's
+    (§470); the start hour's details are the event page's. Open-Meteo's credit is the site footer's
     (§455).
   */
   const forecasts = await forecastsForEvents(

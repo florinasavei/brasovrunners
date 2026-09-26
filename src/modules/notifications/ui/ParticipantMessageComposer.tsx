@@ -256,7 +256,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
               />
             ))}
           </Stack>
-          {/* «Tradu din română» (§NNN): the English subject or text from the Romanian one — the
+          {/* «Tradu din română» (§464): the English subject or text from the Romanian one — the
               club's own words only; no participant's data is in either box. */}
           <TranslateFieldButton en={`${part}En`} />
           <Typography id={`participant-message-${part}-help`} variant="caption" color="text.secondary">

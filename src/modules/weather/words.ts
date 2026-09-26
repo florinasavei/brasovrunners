@@ -37,9 +37,9 @@ export type WeatherWords = {
   rainShort: string | null;
   /** «ploaie probabilă» / "rain likely" — the words a card, the hero and the event page add to the spoken text when `rainLikely` holds (§429). */
   rainLikely: string;
-  /** «ploaie probabilă 60 %» when `rainLikely` holds (the chance only when the hour has one), else null (§NNN). */
+  /** «ploaie probabilă 60 %» when `rainLikely` holds (the chance only when the hour has one), else null (§469). */
   rainLikelyChance: string | null;
-  /** The reminder's one line (§NNN): the sky's word, the degrees, and the rain phrase only when rain is likely — no wind, no humidity. */
+  /** The reminder's one line (§469): the sky's word, the degrees, and the rain phrase only when rain is likely — no wind, no humidity. */
   line: string;
 };
 

@@ -15,7 +15,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (over §389, §446, §330) — the declarations of a family on one address, signed as a wizard
+ * §471 (over §389, §446, §330) — the declarations of a family on one address, signed as a wizard
  * (BR-REQ-033-02, BR-REQ-036-02, AGENTS.md §13.2).
  *
  * The owner, 2026-09-26: "ai înțeles cum trebuie să faci cu semnarea declarațiilor pentru familie?
@@ -191,7 +191,7 @@ const passOf = (
   ...overrides,
 });
 
-describe("§NNN the declaration request names the address's other declarations", () => {
+describe("§471 the declaration request names the address's other declarations", () => {
   it("says the one link signs them all, first name and initial, in both languages — never a person alone", async () => {
     const { ana, maria } = await family();
     const { text } = await declarationLink(ana.id, at(20));
@@ -213,7 +213,7 @@ describe("§NNN the declaration request names the address's other declarations",
   });
 });
 
-describe("§NNN the wizard: one link, one person per step, one acceptance and one PDF each", () => {
+describe("§471 the wizard: one link, one person per step, one acceptance and one PDF each", () => {
   it("the first signature spends the link; the pass and the spent link then sign the others, each against their own name", async () => {
     const { event, ana, maria, ion } = await family();
     const { secret } = await declarationLink(ana.id, at(20));
@@ -355,12 +355,12 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
 });
 
 /**
- * The brief's scenario (§NNN, found in review): Ana (A), Maria (B) and Ionuț (C), a minor whose
+ * The brief's scenario (§471, found in review): Ana (A), Maria (B) and Ionuț (C), a minor whose
  * parent is Ana, on one address. The wizard is entered from B's link; the steps are B, A, C; B is
  * signed, A is put off with «Semnez mai târziu», C is signed with the parent's and the minor's
  * parts (§330). Two acceptances, two confirmations, two numbers — and A's own link still signs A.
  */
-describe("§NNN the brief's scenario: entered from B, A put off, the minor signed by two", () => {
+describe("§471 the brief's scenario: entered from B, A put off, the minor signed by two", () => {
   async function familyWithMinor() {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana", NOW), NOW);
@@ -553,7 +553,7 @@ describe("§NNN the brief's scenario: entered from B, A put off, the minor signe
   });
 });
 
-describe("§NNN «Semnează declarațiile» on «Înscrierile mele» (§77)", () => {
+describe("§471 «Semnează declarațiile» on «Înscrierile mele» (§77)", () => {
   it("exchanges the live link on the server for a pass over the event's declarations, and signs through it", async () => {
     const { event, ana, maria, ion } = await family();
     const mine = (await issueActionToken(db, { participantId: ana.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(600), now: at(20) })).secret;

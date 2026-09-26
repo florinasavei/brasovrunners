@@ -114,7 +114,7 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Tradu din română»'s daily allowance of characters (§NNN), beside the other brakes on what the
+ * «Tradu din română»'s daily allowance of characters (§464), beside the other brakes on what the
  * club pays. A club setting (§450): it caps what the club spends and cannot stop the platform, so
  * the Administrator's door; the service asserts the capability again, refuses a number out of
  * range and writes the audit row; a save that changes nothing writes nothing.

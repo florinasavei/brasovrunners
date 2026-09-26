@@ -21,7 +21,7 @@ export type ListedEvent = { id: string; featured: boolean; type: string } & CoHo
  *
  * `listUpcomingEvents` orders featured first, so if the club has a lead event it is the first
  * row and no second query is needed. It is then dropped from the list: the page draws it once,
- * as the first card of the grid with its own frame (§NNN; the hero above the cards until then),
+ * as the first card of the grid with its own frame (§470; the hero above the cards until then),
  * and the rest after it (`tests/e2e/event-pages.spec.ts` asserts it appears exactly once).
  *
  * **The lead follows the filters** (§413, reversing what §133 and §401 said of the kind and the

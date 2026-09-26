@@ -17,7 +17,7 @@ import {
 
 /**
  * Where the club's daily translation allowance is kept, and how much of today's is spent
- * (`DECISIONS.md` §NNN).
+ * (`DECISIONS.md` §464).
  *
  * The setting is one `platform_settings` row in the shape of every other club setting (§377,
  * §389): a strict schema, the Administrator's capability (`canManageClubSettings`, §450 — it caps

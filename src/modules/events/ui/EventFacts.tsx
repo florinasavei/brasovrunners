@@ -105,7 +105,7 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
  */
 const RACE_ROW_GAP = 0.5;
 
-// The weather row is one line since §NNN; the hours strip, details and place line went with it.
+// The weather row is one line since §469; the hours strip, details and place line went with it.
 
 /**
  * The facts of an event, grouped by the question they answer.
@@ -121,10 +121,10 @@ const RACE_ROW_GAP = 0.5;
  * - **the listing card** (`variant="compact"`): no labels — a line for when and one for where, each
  *   with the page's row glyph in front of it, the place as its map link, then the route and the
  *   cost as the page's pills, then the state of registration (§366) — the featured event's too,
- *   since §NNN made it the first card of the listing's grid rather than a hero above it;
+ *   since §470 made it the first card of the listing's grid rather than a hero above it;
  * - **the one-line summary** (the default): the `<dl>`, each row one line of short pieces
  *   separated by a middle dot, except the route, which is the listing card's own row of pills, its
- *   cost details and links on a line under them (§449). It was the featured hero's; since §NNN no
+ *   cost details and links on a line under them (§449). It was the featured hero's; since §470 no
  *   page draws it, and its tests hold it until a chore removes it with them;
  * - **the event page and its preview** (`stacked`): the `<dl>` grouped again and restyled
  *   (§356) — "când" one line, the place with its address under it, the route as one row of
@@ -152,7 +152,7 @@ export default async function EventFacts({
   now: Date;
   variant?: "full" | "compact";
   /**
-   * The featured card inside the club's race week (§78, on the card since §NNN): a closed window's
+   * The featured card inside the club's race week (§78, on the card since §470): a closed window's
    * line says "come to the desk with the QR from your email" (`cardRegistrationLine`). The compact
    * form only.
    */
@@ -666,7 +666,7 @@ export default async function EventFacts({
        (§388), so the hero cannot read the route in another order, another set or other words —
        surface, difficulty, distance, elevation, night, then the cost's closed-set word (§375,
        §394, §428). The surface is said here, once, as on the cards: the chip beside the type no
-       longer carries it (the hero's, until §NNN). The night pill's sunset rides in its `srSuffix`, as
+       longer carries it (the hero's, until §470). The night pill's sunset rides in its `srSuffix`, as
        on the card. A pill only for what the club stated; null is unstated, not free (AGENTS.md §1.2). */
     const heroPills: Pill[] = buildRoutePills(event, t, format);
     /*
@@ -1020,7 +1020,7 @@ export default async function EventFacts({
       and the chance of rain — an ordered list, so a screen reader hears "list, 3 items";
     - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», the row's last line.
 
-    Since §NNN (the owner, 2026-09-26: the page's weather as small as the card's) the row is the
+    Since §469 (the owner, 2026-09-26: the page's weather as small as the card's) the row is the
     first line reduced to the glyph, the sky's word and the start hour's degrees — and the umbrella
     with «ploaie probabilă» only when rain is likely. No wind, no chance of rain on a dry hour; the
     details, the hours strip and the place line are gone; the reminder keeps its own line.

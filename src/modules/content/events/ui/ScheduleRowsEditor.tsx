@@ -250,7 +250,7 @@ function ScheduleRowsEditorIsland({
             />
             <Box sx={WHAT_SX}>
               <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-              {/* «Tradu din română» (§NNN): the row's English words from its Romanian ones — in the
+              {/* «Tradu din română» (§464): the row's English words from its Romanian ones — in the
                   English box's own cell, so from `MEDIUM` it sits under English, not on a third
                   grid row under Română. */}
               <Box sx={{ minWidth: 0 }}>

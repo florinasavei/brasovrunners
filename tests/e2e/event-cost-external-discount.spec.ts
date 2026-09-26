@@ -164,7 +164,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () 
   });
 
   /**
-   * The listing's featured card (the hero until §NNN) reads the same cost pill as every card and
+   * The listing's featured card (the hero until §470) reads the same cost pill as every card and
    * the organizer's door (§394, §409) — this is the one spot that has to borrow the *shared* singleton
    * event (`ensureRegistrationIsOpen`'s own `FEATURED`, `DECISIONS.md` §28: "the database refuses
    * a second [featured event]"), so the change is made and read back inside a `try`/`finally`:
@@ -213,7 +213,7 @@ async function runFeaturedHeroCase(page: Page): Promise<void> {
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/[?&]saved=/);
 
-    // The featured event is a card since §NNN, so it says the cost the way every card does: the
+    // The featured event is a card since §470, so it says the cost the way every card does: the
     // «Cu taxă» pill with its screen-reader suffix, and the organizer's door (§409). The amount
     // and the club's discount note are the event page's, as on every card (§343) — the hero's
     // route-extras line (§449) went with the hero.

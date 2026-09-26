@@ -25,7 +25,7 @@ type Props = {
 };
 
 /**
- * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §NNN), beside the
+ * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §464), beside the
  * other brakes on Costuri and built like them (`JobCadencePanel`): one form, the service asserting
  * the role and writing the audit row, a refusal handed back as the form's state (§315), one
  * question first (§384). It says what is spent today, what DeepL Free allows a month, and that

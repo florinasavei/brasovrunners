@@ -79,7 +79,7 @@ async function noSidewaysScroll(page: Page) {
 }
 
 test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)", () => {
-  test("a map link with a pin: the page's weather is one line (§NNN)", async ({ page }) => {
+  test("a map link with a pin: the page's weather is one line (§469)", async ({ page }) => {
     const id = await insertDraft({ mapUrl: "https://www.google.com/maps?q=45.6384,25.5921" }, "pin");
     try {
       await signIn(page, "Dev Administrator");
@@ -88,7 +88,7 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
       await expect(weather).toBeVisible();
       await expect(weather).toContainText("Parțial noros");
 
-      // One line since §NNN: no hours strip, no details, no place line; Open-Meteo in the footer only (§455).
+      // One line since §469: no hours strip, no details, no place line; Open-Meteo in the footer only (§455).
       await expect(weather.getByTestId("weather-hours")).toHaveCount(0);
       await expect(weather.getByTestId("weather-details")).toHaveCount(0);
       await expect(weather.getByTestId("weather-credit")).toHaveCount(0);
@@ -169,7 +169,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
 
     // No credit strip under the listing's cards any more (the owner, 2026-09-26: "nu vreau footer
     // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead
-    // (§455), and since §NNN there is no hero with a «Vremea» line of its own: no Open-Meteo link
+    // (§455), and since §470 there is no hero with a «Vremea» line of its own: no Open-Meteo link
     // anywhere in `#main`.
     await expect(main.locator('a[href*="open-meteo"]')).toHaveCount(0);
     const footerCredit = page.getByTestId("footer-weather-credit");
@@ -191,7 +191,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
 
   /**
    * The positive case of the featured card's weather (a review finding, §416; a card's pill since
-   * §NNN, the hero's «Vremea» row gone with the hero): the test above only proves it is absent
+   * §470, the hero's «Vremea» row gone with the hero): the test above only proves it is absent
    * three weeks out. The featured event is the shared `FEATURED` singleton
    * (`DECISIONS.md` §28: the database refuses a second), so both its gathering and its gun time —
    * `weatherInstant` reads `raceStartsAt` over `startsAt` when the event has one (`forecast.ts`),

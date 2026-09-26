@@ -11,7 +11,7 @@ import { OPTION_GLYPH_SX, OPTION_LABEL_SX } from "@/shared/ui/select-option";
 import { type SearchableCountry, searchCountries } from "../country-search";
 
 /**
- * The one searchable country picker (§NNN) both country fields open: the telephone prefix
+ * The one searchable country picker (§463) both country fields open: the telephone prefix
  * (`mode="dialling"`, each row with its `+40`, digits searched) and the citizenship
  * (`mode="citizenship"`, names only).
  *

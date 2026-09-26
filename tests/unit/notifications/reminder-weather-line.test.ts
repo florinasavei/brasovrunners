@@ -4,7 +4,7 @@ import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 import { weatherWords } from "@/modules/weather/words";
 
-// The reminder's weather is one line (§NNN): the sky's word, the degrees, the rain phrase only when rain is likely.
+// The reminder's weather is one line (§469): the sky's word, the degrees, the rain phrase only when rain is likely.
 const reading = (precipitationProbability: number): WeatherReading => ({
   hourAt: 0,
   code: 2,

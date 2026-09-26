@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * The club's daily allowance of translated characters (`DECISIONS.md` §NNN).
+ * The club's daily allowance of translated characters (`DECISIONS.md` §464).
  *
  * DeepL API Free gives 500 000 characters a month and then answers "quota exceeded" until the
  * month turns (HTTP 456). Fifty thousand a day by default keeps one enthusiastic afternoon —

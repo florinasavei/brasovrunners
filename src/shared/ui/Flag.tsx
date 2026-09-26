@@ -23,7 +23,7 @@ export default function Flag({
   code: string;
   width?: number;
   className?: string;
-  /** `lazy` in a long list, so only the flags scrolled to are fetched (§NNN). */
+  /** `lazy` in a long list, so only the flags scrolled to are fetched (§463). */
   loading?: "lazy" | "eager";
 }) {
   return (

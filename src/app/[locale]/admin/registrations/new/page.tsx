@@ -92,7 +92,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
-  // The prefix's search (§NNN), the same words as the public form.
+  // The prefix's search (§463), the same words as the public form.
   const countrySearchWords = {
     search: rt("countrySearch.search"),
     noMatch: rt("countrySearch.noMatch"),

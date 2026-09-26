@@ -3,7 +3,7 @@ import { birthDateEchoText as echoText } from "@/modules/registrations/ui/birth-
 import { registrationSubmissionSchema, staffRegistrationSubmissionSchema } from "@/modules/registrations/fields";
 
 // BR-REQ-031-04: the birth date read back in words with the age on the event day, and the
-// city required on the public form (§NNN).
+// city required on the public form (§467).
 describe("BR-REQ-031-04 birth date echo", () => {
   const template = "{date} · {age} on the event day";
 

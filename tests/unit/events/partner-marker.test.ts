@@ -137,7 +137,7 @@ describe("§367 the listing card's chip, amended §375: one glyph, a generic lab
     expect(source).toMatch(/height: "auto"/);
   });
 
-  it("stands in the chips row of the event card (the featured one's too, §NNN) and the series card", () => {
+  it("stands in the chips row of the event card (the featured one's too, §470) and the series card", () => {
     // Each card's chips row is the first thing in it: the chip comes after the type's chip and
     // before the title (`variant="h2"`, or the hero's `h1`/`h2`). The listing's own card lives in
     // the page or, once it has a file of its own, in `EventCard.tsx` — either is read.

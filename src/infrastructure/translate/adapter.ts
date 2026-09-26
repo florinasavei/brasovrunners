@@ -1,5 +1,5 @@
 /**
- * The translation provider boundary (`DECISIONS.md` §NNN, «Tradu din română»).
+ * The translation provider boundary (`DECISIONS.md` §464, «Tradu din română»).
  *
  * One method goes out, one list comes back: the club's Romanian words in, the English words out,
  * in the same order. Nothing about DeepL — its host, its error codes, its language tags — is

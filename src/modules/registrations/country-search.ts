@@ -1,5 +1,5 @@
 /**
- * Finding a country by typing part of it (§NNN): the one rule both country pickers on the
+ * Finding a country by typing part of it (§463): the one rule both country pickers on the
  * registration form search with — the telephone prefix and the citizenship.
  *
  * The owner: "în dropdown-urile de telefon și cetățenie, vreau searchbox să pot găsi țara". Two

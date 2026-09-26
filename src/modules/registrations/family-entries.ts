@@ -160,7 +160,7 @@ export async function registeredOnAddress<T extends Record<string, unknown>>(db:
 }
 
 /**
- * The address's other declarations still to sign at the event (§NNN): the registrations of this
+ * The address's other declarations still to sign at the event (§471): the registrations of this
  * participant there, other than `exceptId`, in a state a declaration is signed from — named as
  * `registeredOnAddress` names them, first name and initial. The declaration request says them, so
  * a parent knows the one link signs them all, one after the other.

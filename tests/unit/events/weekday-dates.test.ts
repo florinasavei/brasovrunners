@@ -96,7 +96,7 @@ describe("BR-REQ-040-03 criterion 4 the event's facts carry the day of the week,
     expect(html).not.toContain("Sâmbătă");
   });
 
-  // The date and hour sit in their own <strong> (§NNN), so the sentence is read as text.
+  // The date and hour sit in their own <strong> (§472), so the sentence is read as text.
   const words = (html: string) => html.replace(/<style[^>]*>[^<]*<\/style>/g, "").replace(/<[^>]+>/g, "");
 
   it("names the registration's opening day inside the card's sentence in lower case, in Romanian", async () => {

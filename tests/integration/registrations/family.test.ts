@@ -624,7 +624,7 @@ describe("§389 each person is their own registration afterwards", () => {
   });
 });
 
-describe("§NNN the family email's facts in bold, and «Nu înscriu această persoană»", () => {
+describe("§468 the family email's facts in bold, and «Nu înscriu această persoană»", () => {
   it("the email states the event, the address's registrations and the person in one bold box, and carries the second answer on the same link", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);

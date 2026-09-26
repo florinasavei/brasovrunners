@@ -18,7 +18,7 @@ import {
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
- * The pass that carries the family's declarations from one person to the next (§NNN).
+ * The pass that carries the family's declarations from one person to the next (§471).
  *
  * AGENTS.md §13.2, step 4: the server "consumes the token or exchanges it for a short-lived,
  * purpose-limited HTTP-only action session". The pass is that session, held by the browser sealed
@@ -136,7 +136,7 @@ export async function writeFamilySigningPass(pass: FamilySigningPass, token: str
 }
 
 /**
- * Take the pass back from the browser (§NNN, nit found in review): the opened link's own person
+ * Take the pass back from the browser (§471, nit found in review): the opened link's own person
  * signed on a page where no wizard follows, so a pass left from an earlier walk on this device —
  * done, or bound to another person of the address — must not stand beside the fresh signature.
  * The fresh link wins.
@@ -155,7 +155,7 @@ export async function clearFamilySigningPass(token: string): Promise<void> {
 }
 
 /**
- * Whether a pass belongs beside the registration the opened link names (§NNN, nit found in
+ * Whether a pass belongs beside the registration the opened link names (§471, nit found in
  * review): a pass from «Înscrierile mele» never does, and a link's pass only for its own origin.
  * A live link whose pass names another person is signed as the link alone — the fresh link wins.
  */
@@ -268,7 +268,7 @@ async function bindingHolds<T extends Record<string, unknown>>(
 /**
  * Every registration of one address at one event — the wizard's rows, whatever their state — and
  * whether each carries a declaration acceptance (`signedBefore`: a person who signed before the
- * wizard began is a step shown as signed, §NNN, found in review).
+ * wizard began is a step shown as signed, §471, found in review).
  */
 export async function listFamilySigningRows<T extends Record<string, unknown>>(
   db: Database<T>,

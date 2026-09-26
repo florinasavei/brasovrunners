@@ -8,7 +8,7 @@ import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Tradu din română» (`DECISIONS.md` §NNN): the Romanian words of some English boxes, translated,
+ * «Tradu din română» (`DECISIONS.md` §464): the Romanian words of some English boxes, translated,
  * handed back to the button that asked. Called by the button, not posted by a form — the answer
  * fills boxes in the browser and saves nothing, so there is no page to redirect to and no toast
  * of "saved". The session is asserted here and the role again in the service (BR-REQ-060-01);

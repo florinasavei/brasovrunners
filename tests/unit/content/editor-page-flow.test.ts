@@ -200,7 +200,7 @@ describe("§406 the cards' headings and the map", () => {
     expect(flow.headings.when).toBe("4 · Data și ora — apare pe pagină");
     expect(flow.headings.place).toBe("5 · Locul — apare pe pagină");
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
-    // The cost is asked inside card 1 since §NNN: no heading of its own, the cards after it renumber.
+    // The cost is asked inside card 1 since §466: no heading of its own, the cards after it renumber.
     expect("cost" in flow.headings).toBe(false);
     expect(flow.headings.registration).toBe("7 · Participare și înscrieri — gol, nu apare pe pagină");
     expect(flow.headings.video).toBe("12 · Filmul — gol, nu apare pe pagină");
@@ -236,7 +236,7 @@ describe("§406 the cards' headings and the map", () => {
       "box-video",
       "box-start-list",
     ]);
-    // No Cost chip (§NNN): the cost is asked inside card 1.
+    // No Cost chip (§466): the cost is asked inside card 1.
     expect(flow.entries.some((entry) => entry.id === "cost")).toBe(false);
     expect(links[3][1]).toBe("4 · Când — apare pe pagină");
     expect(links[2][1]).toBe("3 · Descrierea — gol, nu apare pe pagină");

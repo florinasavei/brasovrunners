@@ -19,7 +19,7 @@ import ro from "../../../messages/ro.json";
 import { type FamilySigningPass, openFamilyPass, passFitsLink, sealFamilyPass } from "@/modules/registrations/family-signing";
 
 /**
- * §NNN (over §389, §446) — a family's declarations signed as a wizard (BR-REQ-033-02):
+ * §471 (over §389, §446) — a family's declarations signed as a wizard (BR-REQ-033-02):
  * one stepper over the address's registrations at the event, the opened person first, one person
  * per step, and a pass that carries the wizard from one person to the next.
  */
@@ -31,7 +31,7 @@ const row = (id: string, registeredName: string, status: FamilySigningRow["statu
   createdAt: at(minute),
 });
 
-describe("§NNN the family's steps", () => {
+describe("§471 the family's steps", () => {
   const ana = row("a", "Ana Pop", "PENDING_DECLARATION", 1);
   const maria = row("m", "Maria Pop", "PENDING_DECLARATION", 2);
   const ion = row("i", "Ion Pop", "WAITLIST_OFFERED", 3);
@@ -194,7 +194,7 @@ describe("§NNN the family's steps", () => {
   });
 });
 
-describe("§NNN the pass (AGENTS.md §13.2 step 4)", () => {
+describe("§471 the pass (AGENTS.md §13.2 step 4)", () => {
   const pass: FamilySigningPass = {
     binding: "link",
     participantId: "11111111-1111-4111-8111-111111111111",
@@ -238,7 +238,7 @@ describe("§NNN the pass (AGENTS.md §13.2 step 4)", () => {
   });
 });
 
-describe("§NNN the stepper's words, in both languages (found in review)", () => {
+describe("§471 the stepper's words, in both languages (found in review)", () => {
   type Family = { stepTitle: string; state: Record<string, string> };
   const catalogues = { ro, en } as const;
   const words = (locale: keyof typeof catalogues) =>

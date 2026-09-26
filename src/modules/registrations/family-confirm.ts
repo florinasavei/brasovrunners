@@ -148,7 +148,7 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
 export type FamilyDecline = { ok: true } | { ok: false };
 
 /**
- * «Nu înscriu această persoană» (§NNN): the email's second answer to the same single-use link. The
+ * «Nu înscriu această persoană» (§468): the email's second answer to the same single-use link. The
  * press spends the token and deletes the kept form with every field of the other person it held,
  * in one transaction; nobody is registered and no place was ever held (a kept form holds none,
  * §446). One decision per link: once either answer is pressed, the other finds the token spent.

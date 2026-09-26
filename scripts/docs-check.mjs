@@ -302,7 +302,7 @@ const PROVIDER_HOSTS = [
   // Open-Meteo's site, which the forecast's credit links to; the server asks its `api.` subdomain,
   // derived from it (§402, the weather on the event page): public, keyless, fixed, theirs.
   "open-meteo.com",
-  // DeepL's text API (§NNN, «Tradu din română»): the free plan's host and the paid one, fixed by
+  // DeepL's text API (§464, «Tradu din română»): the free plan's host and the paid one, fixed by
   // DeepL and chosen by the key's own `:fx` suffix; only the club's content texts are sent.
   "api-free.deepl.com",
   "api.deepl.com",

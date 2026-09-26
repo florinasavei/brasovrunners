@@ -9,7 +9,7 @@ import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * §NNN, after review — a translation filled into a rich-text fold that was still shut must survive a
+ * §464, after review — a translation filled into a rich-text fold that was still shut must survive a
  * refused save. The fold mounts its editor from the translation (`LazyRichTextEditor` passes it as
  * `override`); the editor wrapper used to swap in the form's recalled value whenever one existed,
  * so the fold opened on the old English and its hidden box posted that on the next save.
@@ -54,7 +54,7 @@ function posted(html: string): string {
   return (value as string).replace(/&quot;/g, '"').replace(/&amp;/g, "&");
 }
 
-describe("§NNN a translation filled into a shut fold, after a refused save", () => {
+describe("§464 a translation filled into a shut fold, after a refused save", () => {
   it("is the document the editor mounts from and posts, not the recalled English", () => {
     const html = render(doc("Freshly translated English"));
     expect(posted(html)).toContain("Freshly translated English");

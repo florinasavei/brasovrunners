@@ -229,7 +229,7 @@ export type OwnerTaskInputs = {
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
   vercelUsageConfigured: boolean;
   /**
-   * Is «Tradu din română» set up (§NNN): `TRANSLATE_PROVIDER=deepl` with `DEEPL_API_KEY`, or
+   * Is «Tradu din română» set up (§464): `TRANSLATE_PROVIDER=deepl` with `DEEPL_API_KEY`, or
    * switched `off` on purpose? Off by absence, the buttons are simply not drawn.
    */
   translationConfigured: boolean;
@@ -423,7 +423,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.vercelUsageConfigured ? "done" : "open",
   });
 
-  // «Tradu din română» (§NNN): built; open until DeepL's free key is on the deployment, never
+  // «Tradu din română» (§464): built; open until DeepL's free key is on the deployment, never
   // blocking — without it the English boxes are written by hand, as before.
   push("translation", {
     owner: "club",

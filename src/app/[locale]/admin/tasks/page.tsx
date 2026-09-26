@@ -469,7 +469,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // The club's own setting first, the deployment's variable as the fallback (§244).
       declarationArchiveConfigured: volume.archiveConfigured,
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
-      // «Tradu din română» (§NNN): DeepL chosen and its key set; `off` reads as done — nothing owed.
+      // «Tradu din română» (§464): DeepL chosen and its key set; `off` reads as done — nothing owed.
       translationConfigured: isTranslationConfigured(env) || env.TRANSLATE_PROVIDER === "off",
       // Capture counts, like local storage does: on a laptop the form works and nothing is
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
@@ -556,7 +556,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           ),
         )
       : [];
-  // «Tradu din română»'s allowance and today's spend (§NNN), only for the panel that shows them.
+  // «Tradu din română»'s allowance and today's spend (§464), only for the panel that shows them.
   const translation =
     panel === "costs"
       ? await Promise.all([readTranslationBudget(db), charactersTranslatedToday(db, now)]).then(([state, usedToday]) => ({ state, usedToday }))
@@ -842,7 +842,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           emailTiming={deliveryTiming.timing}
         />
 
-        {/* «Tradu din română»'s daily allowance (§NNN): what DeepL Free may spend a day, and today's spend. */}
+        {/* «Tradu din română»'s daily allowance (§464): what DeepL Free may spend a day, and today's spend. */}
         {translation && (
           <TranslationBudgetPanel
             locale={locale}

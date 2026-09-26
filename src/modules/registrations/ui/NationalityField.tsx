@@ -9,7 +9,7 @@ import type { SearchableCountry } from "../country-search";
 import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_SX } from "./CountryPicker";
 
 /**
- * Citizenship: required, Romania unless the runner says otherwise (§432), and searchable (§NNN;
+ * Citizenship: required, Romania unless the runner says otherwise (§432), and searchable (§463;
  * the owner, "vreau searchbox să pot găsi țara").
  *
  * **What posts is a native `<select name="nationality" required>`**, drawn by the server with

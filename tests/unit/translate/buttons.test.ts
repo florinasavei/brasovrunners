@@ -9,7 +9,7 @@ import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — the buttons exist only where the page offers translation: no action from the layout (no
+ * §464 — the buttons exist only where the page offers translation: no action from the layout (no
  * DeepL key, or a role that may not) and nothing is drawn — no button, no catalogue lookup — so a
  * deployment without the key shows every editor exactly as before. With one, the button says its
  * verb in the reader's language. Every word is in both catalogues.
@@ -23,7 +23,7 @@ function render(node: ReturnType<typeof createElement>, withAction: boolean) {
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, provider, node)));
 }
 
-describe("§NNN «Tradu din română» buttons", () => {
+describe("§464 «Tradu din română» buttons", () => {
   it("draws nothing without a translator, even with no catalogue at all", () => {
     expect(renderToStaticMarkup(createElement(TranslateFieldButton, { en: "translations.en.title" }))).toBe("");
     expect(renderToStaticMarkup(createElement(TranslateAllButton))).toBe("");

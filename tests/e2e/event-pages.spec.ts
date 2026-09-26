@@ -142,7 +142,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
   test("gives every event link a tap target of at least 44 by 44 pixels", async ({ page }) => {
     await page.goto("/ro/evenimente");
     // The past-events fold (§267) is closed, and a link in a closed fold measures 0×0 and is not a
-    // tap target yet ("Other events" folded too until §NNN). Open every fold, so the links are
+    // tap target yet ("Other events" folded too until §470). Open every fold, so the links are
     // measured as a reader would see them — every title on the page, not one by heading, so
     // `cardOnListing` (`support/fold.ts`) does not fit.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
@@ -321,7 +321,7 @@ test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
   test("shows the featured race as the first card, with both of its times", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
-    // A card since §NNN, still a region named by its title, and the «Evenimentul principal» chip on it.
+    // A card since §470, still a region named by its title, and the «Evenimentul principal» chip on it.
     const hero = page.getByRole("region", { name: /Crosul aniversar/ });
     await expect(hero).toBeVisible();
     await expect(hero.getByText("Evenimentul principal", { exact: true })).toBeVisible();
@@ -339,7 +339,7 @@ test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
 
     const titles = await page.locator("main ul li h2").allInnerTexts();
     expect(titles.filter((title) => title.includes("Crosul aniversar"))).toHaveLength(1);
-    // The first `<li>` of the grid the other cards are in (§NNN; the owner: "vreau doar sa fie primul").
+    // The first `<li>` of the grid the other cards are in (§470; the owner: "vreau doar sa fie primul").
     const cards = page.locator('[data-testid="listing-cards"] > li');
     await expect(cards.first()).toHaveAttribute("data-featured", "true");
     await expect(cards.first().locator("h2")).toContainText("Crosul aniversar");

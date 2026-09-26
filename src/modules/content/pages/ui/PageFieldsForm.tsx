@@ -72,7 +72,7 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
-      {/* «Tradu tot din română» (§NNN): every English box from its Romanian twin, one question first. */}
+      {/* «Tradu tot din română» (§464): every English box from its Romanian twin, one question first. */}
       <TranslateAllButton />
 
       <LocaleTabPanels
@@ -80,7 +80,7 @@ export default async function PageFieldsForm({
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;
-          // «Tradu din română» under each English box (§NNN); nothing on the Romanian tab.
+          // «Tradu din română» under each English box (§464); nothing on the Romanian tab.
           const translate = (field: string) => (locale === "en" ? <TranslateFieldButton en={name(field)} /> : null);
 
           return {

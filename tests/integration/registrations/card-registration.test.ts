@@ -129,7 +129,7 @@ function door(html: string): { href: string; words: string; attributes: string }
   if (!anchor) throw new Error("a door row with no link");
   return { href: /href="([^"]*)"/.exec(anchor[1])?.[1] ?? "", words: text(anchor[2]).trim(), attributes: anchor[1] };
 }
-/** The line's bold pieces (§NNN): only the date and hour and the free places are in <strong>. */
+/** The line's bold pieces (§472): only the date and hour and the free places are in <strong>. */
 function bolds(html: string): string[] {
   const open = /<[^<>]*\bdata-fact="registration"[^>]*>/.exec(html);
   if (!open) throw new Error("no registration line");

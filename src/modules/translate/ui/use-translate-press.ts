@@ -9,7 +9,7 @@ import { useTranslateAction } from "./TranslateProvider";
 export type PressMessage = { tone: "done" | "refused"; text: string };
 
 /**
- * One press of «Tradu din română», for one box or for all of them (`DECISIONS.md` §NNN): read the
+ * One press of «Tradu din română», for one box or for all of them (`DECISIONS.md` §464): read the
  * Romanian twins as they are now, ask the action, put each answer in its English box, and say in
  * words what happened. The pressed state first (§371): the label turns to «Se traduce…» before
  * the request leaves. Nothing is saved — the sentence says so, and the ordinary save stores the

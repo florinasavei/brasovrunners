@@ -1,6 +1,6 @@
 /**
  * Which boxes «Tradu din română» may fill, and where each one's Romanian twin is
- * (`DECISIONS.md` §NNN).
+ * (`DECISIONS.md` §464).
  *
  * **An allowlist of the club's own words, read by both halves.** The browser uses it to find the
  * English boxes of a form ("Tradu tot din română") and the Romanian box beside each; the server

@@ -65,7 +65,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   const t = await getTranslations("Registrations");
   /*
     The page's one toast slot (§427): the cancel's, on its own outcome page, and «Semnează
-    declarațiile» refused for an address with nobody left to walk (§NNN, nit found in review), on
+    declarațiile» refused for an address with nobody left to walk (§471, nit found in review), on
     the list it lands back on. Each flash is written only before the redirect to its own branch.
   */
   const flashSlot = <PublicFlash accept={["unregistered", "familySignNothingLeft", "familySignOneLeft"]} />;
@@ -91,7 +91,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
 
   /*
-    A family's declarations, signed as one wizard (§NNN): every event at which this address holds
+    A family's declarations, signed as one wizard (§471): every event at which this address holds
     two or more declarations still to sign gets one button, which exchanges this link on the server
     for the wizard's pass and opens the declaration page — the same steps an emailed link opens.
   */

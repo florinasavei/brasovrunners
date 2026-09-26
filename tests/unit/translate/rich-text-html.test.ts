@@ -3,7 +3,7 @@ import { type RichTextDoc, richTextSchema } from "@/modules/content/rich-text/do
 import { htmlToInline, inlineToHtml, richTextSegments, withTranslatedSegments } from "@/modules/translate/domain/rich-text-html";
 
 /**
- * §NNN — «Tradu tot din română» keeps the Romanian layout: only the words go to the provider, and
+ * §464 — «Tradu tot din română» keeps the Romanian layout: only the words go to the provider, and
  * the answer is put back into a copy of the same document. Marks and links survive the round trip
  * through the provider's HTML; every picture, film and table keeps every attribute; a link's
  * address is never sent.
@@ -69,7 +69,7 @@ const ENGLISH: Record<string, string> = {
   Startul: "The start",
 };
 
-describe("§NNN a rich text translated with its layout", () => {
+describe("§464 a rich text translated with its layout", () => {
   it("sends only the words: one line per block, pictures' and films' words as text, empty lines skipped, no address", () => {
     const segments = richTextSegments(DOC);
     expect(segments.map((segment) => (segment.format === "html" ? segment.html : segment.text))).toEqual(Object.keys(ENGLISH));
@@ -115,7 +115,7 @@ describe("§NNN a rich text translated with its layout", () => {
   });
 });
 
-describe("§NNN inline HTML, both ways", () => {
+describe("§464 inline HTML, both ways", () => {
   it("round-trips marks, a link and escaped characters unchanged", () => {
     const content = [
       { type: "text" as const, text: "a < b & " },

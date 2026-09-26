@@ -77,7 +77,7 @@ export const STAFF_CLIENT_MESSAGES = [
   "Network.close",
   "Network.blocked",
   "Network.retry",
-  // «Tradu din română» (§NNN): the buttons beside every English box and at the top of an editor,
+  // «Tradu din română» (§464): the buttons beside every English box and at the top of an editor,
   // their pressed state, their question and their refusals.
   "Translate",
 ] as const;

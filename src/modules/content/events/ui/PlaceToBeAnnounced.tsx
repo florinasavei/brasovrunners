@@ -282,7 +282,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
                 >
                   {labels.copyToEnglish}
                 </Button>
-                {/* «Tradu din română» (§NNN): the place's name translated, where the page offers it. */}
+                {/* «Tradu din română» (§464): the place's name translated, where the page offers it. */}
                 <TranslateFieldButton en={EN_NAME} />
               </Stack>
             </Stack>

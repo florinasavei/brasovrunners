@@ -304,7 +304,7 @@ function CoHostRowsEditorIsland({
                     );
                   })}
                 </Stack>
-                {/* «Tradu din română» (§NNN): the English description from the Romanian one. */}
+                {/* «Tradu din română» (§464): the English description from the Romanian one. */}
                 <TranslateFieldButton en={descriptionField("En")} />
                 <Typography id={aboutHelpId} variant="caption" color="text.secondary">
                   {labels.descriptionHelp}

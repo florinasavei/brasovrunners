@@ -132,7 +132,7 @@ export type PageSection = {
   /** Whether the page draws it for this event. */
   drawn: (data: PageSectionData) => boolean;
   /**
-   * The section whose editor card holds this one's card (§NNN): the page draws it in its own place,
+   * The section whose editor card holds this one's card (§466): the page draws it in its own place,
    * but the editor asks it inside another card, so it has no number and no chip on the map.
    */
   nestedIn?: PageSectionId;
@@ -188,7 +188,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
       texts.some((text) => hasRouteDescription(text.routeDescriptionJson)),
   },
   // "Cost" (§343, §356): its own row in the facts, on every type, while a cost is stated. The
-  // editor asks it inside card 1, «Ce fel de eveniment», since §NNN (the owner, 2026-09-26:
+  // editor asks it inside card 1, «Ce fel de eveniment», since §466 (the owner, 2026-09-26:
   // "cardul 7. Cost poate fi inclus în cardul 1"), so it has no number and no chip of its own.
   { id: "cost", card: "box-cost", anchor: null, glyph: "cost", automatic: false, nestedIn: "kind", drawn: ({ event }) => event.costType !== null },
   /*
@@ -249,7 +249,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
 /** A section with its place on the page: its number, or null for an automatic one. */
 export type NumberedPageSection = PageSection & { number: number | null };
 
-/** Every section with its number, counting only those with a top-level card (a nested one, §NNN, has none). */
+/** Every section with its number, counting only those with a top-level card (a nested one, §466, has none). */
 export function numberedPageSections(): NumberedPageSection[] {
   let next = 0;
   return PAGE_SECTIONS.map((section) => ({ ...section, number: section.automatic || section.nestedIn ? null : (next += 1) }));

@@ -98,7 +98,7 @@ export async function withdrawFromMyRegistrationsAction(form: FormData): Promise
 }
 
 /**
- * «Semnează declarațiile» (§NNN, over §77): the address's declarations still to sign at one event,
+ * «Semnează declarațiile» (§471, over §77): the address's declarations still to sign at one event,
  * as the declaration page's wizard. The link is read, not spent, and exchanged on the server for
  * the wizard's pass (`startFamilySigningFromMine`) — no new token goes in any URL. The wizard opens
  * on the declaration page under this same link, which is where the pass travels and nowhere else.
@@ -111,7 +111,7 @@ export async function startFamilySigningFromMyRegistrationsAction(form: FormData
 
   const result = await startFamilySigningFromMine(token, eventId, now);
   /*
-    Refused (§NNN, nit found in review): a dead link says so on the page, as every press here does;
+    Refused (§471, nit found in review): a dead link says so on the page, as every press here does;
     an address with nobody left to walk lands back on the list, and a toast names why — nobody left
     to sign, or one person alone, whose own emailed link signs them.
   */

@@ -19,7 +19,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  */
 
 /** The box title each section's card already wears (`Admin.editor.boxes.<key>.title`). */
-/** The sections with a numbered card of their own: not the automatic share links, not the cost (inside card 1 since §NNN). */
+/** The sections with a numbered card of their own: not the automatic share links, not the cost (inside card 1 since §466). */
 type HeadedSectionId = Exclude<PageSectionId, "share" | "cost">;
 
 const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
@@ -64,7 +64,7 @@ export async function pageFlow(data: PageSectionData): Promise<PageFlow> {
   }
   return {
     headings,
-    // A section asked inside another card (the cost, §NNN) has no chip: the map lists the cards.
+    // A section asked inside another card (the cost, §466) has no chip: the map lists the cards.
     entries: states.filter((section) => !section.nestedIn).map((section) => ({
       id: section.id,
       number: section.number,

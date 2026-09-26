@@ -1,5 +1,5 @@
 /**
- * A message's `{placeholders}` kept out of the provider's hands (`DECISIONS.md` §NNN).
+ * A message's `{placeholders}` kept out of the provider's hands (`DECISIONS.md` §464).
  *
  * The participant message (§364) may carry `{participantName}`, `{eventTitle}` and the rest of its
  * closed set. Sent as words, a provider may translate one, change its case or put a space inside

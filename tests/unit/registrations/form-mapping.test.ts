@@ -95,7 +95,7 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
 
   /**
    * §432 — citizenship is required on the public form (reversing §322's optional), optional for
-   * a staff entry; the city likewise since §NNN. Blank is absent, never an empty string.
+   * a staff entry; the city likewise since §467. Blank is absent, never an empty string.
    */
   it("refuses the public form without a citizenship or a city, and a staff entry needs neither", () => {
     const values = readRegistrationForm(filledForm({ nationality: "", city: "  " }), "ro");
@@ -108,7 +108,7 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
     expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ nationality: "Romania" }), "ro")).success).toBe(false);
   });
 
-  it("refuses the public form with a blank city alone, naming it (§NNN)", () => {
+  it("refuses the public form with a blank city alone, naming it (§467)", () => {
     const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ city: "" }), "ro"));
     expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["city"]);
   });
