@@ -82,7 +82,7 @@ export default async function TeamPage({ params }: Props) {
       <Typography variant="h1" gutterBottom sx={headingRule}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3, whiteSpace: "pre-line" }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 }, whiteSpace: "pre-line" }}>
         {page?.intro ?? t("lead", { club: CLUB_NAME })}
       </Typography>
 
@@ -151,7 +151,7 @@ export default async function TeamPage({ params }: Props) {
         </Box>
       )}
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
         {t.rich("contact", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
     </Container>

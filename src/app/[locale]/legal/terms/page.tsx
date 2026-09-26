@@ -71,7 +71,7 @@ export default async function TermsPage({ params }: Props) {
             {document.title}
           </Typography>
           {/* The same version line as the privacy notice (§323). */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
             {t("inForce", {
               version: document.version,
               date: formatDay(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),

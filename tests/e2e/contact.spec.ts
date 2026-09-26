@@ -56,7 +56,11 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await footer.locator("summary").click();
     const inFooter = footer.getByRole("link", { name: "Scrie-ne" });
     await expect(inFooter).toBeVisible();
-    expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The fold's links are the bar's own targets on a phone since §NNN amended §385 (the compact
+    // fold, `footer-target.ts`): 24 pixels below 360, 28 up to `sm`, 44 from `sm` as before.
+    const width = page.viewportSize()?.width ?? 1280;
+    const target = width >= 600 ? 44 : width >= 360 ? 28 : 24;
+    expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(target - 0.5);
   });
 
   test("sends a message and says so, naming where the answer goes", async ({ page }) => {
