@@ -428,7 +428,8 @@
         "turnOn": "Turn the honeypot on"
       },
       "savedHoneypotOn": "The honeypot is on.",
-      "savedHoneypotOff": "The honeypot is off."
+      "savedHoneypotOff": "The honeypot is off.",
+      "readOnly": "The anti-bot check is changed by the Superadministrator: off, the form is open to robots; switched on wrongly, it can refuse real people. The state above is up to date for you too."
     },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
@@ -1748,7 +1749,7 @@
         "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
         "DEV": "plus the technical page /devs. No participant data.",
         "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
-        "SUPERADMIN": "plus the platform settings that can stop the service (how often the platform checks, the database's limits) and naming another Superadministrator."
+        "SUPERADMIN": "plus the platform settings that can stop the service (how often the platform checks, the database's limits, the anti-bot check) and naming another Superadministrator."
       },
       "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
@@ -3343,7 +3344,8 @@
           "steps": [
             "The Administrator runs the club: the registrations, the legal texts, the team, the pages, the plans, the deadlines. The Superadministrator does all of that and, on top, changes the settings below — a wrong one can stop the site or delay every email, for everybody at once. An Administrator sees them, with current figures, and cannot change them.",
             "“To do” → “Costs” → “How often the platform checks”: the brake on the scheduled jobs. “On demand” is the default — the platform wakes the database only when it has something to do. A longer interval lowers the Neon bill, but delays every hand-over of a waiting-list place and every email the jobs send.",
-            "“To do” → “Costs” → “The database's limits”:the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them.",
+            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them.",
+            "“To do” → “Anti-bot”: the Cloudflare Turnstile check and the hidden honeypot trap. Off, the form is open to robots; on with a wrong key, it can refuse real people. Switch it off on the day the box refuses people, and back on afterwards.",
             "“Staff”: only a Superadministrator makes somebody else a Superadministrator, changes a Superadministrator's role or takes their access away. The last Superadministrator cannot be demoted or removed — whoever takes the platform over is named first."
           ],
           "roles": [

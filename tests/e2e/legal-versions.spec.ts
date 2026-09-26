@@ -161,7 +161,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
   test("offers one download per language on the version page, and the file is a PDF", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/legal");
-    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):visible').first().click();
+    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
     await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}$/);
 
     const download = page.waitForEvent("download");

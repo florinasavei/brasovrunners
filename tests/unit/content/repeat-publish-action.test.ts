@@ -27,7 +27,7 @@ vi.mock("@/db/client", () => ({ getDb: () => ({}) }));
 vi.mock("@/modules/staff-identity/session", () => ({
   DEV_STAFF_COOKIE: "dev-staff",
   requireStaff: async () => ({ id: "staff-1", role: "ADMIN" }),
-  requireStaffRole: async () => ({ id: "staff-1", role: "ADMIN" }),
+  requireStaffCapability: async () => ({ id: "staff-1", role: "ADMIN" }),
 }));
 vi.mock("@/modules/content/events/service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/content/events/service")>()),

@@ -10,7 +10,8 @@ import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { updateJobCadence } from "@/modules/jobs/cadence";
 import { giveOlderPicturesTheirLadder } from "@/modules/media/older-pictures";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { canManageClubSettings, canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -36,7 +37,7 @@ export async function updateBotCheckAction(_previous: FormOutcome | null, form: 
 
   let outcome: string;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManagePlatform);
     /*
       One panel, two switches (§282): the captcha and the hidden trap. The form says which it
       is and the state it wants, so two people pressing at once end up where the second one
@@ -69,7 +70,7 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
   const path = getPathname({ locale, href: "/admin/tasks" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     await updateNeonPlan(
       getDb(),
       actor,
@@ -100,7 +101,7 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   const path = getPathname({ locale, href: "/admin/tasks" });
 
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canManagePlatform);
     await updateJobCadence(getDb(), actor, { minutes: form.get("minutes") }, new Date());
   } catch (error) {
     return refused(error, form);
@@ -121,7 +122,7 @@ export async function giveOlderPicturesLadderAction(_previous: FormOutcome | nul
 
   let result: { converted: number; failed: number; left: number };
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageClubSettings);
     result = await giveOlderPicturesTheirLadder(getDb(), actor, { now: new Date() });
   } catch (error) {
     return refused(error, form);
@@ -157,7 +158,7 @@ export async function updateNeonLimitsAction(_previous: FormOutcome | null, form
 
   let changed: boolean;
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffCapability(canManagePlatform);
     const outcome = await updateNeonLimits(
       getDb(),
       actor,

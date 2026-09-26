@@ -37,9 +37,9 @@ import {
   type DevIdentityKey,
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
-import { canDeleteEvent, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
-import { DEV_STAFF_COOKIE, requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
   inviteZitadelUser,
   resendZitadelInvite,
@@ -831,7 +831,7 @@ export async function deleteEventAction(_previous: FormOutcome | null, form: For
   try {
     // The coarse gate first, so a non-Administrator never reaches the service; the service
     // asserts it again, and refuses any event that has a registration against it.
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canDeleteEvent);
     await deleteEvent(getDb(), { actor, eventId });
     outcome = { saved: "deleted" };
   } catch (error) {
@@ -863,7 +863,7 @@ export async function hardDeleteEventAction(_previous: FormOutcome | null, form:
 
   let erased = 0;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canHardDeleteEvent);
     const result = await hardDeleteEvent(getDb(), {
       actor,
       eventId,
@@ -892,7 +892,7 @@ export async function addTestRegistrationsAction(_previous: FormOutcome | null, 
 
   let stoppedAt: number | null = null;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageTestRegistrations);
     const result = await addTestRegistrations(getDb(), actor, {
       eventId,
       count: Number(text(form, "count")),
@@ -919,7 +919,7 @@ export async function removeTestRegistrationsAction(_previous: FormOutcome | nul
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageTestRegistrations);
     await removeTestRegistrations(getDb(), actor, eventId);
     outcome = { saved: "testRegistrationsRemoved" };
   } catch (error) {
@@ -943,7 +943,7 @@ export async function withdrawInterestAction(_previous: FormOutcome | null, form
 
   let outcome: { error?: string; saved?: string };
   try {
-    await requireStaffRole("ADMIN");
+    await requireStaffCapability(canManageRegistrations);
     const removed = await withdrawInterest(getDb(), eventId, text(form, "email"));
     outcome = { saved: removed ? "interestRemoved" : "interestNotFound" };
   } catch (error) {
@@ -963,7 +963,7 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     await eraseGroupRunDeclaration(getDb(), actor, { id: text(form, "declarationId"), reason: text(form, "reason") }, new Date());
   } catch (error) {
     return refused(error, form);
@@ -981,7 +981,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
   try {
     // The coarse gate first, so a non-Administrator never reaches the service; the service
     // asserts it again for callers that are not this action.
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageStaff);
     const member = await inviteStaffUser(getDb(), actor, {
       email: text(form, "email"),
       displayName: text(form, "displayName"),
@@ -1012,7 +1012,7 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageStaff);
     // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
     const member = await resendStaffInvitation(getDb(), actor, text(form, "email"));
     const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
@@ -1034,7 +1034,7 @@ export async function sendStaffPasswordResetAction(_previous: FormOutcome | null
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageStaff);
     // A colleague on the list, and one this actor may manage — never a Superadministrator's
     // account for an Administrator (§NNN); the provider is asked for the row's own address.
     const member = await assertMayManageAccount(getDb(), actor, text(form, "email"));
@@ -1061,7 +1061,7 @@ export async function setStaffAccountActiveAction(_previous: FormOutcome | null,
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageStaff);
     const active = form.get("active") === "1";
     // The same question as the password link (§NNN): an Administrator who could switch the
     // owner's account off could lock the platform's settings away from everybody.
@@ -1087,7 +1087,7 @@ export async function changeStaffRoleAction(_previous: FormOutcome | null, form:
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageStaff);
     await changeStaffRole(getDb(), actor, text(form, "staffUserId"), text(form, "role") as StaffRole);
     outcome = { saved: "role" };
   } catch (error) {
@@ -1103,7 +1103,7 @@ export async function revokeStaffAction(_previous: FormOutcome | null, form: For
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageStaff);
     await revokeStaffUser(getDb(), actor, text(form, "staffUserId"));
     outcome = { saved: "revoked" };
   } catch (error) {

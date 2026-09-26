@@ -72,7 +72,7 @@ import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { canManagePlatform, canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings, canManagePlatform, canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
@@ -607,8 +607,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       {panel === "botCheck" && (
         <>
         {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
-            which the club must be able to switch off on the day it refuses real people. */}
-        <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} />
+            which the club must be able to switch off on the day it refuses real people. The
+            Superadministrator's to switch since §NNN; an Administrator reads it. */}
+        <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} mayEdit={canManagePlatform(actor.role)} />
         </>
       )}
 
@@ -752,11 +753,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {/*
           The one setting on this panel (§280's follow-up): which Neon plan the account is on.
           Above the figures that follow it, so a plan set wrong shows here before it shows on
-          the invoice. This page is the Administrator's already (`canManageRegistrations` at the
-          door), so `mayEdit` is true for every reader who gets this far; the prop stays for the
-          same reason the Mailgun panel carries it (§291).
+          the invoice. A club setting (`canManageClubSettings`, the Administrator's); the prop
+          stays for the same reason the Mailgun panel carries it (§291).
         */}
-        <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+        <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageClubSettings(actor.role)} />
 
         {/* How often the platform may wake the database for its scheduled work (§334) — the
             throttle the owner asked for, beside the plan that bills each wake. The

@@ -24,14 +24,15 @@ import { MIN_PARTICIPANT_AGE, yearsPhrase } from "@/modules/registrations/domain
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
-import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
  *
- * Each one starts with `requireStaffRole("ADMIN")` — the coarse gate, so a non-Administrator
+ * Each one starts with `requireStaffCapability(canManageRegistrations)` — the coarse gate, so a non-Administrator
  * never reaches the service — and the service asserts the role again for callers that are not
  * these actions. BR-REQ-060-01 criterion 4: a replayed POST never went past the page's own
  * guard at all.
@@ -299,7 +300,7 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
   const registrationId = text(form, "registrationId");
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     await correctRegisteredName(getDb(), actor, registrationId, text(form, "registeredName"), new Date());
   } catch (error) {
     return refused(error, form, { fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" ? ["registeredName"] : failure.fields) });
@@ -314,7 +315,7 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
   const registrationId = text(form, "registrationId");
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     await cancelRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
   } catch (error) {
     return refused(error, form);
@@ -337,7 +338,7 @@ export async function cancelRegistrationFromRowAction(_previous: FormOutcome | n
 
 /**
  * Withdraw a participant's optional data on their behalf (§322, `AGENTS.md` §15.11): the ticked
- * groups, the reason typed. `requireStaffRole("ADMIN")` is the coarse gate and the service asks
+ * groups, the reason typed. `requireStaffCapability(canManageRegistrations)` is the coarse gate and the service asks
  * `canManageRegistrations` again, so a replayed POST from an Organizer's session goes nowhere.
  */
 export async function withdrawConsentAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -346,7 +347,7 @@ export async function withdrawConsentAction(_previous: FormOutcome | null, form:
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     const fields = {
       ...(form.get("health") === "on" ? { health: true as const } : {}),
       ...(form.get("socials") === "on" ? { socials: true as const } : {}),
@@ -459,7 +460,7 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
   let failed = 0;
   let voided: number[] = [];
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     ({ cancelled, test, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
   } catch (error) {
     return backTo(returnTo, outcomeOf(error));
@@ -510,7 +511,7 @@ export async function bulkDeleteRegistrationsAction(form: FormData): Promise<voi
   let erased = 0;
   let failed = 0;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     ({ erased, failed } = await bulkDeleteRegistrationsByStaff(
       getDb(),
       actor,
@@ -537,7 +538,7 @@ export async function deleteRegistrationAction(_previous: FormOutcome | null, fo
   const registrationId = text(form, "registrationId");
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
   } catch (error) {
     return refused(error, form);
@@ -583,7 +584,7 @@ export async function eraseRegistrationFromListAction(_previous: FormOutcome | n
   const listPath = getPathname({ locale, href: "/admin/registrations" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     /*
       Refused before the database is touched. Not a duplicate of the service's own check: that
       one compares against the registration, this one is what stops an empty field spending a
@@ -637,7 +638,7 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
 
   let sent = 0;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
   } catch (error) {

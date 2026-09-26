@@ -428,7 +428,8 @@
         "turnOn": "Pornește honeypot-ul"
       },
       "savedHoneypotOn": "Honeypot-ul este pornit.",
-      "savedHoneypotOff": "Honeypot-ul este oprit."
+      "savedHoneypotOff": "Honeypot-ul este oprit.",
+      "readOnly": "Verificarea anti-robot o schimbă Superadministratorul: oprită, formularul e deschis roboților; pornită greșit, poate refuza oameni reali. Starea de mai sus e la zi și pentru tine."
     },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
@@ -1748,7 +1749,7 @@
         "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
         "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
-        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date) și numirea altui Superadministrator."
+        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date, verificarea anti-robot) și numirea altui Superadministrator."
       },
       "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
@@ -3343,7 +3344,8 @@
           "steps": [
             "Administratorul conduce clubul: înscrierile, textele legale, echipa, paginile, planurile, termenele. Superadministratorul face tot asta și, în plus, schimbă setările de mai jos — una greșită poate opri site-ul sau întârzia toate emailurile, pentru toată lumea deodată. Un Administrator le vede, cu cifrele la zi, dar nu le poate schimba.",
             "„De făcut” → „Costuri” → „Cât de des verifică platforma”: frâna joburilor programate. „La nevoie” e implicit — platforma trezește baza de date doar când are ceva de făcut. Un interval mai lung scade factura Neon, dar întârzie fiecare predare a unui loc de pe lista de așteptare și fiecare email trimis de joburi.",
-            "„De făcut” → „Costuri” → „Limitele bazei de date”:frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe.",
+            "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe.",
+            "„De făcut” → „Anti-robot”: verificarea Cloudflare Turnstile și capcana ascunsă (honeypot). Oprită, formularul e deschis roboților; pornită cu o cheie greșită, poate refuza oameni reali. Se oprește în ziua în care caseta refuză oameni și se pornește la loc după.",
             "„Echipa”: doar un Superadministrator face pe altcineva Superadministrator, îi schimbă rolul unui Superadministrator sau îi retrage accesul. Ultimul Superadministrator nu poate fi retrogradat sau scos — cine preia platforma trebuie numit întâi."
           ],
           "roles": [

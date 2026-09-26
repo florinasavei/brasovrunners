@@ -261,7 +261,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
     That is the whole guard on the query parameter, and it is enough: a row that is not on the
     page in front of you cannot be named, so `?erase=<some other id>` opens nothing, and the
-    name the panel asks to have typed is a name that is genuinely on screen. `requireStaffRole`
+    name the panel asks to have typed is a name that is genuinely on screen. `requireStaffCapability`
     in the action is what actually refuses the erasure (BR-REQ-060-01); this decides only what
     is drawn.
   */

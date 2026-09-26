@@ -3,7 +3,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { DomainError } from "@/shared/errors/domain-error";
-import { canAssignRole, canManageMember, canManageStaff, STAFF_ROLES, type StaffRole } from "./domain/roles";
+import { canAssignRole, canManageMember, canManageStaff, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
   countSuperadministrators,
@@ -191,8 +191,8 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
   assertMayManage(actor, target);
   assertMayAssign(actor, role);
   if (
-    target.role === "SUPERADMIN" &&
-    role !== "SUPERADMIN" &&
+    isSuperadmin(target.role) &&
+    !isSuperadmin(role) &&
     (await countSuperadministrators(db)) <= 1
   ) {
     throw new DomainError("CONFLICT", "the last superadministrator cannot be demoted");
@@ -225,7 +225,7 @@ export async function revokeStaffUser<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", "an administrator cannot remove their own access");
   }
   assertMayManage(actor, target);
-  if (target.role === "SUPERADMIN" && (await countSuperadministrators(db)) <= 1) {
+  if (isSuperadmin(target.role) && (await countSuperadministrators(db)) <= 1) {
     throw new DomainError("CONFLICT", "the last superadministrator cannot be removed");
   }
 

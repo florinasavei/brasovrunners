@@ -50,7 +50,7 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
 /**
  * The hierarchy itself, and the only place it is written.
  *
- * `session.ts` used to keep a second copy of this to answer `requireStaffRole`, which is one
+ * `session.ts` used to keep a second copy of this to answer the old `requireStaffRole`, which is one
  * rule in two places and exactly what §1.5 forbids. It imports this now.
  */
 const RANK: Record<StaffRole, number> = {
@@ -447,7 +447,7 @@ export function canManageStaff(role: StaffRole): boolean {
  */
 export function canAssignRole(actor: StaffRole, role: StaffRole): boolean {
   if (!canManageStaff(actor)) return false;
-  return role === "SUPERADMIN" ? atLeast(actor, "SUPERADMIN") : true;
+  return isSuperadmin(role) ? isSuperadmin(actor) : true;
 }
 
 /**
@@ -458,7 +458,16 @@ export function canAssignRole(actor: StaffRole, role: StaffRole): boolean {
  */
 export function canManageMember(actor: StaffRole, target: StaffRole): boolean {
   if (!canManageStaff(actor)) return false;
-  return target === "SUPERADMIN" ? atLeast(actor, "SUPERADMIN") : true;
+  return isSuperadmin(target) ? isSuperadmin(actor) : true;
+}
+
+/**
+ * Whether `role` is the top of the ladder — the one a team page protects, and the one the
+ * service counts so the last of them is never demoted or removed (§NNN). Named here so no call
+ * site compares a role to a string of its own (`tests/unit/staff/no-raw-role-checks.test.ts`).
+ */
+export function isSuperadmin(role: StaffRole): boolean {
+  return role === "SUPERADMIN";
 }
 
 /** The roles `actor` may give, in rank order — what the team page's selects offer (§NNN). */
@@ -491,13 +500,27 @@ export function canWriteLegalTexts(role: StaffRole): boolean {
  *     "Limitele bazei de date"          Neon's size ceiling and monthly quota (§335): a quota
  *                                       reached suspends the database, and the site with it
  *     the email delivery timing         (§221) every message waits for the scheduler
+ *     the anti-robot check              (§254, §282) the Turnstile switch: on with a broken key
+ *                                       it refuses every registration; off, the form is open
+ *                                       to bots — either way every participant at once
  *
- * The club's own settings — the Mailgun and Neon plans (§100, §280), the deadlines (§377), the
- * anti-bot switch (§254), who receives the club's copies — stay the Administrator's: each changes
+ * The club's own settings — the Mailgun and Neon plans (§100, §280), the deadlines (§377), who
+ * receives the club's copies — are `canManageClubSettings`, the Administrator's: each changes
  * what the club promises or pays, not whether the platform runs.
  */
 export function canManagePlatform(role: StaffRole): boolean {
   return atLeast(role, "SUPERADMIN");
+}
+
+/**
+ * **The club's own settings — the Administrator's (§NNN).** The email and database plans
+ * (§100, §280), the deadlines and the per-address limit ("Termene", §377), the club's notices and
+ * email texts, who receives the contact form and the club's copies, "Trimite acum" within the
+ * allowance (§80), giving older pictures their sizes (§414). Each changes what the club promises,
+ * says or pays; none of them can stop the platform — those are `canManagePlatform`.
+ */
+export function canManageClubSettings(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
 }
 
 /**
