@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
 
 /**
  * BR-REQ-041-01 (`DECISIONS.md` §356) — the event page's facts, grouped by the question they
@@ -341,27 +342,67 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 });
 
-describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => {
-  it("the featured hero: one line of pieces under «Traseu», middle dots, no pills, the cost in the route", async () => {
+describe("BR-REQ-041-01 the hero's route is the listing card's pills (§NNN), its other rows one line (§169, §356)", () => {
+  it("the featured hero: the card's own pills under «Traseu», the cost's closed-set word among them, the amount in words under them", async () => {
+    // The owner, 2026-09-26, of the hero's «Traseu» line above the cards: "astea de sus trebuie
+    // sa fie tot pills ca si in cardurile de mai jos".
     const html = renderToStaticMarkup(await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei" }), now: NOW }));
-    expect(html).not.toContain("MuiChip-root");
     const route = row(html, "Traseu");
-    expect(text(route.dd)).toContain("300 m diferență de nivel");
+    expect(route.dd).toContain('data-fact="pills"');
+    const pills = chips(route.dd);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Cu taxă"]);
+    for (const pill of pills) {
+      expect(pill.outlined, pill.label).toBe(true);
+      expect(pill.small, pill.label).toBe(true);
+      expect(pill.glyph, pill.label).not.toBeNull();
+    }
+    // What a pill cannot hold: the amount, as words on a line under the pills.
     expect(text(route.dd)).toContain("Taxă: 50 lei");
+    expect(text(route.dd)).not.toContain("diferență de nivel");
     expect(rows(html).map((r) => r.label)).not.toContain("Cost");
     // The hero says no address: a summary above the fold.
     expect(html).not.toContain("Strada Nicolae Labiș");
   });
 
-  it("orders the hero's route the same way as the card's and the page's pills — difficulty before distance and elevation (§366, amended §375)", async () => {
+  it("draws exactly the listing card's pills — the same set, order and words (§366, amended §375)", async () => {
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
-    // terrain type, difficulty, distance, elevation". The hero has no surface pill of its own.
-    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
-    const route = row(html, "Traseu");
-    const text = route.dd.replace(/<[^>]+>/g, "");
-    expect(text.indexOf("Ușor")).toBeGreaterThan(-1);
-    expect(text.indexOf("Ușor")).toBeLessThan(text.indexOf("10 km"));
-    expect(text.indexOf("10 km")).toBeLessThan(text.indexOf("300 m diferență de nivel"));
+    // terrain type, difficulty, distance, elevation" — one function (`buildRoutePills`) for both.
+    for (const overrides of [{}, { costType: "DONATION" as const }, { surface: null, difficulty: null, costType: null }]) {
+      const hero = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW }));
+      const card = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact" }));
+      const heroLabels = chips(row(hero, "Traseu").dd).map((pill) => pill.label);
+      const cardPills = /data-fact="pills"[\s\S]*$/.exec(withoutStyles(card))?.[0] ?? "";
+      expect(heroLabels.length).toBeGreaterThan(0);
+      expect(heroLabels).toEqual(chips(cardPills).map((pill) => pill.label));
+    }
+  });
+
+  it("with a forecast: the card's weather is its last pill; the hero keeps the same route pills and says the weather in its own «Vremea» row, never as a pill (§NNN, §416, §429)", async () => {
+    const reading = {
+      hourAt: NOW.getTime(), code: 3, kind: "overcast", glyph: "cloud", temperatureC: 12.4, precipitationProbability: 70, windKmh: 14,
+      feelsLikeC: null, precipitationMm: null, gustKmh: null, humidity: null, uvIndex: null,
+    } as unknown as WeatherReading;
+    const overrides: Partial<PublicEvent> = { surface: "TRAIL", distanceMeters: 10000, costType: "FREE" };
+    const hero = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, weather: { start: reading, hours: [reading], place: "club" } }));
+    const card = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", cardWeather: reading }));
+    const cardRow = /data-fact="pills"[\s\S]*/.exec(withoutStyles(card))?.[0] ?? "";
+    expect(text(cardRow)).toContain("12");
+    const heroLabels = chips(row(hero, "Traseu").dd).map((pill) => pill.label);
+    expect(heroLabels).toEqual(chips(cardRow).map((pill) => pill.label));
+    expect(text(row(hero, "Traseu").dd)).not.toContain("12");
+    expect(hero).toContain('data-testid="hero-weather"');
+  });
+
+  it("says the surface once on the hero, as the first pill, never also a chip beside the type — as the cards (§366)", () => {
+    const hero = readFileSync("src/modules/events/ui/FeaturedEventHero.tsx", "utf8");
+    expect(hero).toMatch(/<EventKindChips\b[^>]*\bsurface=\{null\}[^>]*\/>/);
+  });
+
+  it("makes no «Traseu» row at all for an event that states no route and no cost", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, costType: null }), now: NOW }),
+    );
+    expect(rows(html).map((r) => r.label)).not.toContain("Traseu");
   });
 
   it("the featured hero's clock is the size of its other glyphs — eighteen pixels, three under the baseline (§366)", async () => {
