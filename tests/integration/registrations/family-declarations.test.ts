@@ -8,7 +8,8 @@ import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
-import { familySigningSteps } from "@/modules/registrations/domain/family-signing";
+import { currentFamilyStep, familySigningSteps } from "@/modules/registrations/domain/family-signing";
+import { issueActionToken } from "@/modules/action-tokens/repository";
 import type { FamilySigningPass } from "@/modules/registrations/family-signing";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -35,7 +36,10 @@ const { submitRegistration, confirmEmail } = await import("@/modules/registratio
 const { confirmFamilyEntry } = await import("@/modules/registrations/family-confirm");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { consumeAndSignDeclaration, consumeAndSignFamilyDeclaration } = await import("@/modules/registrations/token-actions");
-const { familyPassHolds, listFamilySigningRows } = await import("@/modules/registrations/family-signing");
+const { familyPassHolds, familyStepsOfPass, listFamilySigningRows, nextFamilyPass } = await import("@/modules/registrations/family-signing");
+const { skipFamilyDeclaration, startFamilySigningFromMine, readRegistrationTokenContext, spentLinkHasFamilyLeft } = await import(
+  "@/modules/registrations/token-actions"
+);
 const { tokenAttemptAllowed } = await import("@/modules/action-tokens/throttle");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
@@ -77,7 +81,7 @@ async function createEvent(): Promise<EventInput> {
   return { id: event.id, raceId: null, capacity: event.capacity, registrationMode: "INTERNAL", registrationOpensAt: null, registrationClosesAt: null, startsAt: event.startsAt, eventStatus: event.eventStatus, publishedAt: NOW };
 }
 
-const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Maria: "1990-07-11", Ion: "1987-02-14", Vecina: "1979-01-01" };
+const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Maria: "1990-07-11", Ion: "1987-02-14", Vecina: "1979-01-01", Ionut: "2011-05-20" };
 
 const submission = (firstName: string, at: Date, overrides: Record<string, unknown> = {}) => ({
   firstName,
@@ -118,8 +122,8 @@ async function render(row: Awaited<ReturnType<typeof outbox>>[number], now: Date
 }
 
 /** Another person on the address, through §446's email and its one button. */
-async function addPerson(event: EventInput, firstName: string, minute: number) {
-  await submitRegistration(db, event, submission(firstName, at(minute)), at(minute));
+async function addPerson(event: EventInput, firstName: string, minute: number, overrides: Record<string, unknown> = {}) {
+  await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute));
   const offer = (await outbox("REGISTER_ANOTHER_PERSON")).at(-1)!;
   const message = await render(offer, at(minute + 1));
   const secret = /\/inregistrari\/familie\/([A-Za-z0-9_-]+)/.exec(message.text)?.[1];
@@ -169,12 +173,22 @@ async function refusal(promise: Promise<unknown>) {
   throw new Error("the signature was accepted");
 }
 
-const passOf = (participantId: string, eventId: string, originId: string, signedIds: string[], expiresAt = at(90)): FamilySigningPass => ({
-  participantId,
-  eventId,
-  originId,
+/** A link's pass after its own person signed, over the three people of `family()`. */
+const passOf = (
+  people: { ana: { id: string; participantId: string; eventId: string }; maria: { id: string }; ion: { id: string } },
+  signedIds: string[],
+  overrides: Partial<FamilySigningPass> = {},
+): FamilySigningPass => ({
+  binding: "link",
+  participantId: people.ana.participantId,
+  eventId: people.ana.eventId,
+  originId: people.ana.id,
+  eligibleIds: [people.ana.id, people.maria.id, people.ion.id],
   signedIds,
-  expiresAt,
+  skippedIds: [],
+  done: false,
+  expiresAt: at(90),
+  ...overrides,
 });
 
 describe("§NNN the declaration request names the address's other declarations", () => {
@@ -219,7 +233,7 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
       ["Ion Pop", "next"],
     ]);
 
-    let pass = passOf(ana.participantId, event.id, ana.id, [ana.id]);
+    let pass = passOf({ ana, maria, ion }, [ana.id]);
     expect(await familyPassHolds(db, secret, pass, at(22))).toBe(true);
 
     // Maria's step checks Maria's name: Ana's own is refused, nothing recorded.
@@ -231,7 +245,7 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
 
     const second = await consumeAndSignFamilyDeclaration(secret, pass, maria.id, await signing("Maria Pop"), at(23));
     expect(second).toMatchObject({ ok: true, registration: { id: maria.id, status: "CONFIRMED" } });
-    pass = passOf(ana.participantId, event.id, ana.id, [ana.id, maria.id]);
+    pass = passOf({ ana, maria, ion }, [ana.id, maria.id]);
     const third = await consumeAndSignFamilyDeclaration(secret, pass, ion.id, await signing("ion  pop"), at(24));
     expect(third).toMatchObject({ ok: true, registration: { id: ion.id, status: "CONFIRMED" } });
 
@@ -254,21 +268,21 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
   });
 
   it("a family walks the spent link's page more often than its ten attempts an hour: the pass is never charged", async () => {
-    const { event, ana, maria } = await family();
+    const { ana, maria, ion } = await family();
     const { secret } = await declarationLink(ana.id, at(20));
     await consumeAndSignDeclaration(secret, await signing("Ana Pop"), at(21));
     // The link's allowance spent by the pages of a large family (§19.4: ten an hour).
     for (let attempt = 0; attempt < 12; attempt++) await tokenAttemptAllowed(db, secret, at(22));
     expect(await tokenAttemptAllowed(db, secret, at(22))).toBe(false);
 
-    const signed = await consumeAndSignFamilyDeclaration(secret, passOf(ana.participantId, event.id, ana.id, [ana.id]), maria.id, await signing("Maria Pop"), at(23));
+    const signed = await consumeAndSignFamilyDeclaration(secret, passOf({ ana, maria, ion }, [ana.id]), maria.id, await signing("Maria Pop"), at(23));
     expect(signed).toMatchObject({ ok: true, registration: { id: maria.id, status: "CONFIRMED" } });
   });
 
   it("the pass alone, the link alone, or a pass beside another link signs nobody", async () => {
-    const { event, ana, maria } = await family();
+    const { event, ana, maria, ion } = await family();
     const { secret } = await declarationLink(ana.id, at(20));
-    const pass = passOf(ana.participantId, event.id, ana.id, [ana.id]);
+    const pass = passOf({ ana, maria, ion }, [ana.id]);
 
     // Before the first signature the link is live, not spent: the pass is not honoured beside it.
     expect(await consumeAndSignFamilyDeclaration(secret, pass, maria.id, await signing("Maria Pop"), at(21))).toMatchObject({ ok: false });
@@ -291,14 +305,14 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
   });
 
   it("never signs the link's own person a second time, nor a registration of another address", async () => {
-    const { event, ana } = await family();
+    const { event, ana, maria, ion } = await family();
     await submitRegistration(db, event, submission("Vecina", at(30), { lastName: "Străină", email: "vecina@example.ro" }), at(30));
     const vecina = (await rowsOf(event.id)).find((row) => row.registeredName === "Vecina Străină")!;
     await confirmEmail(db, event, vecina.id, at(31));
 
     const { secret } = await declarationLink(ana.id, at(32));
     await consumeAndSignDeclaration(secret, await signing("Ana Pop"), at(33));
-    const pass = passOf(ana.participantId, event.id, ana.id, [ana.id]);
+    const pass = passOf({ ana, maria, ion }, [ana.id]);
 
     expect(await consumeAndSignFamilyDeclaration(secret, pass, ana.id, await signing("Ana Pop"), at(34))).toMatchObject({ ok: false });
     expect(await consumeAndSignFamilyDeclaration(secret, pass, vecina.id, await signing("Vecina Străină"), at(34))).toMatchObject({ ok: false });
@@ -307,11 +321,11 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
   });
 
   it("a person the wizard signed is closed: their own emailed link no longer signs, and says so rather than dying", async () => {
-    const { event, ana, maria } = await family();
+    const { ana, maria, ion } = await family();
     const anaLink = await declarationLink(ana.id, at(20));
     const mariaLink = await declarationLink(maria.id, at(20));
     await consumeAndSignDeclaration(anaLink.secret, await signing("Ana Pop"), at(21));
-    await consumeAndSignFamilyDeclaration(anaLink.secret, passOf(ana.participantId, event.id, ana.id, [ana.id]), maria.id, await signing("Maria Pop"), at(22));
+    await consumeAndSignFamilyDeclaration(anaLink.secret, passOf({ ana, maria, ion }, [ana.id]), maria.id, await signing("Maria Pop"), at(22));
 
     // Maria's own link is still a live token on a confirmed registration: the page reads the state
     // (§420), and a press is a conflict that records nothing.
@@ -319,5 +333,241 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
     expect(token.usedAt).toBeNull();
     expect(await refusal(consumeAndSignDeclaration(mariaLink.secret, await signing("Maria Pop"), at(23)))).toMatchObject({ code: "CONFLICT" });
     expect((await db.select().from(declarationAcceptances)).filter((row) => row.registrationId === maria.id)).toHaveLength(1);
+  });
+});
+
+/**
+ * The brief's scenario (§NNN, found in review): Ana (A), Maria (B) and Ionuț (C), a minor whose
+ * parent is Ana, on one address. The wizard is entered from B's link; the steps are B, A, C; B is
+ * signed, A is put off with «Semnez mai târziu», C is signed with the parent's and the minor's
+ * parts (§330). Two acceptances, two confirmations, two numbers — and A's own link still signs A.
+ */
+describe("§NNN the brief's scenario: entered from B, A put off, the minor signed by two", () => {
+  async function familyWithMinor() {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana", NOW), NOW);
+    const [ana] = await rowsOf(event.id);
+    await confirmEmail(db, event, ana.id, at(1));
+    await addPerson(event, "Maria", 5);
+    await addPerson(event, "Ionut", 10, { guardianName: "Ana Pop" });
+    const [a, b, c] = await rowsOf(event.id);
+    expect([a, b, c].map((row) => [row.registeredName, row.status, row.guardianName])).toEqual([
+      ["Ana Pop", "PENDING_DECLARATION", null],
+      ["Maria Pop", "PENDING_DECLARATION", null],
+      ["Ionut Pop", "PENDING_DECLARATION", "Ana Pop"],
+    ]);
+    return { event, a, b, c };
+  }
+
+  it("B, A, C in that order; B signed, A later, C signed by parent and minor; A's own link signs A afterwards", async () => {
+    const { event, a, b, c } = await familyWithMinor();
+    const bLink = await declarationLink(b.id, at(20));
+    const aLink = await declarationLink(a.id, at(20));
+
+    // The page B's link opens: B first, then the others in the order they registered.
+    const opened = familySigningSteps(await listFamilySigningRows(db, b.participantId, event.id), {
+      originId: b.id,
+      originSignable: true,
+      signedIds: [],
+    });
+    expect(opened.map((step) => [step.registeredName, step.state])).toEqual([
+      ["Maria Pop", "current"],
+      ["Ana Pop", "next"],
+      ["Ionut Pop", "next"],
+    ]);
+
+    // B signs from her link; the action then issues the pass over the three, fixed now.
+    expect(await consumeAndSignDeclaration(bLink.secret, await signing("Maria Pop"), at(21))).toMatchObject({ ok: true });
+    let { pass, steps } = await nextFamilyPass(
+      db,
+      { binding: "link", participantId: b.participantId, eventId: event.id, originId: b.id, eligibleIds: opened.map((step) => step.id), signedIds: [b.id], skippedIds: [] },
+      at(21),
+    );
+    expect(steps.map((step) => [step.id, step.state])).toEqual([
+      [b.id, "signed"],
+      [a.id, "current"],
+      [c.id, "next"],
+    ]);
+
+    // «Semnez mai târziu» on A: nothing written anywhere but the pass.
+    const before = await rowsOf(event.id);
+    const skipped = await skipFamilyDeclaration(bLink.secret, pass, a.id, at(22));
+    if (!skipped.ok) throw new Error("the skip was refused");
+    ({ pass, steps } = skipped);
+    expect(await rowsOf(event.id)).toEqual(before);
+    expect(steps.map((step) => [step.id, step.state])).toEqual([
+      [b.id, "signed"],
+      [a.id, "later"],
+      [c.id, "current"],
+    ]);
+    // A is never current again in this pass: signing A through it is refused.
+    expect(await consumeAndSignFamilyDeclaration(bLink.secret, pass, a.id, await signing("Ana Pop"), at(22))).toMatchObject({ ok: false });
+
+    // C, the minor: the parent's signature and document, and the minor's own.
+    const minor = { ...(await signing("Ana Pop")), minorTypedName: "Ionut Pop", minorIdDocument: "MP 123456" };
+    expect(await consumeAndSignFamilyDeclaration(bLink.secret, pass, c.id, minor, at(23))).toMatchObject({
+      ok: true,
+      registration: { id: c.id, status: "CONFIRMED" },
+    });
+    ({ pass, steps } = await nextFamilyPass(db, { ...pass, signedIds: [...pass.signedIds, c.id] }, at(23)));
+    expect(pass.done).toBe(true);
+    expect(steps.map((step) => [step.id, step.state])).toEqual([
+      [b.id, "signed"],
+      [a.id, "later"],
+      [c.id, "signed"],
+    ]);
+
+    const acceptances = await db.select().from(declarationAcceptances).orderBy(declarationAcceptances.acceptedAt);
+    expect(acceptances.map((row) => [row.registrationId, row.typedName, row.minorTypedName])).toEqual([
+      [b.id, "Maria Pop", null],
+      [c.id, "Ana Pop", "Ionut Pop"],
+    ]);
+    expect((await outbox("REGISTRATION_CONFIRMED")).map((row) => row.registrationId).sort()).toEqual([b.id, c.id].sort());
+    const numbered = (await rowsOf(event.id)).filter((row) => row.status === "CONFIRMED" && (row.bibNumber ?? row.provisionalBibNumber) !== null);
+    expect(numbered.map((row) => row.id).sort()).toEqual([b.id, c.id].sort());
+
+    // A done pass signs nobody, and puts nobody off.
+    expect(await consumeAndSignFamilyDeclaration(bLink.secret, pass, a.id, await signing("Ana Pop"), at(24))).toMatchObject({ ok: false });
+    expect(await skipFamilyDeclaration(bLink.secret, pass, a.id, at(24))).toMatchObject({ ok: false });
+
+    // A's own emailed link, untouched by the skip, still signs A: three acceptances.
+    expect(await consumeAndSignDeclaration(aLink.secret, await signing("Ana Pop"), at(25))).toMatchObject({
+      ok: true,
+      registration: { id: a.id, status: "CONFIRMED" },
+    });
+    expect(await db.select().from(declarationAcceptances)).toHaveLength(3);
+  });
+
+  it("«Semnez mai târziu» on the opened link's own person starts the wizard without spending the link", async () => {
+    const { event, a, b, c } = await familyWithMinor();
+    const aLink = await declarationLink(a.id, at(20));
+
+    const skipped = await skipFamilyDeclaration(aLink.secret, null, a.id, at(21));
+    if (!skipped.ok) throw new Error("the skip was refused");
+    expect(skipped.pass).toMatchObject({ binding: "link", originId: a.id, skippedIds: [a.id], signedIds: [], done: false });
+    expect(skipped.steps.map((step) => [step.id, step.state])).toEqual([
+      [a.id, "later"],
+      [b.id, "current"],
+      [c.id, "next"],
+    ]);
+    // The link is live — nothing spent — and the pass holds beside it only because A was put off.
+    const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, a.id));
+    expect(tokens.find((row) => row.purpose === "COMPLETE_DECLARATION")?.usedAt).toBeNull();
+    expect(await familyPassHolds(db, aLink.secret, skipped.pass, at(21))).toBe(true);
+    expect(await familyPassHolds(db, aLink.secret, { ...skipped.pass, skippedIds: [] }, at(21))).toBe(false);
+
+    expect(await consumeAndSignFamilyDeclaration(aLink.secret, skipped.pass, b.id, await signing("Maria Pop"), at(22))).toMatchObject({ ok: true });
+    // Another person's id is refused as a skip on a link that is not theirs, without a pass.
+    expect(await skipFamilyDeclaration(aLink.secret, null, c.id, at(22))).toMatchObject({ ok: false });
+    expect((await rowsOf(event.id)).find((row) => row.id === a.id)?.status).toBe("PENDING_DECLARATION");
+  });
+
+  it("a GET — the page's read path — records nothing, with or without the pass", async () => {
+    const { event, a, b } = await familyWithMinor();
+    const bLink = await declarationLink(b.id, at(20));
+    await consumeAndSignDeclaration(bLink.secret, await signing("Maria Pop"), at(21));
+    const { pass } = await nextFamilyPass(
+      db,
+      { binding: "link", participantId: b.participantId, eventId: event.id, originId: b.id, eligibleIds: (await rowsOf(event.id)).map((row) => row.id), signedIds: [b.id], skippedIds: [] },
+      at(21),
+    );
+    const rowsBefore = await rowsOf(event.id);
+    const acceptancesBefore = await db.select().from(declarationAcceptances);
+    const outboxBefore = await db.select().from(emailOutbox);
+
+    for (let view = 0; view < 3; view++) {
+      await readRegistrationTokenContext(bLink.secret, "COMPLETE_DECLARATION", { charge: false });
+      expect(await familyPassHolds(db, bLink.secret, pass, at(22))).toBe(true);
+      expect(currentFamilyStep(await familyStepsOfPass(db, pass))?.id).toBe(a.id);
+      expect(await spentLinkHasFamilyLeft(bLink.secret, at(22))).toBe(true);
+    }
+
+    expect(await rowsOf(event.id)).toEqual(rowsBefore);
+    expect(await db.select().from(declarationAcceptances)).toEqual(acceptancesBefore);
+    expect(await db.select().from(emailOutbox)).toEqual(outboxBefore);
+  });
+
+  it("the pass dies with the earliest hold still running, and a stranger's address never enters", async () => {
+    const { event, a, b, c } = await familyWithMinor();
+    const bLink = await declarationLink(b.id, at(20));
+    await consumeAndSignDeclaration(bLink.secret, await signing("Maria Pop"), at(21));
+
+    // A's hold ends in ten minutes: the pass issued now lapses then, not in thirty.
+    const holdEnds = at(31);
+    await db.update(registrations).set({ holdExpiresAt: holdEnds }).where(eq(registrations.id, a.id));
+    const { pass } = await nextFamilyPass(
+      db,
+      { binding: "link", participantId: b.participantId, eventId: event.id, originId: b.id, eligibleIds: [b.id, a.id, c.id], signedIds: [b.id], skippedIds: [] },
+      at(21),
+    );
+    expect(pass.expiresAt).toEqual(holdEnds);
+    const { openFamilyPass, sealFamilyPass } = await import("@/modules/registrations/family-signing");
+    const sealed = sealFamilyPass(pass, "k") as string;
+    expect(openFamilyPass(sealed, at(30), "k")).not.toBeNull();
+    expect(openFamilyPass(sealed, at(31), "k")).toBeNull();
+
+    // A stranger at the same event: a pass naming her is refused, and so is signing her through it.
+    await submitRegistration(db, event, submission("Vecina", at(40), { lastName: "Străină", email: "vecina@example.ro" }), at(40));
+    const vecina = (await rowsOf(event.id)).find((row) => row.registeredName === "Vecina Străină")!;
+    await confirmEmail(db, event, vecina.id, at(41));
+    expect(await familyPassHolds(db, bLink.secret, { ...pass, eligibleIds: [...pass.eligibleIds, vecina.id] }, at(22))).toBe(false);
+    expect(await consumeAndSignFamilyDeclaration(bLink.secret, pass, vecina.id, await signing("Vecina Străină"), at(22))).toMatchObject({ ok: false });
+    // Nor does somebody added to the address after the pass was issued become one of its steps.
+    await addPerson(event, "Ion", 45);
+    const ion = (await rowsOf(event.id)).find((row) => row.registeredName === "Ion Pop")!;
+    expect((await familyStepsOfPass(db, pass)).map((step) => step.id)).not.toContain(ion.id);
+  });
+
+  it("a pass with no hold behind it charges an attempt; one that holds beside this very link does not", async () => {
+    const { event, a, b, c } = await familyWithMinor();
+    const bLink = await declarationLink(b.id, at(20));
+    const aLink = await declarationLink(a.id, at(20));
+    await consumeAndSignDeclaration(bLink.secret, await signing("Maria Pop"), at(21));
+    const pass: FamilySigningPass = {
+      binding: "link", participantId: b.participantId, eventId: event.id, originId: b.id,
+      eligibleIds: [b.id, a.id, c.id], signedIds: [b.id], skippedIds: [], done: false, expiresAt: at(50),
+    };
+    // Beside A's live link (not the pass's link), each press is refused and charged.
+    for (let press = 0; press < 10; press++) {
+      expect(await consumeAndSignFamilyDeclaration(aLink.secret, pass, a.id, await signing("Ana Pop"), at(22))).toMatchObject({ ok: false });
+    }
+    expect(await tokenAttemptAllowed(db, aLink.secret, at(22))).toBe(false);
+  });
+});
+
+describe("§NNN «Semnează declarațiile» on «Înscrierile mele» (§77)", () => {
+  it("exchanges the live link on the server for a pass over the event's declarations, and signs through it", async () => {
+    const { event, ana, maria, ion } = await family();
+    const mine = (await issueActionToken(db, { participantId: ana.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(600), now: at(20) })).secret;
+
+    const started = await startFamilySigningFromMine(mine, event.id, at(21));
+    if (!started.ok) throw new Error("the exchange was refused");
+    expect(started.pass).toMatchObject({ binding: "mine", originId: null, eligibleIds: [ana.id, maria.id, ion.id], signedIds: [], done: false });
+    expect(await familyPassHolds(db, mine, started.pass, at(21))).toBe(true);
+    expect(currentFamilyStep(await familyStepsOfPass(db, started.pass))?.id).toBe(ana.id);
+
+    expect(await consumeAndSignFamilyDeclaration(mine, started.pass, ana.id, await signing("Ana Pop"), at(22))).toMatchObject({
+      ok: true,
+      registration: { id: ana.id, status: "CONFIRMED" },
+    });
+    // The link was read, never spent.
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "MANAGE_PROFILE"));
+    expect(token.usedAt).toBeNull();
+
+    // Another address's «Înscrierile mele» link opens nothing here.
+    await submitRegistration(db, event, submission("Vecina", at(30), { lastName: "Străină", email: "vecina@example.ro" }), at(30));
+    const vecina = (await rowsOf(event.id)).find((row) => row.registeredName === "Vecina Străină")!;
+    const strangers = (await issueActionToken(db, { participantId: vecina.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(600), now: at(30) })).secret;
+    expect(await familyPassHolds(db, strangers, started.pass, at(31))).toBe(false);
+    expect(await startFamilySigningFromMine(strangers, event.id, at(31))).toMatchObject({ ok: false });
+  });
+
+  it("is refused for an event with fewer than two declarations waiting", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana", NOW), NOW);
+    const [ana] = await rowsOf(event.id);
+    await confirmEmail(db, event, ana.id, at(1));
+    const mine = (await issueActionToken(db, { participantId: ana.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(600), now: at(2) })).secret;
+    expect(await startFamilySigningFromMine(mine, event.id, at(3))).toMatchObject({ ok: false });
   });
 });

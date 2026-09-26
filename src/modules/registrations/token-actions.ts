@@ -31,7 +31,16 @@ import {
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { findRegistrationById } from "./repository";
 import { confirmFamilyEntry, type FamilyConfirmation, type FamilyEntryLink, readFamilyEntryLink } from "./family-confirm";
-import { familyPassHolds, type FamilySigningPass } from "./family-signing";
+import {
+  familyPassHolds,
+  type FamilySigningPass,
+  familyStepsOfPass,
+  listFamilySigningRows,
+  nextFamilyPass,
+  passBase,
+} from "./family-signing";
+import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard, isSignable } from "./domain/family-signing";
+import { readMyRegistrations } from "./my-registrations";
 import { isUuid } from "@/shared/ids";
 
 /**
@@ -247,45 +256,160 @@ export async function consumeAndSignDeclaration(
 /**
  * The next declaration of a family on one address, signed through the wizard's pass (§NNN).
  *
- * The opened link was spent by the first signature (`consumeAndSignDeclaration`); what authorizes
- * this one is that spent secret together with the pass the first signature handed the browser
- * (`family-signing.ts`, AGENTS.md §13.2 step 4). The registration must be another one of the
- * pass's participant at the pass's event — never the link's own, which its own signature closed —
- * and everything after that is `signDeclaration`, unchanged: the event's lock, the state, the
+ * What authorizes it is the secret the pass is bound to — the opened link, spent by its own
+ * signature or put off with «Semnez mai târziu», or the «Înscrierile mele» link it was exchanged
+ * for — together with the pass itself (`family-signing.ts`, AGENTS.md §13.2 step 4). The
+ * registration must be one of the pass's own people, and everything after that is
+ * `signDeclaration`, unchanged: the event's lock, the state, the
  * approved text by id and hash, the names, the identity documents, the allocator, one acceptance
  * and one confirmation with its own PDF.
  *
- * No throttle charge (§19.4 bounds guessing, §202): the pass was opened under the deployment's key
- * (`openFamilyPass`), which nobody outside the server can forge, so a press that carries one guesses
- * nothing — and a family of four walks the spent link's page and presses it eight or nine times in
- * a few minutes, which the link's ten attempts an hour would not survive. A refusal of the pass or
- * of the registration is the generic token refusal: it says nothing about which.
+ * Only the step that is current may be signed: the pass's own people (`eligibleIds`, fixed when it
+ * was issued), neither signed nor put off, re-read from the rows — a `done` pass signs nobody.
+ *
+ * The throttle (§19.4, §202): a press whose pass holds beside this very secret guesses nothing and
+ * is not charged — a family of four walks the page and presses it eight or nine times in a few
+ * minutes, which the link's ten attempts an hour would not survive. A press whose pass does not
+ * hold, or that carries none, is charged one attempt, as any other press of this link. A refusal of
+ * the pass or of the registration is the generic token refusal: it says nothing about which.
  */
 export async function consumeAndSignFamilyDeclaration(
   secret: string,
-  pass: FamilySigningPass,
+  pass: FamilySigningPass | null,
   registrationId: string,
   input: Parameters<typeof consumeAndSignDeclaration>[1],
   now: Date,
 ) {
   const db = getDb();
 
+  const holds = pass !== null && !pass.done && (await familyPassHolds(db, secret, pass, now));
+  if (!pass || !holds) {
+    await tokenAttemptAllowed(db, secret, now);
+    return TOKEN_NOT_FOUND;
+  }
   // A posted id that is not one answers like a wrong one, never as the database's parse error (§376).
   if (!isUuid(registrationId)) return TOKEN_NOT_FOUND;
-  if (!(await familyPassHolds(db, secret, pass, now))) return TOKEN_NOT_FOUND;
+  const current = currentFamilyStep(await familyStepsOfPass(db, pass));
+  if (!current || current.id !== registrationId) return TOKEN_NOT_FOUND;
 
   const registration = await findRegistrationById(db, registrationId);
-  if (
-    !registration ||
-    registration.id === pass.originId ||
-    registration.participantId !== pass.participantId ||
-    registration.eventId !== pass.eventId
-  ) {
+  if (!registration || registration.participantId !== pass.participantId || registration.eventId !== pass.eventId) {
     return TOKEN_NOT_FOUND;
   }
   const event = await loadEventForRegistration(db, registration.eventId);
   const updated = await signDeclaration(db, event, registration.id, input, now);
   return { ok: true as const, registration: updated };
+}
+
+/**
+ * «Semnez mai târziu» (§NNN): the current person is put off — shown on the list, never current
+ * again in this pass — and the wizard moves on. Nothing is written to any registration, token or
+ * table: the answer is the pass's next state, which the caller writes. The person's own emailed
+ * link is untouched and still signs them.
+ *
+ * With a pass that holds beside this secret, the step put off must be the current one. Without
+ * one, the secret must be a live declaration or offer link and the person its own registration:
+ * that press both starts the wizard (the address's other people, fixed now) and puts the link's
+ * person off, so the pass is bound to a live link whose own person it names as skipped.
+ * One throttled attempt then, as any read of the link.
+ */
+export async function skipFamilyDeclaration(
+  secret: string,
+  pass: FamilySigningPass | null,
+  registrationId: string,
+  now: Date,
+): Promise<{ ok: true; pass: FamilySigningPass; steps: FamilyStep[] } | typeof TOKEN_NOT_FOUND> {
+  const db = getDb();
+  if (!isUuid(registrationId)) return TOKEN_NOT_FOUND;
+
+  if (pass && !pass.done && (await familyPassHolds(db, secret, pass, now))) {
+    const current = currentFamilyStep(await familyStepsOfPass(db, pass));
+    if (!current || current.id !== registrationId) return TOKEN_NOT_FOUND;
+    return { ok: true, ...(await nextFamilyPass(db, { ...passBase(pass), skippedIds: [...pass.skippedIds, registrationId] }, now)) };
+  }
+
+  const declaration = await readRegistrationTokenContext(secret, "COMPLETE_DECLARATION");
+  // The same secret, already presented in this request: no second attempt (§202).
+  const context = declaration.ok ? declaration : await readRegistrationTokenContext(secret, "WAITLIST_OFFER", { charge: false });
+  if (!context.ok || context.token.registrationId !== registrationId) return TOKEN_NOT_FOUND;
+  const registration = await findRegistrationById(db, registrationId);
+  if (!registration || registration.participantId !== context.token.participantId) return TOKEN_NOT_FOUND;
+
+  const fresh = familySigningSteps(await listFamilySigningRows(db, registration.participantId, registration.eventId), {
+    originId: registration.id,
+    originSignable: true,
+    signedIds: [],
+  });
+  if (!isFamilyWizard(fresh) || currentFamilyStep(fresh)?.id !== registration.id) return TOKEN_NOT_FOUND;
+  const next = await nextFamilyPass(
+    db,
+    {
+      binding: "link",
+      participantId: registration.participantId,
+      eventId: registration.eventId,
+      originId: registration.id,
+      eligibleIds: fresh.map((step) => step.id),
+      signedIds: [],
+      skippedIds: [registration.id],
+    },
+    now,
+  );
+  return { ok: true, ...next };
+}
+
+/**
+ * «Semnează declarațiile» on «Înscrierile mele» (§NNN, over §77): the address's live link to its
+ * own registrations, exchanged on the server for the wizard's pass over that event's declarations
+ * still to sign — never a new token in the URL. The link is read, not spent (one throttled attempt,
+ * `readMyRegistrations`), and the pass is bound to it: cancelling from that page spends it, and the
+ * pass stops holding with it. Refused unless two or more declarations wait at that event.
+ */
+export async function startFamilySigningFromMine(
+  secret: string,
+  eventId: string,
+  now: Date,
+): Promise<{ ok: true; pass: FamilySigningPass } | typeof TOKEN_NOT_FOUND> {
+  const db = getDb();
+  const context = await readMyRegistrations(db, secret, "ro", now);
+  if (!context.ok || !isUuid(eventId)) return TOKEN_NOT_FOUND;
+  const steps = familySigningSteps(await listFamilySigningRows(db, context.participantId, eventId), {
+    originId: null,
+    originSignable: false,
+    signedIds: [],
+  });
+  if (!isFamilyWizard(steps) || !currentFamilyStep(steps)) return TOKEN_NOT_FOUND;
+  const { pass } = await nextFamilyPass(
+    db,
+    {
+      binding: "mine",
+      participantId: context.participantId,
+      eventId,
+      originId: null,
+      eligibleIds: steps.map((step) => step.id),
+      signedIds: [],
+      skippedIds: [],
+    },
+    now,
+  );
+  return { ok: true, pass };
+}
+
+/**
+ * Whether a spent declaration link's address still holds other declarations to sign at its event
+ * (§NNN, nit found in review): the page then says each person's own emailed link still works, where
+ * the wizard's pass has lapsed or was never on this device. Reads only; charges nothing — the page
+ * already charged this request's one attempt.
+ */
+export async function spentLinkHasFamilyLeft(secret: string, now: Date): Promise<boolean> {
+  const db = getDb();
+  const scope =
+    (await readSpentActionTokenScope(db, { secret, purpose: "COMPLETE_DECLARATION", now })) ??
+    (await readSpentActionTokenScope(db, { secret, purpose: "WAITLIST_OFFER", now }));
+  if (!scope?.registrationId) return false;
+  const registration = await findRegistrationById(db, scope.registrationId);
+  if (!registration) return false;
+  const rows = await listFamilySigningRows(db, registration.participantId, registration.eventId);
+  return rows.some((row) => row.id !== registration.id && isSignable(row.status));
 }
 
 /**

@@ -46,30 +46,65 @@ import {
 import { describeMovedOnDeclarationLink, stepForSpentLink } from "@/modules/registrations/domain/link-status";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { signDeclarationAction } from "./actions";
+import { signDeclarationAction, skipFamilyDeclarationAction } from "./actions";
 import { DENSITY } from "@/theme/density";
-import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard } from "@/modules/registrations/domain/family-signing";
+import {
+  currentFamilyStep,
+  type FamilyStep,
+  familySigningSteps,
+  hasNextFamilyStep,
+  isFamilyWizard,
+} from "@/modules/registrations/domain/family-signing";
 import {
   type FamilySigningPass,
   familyPassHolds,
+  familyStepsOfPass,
   listFamilySigningRows,
   readFamilySigningPass,
 } from "@/modules/registrations/family-signing";
+import { spentLinkHasFamilyLeft } from "@/modules/registrations/token-actions";
 import FamilySigningSteps from "@/modules/registrations/ui/FamilySigningSteps";
 
 /**
- * The family's steps behind a pass this browser holds for this link (§NNN), or null: no pass, a
- * lapsed one, or one that is not this spent link's. Reads only.
+ * The pass this browser holds, when it holds beside this page's secret (§NNN); null otherwise — no
+ * pass, a lapsed one, or another link's. Reads only, and charges nothing: the page charges the
+ * request's one attempt itself, unless this said yes (§19.4, §202).
  */
-async function familyStepsOfPass(token: string, pass: FamilySigningPass | null, now: Date): Promise<FamilyStep[] | null> {
+async function heldPass(token: string, pass: FamilySigningPass | null, now: Date): Promise<FamilySigningPass | null> {
   if (!pass) return null;
-  const db = getDb();
-  if (!(await familyPassHolds(db, token, pass, now))) return null;
-  return familySigningSteps(await listFamilySigningRows(db, pass.participantId, pass.eventId), {
-    originId: pass.originId,
-    originSignable: false,
-    signedIds: pass.signedIds,
-  });
+  return (await familyPassHolds(getDb(), token, pass, now)) ? pass : null;
+}
+
+/**
+ * The family's last screen (§NNN): everybody the wizard walked, and under each name what happens
+ * next — a confirmed person's desk code and QR, the waiting list, or the emailed link that still
+ * signs a person left for later — then «Gata», back to the event.
+ */
+async function FamilyDone({ steps, doneHref }: { steps: readonly FamilyStep[]; doneHref: string }) {
+  const t = await getTranslations("Registrations");
+  const later = steps.some((step) => step.state === "later");
+  return (
+    <Box data-testid="family-signing-done" sx={{ mt: 3 }}>
+      <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
+        {t("declare.family.doneTitle")}
+      </Typography>
+      <FamilySigningSteps steps={steps} detailed />
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {later ? t("declare.family.doneLater") : t("declare.family.doneAll")}
+      </Typography>
+      <Button component="a" href={doneHref} variant="contained" sx={TAP_TARGET} data-testid="family-signing-finish">
+        {t("declare.family.doneAction")}
+      </Button>
+    </Box>
+  );
+}
+
+/** Where «Gata» goes: the event's page in this language, or the listing when it has none. */
+async function familyDoneHref(eventId: string, locale: "ro" | "en"): Promise<string> {
+  const details = await findEventNotificationDetails(getDb(), eventId, locale);
+  return details?.locale === locale && details.slug
+    ? getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: details.slug } } })
+    : getPathname({ locale, href: "/" });
 }
 
 type Props = {
@@ -145,7 +180,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   if (done) {
     // The last person of a family signed: everybody on the address, each with their state.
-    const familySteps = await familyStepsOfPass(token, pass, now);
+    const held = await heldPass(token, pass, now);
+    const familySteps = held ? await familyStepsOfPass(getDb(), held) : null;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -155,16 +191,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
-        {familySteps && isFamilyWizard(familySteps) && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
-              {t("declare.family.doneTitle")}
-            </Typography>
-            <FamilySigningSteps steps={familySteps} />
-            <Typography variant="body2" color="text.secondary">
-              {t("declare.family.doneAll")}
-            </Typography>
-          </Box>
+        {held && familySteps && isFamilyWizard(familySteps) && (
+          <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
         )}
         {/* The toast the signature flashed (§427): the one that matches this outcome, never the other. */}
         <PublicFlash accept={[done === "waitlisted" ? "declarationWaitlisted" : "declarationConfirmed"]} />
@@ -192,11 +220,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * token's real purpose, and the other is the `PURPOSE_MISMATCH` that proves it.
    */
   /*
-    A browser that carries the family's pass (§NNN) is not charged an attempt: the pass opened under
-    the deployment's key, so the request guesses nothing (§202), and a family walks this page once
-    per person — more than the link's ten an hour would allow.
+    A browser whose pass holds beside this very link (§NNN, found in review) is not charged an
+    attempt: the secret is one the pass was bound to on the server, so the request guesses nothing
+    (§202), and a family walks this page once per person — more than the link's ten an hour would
+    allow. Any other request pays, a valid pass for another link included.
   */
-  const declarationRead = await readRegistrationTokenContext(token, "COMPLETE_DECLARATION", { charge: pass === null });
+  const held = await heldPass(token, pass, now);
+  const declarationRead = await readRegistrationTokenContext(token, "COMPLETE_DECLARATION", { charge: held === null });
   const offerRead = declarationRead.ok
     ? undefined
     // The same secret, already presented in this request: it costs no further attempt (§202).
@@ -208,20 +238,32 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     offerRead && !offerRead.ok ? { purpose: "WAITLIST_OFFER" as const, reason: offerRead.reason } : null,
   ].filter((refusal) => refusal !== null);
 
+  const db = getDb();
+
   /*
-    The family's wizard carried on (§NNN): the link is spent — its own person signed — and this
-    browser holds the pass that signature handed it, for this link. The page is then the next
-    person's step: the first registration on the address at the event whose declaration can still
-    be signed, with the same form every declaration has. With nobody left, the list of who was
-    signed. Only the spent link and the pass together open it; either alone is the notice below.
+    The family's wizard carried on (§NNN): this browser holds the pass for this secret — the link
+    spent by its own person's signature, the link whose person was put off with «Semnez mai
+    târziu», or «Înscrierile mele» exchanged on the server. The page is then the current person's
+    step, with the same form every declaration has; with nobody left, the list of who was signed.
+
+    A pass with nobody current beside a live link gives the page back to the link's own person —
+    put off earlier, signing now from their own email, as the skip promised.
   */
-  const passSteps = !context.ok && refusals.some((refusal) => refusal.reason === "ALREADY_USED")
-    ? await familyStepsOfPass(token, pass, now)
-    : null;
-  const familyCurrent = passSteps ? currentFamilyStep(passSteps) : null;
+  const heldSteps = held ? await familyStepsOfPass(db, held) : null;
+  const heldCurrent = held && !held.done && heldSteps ? currentFamilyStep(heldSteps) : null;
+  const passSteps = heldSteps && (heldCurrent !== null || !context.ok) ? heldSteps : null;
+  const familyCurrent = passSteps ? heldCurrent : null;
   const familyMode = passSteps !== null && isFamilyWizard(passSteps);
 
   const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
+  /*
+    A spent link with no pass that holds (§NNN, nit found in review): lapsed, done elsewhere, or
+    another device. When the address still has declarations to sign at the event, one line says each
+    person's own emailed link still works — rather than leaving the parent at "already used".
+  */
+  const familyLeft = spent !== null && refusals.some((refusal) => refusal.reason === "ALREADY_USED")
+    ? await spentLinkHasFamilyLeft(token, now)
+    : false;
 
   /**
    * A live token plus `invalid=1` means the press failed for a reason that is **not** the token
@@ -251,7 +293,6 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const documentRefused = signing && invalid === "document";
   const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused;
 
-  const db = getDb();
   const declaration = signing
     ? await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now)
     : undefined;
@@ -268,17 +309,17 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * deadline, so the row is asked instead. Two reads, on a page that is one participant's one
    * click, against a fact `service.ts` refuses to be wrong about anyway.
    */
-  const registration = context.ok && context.token.registrationId
-    ? await findRegistrationById(db, context.token.registrationId)
-    : familyCurrent
-      ? await findRegistrationById(db, familyCurrent.id)
+  const registration = familyCurrent
+    ? await findRegistrationById(db, familyCurrent.id)
+    : context.ok && context.token.registrationId
+      ? await findRegistrationById(db, context.token.registrationId)
       : undefined;
   /*
     The family's stepper (§NNN), from the opened link: everybody on the address at the event whose
     declaration waits, this person first. One person alone gets the page they always had.
   */
   const linkSteps =
-    context.ok && registration
+    context.ok && registration && !familyCurrent
       ? familySigningSteps(await listFamilySigningRows(db, registration.participantId, registration.eventId), {
           originId: registration.id,
           originSignable: true,
@@ -301,7 +342,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     event is named only in this locale's own words, as `readSpentRegistrationLink` names it.
   */
   const movedOn =
-    context.ok && registration
+    context.ok && registration && !familyCurrent
       ? describeMovedOnDeclarationLink(context.token.purpose === "WAITLIST_OFFER" ? "WAITLIST_OFFER" : "COMPLETE_DECLARATION", registration.status)
       : null;
   const ownLocale = eventDetails?.locale === locale ? eventDetails : undefined;
@@ -440,19 +481,18 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep && <RegistrationJourney current={journeyStep} />}
 
-      {familyMode && !familyCurrent && passSteps ? (
+      {familyMode && !familyCurrent && passSteps && held ? (
         /* The family's wizard with nobody left to sign (§NNN): who was signed, and nothing to press. */
-        <Box data-testid="family-signing-done">
-          <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
-            {t("declare.family.doneTitle")}
-          </Typography>
-          <FamilySigningSteps steps={passSteps} />
-          <Typography variant="body2" color="text.secondary">
-            {t("declare.family.doneAll")}
-          </Typography>
-        </Box>
+        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(held.eventId, locale)} />
       ) : blocked || !declaration || movedOnNotice ? (
-        <ActionLinkNotice locale={locale} status={notice} />
+        <>
+          <ActionLinkNotice locale={locale} status={notice} />
+          {familyLeft && (
+            <Alert severity="info" sx={{ mt: 2 }} data-testid="family-own-links">
+              {t("declare.family.ownLinksStillWork")}
+            </Alert>
+          )}
+        </>
       ) : (
         <>
           {/*
@@ -602,8 +642,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
 
               <input type="hidden" name="token" value={token} />
-              {/* The family's next person (§NNN): signed through the pass, never through the spent link alone. */}
-              {!context.ok && familyCurrent && <input type="hidden" name="registrationId" value={familyCurrent.id} />}
+              {/* The family's current person (§NNN): signed through the pass, never through the link alone. */}
+              {familyCurrent && <input type="hidden" name="registrationId" value={familyCurrent.id} />}
               {/* The version being read, so the signature is refused against any other text
 
                   (BR-REQ-033-02 criterion 6). */}
@@ -749,8 +789,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   />
                 </>
               )}
+              {/* «… și treci la următoarea» while another person follows (§NNN); the last one confirms. */}
               <Button type="submit" variant="contained" sx={TAP_TARGET}>
-                {t("declare.action")}
+                {familySteps && hasNextFamilyStep(familySteps) ? t("declare.family.nextAction") : t("declare.action")}
               </Button>
               {/*
                 The notice, under the button that hands over the identity document (§323): what
@@ -764,6 +805,24 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               </Box>
             </Stack>
           </form>
+          {/*
+            «Semnez mai târziu» (§NNN): its own form — a form cannot sit in another — and its own
+            action, which writes no registration: the person is put off in the pass, shown as
+            "later", and the page moves on. Their own emailed link still signs them.
+          */}
+          {familySteps && familyPosition >= 0 && registration && (
+            <Box component="form" action={skipFamilyDeclarationAction} sx={{ mt: 2 }} data-testid="family-signing-skip">
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="token" value={token} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                {t("declare.family.skipAction")}
+              </Button>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {t("declare.family.skipHelp")}
+              </Typography>
+            </Box>
+          )}
         </>
       )}
     </Container>

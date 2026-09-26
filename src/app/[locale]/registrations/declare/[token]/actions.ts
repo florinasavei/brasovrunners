@@ -11,10 +11,20 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
-import { consumeAndSignDeclaration, consumeAndSignFamilyDeclaration } from "@/modules/registrations/token-actions";
-import { TOKEN_NOT_FOUND } from "@/modules/action-tokens/domain/token-state";
+import {
+  consumeAndSignDeclaration,
+  consumeAndSignFamilyDeclaration,
+  skipFamilyDeclaration,
+} from "@/modules/registrations/token-actions";
 import { currentFamilyStep, familySigningSteps, isFamilyWizard } from "@/modules/registrations/domain/family-signing";
-import { listFamilySigningRows, readFamilySigningPass, writeFamilySigningPass } from "@/modules/registrations/family-signing";
+import {
+  type FamilyPassBase,
+  listFamilySigningRows,
+  nextFamilyPass,
+  passBase,
+  readFamilySigningPass,
+  writeFamilySigningPass,
+} from "@/modules/registrations/family-signing";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
@@ -60,9 +70,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       contentSha256: String(form.get("contentSha256") ?? ""),
     };
     const result = familyRegistrationId
-      ? pass
-        ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now)
-        : TOKEN_NOT_FOUND
+      ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now)
       : await consumeAndSignDeclaration(token, input, now);
 
     if (!result.ok) redirect(`${path}?invalid=1`);
@@ -70,27 +78,38 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     await clearFormDraft(path);
 
     /*
-      Another person on the address still to sign (§NNN): the pass is given — or renewed, with this
+      Another person on the address still to sign (§NNN): the pass is given — or moved on, with this
       signature added — and the page shows the next person's step. The URL carries nothing new: the
-      pass is the wizard's memory, and the page reads the rest from the rows.
+      pass is the wizard's memory, and the page reads the rest from the rows. The link's own
+      signature fixes the wizard's people now (`eligibleIds`): nobody added to the address later.
+      With nobody left, the pass is `done` — it lists who was signed and signs nobody.
     */
     const signed = result.registration;
-    const nextPass = {
-      participantId: signed.participantId,
-      eventId: signed.eventId,
-      originId: pass && familyRegistrationId ? pass.originId : signed.id,
-      signedIds: [...(pass && familyRegistrationId ? pass.signedIds : []), signed.id],
-    };
-    const steps = familySigningSteps(await listFamilySigningRows(getDb(), signed.participantId, signed.eventId), {
-      originId: nextPass.originId,
-      originSignable: false,
-      signedIds: nextPass.signedIds,
-    });
-    // The pass outlives the last signature too, for the page that lists who was signed.
-    if (isFamilyWizard(steps)) await writeFamilySigningPass(nextPass, token, now);
+    const db = getDb();
+    let base: FamilyPassBase;
+    if (familyRegistrationId && pass) {
+      base = { ...passBase(pass), signedIds: [...pass.signedIds, signed.id] };
+    } else {
+      const fresh = familySigningSteps(await listFamilySigningRows(db, signed.participantId, signed.eventId), {
+        originId: signed.id,
+        originSignable: false,
+        signedIds: [signed.id],
+      });
+      base = {
+        binding: "link",
+        participantId: signed.participantId,
+        eventId: signed.eventId,
+        originId: signed.id,
+        eligibleIds: fresh.map((step) => step.id),
+        signedIds: [signed.id],
+        skippedIds: [],
+      };
+    }
+    const next = await nextFamilyPass(db, base, now);
+    if (isFamilyWizard(next.steps)) await writeFamilySigningPass(next.pass, token, now);
     // No toast here: the next step's page names the person just signed, where the toast's "your
     // registration" would not say whose (§427's words are one runner's).
-    if (currentFamilyStep(steps)) redirect(path);
+    if (currentFamilyStep(next.steps)) redirect(path);
     /*
       "What is next" says when the reminder comes (§377): this event's own lead, or the club's, as
       whole hours in the address — the page has spent its token and reads nothing else. Only words
@@ -183,6 +202,24 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     if (isDomainError(error) && error.code === "CONFLICT") redirect(`${path}?invalid=1`);
     throw error;
   }
+}
+
+/**
+ * «Semnez mai târziu» on a family's step (§NNN): the current person is put off and the page moves
+ * on to the next. No registration, token or table is written — only the pass, whose next state
+ * lists the person as "later" and never current again; their own emailed link still signs them.
+ * The first press on a live link starts the wizard with its own person put off.
+ */
+export async function skipFamilyDeclarationAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
+  const now = new Date();
+
+  const result = await skipFamilyDeclaration(token, await readFamilySigningPass(now), String(form.get("registrationId") ?? ""), now);
+  if (!result.ok) redirect(`${path}?invalid=1`);
+  await writeFamilySigningPass(result.pass, token, now);
+  redirect(path);
 }
 
 /**

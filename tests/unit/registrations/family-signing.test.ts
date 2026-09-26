@@ -3,10 +3,13 @@ import {
   currentFamilyStep,
   type FamilySigningRow,
   familySigningSteps,
+  FAMILY_PASS_MINUTES,
+  familyPassExpiresAt,
+  hasNextFamilyStep,
   isFamilyWizard,
   isSignable,
 } from "@/modules/registrations/domain/family-signing";
-import { openFamilyPass, sealFamilyPass } from "@/modules/registrations/family-signing";
+import { type FamilySigningPass, openFamilyPass, sealFamilyPass } from "@/modules/registrations/family-signing";
 
 /**
  * §NNN (over §389, §446) — a family's declarations signed as a wizard (BR-REQ-033-02):
@@ -88,6 +91,55 @@ describe("§NNN the family's steps", () => {
     expect(opened.map((step) => step.state)).toEqual(["closed", "current"]);
   });
 
+  it("«Semnez mai târziu»: a person put off is shown as later, never current, and the next one is current", () => {
+    const steps = familySigningSteps([ana, maria, ion], { originId: "m", originSignable: true, signedIds: [], skippedIds: ["m"] });
+    expect(steps.map((step) => [step.id, step.state])).toEqual([
+      ["m", "later"],
+      ["a", "current"],
+      ["i", "next"],
+    ]);
+    const allPutOff = familySigningSteps([ana, maria, ion], { originId: "m", originSignable: false, signedIds: ["m"], skippedIds: ["a", "i"] });
+    expect(allPutOff.map((step) => step.state)).toEqual(["signed", "later", "later"]);
+    expect(currentFamilyStep(allPutOff)).toBeNull();
+    // Put off, then signed from their own link elsewhere: no longer waiting here.
+    const signedElsewhere = familySigningSteps([ana, { ...maria, status: "CONFIRMED" }], { originId: "a", originSignable: false, signedIds: ["a"], skippedIds: ["m"] });
+    expect(signedElsewhere.map((step) => step.state)).toEqual(["signed", "closed"]);
+  });
+
+  it("walks only the people fixed when the pass was issued — nobody added to the address later", () => {
+    const newcomer = row("n", "Newcomer Pop", "PENDING_DECLARATION", 9);
+    const steps = familySigningSteps([ana, maria, newcomer], { originId: "a", originSignable: false, signedIds: ["a"], eligibleIds: ["a", "m"] });
+    expect(steps.map((step) => step.id)).toEqual(["a", "m"]);
+    const fromMine = familySigningSteps([ana, maria, newcomer], { originId: null, originSignable: false, signedIds: [], eligibleIds: ["a", "m", "n"] });
+    expect(fromMine.map((step) => [step.id, step.state])).toEqual([
+      ["a", "current"],
+      ["m", "next"],
+      ["n", "next"],
+    ]);
+  });
+
+  it("says whether another person follows the current one", () => {
+    expect(hasNextFamilyStep(familySigningSteps([ana, maria], { originId: "a", originSignable: true, signedIds: [] }))).toBe(true);
+    expect(hasNextFamilyStep(familySigningSteps([ana, maria], { originId: "a", originSignable: false, signedIds: ["a"] }))).toBe(false);
+  });
+
+  it("the pass lapses at the earliest hold still running among the people left, and never later than its own minutes", () => {
+    const now = at(0);
+    const soon = new Date(now.getTime() + 10 * 60_000);
+    const steps = familySigningSteps(
+      [
+        { ...ana, holdExpiresAt: new Date(now.getTime() - 60_000) },
+        { ...maria, holdExpiresAt: soon },
+        { ...ion, holdExpiresAt: new Date(now.getTime() + 5 * 60_000) },
+      ],
+      { originId: "a", originSignable: false, signedIds: [], skippedIds: ["i"] },
+    );
+    // Ana's lapsed hold is not a cap; Ion was put off; Maria's hold in ten minutes is.
+    expect(familyPassExpiresAt(steps, now)).toEqual(soon);
+    const far = familySigningSteps([{ ...maria, holdExpiresAt: new Date(now.getTime() + 7 * 86_400_000) }], { originId: "m", originSignable: true, signedIds: [] });
+    expect(familyPassExpiresAt(far, now)).toEqual(new Date(now.getTime() + FAMILY_PASS_MINUTES * 60_000));
+  });
+
   it("signs from the two states `signDeclaration` accepts, and from no other", () => {
     expect(isSignable("PENDING_DECLARATION")).toBe(true);
     expect(isSignable("WAITLIST_OFFERED")).toBe(true);
@@ -98,11 +150,15 @@ describe("§NNN the family's steps", () => {
 });
 
 describe("§NNN the pass (AGENTS.md §13.2 step 4)", () => {
-  const pass = {
+  const pass: FamilySigningPass = {
+    binding: "link",
     participantId: "11111111-1111-4111-8111-111111111111",
     eventId: "22222222-2222-4222-8222-222222222222",
     originId: "33333333-3333-4333-8333-333333333333",
-    signedIds: ["33333333-3333-4333-8333-333333333333", "44444444-4444-4444-8444-444444444444"],
+    eligibleIds: ["33333333-3333-4333-8333-333333333333", "44444444-4444-4444-8444-444444444444", "55555555-5555-4555-8555-555555555555"],
+    signedIds: ["33333333-3333-4333-8333-333333333333"],
+    skippedIds: ["44444444-4444-4444-8444-444444444444"],
+    done: false,
     expiresAt: at(40),
   };
 
@@ -113,6 +169,13 @@ describe("§NNN the pass (AGENTS.md §13.2 step 4)", () => {
     expect(openFamilyPass(sealed as string, at(10), "secret-one:family-signing")).toEqual(pass);
     expect(openFamilyPass(sealed as string, at(10), "secret-two:family-signing")).toBeNull();
     expect(openFamilyPass(`${(sealed as string).slice(0, -2)}AA`, at(10), "secret-one:family-signing")).toBeNull();
+  });
+
+  it("keeps whether it came from «Înscrierile mele», and refuses a shape that mixes the two bindings", () => {
+    const mine: FamilySigningPass = { ...pass, binding: "mine", originId: null, signedIds: [], skippedIds: [], done: true };
+    expect(openFamilyPass(sealFamilyPass(mine, "k") as string, at(10), "k")).toEqual(mine);
+    expect(openFamilyPass(sealFamilyPass({ ...pass, binding: "mine" }, "k") as string, at(10), "k")).toBeNull();
+    expect(openFamilyPass(sealFamilyPass({ ...pass, originId: null }, "k") as string, at(10), "k")).toBeNull();
   });
 
   it("is nothing once it has lapsed", () => {

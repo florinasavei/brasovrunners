@@ -4695,7 +4695,7 @@
       "accept": "I have read and accept the declaration above, including, expressly, the limitation of the organiser's liability to the extent the law allows.",
       "family": {
         "stepsLabel": "The declarations on this address",
-        "stepTitle": "Step {step} of {total}: {name}",
+        "stepTitle": "Declaration {step} of {total} — {name}",
         "intro": "Several people are registered for this event on this address. The declarations are signed here, one after the other: one person per step, each with their own name and identity document (a parent for a minor). After each signature the page moves on to the next person, and each receives their own confirmation and the PDF of their declaration by email.",
         "lastSigned": "The declaration for {name} is signed. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
         "lastWaitlisted": "The place for {name} was no longer free: {name} is now on the waiting list.",
@@ -4706,7 +4706,20 @@
           "waitlisted": "on the waiting list",
           "current": "now",
           "next": "next",
-          "closed": "no longer waiting for a signature"
+          "closed": "no longer waiting for a signature",
+          "later": "later"
+        },
+        "nextAction": "Sign and go to the next one",
+        "skipAction": "I'll sign later",
+        "skipHelp": "Nothing changes in this person's registration: their declaration can also be signed from the link emailed for them, until the deadline.",
+        "doneLater": "A declaration left for later is signed from the link emailed for that person, until the deadline.",
+        "doneAction": "Done",
+        "ownLinksStillWork": "This address still has declarations to sign for this event: each person can sign theirs from the link emailed for them.",
+        "what": {
+          "confirmed": "Confirmed. The code for the registration desk: {code}. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
+          "waitlisted": "On the waiting list: an email comes if a place frees up.",
+          "later": "Later: sign from the link emailed for this person.",
+          "closed": "No longer waiting for a signature."
         }
       },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
@@ -4832,7 +4845,11 @@
       "eventCancelledChip": "Event cancelled",
       "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
       "runner": "Registered: {name}",
-      "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day."
+      "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day.",
+      "familySign": {
+        "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
+        "action": "Sign the declarations"
+      }
     },
     "manage": {
       "title": "Manage your registration",

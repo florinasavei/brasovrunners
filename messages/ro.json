@@ -4695,7 +4695,7 @@
       "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
       "family": {
         "stepsLabel": "Declarațiile de pe această adresă",
-        "stepTitle": "Pasul {step} din {total}: {name}",
+        "stepTitle": "Declarația {step} din {total} — {name}",
         "intro": "Pe această adresă sunt mai multe persoane înscrise la eveniment. Declarațiile se semnează aici, pe rând: câte o persoană la fiecare pas, fiecare cu numele și actul ei (pentru un minor, părintele). După fiecare semnătură pagina trece la următoarea persoană, iar fiecare primește pe email confirmarea și PDF-ul declarației ei.",
         "lastSigned": "Declarația pentru {name} a fost semnată. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
         "lastWaitlisted": "Locul pentru {name} nu mai era disponibil: {name} este acum pe lista de așteptare.",
@@ -4706,7 +4706,20 @@
           "waitlisted": "pe lista de așteptare",
           "current": "acum",
           "next": "urmează",
-          "closed": "nu mai așteaptă semnătura"
+          "closed": "nu mai așteaptă semnătura",
+          "later": "mai târziu"
+        },
+        "nextAction": "Semnează și treci la următoarea",
+        "skipAction": "Semnez mai târziu",
+        "skipHelp": "Nimic nu se schimbă la înscrierea acestei persoane: declarația ei se poate semna și din linkul primit pe email pentru ea, până la termen.",
+        "doneLater": "O declarație lăsată pentru mai târziu se semnează din linkul primit pe email pentru acea persoană, până la termen.",
+        "doneAction": "Gata",
+        "ownLinksStillWork": "Pe această adresă mai sunt declarații de semnat la acest eveniment: fiecare persoană o poate semna din linkul primit pe email pentru ea.",
+        "what": {
+          "confirmed": "Confirmat. Codul pentru masa de înscrieri: {code}. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
+          "waitlisted": "Pe lista de așteptare: primește un email dacă se eliberează un loc.",
+          "later": "Mai târziu: semnează din linkul primit pe email pentru această persoană.",
+          "closed": "Nu mai așteaptă semnătura."
         }
       },
       "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
@@ -4832,7 +4845,11 @@
       "eventCancelledChip": "Eveniment anulat",
       "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
       "runner": "Înscris: {name}",
-      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până la {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
+      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până la {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei.",
+      "familySign": {
+        "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
+        "action": "Semnează declarațiile"
+      }
     },
     "manage": {
       "title": "Gestionează înscrierea",

@@ -24,8 +24,10 @@ import {
   cancelFromMyRegistrationsAction,
   selfCheckInFromMyRegistrationsAction,
   setListConsentFromMyRegistrationsAction,
+  startFamilySigningFromMyRegistrationsAction,
   withdrawFromMyRegistrationsAction,
 } from "./actions";
+import { isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
@@ -82,6 +84,17 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
 
+  /*
+    A family's declarations, signed as one wizard (§NNN): every event at which this address holds
+    two or more declarations still to sign gets one button, which exchanges this link on the server
+    for the wizard's pass and opens the declaration page — the same steps an emailed link opens.
+  */
+  const familySigning = context.ok
+    ? [...new Set(context.items.filter((item) => !item.eventCancelled && isSignable(item.status)).map((item) => item.eventId))]
+        .map((eventId) => context.items.filter((item) => item.eventId === eventId && isSignable(item.status)))
+        .filter((items) => items.length > 1)
+    : [];
+
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -109,6 +122,25 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       ) : context.items.length === 0 ? (
         <Typography>{t("mine.empty")}</Typography>
       ) : (
+        <>
+        {familySigning.map((items) => (
+          <Alert key={items[0].eventId} severity="info" sx={{ mb: 2 }} data-testid="my-family-signing">
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              {t("mine.familySign.body", {
+                event: items[0].eventTitle ?? "",
+                names: items.map((item) => item.registeredName).join(", "),
+              })}
+            </Typography>
+            <form action={startFamilySigningFromMyRegistrationsAction}>
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="token" value={token} />
+              <input type="hidden" name="eventId" value={items[0].eventId} />
+              <Button type="submit" variant="contained" sx={TAP_TARGET}>
+                {t("mine.familySign.action")}
+              </Button>
+            </form>
+          </Alert>
+        ))}
         <Stack component="ul" spacing={2} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {context.items.map((item) => (
             <Box
@@ -328,6 +360,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
             </Box>
           ))}
         </Stack>
+        </>
       )}
 
       {/*
