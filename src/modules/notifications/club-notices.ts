@@ -64,7 +64,13 @@ export async function updateClubNotices<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
-      parsed.error.issues.map((issue) => String(issue.path[0] ?? "")),
+      /*
+        The *list* each refusal is about — `participants.bcc`, never the index of the entry in it
+        and never just `participants` (§NNN). The first segment alone named no box on the form, so
+        the summary linked to nothing and no box turned red: a Bcc the club could not save and
+        could not see why. The action maps each list to its box (`CLUB_NOTICE_BOXES`).
+      */
+      [...new Set(parsed.error.issues.map((issue) => issue.path.slice(0, 2).map(String).join(".")))],
     );
   }
   const next = parsed.data;
