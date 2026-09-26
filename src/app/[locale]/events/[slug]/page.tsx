@@ -24,7 +24,7 @@ import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PencilIcon from "@/shared/ui/PencilIcon";
+import EditIcon from "@mui/icons-material/Edit";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
@@ -192,13 +192,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         <Typography variant="body2">
           {/* A left arrow before the words, and a pencil in the staff edit button (§NNN). */}
           <Link href="/events" style={{ display: "inline-flex", alignItems: "center", gap: 4, minHeight: 44 }}>
-            <ArrowBackIcon aria-hidden="true" sx={{ fontSize: 18 }} />
+            <ArrowBackIcon aria-hidden="true" data-testid="back-arrow" sx={{ fontSize: 18 }} />
             {t("backToEvents")}
           </Link>
         </Typography>
         {editHref && (
           <Button component="a" href={editHref} variant="outlined" size="small" sx={{ minHeight: 44, gap: 1 }}>
-            <PencilIcon />
+            <EditIcon aria-hidden="true" data-testid="edit-glyph" sx={{ fontSize: 18 }} />
             {t("editInBackoffice")}
           </Button>
         )}

@@ -1,9 +1,7 @@
 import { createTranslator } from "next-intl";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import type { WeatherReading } from "./domain/forecast";
-import type { ForecastPlaceSource } from "./domain/place";
 
 /**
  * A forecast in words, in one language (§402) — the page's row and the reminder's row say the
@@ -84,22 +82,12 @@ function weatherCatalogue(locale: "ro" | "en") {
 }
 
 /**
- * Which place the forecast is for, in words (§416): «Pentru locul evenimentului» when it was read
- * at the event's own pin or typed pair, «Pentru Brașov» when it fell back to the club's place — so
- * a runner never reads the city's forecast as the trailhead's.
- */
-export function forecastPlaceWords(source: ForecastPlaceSource, locale: "ro" | "en"): string {
-  const t = weatherCatalogue(locale);
-  return source === "club" ? t("place.club", { place: CLUB_LOCALITY }) : t("place.event");
-}
-
-/**
- * The words that belong to no one hour: the block's list name, «Pe ore, de la start»; a card pill's
+ * The words that belong to no one hour: a card pill's
  * spoken prefix, «Vremea la start»; and the credit, «Prognoză: Open-Meteo», for the site footer's
  * «Despre club» fold (`SiteFooter`, §429) — the event page and the featured hero say theirs beside
  * the forecast, through `weatherWords`.
  */
-export function weatherListWords(locale: "ro" | "en"): { hours: string; atStart: string; credit: string } {
+export function weatherListWords(locale: "ro" | "en"): { atStart: string; credit: string } {
   const t = weatherCatalogue(locale);
-  return { hours: t("hours"), atStart: t("atStart"), credit: t("credit", { source: t("source") }) };
+  return { atStart: t("atStart"), credit: t("credit", { source: t("source") }) };
 }

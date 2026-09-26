@@ -88,7 +88,8 @@ let asked: URL[] = [];
  * rain and 23 km/h of wind — and the page's details (§416): feels like 13.8 °C, 2.4 mm, gusts of
  * 41 km/h, 88% humidity, UV 1.2. The start's third hour is 18 °C, so the block's cells differ.
  */
-function openMeteo(): typeof fetch {
+function openMeteo(sky: { code?: number; chance?: number; mm?: number } = {}): typeof fetch {
+  const { code = 95, chance = 70, mm = 2.4 } = sky;
   const first = Math.floor(NOW.getTime() / HOUR) * HOUR;
   const time = Array.from({ length: 8 * 24 }, (_, index) => (first + index * HOUR) / 1000);
   const third = (new Date("2026-09-26T07:00:00Z").getTime() - first) / HOUR;
@@ -100,11 +101,11 @@ function openMeteo(): typeof fetch {
         hourly: {
           time,
           temperature_2m: time.map((_, index) => (index === third ? 18 : 16.2)),
-          precipitation_probability: time.map(() => 70),
-          weather_code: time.map(() => 95),
+          precipitation_probability: time.map(() => chance),
+          weather_code: time.map(() => code),
           wind_speed_10m: time.map(() => 23.4),
           apparent_temperature: time.map(() => 13.8),
-          precipitation: time.map(() => 2.4),
+          precipitation: time.map(() => mm),
           wind_gusts_10m: time.map(() => 41),
           relative_humidity_2m: time.map(() => 88),
           uv_index: time.map(() => 1.2),
@@ -141,8 +142,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     const weather = rows(html).find((row) => row.label === "Vremea");
     expect(text(weather?.dd ?? "")).toContain("Furtună");
     expect(text(weather?.dd ?? "")).toContain("16 °C");
-    expect(text(weather?.dd ?? "")).toContain("70% șanse de ploaie");
-    expect(text(weather?.dd ?? "")).toContain("vânt 23 km/h");
+    expect(text(weather?.dd ?? "")).not.toContain("km/h");
     // The forecast's own glyph in the row glyph's place: the storm, one 20-pixel family with the others.
     expect(weather?.dt).toMatch(/^<svg\b/);
   });
@@ -158,8 +158,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     const html = await page();
     const weather = rows(html).find((row) => row.label === "Weather");
     expect(text(weather?.dd ?? "")).toContain("Thunderstorm");
-    expect(text(weather?.dd ?? "")).toContain("70% chance of rain");
-    expect(text(weather?.dd ?? "")).toContain("wind 23 km/h");
+    expect(text(weather?.dd ?? "")).not.toContain("km/h");
     expect(html).not.toContain(`href="${OPEN_METEO_SITE}"`);
     expect(text(html)).not.toContain("Open-Meteo");
   });
@@ -207,9 +206,53 @@ describe("BR-REQ-011-01 the event page's weather is one line (§NNN, replacing �
     expect(dd).not.toContain('data-testid="weather-credit"');
     expect(text(dd)).not.toContain("rafale");
     expect(text(dd)).not.toContain("Pentru Brașov");
+    expect(text(dd)).not.toContain("km/h");
   });
 
-  it("is read at the pin the map link carries, and says «Pentru locul evenimentului»", async () => {
+  const rainy = () => openMeteo({ code: 61, chance: 80, mm: 1 });
+  const dry = () => openMeteo({ code: 2, chance: 10, mm: 0 });
+  const line = async (locale: "ro" | "en", fetchImpl: typeof fetch) => {
+    currentLocale = locale;
+    const html = withoutStyles(await page({}, fetchImpl));
+    return rows(html).find((row) => row.label === "Vremea" || row.label === "Weather")?.dd ?? "";
+  };
+
+  it("RO, rain likely: the word, the degrees and the umbrella with «ploaie probabilă» — no chance, no wind", async () => {
+    const dd = await line("ro", rainy());
+    expect(text(dd)).toContain("Ploaie");
+    expect(text(dd)).toContain("16 °C");
+    expect(text(dd)).toContain("ploaie probabilă");
+    expect(dd).toContain('data-testid="weather-rain-likely"');
+    expect(text(dd)).not.toContain("km/h");
+    expect(text(dd)).not.toContain("șanse");
+  });
+
+  it("RO, rain unlikely: the word and the degrees alone", async () => {
+    const dd = await line("ro", dry());
+    expect(text(dd)).toContain("Parțial noros");
+    expect(text(dd)).toContain("16 °C");
+    expect(dd).not.toContain('data-testid="weather-rain-likely"');
+    expect(text(dd)).not.toMatch(/ploaie|km\/h|%/);
+  });
+
+  it("EN, rain likely and unlikely", async () => {
+    const wet = await line("en", rainy());
+    expect(text(wet)).toContain("Rain");
+    expect(text(wet)).toContain("16 °C");
+    expect(text(wet)).toContain("rain likely");
+    expect(text(wet)).not.toMatch(/km\/h|chance/);
+    const fine = await line("en", dry());
+    expect(text(fine)).toContain("Partly cloudy");
+    expect(text(fine)).not.toMatch(/rain|km\/h|%/);
+  });
+
+  it("is no row at all without a forecast", async () => {
+    const html = await page({}, failing);
+    expect(rows(html).map((row) => row.label)).not.toContain("Vremea");
+    expect(html).not.toContain('data-testid="event-weather"');
+  });
+
+  it("is read at the pin the map link carries", async () => {
     await weatherDd({ mapUrl: "https://www.google.com/maps?q=45.6427,25.5887" });
     expect(asked).toHaveLength(1);
     expect(asked[0].searchParams.get("latitude")).toBe("45.643");
@@ -223,7 +266,7 @@ describe("BR-REQ-011-01 the event page's weather is one line (§NNN, replacing �
     expect(asked[0].searchParams.get("longitude")).toBe("25.592");
   });
 
-  it("falls back to the club's place and says so, «Pentru Brașov»", async () => {
+  it("falls back to the club's place", async () => {
     await weatherDd({ mapUrl: "https://maps.app.goo.gl/AbCdEf123" });
     expect(Number(asked[0].searchParams.get("latitude"))).toBeCloseTo(env.CLUB_COORDINATES.latitude, 3);
     expect(Number(asked[0].searchParams.get("longitude"))).toBeCloseTo(env.CLUB_COORDINATES.longitude, 3);

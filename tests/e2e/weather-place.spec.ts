@@ -93,6 +93,7 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)"
       await expect(weather.getByTestId("weather-details")).toHaveCount(0);
       await expect(weather.getByTestId("weather-credit")).toHaveCount(0);
       await expect(weather).not.toContainText("Open-Meteo");
+      await expect(weather).not.toContainText("km/h");
       await noSidewaysScroll(page);
 
       // The editor's «Coordonate» box stays empty, and the line under it says the link's pin is read.

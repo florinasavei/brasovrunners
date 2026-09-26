@@ -5458,12 +5458,7 @@
     "humidity": "humidity {percent}%",
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
-    "hours": "Hour by hour, from the start",
     "atStart": "Weather at the start",
-    "place": {
-      "event": "For the event's place",
-      "club": "For {place}"
-    },
     "codes": {
       "clear": "Clear",
       "mainlyClear": "Mostly clear",

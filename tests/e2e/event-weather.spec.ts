@@ -6,7 +6,7 @@ import { expect, type Page, test } from "@playwright/test";
  * (criteria 18–19, 23); `docs:land` adds it alongside `DECISIONS.md` §402.
  *
  * The suite's server answers every forecast with one fixed hour (`E2E_WEATHER_STUB`, set by
- * `playwright.config.ts`): partly cloudy, 14 °C, a 20% chance of rain, an 11 km/h wind — and never
+ * `playwright.config.ts`): partly cloudy, 14 °C, a 20% chance of rain, an 11 km/h wind (the page shows the word and the degrees since §NNN) — and never
  * reaches Open-Meteo. The seed's runs are dated from today (`db/seeds/sample-dates.ts`): the
  * interval session is the next Wednesday one to seven days ahead, the Tâmpa run the next Saturday
  * two to eight days ahead, and the anniversary cross three weeks and more away. So the spec reads
@@ -36,8 +36,8 @@ test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
     await expect(weather).toBeVisible();
     await expect(weather).toContainText("Parțial noros");
     await expect(weather).toContainText("14 °C");
-    await expect(weather).toContainText("20% șanse de ploaie");
-    await expect(weather).toContainText("vânt 11 km/h");
+    await expect(weather).not.toContainText("șanse de ploaie");
+    await expect(weather).not.toContainText("km/h");
 
     // The credit the data's licence asks for is the footer fold's alone (§455), never the row's.
     await expect(page.locator("#main").getByText("Open-Meteo")).toHaveCount(0);
@@ -61,8 +61,8 @@ test.describe("BR-REQ-011-01 the weather at the start (§402)", () => {
     await expect(weather).toBeVisible();
     await expect(weather).toContainText("Partly cloudy");
     await expect(weather).toContainText("14 °C");
-    await expect(weather).toContainText("20% chance of rain");
-    await expect(weather).toContainText("wind 11 km/h");
+    await expect(weather).not.toContainText("chance of rain");
+    await expect(weather).not.toContainText("km/h");
     await expect(page.locator("#main").getByText("Open-Meteo")).toHaveCount(0);
   });
 

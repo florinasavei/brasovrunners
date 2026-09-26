@@ -1013,7 +1013,8 @@ export default async function EventFacts({
     - where it was read, «Pentru locul evenimentului» or «Pentru Brașov», the row's last line.
 
     Since §NNN (the owner, 2026-09-26: the page's weather as small as the card's) the row is the
-    first line alone — the glyph, the word, the degrees, the rain, the wind, the umbrella. The
+    first line reduced to the glyph, the sky's word and the start hour's degrees — and the umbrella
+    with «ploaie probabilă» only when rain is likely. No wind, no chance of rain on a dry hour; the
     details, the hours strip and the place line are gone; the reminder keeps its own line.
   */
   if (weather) {
@@ -1030,7 +1031,7 @@ export default async function EventFacts({
       icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow(forecastSummaryPieces(words, weather.start, umbrella))}
+          {flow([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])])}
         </Box>
       ),
     });
