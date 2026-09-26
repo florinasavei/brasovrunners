@@ -39,6 +39,12 @@ export type RegistrationListRow = {
   clubMemberDeclared: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
+  /**
+   * The club's terms the form accepted expressly (§421), and when — the export's two columns
+   * (§NNN). Null for a staff or desk entry and for a row sent before the column existed.
+   */
+  termsVersion: number | null;
+  termsAcceptedAt: Date | null;
   /** The runner's own club, as typed (§172): a column the start list is sorted by. */
   clubName: string | null;
   /** The optional socials (§106), as typed; null when not given. */
@@ -309,6 +315,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
+      termsVersion: registrations.termsVersion,
+      termsAcceptedAt: registrations.termsAcceptedAt,
       clubName: registrations.clubName,
       listOptOut: registrations.listOptOut,
       stravaUrl: registrations.stravaUrl,
@@ -533,6 +541,15 @@ export type RegistrationDetail = {
   eventStartsAt: Date;
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
   cycleStartedAt: Date;
+  /**
+   * The two legal texts this cycle's form was sent under (§NNN): the privacy notice every
+   * registration acknowledges (its moment is `cycleStartedAt`), and the terms accepted expressly
+   * (§421) — null on a staff or desk entry, whose paper carries them, and on a row sent before
+   * the column existed.
+   */
+  privacyNoticeVersion: number;
+  termsVersion: number | null;
+  termsAcceptedAt: Date | null;
   /** The participant's own click (any event); staff vouching is `emailConfirmedAt`. */
   emailVerifiedAt: Date | null;
   /** The latest declaration acceptance, online or on paper; the journey's fourth step (§145). */
@@ -595,6 +612,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
+      privacyNoticeVersion: registrations.privacyNoticeVersion,
+      termsVersion: registrations.termsVersion,
+      termsAcceptedAt: registrations.termsAcceptedAt,
       emailVerifiedAt: participants.emailVerifiedAt,
       declarationAcceptedAt: latestDeclarationAcceptedAt,
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
@@ -1059,6 +1079,28 @@ export async function listEventsForDesk<T extends Record<string, unknown>>(
  * holds first, then the waiting list in exactly the order `lockOldestWaitlisted` serves it —
  * oldest `waitlisted_at` first, `id` breaking a tie — so the panel's numbering is a promise.
  */
+/**
+ * Which of the three terms lines the registration's page shows (§NNN): the version accepted
+ * expressly on the form, the paper note for a staff or desk entry, or "no version recorded" for
+ * a row sent before the column existed. Pulled out of the page's JSX so a unit test can pick
+ * each branch without a browser.
+ */
+export type TermsLineKind =
+  | { readonly kind: "accepted"; readonly version: number; readonly acceptedAt: Date | null }
+  | { readonly kind: "onPaper" }
+  | { readonly kind: "notRecorded" };
+
+export function termsLineKindFor(registration: {
+  termsVersion: number | null;
+  termsAcceptedAt: Date | null;
+  source: RegistrationSource;
+}): TermsLineKind {
+  if (registration.termsVersion !== null) {
+    return { kind: "accepted", version: registration.termsVersion, acceptedAt: registration.termsAcceptedAt };
+  }
+  return registration.source === "STAFF" ? { kind: "onPaper" } : { kind: "notRecorded" };
+}
+
 export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
   return db
     .select({

@@ -6,6 +6,7 @@ import { deletionObstacle, dependantObstacle } from "@/modules/legal-documents/d
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { readDeletionFacts } from "@/modules/legal-documents/service";
+import { findRegistrationDetailForAdmin, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -160,6 +161,34 @@ describe("§421 the terms tick", () => {
     const row = await onlyRow(event.id);
     expect(row.termsVersion).toBeNull();
     expect(row.termsAcceptedAt).toBeNull();
+  });
+
+  /**
+   * §NNN — the backoffice reads what the form recorded: the registration's page draws the terms
+   * line beside the privacy notice's, and the export's two columns come from the list query. A
+   * staff entry reads as none on both.
+   */
+  it("hands the terms version and moment, and the notice's version, to the registration page and the export", async () => {
+    await approve("PRIVACY_NOTICE", 1);
+    await approve("TERMS", 1);
+    await approve("TERMS", 2, at(-1));
+    const event = await createEvent();
+    await submitRegistration(db, event, submission(NOW), NOW);
+    await submitRegistration(db, event, submission(at(1), { email: "ion@example.ro", firstName: "Ion", termsAccepted: undefined }), at(1), "REAL", {
+      source: "STAFF",
+      createdByStaffUserId: null,
+    });
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    const publicRow = rows.find((row) => row.source === "PUBLIC")!;
+    const staffRow = rows.find((row) => row.source === "STAFF")!;
+
+    const detail = await findRegistrationDetailForAdmin(db, publicRow.id);
+    expect(detail).toMatchObject({ privacyNoticeVersion: 1, termsVersion: 2, termsAcceptedAt: NOW, cycleStartedAt: NOW });
+    expect(await findRegistrationDetailForAdmin(db, staffRow.id)).toMatchObject({ privacyNoticeVersion: 1, termsVersion: null, termsAcceptedAt: null });
+
+    const listed = new Map((await listRegistrationsForAdmin(db, { eventId: event.id })).map((row) => [row.id, row]));
+    expect(listed.get(publicRow.id)).toMatchObject({ termsVersion: 2, termsAcceptedAt: NOW });
+    expect(listed.get(staffRow.id)).toMatchObject({ termsVersion: null, termsAcceptedAt: null });
   });
 
   it("makes a terms version somebody accepted relied on: refused withdrawal and deletion, like a notice", async () => {
