@@ -14,10 +14,12 @@
  *     else the manifest item's `title`, or nothing lands;
  *   - a fixer's housekeeping is never landed: a section or an addendum that only says the text was
  *     "carried forward", or a sentence saying no DECISIONS.md or CHANGELOG.md edit was made, is
- *     dropped, and every dropped sentence is printed so the dry run shows it. The match is narrow —
- *     "carried forward from the implementer/verbatim/unchanged", or "no … DECISIONS/CHANGELOG/SPECS
- *     … edit/change" in either order — never a bare "unchanged" or "did not change" on its own,
- *     which belongs to the fix's substance as often as to its housekeeping;
+ *     dropped — a whole sentence when it is nothing else, or just its clause when a ';' joins it
+ *     to real substance — and every dropped piece is printed so the dry run shows it. The match is
+ *     narrow — any tense of "carr(y/ies/ied/ying) forward" followed by "from the implementer/
+ *     verbatim/unchanged", or "no … DECISIONS/CHANGELOG/SPECS … edit/change" in either order —
+ *     never a bare "unchanged" or "did not change" on its own, nor "carries the place forward",
+ *     which belong to the fix's substance as often as to its housekeeping;
  *   - a committed fix report with a blank `commitSha` is refused, naming the item and the round —
  *     "committed" with nothing to point at is the same defect as a blank summary;
  *   - a SPECS criterion whose `requirement` is not a full `BR-REQ-\d{3}-\d{2}` id is dropped, with
@@ -56,17 +58,28 @@ const NO_ARTIFACT_EDIT = new RegExp(
   "i",
 );
 /**
- * "Carried forward from the implementer", "carried forward verbatim/unchanged" — the text itself
- * says it is a copy of something else. A sentence like "a declined offer carries the place forward
- * to the next person" is the fix's substance (present tense, no qualifier) and must not match.
+ * "Carried forward from the implementer", "carries forward unchanged", "carrying forward
+ * verbatim" — any tense of "carry … forward" whose complement says it is a copy of something
+ * else. A sentence like "a declined offer carries the place forward to the next person", or
+ * "a waiting-list offer's deadline is carried forward to the next day", is the fix's substance
+ * (a direct object between "carr(y|ies|ied|ying)" and "forward", or no qualifier at all) and
+ * must not match.
  */
-const CARRIED_FORWARD = /\bcarried\s+forward\b[^.;]{0,30}\b(from the implementer|verbatim|unchanged)\b/i;
+const CARRIED_FORWARD = /\bcarr(?:y|ies|ied|ying)\s+forward\b[^.;]{0,30}\b(from the implementer|verbatim|unchanged)\b/i;
 /** A whole text that says nothing, including a bare "(carried forward)" with no qualifier. */
 const EMPTY_WORDS = /^[(\s]*(none|n\/a|unchanged|carried forward|no (changes?|edits?|addendum)|nothing( (new|to add))?|same( as (above|before))?|—|-+)[.)\s]*$/i;
 
+/** True when `clause` is on its own nothing but housekeeping — carried-forward or a no-edit note. */
+function isHousekeepingClause(clause) {
+  // A file name's dot ("DECISIONS.md") is not the end of a clause for NO_ARTIFACT_EDIT.
+  const plain = clause.replace(/\.(md|mjs|js|ts)\b/g, "_$1");
+  return CARRIED_FORWARD.test(plain) || NO_ARTIFACT_EDIT.test(plain);
+}
+
 /**
- * A fixer's text without its housekeeping: the sentences that only say what was not written or
- * that the text was carried forward. Returns the text left and the sentences dropped.
+ * A fixer's text without its housekeeping: the sentences — or, when housekeeping shares a
+ * sentence with real substance across a ';', the clauses — that only say what was not written
+ * or that the text was carried forward. Returns the text left and the pieces dropped.
  */
 export function withoutHousekeeping(text) {
   const kept = [];
@@ -78,11 +91,39 @@ export function withoutHousekeeping(text) {
     for (let i = 0; i < parts.length; i += 2) {
       const sentence = parts[i];
       const separator = parts[i + 1] ?? "";
-      // A file name's dot ("DECISIONS.md") is not the end of a clause for NO_ARTIFACT_EDIT.
-      const plain = sentence.replace(/\.(md|mjs|js|ts)\b/g, "_$1");
-      const housekeeping = CARRIED_FORWARD.test(plain) || NO_ARTIFACT_EDIT.test(plain);
-      if (housekeeping && sentence.trim()) dropped.push(sentence.trim());
-      else out += sentence + separator;
+      if (!sentence) continue;
+      if (!sentence.includes(";")) {
+        // No ';' to hide substance behind — test the whole sentence, as before.
+        if (isHousekeepingClause(sentence)) dropped.push(sentence.trim());
+        else out += sentence + separator;
+        continue;
+      }
+      // A ';' may join a housekeeping clause to real substance in one sentence — test each
+      // clause on its own (never the whole sentence at once) so the substance is kept rather
+      // than lost with its housekeeping neighbour.
+      const clauseParts = sentence.split(/(;\s*)/);
+      const survivors = [];
+      let sawHousekeeping = false;
+      for (let j = 0; j < clauseParts.length; j += 2) {
+        const clause = clauseParts[j];
+        if (!clause.trim()) continue;
+        if (isHousekeepingClause(clause)) {
+          dropped.push(clause.trim());
+          sawHousekeeping = true;
+        } else {
+          survivors.push(clause.replace(/;\s*$/, "").trim());
+        }
+      }
+      if (!sawHousekeeping) {
+        out += sentence + separator;
+        continue;
+      }
+      let rebuilt = survivors.join("; ");
+      if (rebuilt) {
+        rebuilt = rebuilt.charAt(0).toUpperCase() + rebuilt.slice(1);
+        if (!/[.!?]$/.test(rebuilt)) rebuilt += ".";
+        out += rebuilt + separator;
+      }
     }
     out = out.trim();
     if (out && !EMPTY_WORDS.test(out)) kept.push(out);

@@ -91,18 +91,42 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
     }
   });
 
-  it("drops a round's 'no DECISIONS.md edit was made' sentence and keeps the substance around it", () => {
-    // The sentence BR-V1.91's landing put into DECISIONS.md, verbatim in shape.
+  it("drops a round's 'no DECISIONS.md edit was made' clause and keeps the substance it shares a sentence with", () => {
+    // The sentence BR-V1.91's landing put into DECISIONS.md, verbatim in shape, now joined by a
+    // ';' to a trailing clause that is itself substance-free but not a no-edit note — it survives
+    // too, per the review's should-fix: only the housekeeping clause is tested and dropped, never
+    // the whole sentence, once a ';' is there to separate it from its neighbour.
     const addendum =
       "This round made the helper the one every listing spec uses. " +
       "No DECISIONS.md, CHANGELOG.md, SPECS.md or PROJECT_BASELINE edit was made, per the branch's rules; the changelogLine and specsCriteria above are text for the orchestrator to place.";
     const entry = entryFromResults({ impl }, [round({ decisionsAddendum: addendum })]);
-    expect(entry.body).toBe(`${impl.decisionsSection}\n\nThis round made the helper the one every listing spec uses.`);
+    expect(entry.body).toBe(
+      `${impl.decisionsSection}\n\nThis round made the helper the one every listing spec uses. The changelogLine and specsCriteria above are text for the orchestrator to place.`,
+    );
+    expect(entry.notes.some((n) => n.startsWith("dropped from fix round 1: \"No DECISIONS.md"))).toBe(true);
+  });
+
+  it("drops only the housekeeping clause of a ';' sentence, keeping real substance the clause shares it with", () => {
+    // The should-fix from the review of chore/tooling-ship-land-migrations-nightly: a fixer's
+    // no-edit clause and a real fix, joined by ';' in one sentence, used to lose the fix too.
+    const addendum =
+      "This round made the helper the one every listing spec uses. " +
+      "No DECISIONS.md, CHANGELOG.md, SPECS.md or PROJECT_BASELINE edit was made, per the branch's rules; the desk now refuses a check-in without a signed declaration.";
+    const entry = entryFromResults({ impl }, [round({ decisionsAddendum: addendum })]);
+    expect(entry.body).toBe(
+      `${impl.decisionsSection}\n\nThis round made the helper the one every listing spec uses. The desk now refuses a check-in without a signed declaration.`,
+    );
     expect(entry.notes.some((n) => n.startsWith("dropped from fix round 1: \"No DECISIONS.md"))).toBe(true);
   });
 
   it("drops an addendum that is nothing but housekeeping", () => {
-    for (const addendum of ["The § text, changelog line and SPECS criteria are carried forward unchanged.", "None.", "No changes to DECISIONS.md were needed."]) {
+    for (const addendum of [
+      "The § text, changelog line and SPECS criteria are carried forward unchanged.",
+      "None.",
+      "No changes to DECISIONS.md were needed.",
+      "The section carries forward from the implementer.",
+      "This round is carrying forward the earlier text, unchanged.",
+    ]) {
       const entry = entryFromResults({ impl }, [round({ decisionsAddendum: addendum })]);
       expect(entry.body, addendum).toBe(impl.decisionsSection);
     }
@@ -113,6 +137,8 @@ describe("§NNN docs:land — a fixer's housekeeping never lands", () => {
       "The review found §372 did not say what changed at 320 pixels; the card now wraps.",
       "A waiting-list offer's deadline is carried forward to the next day when the start is sooner than the offer's hours, which the old text said nowhere in its rules for the queue.",
       "SPECS criterion 6 is now measured at a tenth of a pixel.",
+      "A hold now carries the runner's place forward to the race day, never dropping it.",
+      "The desk clerk carries a spare declaration forward to the next shift, per the new procedure.",
     ];
     for (const sentence of kept) expect(withoutHousekeeping(sentence), sentence).toEqual({ text: sentence, dropped: [] });
   });
