@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import { cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages } from "@/modules/public-cache/reads";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 
@@ -40,7 +41,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of routing.locales) {
-    const events = await cachedSitemapEvents(locale);
+    // Each read with its last good copy behind it (§NNN): a crawler that arrives during an outage
+    // is told the addresses the site had, not a 500 that makes it drop them.
+    const events = (await readWithLastGood(`sitemap:events:${locale}`, () => cachedSitemapEvents(locale), now)).value;
 
     /**
      * The site root is deliberately absent: it redirects to the events listing, and listing a
@@ -88,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * returned, and only in a locale that has one — the same rule as everything above.
    */
   for (const locale of routing.locales) {
-    for (const page of await cachedSitemapPages(locale)) {
+    for (const page of (await readWithLastGood(`sitemap:pages:${locale}`, () => cachedSitemapPages(locale), now)).value) {
       const urls = slugRouteUrls(env.APP_BASE_URL, "/pages/[slug]", page.translations);
       const url = urls[locale];
       if (!url) continue;
@@ -123,7 +126,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * resolves, and a crawler that already knows it should still be told where its languages are.
    */
   for (const locale of routing.locales) {
-    const albums = await cachedSitemapAlbums(locale);
+    const albums = (await readWithLastGood(`sitemap:albums:${locale}`, () => cachedSitemapAlbums(locale), now)).value;
     entries.push({
       url: staticRouteUrl(env.APP_BASE_URL, "/gallery", locale),
       alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/gallery")) },

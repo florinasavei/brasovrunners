@@ -49,6 +49,7 @@ import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
 import { EXPECTED_MIGRATION } from "@/db/schema-version";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import { type PublicContent, publicRead } from "./cache";
 import { clockWindow } from "./clock";
 
@@ -407,9 +408,11 @@ export async function cachedSitemapAlbums(locale: Locale) {
  */
 export async function cachedContactFormReaches(): Promise<boolean> {
   try {
-    return await publicRead(["settings.contact-reaches"], ["settings"], async () =>
-      contactFormReaches(env, await readContactRecipients(getDb())),
+    // The yes/no answer only, never the addresses (§333), with its last good copy (§NNN).
+    const read = await readWithLastGood("settings:contact-reaches", () =>
+      publicRead(["settings.contact-reaches"], ["settings"], async () => contactFormReaches(env, await readContactRecipients(getDb()))),
     );
+    return read.value;
   } catch {
     return contactFormReaches(env, null);
   }
@@ -453,7 +456,10 @@ export async function cachedBotCheckSiteKey(): Promise<string | undefined> {
  */
 export async function cachedDeadlines(): Promise<Deadlines> {
   try {
-    return (await publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb()))).deadlines;
+    // The club's own numbers from the last good copy before today's constants (§NNN): an outage
+    // must not quietly rewrite "48 hours" to a default the club may have changed.
+    const read = await readWithLastGood("settings:deadlines", () => publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb())));
+    return read.value.deadlines;
   } catch {
     return { ...DEFAULT_DEADLINES };
   }

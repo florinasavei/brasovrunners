@@ -42,11 +42,16 @@ const PARTICIPANT_FIELDS = ["participantEmail", "registeredName", "deliveryEmail
 
 /*
   The one Client Component the tree may hold, because Next requires it to be one: the backoffice's
-  error boundary (§NNN), which handles a save a network refused and throws every other error on to
-  `[locale]/error.tsx`. It is handed an error and nothing else — no row, no participant — and the
-  last test below holds it to importing no data at all.
+  error boundary (§NNN), which handles a save a network refused and a database that is away, and
+  throws every other error on to `[locale]/error.tsx`. It is handed an error and nothing else — no
+  row, no participant — and the test below holds it to importing no data at all.
 */
 const NEXT_REQUIRED_CLIENT_FILES = new Set(["src/app/[locale]/admin/error.tsx"]);
+
+/** The module specifiers a source file imports from. */
+function importsOf(source: string): string[] {
+  return [...source.matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1]);
+}
 
 describe("AGENTS.md §14.5 the backoffice renders participant rows on the server", () => {
   it("has no Client Component anywhere in the admin route tree", async () => {
@@ -93,8 +98,27 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
   it("lets the backoffice's error boundary be a Client Component only while it reads no data", async () => {
     for (const name of NEXT_REQUIRED_CLIENT_FILES) {
       const source = await readFile(join(ROOT, ...name.split("/")), "utf8");
-      const imports = [...source.matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1]);
-      expect(imports.filter((specifier) => /^@\/(db|modules)\//.test(specifier)), name).toEqual([]);
+      /*
+        Nothing from `@/db`, and from `@/modules` only what cannot read a row (§NNN, the merge of
+        the save fallback with the budget governor, whose resting page the boundary also draws): a
+        module's `domain/` — pure rules, AGENTS.md §5 — and a module's `ui/` Client
+        Component that itself imports nothing from either tree.
+      */
+      const offenders: string[] = [];
+      for (const specifier of importsOf(source)) {
+        if (/^@\/db\//.test(specifier)) offenders.push(specifier);
+        if (!/^@\/modules\//.test(specifier) || /^@\/modules\/[^/]+\/domain\//.test(specifier)) continue;
+        if (!/^@\/modules\/[^/]+\/ui\//.test(specifier)) {
+          offenders.push(specifier);
+          continue;
+        }
+        const island = await readFile(join(SRC, `${specifier.slice(2)}.tsx`), "utf8");
+        const islandFirstLine = island.split("\n").find((line) => line.trim() !== "") ?? "";
+        if (!/^["']use client["']/.test(islandFirstLine.trim())) offenders.push(specifier);
+        if (importsOf(island).some((inner) => /^@\/(db|modules)\//.test(inner))) offenders.push(specifier);
+        for (const field of PARTICIPANT_FIELDS) expect(island, specifier).not.toContain(field);
+      }
+      expect(offenders, name).toEqual([]);
       for (const field of PARTICIPANT_FIELDS) expect(source, name).not.toContain(field);
     }
   });

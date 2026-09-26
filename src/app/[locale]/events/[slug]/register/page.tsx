@@ -4,6 +4,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
@@ -27,7 +28,8 @@ import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domai
 import { costUrlHost } from "@/modules/events/domain/cost";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
-import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { registrationEventWithLastGood } from "@/modules/resilience/event-copy";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { countryOptions } from "@/modules/registrations/countries";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
@@ -126,13 +128,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const event = await findPublishedEventBySlug(getDb(), locale, slug);
-  if (!event) notFound();
-
   const now = new Date();
+  /*
+    The event, with its last good copy behind it (§NNN). While the database is away — an outage,
+    or Neon refusing on the month's quota — the page is served from that copy: the resting notice
+    says so, the form is drawn disabled so nothing can be sent, and what a person typed before a
+    refused press comes back from the draft cookie. Every read below that needs the database is
+    skipped then; the ones the public cache answers are tried and may say nothing.
+  */
+  const eventRead = await registrationEventWithLastGood(locale, slug, now);
+  const event = eventRead.value;
+  if (!event) notFound();
+  const resting = eventRead.freshness === "stale";
+
   // Read once: the widget is drawn when both keys are set *and* the club has not switched the
-  // check off (§254). The honeypot and the timing check stand either way (§19.4).
-  const siteKey = await activeBotCheckSiteKey(getDb(), now);
+  // check off (§254). The honeypot and the timing check stand either way (§19.4). None while
+  // resting: the form cannot be sent, so there is no token to ask for.
+  const siteKey = resting ? undefined : await activeBotCheckSiteKey(getDb(), now);
   const state = registrationState(
     {
       registrationMode: event.registrationMode,
@@ -190,6 +202,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const throttled = (fields ?? "").split(",").includes("throttled");
   /**
+   * The database was away when the form was sent (§NNN): a compute that could not start, or Neon
+   * refusing on its monthly quota. About nothing the person typed, like the three above; the
+   * draft cookie brought their answers back, and nothing was registered or sent.
+   */
+  const databaseAway = (fields ?? "").split(",").includes("databaseAway");
+  /**
    * The emergency contact was the runner's own number (§228). A marker rather than a field,
    * like the two above, so the summary can still link the field while the sentence beneath it
    * says which of the two rules refused it — "that number is not valid" is untrue and was what
@@ -221,7 +239,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     keep what was typed. The cached read the event page makes; optional, so a failure says nothing.
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null = null;
-  if (!submitted && !error) {
+  if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
       if (places?.available === 0) {
@@ -257,7 +275,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     page's list makes; optional, so a failure leaves the box as it always read.
   */
   let listStatesOn = false;
-  if (event.participantListVisibility === "NAMES") {
+  if (event.participantListVisibility === "NAMES" && !resting) {
     try {
       listStatesOn = await cachedListStatesDisclosed(now);
     } catch (failure) {
@@ -270,7 +288,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     again when the form is sent and records the version it finds. None approved: the form says
     registrations cannot be taken, and the service refuses them.
   */
-  const termsVersion = (await cachedCurrentApprovedDocument("TERMS", locale, now))?.version ?? null;
+  let termsVersion: number | null = null;
+  try {
+    termsVersion = (await cachedCurrentApprovedDocument("TERMS", locale, now))?.version ?? null;
+  } catch (failure) {
+    // Only while resting may it go unread: the form cannot be sent then, and the tick says "—".
+    unstable_rethrow(failure);
+    if (!resting) throw failure;
+  }
   const t = await getTranslations("Registration");
   // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
@@ -292,7 +317,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * message is announced with the field instead of having to be hunted for.
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
-  const draft = error ? await readFormDraft() : null;
+  // While resting too (§NNN): a press the database refused left the answers in the draft cookie.
+  const draft = error || resting ? await readFormDraft() : null;
   /*
   What was typed before a rejected submission (§142), by field name.
 
@@ -423,6 +449,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         on production, where the mode is `live` (`delivery-notice.ts`). Above the journey strip
         so it is the first thing read on the form and on the check-your-email screen alike.
       */}
+      {/* Served from the last good copy (§NNN): when, and — on a month Neon has paused — until when. */}
+      <LastGoodNotice read={eventRead} />
+
       <EmailDeliveryNotice />
 
       {/* Where they are in the journey, and what happens next — the same component every page
@@ -469,7 +498,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             Each rejected field is a link to its own anchor, which is the one pattern that needs
             no JavaScript: following it moves focus to the input itself.
           */}
-          {error && (
+          {/* The form cannot be sent while resting (§NNN); what was typed stays in the boxes below. */}
+          {resting && !submitted && (
+            <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-resting">
+              {t("restingForm")}
+            </Alert>
+          )}
+          {/* The refusal a press met while the database was away is what the notice above says. */}
+          {error && !(resting && databaseAway) && (
             <Alert
               /*
                 Quieter for the anti-bot refusal (§282; the owner, of the red panel: "trebuie sa
@@ -489,7 +525,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               sx={{ mb: 2 }}
             >
               <AlertTitle>
-                {throttled ? t("errors.throttledTitle") : tooFast ? t("errors.tooFastTitle") : t("errors.title")}
+                {databaseAway
+                  ? t("errors.databaseAwayTitle")
+                  : throttled
+                    ? t("errors.throttledTitle")
+                    : tooFast
+                      ? t("errors.tooFastTitle")
+                      : t("errors.title")}
               </AlertTitle>
               {/*
                 The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
@@ -503,7 +545,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 the one rejection that is about nothing they typed, so it is said first and on
                 its own, and the catalogue already had the sentence for it.
               */}
-              {waitlistRefusal ? (
+              {databaseAway ? (
+                t("errors.databaseAway")
+              ) : waitlistRefusal ? (
                 /*
                   No place and nothing to join (§348): the event page's own sentence, and that
                   nothing was registered or sent. Everything typed is still in the boxes below,
@@ -569,7 +613,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           )}
 
           {/* No terms approved (§421): there is nothing to accept, and the service would refuse. */}
-          {termsVersion === null && (
+          {termsVersion === null && !resting && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-terms-missing">
               {t("terms.missing")}
             </Alert>
@@ -633,7 +677,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               before it answers would buy the refusal it is meant to get past. Held, then sent
               when the token lands — never dropped.
             */}
-            {tooFast && (
+            {tooFast && !resting && (
               <Box sx={{ display: "flex", mb: 2 }}>
                 <SubmitButton
                   label={t("errors.tooFastResend")}
@@ -646,6 +690,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Box>
             )}
+            {/*
+              Disabled as one while resting (§NNN): a disabled fieldset turns off every control inside
+              it — nothing can be typed, pressed or sent — and still shows what the draft brought back.
+            */}
+            <Box component="fieldset" disabled={resting} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="slug" value={slug} />
@@ -1314,6 +1363,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 button that sends the form from where the browser lands — so a second panel
                 repeating it above the submit button is the same words twice on one screen.
               */}
+              {resting ? (
+                <Button variant="contained" size="large" fullWidth disabled data-testid="registration-submit-resting">
+                  {t("submit")}
+                </Button>
+              ) : (
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
@@ -1347,7 +1401,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 size="large"
                 fullWidth
               />
+              )}
             </Stack>
+            </Box>
           </form>
         </>
       )}

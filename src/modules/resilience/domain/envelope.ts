@@ -117,6 +117,13 @@ export function readEnvelope<T>(raw: string | null | undefined): Envelope<T> | n
  */
 export const SNAPSHOT_MAX_AGE_HOURS = 12;
 
-export function isSnapshotTooOld(envelope: Envelope<unknown>, now: Date): boolean {
-  return now.getTime() - envelope.takenAt.getTime() > SNAPSHOT_MAX_AGE_HOURS * 3_600_000;
+/**
+ * How old a snapshot may be while Neon has suspended the project for the rest of its billing
+ * period (§NNN): a whole period and a day. Nothing is written while the database is suspended, so
+ * the copy is the newest truth there is, and the page says so and until when.
+ */
+export const SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS = 32 * 24;
+
+export function isSnapshotTooOld(envelope: Envelope<unknown>, now: Date, maxAgeHours: number = SNAPSHOT_MAX_AGE_HOURS): boolean {
+  return now.getTime() - envelope.takenAt.getTime() > maxAgeHours * 3_600_000;
 }

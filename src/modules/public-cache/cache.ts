@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
+import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
+import { ColdMissError, isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
+import { copyOf, keepCopy } from "@/modules/resilience/last-good";
+import { allowRefreshNow, scheduleMissRefresh } from "./miss-refresh";
 import { buildInfo } from "@/shared/config/build-info";
 
 /**
@@ -139,11 +144,57 @@ export async function publicRead<T>(
 ): Promise<T> {
   if (!insideNextServer() || process.env.NODE_ENV !== "production" || prerenderingAtBuild()) return load();
 
-  const cached = unstable_cache(async () => tagDates(await load()), [KEYSPACE, ...key.map(String)], {
-    tags: contents.map(publicTag),
-    revalidate: PUBLIC_CACHE_CEILING_SECONDS,
-  });
-  return untagDates(await cached()) as T;
+  // A miss asks the database through the breaker (§NNN): while this instance knows the database
+  // is away, a miss fails at once and `readWithLastGood` serves the copy, instead of every page
+  // view waiting on a connection that will be refused. A hit never gets this far.
+  //
+  // The month's budget stretches the day's ceiling (§NNN, `GOVERNOR_EFFECTS.cacheCeilingFactor`):
+  // twice at amber, four times at red. Read from this instance's memory without waiting — a
+  // visitor never waits on Neon's API — and a write still expires what it changed at once.
+  const effects = governorEffects(peekNeonBudgetLevel());
+  const keyParts = [KEYSPACE, ...key.map(String)];
+  const options = { tags: contents.map(publicTag), revalidate: PUBLIC_CACHE_CEILING_SECONDS * effects.cacheCeilingFactor };
+  /*
+    The copy a red month's miss is answered from (§NNN): every load keeps one, in memory and the
+    object store (`resilience/last-good.ts`, at most once per ten minutes per key), under a key
+    without the deployment's keyspace so a release does not start the month with nothing. Never
+    for what registrations change — free places and the start list: a stale "3 locuri libere" is a
+    form filled in for a place that is gone, and a stale list shows a name its owner withdrew
+    (AGENTS.md §10.6, §281). Those miss honestly and their pages say they cannot tell just now.
+  */
+  const copyKey = contents.includes("places") ? null : `cache:${key.map(String).join(":")}`;
+  const loadAndKeep = async () => {
+    const value = await throughBreaker(load);
+    if (copyKey) keepCopy(copyKey, value);
+    return tagDates(value);
+  };
+
+  if (effects.publicMissRefreshMinutes === 0) return untagDates(await unstable_cache(loadAndKeep, keyParts, options)()) as T;
+
+  /*
+    Red (§NNN): anonymous traffic is served from the cache only. A hit is answered as ever; a miss
+    never asks the database in the request. It is answered from the read's last good copy when
+    there is one, else it throws `ColdMissError` — which a page's `readWithLastGood` turns into its
+    own copy or the short resting page, and an optional part of a page into nothing — and either way
+    the read is queued for the background refresh at the next allowed moment (`miss-refresh.ts`).
+  */
+  try {
+    return untagDates(
+      await unstable_cache(
+        async () => {
+          throw new ColdMissError();
+        },
+        keyParts,
+        options,
+      )(),
+    ) as T;
+  } catch (error) {
+    if (!isColdMiss(error)) throw error;
+    scheduleMissRefresh(keyParts.join("|"), () => unstable_cache(loadAndKeep, keyParts, options)(), effects.publicMissRefreshMinutes);
+    const copy = copyKey ? await copyOf<T>(copyKey) : null;
+    if (copy) return copy.value;
+    throw error;
+  }
 }
 
 /**
@@ -162,6 +213,8 @@ export async function publicRead<T>(
  */
 export function revalidatePublicContent(...contents: PublicContent[]): void {
   if (!insideNextServer()) return;
+  // The write woke the compute already: a red month's next miss may refresh at once (§NNN).
+  allowRefreshNow();
   for (const content of new Set(contents)) {
     try {
       revalidateTag(publicTag(content), { expire: 0 });

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import type { getDb } from "@/db/client";
+import { governedCadence } from "@/modules/diagnostics/domain/neon-budget";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { isDatabaseAwayError, isQuotaRefusalError } from "@/modules/resilience/domain/database-away";
 import { isAuthorizedJobRequest } from "./auth";
 import { type JobName, planQuiet, type QuietPlan } from "./schedule";
 import { insideJobRun, readPingVerdict, recordPing, recordRealRun } from "./schedule-cache";
@@ -53,6 +56,18 @@ export async function answerJobPing(
     });
   }
 
+  /*
+    The month's budget (§NNN), from Neon's API and never the database, and only for a ping that
+    is about to run: the ones answered from the cache above never ask. It only ever widens the
+    interval a run plans under (red's two hours); it never stops a job on its own. The platform's
+    estimate is not the counter Neon enforces, and an estimate that ran ahead of Neon would leave
+    the outbox, the reminders and the maintenance idle for days while the database answered — an
+    email silently not sent, which §40 forbids (a spent allowance defers, never discards). The
+    jobs rest only on Neon's own refusal, in the catch below, and the next ping is the probe that
+    resumes them.
+  */
+  const budget = await readNeonBudget(now);
+
   // The database, only now: everything above this line runs without a connection or its module.
   const [{ getDb: openDb }, { consumeRateLimit }, { readJobCadence }, { nextWork }] = await Promise.all([
     import("@/db/client"),
@@ -62,22 +77,48 @@ export async function answerJobPing(
   ]);
   const db = openDb();
 
-  // After the secret check, never before it: a bucket an unauthenticated caller can fill is a
-  // way to switch the scheduler off, which is worse than the flood it would be refusing.
-  const throttle = await consumeRateLimit(db, "job-invoke", job, now);
-  if (!throttle.allowed) {
-    return NextResponse.json(
-      { error: "RATE_LIMITED" },
-      { status: 429, headers: { "Retry-After": String(throttle.retryAfter) } },
-    );
+  let outcome: JobRunOutcome;
+  try {
+    // After the secret check, never before it: a bucket an unauthenticated caller can fill is a
+    // way to switch the scheduler off, which is worse than the flood it would be refusing.
+    const throttle = await consumeRateLimit(db, "job-invoke", job, now);
+    if (!throttle.allowed) {
+      return NextResponse.json(
+        { error: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(throttle.retryAfter) } },
+      );
+    }
+    outcome = await insideJobRun(job, () => run(db, now));
+  } catch (error) {
+    /*
+      The database is away — Neon's quota refusal (the only thing that rests the jobs, whatever
+      the governor reads), a compute that cannot start, a network that does not reach it (§NNN). Answering 500 on every
+      ping of an outage is how cron-job.org switches a monitor off (§98), and the scheduler would
+      then stay off after the database is back. So an away-error answers 200 with the reason and
+      records the ping; any other error is a bug and still fails loudly. Nothing is lost: a job
+      that did not run leaves its rows as they were, and the next ping finds them due.
+    */
+    if (!isDatabaseAwayError(error)) throw error;
+    const quota = isQuotaRefusalError(error);
+    console.error(`[jobs] ${job}: the database is away${quota ? " (Neon's compute quota)" : ""}; not run`, error);
+    await recordPing(job, now, false);
+    return NextResponse.json({
+      job,
+      ran: false,
+      reason: "database-away",
+      quota,
+      budgetLevel: budget.level,
+      checkedAt: now.toISOString(),
+    });
   }
-
-  const outcome = await insideJobRun(job, () => run(db, now));
 
   let plan: QuietPlan | null = null;
   try {
     const cadence = await readJobCadence(db);
-    plan = planQuiet({ ranAt: now, nextWorkAt: await nextWork(db, job, now), cadenceMinutes: cadence.minutes, failed: outcome.failed });
+    // The governor's floor rides the Administrator's interval (§NNN): the longer wins, and it is
+    // the one the floor slots carry, so the pings after this run honour it from the cache.
+    const cadenceMinutes = governedCadence(cadence.minutes, budget.effects.jobFloorMinutes);
+    plan = planQuiet({ ranAt: now, nextWorkAt: await nextWork(db, job, now), cadenceMinutes, failed: outcome.failed });
     await recordRealRun(job, plan);
   } catch (error) {
     // The work is done; only the promise to the next pings is missing, so they run for real.
@@ -92,6 +133,7 @@ export async function answerJobPing(
     nextCheckAt: plan ? plan.quietUntil.toISOString() : now.toISOString(),
     notBefore: plan?.floorUntil ? plan.floorUntil.toISOString() : null,
     cadenceMinutes: plan?.cadenceMinutes ?? null,
+    budgetLevel: budget.level,
     checkedAt: now.toISOString(),
   });
 }

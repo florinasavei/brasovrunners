@@ -9,6 +9,7 @@ import {
   cachedPublishedAlbums,
   cachedPublishedPages,
 } from "@/modules/public-cache/reads";
+import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
@@ -53,7 +54,9 @@ import SiteNav from "./SiteNav";
  */
 async function navigationPages(locale: Locale) {
   try {
-    return await cachedPublishedPages(locale);
+    // With its last good copy behind it (§NNN): an outage keeps the menu the site had rather
+    // than dropping the standing pages from every page's header.
+    return (await readWithLastGood(`nav:pages:${locale}`, () => cachedPublishedPages(locale))).value;
   } catch {
     return [];
   }
@@ -62,7 +65,7 @@ async function navigationPages(locale: Locale) {
 /** Whether the gallery section is offered: a published album in this locale, or nothing. */
 async function hasPublishedAlbum(locale: Locale) {
   try {
-    return (await cachedPublishedAlbums(locale)).length > 0;
+    return (await readWithLastGood(`nav:gallery:${locale}`, async () => (await cachedPublishedAlbums(locale)).length > 0)).value;
   } catch {
     return false;
   }

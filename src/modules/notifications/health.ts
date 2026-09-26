@@ -3,6 +3,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
+import { plannedCadenceMinutes } from "@/modules/jobs/schedule-cache";
 import { checkGmailHealth, type GmailHealth } from "./email-transport";
 
 /**
@@ -64,9 +65,16 @@ export type EmailHealth = {
   gmail: GmailHealth;
 };
 
+/**
+ * `governorFloorMinutes` is the budget governor's minimum interval in force now (§NNN): time the
+ * outbox job may leave a retry waiting, added exactly like the Administrator's own interval — the
+ * longer of the two, and of the interval the outbox's last run planned under, which its cached
+ * slot remembers after the governor's level has dropped.
+ */
 export async function checkEmailHealth<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
+  governorFloorMinutes = 0,
 ): Promise<EmailHealth> {
   const deferredFrom = new Date(now.getTime() + DEFERRED_BEYOND_MS);
   /*
@@ -84,7 +92,8 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     hourly night pinger reaches at most 45 minutes later: the interval plus about an hour, as
     before, still inside ninety plus the interval (`tests/unit/jobs/schedule-alignment.test.ts`).
   */
-  const { minutes: cadenceMinutes } = await readJobCadence(db);
+  const { minutes: stated } = await readJobCadence(db);
+  const cadenceMinutes = Math.max(stated, governorFloorMinutes, await plannedCadenceMinutes("email-outbox", now));
   const overdueAfterMs = OVERDUE_AFTER_MS + cadenceMinutes * 60_000;
   const overdueBefore = new Date(now.getTime() - overdueAfterMs);
   const failedSince = new Date(now.getTime() - FAILED_WINDOW_MS);

@@ -16,6 +16,7 @@ import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
@@ -36,6 +37,26 @@ function text(form: FormData, name: string): string {
  * mean (BR-REQ-031-01 criterion 3).
  */
 export async function submitRegistrationAction(form: FormData): Promise<void> {
+  try {
+    await submitRegistrationOrRefuse(form);
+  } catch (error) {
+    /*
+      The database is away (§NNN) — a compute that could not start, or Neon refusing on the month's
+      quota. Not a bug and nothing the person did: what they typed goes back with them in the
+      draft cookie, and the form says so politely instead of the error page eating twenty fields.
+      `redirect()` and `notFound()` throw too; they are not away-errors and pass straight through.
+      The form carries no family link since the emailed confirmation replaced it, so none is kept.
+    */
+    if (!isDatabaseAwayError(error)) throw error;
+    console.error("[registration] the database is away; the form goes back with its answers", error);
+    const locale = toLocale(form.get("locale"));
+    const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: text(form, "slug") } } });
+    await stashFormDraft(form, path);
+    redirect(`${path}?error=DATABASE_AWAY&fields=databaseAway#${ERROR_SUMMARY_ID}`);
+  }
+}
+
+async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));
   const slug = text(form, "slug");
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });

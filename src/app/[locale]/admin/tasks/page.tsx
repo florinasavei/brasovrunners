@@ -64,6 +64,8 @@ import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon"
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
 import { readJobCadence } from "@/modules/jobs/cadence";
@@ -316,9 +318,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // health half) — cached fifteen minutes, same as `/api/health`.
   const botCheckHealth = await probeTurnstileSecret();
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
+  // The month's budget as the governor reads it (§NNN) — Neon's API through the shared reading,
+  // never the database — for the health checks' thresholds and the "Bugetul lunii" card.
+  const budget = await readNeonBudget(now);
   const jobs = await Promise.all([
-    checkJobHealth(db, "email-outbox", now),
-    checkJobHealth(db, "registration-maintenance", now),
+    checkJobHealth(db, "email-outbox", now, budget.effects.jobFloorMinutes),
+    checkJobHealth(db, "registration-maintenance", now, budget.effects.jobFloorMinutes),
   ]);
   // The listing's own query, so "published" here means exactly what a visitor sees.
   const published = await listPublishedEvents(db, locale);
@@ -358,7 +363,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const raceDaySheetsDue = [...new Set(shredderRows.map((row) => row.title ?? row.eventId))];
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
-  const email = await checkEmailHealth(db, now);
+  const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
   const contactRecipients = await readContactRecipients(db);
   // The plan the club says it is on (§100): its price is a row on the cost table below.
@@ -644,6 +649,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
         {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
+        {query.saved === "budgetThresholds" && <Alert severity="success">{t("budgetThresholds.saved")}</Alert>}
         {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
         {query.saved === "neonLimitsSame" && <Alert severity="info">{t("neonLimits.savedSame")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
@@ -828,6 +834,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
           door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
         */}
+        {/* The month's budget and what the platform is doing about it (§NNN), above the brakes it is read against. */}
+        <NeonBudgetPanel locale={locale} reading={budget} mayEdit={canManageRegistrations(actor.role)} />
+
         {neonLimits && (
           <NeonLimitsPanel
             locale={locale}

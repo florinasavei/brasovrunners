@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { eventShareImage, SHARE_SHAPES } from "@/modules/events/share-image";
-import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
+import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
 
 /**
  * The Open Graph picture of one event (`DECISIONS.md` §90): what Facebook, WhatsApp and a
@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function Image({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Response> {
   const { locale, slug } = await params;
   const known = routing.locales.find((candidate) => candidate === locale);
-  const event = known ? await cachedPublishedEventBySlug(known, slug) : undefined;
+  const event = known ? await eventBySlugWithLastGood(known, slug) : undefined;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const t = await getTranslations({ locale: known, namespace: "Event" });
   return await eventShareImage(event, known, "og", {

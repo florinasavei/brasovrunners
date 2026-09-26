@@ -14,6 +14,7 @@ import { subscribeToNewsletter } from "@/modules/newsletter/service";
 import { NEWSLETTER_DIALOG_ID, NEWSLETTER_SECTION_ID } from "@/modules/newsletter/ui/newsletter-box";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
+import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -100,6 +101,22 @@ function text(form: FormData, name: string): string {
 export async function submitContactAction(form: FormData): Promise<void> {
   const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/contact" });
+  try {
+    await sendOrRefuse(form, locale, path);
+  } catch (error) {
+    /*
+      The database is away (§NNN): the bot-check switch, the throttle and the stored message all
+      need it. The page's own `UNAVAILABLE` sentence says the message did not leave, and the draft
+      cookie keeps what was typed. `redirect()` throws too, and is not an away-error.
+    */
+    if (!isDatabaseAwayError(error)) throw error;
+    console.error("[contact] the database is away; the message goes back with the form", error);
+    await stashFormDraft(form, path);
+    redirect(`${path}?error=UNAVAILABLE#${CONTACT_ERROR_SUMMARY_ID}`);
+  }
+}
+
+async function sendOrRefuse(form: FormData, locale: Locale, path: string): Promise<void> {
 
   // The bot check, when configured (§97, §216): only a token Cloudflare looked at and
   // rejected is a field error. A widget that never ran, or a Cloudflare that did not answer,

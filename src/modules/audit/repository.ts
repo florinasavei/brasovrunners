@@ -166,6 +166,8 @@ export type AuditAction =
   | "neon_plan.changed"
   /** The minimum minutes between two real runs of each scheduled job, from and to (§334). */
   | "job_cadence.changed"
+  /** The shares of the Neon quota that turn the month's budget amber and red, from and to (§NNN). */
+  | "neon_budget_thresholds.changed"
   /** The club's deadlines ("Termene", §377): which ones moved, each from and to. */
   | "deadlines.changed"
   /** How many registrations one address may carry at one event (§389), from and to. */
