@@ -3238,22 +3238,24 @@
               ]
             },
             {
-              "title": "Ce poate fiecare rol: Administrator și Organizator",
+              "title": "Ce poate fiecare rol",
               "steps": [
-                "Organizatorul (Dani): vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților.",
-                "Organizatorul nu publică un eveniment, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
-                "Administratorul (Amalia): tot ce face Organizatorul, plus «Creează și publică», anularea și ștergerea unei înscrieri, retrimiterea emailurilor și «Alocă numerele».",
-                "Superadministratorul: tot ce face Administratorul, plus documentele legale și conturile din «Echipa»."
+                "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
+                "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
+                "Organizatorul: vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților. Nu scrie textele, nu publică, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
+                "Rolul Tehnic: pagina de configurație a platformei, ca să depaneze; poate corecta setările unui eveniment. Nu vede înscrierile.",
+                "Administratorul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene» și planul Mailgun. Citește documentele legale, dar nu le scrie și nu le aprobă, și nu vede «Echipa».",
+                "Superadministratorul: tot ce face Administratorul, plus documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul). O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă sau să ți-l dea."
               ]
             },
             {
               "title": "Ce NU se poate face",
               "steps": [
-                "Un Voluntar nu vede adrese de email, nu anulează, nu șterge și nu exportă liste.",
-                "Un Redactor nu schimbă setările unui eveniment și nu publică nimic.",
-                "Un Organizator nu publică, nu anulează, nu șterge o înscriere și nu retrimite emailuri.",
-                "Niciun rol în afară de Superadministrator nu aprobă documente legale sau nu adaugă un coleg în «Echipa».",
-                "Nimeni nu ocolește fereastra de confirmare de la o apăsare importantă (vezi mai sus)."
+                "Nimeni nu schimbă adresa de email confirmată a unui participant, nici un Administrator.",
+                "Nimeni nu unește două înscrieri într-una.",
+                "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
+                "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
+                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber."
               ]
             }
           ]
@@ -3677,7 +3679,7 @@
             {
               "title": "Conturi pentru voluntari și colegi (Superadministrator)",
               "steps": [
-                "«Echipa» apare doar pentru un Superadministrator; un Administrator îi cere lui.",
+                "Rol necesar: Superadministrator. «Echipa» apare doar pentru el; un Administrator nu o vede și îi cere lui.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
@@ -3688,7 +3690,7 @@
         },
         {
           "title": "Documente legale și date personale (GDPR)",
-          "who": "Rol: Administrator; scrierea și aprobarea textelor, Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
+          "who": "Rol: Administrator citește; scrierea, aprobarea, retragerea și ștergerea textelor cer Superadministrator. De citit o dată, înainte de prima cursă cu înscrieri.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3697,7 +3699,7 @@
             {
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
-                "Doar un Superadministrator vede «Versiune nouă»; un Administrator citește textele și PDF-urile.",
+                "Rol necesar: Superadministrator. Doar el vede «Versiune nouă» și aprobă; un Administrator citește textele și PDF-urile, dar nu scrie, nu aprobă și nu retrage o versiune.",
                 "«Documente legale» → «Versiune nouă».",
                 "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
@@ -3710,7 +3712,7 @@
             {
               "title": "Cele cinci texte, înainte de publicarea cursei",
               "steps": [
-                "Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
+                "Rol necesar: Superadministrator. Într-o singură ședință, fiecare de la «Pornește de la textul platformei»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
                 "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
               ]
@@ -3870,9 +3872,8 @@
             {
               "title": "Verifică dacă platforma funcționează",
               "steps": [
-                "Deschide /api/health într-un tab nou al browserului — e text simplu, nu o pagină din site.",
-                "Dacă scrie \"ok\", platforma funcționează. Orice alt cuvânt înseamnă o problemă reală.",
-                "Nu știi ce înseamnă restul textului? Trimite-l unui Superadministrator sau proprietarului clubului."
+                "Deschide /api/health într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că platforma funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
+                "Nu ești sigur ce vezi? Trimite textul proprietarului clubului."
               ]
             },
             {

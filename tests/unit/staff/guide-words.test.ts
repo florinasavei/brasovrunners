@@ -150,6 +150,22 @@ describe("BR-REQ-060-01 criterion 34 the guide quotes the screen's own words", (
     for (const role of STAFF_ROLES) expect(guide.sections.some((section) => section.roles.includes(role)), role).toBe(true);
   });
 
+  /*
+    A job only a Superadministrator can do — every legal-text write (`legal/actions.ts`,
+    `requireStaffRole("SUPERADMIN")`) and «Echipa» (`canManageStaff`) — says so in its first line,
+    so an Administrator knows to ask for the role before walking the steps into a missing button.
+  */
+  it("a job that needs a Superadministrator says so in its first line", () => {
+    const marks = { ro: ["→ «Versiune nouă»", "«Echipa» → «Adaugă o persoană»"], en: ["→ «New version»", "«Staff» → «Add someone»"] };
+    const lead = { ro: "Rol necesar: Superadministrator.", en: "Role needed: Superadministrator." };
+    for (const [locale, catalogue] of Object.entries(locales) as ["ro" | "en", Catalogue][]) {
+      const jobs = guideOf(catalogue).sections.flatMap((section) => section.tasks)
+        .filter((task) => task.steps.some((step) => marks[locale].some((mark) => step.includes(mark))));
+      expect(jobs.length, locale).toBeGreaterThanOrEqual(2);
+      for (const job of jobs) expect(job.steps[0].startsWith(lead[locale]), `${locale}: ${job.title}`).toBe(true);
+    }
+  });
+
   it("keeps the family section the page appends its pending line to (§389)", () => {
     for (const catalogue of Object.values(locales)) {
       expect(guideOf(catalogue).sections.filter((section) => section.key === "family")).toHaveLength(1);

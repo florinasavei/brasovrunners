@@ -8,8 +8,8 @@ import { orderGuideSections } from "@/modules/staff-identity/domain/guide-order"
  * (`guide-order.ts`), rather than only through the page's own render (`tests/e2e/guide.spec.ts`,
  * which covers MODERATOR and CONTRIBUTOR only).
  *
- * Every `StaffRole` gets its own case here, including `ADMIN` — Amalia's role, and the one the
- * e2e suite left out.
+ * Every `StaffRole` gets its own case here, including `ADMIN` — the Administrator's, and the one
+ * the e2e suite left out.
  */
 
 type GuideSection = { title: string; roles: string[] };

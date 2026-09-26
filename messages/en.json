@@ -3238,22 +3238,24 @@
               ]
             },
             {
-              "title": "What each role can do: Administrator vs Organizer",
+              "title": "What each role can do",
               "steps": [
-                "The Organizer (Dani): reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants.",
-                "The Organizer does not publish an event, does not cancel or erase a registration, does not resend emails and does not assign numbers.",
-                "The Administrator (Amalia): everything the Organizer does, plus «Create and publish», cancelling and erasing a registration, resending emails and «Assign numbers».",
-                "The Superadministrator: everything the Administrator does, plus the legal documents and the accounts under «Staff»."
+                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in. Sees a name, a state and a number, never an email address.",
+                "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
+                "The Organizer: reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants. Does not write the texts, publish, cancel or erase a registration, resend emails or assign numbers.",
+                "The Tehnic role: the platform's configuration page, for troubleshooting; may correct an event's settings. Does not see the registrations.",
+                "The Administrator: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines» and the Mailgun plan. Reads the legal documents but does not write or approve them, and does not see «Staff».",
+                "The Superadministrator: everything the Administrator does, plus the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access). A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it or to give it to you."
               ]
             },
             {
               "title": "What cannot be done",
               "steps": [
-                "A Volunteer never sees email addresses, cancels, erases or exports a list.",
-                "A Redactor never changes an event's settings and never publishes anything.",
-                "An Organizer never publishes, cancels or erases a registration, and never resends an email.",
-                "No role but the Superadministrator approves a legal document or adds a colleague under «Staff».",
-                "Nobody skips the confirmation window before an important press (see above)."
+                "Nobody changes a participant's confirmed email address, not even an Administrator.",
+                "Nobody merges two registrations into one.",
+                "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
+                "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
+                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free."
               ]
             }
           ]
@@ -3677,7 +3679,7 @@
             {
               "title": "Accounts for volunteers and colleagues (Superadministrator)",
               "steps": [
-                "«Staff» shows only for a Superadministrator; an Administrator asks one.",
+                "Role needed: Superadministrator. «Staff» shows only for one; an Administrator does not see it and asks them.",
                 "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
                 "It never arrived: on their row, «Resend the invitation».",
@@ -3688,7 +3690,7 @@
         },
         {
           "title": "Legal documents and personal data (GDPR)",
-          "who": "Role: Administrator; writing and approving the texts, Superadministrator. Read once, before the first race with registrations.",
+          "who": "Role: an Administrator reads; writing, approving, withdrawing and deleting the texts need a Superadministrator. Read once, before the first race with registrations.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -3697,7 +3699,7 @@
             {
               "title": "Approve a new version of a legal text",
               "steps": [
-                "Only a Superadministrator sees «New version»; an Administrator reads the texts and the PDFs.",
+                "Role needed: Superadministrator. Only they see «New version» and approve; an Administrator reads the texts and the PDFs but does not write, approve or withdraw a version.",
                 "«Legal documents» → «New version».",
                 "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
@@ -3710,7 +3712,7 @@
             {
               "title": "The five texts, before the race is published",
               "steps": [
-                "In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
+                "Role needed: Superadministrator. In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
                 "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
                 "Until you approve the new notice, the public participant list shows the confirmed only."
               ]
@@ -3870,9 +3872,8 @@
             {
               "title": "Check whether the platform is working",
               "steps": [
-                "Open /api/health in a new browser tab — it is plain text, not a page from the site.",
-                "If it says \"ok\", the platform is working. Any other word means a real problem.",
-                "Not sure what the rest of the text means? Send it to a superadministrator or the club's owner."
+                "Open /api/health in a new tab and read only the first word after \"status\", at the very start of the text: ok means the platform is working, degraded or down means a problem, even if ok appears further down.",
+                "Not sure what you see? Send the text to the club's owner."
               ]
             },
             {
