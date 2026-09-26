@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AdminSection } from "@/modules/staff-identity/domain/roles";
+import type { AdminSection, StaffRole } from "@/modules/staff-identity/domain/roles";
+import * as roles from "@/modules/staff-identity/domain/roles";
 import {
   allowedTransitions,
   assignableRoles,
@@ -453,5 +454,81 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
         expect(missing, `${STAFF_ROLES[higher]} against ${STAFF_ROLES[lower]}`).toEqual(allowed);
       }
     }
+  });
+});
+
+/**
+ * BR-REQ-060-01, §NNN — the whole matrix, as data. Every single-role capability `domain/roles.ts`
+ * exports, against every role, written out as the expected answer rather than derived from the
+ * ladder: a change to any one cell has to be made here too, on purpose. The first test refuses a
+ * capability exported without a row, so the table cannot fall behind the module.
+ */
+describe("BR-REQ-060-01 every capability × every role", () => {
+  // Columns in STAFF_ROLES order: Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator.
+  const ORDER = ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
+  const MATRIX: Record<string, readonly [boolean, boolean, boolean, boolean, boolean, boolean]> = {
+    //                          CONTRIB COPYW  MODER  DEV    ADMIN  SUPER
+    isEditorial: /*           */ [false, false, true, true, true, true],
+    canEditTexts: /*          */ [false, true, false, false, true, true],
+    canEditEventFields: /*    */ [false, false, true, true, true, true],
+    canCreateEvent: /*        */ [false, false, false, false, true, true],
+    canCreatePage: /*         */ [false, true, false, false, true, true],
+    canDeleteEvent: /*        */ [false, false, false, false, true, true],
+    canHardDeleteEvent: /*    */ [false, false, false, false, true, true],
+    canReadRegistrations: /*  */ [false, false, true, false, true, true],
+    canMessageParticipants: /**/ [false, false, true, false, true, true],
+    canManageRegistrations: /**/ [false, false, false, false, true, true],
+    canWorkTheDesk: /*        */ [true, true, true, true, true, true],
+    canManageTestRegistrations: [false, false, false, false, true, true],
+    canSeeDiagnostics: /*     */ [false, false, false, true, true, true],
+    canManageStaff: /*        */ [false, false, false, false, true, true],
+    isSuperadmin: /*          */ [false, false, false, false, false, true],
+    canWriteLegalTexts: /*    */ [false, false, false, false, true, true],
+    canManagePlatform: /*     */ [false, false, false, false, false, true],
+    canManageClubSettings: /* */ [false, false, false, false, true, true],
+    canReadContent: /*        */ [false, true, true, true, true, true],
+  };
+  // Exported functions of one argument that are not about a role.
+  const NOT_A_ROLE_CAPABILITY = new Set(["isLiveContent", "assignableRoles", "visibleAdminSections", "atLeast"]);
+  const capability = (name: string) => (roles as unknown as Record<string, (role: StaffRole) => boolean>)[name];
+
+  it("has a row for every capability the module exports, and the roles in their order", () => {
+    expect([...STAFF_ROLES]).toEqual([...ORDER]);
+    const exported = Object.entries(roles)
+      .filter(([name, value]) => typeof value === "function" && /^(can|is)[A-Z]/.test(name) && !NOT_A_ROLE_CAPABILITY.has(name))
+      .filter(([, value]) => (value as (...args: unknown[]) => unknown).length === 1)
+      .map(([name]) => name)
+      .sort();
+    expect(exported).toEqual(Object.keys(MATRIX).sort());
+  });
+
+  for (const [name, row] of Object.entries(MATRIX)) {
+    it.each(ORDER.map((role, index) => [role, row[index]] as const))(`${name}(%s) is %s`, (role, expected) => {
+      expect(capability(name)(role)).toBe(expected);
+    });
+  }
+
+  // Actor (row) × target (column), in STAFF_ROLES order. The Administrator gives and touches every
+  // role but the top one; the Superadministrator every role; nobody below the Administrator any.
+  const PAIRS: Record<StaffRole, readonly [boolean, boolean, boolean, boolean, boolean, boolean]> = {
+    CONTRIBUTOR: [false, false, false, false, false, false],
+    COPYWRITER: [false, false, false, false, false, false],
+    MODERATOR: [false, false, false, false, false, false],
+    DEV: [false, false, false, false, false, false],
+    ADMIN: [true, true, true, true, true, false],
+    SUPERADMIN: [true, true, true, true, true, true],
+  };
+  const pairs = ORDER.flatMap((actor) => ORDER.map((target, index) => [actor, target, PAIRS[actor][index]] as const));
+
+  it.each(pairs)("canAssignRole(%s, %s) is %s", (actor, target, expected) => {
+    expect(canAssignRole(actor, target)).toBe(expected);
+  });
+
+  it.each(pairs)("canManageMember(%s, %s) is %s", (actor, target, expected) => {
+    expect(canManageMember(actor, target)).toBe(expected);
+  });
+
+  it.each(ORDER)("assignableRoles(%s) is exactly the targets canAssignRole allows", (actor) => {
+    expect(assignableRoles(actor)).toEqual(ORDER.filter((_, index) => PAIRS[actor][index]));
   });
 });

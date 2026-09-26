@@ -85,6 +85,30 @@ describe("§NNN no raw role checks outside roles.ts and the door", () => {
     }
   });
 
+  it("a club setting asks one predicate at the page, the action and the service", () => {
+    // What a role sees and what the server allows are one answer (BR-REQ-060-01): each settings
+    // service asserts `canManageClubSettings`, the action that calls it asserts the same, and the
+    // page that draws its form asks it too — never `canManageRegistrations`, which is another verb.
+    const services = [
+      "src/modules/notifications/email-plan.ts",
+      "src/modules/contact/recipients.ts",
+      "src/modules/notifications/club-notices.ts",
+      "src/modules/deadlines/deadlines.ts",
+      "src/modules/registrations/address-cap.ts",
+      "src/modules/diagnostics/neon-plan.ts",
+      "src/modules/media/older-pictures.ts",
+    ];
+    for (const file of services) {
+      const source = readFileSync(path.join(ROOT, file), "utf8");
+      expect(source, file).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
+      expect(source, file).not.toMatch(/canManageRegistrations\(/);
+    }
+    const emailsPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    expect(emailsPage).toMatch(/const mayEditEmail = canManageClubSettings\(staff\.role\);/);
+    const tasksPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/tasks/page.tsx"), "utf8");
+    expect(tasksPage).toMatch(/canManageClubSettings\(actor\.role\) && <OlderPicturesPanel/);
+  });
+
   it("the door takes a predicate, not a role", () => {
     const session = readFileSync(path.join(ROOT, "src/modules/staff-identity/session.ts"), "utf8");
     expect(session).toMatch(/export async function requireStaffCapability\(capability: \(role: StaffRole\) => boolean\)/);

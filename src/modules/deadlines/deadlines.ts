@@ -5,7 +5,7 @@ import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   changedDeadlines,
@@ -67,7 +67,7 @@ export async function updateDeadlines<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<DeadlinesState> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the club's deadlines`);
   }
   const parsed = deadlinesSettingSchema.safeParse(rawInput);

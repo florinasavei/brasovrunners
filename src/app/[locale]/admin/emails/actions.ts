@@ -18,7 +18,7 @@ import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -108,7 +108,8 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
 
   let outcome: string;
   try {
-    const actor = await requireStaffCapability(canManageClubSettings);
+    // The registrations list's own verb (§80): the same predicate here, there and in the service.
+    const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     outcome = `saved=outboxSent&sent=${result.sent}`;
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });

@@ -616,7 +616,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       {panel === "todo" && (
         <>
         {/* A thing owed once (§430): the pictures from before §414 get their phone sizes. Gone at zero. */}
-        {olderPictures > 0 && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
+        {olderPictures > 0 && canManageClubSettings(actor.role) && <OlderPicturesPanel locale={locale} left={olderPictures} lastFailed={lastPressFailed} />}
 
         {/* Who and what kind — two rows of links, no client code, each keeping the other's
             choice (§150). The link is 44 px tall; the chip inside it is small. */}
