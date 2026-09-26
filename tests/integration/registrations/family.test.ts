@@ -42,7 +42,7 @@ let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 
 const { submitRegistration, confirmEmail, signDeclaration, requestRegistrationLink } = await import("@/modules/registrations/service");
-const { confirmFamilyEntry, readFamilyEntryLink } = await import("@/modules/registrations/family-confirm");
+const { confirmFamilyEntry, declineFamilyEntry, readFamilyEntryLink } = await import("@/modules/registrations/family-confirm");
 const { purgeLapsedFamilyEntries } = await import("@/modules/registrations/family-entries");
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
@@ -617,5 +617,68 @@ describe("§389 each person is their own registration afterwards", () => {
     expect(
       await db.select().from(registrations).where(and(eq(registrations.eventId, event.id), eq(registrations.participantId, ana.participantId))),
     ).toHaveLength(1);
+  });
+});
+
+describe("§NNN the family email's facts in bold, and «Nu înscriu această persoană»", () => {
+  it("the email states the event, the address's registrations and the person in one bold box, and carries the second answer on the same link", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    await submitRegistration(db, event, submission("Maria", at(5)), at(5));
+    const offerRow = (await outbox("REGISTER_ANOTHER_PERSON")).at(-1)!;
+    const message = await render(offerRow, at(6));
+
+    // One box per half, the values bold (the owner: "trebuie să avem bold pe chestiile importante").
+    expect(message.html.match(/data-email-part="family-facts"/g)).toHaveLength(2);
+    expect(message.html).toContain("<strong style=\"font-size:16px\">Maria Pop, data nașterii 11.07.1990.</strong>");
+    expect(message.html).toContain("<strong style=\"font-size:16px\">Ana P.</strong>");
+    expect(message.text).toMatch(/Evenimentul: Crosul familiei, /);
+    expect(message.text).toMatch(/The event: The family cross, /);
+
+    // The second button: the same token, the page's "no" shape.
+    const confirm = /https?:\/\/[^\s"]+\/inregistrari\/familie\/([A-Za-z0-9_-]+)/.exec(message.text)!;
+    expect(message.text).toContain(`Nu înscriu această persoană: ${confirm[0]}?decline=1`);
+    expect(message.text).toContain("I am not registering this person: ");
+    expect(message.html).toContain(`href="${confirm[0]}?decline=1"`);
+    // One token for both answers.
+    expect(await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"))).toHaveLength(1);
+  });
+
+  it("the press deletes the kept form and spends the link; nobody is registered and the confirmation no longer works", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    const secret = await offer(event, "Maria", 5);
+
+    expect(await declineFamilyEntry(db, secret, at(7))).toEqual({ ok: true });
+    expect(await entries()).toHaveLength(0);
+    expect((await rowsOf(event.id)).map((row) => row.registeredName)).toEqual(["Ana Pop"]);
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
+    expect(token.usedAt).not.toBeNull();
+
+    // Single use: neither answer works again, and the page reads the link as gone.
+    expect(await declineFamilyEntry(db, secret, at(8))).toEqual({ ok: false });
+    expect(await press(secret, at(8))).toEqual({ ok: false });
+    expect(await readFamilyEntryLink(db, secret, "ro", at(8))).toEqual({ ok: false });
+  });
+
+  it("after the confirmation the decline finds the link spent and deletes nobody", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    const secret = await offer(event, "Maria", 5);
+    expect((await press(secret, at(7))).ok).toBe(true);
+
+    expect(await declineFamilyEntry(db, secret, at(8))).toEqual({ ok: false });
+    expect((await rowsOf(event.id)).map((row) => row.registeredName)).toEqual(["Ana Pop", "Maria Pop"]);
+  });
+
+  it("the lapsed message and the one at the limit carry no second button", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    await submitRegistration(db, event, submission("Maria", at(5)), at(5));
+    await purgeLapsedFamilyEntries(db, new Date(at(5).getTime() + HOURS_48 + 1));
+    const lapsed = await render((await outbox("REGISTER_ANOTHER_PERSON")).at(-1)!, new Date(at(5).getTime() + HOURS_48 + 2));
+    expect(lapsed.text).not.toContain("Nu înscriu această persoană:");
+    expect(lapsed.text).not.toContain("data-email-part");
+    expect(lapsed.html).not.toContain("family-facts");
   });
 });

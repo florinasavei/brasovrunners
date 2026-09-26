@@ -4889,6 +4889,13 @@
       "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email. Linkul rămâne valabil dacă se eliberează un loc pe adresă.",
       "fitnessMissing": "Bifează mai întâi că persoana își declară singură, la semnare, starea de sănătate.",
       "refused": "Nu am putut înscrie persoana cu datele trimise (de exemplu, termenii s-au schimbat între timp sau vârsta nu este permisă). Trimite din nou formularul de înscriere; linkul acesta nu s-a folosit.",
+      "decline": "Nu înscriu această persoană",
+      "declinePending": "Se șterge…",
+      "declineTitle": "Nu înscrii această persoană?",
+      "declineIntro": "Formularul de înscriere la {event} a fost trimis din nou de pe adresa {email}, pentru persoana de mai jos. Dacă nu vrei să o înscrii, apasă butonul: datele trimise pentru ea se șterg acum, nu se înscrie nimeni, iar linkul din email nu se mai poate folosi.",
+      "declineBack": "Vreau totuși să o înscriu",
+      "declinedTitle": "Persoana nu a fost înscrisă",
+      "declined": "Gata. Nu am înscris pe nimeni, iar datele trimise pentru această persoană s-au șters. Înscrierile de pe adresa ta au rămas cum erau.",
       "people": {
         "one": "o persoană",
         "few": "{count} persoane",

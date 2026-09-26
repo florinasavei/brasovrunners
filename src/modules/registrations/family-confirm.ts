@@ -143,3 +143,29 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
     return { ok: true as const, registration, email: participant.deliveryEmail };
   });
 }
+
+export type FamilyDecline = { ok: true } | { ok: false };
+
+/**
+ * «Nu înscriu această persoană» (§NNN): the email's second answer to the same single-use link. The
+ * press spends the token and deletes the kept form with every field of the other person it held,
+ * in one transaction; nobody is registered and no place was ever held (a kept form holds none,
+ * §446). One decision per link: once either answer is pressed, the other finds the token spent.
+ *
+ * A lapsed or unknown link, or a kept form already gone (confirmed, or purged by the job), is the
+ * one generic "this link no longer works" — the spend of a live token stands, as for any link used
+ * once. GET never reaches here (§12.8): the page only reads the link, the press is a POST.
+ */
+export async function declineFamilyEntry<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<FamilyDecline> {
+  if (!(await tokenAttemptAllowed(db, secret, now))) return { ok: false };
+
+  return db.transaction(async (tx) => {
+    const consumed = await consumeActionToken(tx, { secret, purpose: "REGISTER_ANOTHER_PERSON", now });
+    if (!consumed.ok) return { ok: false as const };
+    const entry = await findFamilyEntryByToken(tx, consumed.token.id);
+    if (!entry) return { ok: false as const };
+    // Deleted even at its last instant: what the address asked is what the job would do anyway.
+    await deleteFamilyEntry(tx, entry.id);
+    return { ok: true as const };
+  });
+}

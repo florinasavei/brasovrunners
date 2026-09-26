@@ -639,6 +639,11 @@ async function renderRow(
       await linkFamilyEntryToken(db, familyEntry.id, issued.token.id);
       const path = getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token: issued.secret } } });
       actionUrl = `${env.APP_BASE_URL}${path}`;
+      /*
+        «Nu înscriu această persoană» (§NNN): the same token, the page's "no" shape. One decision per
+        link: whichever answer is pressed spends it, and opening either changes nothing (§12.8).
+      */
+      data.familyDeclineUrl = `${actionUrl}?decline=1`;
     }
   } else if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];

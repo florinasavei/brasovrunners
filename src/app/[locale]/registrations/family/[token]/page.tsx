@@ -17,11 +17,11 @@ import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney"
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
-import { confirmFamilyEntryAction } from "./actions";
+import { confirmFamilyEntryAction, declineFamilyEntryAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; refused?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; refused?: string; decline?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -49,9 +49,23 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, refused } = await searchParams;
+  const { done, invalid, refused, decline } = await searchParams;
   const t = await getTranslations("Registrations");
   const tEvent = await getTranslations("Event");
+
+  // «Nu înscriu această persoană» was pressed (§NNN): the kept form is deleted and nobody registered.
+  if (done === "declined") {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("family.declinedTitle")}
+        </Typography>
+        <Alert severity="info" data-testid="family-declined">
+          {t("family.declined")}
+        </Alert>
+      </Container>
+    );
+  }
 
   if (done === "declare" || done === "waitlist") {
     return (
@@ -78,6 +92,45 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
           {t("family.title")}
         </Typography>
         <ActionLinkNotice locale={locale} status={null} />
+      </Container>
+    );
+  }
+
+  const personBlock = (
+    <div data-testid="family-person">
+      <Typography component="h2" sx={{ fontWeight: 600, fontSize: "1rem" }}>
+        {t("family.person")}
+      </Typography>
+      <Typography sx={{ fontWeight: 700 }}>{link.personName}</Typography>
+      {link.personBirthDate && <Typography variant="body2">{t("family.birthDate", { date: link.personBirthDate })}</Typography>}
+    </div>
+  );
+
+  /*
+    «Nu înscriu această persoană» (§NNN): the email's second button opens this shape of the page. It
+    reads the link like the confirmation does and changes nothing (§12.8); only the press deletes.
+    The way back is the same page without the marker — the link is still unspent.
+  */
+  if (decline === "1") {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("family.declineTitle")}
+        </Typography>
+        <Stack spacing={2}>
+          <Typography>{t("family.declineIntro", { event: link.eventTitle ?? "", email: link.email })}</Typography>
+          {personBlock}
+          <form action={declineFamilyEntryAction}>
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="token" value={token} />
+            <div data-testid="family-decline">
+              <SubmitButton label={t("family.decline")} pendingLabel={t("family.declinePending")} size="medium" />
+            </div>
+          </form>
+          <Typography>
+            <Link href={{ pathname: "/registrations/family/[token]", params: { token } }}>{t("family.declineBack")}</Link>
+          </Typography>
+        </Stack>
       </Container>
     );
   }
@@ -132,13 +185,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
           )}
         </div>
 
-        <div data-testid="family-person">
-          <Typography component="h2" sx={{ fontWeight: 600, fontSize: "1rem" }}>
-            {t("family.person")}
-          </Typography>
-          <Typography>{link.personName}</Typography>
-          {link.personBirthDate && <Typography variant="body2">{t("family.birthDate", { date: link.personBirthDate })}</Typography>}
-        </div>
+        {personBlock}
 
         <Typography variant="body2">{t("family.next", { email: link.email, people })}</Typography>
         {link.adult && (
@@ -175,6 +222,15 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         <Typography variant="body2" color="text.secondary">
           {t("family.wrongData")}
         </Typography>
+
+        {/* The other answer to the same link (§NNN), quieter than the confirmation: the kept form deleted, nobody registered. */}
+        <form action={declineFamilyEntryAction}>
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="token" value={token} />
+          <div data-testid="family-decline">
+            <SubmitButton label={t("family.decline")} pendingLabel={t("family.declinePending")} variant="outlined" size="medium" />
+          </div>
+        </form>
       </Stack>
     </Container>
   );
