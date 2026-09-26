@@ -3176,7 +3176,7 @@
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
-        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
+        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only by confirming from the email sent to the address; at the limit, the email says so and carries no button. Each person signs their own declaration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
         "field": "Registrations per address (per event)",
         "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
         "value": "One address may register at most {people} for an event.",
@@ -3237,10 +3237,10 @@
           "title": "A family on one address",
           "who": "For every role. How several people register with the same email.",
           "steps": [
-            "One person registers as usual. If the form is sent again with the same address and another name, no registration is created: the screen shows the same “check your email” as always (so nobody can learn from the form who is registered), and the address gets the email “You are already registered — do you want to register someone else with the same address?”.",
-            "The email has a button to the form, with the address already filled in and locked. You fill in the other person's details: the name, the birth date (for a minor, the parent too), the phone is optional, the consents as usual. The link is valid for {confirmation} and works once.",
+            "One person registers as usual. If the form is sent again with the same address for a different person — another name and another birth date than every person already registered —, nobody is registered yet: the screen shows the same “check your email” as always (so nobody can learn from the form who is registered), and the address gets the email “Registering one more person?”, with who is already registered and the person from the form.",
+            "The email has one button, “I confirm I am registering another person”. The page it opens shows the details again; for an adult it asks one tick (the person declares their own health when they sign). The confirmation registers them straight away — no second confirmation link. The link is valid for {confirmation} and works once; unconfirmed details are deleted by themselves after that. If only the name or only the birth date differs, nobody is registered: the address gets the existing registration's email, with one sentence on how to register someone else.",
             "One address may register at most {people} for an event. An administrator changes the number in “Emails” → “Deadlines”. At the limit, the email says so and carries no button.",
-            "Each person confirms their own registration (their own confirmation link) and signs their own declaration — an adult never signs for another adult; a minor signs as usual. Each has their own place, their own race number and, if it comes to it, their own place on the waiting list.",
+            "Each person signs their own declaration (their own email with the declaration) — an adult never signs for another adult; a minor signs as usual. Each has their own place, their own race number and, if it comes to it, their own place on the waiting list.",
             "The address receives one QR code for each confirmed person, in separate emails — up to {people}. At the desk you scan each code in turn: each opens that person's own page.",
             "In the registrations list, at the desk and in the export each person is a row of their own, with the same address. “My registrations” lists every registration of the address, each with its name. Cancelling or erasing one leaves the others alone. Reminders and thank-yous come one per person."
           ],
@@ -3654,7 +3654,7 @@
       },
       "family": {
         "title": "Registering someone else on the same address?",
-        "body": "Send the form again — you get an email with the next step."
+        "body": "Send the form again with the person's full name and birth date — you get an email where you confirm with one button."
       }
     },
     "journey": {
@@ -3730,19 +3730,7 @@
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
     "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {
-      "title": "Registering another person with the same address",
-      "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event. For an adult you do not fill in the health information, the public list or Strava and Instagram: these need the person's own consent.",
-      "emailFixed": "The address the link was sent to. It cannot be changed here: for another address, use the ordinary form.",
-      "phoneOptional": "Optional for this person — a child without a phone, for instance. The emergency contact below is still required.",
-      "alreadyOnAddress": "This person is already registered with this address. Nothing was created. For someone else, change the name and send again — the link still works.",
-      "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address.",
-      "linkGone": "The link for another person no longer works — it was used, it expired, or it is for another event. Send the form below again with your address and the person's name: you get a new email with the next step.",
-      "people": {
-        "one": "one person",
-        "few": "{count} people",
-        "other": "{count} people"
-      },
-      "fitnessAcknowledged": "I know that the person I am registering declares themselves, when they sign their declaration, that their health allows the effort."
+      "linkGone": "This link for another person is no longer used. Send the form below again with your address and the person's full name and birth date: you get an email where you confirm their registration with one button."
     },
     "terms": {
       "accept": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
@@ -3940,6 +3928,33 @@
         "title": "This registration is no longer active",
         "body": "This link has already been used, and the registration has lapsed since — either the deadline passed or the event started."
       }
+    },
+    "family": {
+      "title": "Registering one more person",
+      "intro": "The registration form for {event} was sent again from the address {email}, for another person. We have not registered them yet: check the details below and confirm.",
+      "registered": "Already registered with this address",
+      "nobody": "Nobody at the moment.",
+      "person": "The person you are registering",
+      "birthDate": "Birth date: {date}",
+      "next": "Once confirmed, the person has their own place and receives at {email} their own email with the declaration to sign, then their own QR code. One address may register at most {people} for an event.",
+      "consent": "Register someone only with their agreement, and tell them that their details come to us and how we use them: see the privacy notice. The messages about their registration come to this address.",
+      "privacy": "The privacy notice",
+      "adultNote": "For an adult we keep none of the health information, the public-list choice or the Strava and Instagram from the form: these need the person's own consent.",
+      "fitnessAcknowledged": "I know that the person I am registering declares themselves, when they sign their declaration, that their health allows the effort.",
+      "action": "I confirm I am registering another person",
+      "wrongData": "Are the details wrong? Do not confirm: send the form again with the correct full name and birth date. This link expires by itself, and the details sent are deleted.",
+      "doneTitle": "The person is registered",
+      "done": "Done. The email with the declaration to sign for this person comes to your address: each person signs their own declaration and gets their own QR code.",
+      "doneWaitlist": "The person is on the waiting list. When a place frees up, an email comes to your address.",
+      "alreadyOnAddress": "We did not register them: a person with the same name or the same birth date is already registered with this address. For someone else, send the form again with that person's full name and birth date.",
+      "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address. This link still works if a place on the address frees up.",
+      "fitnessMissing": "First tick that the person declares their own health when they sign.",
+      "refused": "We could not register the person with the details sent (the terms may have changed in the meantime, or the age is not allowed, for instance). Send the registration form again; this link was not used.",
+      "people": {
+        "one": "one person",
+        "few": "{count} people",
+        "other": "{count} people"
+      }
     }
   },
   "Devs": {
@@ -3947,7 +3962,8 @@
       "title": "Emails captured on this machine",
       "intro": "Locally nothing leaves the machine: every message the platform would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
       "empty": "Nothing captured yet. Register for an event and come back.",
-      "contact": "Through the contact form — would have reached the club’s mailbox:"
+      "contact": "Through the contact form — would have reached the club’s mailbox:",
+      "text": "The message text"
     },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",

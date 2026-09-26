@@ -124,6 +124,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/registrations/confirm/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 4 },
   { file: "src/app/[locale]/registrations/declare/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
+  // Another person confirmed from the inbox (§NNN): born on the scale, its three containers.
+  { file: "src/app/[locale]/registrations/family/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
   { file: "src/app/[locale]/registrations/list/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/registrations/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/registrations/mine/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

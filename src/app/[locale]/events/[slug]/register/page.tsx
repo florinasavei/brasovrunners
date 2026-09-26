@@ -49,7 +49,6 @@ import {
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
-import ShownForMinor from "@/modules/registrations/ui/ShownForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
@@ -58,10 +57,6 @@ import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
-import { readAddressCap } from "@/modules/registrations/address-cap";
-import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
-import { readAnotherPersonLink } from "@/modules/registrations/token-actions";
-import { countForm } from "@/i18n/count-form";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -153,16 +148,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another } = await searchParams;
   /*
-    The form for another person on a registered address (§389), opened from the link emailed to it.
-    Read, never spent — a GET changes nothing (§12.8), and a mail scanner opening the link leaves it
-    working; the submission spends it. A link that works puts the form in its family shape: the
-    address fixed and shown, the telephone optional. One that does not — spent, lapsed, for another
-    event — says so in one sentence above the ordinary form, and nothing else.
+    A link from an email sent before §NNN, which opened this form for another person on the address
+    (§389). Retired: the email now carries one confirmation of the person the form named
+    (`/registrations/family/[token]`), so this is the ordinary form, and one sentence above it says
+    what to do instead. Nothing is read, and nothing is spent.
   */
-  const anotherSecret = !submitted && typeof another === "string" && another !== "" ? another : undefined;
-  const anotherLink = anotherSecret ? await readAnotherPersonLink(anotherSecret, event.id, now) : null;
-  const family = anotherLink?.ok ? { secret: anotherSecret as string, email: anotherLink.email } : null;
-  const anotherLinkGone = Boolean(anotherSecret) && !family;
+  const anotherLinkGone = !submitted && typeof another === "string" && another !== "";
   // Only meaningful on the screen that follows a successful submit (§224): the inbox to open
   // and the first name to greet, from the form just posted, never from the registrations table.
   const submittedFacts = submitted ? await readSubmittedFacts() : null;
@@ -224,17 +215,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       ? WAITLIST_FULL
       : null;
   /*
-    The three refusals of the form behind the emailed link (§389), each a marker matched against its
-    one literal. The first two only ever reach a page that holds the link — whoever reads them has
-    read the address's inbox, so they may say what they are about (§39); the third is the link
-    itself no longer working, said on the plain form it sends the person back to. The limit is the
-    club's setting, read now, in words that agree with the number.
-  */
-  const alreadyOnAddress = refusedMarkers.includes(ALREADY_ON_ADDRESS);
-  const addressAtCap = refusedMarkers.includes(ADDRESS_AT_CAP);
-  const anotherLinkRefused = refusedMarkers.includes(ANOTHER_LINK_INVALID);
-  const capCount = addressAtCap || family ? (await readAddressCap(getDb())).cap.registrationsPerAddress : null;
-  /*
     The same, said before anybody types (§348): somebody who reached this form by its address —
     the event page offers no button then — reads why it would refuse, above the first field. The
     form stays, so a slot that opens a minute later is still one press away, and so a refusal can
@@ -292,8 +272,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   const termsVersion = (await cachedCurrentApprovedDocument("TERMS", locale, now))?.version ?? null;
   const t = await getTranslations("Registration");
-  // "4 persoane" / "4 people": the club's limit per address, in words that agree with it (§389, §341).
-  const people = capCount !== null ? t(`another.people.${countForm(capCount, locale)}`, { count: capCount }) : "";
   // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
   const legal = await getTranslations("Legal");
@@ -525,17 +503,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 the one rejection that is about nothing they typed, so it is said first and on
                 its own, and the catalogue already had the sentence for it.
               */}
-              {alreadyOnAddress ? (
-                // Behind the emailed link (§389): this runner is on the address already, and the
-                // link still works for somebody else.
-                t("another.alreadyOnAddress")
-              ) : addressAtCap ? (
-                // Behind the emailed link (§389): the address has the club's limit; nothing was registered.
-                t("another.atCap", { people })
-              ) : anotherLinkRefused ? (
-                // The link is spent, lapsed or for another event: the plain form, and how to get a new one.
-                t("another.linkGone")
-              ) : waitlistRefusal ? (
+              {waitlistRefusal ? (
                 /*
                   No place and nothing to join (§348): the event page's own sentence, and that
                   nothing was registered or sent. Everything typed is still in the boxes below,
@@ -593,14 +561,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          {/* The form for another person on the address (§389): whose address, and what happens next. */}
-          {family && (
-            <Alert severity="info" sx={{ mb: 2 }} data-testid="another-person-notice">
-              <AlertTitle>{t("another.title")}</AlertTitle>
-              {t("another.intro", { email: family.email, people })}
-            </Alert>
-          )}
-          {/* A link that no longer works, opened (§389): one sentence, then the ordinary form. */}
+          {/* A link from an older email for another person (§389), opened: one sentence, then the ordinary form (§NNN). */}
           {anotherLinkGone && !error && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="another-person-link-gone">
               {t("another.linkGone")}
@@ -698,8 +659,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
               />
               <input type="hidden" name="renderedAt" value={now.toISOString()} />
-              {/* The link's secret, back to the action that spends it (§389) — never kept in the draft. */}
-              {family && <input type="hidden" name={ANOTHER_PERSON_PARAM} value={family.secret} />}
 
               {/*
                 Two columns from `md` up, one below (BR-REQ-041-01 is phone-first and the phone
@@ -841,41 +800,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 messages to "…@gmail.con": one letter, and the confirmation link goes nowhere
                 while the screen says to check the inbox.
               */}
-              {family ? (
-                /*
-                  The address the link was sent to, fixed (§389): shown so the person knows where
-                  the next message goes, read-only, and never posted — the action takes the address
-                  from the token, so nothing typed here could move a registration to another inbox.
-                */
-                <TextField
-                  id={fieldId("email")}
-                  label={t("email")}
-                  value={family.email}
-                  helperText={t("another.emailFixed")}
-                  fullWidth
-                  slotProps={{ htmlInput: { readOnly: true, "aria-readonly": true, "data-testid": "another-person-email" } }}
-                />
-              ) : (
-                <EmailTwice
-                  name="email"
-                  confirmName="emailConfirm"
-                  fieldId={fieldId("email")}
-                  confirmFieldId={fieldId("emailConfirm")}
-                  label={t("email")}
-                  confirmLabel={t("emailConfirm")}
-                  mismatchLabel={t("emailMismatch")}
-                  noPasteLabel={t("emailNoPaste")}
-                  allowPasteLabel={t("emailAllowPaste")}
-                  invalidLabel={t("emailInvalid")}
-                  suggestionLabel={t.raw("emailSuggestion") as string}
-                  useSuggestionLabel={t("emailUseSuggestion")}
-                  help={t("emailHelp")}
-                  defaultValue={prefill("email")}
-                  defaultConfirmValue={prefill("emailConfirm")}
-                  error={invalid.has("email") || invalid.has("emailConfirm")}
-                  helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
-                />
-              )}
+              <EmailTwice
+                name="email"
+                confirmName="emailConfirm"
+                fieldId={fieldId("email")}
+                confirmFieldId={fieldId("emailConfirm")}
+                label={t("email")}
+                confirmLabel={t("emailConfirm")}
+                mismatchLabel={t("emailMismatch")}
+                noPasteLabel={t("emailNoPaste")}
+                allowPasteLabel={t("emailAllowPaste")}
+                invalidLabel={t("emailInvalid")}
+                suggestionLabel={t.raw("emailSuggestion") as string}
+                useSuggestionLabel={t("emailUseSuggestion")}
+                help={t("emailHelp")}
+                defaultValue={prefill("email")}
+                defaultConfirmValue={prefill("emailConfirm")}
+                error={invalid.has("email") || invalid.has("emailConfirm")}
+                helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
+              />
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 invalidLabel={t("phoneInvalid")}
@@ -888,12 +831,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
                 countryNames={phoneNames}
-                // Optional for another person on the address (§389): often a child with no phone of
-                // their own; the emergency contact below is still asked.
-                required={!family}
+                required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
-                helperText={invalid.has("phone") ? t("errors.phone") : family ? t("another.phoneOptional") : t("phoneHelp")}
+                helperText={invalid.has("phone") ? t("errors.phone") : t("phoneHelp")}
               />
 
               {/*
@@ -1124,9 +1065,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   (§323): gone once the birth date says under eighteen — disabled as well as
                   hidden, so neither box is validated or posted — and never stored for a minor
                   whatever is posted. A rejection naming either box shows it whatever the date.
-                  Never on the family form (§421): a minor keeps none, and another adult's
-                  socials are that adult's to give — the service drops them whatever is posted. */}
-              {!family && (
+                  Another adult's, sent from an address registered already (§421, §NNN), are that
+                  adult's to give: the service keeps none of them for the confirmation. */}
               <HiddenForMinor
                 birthDateId={fieldId("birthDate")}
                 forceOpen={invalid.has("stravaUrl") || invalid.has("instagramHandle")}
@@ -1158,7 +1098,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
               </HiddenForMinor>
-              )}
 
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
@@ -1174,8 +1113,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 consents; this is the optional note for the person who wants the medical team
                 to know something, and it says so.
 
-                On the family form, only for a minor (§421): the parent consents for the child;
-                another adult's health note is art. 9 data only that adult can consent to.
+                For another adult sent from an address registered already (§421, §NNN), the health
+                note is art. 9 data only that adult can consent to: the service keeps none of it.
               */}
               {(() => {
                 const healthBlock = (
@@ -1201,13 +1140,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
                 );
-                return family ? (
-                  <ShownForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("healthConsent") || invalid.has("healthNotes")}>
-                    {healthBlock}
-                  </ShownForMinor>
-                ) : (
-                  healthBlock
-                );
+                return healthBlock;
               })()}
 
               </Stack>
@@ -1297,30 +1230,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   ),
                 })}
               </CheckboxField>
-              {/*
-                The fitness statement. On the family form (§389, §421) it is the parent's to make
-                for a minor, as on the ordinary form, and nobody's to make for another adult: then
-                the address holder acknowledges that the person makes it in the declaration they
-                sign. The birth date decides which one is shown; the server decides which one is owed.
-              */}
-              {family ? (
-                <>
-                  <ShownForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("fitnessDeclared")}>
-                    <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
-                      {t("fitnessDeclared")}
-                    </CheckboxField>
-                  </ShownForMinor>
-                  <HiddenForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("fitnessAcknowledged")}>
-                    <CheckboxField id={fieldId("fitnessAcknowledged")} name="fitnessAcknowledged" required defaultChecked={prefill("fitnessAcknowledged") === "on"}>
-                      {t("another.fitnessAcknowledged")}
-                    </CheckboxField>
-                  </HiddenForMinor>
-                </>
-              ) : (
-                <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
-                  {t("fitnessDeclared")}
-                </CheckboxField>
-              )}
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
+                {t("fitnessDeclared")}
+              </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required defaultChecked={prefill("privacyAcknowledged") === "on"}>
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
@@ -1355,8 +1267,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                       )}
                     </>
                   );
-                  // On the family form, a minor's only (§421): another adult consents to the list themselves.
-                  return family ? <ShownForMinor birthDateId={fieldId("birthDate")}>{listQuestion}</ShownForMinor> : listQuestion;
+                  return listQuestion;
                 })()}
 
               {/*

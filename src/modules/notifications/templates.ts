@@ -590,6 +590,20 @@ export type TemplateData = {
   addressCap?: number;
   addressAtCap?: boolean;
   /**
+   * Another person on the address, confirmed from the inbox (§NNN): who the address holds at the
+   * event now, as "Ana P." — its own active registrations, never anybody else's — and the person
+   * the form named, in full, with the birth date as "12.03.2012". Read from the kept form at send
+   * time; absent at the limit or once the form is gone, and then there is no button either.
+   */
+  familyRegistered?: string[];
+  familyPersonName?: string;
+  familyPersonBirthDate?: string;
+  /**
+   * A message re-sent because the form came back with a registration's name or birth date but not
+   * both (§NNN): one sentence says how to register somebody else. Only ever in the inbox.
+   */
+  anotherPersonHint?: boolean;
+  /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
    * message greets them and says whose registration it is about (§419) — the address is theirs.
    */
@@ -989,17 +1003,19 @@ const T = {
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
     /**
-     * The form sent again with a registered address and another runner's name (§389): nothing was
-     * created, and this is the address's answer. Two shapes: the question and the link to the form
-     * for the other person; or, when the address already carries the club's limit at the event, the
-     * sentence that says so and no link. Addressed to the inbox, not to one runner — a parent reads
-     * it as often as the runner does — so the greeting names nobody.
+     * The form sent again from a registered address, for a different person (§389, §NNN): nobody
+     * was registered yet, and this is the address's answer. Two shapes: the question, with one
+     * button that confirms the person the form named — who the address holds and who that person
+     * is are lines the platform adds before these words (`familyLines`); or, when the address
+     * already carries the club's limit at the event, the sentence that says so and no button.
+     * Addressed to the inbox, not to one runner — a parent reads it as often as the runner does —
+     * so the greeting names nobody.
      */
     registerAnotherPerson: {
       subject: (d: TemplateData) =>
         d.addressAtCap
           ? `Adresa ta are deja numărul maxim de înscrieri la ${d.eventTitle ?? "eveniment"}`
-          : `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"} — înscrii pe altcineva?`,
+          : `Înscrii încă o persoană la ${d.eventTitle ?? "eveniment"}?`,
       greeting: () => "Salut,",
       body: (d: TemplateData) =>
         d.addressAtCap
@@ -1009,13 +1025,13 @@ const T = {
               "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
             ]
           : [
-              `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"}. Vrei să înscrii pe altcineva cu aceeași adresă?`,
-              "Formularul a fost trimis din nou cu această adresă și un alt nume, așa că nu am înscris încă pe nimeni. Dacă e cineva din familie, apasă butonul de mai jos: adresa rămâne aceeași, completezi datele persoanei, iar ea își confirmă și își semnează singură înscrierea, cu propriul link și propriul cod QR.",
+              `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă, pentru o altă persoană. Nu am înscris-o încă: dacă tu ai trimis formularul și vrei să o înscrii, apasă butonul de mai jos și confirmă pe pagina care se deschide.`,
+              "După confirmare persoana are propriul loc și primește pe această adresă propriul email cu declarația de semnat, apoi propriul cod QR.",
               // The other person's agreement, and that they are told how their data is used (§419; GDPR art. 14).
               "Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim: nota de confidențialitate e la linkul de la sfârșitul acestui mesaj. Mesajele despre înscrierea lui vor veni la această adresă.",
-              `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)} și se poate folosi o singură dată. Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.`,
+              `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)} și se poate folosi o singură dată. Dacă nu tu ai trimis formularul, ignoră acest mesaj: nu se înscrie nimeni, iar datele trimise se șterg singure.`,
             ],
-      action: "Înscrie altă persoană",
+      action: "Confirm că înscriu altă persoană",
     },
     /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
@@ -1065,6 +1081,16 @@ const T = {
     },
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
+    /**
+     * Before the body of the confirmation for another person (§NNN): who the address holds at the
+     * event, and who the form named — facts of this send, whoever wrote the words around them.
+     */
+    familyLines: (registered: readonly string[], name: string, birthDate: string) => [
+      `Înscriși deja cu această adresă: ${registered.length > 0 ? endSentence(registered.join(", ")) : "nimeni în acest moment."}`,
+      `Persoana din formular: ${name}${birthDate ? `, data nașterii ${birthDate}` : ""}.`,
+    ],
+    /** Under "you are already registered", on a re-send for a slip (§NNN): the one way to register somebody else. */
+    anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -1344,7 +1370,7 @@ const T = {
       subject: (d: TemplateData) =>
         d.addressAtCap
           ? `Your address already has the most registrations allowed for ${d.eventTitle ?? "the event"}`
-          : `You are already registered for ${d.eventTitle ?? "the event"} — registering someone else?`,
+          : `Registering one more person for ${d.eventTitle ?? "the event"}?`,
       greeting: () => "Hello,",
       body: (d: TemplateData) =>
         d.addressAtCap
@@ -1354,12 +1380,12 @@ const T = {
               "If you did not send the form, you can ignore this message: nothing has changed.",
             ]
           : [
-              `You are already registered for ${d.eventTitle ?? "the event"}. Do you want to register someone else with the same address?`,
-              "The form was sent again with this address and another name, so we have not registered anyone yet. If it is someone in your family, press the button below: the address stays the same, you fill in that person's details, and they confirm and sign their own registration, with their own link and their own QR code.",
+              `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address, for another person. We have not registered them yet: if you sent the form and want to register them, press the button below and confirm on the page it opens.`,
+              "Once confirmed, the person has their own place and receives, at this address, their own email with the declaration to sign, then their own QR code.",
               "Register someone only with their agreement, and tell them that their details come to us and how we use them: the privacy notice is at the link at the end of this message. The messages about their registration will come to this address.",
-              `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)} and can be used once. If you did not send the form, you can ignore this message: nothing has changed.`,
+              `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)} and can be used once. If you did not send the form, ignore this message: nobody is registered, and the details sent are deleted by themselves.`,
             ],
-      action: "Register another person",
+      action: "I confirm I am registering another person",
     },
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
@@ -1393,6 +1419,11 @@ const T = {
       return `${label}: ${start}sunset at ${night.sunset}${end}. Bring a headlamp.`;
     },
     addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
+    familyLines: (registered: readonly string[], name: string, birthDate: string) => [
+      `Already registered with this address: ${registered.length > 0 ? endSentence(registered.join(", ")) : "nobody at the moment."}`,
+      `The person in the form: ${name}${birthDate ? `, born on ${birthDate}` : ""}.`,
+    ],
+    anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -1460,6 +1491,11 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un participant" : form === "few" ? `${count} participanți` : `${count} de participanți`;
   return form === "one" ? "one participant" : `${count} participants`;
+}
+
+/** A sentence that already ends in a full stop — "Ana P." — takes no second one (§NNN). */
+function endSentence(text: string): string {
+  return text.endsWith(".") ? text : `${text}.`;
 }
 
 /**
@@ -1660,6 +1696,16 @@ export function buildTemplateContent(
       // The number when the message carries one: a settled number, or the provisional one the
       // desk gave, whichever this registration actually has (§286).
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
+      // …and, on a re-send for a slip (§NNN), how to register somebody else — the inbox's alone.
+      ...(data.anotherPersonHint ? [copy.anotherPersonHint] : []),
+      /*
+        Another person on the address (§NNN): who the address holds and who the form named, before
+        the question — facts of this send, like "you were already registered" above, so a club that
+        rewrote the words still says them. Only with the kept form in hand, as the button.
+      */
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyPersonName
+        ? copy.familyLines(data.familyRegistered ?? [], data.familyPersonName, data.familyPersonBirthDate ?? "")
+        : []),
       /*
         The club's own words, with their formatting when it wrote them in the editor (§270).
         A stored document that cannot be read — an older shape, a node an email may not carry —

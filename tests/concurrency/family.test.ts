@@ -13,6 +13,10 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 import { ADDRESS_CAP_SETTING_KEY } from "@/modules/registrations/address-cap";
 import { familyRegistrationOpen, LEGACY_ONE_PER_ADDRESS_CONSTRAINT } from "@/modules/registrations/family-gate";
+import { issueActionToken } from "@/modules/action-tokens/repository";
+import { pendingFamilyEntries } from "@/db/schema/family-entries";
+import { confirmFamilyEntry } from "@/modules/registrations/family-confirm";
+import { linkFamilyEntryToken } from "@/modules/registrations/family-entries";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 
 /**
@@ -112,10 +116,12 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
     return { id: event.id, eventStatus: event.eventStatus, registrationMode: "INTERNAL", startsAt: event.startsAt, registrationOpensAt: null, registrationClosesAt: null, capacity: event.capacity, raceId: null, publishedAt: NOW };
   }
 
+  // Each person a birth date of their own (§NNN): a different person differs in both facts.
+  const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Maria: "1990-07-11", Ion: "1987-02-14", Dan: "1988-05-20", Eva: "1991-11-30", Radu: "1989-09-09" };
   const submission = (email: string, firstName: string) => ({
     firstName,
     lastName: "Pop",
-    birthDate: "1985-03-02",
+    birthDate: BIRTH_DATES[firstName] ?? "1985-03-02",
     sex: "UNSPECIFIED",
     phone: "+40711111111",
     emergencyContactName: "Ion Vecinul",
@@ -180,5 +186,50 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
 
     const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(rows).toHaveLength(2);
+  });
+
+  it("the emailed confirmations pressed together cannot pass the club's limit per address (§NNN)", async () => {
+    // The contract release, as in the case above (it has run by now whatever the database was).
+    expect(await familyRegistrationOpen(db)).toBe(true);
+    await db
+      .insert(platformSettings)
+      .values({ key: ADDRESS_CAP_SETTING_KEY, value: { registrationsPerAddress: 2 }, updatedAt: NOW })
+      .onConflictDoUpdate({ target: platformSettings.key, set: { value: { registrationsPerAddress: 2 }, updatedAt: NOW } });
+    forgetCachedAddressCap();
+
+    const event = await createEvent();
+    const email = `family.confirm.${Date.now()}@example.ro`;
+    await submitRegistration(db, event, submission(email, "Ana"), NOW);
+    // Four different people from the public form — within the form's five an hour — each kept for the inbox.
+    for (const name of ["Maria", "Ion", "Dan", "Eva"]) await submitRegistration(db, event, submission(email, name), NOW);
+    const kept = await db.select().from(pendingFamilyEntries).where(eq(pendingFamilyEntries.eventId, event.id));
+    expect(kept).toHaveLength(4);
+
+    // The link each email would carry, minted as the renderer mints it at send time and tied to its form.
+    const secrets = await Promise.all(
+      kept.map(async (entry) => {
+        const issued = await issueActionToken(db, {
+          participantId: entry.participantId,
+          registrationId: entry.registrationId,
+          purpose: "REGISTER_ANOTHER_PERSON",
+          expiresAt: entry.expiresAt,
+          now: NOW,
+        });
+        await linkFamilyEntryToken(db, entry.id, issued.token.id);
+        return issued.secret;
+      }),
+    );
+
+    // Four presses at once, one slot left on the address.
+    const results = await Promise.allSettled(secrets.map((secret) => confirmFamilyEntry(db, secret, { fitnessAcknowledged: true }, NOW)));
+    expect(results.filter((result) => result.status === "fulfilled" && result.value.ok)).toHaveLength(1);
+    const refused = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+    expect(refused).toHaveLength(3);
+    for (const failure of refused) expect((failure.reason as { fields?: string[] }).fields).toEqual(["addressAtCap"]);
+
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(rows).toHaveLength(2);
+    // The refused three kept their forms and their links; the confirmed one's form is gone.
+    expect(await db.select().from(pendingFamilyEntries).where(eq(pendingFamilyEntries.eventId, event.id))).toHaveLength(3);
   });
 });

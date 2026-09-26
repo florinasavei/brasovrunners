@@ -3176,7 +3176,7 @@
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
-        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar din linkul trimis pe email; la limită, emailul spune asta și nu mai are link. Fiecare persoană își confirmă și își semnează singură înscrierea. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
+        "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment — de exemplu o familie. A doua înscriere se face doar confirmând din emailul trimis adresei; la limită, emailul spune asta și nu mai are buton. Fiecare persoană își semnează singură declarația. De la BR-V1.94 fluxul e pornit; până rulează acea versiune pe un mediu, rămâne latent.",
         "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
         "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
         "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
@@ -3237,10 +3237,10 @@
           "title": "O familie pe o singură adresă",
           "who": "Pentru toate rolurile. Cum se înscriu mai multe persoane cu același email.",
           "steps": [
-            "O persoană se înscrie ca de obicei. Dacă formularul e trimis din nou cu aceeași adresă și alt nume, nu se creează nicio înscriere: pe ecran apare același „verifică-ți emailul” ca oricând (așa nimeni nu poate afla din formular cine e înscris), iar adresa primește emailul „Ești deja înscris(ă) — vrei să înscrii pe altcineva cu aceeași adresă?”.",
-            "Emailul are un buton către formular, cu adresa deja completată și blocată. Se completează datele celeilalte persoane: numele, data nașterii (la un minor, și părintele), telefonul e opțional, acordurile ca de obicei. Linkul e valabil {confirmation} și merge o singură dată.",
+            "O persoană se înscrie ca de obicei. Dacă formularul e trimis din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise —, încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând (așa nimeni nu poate afla din formular cine e înscris), iar adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular.",
+            "Emailul are un singur buton, „Confirm că înscriu altă persoană”. Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea. Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
             "Pe o adresă se pot înscrie cel mult {people} la un eveniment. Numărul îl schimbă un administrator, în „Emailuri” → „Termene”. La limită, emailul spune asta și nu mai are buton.",
-            "Fiecare persoană își confirmă singură înscrierea (propriul link de confirmare) și își semnează singură declarația — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei. Fiecare are propriul loc, propriul număr de concurs și, dacă e cazul, propriul loc pe lista de așteptare.",
+            "Fiecare persoană își semnează singură declarația (propriul email cu declarația) — un adult nu semnează pentru alt adult; pentru un minor semnează ca de obicei. Fiecare are propriul loc, propriul număr de concurs și, dacă e cazul, propriul loc pe lista de așteptare.",
             "Adresa primește câte un cod QR pentru fiecare persoană confirmată, în emailuri separate — până la {people}. La masă scanezi fiecare cod pe rând: fiecare deschide pagina persoanei lui.",
             "În lista de înscrieri, la masă și în export fiecare persoană e un rând separat, cu aceeași adresă. „Înscrierile mele” arată toate înscrierile adresei, cu numele fiecăruia. Anularea sau ștergerea uneia nu le atinge pe celelalte. Mementourile și mulțumirile vin câte unul pentru fiecare persoană."
           ],
@@ -3654,7 +3654,7 @@
       },
       "family": {
         "title": "Înscrii pe altcineva cu aceeași adresă?",
-        "body": "Trimite din nou formularul — primești un email cu pasul următor."
+        "body": "Trimite din nou formularul cu numele complet și data nașterii persoanei — primești un email în care confirmi cu un buton."
       }
     },
     "journey": {
@@ -3730,19 +3730,7 @@
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
-      "title": "Înscrii o altă persoană cu aceeași adresă",
-      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment. Pentru un adult nu completezi informațiile medicale, lista publică sau Strava și Instagram: acestea țin de acordul persoanei însăși.",
-      "emailFixed": "Adresa la care a venit linkul. Nu se poate schimba aici: pentru altă adresă, completează formularul obișnuit.",
-      "phoneOptional": "Opțional pentru această persoană — de exemplu un copil fără telefon. Contactul de urgență de mai jos rămâne obligatoriu.",
-      "alreadyOnAddress": "Persoana aceasta este deja înscrisă cu această adresă. Nu s-a creat nimic. Pentru altcineva, schimbă numele și trimite din nou — linkul rămâne valabil.",
-      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email.",
-      "linkGone": "Linkul pentru încă o persoană nu mai este valabil — a fost folosit, a expirat sau este pentru alt eveniment. Trimite din nou formularul de mai jos cu adresa ta și numele persoanei: primești un email nou cu pasul următor.",
-      "people": {
-        "one": "o persoană",
-        "few": "{count} persoane",
-        "other": "{count} de persoane"
-      },
-      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul."
+      "linkGone": "Linkul acesta pentru încă o persoană nu mai este folosit. Trimite din nou formularul de mai jos cu adresa ta, numele complet și data nașterii persoanei: primești un email în care confirmi înscrierea ei cu un singur buton."
     },
     "terms": {
       "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
@@ -3940,6 +3928,33 @@
         "title": "Înscrierea nu mai este activă",
         "body": "Linkul acesta s-a folosit deja, iar între timp înscrierea a expirat — fie a trecut termenul, fie evenimentul a început."
       }
+    },
+    "family": {
+      "title": "Înscrii încă o persoană",
+      "intro": "Formularul de înscriere la {event} a fost trimis din nou de pe adresa {email}, pentru o altă persoană. Nu am înscris-o încă: verifică datele de mai jos și confirmă.",
+      "registered": "Înscriși deja cu această adresă",
+      "nobody": "Nimeni în acest moment.",
+      "person": "Persoana pe care o înscrii",
+      "birthDate": "Data nașterii: {date}",
+      "next": "După confirmare, persoana are propriul loc și primește la {email} propriul email cu declarația de semnat, apoi propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "consent": "Înscrie pe cineva doar cu acordul lui și spune-i că datele lui ajung la noi și cum le folosim: vezi nota de confidențialitate. Mesajele despre înscrierea lui vin la această adresă.",
+      "privacy": "Nota de confidențialitate",
+      "adultNote": "Pentru un adult nu păstrăm informațiile medicale, alegerea pentru lista publică sau Strava și Instagram din formular: acestea țin de acordul persoanei însăși.",
+      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul.",
+      "action": "Confirm că înscriu altă persoană",
+      "wrongData": "Datele nu sunt bune? Nu confirma: trimite din nou formularul, cu numele complet și data nașterii corecte. Linkul acesta expiră singur, iar datele trimise se șterg.",
+      "doneTitle": "Persoana este înscrisă",
+      "done": "Gata. Emailul cu declarația de semnat pentru această persoană vine pe adresa ta: fiecare persoană își semnează singură declarația și primește propriul cod QR.",
+      "doneWaitlist": "Persoana este pe lista de așteptare. Când se eliberează un loc, primești un email pe adresa ta.",
+      "alreadyOnAddress": "Nu am înscris-o: o persoană cu același nume sau cu aceeași dată a nașterii este deja înscrisă cu această adresă. Pentru altcineva, trimite din nou formularul cu numele complet și data nașterii acelei persoane.",
+      "atCap": "Nu am înscris-o: pe o adresă de email se pot înscrie cel mult {people} la un eveniment, iar adresa aceasta le are deja. Pentru încă o persoană, folosește adresa ei de email. Linkul rămâne valabil dacă se eliberează un loc pe adresă.",
+      "fitnessMissing": "Bifează mai întâi că persoana își declară singură, la semnare, starea de sănătate.",
+      "refused": "Nu am putut înscrie persoana cu datele trimise (de exemplu, termenii s-au schimbat între timp sau vârsta nu este permisă). Trimite din nou formularul de înscriere; linkul acesta nu s-a folosit.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
     }
   },
   "Devs": {
@@ -3947,7 +3962,8 @@
       "title": "Emailuri capturate pe această mașină",
       "intro": "Local nu pleacă nimic: fiecare mesaj pe care platforma l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
       "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino.",
-      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:"
+      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:",
+      "text": "Textul mesajului"
     },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",

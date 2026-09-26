@@ -38,7 +38,14 @@ import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
-import { ANOTHER_PERSON_PARAM } from "@/modules/registrations/domain/family";
+import {
+  birthDateText,
+  findFamilyEntryById,
+  linkFamilyEntryToken,
+  personOfEntry,
+  registeredOnAddress,
+} from "@/modules/registrations/family-entries";
+import type { PendingFamilyEntry } from "@/db/schema/family-entries";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { weatherForEvent } from "@/modules/weather/source";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
@@ -72,15 +79,16 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
-  // The form for another person on the same address (§389) — only while the address has room; at
-  // the club's limit the message carries no link, and nothing is minted for it.
+  // Another person on the same address, confirmed from the inbox (§389, §NNN) — only while the
+  // address has room and the posted form is still kept; at the club's limit the message carries no
+  // link, and nothing is minted for it.
   REGISTER_ANOTHER_PERSON: "REGISTER_ANOTHER_PERSON",
 };
 
 /**
- * Where each purpose's link opens: a page of its own, the secret in its path — except the form for
- * another person on one address (§389), which is the event's own registration form with the secret
- * in `?another=` (`ANOTHER_PERSON_PARAM`), built below with the event's slug.
+ * Where each purpose's link opens: a page of its own, the secret in its path. Another person on one
+ * address (§389, §NNN) opens `/registrations/family/[token]`, built below once the kept form is
+ * found — it is minted only then.
  */
 const ROUTE_BY_PURPOSE: Record<
   Exclude<EmailActionTokenPurpose, "REGISTER_ANOTHER_PERSON">,
@@ -503,6 +511,11 @@ async function renderRow(
   if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
     data.alreadyRegistered = true;
   }
+  // …re-sent for a slip (§NNN): the name or the birth date matched a registration, not both — so the
+  // message says how to register somebody else. Never on a club copy: it is advice to the address.
+  if ((row.payloadJson as { anotherPersonHint?: unknown } | null)?.anotherPersonHint === true && !clubCopy) {
+    data.anotherPersonHint = true;
+  }
   // The staff invitation (§141): everything it says is in the payload — there is no
   // participant and no token; the action is the sign-in page, which asserts who they are.
   if (row.messageType === "STAFF_INVITATION") {
@@ -565,16 +578,27 @@ async function renderRow(
   }
 
   /*
-    The link for another person on one address (§389): what the submission decided, from the row —
-    the club's limit as it stood then, and whether the address had reached it. At the limit the
-    message is the sentence that says so, and no token is minted for a link it does not carry.
+    Another person on one address (§389, §NNN): what the submission decided, from the row — the
+    club's limit as it stood then, whether the address had reached it, and the kept form by its id.
+    At the limit the message is the sentence that says so, and no token is minted for a link it does
+    not carry. Otherwise the message names who the address holds here now — its own active
+    registrations, first name and initial, never anybody else's — and the person the form named,
+    read from the kept form at send time; with the form gone (confirmed, or lapsed and purged) there
+    is nothing to confirm, and no link either.
   */
-  let anotherPersonLink = false;
+  let familyEntry: PendingFamilyEntry | undefined;
   if (row.messageType === "REGISTER_ANOTHER_PERSON") {
-    const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown };
+    const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown; familyEntryId?: unknown };
     data.addressAtCap = payload.atCap === true;
     if (typeof payload.registrationsPerAddress === "number") data.addressCap = payload.registrationsPerAddress;
-    anotherPersonLink = !data.addressAtCap && Boolean(eventDetails?.slug);
+    const kept = !data.addressAtCap && typeof payload.familyEntryId === "string" ? await findFamilyEntryById(db, payload.familyEntryId) : undefined;
+    if (kept && kept.expiresAt.getTime() > now.getTime()) {
+      familyEntry = kept;
+      const person = personOfEntry(kept);
+      data.familyPersonName = person.legalName;
+      data.familyPersonBirthDate = birthDateText(person.birthDate);
+      data.familyRegistered = await registeredOnAddress(db, kept.eventId, kept.participantId);
+    }
   }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
@@ -583,26 +607,24 @@ async function renderRow(
   // one rule to check rather than a list of which actions are safe to copy (§320).
   let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
   if (purpose === "REGISTER_ANOTHER_PERSON") {
-    if (anotherPersonLink && eventDetails && row.participantId && row.registrationId && !clubCopy) {
+    if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
       /*
         Single use, hashed at rest, minted here at send time like every link (§12.8, §14.5), and
-        alive for the club's email-link window ("Termene", §377) — the same hours the other person's
-        own confirmation link will get. Scoped to the registration the address already holds here,
-        which names the event and the participant; opening the page reads it, only the submission
-        spends it. The form is the event's own, in the language its slug belongs to.
+        alive exactly as long as the kept form — the club's email-link window ("Termene", §377) from
+        the submission. Scoped to the registration the address already holds here, which names the
+        event and the participant, and tied to the kept form by the token's id, so it confirms this
+        one person and nobody else. Opening the page reads it; only the press spends it.
       */
       const issued = await issueActionToken(db, {
         participantId: row.participantId,
         registrationId: row.registrationId,
         purpose,
-        expiresAt: emailLinkExpiresAt(now, settings),
+        expiresAt: familyEntry.expiresAt,
         now,
       });
-      const formPath = getPathname({
-        locale: eventDetails.locale,
-        href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } },
-      });
-      actionUrl = `${env.APP_BASE_URL}${formPath}?${ANOTHER_PERSON_PARAM}=${issued.secret}`;
+      await linkFamilyEntryToken(db, familyEntry.id, issued.token.id);
+      const path = getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token: issued.secret } } });
+      actionUrl = `${env.APP_BASE_URL}${path}`;
     }
   } else if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];

@@ -107,7 +107,8 @@ export async function resolveLocaleSwitch(
     parsed.route === "/registrations/declare/[token]" ||
     parsed.route === "/registrations/manage/[token]" ||
     parsed.route === "/registrations/mine/[token]" ||
-    parsed.route === "/registrations/list/[token]"
+    parsed.route === "/registrations/list/[token]" ||
+    parsed.route === "/registrations/family/[token]"
   ) {
     const token = parsed.params.token;
     if (!token) return listing;

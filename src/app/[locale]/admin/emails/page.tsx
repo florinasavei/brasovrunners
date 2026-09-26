@@ -9,6 +9,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual } from "@/modules/notifications/templates";
+import { EMAIL_SAMPLE_FAMILY } from "@/modules/notifications/domain/email-sample";
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
@@ -200,8 +201,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     const sample = emailSampleFor(messageType, emailLocale);
     // The club's deadlines in force (§377), which the send gives every message as numbers.
     sample.timings = timings;
-    // And the club's limit per address, on the message that states it (§389): the link's shape.
-    if (messageType === "REGISTER_ANOTHER_PERSON") sample.addressCap = perAddress;
+    // And the club's limit per address, on the message that states it (§389): the link's shape —
+    // with who the sample address holds and the person its form named (§NNN).
+    if (messageType === "REGISTER_ANOTHER_PERSON") {
+      sample.addressCap = perAddress;
+      sample.familyRegistered = [...EMAIL_SAMPLE_FAMILY.registered];
+      sample.familyPersonName = EMAIL_SAMPLE_FAMILY.personName;
+      sample.familyPersonBirthDate = EMAIL_SAMPLE_FAMILY.personBirthDate;
+    }
     // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
     // and through the club's own words where it has written some (§247), so the preview is
     // what a participant will actually receive rather than what the platform ships.

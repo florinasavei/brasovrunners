@@ -436,11 +436,11 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .superRefine(emergencyContactRule);
 
 /**
- * The public form for another person on an address that is registered already (§389), reached
- * only from the link emailed to that address. Everything the public form asks, but the runner's
- * own telephone: the second person is often a child with none, and the address — and the emergency
- * contact, still required — is how the club reaches the family. The address itself is never read
- * from this form: the caller fixes it from the token.
+ * Another person on an address that is registered already (§389), as the press on the emailed
+ * confirmation reads the kept form again (§NNN, `family-confirm.ts`). Everything the public form
+ * asks, but the runner's own telephone — kept optional from §389's family form, where the second
+ * person was often a child with none; the emergency contact is still required. The address itself
+ * is never read from the kept form: the caller fixes it from the token.
  */
 export const anotherPersonSubmissionSchema = submissionFields
   .partial({ phone: true })
@@ -455,9 +455,10 @@ export const anotherPersonSubmissionSchema = submissionFields
 /**
  * Whether the runner on the family form is an adult (§421): eighteen or over today, by the same
  * calendar rule as the guardian check. False for a date that cannot be read — the schema refuses
- * that on its own, and nothing is taken away from a form it is about to refuse.
+ * that on its own, and nothing is taken away from a form it is about to refuse. The confirmation
+ * page of §NNN asks the adult's acknowledgement by the same rule (`family-entries.ts`).
  */
-function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
+export function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
   if (typeof birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return false;
   if (Number.isNaN(Date.parse(`${birthDate}T00:00:00Z`))) return false;
   return !isMinorOn(birthDate, now);
