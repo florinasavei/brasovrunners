@@ -1,4 +1,4 @@
-import { HIGH_WEB_MAX, WEB_MAX } from "./limits";
+import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "./limits";
 
 /**
  * The widths a picture is stored at, and how a page asks for the right one (§414).
@@ -24,8 +24,13 @@ import { HIGH_WEB_MAX, WEB_MAX } from "./limits";
  * a body keeps working.
  */
 
-/** The two choices beside every upload. `normal` is the default and what an old client sends. */
-export const IMAGE_QUALITIES = ["normal", "high"] as const;
+/**
+ * The four choices beside every upload, smallest first (§NNN; §414 had two): «Minimă» (`low`),
+ * «Medie» (`normal`), «Mare» (`high`) and «Originală» (`original`). The two words §414 sent keep
+ * their meaning — `normal` is still the default and what an old client sends, `high` still keeps
+ * 4000 pixels — so a request from a tab opened before this change stores exactly what it did.
+ */
+export const IMAGE_QUALITIES = ["low", "normal", "high", "original"] as const;
 export type ImageQuality = (typeof IMAGE_QUALITIES)[number];
 export const DEFAULT_IMAGE_QUALITY: ImageQuality = "normal";
 
@@ -33,7 +38,7 @@ export const DEFAULT_IMAGE_QUALITY: ImageQuality = "normal";
  * The quality a request asked for, or `null` when it asked for something that is not one.
  *
  * Absent (a client from before §414, a test that posts only a file) is the default; anything
- * else must be one of the two words — the server never guesses what `"hd"` or `"max"` meant.
+ * else must be one of the four words — the server never guesses what `"hd"` or `"max"` meant.
  */
 export function parseImageQuality(value: unknown): ImageQuality | null {
   if (value === null || value === undefined || value === "") return DEFAULT_IMAGE_QUALITY;
@@ -54,20 +59,46 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
  * the master), and a 4000-pixel poster is not what a laptop at 2× has to download — it takes
  * the same 2400 file a «Normală» picture's master is, and only a screen wider than that takes
  * the whole master.
+ *
+ * 3200 is a rung only under a master wider than `HIGH_WEB_MAX` (§NNN) — that is, only under an
+ * «Originală», which is the one choice that can store more than 4000 pixels. Without it the event
+ * page's widest column on a laptop at 2× (2976 physical pixels) skipped from the 2400 rung
+ * straight to a 6000-pixel master of several megabytes. A «Mare» master of 3556–4000 pixels does
+ * **not** get it, and must not: the srcset is built at render time from the master's width, and
+ * every such master stored since §414 was stored without a 3200 file — naming one would be a
+ * broken picture (`isLadderKeyPrefix`).
  */
-export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920, 2400] as const;
+export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920, 2400, 3200] as const;
 
-/** The master's long side for a choice (§414): what `images.ts` resizes to. */
+/** The rung that exists only under an «Originală» master (§NNN). */
+const ORIGINAL_ONLY_RUNG = 3200;
+
+const MASTER_MAX_EDGE: Record<ImageQuality, number> = {
+  low: LOW_WEB_MAX,
+  normal: WEB_MAX,
+  high: HIGH_WEB_MAX,
+  original: ORIGINAL_WEB_MAX,
+};
+
+/** The master's long side for a choice (§414, §NNN): what `images.ts` resizes to. */
 export function masterMaxEdge(quality: ImageQuality): number {
-  return quality === "high" ? HIGH_WEB_MAX : WEB_MAX;
+  return MASTER_MAX_EDGE[quality];
 }
 
 /**
  * The rungs stored below a master of this width: those narrower than 0.9 of it. A 1725-pixel
- * portrait gets 480…1280, not a 1600 that would be the master again for 7% fewer bytes.
+ * portrait gets 480…1280, not a 1600 that would be the master again for 7% fewer bytes. The 3200
+ * rung only under a master wider than `HIGH_WEB_MAX` (an «Originală»; see `LADDER_WIDTHS`).
  */
 export function ladderWidths(masterWidth: number): number[] {
-  return LADDER_WIDTHS.filter((width) => width < masterWidth * 0.9);
+  return LADDER_WIDTHS.filter(
+    (width) => width < masterWidth * 0.9 && (width !== ORIGINAL_ONLY_RUNG || masterWidth > HIGH_WEB_MAX),
+  );
+}
+
+/** The widest file the browser can take below the master, or `null` when the master is alone. */
+export function topRungWidth(masterWidth: number): number | null {
+  return ladderWidths(masterWidth).at(-1) ?? null;
 }
 
 /**

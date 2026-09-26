@@ -27,7 +27,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
-import { HIGH_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
+import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteAlbumAction, deletePhotoAction, saveAlbumAction, setCoverAction, transitionAlbumAction } from "../actions";
@@ -139,17 +139,33 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   done: t.raw("gallery.uploaded") as string,
                   failed: t.raw("gallery.uploadFailed") as string,
                   // The quality beside the button and what the photo became (§414).
+                  // Four levels, and the chosen photo's pixels and weight before it goes up (§NNN).
                   quality: {
                     legend: t("gallery.qualityLegend"),
+                    low: t("gallery.qualityLow"),
                     normal: t("gallery.qualityNormal"),
                     high: t("gallery.qualityHigh"),
-                    help: t("gallery.qualityHelp", { normalMax: String(WEB_MAX), highMax: String(HIGH_WEB_MAX) }),
+                    original: t("gallery.qualityOriginal"),
+                    help: t("gallery.qualityHelp", {
+                      lowMax: String(LOW_WEB_MAX),
+                      normalMax: String(WEB_MAX),
+                      highMax: String(HIGH_WEB_MAX),
+                      originalMax: String(ORIGINAL_WEB_MAX),
+                    }),
+                  },
+                  chosen: {
+                    chosen: t.raw("gallery.chosen") as string,
+                    sent: t.raw("gallery.sent") as string,
+                    lighter: t.raw("gallery.lighter") as string,
                   },
                   stored: {
                     template: t.raw("gallery.stored") as string,
+                    topRung: t.raw("gallery.storedTopRung") as string,
+                    low: t("gallery.storedLow"),
                     normal: t("gallery.storedNormal"),
                     high: t("gallery.storedHigh"),
-                    nearLossless: t("gallery.storedNearLossless"),
+                    original: t("gallery.storedOriginal"),
+                    nearLossless: t.raw("gallery.storedNearLossless") as string,
                   },
                 }}
               />

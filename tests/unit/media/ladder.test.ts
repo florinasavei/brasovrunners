@@ -6,16 +6,20 @@ import {
   coverMagnification,
   FORMER_KEY_PREFIX_PATTERN,
   formerKeyPrefixOf,
+  IMAGE_QUALITIES,
   isLadderKeyPrefix,
   LADDER_WIDTHS,
   ladderKeyPrefixOf,
   ladderWidths,
+  masterMaxEdge,
   parseImageQuality,
   pictureSizes,
   pictureSrcSet,
+  topRungWidth,
 } from "@/modules/media/ladder";
 import { assetObjectKeys } from "@/modules/media/storage";
-import { describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
+import { chosenFactsOf, describeChosenImage, describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
+import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 
 /**
  * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — a picture is
@@ -31,12 +35,18 @@ const OLD_PREFIX = "3f2a1b4c-0000-4abc-8def-000000000002";
 const r2 = (prefix: string) => `https://pub-example.r2.dev/production/${prefix}/web.webp`;
 
 describe("§414 the quality a request may ask for", () => {
-  it("is normal when nothing is asked, one of the two words otherwise, and refused for anything else", () => {
+  it("is normal when nothing is asked, one of the four words otherwise, and refused for anything else", () => {
     expect(parseImageQuality(null)).toBe("normal");
     expect(parseImageQuality(undefined)).toBe("normal");
     expect(parseImageQuality("")).toBe("normal");
     expect(parseImageQuality("normal")).toBe("normal");
     expect(parseImageQuality("high")).toBe("high");
+    // §NNN: «Minimă» and «Originală» beside the two §414 words, whose meaning is unchanged.
+    expect(parseImageQuality("low")).toBe("low");
+    expect(parseImageQuality("original")).toBe("original");
+    expect([...IMAGE_QUALITIES]).toEqual(["low", "normal", "high", "original"]);
+    expect(IMAGE_QUALITIES.map(masterMaxEdge)).toEqual([LOW_WEB_MAX, WEB_MAX, HIGH_WEB_MAX, ORIGINAL_WEB_MAX]);
+    expect([LOW_WEB_MAX, WEB_MAX, HIGH_WEB_MAX, ORIGINAL_WEB_MAX]).toEqual([1280, 2400, 4000, 6000]);
     for (const refused of ["HIGH", "hd", "max", "100", 92, {}]) expect(parseImageQuality(refused), String(refused)).toBeNull();
   });
 });
@@ -45,8 +55,16 @@ describe("§414 the ladder", () => {
   it("stores every rung narrower than 0.9 of the master, and never one wider", () => {
     // A «Normală» master is at most 2400, so it never gets the 2400 rung; a 4000 «Înaltă» one does.
     expect(ladderWidths(2400)).toEqual([480, 640, 960, 1280, 1600, 1920]);
-    expect(ladderWidths(4000)).toEqual([...LADDER_WIDTHS]);
-    expect(ladderWidths(3000)).toEqual([...LADDER_WIDTHS]);
+    // §NNN: 3200 only under a master wider than 4000 — an «Originală». A «Mare» master of up to
+    // 4000 was stored without it since §414, and its srcset must not start naming it.
+    expect(ladderWidths(4000)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
+    expect(ladderWidths(3600)).not.toContain(3200);
+    expect(ladderWidths(4001)).toEqual([...LADDER_WIDTHS]);
+    expect(ladderWidths(6000)).toEqual([...LADDER_WIDTHS]);
+    expect([topRungWidth(4000), topRungWidth(6000), topRungWidth(1080), topRungWidth(500)]).toEqual([2400, 3200, 960, null]);
+    expect(ladderWidths(3000)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
+    // A «Minimă» master: a phone's column at 3× and no more.
+    expect(ladderWidths(1280)).toEqual([480, 640, 960]);
     expect(ladderWidths(2600)).toEqual([480, 640, 960, 1280, 1600, 1920]);
     // A 1725-pixel portrait: 1600 would be the master again for 7% fewer bytes.
     expect(ladderWidths(1725)).toEqual([480, 640, 960, 1280]);
@@ -109,8 +127,14 @@ describe("§414 srcset", () => {
     );
     // The local store's relative address works the same way.
     expect(pictureSrcSet(`/api/media/local/${LADDER_PREFIX}/web.webp`, 1080)).toContain(`/api/media/local/${LADDER_PREFIX}/960w.webp 960w`);
-    // A 4000-pixel master at «Înaltă» names the 2400 rung before itself.
-    expect(pictureSrcSet(r2(LADDER_PREFIX), 4000)).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 4000w$/);
+    // A 4000-pixel master at «Mare» names the 2400 rung before itself, and no 3200 file — none
+    // was ever stored under one (§414; the §NNN review's blocker).
+    const mare = pictureSrcSet(r2(LADDER_PREFIX), 4000) as string;
+    expect(mare).toMatch(/\/1920w\.webp 1920w, \S+\/2400w\.webp 2400w, \S+\/web\.webp 4000w$/);
+    expect(mare).not.toContain("3200w");
+    expect(pictureSrcSet(r2(LADDER_PREFIX), 3600)).not.toContain("3200w");
+    // An «Originală» master wider than 4000 names the 3200 rung it was stored with (§NNN).
+    expect(pictureSrcSet(r2(LADDER_PREFIX), 4800)).toMatch(/\/2400w\.webp 2400w, \S+\/3200w\.webp 3200w, \S+\/web\.webp 4800w$/);
   });
 
   it("offers an older picture nothing: its one file, as a page always drew it", () => {
@@ -192,16 +216,61 @@ describe("§414 the body renderer", () => {
 describe("§414 what the person is told after an upload", () => {
   const labels = {
     template: "{width} × {height}, {quality}: {size}; {files} files, {total}",
-    normal: "normal",
-    high: "high",
-    nearLossless: "high, near-lossless",
+    topRung: "Largest smaller copy: {width} px, {size}.",
+    low: "minimum",
+    normal: "medium",
+    high: "large",
+    original: "original",
+    nearLossless: "{quality}, near-lossless",
   };
-  const facts = { width: 2400, height: 1857, quality: "normal" as const, encoding: "lossy" as const, bytes: 390_000, files: 8, totalBytes: 1_090_000 };
+  const facts = {
+    width: 2400,
+    height: 1857,
+    quality: "normal" as const,
+    encoding: "lossy" as const,
+    bytes: 390_000,
+    files: 8,
+    totalBytes: 1_090_000,
+    topRung: null,
+  };
 
   it("states the size, the choice, the bytes and the files", () => {
-    expect(describeStoredImage(facts, labels, "en")).toBe("2400 × 1857, normal: 381 KB; 8 files, 1 MB");
-    expect(describeStoredImage({ ...facts, quality: "high", encoding: "nearLossless" }, labels, "en")).toContain("high, near-lossless");
-    expect(describeStoredImage({ ...facts, quality: "high" }, labels, "en")).toContain(", high:");
+    expect(describeStoredImage(facts, labels, "en")).toBe("2400 × 1857, medium: 381 KB; 8 files, 1 MB");
+    expect(describeStoredImage({ ...facts, quality: "high", encoding: "nearLossless" }, labels, "en")).toContain("large, near-lossless");
+    expect(describeStoredImage({ ...facts, quality: "high" }, labels, "en")).toContain(", large:");
+  });
+
+  it("names each of the four levels, and a near-lossless «Originală» as such (§NNN)", () => {
+    expect(describeStoredImage({ ...facts, quality: "low" }, labels, "en")).toContain(", minimum:");
+    expect(describeStoredImage({ ...facts, quality: "original" }, labels, "en")).toContain(", original:");
+    expect(describeStoredImage({ ...facts, quality: "original", encoding: "nearLossless" }, labels, "en")).toContain(
+      ", original, near-lossless:",
+    );
+  });
+
+  it("adds the widest smaller copy's width and weight when there is one (§NNN)", () => {
+    expect(describeStoredImage({ ...facts, topRung: { width: 1920, bytes: 250_000 } }, labels, "en")).toBe(
+      "2400 × 1857, medium: 381 KB; 8 files, 1 MB Largest smaller copy: 1920 px, 244 KB.",
+    );
+  });
+
+  it("says the chosen file's pixels and weight, and what is sent only when the browser sent another file (§NNN)", () => {
+    const chosenLabels = {
+      chosen: "Chosen: {name}, {width} × {height} px, {size}.",
+      sent: "Sent: {width} × {height} px, {size}.",
+      lighter: "Sent lighter: {size}.",
+    };
+    const chosen = { width: 4032, height: 3024, bytes: 3.2 * 1024 * 1024 };
+    const asItIs = chosenFactsOf("IMG_0001.jpg", { chosen, sent: chosen, reencoded: false });
+    expect(asItIs.sent).toBeUndefined();
+    expect(describeChosenImage(asItIs, chosenLabels, "ro")).toBe("Chosen: IMG_0001.jpg, 4032 × 3024 px, 3,2 MB.");
+    const resized = chosenFactsOf("IMG_0001.jpg", { chosen, sent: { width: 3000, height: 2250, bytes: 1_200_000 }, reencoded: true });
+    expect(describeChosenImage(resized, chosenLabels, "en")).toBe(
+      "Chosen: IMG_0001.jpg, 4032 × 3024 px, 3.2 MB. Sent: 3000 × 2250 px, 1.1 MB.",
+    );
+    // Re-encoded at the same pixels only to be lighter: never "smaller" with the same size twice.
+    const lighter = chosenFactsOf("IMG_0001.jpg", { chosen, sent: { width: 4032, height: 3024, bytes: 3 * 1024 * 1024 }, reencoded: true });
+    expect(describeChosenImage(lighter, chosenLabels, "en")).toBe("Chosen: IMG_0001.jpg, 4032 × 3024 px, 3.2 MB. Sent lighter: 3 MB.");
   });
 
   it("writes a megabyte with the page's decimal separator", () => {

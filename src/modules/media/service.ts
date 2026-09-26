@@ -20,10 +20,14 @@ export type StoredImageFacts = {
   bytes: number;
   files: number;
   totalBytes: number;
+  /** The widest rung below the master (§NNN): what a laptop at 2× loads; `null` without one. */
+  topRung: { width: number; bytes: number } | null;
 };
 
 export function storedImageFacts(processed: ProcessedImage): StoredImageFacts {
+  const top = processed.rungs.at(-1);
   return {
+    topRung: top ? { width: top.width, bytes: top.body.byteLength } : null,
     width: processed.width,
     height: processed.height,
     quality: processed.quality,

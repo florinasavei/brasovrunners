@@ -16,6 +16,7 @@ import {
   type MediaReference,
   totalMediaBytes,
 } from "@/modules/media/references";
+import { isLadderKeyPrefix, topRungWidth } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -25,6 +26,11 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deletePictureAction } from "../actions";
+
+/** The widest rung stored below a picture's master, or `null` for a picture from before §414. */
+function topRungOf(row: MediaAssetRow): number | null {
+  return isLadderKeyPrefix(row.keyPrefix) ? topRungWidth(row.width) : null;
+}
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -83,6 +89,16 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
     }
   };
 
+  const topRungLine = (row: MediaAssetRow) => {
+    const width = topRungOf(row);
+    if (width === null) return null;
+    return (
+      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }} data-testid="picture-top-rung">
+        {t("pictures.topRung", { width })}
+      </Typography>
+    );
+  };
+
   const columns: readonly AdminColumn<MediaAssetRow>[] = [
     {
       key: "picture",
@@ -119,6 +135,11 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
           <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
             {t("pictures.size", { width: row.width, height: row.height, kb: Math.round(row.byteSize / 1024) })}
           </Typography>
+          {/*
+            The widest smaller copy (§NNN), what a laptop at 2× loads in place of the master — only
+            for a picture stored with a ladder; its weight is not recorded, so the width alone.
+          */}
+          {topRungLine(row)}
           {/*
             The whole address of the large variant, so a picture already in the bucket can go
             into a newsletter or a post without being uploaded somewhere a second time. Text
