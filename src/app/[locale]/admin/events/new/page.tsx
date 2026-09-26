@@ -18,7 +18,6 @@ import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
-import StatusBox from "@/modules/content/events/ui/boxes/StatusBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
@@ -241,14 +240,13 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />
               <ProgrammeBox {...box} languages={languages} heading={flow.headings.programme} />
-              <RulesBox languages={languages} heading={flow.headings.rules} />
+              <RulesBox {...box} languages={languages} heading={flow.headings.rules} declarations={declarations} />
               <VideoBox {...box} heading={flow.headings.video} />
               <StartListBox {...box} heading={flow.headings.startList} />
 
-              {/* Not a section of the page: the status — read-only here, "Programat" (§358) —,
-                  the marks, the address. */}
+              {/* Not a section of the page: the marks, the address. The status is in the first
+                  card since §NNN — read-only here, "Programat" (§358). */}
               <EditorGroup label={t("editor.groups.offPage")} />
-              <StatusBox {...box} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />
 

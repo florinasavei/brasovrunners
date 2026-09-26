@@ -67,6 +67,8 @@ export type SummaryWords = {
   };
   window: { range: string; fromPublication: string; untilStart: string };
   conditions: { noDeclaration: string };
+  /** A group run's optional self-declaration, under «Regulamentul» (§NNN). */
+  declaration: { offered: string; notOffered: string; notAsked: string };
   confirmation: { sentence: string; atStart: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
@@ -381,16 +383,34 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
   return fillIn(words.window.range, { from, to });
 }
 
-/** Sub-card 8.2: `de la 14 ani · Declarația v3`, or what is missing. */
-export function conditionsSummary(
+/** Sub-card 8.2: `de la 14 ani` — the declaration is chosen under «Regulamentul» since §NNN. */
+export function conditionsSummary(words: SummaryWords, minAge: number): string {
+  return join(words, [fillIn(words.registration.minAge, { age: minAge })]);
+}
+
+type DeclarationEvent = Pick<EditableEvent, "registrationMode" | "offersGroupRunDeclaration">;
+
+/**
+ * The «Declarația pe propria răspundere» card under «Regulamentul» (§NNN), and the part of the
+ * rules card's closed line it adds: a group run's optional self-declaration — `declarație trail` or
+ * `fără declarație` — or a race's, when it registers on the site — `declarația v3`, or the missing
+ * one named as the gap it is. Null when the event asks for no declaration at all (a race registering
+ * elsewhere, or not at all).
+ */
+export function declarationSummary(
   words: SummaryWords,
-  minAge: number,
-  declaration: { version: number; title: string } | null,
-): string {
-  return join(words, [
-    fillIn(words.registration.minAge, { age: minAge }),
-    declaration ? fillIn(words.registration.declaration, { version: declaration.version }) : words.conditions.noDeclaration,
-  ]);
+  event: DeclarationEvent | null,
+  options: { takesRegistrations: boolean; declarationVersion: number | null; surface: string | null },
+): string | null {
+  if (!options.takesRegistrations) {
+    return event?.offersGroupRunDeclaration && options.surface
+      ? fillIn(words.declaration.offered, { surface: options.surface })
+      : words.declaration.notOffered;
+  }
+  if ((event?.registrationMode ?? "NONE") !== "INTERNAL") return null;
+  return options.declarationVersion !== null
+    ? fillIn(words.registration.declaration, { version: options.declarationVersion })
+    : words.conditions.noDeclaration;
 }
 
 /**

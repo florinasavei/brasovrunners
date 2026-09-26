@@ -8,21 +8,20 @@ import type { RiskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import type { FoldNode } from "@/shared/ui/fold";
 
 /**
- * The event editor's first box, and the three cards that were inside it.
+ * The event editor's first box, and the cards that were inside it.
  *
- * §358 (2026-09-24; the owner: "these 3 cards should be in the first one, both on edit and create
- * mode") nested "Starea evenimentului", "Traseul" and "Linkuri și fișiere" inside "Ce fel de
- * eveniment". §406 (2026-09-25; the owner: "am nevoie de mai multe căsuțe la editor ca să văd exact
- * ce flow am în pagină") lays the editor out as the page instead, card by card in the page's order,
- * and the three are drawn in three different places on the page — or, the status, nowhere — so
- * each is a box of its own again, moved whole: the same fields, the same names, the same ids, the
- * same closed lines. The first box is the type alone, and its closed line is the type.
+ * §358 (2026-09-24) nested "Starea evenimentului", "Traseul" and "Linkuri și fișiere" inside "Ce fel
+ * de eveniment". §406 (2026-09-25) laid the editor out as the page instead and moved all three out.
+ * §NNN (2026-09-26; the owner: "starea evenimentului ar trebui să apară pe primul card «Ce fel de
+ * eveniment»") brings the status back into the first box as a named card — whole: the same field,
+ * the same name, the same id — and the first box's closed line says it beside the type: «Alergare de
+ * grup · Programat». The course and the links stay boxes of their own, where the page draws them.
  *
- * What §358 settled and still holds is kept here: the create page's status is read-only
- * ("Programat", nothing posted); a role that may only read the settings sees each box as its
- * heading and its line; the status box wears the amber outline of a box whose change reaches people
- * (the count itself is said once, under the page map, §408); a refusal
- * opens the box it names — one fold now, not two.
+ * What §358 settled and still holds: the create page's status is read-only ("Programat", nothing
+ * posted); a role that may only read the settings sees the first box's line and is told once; the
+ * status wears the amber outline of a card whose change reaches people — and so does the box that
+ * holds it (the count itself is said once, under the page map, §408); a refusal opens the folds it
+ * sits in.
  *
  * The boxes are async Server Components; each is awaited into the element tree it hands React and
  * rendered to the HTML the server sends — the markup is what decides what opens with JavaScript off.
@@ -52,7 +51,6 @@ vi.mock("@/modules/content/events/ui/boxes/box-kit", async (importOriginal) => {
 });
 
 const { default: KindBox } = await import("@/modules/content/events/ui/boxes/KindBox");
-const { default: StatusBox } = await import("@/modules/content/events/ui/boxes/StatusBox");
 const { default: CourseBox } = await import("@/modules/content/events/ui/boxes/CourseBox");
 const { default: LinksBox } = await import("@/modules/content/events/ui/boxes/LinksBox");
 const { revealField } = await import("@/shared/forms/ActionForm");
@@ -111,19 +109,18 @@ const NOTICE = {
 };
 
 type BoxOptions = { locale?: "ro" | "en"; mayEditSettings?: boolean; risk?: RiskMark | null };
-type Boxes = { kind: string; status: string; course: string; links: string };
+type Boxes = { kind: string; course: string; links: string };
 
 /**
- * The four boxes as the pages hand them their props, each rendered to HTML on its own: the editor
- * hands the status box its notice and the risk mark; the create page hands neither.
+ * The three boxes as the pages hand them their props, each rendered to HTML on its own: the editor
+ * hands the first box the notice and the risk mark; the create page hands neither.
  */
 async function boxes(event: EditableEvent | null, { locale = "ro", mayEditSettings = true, risk = null }: BoxOptions = {}): Promise<Boxes> {
   currentLocale = locale;
   const box = { event, mayEditSettings } as const;
   const html = (element: unknown) => markup(renderToStaticMarkup(element as ReactElement));
   return {
-    kind: html(await KindBox({ ...box, registered: risk?.count ?? 0 })),
-    status: html(event ? await StatusBox({ event, mayEditSettings, risk, notice: NOTICE }) : await StatusBox({ event: null, mayEditSettings })),
+    kind: html(await KindBox({ ...box, registered: risk?.count ?? 0, risk, ...(event ? { notice: NOTICE } : {}) })),
     course: html(await CourseBox({ ...box, languages: [] })),
     links: html(await LinksBox({ ...box, locale })),
   };
@@ -136,6 +133,8 @@ const summaryOf = (html: string): string => html.slice(0, html.indexOf("</summar
 const foldTags = (html: string): string[] => html.match(/<details[^>]*>/g) ?? [];
 const isOpen = (tag: string): boolean => /\sopen(=""|\s|>)/.test(tag);
 const idOf = (tag: string): string | null => tag.match(/\sid="([^"]+)"/)?.[1] ?? null;
+/** The named cards of a box: every fold with an id, the help lines left out. */
+const namedFolds = (html: string): string[] => foldTags(html).map(idOf).filter((id): id is string => id !== null);
 
 /**
  * The folds an element sits inside, outermost first, read off the markup: every `<details>` opened
@@ -164,22 +163,30 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
   return { node: { tagName: "INPUT", parentElement: parent, dispatchEvent: () => true }, details };
 }
 
-describe("§406 the first box is the type alone, and the three cards are boxes of their own", () => {
-  it("holds no card: its only fold is itself, closed on the editor, with the type as its line", async () => {
+describe("§NNN the first box holds the type and the status, and its line says both", () => {
+  it("holds the status as a named card inside it — and neither the course nor the links", async () => {
     const { kind } = await boxes(EVENT);
-    expect(foldTags(kind).filter((tag) => !/data-rich|help/.test(tag)).map(idOf)[0]).toBe("box-kind");
-    for (const id of ["box-status", "box-course", "box-links"]) expect(kind).not.toContain(`id="${id}"`);
+    expect(namedFolds(kind)).toEqual(["box-kind", "box-status"]);
+    expect(foldsAround(kind, "box-status")).toEqual(["box-kind"]);
+    for (const id of ["box-course", "box-links"]) expect(kind).not.toContain(`id="${id}"`);
     expect(isOpen(foldTags(kind)[0])).toBe(false);
-    expect(summaryOf(kind)).toMatch(/<h2[^>]*>Ce fel de eveniment<span[^>]*>Alergare de grup<\/span>/);
-    // The type select and "Ce înseamnă fiecare tip?" stay in it.
+    expect(kind).toMatch(/<h3[^>]*>Starea evenimentului<span[^>]*>Programat<\/span>/);
+    // The type select and "Ce înseamnă fiecare tip?" stay in it; the status select is inside it now.
     expect(kind).toContain('name="event.type"');
+    expect(kind).toContain('name="event.eventStatus"');
     expect(kind).toContain("Ce înseamnă fiecare tip?");
   });
 
-  it("makes each of the three a closed level-2 box, headed by an h2, with the id it always had", async () => {
+  it("says the type and the status on its closed line, in both catalogues", async () => {
+    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>Ce fel de eveniment<span[^>]*>Alergare de grup · Programat<\/span>/);
+    const cancelled = { ...EVENT, type: "RACE", eventStatus: "CANCELLED" } as unknown as EditableEvent;
+    expect(summaryOf((await boxes(cancelled)).kind)).toContain("Concurs · Anulat");
+    expect(summaryOf((await boxes(EVENT, { locale: "en" })).kind)).toMatch(/<h2[^>]*>What kind of event<span[^>]*>Group run · Programat<\/span>/);
+  });
+
+  it("keeps the course and the links as closed level-2 boxes, with the ids and lines they always had", async () => {
     const drawn = await boxes(EVENT);
     for (const [key, id, name] of [
-      ["status", "box-status", "Starea evenimentului"],
       ["course", "box-course", "Traseul"],
       ["links", "box-links", "Linkuri și fișiere"],
     ] as const) {
@@ -190,22 +197,17 @@ describe("§406 the first box is the type alone, and the three cards are boxes o
       expect(foldsAround(html, id), key).toEqual([]);
       expect(html, key).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
     }
-  });
-
-  it("keeps each box's own closed line, in both catalogues", async () => {
-    const ro = await boxes(EVENT);
-    expect(ro.status).toMatch(/<h2[^>]*>Starea evenimentului<span[^>]*>Programat<\/span>/);
-    expect(ro.course).toContain("Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu");
-    expect(ro.links).toContain("Strava · 1 link (Traseul (GPX))");
+    expect(drawn.course).toContain("Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu");
+    expect(drawn.links).toContain("Strava · 1 link (Traseul (GPX))");
     const en = await boxes(EVENT, { locale: "en" });
-    expect(en.kind).toMatch(/<h2[^>]*>What kind of event<span[^>]*>Group run<\/span>/);
-    for (const name of ["Event status", "The course", "Links and files"]) expect(`${en.status}${en.course}${en.links}`).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
+    for (const name of ["The course", "Links and files"]) expect(`${en.course}${en.links}`).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
+    expect(en.kind).toMatch(/<h3[^>]*>Event status<span/);
   });
 
-  it("posts the same names as before, each from its own box", async () => {
+  it("posts the same names as before, each from its own box — and no declaration from «Traseul» (§NNN)", async () => {
     const drawn = await boxes(EVENT);
-    expect(drawn.status).toContain('name="event.eventStatus"');
     for (const name of ["event.surface", "event.difficulty", "event.distanceMeters", "event.elevationGainMeters", "event.routeUrl"]) expect(drawn.course, name).toContain(`name="${name}"`);
+    expect(drawn.course).not.toContain("group-run-declaration-field");
     for (const name of ["event.stravaEventUrl", "event.facebookEventUrl", "event.links[0].url"]) expect(drawn.links, name).toContain(`name="${name}"`);
   });
 
@@ -216,16 +218,17 @@ describe("§406 the first box is the type alone, and the three cards are boxes o
   });
 });
 
-describe("§406 with people registered, the status box says so itself", () => {
-  it("wears the outline and its sentence on the status box, never the count, and neither on the type, the course or the links", async () => {
+describe("§NNN with people registered, the status card says so, and the first box wears the outline", () => {
+  it("draws the sentence inside the status card, never the count, and nothing on the course or the links", async () => {
     const drawn = await boxes(EVENT, { risk: RISK });
-    expect(drawn.status).toContain('data-testid="risk-line"');
+    expect(drawn.kind).toContain('data-testid="risk-line"');
+    expect(foldsAround(drawn.kind, "box-status")).toEqual(["box-kind"]);
+    expect(drawn.kind.indexOf('data-testid="risk-line"')).toBeGreaterThan(drawn.kind.indexOf('id="box-status"'));
     // The number is said once, under the page map (§408) — on no box, shut or open.
-    for (const key of ["kind", "status", "course", "links"] as const) expect(drawn[key], key).not.toMatch(/\b23\b/);
-    for (const key of ["kind", "course", "links"] as const) expect(drawn[key], key).not.toContain('data-testid="risk-line"');
-    const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
-    expect(status).toContain('tone: risk ? "risk" : "default"');
-    expect(status).not.toContain("badge");
+    for (const key of ["kind", "course", "links"] as const) expect(drawn[key], key).not.toMatch(/\b23\b/);
+    for (const key of ["course", "links"] as const) expect(drawn[key], key).not.toContain('data-testid="risk-line"');
+    expect(read("src/modules/content/events/ui/boxes/StatusBox.tsx")).toContain('tone: risk ? "risk" : "default"');
+    expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain('tone={risk ? "risk" : "default"}');
     // The type's warning about switching to a group run still speaks of the registered.
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain('t("editor.boxes.kind.groupRunWarning", { count: registered })');
   });
@@ -240,11 +243,12 @@ describe("§406 with people registered, the status box says so itself", () => {
 });
 
 describe("§358 a role that may only read the settings", () => {
-  it("is told once, in the type's box, and sees each other box as its heading and its line, with nothing to open", async () => {
+  it("is told once, in the type's box, whose line still names the status; the other boxes are their heading and line", async () => {
     const drawn = await boxes(EVENT, { mayEditSettings: false, risk: RISK });
     expect(drawn.kind.match(/Setările le schimbă un Organizator sau un Administrator\./g)).toHaveLength(1);
+    expect(summaryOf(drawn.kind)).toContain("Alergare de grup · Programat");
+    expect(drawn.kind).not.toContain('id="box-status"');
     for (const [key, id, name, line] of [
-      ["status", "box-status", "Starea evenimentului", "Programat"],
       ["course", "box-course", "Traseul", "Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu"],
       ["links", "box-links", "Linkuri și fișiere", "Strava · 1 link (Traseul (GPX))"],
     ] as const) {
@@ -255,46 +259,50 @@ describe("§358 a role that may only read the settings", () => {
       expect(section, id).toContain(line);
       expect(section.replace(/<h2[\s\S]*<\/h2>/, ""), id).toBe("");
     }
-    // The status box wears the amber outline and no number — the page's one line says it (§408);
-    // nothing is posted or offered.
-    expect(drawn.status).not.toMatch(/\b23\b/);
+    // No number anywhere — the page's one line says it (§408); nothing is posted or offered.
+    expect(Object.values(drawn).join("")).not.toMatch(/\b23\b/);
     expect(Object.values(drawn).join("")).not.toMatch(/name="event\./);
   });
 });
 
 describe("§358 the create page's status is read-only", () => {
-  it("opens the type's box and shows «Programat», no select, nothing posted, with the line that says when it can change", async () => {
+  it("opens the type's box and shows «Programat» in its status card, no select, nothing posted, with the line that says when it can change", async () => {
     const drawn = await boxes(null);
     expect(isOpen(foldTags(drawn.kind)[0])).toBe(true);
-    expect(drawn.status).toContain('data-testid="status-on-create"');
-    expect(drawn.status).toMatch(/<input[^>]*disabled[^>]*value="Programat"|<input[^>]*value="Programat"[^>]*disabled/);
-    expect(drawn.status).not.toContain('name="event.eventStatus"');
-    expect(drawn.status).not.toContain("Anulat");
-    expect(drawn.status).not.toContain("Încheiat");
-    expect(drawn.status).toContain("Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat.");
+    expect(foldsAround(drawn.kind, "box-status")).toEqual(["box-kind"]);
+    expect(drawn.kind).toContain('data-testid="status-on-create"');
+    expect(drawn.kind).toMatch(/<input[^>]*disabled[^>]*value="Programat"|<input[^>]*value="Programat"[^>]*disabled/);
+    expect(drawn.kind).not.toContain('name="event.eventStatus"');
+    expect(drawn.kind).not.toContain("Anulat");
+    expect(drawn.kind).not.toContain("Încheiat");
+    expect(drawn.kind).toContain("Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat.");
     const en = await boxes(null, { locale: "en" });
-    expect(en.status).toContain("A new event starts as scheduled (Programat); its status can be changed once the event exists.");
+    expect(en.kind).toContain("A new event starts as scheduled (Programat); its status can be changed once the event exists.");
   });
 
-  it("keeps the hidden SCHEDULED on the create page, and the status box among the cards not on the page", () => {
-    const create = read("src/app/[locale]/admin/events/new/page.tsx");
-    expect(create).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    expect(create).toMatch(/t\("editor\.groups\.offPage"\)[\s\S]*<StatusBox \{\.\.\.box\} \/>/);
+  it("keeps the hidden SCHEDULED on the create page, and no status box among the cards not on the page", () => {
+    for (const page of ["src/app/[locale]/admin/events/new/page.tsx", "src/app/[locale]/admin/events/[id]/page.tsx"]) {
+      const source = read(page);
+      expect(source, page).not.toContain("<StatusBox");
+      expect(source, page).not.toContain("<StatusCard");
+    }
+    expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
+    expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toMatch(/<KindBox \{\.\.\.box\}[^>]*risk=\{risk\} notice=\{notice\} \/>/);
   });
 });
 
-describe("§406 a refusal opens the box it names", () => {
-  it("opens «Traseul» for a refused route link, «Linkuri și fișiere» for a link, «Starea evenimentului» for the status", async () => {
+describe("§406 a refusal opens the folds it names", () => {
+  it("opens «Traseul» for a refused route link, «Linkuri și fișiere» for a link, the first box and its status card for the status", async () => {
     const drawn = await boxes(EVENT);
-    for (const [key, field, id] of [
-      ["course", "field-event.routeUrl", "box-course"],
-      ["links", "field-event.links[0].url", "box-links"],
-      ["links", "field-event.links[0].labelEn", "box-links"],
-      ["links", "field-event.stravaEventUrl", "box-links"],
-      ["status", "field-event.eventStatus", "box-status"],
+    for (const [key, field, ids] of [
+      ["course", "field-event.routeUrl", ["box-course"]],
+      ["links", "field-event.links[0].url", ["box-links"]],
+      ["links", "field-event.links[0].labelEn", ["box-links"]],
+      ["links", "field-event.stravaEventUrl", ["box-links"]],
+      ["kind", "field-event.eventStatus", ["box-kind", "box-status"]],
     ] as const) {
       const around = foldsAround(drawn[key], field);
-      expect(around, field).toEqual([id]);
+      expect(around, field).toEqual(ids);
       const { node, details } = chain(around);
       revealField(node as unknown as HTMLElement);
       expect(details.every((fold) => fold.open), field).toBe(true);

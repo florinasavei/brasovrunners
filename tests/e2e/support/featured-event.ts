@@ -254,7 +254,8 @@ export async function ensureRegistrationIsOpen(page: Page) {
 
     // The approved declaration a participant signs, in its own card. Chosen, never written: the
     // first real option after "Niciuna" is the sample version the legal seed approved.
-    await openEditorBox(page, "Condiții de participare și declarația");
+    // The declaration is chosen under «Regulamentul» since §NNN.
+    await openEditorBox(page, "Declarația pe propria răspundere");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();
 

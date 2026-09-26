@@ -1427,8 +1427,9 @@
           "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
         },
         "conditions": {
-          "title": "Condiții de participare și declarația",
-          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
+          "title": "Condiții de participare",
+          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
+          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Regulamentul» → «Declarația pe propria răspundere»."
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -1621,6 +1622,11 @@
             "locked": "blocată după publicare",
             "none": "fără adresă",
             "seoOneLanguage": "SEO într-o singură limbă"
+          },
+          "declaration": {
+            "offered": "declarație pentru {surface}",
+            "notOffered": "fără declarație",
+            "notAsked": "nu se cere"
           }
         },
         "video": {
@@ -1630,6 +1636,11 @@
           "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
           "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
           "toDescription": "Mergi la descriere"
+        },
+        "declaration": {
+          "title": "Declarația pe propria răspundere",
+          "newest": "Cea mai nouă versiune aprobată: v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
+          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația."
         }
       },
       "identical": {
@@ -1641,8 +1652,10 @@
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
-        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
-        "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
+        "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
+        "surface": "Suprafața, din cardul «Traseul»: {surface}",
+        "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
       "pageFlow": {
         "title": "Pagina, de sus în jos",

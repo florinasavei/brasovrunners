@@ -15,8 +15,11 @@ type DeclarationSurface = "ASPHALT" | "TRAIL";
 const SURFACES: readonly string[] = ["ASPHALT", "TRAIL"];
 
 /**
- * "Declarație opțională pe propria răspundere" (§393), in "Traseul": whether this group run's page
- * offers the self-declaration of its surface.
+ * "Declarație opțională pe propria răspundere" (§393): whether this group run's page offers the
+ * self-declaration of its surface. Since §NNN it sits under «Regulamentul», in the named card
+ * «Declarația pe propria răspundere» (`DeclarationCard`) — one place for declarations, under the
+ * rules (the owner, 2026-09-26: "momentan nu văd unde selectez declarația") — and says the surface
+ * it reads from «Traseul» and which approved text is in force for it.
  *
  * A client island because the answer follows two selects of the same form — the type (§111: only a
  * group run) and the surface (asphalt or trail: which text) — read with the observer `OnlyForType`
@@ -46,7 +49,16 @@ export default function GroupRunDeclarationField({
   initialChecked: boolean;
   /** Whether the club has an approved version in force of each surface's text. */
   approved: Record<DeclarationSurface, boolean>;
-  words: { label: string; help: string; notGroupSurface: string; missing: Record<DeclarationSurface, string> };
+  words: {
+    label: string;
+    help: string;
+    notGroupSurface: string;
+    missing: Record<DeclarationSurface, string>;
+    /** "Textul în vigoare pentru trail: …, v2." — only for a surface with an approved text (§NNN). */
+    inForce: Partial<Record<DeclarationSurface, string>>;
+    /** "Suprafața, din cardul «Traseul»: Trail" — one line per value of the surface select, blank included. */
+    surfaceLines: Record<string, string>;
+  };
 }) {
   const recall = useRecall();
   const type = useSelectedValue("event.type", initialType);
@@ -63,8 +75,12 @@ export default function GroupRunDeclarationField({
   const checked = available && (manual ?? recalled ?? (followsSurface ? surface === "TRAIL" : initialChecked));
 
   const note = known === null ? words.notGroupSurface : available ? words.help : words.missing[known];
+  const inForce = known !== null && available ? words.inForce[known] : undefined;
   return (
     <Box data-testid="group-run-declaration-field">
+      <Typography variant="body2" data-testid="group-run-declaration-surface">
+        {words.surfaceLines[surface] ?? words.surfaceLines[""]}
+      </Typography>
       <FormControlLabel
         control={
           <Checkbox
@@ -77,6 +93,11 @@ export default function GroupRunDeclarationField({
         }
         label={words.label}
       />
+      {inForce && (
+        <Typography variant="body2" data-testid="group-run-declaration-in-force">
+          {inForce}
+        </Typography>
+      )}
       <Typography variant="body2" color="text.secondary">
         {note}
       </Typography>

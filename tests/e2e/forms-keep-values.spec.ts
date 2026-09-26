@@ -130,9 +130,9 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
 /*
   §315 and the editor's boxes (§350): a refusal whose field sits in a card three folds deep. An
   internal registration needs an approved declaration — a rule only the server can judge (the
-  select has no `required`: the mode decides) — and the declaration is in "Participare și
-  înscrieri" › "Condiții de participare și declarația", both shut on arrival. The refusal must
-  open both, name the card in its summary, and keep everything typed.
+  select has no `required`: the mode decides) — and the declaration is in "Regulamentul" ›
+  "Declarația pe propria răspundere" since §NNN, both shut on arrival. The refusal must open both,
+  name the card in its summary, and keep everything typed.
 */
 test.describe("§315 a refusal inside a closed card opens it", () => {
   test("an internal registration with no declaration comes back with its card open and every box kept", async ({ page }) => {
@@ -165,10 +165,10 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
-    await expect(refusal.getByRole("link", { name: "Condiții de participare și declarația › Declarația pe care o semnează participantul" })).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Regulamentul › Declarația pe propria răspundere › Declarația pe care o semnează participantul" })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
-    await expect(registration).toHaveAttribute("open", "");
-    await expect(editorBox(page, "Condiții de participare și declarația")).toHaveAttribute("open", "");
+    await expect(editorBox(page, "Regulamentul")).toHaveAttribute("open", "");
+    await expect(editorBox(page, "Declarația pe propria răspundere")).toHaveAttribute("open", "");
     await expect(field("event.capacity")).toHaveValue("40");
     await expect(field("event.registrationMode")).toHaveValue("INTERNAL");
     await expect(field("translations.ro.title")).toHaveValue(`Fără declarație ${suffix}`);
@@ -177,8 +177,8 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 });
 
 /*
-  §406: the status, the course and the links are boxes of their own again (§358 had them inside
-  "Ce fel de eveniment"), each where the page draws it. A link's label in one language only is a
+  §406: the course and the links are boxes of their own again (§358 had them inside "Ce fel de
+  eveniment"), each where the page draws it; the status is a card inside the first box (§NNN). A link's label in one language only is a
   refusal only the server makes (§352, both or neither), and it names the empty box — inside
   "Linkuri și fișiere". The box is shut before the press, so the refusal is what has to open it,
   and every box keeps what was typed. On the way, the create page's status box: there, read-only,
@@ -195,8 +195,10 @@ test.describe("§406 a refusal inside the links box opens it", () => {
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    // The status card is on the create page too, so the two pages look the same — read-only.
+    // The status card is on the create page too, inside the first box (§NNN), so the two pages
+    // look the same — read-only.
     const status = await openEditorBox(page, "Starea evenimentului");
+    await expect(editorBox(page, "Ce fel de eveniment")).toHaveAttribute("open", "");
     const statusBox = status.getByRole("textbox", { name: "Starea evenimentului" });
     await expect(statusBox).toHaveValue("Programat");
     await expect(statusBox).toBeDisabled();

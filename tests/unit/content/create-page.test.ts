@@ -19,7 +19,7 @@ const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf
 
 const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
 const EDIT = read("src/app/[locale]/admin/events/[id]/page.tsx");
-const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
+const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");
 const TRANSLATION_FIELDS = read("src/modules/content/events/ui/TranslationFields.tsx");
@@ -70,7 +70,6 @@ describe("the create page is the editor's page", () => {
       "<VideoBox",
       "<StartListBox",
       't("editor.groups.offPage")',
-      "<StatusBox",
       "<PromotionBox",
       "<AddressBox",
       'id="box-save"',
@@ -87,8 +86,10 @@ describe("the create page is the editor's page", () => {
 
   it("shows the status read-only on create: a hidden SCHEDULED posts, and Anulat is never offered for an event that does not exist", () => {
     expect(CREATE).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    // The card is there, so the two pages look the same (§358) — handed no event, it is read-only.
-    expect(CREATE).toContain("<StatusBox {...box} />");
+    // The card is there, inside the first box (§NNN), so the two pages look the same (§358) —
+    // handed no event, it is read-only.
+    expect(CREATE).toContain("<KindBox {...box} heading={flow.headings.kind} />");
+    expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event: null })");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     // Keyed on the create page alone: a saved event always comes with its notice, by type, so it
     // can never fall into the read-only "Programat" that posts nothing.

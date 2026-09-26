@@ -15,7 +15,6 @@ import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
-import GroupRunDeclarationField from "../GroupRunDeclarationField";
 import NightEventField from "../NightEventField";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
@@ -24,8 +23,9 @@ import { LanguageTabs } from "./TextBoxes";
 
 /**
  * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
- * route's pills in the facts, then the declaration offer under them (§393) and, further down, the
- * route section under `#route` (§387). It was card 1.2 inside "Ce fel de eveniment" (§358) and
+ * route's pills in the facts and, further down, the route section under `#route` (§387). The
+ * group run's declaration offer (§393) was here; since §NNN it is under «Regulamentul», with the
+ * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
@@ -42,7 +42,6 @@ import { LanguageTabs } from "./TextBoxes";
 export default async function CourseBox({
   event,
   mayEditSettings,
-  groupRunDeclarations,
   languages,
   heading,
   inSeries = false,
@@ -174,24 +173,8 @@ export default async function CourseBox({
           />
           <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
-        {/* "Declarație opțională pe propria răspundere" (§393): a group run on asphalt or trail may
-            offer its surface's self-declaration — on by default for trail, the mountain rescue asks
-            for it on the Tâmpa run. An island: it follows the type and surface selects above. */}
-        <GroupRunDeclarationField
-          initialType={event?.type ?? "GROUP_RUN"}
-          initialSurface={event?.surface ?? ""}
-          initialChecked={event?.offersGroupRunDeclaration ?? false}
-          approved={groupRunDeclarations ?? { ASPHALT: false, TRAIL: false }}
-          words={{
-            label: t("editor.groupRunDeclaration.label"),
-            help: t("editor.groupRunDeclaration.help"),
-            notGroupSurface: t("editor.groupRunDeclaration.notGroupSurface"),
-            missing: {
-              ASPHALT: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_ASPHALT") }),
-              TRAIL: t("editor.groupRunDeclaration.missing", { document: t("legal.keys.GROUP_RUN_DECLARATION_TRAIL") }),
-            },
-          }}
-        />
+        {/* The group run's optional self-declaration (§393) is under «Regulamentul» since §NNN
+            (`DeclarationCard`): it still follows the surface chosen here. */}
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}

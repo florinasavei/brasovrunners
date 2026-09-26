@@ -1427,8 +1427,9 @@
           "earlierClose": "An earlier close stops only new registrations."
         },
         "conditions": {
-          "title": "Who may enter and what they sign",
-          "legalLink": "Legal documents — where a new version of the declaration is approved"
+          "title": "Who may enter",
+          "legalLink": "Legal documents — where a new version of the declaration is approved",
+          "declarationUnderRules": "The declaration a participant signs is chosen under “Rules” → “Self-declaration”."
         },
         "reminder": {
           "title": "The reminder before the start"
@@ -1621,6 +1622,11 @@
             "locked": "locked after publication",
             "none": "no address",
             "seoOneLanguage": "SEO in one language only"
+          },
+          "declaration": {
+            "offered": "declaration for {surface}",
+            "notOffered": "no declaration",
+            "notAsked": "not asked"
           }
         },
         "video": {
@@ -1630,6 +1636,11 @@
           "storedHelp": "The page shows this film under the rules, behind one press. It is a link saved before the editor had its YouTube button, and it is kept on every save. A new film goes in the description.",
           "noneHelp": "A film goes in the description, with the text editor's YouTube button, like a picture. The page has no other section for a film.",
           "toDescription": "Go to the description"
+        },
+        "declaration": {
+          "title": "Self-declaration",
+          "newest": "Newest approved version: v{version} · {title}. The participant signs it when confirming the registration.",
+          "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration."
         }
       },
       "identical": {
@@ -1641,8 +1652,10 @@
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
-        "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
-        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
+        "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
+        "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
+        "surface": "Surface, from “The course” card: {surface}",
+        "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
       "pageFlow": {
         "title": "The page, top to bottom",

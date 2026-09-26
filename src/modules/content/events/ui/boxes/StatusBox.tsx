@@ -8,28 +8,26 @@ import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import type { EditableEvent } from "../../repository";
 import { EventCancelFields, type EventNoticeLabels } from "../EventNoticeFields";
-import { BoxNote, type BoxProps, RiskLine } from "./box-kit";
+import { BoxNote, type RiskMark, RiskLine } from "./box-kit";
 
 const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;
 
 /** The cancellation's words and counts (§331). */
-type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength: number };
+export type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength: number };
 
 /**
  * The create page hands no event and no notice; the editor hands both, always — the type says so,
  * so a saved event (possibly cancelled) can never fall into the create page's read-only
  * "Programat", which posts nothing.
  */
-type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
+export type StatusCardProps = { risk?: RiskMark | null } & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
 /**
- * "Starea evenimentului" (§350, §358, §406) — a box of its own among the cards that are not a
- * section of the page, at the end of both pages (§406: the editor is the page, in its order, and a
- * scheduled event's status is drawn nowhere; a cancelled or finished one is a notice over the
- * title, which the status box still says on its closed line). It was card 1.1 inside "Ce fel de
- * eveniment" (§358); it moved whole — its fields, its names, its id — and, as one of the five boxes
- * whose change reaches people, it wears the amber outline (the count is said once, under the page
- * map, §408).
+ * "Starea evenimentului" (§350, §358, §NNN) — a named card inside the first box, «Ce fel de
+ * eveniment» (`KindBox`), where the owner looks for it (2026-09-26: "starea evenimentului ar trebui
+ * să apară pe primul card"). §358 put it there first; §406 made it a box of its own among the
+ * cards that are not a section of the page; §NNN brings it back, whole — its fields, its names, its
+ * id — and the first box's closed line says it beside the type: «Alergare de grup · Programat».
  *
  * **On the create page it is read-only**: "Programat", and one line saying the status can be
  * changed once the event exists. The page posts a hidden `SCHEDULED` beside it — this card posts
@@ -39,21 +37,20 @@ type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never }
  * **On the editor**, inside the save form, so a refusal keeps it (§315); while "Anulat" is chosen on
  * an event that was not cancelled, the cancellation's reason and its "tell them" appear under the
  * select (§331) — they read the select by name. With people registered the card is amber and says
- * what a cancellation does to them.
+ * what a cancellation does to them (the count is said once, under the page map, §408).
  *
- * For a role that may only read the settings, the box is its heading and its line — the status,
- * and the amber outline when people are registered — and nothing to open: the type's box says that
- * the settings are not theirs (§358).
+ * Drawn only for a role that may change the settings: for any other, the first box says the
+ * settings are not theirs, and its closed line still names the status.
  */
-export default async function StatusBox({ event, mayEditSettings, risk, notice, heading }: StatusBoxProps) {
+export default async function StatusCard({ event, risk, notice }: StatusCardProps) {
   const t = await getTranslations("Admin");
   const card = {
     id: "box-status",
-    title: heading ?? t("editor.boxes.status.title"),
+    level: 3,
+    title: t("editor.boxes.status.title"),
     aside: EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"],
     tone: risk ? "risk" : "default",
   } as const;
-  if (!mayEditSettings) return <Panel {...card} />;
 
   if (event === null) {
     return (
