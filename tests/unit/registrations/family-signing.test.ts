@@ -1,15 +1,22 @@
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import {
   currentFamilyStep,
   type FamilySigningRow,
+  type FamilyStep,
   familySigningSteps,
+  familyStepPosition,
+  familyStepWordsKey,
   FAMILY_PASS_MINUTES,
   familyPassExpiresAt,
   hasNextFamilyStep,
   isFamilyWizard,
   isSignable,
+  signedBefore,
 } from "@/modules/registrations/domain/family-signing";
-import { type FamilySigningPass, openFamilyPass, sealFamilyPass } from "@/modules/registrations/family-signing";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import { type FamilySigningPass, openFamilyPass, passFitsLink, sealFamilyPass } from "@/modules/registrations/family-signing";
 
 /**
  * §NNN (over §389, §446) — a family's declarations signed as a wizard (BR-REQ-033-02):
@@ -118,6 +125,44 @@ describe("§NNN the family's steps", () => {
     ]);
   });
 
+  it("shows a person who signed before the wizard began as signed, and counts them in «din M» (found in review)", () => {
+    const anaConfirmed = { ...ana, status: "CONFIRMED" as const, declared: true };
+    const ionQueued = { ...ion, status: "WAITLISTED" as const, declared: true };
+    const steps = familySigningSteps([anaConfirmed, maria, ionQueued], { originId: "m", originSignable: true, signedIds: [] });
+    expect(steps.map((step) => [step.id, step.state])).toEqual([
+      ["m", "current"],
+      ["a", "signed"],
+      ["i", "signed"],
+    ]);
+    expect(familyStepPosition(steps)).toEqual({ step: 1, total: 3 });
+    // One person left beside people already signed is still the stepper, never a lone page that hides them.
+    expect(isFamilyWizard(steps)).toBe(true);
+    // From «Înscrierile mele» the one who signed earlier comes first by registration order, and the count starts after them.
+    const fromMine = familySigningSteps([anaConfirmed, maria], { originId: null, originSignable: false, signedIds: [] });
+    expect(fromMine.map((step) => step.state)).toEqual(["signed", "current"]);
+    expect(familyStepPosition(fromMine)).toEqual({ step: 2, total: 2 });
+    // Put off earlier, then signed from their own link: signed, no longer «nu mai așteaptă».
+    const signedLater = familySigningSteps([{ ...ana, status: "CONFIRMED" }, { ...maria, status: "CONFIRMED", declared: true }], {
+      originId: "a",
+      originSignable: false,
+      signedIds: ["a"],
+      skippedIds: ["m"],
+    });
+    expect(signedLater.map((step) => step.state)).toEqual(["signed", "signed"]);
+  });
+
+  it("never takes a queue place without a signature for a signed one — the declaration is what says so", () => {
+    expect(signedBefore({ status: "CONFIRMED", declared: true })).toBe(true);
+    expect(signedBefore({ status: "WAITLISTED", declared: true })).toBe(true);
+    expect(signedBefore({ status: "WAITLISTED", declared: false })).toBe(false);
+    expect(signedBefore({ status: "CONFIRMED" })).toBe(false);
+    for (const status of ["PENDING_DECLARATION", "WAITLIST_OFFERED", "CANCELLED", "EXPIRED", "PENDING_EMAIL_CONFIRMATION"] as const) {
+      expect(signedBefore({ status, declared: true }), status).toBe(false);
+    }
+    const steps = familySigningSteps([ana, { ...maria, status: "WAITLISTED", declared: false }], { originId: "a", originSignable: true, signedIds: [] });
+    expect(steps.map((step) => step.id)).toEqual(["a"]);
+  });
+
   it("says whether another person follows the current one", () => {
     expect(hasNextFamilyStep(familySigningSteps([ana, maria], { originId: "a", originSignable: true, signedIds: [] }))).toBe(true);
     expect(hasNextFamilyStep(familySigningSteps([ana, maria], { originId: "a", originSignable: false, signedIds: ["a"] }))).toBe(false);
@@ -178,9 +223,67 @@ describe("§NNN the pass (AGENTS.md §13.2 step 4)", () => {
     expect(openFamilyPass(sealFamilyPass({ ...pass, originId: null }, "k") as string, at(10), "k")).toBeNull();
   });
 
+  it("the fresh link wins: beside a live link, only a pass opened on that very link carries the wizard on (found in review)", () => {
+    expect(passFitsLink(pass, pass.originId)).toBe(true);
+    // A skipped person signing later from their own link, with a stale walk from another link on the device.
+    expect(passFitsLink(pass, "44444444-4444-4444-8444-444444444444")).toBe(false);
+    expect(passFitsLink({ ...pass, binding: "mine", originId: null }, pass.originId)).toBe(false);
+    expect(passFitsLink(pass, null)).toBe(false);
+  });
+
   it("is nothing once it has lapsed", () => {
     const sealed = sealFamilyPass(pass, "k") as string;
     expect(openFamilyPass(sealed, at(39), "k")).not.toBeNull();
     expect(openFamilyPass(sealed, at(40), "k")).toBeNull();
+  });
+});
+
+describe("§NNN the stepper's words, in both languages (found in review)", () => {
+  type Family = { stepTitle: string; state: Record<string, string> };
+  const catalogues = { ro, en } as const;
+  const words = (locale: keyof typeof catalogues) =>
+    createTranslator({ locale, messages: catalogues[locale], namespace: "Registrations" });
+  const step = (state: FamilyStep["state"], status: FamilyStep["status"] = "PENDING_DECLARATION"): FamilyStep => ({
+    id: state,
+    registeredName: "Ana Pop",
+    status,
+    state,
+    holdExpiresAt: null,
+    checkinCode: null,
+  });
+  const expected = {
+    ro: { signed: "semnată", waitlisted: "pe lista de așteptare", current: "acum", next: "urmează", later: "mai târziu", closed: "nu mai așteaptă semnătura" },
+    en: { signed: "signed", waitlisted: "on the waiting list", current: "now", next: "next", later: "later", closed: "no longer waiting for a signature" },
+  } as const;
+
+  it("says each of the five states — and a signature that found no place — in words, never by the tick alone", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const t = words(locale);
+      const said = (s: FamilyStep) => t(`declare.family.state.${familyStepWordsKey(s)}`);
+      expect(said(step("signed", "CONFIRMED")), locale).toBe(expected[locale].signed);
+      expect(said(step("signed", "WAITLISTED")), locale).toBe(expected[locale].waitlisted);
+      expect(said(step("current")), locale).toBe(expected[locale].current);
+      expect(said(step("next")), locale).toBe(expected[locale].next);
+      expect(said(step("later")), locale).toBe(expected[locale].later);
+      expect(said(step("closed", "EXPIRED")), locale).toBe(expected[locale].closed);
+    }
+  });
+
+  it("has the same state keys in both catalogues, and no Romanian word under English", () => {
+    const family = (locale: keyof typeof catalogues) =>
+      (catalogues[locale] as unknown as { Registrations: { declare: { family: Family } } }).Registrations.declare.family;
+    expect(Object.keys(family("en").state).sort()).toEqual(Object.keys(family("ro").state).sort());
+    expect(Object.keys(family("ro").state).sort()).toEqual(["closed", "current", "later", "next", "signed", "waitlisted"]);
+    for (const key of Object.keys(family("ro").state)) expect(family("en").state[key], key).not.toBe(family("ro").state[key]);
+  });
+
+  it("«Declarația N din M»: the current person's place, counted from one, every person on the list in M", () => {
+    const steps = [step("signed", "CONFIRMED"), step("later"), step("current"), step("next")];
+    const position = familyStepPosition(steps);
+    expect(position).toEqual({ step: 3, total: 4 });
+    expect(words("ro")("declare.family.stepTitle", { ...position!, name: "Ion Pop" })).toBe("Declarația 3 din 4 — Ion Pop");
+    expect(words("en")("declare.family.stepTitle", { ...position!, name: "Ion Pop" })).toBe("Declaration 3 of 4 — Ion Pop");
+    // Nobody current: no line at all, never «Declarația 0 din 4».
+    expect(familyStepPosition([step("signed", "CONFIRMED"), step("later")])).toBeNull();
   });
 });

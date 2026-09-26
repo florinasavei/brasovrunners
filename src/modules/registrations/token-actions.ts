@@ -358,26 +358,37 @@ export async function skipFamilyDeclaration(
 }
 
 /**
+ * Why «Semnează declarațiile» was refused (§NNN, nit found in review): the link itself (dead,
+ * spent, throttled — the page says so, as for every other press there), or the address no longer
+ * has declarations to walk at the event — nobody left to sign, or one person alone, who signs
+ * from their own emailed link. The last two land on «Înscrierile mele» with a toast naming them.
+ */
+export type FamilySigningStartRefusal = "LINK" | "NOTHING_LEFT" | "ONE_LEFT";
+
+/**
  * «Semnează declarațiile» on «Înscrierile mele» (§NNN, over §77): the address's live link to its
  * own registrations, exchanged on the server for the wizard's pass over that event's declarations
  * still to sign — never a new token in the URL. The link is read, not spent (one throttled attempt,
  * `readMyRegistrations`), and the pass is bound to it: cancelling from that page spends it, and the
- * pass stops holding with it. Refused unless two or more declarations wait at that event.
+ * pass stops holding with it. Refused, with its reason, unless a wizard with somebody to sign opens.
  */
 export async function startFamilySigningFromMine(
   secret: string,
   eventId: string,
   now: Date,
-): Promise<{ ok: true; pass: FamilySigningPass } | typeof TOKEN_NOT_FOUND> {
+): Promise<{ ok: true; pass: FamilySigningPass } | { ok: false; reason: FamilySigningStartRefusal }> {
   const db = getDb();
   const context = await readMyRegistrations(db, secret, "ro", now);
-  if (!context.ok || !isUuid(eventId)) return TOKEN_NOT_FOUND;
+  if (!context.ok) return { ok: false, reason: "LINK" };
+  // A posted id that is not one answers like an event with nothing to sign, never as a parse error (§376).
+  if (!isUuid(eventId)) return { ok: false, reason: "NOTHING_LEFT" };
   const steps = familySigningSteps(await listFamilySigningRows(db, context.participantId, eventId), {
     originId: null,
     originSignable: false,
     signedIds: [],
   });
-  if (!isFamilyWizard(steps) || !currentFamilyStep(steps)) return TOKEN_NOT_FOUND;
+  if (!currentFamilyStep(steps)) return { ok: false, reason: "NOTHING_LEFT" };
+  if (!isFamilyWizard(steps)) return { ok: false, reason: "ONE_LEFT" };
   const { pass } = await nextFamilyPass(
     db,
     {

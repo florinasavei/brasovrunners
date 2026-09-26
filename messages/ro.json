@@ -5362,7 +5362,9 @@
       "contactSent": "Mesaj trimis clubului.",
       "unregistered": "Gata: înscrierea ta e anulată.",
       "declarationConfirmed": "Declarație semnată: înscrierea ta e confirmată.",
-      "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare."
+      "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare.",
+      "familySignNothingLeft": "Nu mai este nicio declarație de semnat la acest eveniment: lista de mai jos arată unde este fiecare înscriere.",
+      "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană."
     },
     "toast": {
       "saved": "Salvat.",

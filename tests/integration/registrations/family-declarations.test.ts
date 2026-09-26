@@ -195,7 +195,7 @@ describe("§NNN the declaration request names the address's other declarations",
   it("says the one link signs them all, first name and initial, in both languages — never a person alone", async () => {
     const { ana, maria } = await family();
     const { text } = await declarationLink(ana.id, at(20));
-    expect(text).toContain("Pe această adresă așteaptă semnătura și declarațiile pentru: Maria P., Ion P.");
+    expect(text).toContain("Pe această adresă mai așteaptă semnătura declarațiile pentru: Maria P., Ion P.");
     expect(text).toContain("The declarations of Maria P., Ion P. on this address are waiting for a signature too.");
     expect((await declarationLink(maria.id, at(20))).text).toContain("declarațiile pentru: Ana P., Ion P.");
   });
@@ -208,7 +208,7 @@ describe("§NNN the declaration request names the address's other declarations",
     await confirmEmail(db, event, ana.id, at(2));
     await confirmEmail(db, event, vecina.id, at(2));
     const { text } = await declarationLink(ana.id, at(3));
-    expect(text).not.toContain("așteaptă semnătura și declarațiile");
+    expect(text).not.toContain("așteaptă semnătura declarațiile");
     expect(text).not.toContain("Vecina");
   });
 });
@@ -265,6 +265,24 @@ describe("§NNN the wizard: one link, one person per step, one acceptance and on
       signedIds: [ana.id, maria.id, ion.id],
     });
     expect(done.every((step) => step.state === "signed")).toBe(true);
+  });
+
+  it("a person who signed from their own link before the wizard began is a step shown as signed, counted in «din M» (found in review)", async () => {
+    const { event, ana, maria } = await family();
+    // Maria signs alone, from her own email, before anybody opens a wizard.
+    const own = await declarationLink(maria.id, at(20));
+    expect(await consumeAndSignDeclaration(own.secret, await signing("Maria Pop"), at(21))).toMatchObject({ ok: true });
+
+    const rows = await listFamilySigningRows(db, ana.participantId, event.id);
+    expect(rows.find((row) => row.id === maria.id)?.declared).toBe(true);
+    expect(rows.find((row) => row.id === ana.id)?.declared).toBe(false);
+    // Ana's link opened afterwards: Maria is on the list, signed, and the count is three.
+    const steps = familySigningSteps(rows, { originId: ana.id, originSignable: true, signedIds: [] });
+    expect(steps.map((step) => [step.registeredName, step.state])).toEqual([
+      ["Ana Pop", "current"],
+      ["Maria Pop", "signed"],
+      ["Ion Pop", "next"],
+    ]);
   });
 
   it("a family walks the spent link's page more often than its ten attempts an hour: the pass is never charged", async () => {
@@ -562,12 +580,18 @@ describe("§NNN «Semnează declarațiile» on «Înscrierile mele» (§77)", ()
     expect(await startFamilySigningFromMine(strangers, event.id, at(31))).toMatchObject({ ok: false });
   });
 
-  it("is refused for an event with fewer than two declarations waiting", async () => {
+  it("is refused for an event with fewer than two declarations waiting, and says which refusal it is (found in review)", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana", NOW), NOW);
     const [ana] = await rowsOf(event.id);
     await confirmEmail(db, event, ana.id, at(1));
     const mine = (await issueActionToken(db, { participantId: ana.participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: at(600), now: at(2) })).secret;
-    expect(await startFamilySigningFromMine(mine, event.id, at(3))).toMatchObject({ ok: false });
+    // One person alone: their own emailed link signs them.
+    expect(await startFamilySigningFromMine(mine, event.id, at(3))).toEqual({ ok: false, reason: "ONE_LEFT" });
+    // Nobody left to sign (an event with nobody of this address, or a posted id that is not one).
+    expect(await startFamilySigningFromMine(mine, "00000000-0000-4000-8000-000000000000", at(3))).toEqual({ ok: false, reason: "NOTHING_LEFT" });
+    expect(await startFamilySigningFromMine(mine, "not-an-id", at(3))).toEqual({ ok: false, reason: "NOTHING_LEFT" });
+    // A link that is not one: the page's own «link expired» notice, never a toast.
+    expect(await startFamilySigningFromMine("A".repeat(43), event.id, at(3))).toEqual({ ok: false, reason: "LINK" });
   });
 });

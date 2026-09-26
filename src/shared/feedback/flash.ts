@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type FormNotice, noticeOf } from "./notice";
-import { isPublicToastKey, type PublicToastKey } from "./public-toasts";
+import { isPublicToastKey, PUBLIC_INFO_TOAST_KEYS, type PublicToastKey } from "./public-toasts";
 
 /**
  * The flash: a notice that survives one redirect (`notice.ts`, `DECISIONS.md` §384).
@@ -57,7 +57,7 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
  * to whom. The page the redirect lands on shows it through `PublicFlash`.
  */
 export async function flashPublic(key: PublicToastKey): Promise<void> {
-  await flash({ kind: "success", key });
+  await flash({ kind: PUBLIC_INFO_TOAST_KEYS.includes(key) ? "info" : "success", key });
 }
 
 async function readAnyFlash(): Promise<FormNotice | null> {

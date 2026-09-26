@@ -1,5 +1,6 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { getPathname } from "@/i18n/navigation";
@@ -134,6 +135,34 @@ export async function writeFamilySigningPass(pass: FamilySigningPass, token: str
   }
 }
 
+/**
+ * Take the pass back from the browser (§NNN, nit found in review): the opened link's own person
+ * signed on a page where no wizard follows, so a pass left from an earlier walk on this device —
+ * done, or bound to another person of the address — must not stand beside the fresh signature.
+ * The fresh link wins.
+ */
+export async function clearFamilySigningPass(token: string): Promise<void> {
+  const jar = await cookies();
+  for (const path of passPaths(token)) {
+    jar.set(COOKIE, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.APP_BASE_URL.startsWith("https://"),
+      path,
+      maxAge: 0,
+    });
+  }
+}
+
+/**
+ * Whether a pass belongs beside the registration the opened link names (§NNN, nit found in
+ * review): a pass from «Înscrierile mele» never does, and a link's pass only for its own origin.
+ * A live link whose pass names another person is signed as the link alone — the fresh link wins.
+ */
+export function passFitsLink(pass: Pick<FamilySigningPass, "binding" | "originId">, linkRegistrationId: string | null): boolean {
+  return pass.binding === "link" && linkRegistrationId !== null && pass.originId === linkRegistrationId;
+}
+
 export type FamilyPassBase = Omit<FamilySigningPass, "done" | "expiresAt">;
 
 /** What a pass carries from one press to the next: everything but its lapse and whether it is done. */
@@ -236,7 +265,11 @@ async function bindingHolds<T extends Record<string, unknown>>(
   return false;
 }
 
-/** Every registration of one address at one event — the wizard's rows, whatever their state. */
+/**
+ * Every registration of one address at one event — the wizard's rows, whatever their state — and
+ * whether each carries a declaration acceptance (`signedBefore`: a person who signed before the
+ * wizard began is a step shown as signed, §NNN, found in review).
+ */
 export async function listFamilySigningRows<T extends Record<string, unknown>>(
   db: Database<T>,
   participantId: string,
@@ -250,6 +283,9 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
       createdAt: registrations.createdAt,
       holdExpiresAt: registrations.holdExpiresAt,
       checkinCode: registrations.checkinCode,
+      // Qualified by hand: inside a one-table select Drizzle prints a column bare, and a bare "id"
+      // in the subquery would be the acceptance's own.
+      declared: sql<boolean>`exists (select 1 from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`,
     })
     .from(registrations)
     .where(and(eq(registrations.participantId, participantId), eq(registrations.eventId, eventId)))

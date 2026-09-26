@@ -110,7 +110,16 @@ export async function startFamilySigningFromMyRegistrationsAction(form: FormData
   const now = new Date();
 
   const result = await startFamilySigningFromMine(token, eventId, now);
-  if (!result.ok) redirect(`${pagePath(locale, token)}?invalid=1`);
+  /*
+    Refused (§NNN, nit found in review): a dead link says so on the page, as every press here does;
+    an address with nobody left to walk lands back on the list, and a toast names why — nobody left
+    to sign, or one person alone, whose own emailed link signs them.
+  */
+  if (!result.ok && result.reason === "LINK") redirect(`${pagePath(locale, token)}?invalid=1`);
+  if (!result.ok) {
+    await flashPublic(result.reason === "ONE_LEFT" ? "familySignOneLeft" : "familySignNothingLeft");
+    redirect(pagePath(locale, token));
+  }
   await writeFamilySigningPass(result.pass, token, now);
   redirect(getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } }));
 }

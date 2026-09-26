@@ -31,10 +31,22 @@ export type FamilySigningRow = {
   holdExpiresAt?: Date | null;
   /** The desk's code once confirmed, for the last screen's QR (§77). */
   checkinCode?: string | null;
+  /** Whether a declaration acceptance exists for the registration — signed on a link or on paper (§67). */
+  declared?: boolean;
 };
 
 /**
- * - `signed`: signed in this pass (or the opened person, once its link is spent);
+ * Whether the person signed before this wizard began (§NNN, found in review): a declaration on
+ * the row and a state it leads to — confirmed, or queued after a signature that found no place.
+ * Such a person is a step shown as signed and counted in «din M», never dropped from the list.
+ */
+export function signedBefore(row: Pick<FamilySigningRow, "status" | "declared">): boolean {
+  return row.declared === true && (row.status === "CONFIRMED" || row.status === "WAITLISTED");
+}
+
+/**
+ * - `signed`: signed in this pass, signed before it (`signedBefore`), or the opened person once
+ *   its link is spent;
  * - `current`: the person signed now;
  * - `next`: still to sign here, after the current one;
  * - `later`: «Semnez mai târziu» — shown, never current; their own emailed link still signs them;
@@ -70,9 +82,10 @@ export type FamilyStepsInput = {
  * The steps, in order: the person whose link was opened first, then the others in the order they
  * were registered.
  *
- * A step is the opened person, a person signed or put off in this pass, or a person whose
- * declaration can be signed now. A registration still waiting for its address confirmation, or
- * queued without an offer, has nothing to sign and is not a step; a cancelled one is not either.
+ * A step is the opened person, a person signed or put off in this pass, a person who signed before
+ * the wizard began (shown as signed, counted in «din M»), or a person whose declaration can be
+ * signed now. A registration still waiting for its address confirmation, or queued without an
+ * offer and without a signature, has nothing to sign and is not a step; a cancelled one is not either.
  */
 export function familySigningSteps(rows: readonly FamilySigningRow[], input: FamilyStepsInput): FamilyStep[] {
   const skippedIds = input.skippedIds ?? [];
@@ -86,13 +99,13 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
   const included = ordered.filter(
     (row) =>
       (eligible === null || eligible.includes(row.id)) &&
-      (row.id === input.originId || input.signedIds.includes(row.id) || skippedIds.includes(row.id) || isSignable(row.status)),
+      (row.id === input.originId || input.signedIds.includes(row.id) || skippedIds.includes(row.id) || signedBefore(row) || isSignable(row.status)),
   );
 
   let currentTaken = false;
   return included.map((row) => {
     let state: FamilyStepState;
-    if (input.signedIds.includes(row.id)) state = "signed";
+    if (input.signedIds.includes(row.id) || signedBefore(row)) state = "signed";
     else if (skippedIds.includes(row.id)) state = isSignable(row.status) ? "later" : "closed";
     else if (row.id === input.originId && !input.originSignable) state = "signed";
     else if (isSignable(row.status) && !currentTaken) {
@@ -109,6 +122,27 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
       checkinCode: row.checkinCode ?? null,
     };
   });
+}
+
+/**
+ * The words a step's line says after the name, as a key under `declare.family.state` (§NNN): the
+ * five states, and a person signed whose signature found no free place says the waiting list
+ * rather than «semnată» alone. Pure, so both languages' words are unit-tested.
+ */
+export type FamilyStepWordsKey = FamilyStepState | "waitlisted";
+
+export function familyStepWordsKey(step: Pick<FamilyStep, "state" | "status">): FamilyStepWordsKey {
+  return step.state === "signed" && step.status === "WAITLISTED" ? "waitlisted" : step.state;
+}
+
+/**
+ * «Declarația N din M» (§NNN): the current person's place in the list, counted from one, and how
+ * many people the list holds — the ones signed before or in this pass, put off and still to sign
+ * all counted in M. Null when nobody is current.
+ */
+export function familyStepPosition(steps: readonly FamilyStep[]): { step: number; total: number } | null {
+  const index = steps.findIndex((step) => step.state === "current");
+  return index < 0 ? null : { step: index + 1, total: steps.length };
 }
 
 /** The step signed now, or null when nobody is left to sign here. */

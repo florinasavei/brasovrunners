@@ -18,6 +18,7 @@ import {
 } from "@/modules/registrations/token-actions";
 import { currentFamilyStep, familySigningSteps, isFamilyWizard } from "@/modules/registrations/domain/family-signing";
 import {
+  clearFamilySigningPass,
   type FamilyPassBase,
   listFamilySigningRows,
   nextFamilyPass,
@@ -106,7 +107,14 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       };
     }
     const next = await nextFamilyPass(db, base, now);
+    /*
+      The fresh link wins (§NNN, nit found in review): a signature by the link's own person replaces
+      whatever pass this device held for the link — a done walk, or one whose person was put off —
+      and where no wizard follows, the old pass is taken back rather than left to list a stale walk
+      on the page this signature lands on.
+    */
     if (isFamilyWizard(next.steps)) await writeFamilySigningPass(next.pass, token, now);
+    else if (pass) await clearFamilySigningPass(token);
     // No toast here: the next step's page names the person just signed, where the toast's "your
     // registration" would not say whose (§427's words are one runner's).
     if (currentFamilyStep(next.steps)) redirect(path);

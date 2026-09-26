@@ -5362,7 +5362,9 @@
       "contactSent": "Message sent to the club.",
       "unregistered": "Done: your registration is cancelled.",
       "declarationConfirmed": "Declaration signed: your registration is confirmed.",
-      "declarationWaitlisted": "Declaration signed: you are on the waiting list."
+      "declarationWaitlisted": "Declaration signed: you are on the waiting list.",
+      "familySignNothingLeft": "No declaration is left to sign for this event: the list below shows where each registration stands.",
+      "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person."
     },
     "toast": {
       "saved": "Saved.",

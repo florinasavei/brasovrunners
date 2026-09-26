@@ -52,6 +52,7 @@ import {
   currentFamilyStep,
   type FamilyStep,
   familySigningSteps,
+  familyStepPosition,
   hasNextFamilyStep,
   isFamilyWizard,
 } from "@/modules/registrations/domain/family-signing";
@@ -60,6 +61,7 @@ import {
   familyPassHolds,
   familyStepsOfPass,
   listFamilySigningRows,
+  passFitsLink,
   readFamilySigningPass,
 } from "@/modules/registrations/family-signing";
 import { spentLinkHasFamilyLeft } from "@/modules/registrations/token-actions";
@@ -249,8 +251,14 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     A pass with nobody current beside a live link gives the page back to the link's own person —
     put off earlier, signing now from their own email, as the skip promised.
   */
-  const heldSteps = held ? await familyStepsOfPass(db, held) : null;
-  const heldCurrent = held && !held.done && heldSteps ? currentFamilyStep(heldSteps) : null;
+  /*
+    The fresh link wins (§NNN, nit found in review): beside a live link, only a pass whose opened
+    person is this link's own carries the wizard on; any other is ignored and the link signs its
+    own person, as it always did.
+  */
+  const walking = held && (!context.ok || passFitsLink(held, context.token.registrationId)) ? held : null;
+  const heldSteps = walking ? await familyStepsOfPass(db, walking) : null;
+  const heldCurrent = walking && !walking.done && heldSteps ? currentFamilyStep(heldSteps) : null;
   const passSteps = heldSteps && (heldCurrent !== null || !context.ok) ? heldSteps : null;
   const familyCurrent = passSteps ? heldCurrent : null;
   const familyMode = passSteps !== null && isFamilyWizard(passSteps);
@@ -327,7 +335,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         })
       : null;
   const familySteps = passSteps ?? (linkSteps && isFamilyWizard(linkSteps) ? linkSteps : null);
-  const familyPosition = familySteps ? familySteps.findIndex((step) => step.state === "current") : -1;
+  const familyPosition = familySteps ? familyStepPosition(familySteps) : null;
   // The person the pass signed last, for the line that says so above the next one's form.
   const lastSigned = passSteps && pass ? passSteps.find((step) => step.id === pass.signedIds.at(-1)) : undefined;
   const eventDetails = registration
@@ -481,9 +489,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep && <RegistrationJourney current={journeyStep} />}
 
-      {familyMode && !familyCurrent && passSteps && held ? (
+      {familyMode && !familyCurrent && passSteps && walking ? (
         /* The family's wizard with nobody left to sign (§NNN): who was signed, and nothing to press. */
-        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(held.eventId, locale)} />
+        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
           <ActionLinkNotice locale={locale} status={notice} />
@@ -512,7 +520,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             whose declaration was signed a moment ago. Each person's form below is the form every
             declaration has, checked against that person's own name.
           */}
-          {familySteps && familyPosition >= 0 && registration && (
+          {familySteps && familyPosition && registration && (
             <Box sx={{ mb: 3 }} data-testid="family-signing">
               {lastSigned && (
                 <Alert severity="success" role="status" sx={{ mb: 2 }}>
@@ -522,7 +530,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 </Alert>
               )}
               <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
-                {t("declare.family.stepTitle", { step: familyPosition + 1, total: familySteps.length, name: registration.registeredName })}
+                {t("declare.family.stepTitle", { ...familyPosition, name: registration.registeredName })}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 {t("declare.family.intro")}
@@ -810,7 +818,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             action, which writes no registration: the person is put off in the pass, shown as
             "later", and the page moves on. Their own emailed link still signs them.
           */}
-          {familySteps && familyPosition >= 0 && registration && (
+          {familySteps && familyPosition && registration && (
             <Box component="form" action={skipFamilyDeclarationAction} sx={{ mt: 2 }} data-testid="family-signing-skip">
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/shared/config/env";
-import type { FamilyStep } from "../domain/family-signing";
+import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
 
 /**
  * The family's declarations as a stepper (§NNN): one line per person on the address, in the order
@@ -19,12 +19,7 @@ import type { FamilyStep } from "../domain/family-signing";
 export default async function FamilySigningSteps({ steps, detailed = false }: { steps: readonly FamilyStep[]; detailed?: boolean }) {
   const t = await getTranslations("Registrations");
 
-  const stateWords = (step: FamilyStep) =>
-    step.state === "signed"
-      ? step.status === "WAITLISTED"
-        ? t("declare.family.state.waitlisted")
-        : t("declare.family.state.signed")
-      : t(`declare.family.state.${step.state}`);
+  const stateWords = (step: FamilyStep) => t(`declare.family.state.${familyStepWordsKey(step)}`);
 
   const whatNext = (step: FamilyStep) => {
     if (step.status === "CONFIRMED" && step.checkinCode) return t("declare.family.what.confirmed", { code: step.checkinCode });

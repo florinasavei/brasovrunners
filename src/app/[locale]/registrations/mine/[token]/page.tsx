@@ -63,6 +63,12 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
   const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
   const t = await getTranslations("Registrations");
+  /*
+    The page's one toast slot (§427): the cancel's, on its own outcome page, and «Semnează
+    declarațiile» refused for an address with nobody left to walk (§NNN, nit found in review), on
+    the list it lands back on. Each flash is written only before the redirect to its own branch.
+  */
+  const flashSlot = <PublicFlash accept={["unregistered", "familySignNothingLeft", "familySignOneLeft"]} />;
 
   if (done) {
     return (
@@ -71,8 +77,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
           {t("mine.cancelledTitle")}
         </Typography>
         <Alert severity="success">{t("mine.cancelled")}</Alert>
-        {/* The toast the cancel flashed (§427), on this outcome only. */}
-        <PublicFlash accept={["unregistered"]} />
+        {/* The toast the cancel flashed (§427). */}
+        {flashSlot}
         <Typography sx={{ mt: 2 }}>
           <Link href="/registrations/mine">{t("mine.newLink")}</Link>
         </Typography>
@@ -102,6 +108,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       </Typography>
 
       {started && <Alert severity="info" sx={{ mb: 2 }}>{t("manage.eventStarted")}</Alert>}
+      {context.ok && flashSlot}
       {/* A closed registration whose last consent data was just withdrawn leaves the list (§324), so the answer is said here. */}
       {withdrawn &&
         context.ok &&
