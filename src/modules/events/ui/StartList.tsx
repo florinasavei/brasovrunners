@@ -136,7 +136,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     // Google honours `data-nosnippet` only on span, div and section elements (not on the
     // `details` root below), so the wrapper — not the disclosure — carries it: names stay out of
     // search snippets (§421); the page itself stays indexed.
-    <Box component="section" data-nosnippet="" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+    <Box component="section" data-nosnippet="" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
     <Box
       component="details"
       aria-labelledby="start-list-title"

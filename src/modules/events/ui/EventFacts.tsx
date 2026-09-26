@@ -1060,7 +1060,7 @@ export default async function EventFacts({
     its own after the `<dl>` closes, never a `dt`/`dd` pair.
   */
   const partnersSection = coHosts.length > 0 ? (
-    <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+    <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
       {/*
         A native `<details>`, no script needed (§401): closed by default on a phone, where a
         partner's card is the tallest thing on the page and a runner came for the race, not the
@@ -1116,7 +1116,7 @@ export default async function EventFacts({
           `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name,
           the description and the links clear of its edge. Unchanged from §344/§352.
         */}
-        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start", pt: 1.5 }}>
+        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapXs, sm: 1.5 }, justifyItems: "start", pt: 1.5 }}>
           {coHosts.map((host, index) => (
             <Box key={index} data-testid="partner-card" sx={{ ...partnerCardSurface, p: 2, maxWidth: "100%" }}>
               {links ? partnerFacts(host) : host.name}

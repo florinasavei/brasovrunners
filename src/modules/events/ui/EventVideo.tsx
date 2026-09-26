@@ -37,7 +37,7 @@ export default async function EventVideo({
   return (
     <Box
       sx={{
-        mt: { xs: DENSITY.sectionGap, sm: 3 },
+        mt: { xs: DENSITY.gapSm, sm: 3 },
         border: 1,
         borderColor: "divider",
         borderRadius: 1,

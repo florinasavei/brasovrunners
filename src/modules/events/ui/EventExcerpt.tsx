@@ -8,6 +8,7 @@ import {
   type RichTextDoc,
 } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { DENSITY } from "@/theme/density";
 import { LINE_GAP } from "./card-layout";
 
 /**
@@ -17,11 +18,16 @@ import { LINE_GAP } from "./card-layout";
  */
 export type ExcerptPlace = "page" | "card";
 
-/** The excerpt as the page renders it: the body's own type, the column's width. */
+/**
+ * The excerpt as the page renders it: the body's own type, the column's width. On a phone its
+ * last paragraph keeps `DENSITY.gapSm` under it rather than sixteen (§NNN, the 360-px density
+ * pass): that margin collapses through the box into the divider's, so it, not the divider, was
+ * what held the facts sixteen pixels down.
+ */
 export const PAGE_EXCERPT_SX = {
   color: "text.secondary",
   mb: 1,
-  "& p:last-of-type": { mb: 2 },
+  "& p:last-of-type": { mb: { xs: DENSITY.gapSm, sm: 2 } },
 } as const;
 
 /**

@@ -19,6 +19,13 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * 1002.9 → 965.4 (its facts 368 → 334.5: the route pills now fit one line), the open footer fold
  * 130 → 96. At 320: the listing 2024.8 → 1960.8, the race's page 1098.9 → 1090.9.
  *
+ * The third round, the event page one step tighter (the description's foot and the divider
+ * `sectionGap` → `gapSm`, the partners, the door and the film likewise, the sections under the
+ * facts `sectionGapLg` → `sectionGap`), measured the same way after the merge of BR-V2.06: at 360
+ * the race's page 965.4 → 949.4 (its facts 518.9 → 502.9 from the top), a partnered event's
+ * 921.5 → 897.5; at 320 the race's 1090.9 → 1074.9. The facts' own rows were already on the
+ * scale's lowest step (six under an answer, four between a question and its answer) and stay.
+ *
  * The phone project runs at 360 px, the width the owner reads the site at; the desktop project
  * keeps its own viewport, where the two defects were the same and the spacing is `sm`'s.
  */
@@ -91,6 +98,30 @@ test.describe("§NNN the public pages at 360 px", () => {
     if (measured.listTop !== null && measured.filterBottom !== null) {
       expect(Math.abs(measured.listTop - measured.filterBottom - around), "the grid under the filter row").toBeLessThanOrEqual(0.5);
     }
+  });
+
+  test("an event page: the description, the divider and the facts one step closer on a phone", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    const first = page.locator("#main h2 a").first();
+    await expect(first).toBeVisible();
+    await page.goto((await first.getAttribute("href"))!);
+    await expect(page.getByTestId("event-facts")).toBeVisible();
+    const measured = await page.evaluate(() => {
+      const hr = document.querySelector("#main hr");
+      const facts = document.querySelector("[data-testid='event-facts']");
+      return {
+        divider: hr ? getComputedStyle(hr).marginTop : null,
+        // The divider's bottom margin is the whole gap to the facts: nothing else sits between.
+        underDivider: hr && facts ? facts.getBoundingClientRect().top - hr.getBoundingClientRect().bottom : null,
+        // The description's last paragraph collapses into the divider's margin: this is the gap a reader sees.
+        overDivider: hr?.previousElementSibling ? hr.getBoundingClientRect().top - hr.previousElementSibling.getBoundingClientRect().bottom : null,
+      };
+    });
+    // `DENSITY.gapSm` on a phone (was `sectionGap`, 16), 24 from `sm` as before.
+    const [divider, under] = isPhone() ? ["8px", 8] : ["24px", 24];
+    expect(measured.divider, "the divider over the facts").toBe(divider);
+    expect(Math.abs((measured.underDivider ?? Number.NaN) - under), "the facts under the divider").toBeLessThanOrEqual(0.5);
+    expect(Math.abs((measured.overDivider ?? Number.NaN) - under), "the divider under the description").toBeLessThanOrEqual(0.5);
   });
 
   test("a public fold's summary is 44 pixels tall, its padding inside it", async ({ page }) => {

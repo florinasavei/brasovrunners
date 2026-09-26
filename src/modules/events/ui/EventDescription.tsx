@@ -1,7 +1,11 @@
 import Box from "@mui/material/Box";
 import { planEventDescription } from "../domain/description";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { DENSITY } from "@/theme/density";
 import EventExcerpt from "./EventExcerpt";
+
+/** Below the theme's `sm` — MUI's own `down("sm")` query. */
+const PHONE_ONLY = "@media (max-width:599.95px)";
 
 /**
  * The event's description, in one place, for the page and its preview (`DECISIONS.md` §187).
@@ -63,7 +67,9 @@ export default function EventDescription({
     <>
       {showsSummary && <EventExcerpt excerptJson={excerptJson} excerpt={excerpt} />}
       {showsBody && (
-        <Box sx={{ mb: 2 }}>
+        // On a phone the body's last block gives up its own margin, which would otherwise collapse
+        // through this box and hold the divider sixteen pixels down whatever the box says (§NNN).
+        <Box sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, [PHONE_ONLY]: { "& > :last-child": { mb: 0 } } }}>
           <RichText body={bodyJson} />
         </Box>
       )}

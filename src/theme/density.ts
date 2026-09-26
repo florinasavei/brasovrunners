@@ -66,9 +66,13 @@ export const DENSITY = {
    */
   gapSm: 1,
   /** A section's own separation from what precedes it — an alert, a divider, a filter row — on
-   * a phone. Was 3 (24px). */
+   * a phone. Was 3 (24px). On an event page, since the 360-px density pass's third round (§NNN),
+   * the sections under the facts — the route, "Linkuri și fișiere", the programme, the rules, the
+   * start list — take this step rather than `sectionGapLg`, and what used to take this one there
+   * (the divider over the facts, the partners, the registration door, the film, the notices) takes
+   * `gapSm`: one step tighter each, so the event page is on the pass as the listing is. */
   sectionGap: 2,
-  /** A large section break — a hero's foot, "Linkuri și fișiere", the programme, the rules, the
-   * past-events fold — on a phone. Was 4 (32px). */
+  /** A large section break — the past-events fold, the calendar's foot, the team page's contact
+   * line — on a phone. Was 4 (32px). */
   sectionGapLg: 2.5,
 } as const;
