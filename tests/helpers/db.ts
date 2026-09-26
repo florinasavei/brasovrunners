@@ -6,6 +6,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
+import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { jobRuns } from "@/db/schema/job-runs";
 import {
   legalDocumentNumbering,
@@ -93,6 +94,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(declarationAcceptances);
   // A group run's self-declarations (§393) reference the event and the legal version: before both.
   await db.delete(groupRunDeclarations);
+  // Another person waiting for the address's confirmation (§NNN): it points at a token and a registration.
+  await db.delete(pendingFamilyEntries);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
   // The gallery: items, then albums (which the cover references), then the assets.

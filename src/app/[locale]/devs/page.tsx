@@ -244,7 +244,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             ) : (
               <Stack spacing={1.5}>
                 {capturedEmails().map((message) => (
-                  <Box key={message.providerMessageId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                  <Box key={message.providerMessageId} data-testid="captured-email" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {message.subject}
                     </Typography>
@@ -258,6 +258,15 @@ export default async function DevsPage({ params, searchParams }: Props) {
                         </MuiLink>
                       ))}
                     </Stack>
+                    {/* The words themselves, folded (§NNN): what a journey walked by hand, or an end-to-end spec, reads. */}
+                    <Box component="details" sx={{ mt: 0.5 }}>
+                      <Typography component="summary" variant="caption" sx={{ cursor: "pointer", minHeight: 32, display: "flex", alignItems: "center" }}>
+                        {t("captured.text")}
+                      </Typography>
+                      <Typography component="pre" variant="caption" data-testid="captured-text" sx={{ whiteSpace: "pre-wrap", m: 0 }}>
+                        {message.text}
+                      </Typography>
+                    </Box>
                   </Box>
                 ))}
               </Stack>

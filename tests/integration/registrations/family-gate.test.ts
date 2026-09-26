@@ -28,7 +28,8 @@ let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 
 const { submitRegistration } = await import("@/modules/registrations/service");
-const { consumeAndRegisterAnotherPerson, readAnotherPersonLink } = await import("@/modules/registrations/token-actions");
+const { confirmFamilyEntry, readFamilyEntryLink } = await import("@/modules/registrations/family-confirm");
+const { familyEntryFields, insertFamilyEntry, linkFamilyEntryToken } = await import("@/modules/registrations/family-entries");
 const { familyRegistrationOpen } = await import("@/modules/registrations/family-gate");
 const { issueActionToken } = await import("@/modules/action-tokens/repository");
 
@@ -115,22 +116,33 @@ describe("§389 if the legacy constraint were ever restored: one registration pe
     expect(types).toEqual(["VERIFY_REGISTRATION_EMAIL", "VERIFY_REGISTRATION_EMAIL"]);
   });
 
-  it("a link for another person — however it was minted — opens nothing and creates nothing, and stays unspent", async () => {
+  it("a confirmation for another person — however it was made — opens nothing and creates nothing, and stays unspent", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
     const [ana] = await db.select().from(registrations);
-    const { secret } = await issueActionToken(db, {
+    const { secret, token: minted } = await issueActionToken(db, {
       participantId: ana.participantId,
       registrationId: ana.id,
       purpose: "REGISTER_ANOTHER_PERSON",
       expiresAt: new Date(NOW.getTime() + 48 * 3_600_000),
       now: NOW,
     });
+    // A kept form for the person (§NNN), as the public form would have kept it while the flow was open.
+    const entry = await insertFamilyEntry(db, {
+      eventId: event.id,
+      participantId: ana.participantId,
+      registrationId: ana.id,
+      locale: "ro",
+      fields: familyEntryFields({ ...submission("Maria"), birthDate: "1990-07-11" }, NOW),
+      expiresAt: new Date(NOW.getTime() + 48 * 3_600_000),
+      now: NOW,
+    });
+    await linkFamilyEntryToken(db, entry.id, minted.id);
 
-    expect(await readAnotherPersonLink(secret, event.id, NOW)).toEqual({ ok: false });
+    expect(await readFamilyEntryLink(db, secret, "ro", NOW)).toEqual({ ok: false });
     let fields: string[] = [];
     try {
-      await consumeAndRegisterAnotherPerson(secret, event, { ...submission("Maria"), fitnessAcknowledged: true, email: undefined }, {}, NOW);
+      await confirmFamilyEntry(db, secret, { fitnessAcknowledged: true }, NOW);
     } catch (error) {
       if (!isDomainError(error)) throw error;
       fields = [...error.fields];

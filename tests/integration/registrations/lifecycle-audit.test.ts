@@ -63,7 +63,8 @@ const { submitRegistration, confirmEmail, signDeclaration, unregister, confirmBy
 );
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
-const { consumeAndRegisterAnotherPerson, consumeAndConfirmEmail } = await import("@/modules/registrations/token-actions");
+const { consumeAndConfirmEmail } = await import("@/modules/registrations/token-actions");
+const { confirmFamilyEntry } = await import("@/modules/registrations/family-confirm");
 const { createRegistrationByStaff } = await import("@/modules/registrations/admin-service");
 const { countDesk } = await import("@/modules/registrations/admin-repository");
 const { countConfirmedAndCheckedInByEvent } = await import("@/modules/content/events/repository");
@@ -134,10 +135,13 @@ async function createEvent(options: { capacity?: number | null; closesAt?: Date 
   };
 }
 
+/** Each member of a family a birth date of their own (§NNN): a different person differs in both. */
+const BIRTH_DATES: Record<string, string> = { Maria: "1990-07-11", Ioana: "1993-08-08", Elena: "1992-04-04" };
+
 const submission = (firstName: string, email: string, when: Date = NOW) => ({
   firstName,
   lastName: "Pop",
-  birthDate: "1985-03-02",
+  birthDate: BIRTH_DATES[firstName] ?? "1985-03-02",
   sex: "UNSPECIFIED",
   nationality: "RO",
   city: "Brașov",
@@ -220,12 +224,8 @@ async function secretOf(row: typeof emailOutbox.$inferSelect, when: Date): Promi
 
 describe("§420 §389 BR-REQ-036-02 every 'register another person' email keeps its own link", () => {
   const EMAIL = "ana@example.ro";
-  const other = (firstName: string, when: Date) => {
-    // An adult on the family link acknowledges the fitness statement rather than making it (§421).
-    const posted: Record<string, unknown> = { ...submission(firstName, EMAIL, when), fitnessAcknowledged: true };
-    delete posted.email;
-    return posted;
-  };
+  // The press on the emailed confirmation (§NNN); an adult's acknowledges the fitness statement (§421).
+  const confirm = (secret: string, when: Date) => confirmFamilyEntry(db, secret, { fitnessAcknowledged: true }, when);
 
   it("a parent who fills the form for each child, then opens the inbox, finds every link working", async () => {
     const event = await createEvent();
@@ -242,13 +242,13 @@ describe("§420 §389 BR-REQ-036-02 every 'register another person' email keeps 
     const live = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
     expect(live.map((token) => token.invalidatedAt)).toEqual([null, null]);
 
-    expect(await consumeAndRegisterAnotherPerson(maria, event, other("Maria", at(5)), {}, at(5))).toMatchObject({ ok: true });
-    expect(await consumeAndRegisterAnotherPerson(ioana, event, other("Ioana", at(6)), {}, at(6))).toMatchObject({ ok: true });
+    expect(await confirm(maria, at(5))).toMatchObject({ ok: true });
+    expect(await confirm(ioana, at(6))).toMatchObject({ ok: true });
     const names = (await db.select().from(registrations).orderBy(registrations.createdAt)).map((row) => row.registeredName);
     expect(names).toEqual(["Ana Pop", "Maria Pop", "Ioana Pop"]);
 
     // Still single use.
-    expect(await consumeAndRegisterAnotherPerson(maria, event, other("Elena", at(7)), {}, at(7))).toEqual({ ok: false });
+    expect(await confirm(maria, at(7))).toEqual({ ok: false });
   });
 
   it("the address's limit is still counted under the lock when the second live link is used", async () => {
@@ -261,8 +261,8 @@ describe("§420 §389 BR-REQ-036-02 every 'register another person' email keeps 
     const maria = await secretOf(first, at(3));
     const ioana = await secretOf(second, at(4));
 
-    expect(await consumeAndRegisterAnotherPerson(maria, event, other("Maria", at(5)), {}, at(5))).toMatchObject({ ok: true });
-    expect(await refusal(consumeAndRegisterAnotherPerson(ioana, event, other("Ioana", at(6)), {}, at(6)))).toEqual({
+    expect(await confirm(maria, at(5))).toMatchObject({ ok: true });
+    expect(await refusal(confirm(ioana, at(6)))).toEqual({
       code: "VALIDATION_ERROR",
       fields: ["addressAtCap"],
     });

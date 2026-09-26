@@ -6,113 +6,110 @@ import {
   queuedPayloads,
   registrationsByEmail,
   registrationStatus,
-  type RegistrationRow,
 } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 import { confirmDialog } from "./support/confirm";
 import { openFold } from "./support/fold";
 
 /**
- * §389 — a family on one address, through the inbox (BR-REQ-032-03, BR-REQ-031-01 criterion 3,
- * BR-REQ-036-02). The owner, 2026-09-25: "people must have this in the flow via email, like 'you are
- * already registered, register for another person?'".
+ * §389, amended by §NNN — a family on one address, confirmed from the inbox (BR-REQ-032-03,
+ * BR-REQ-031-01 criterion 3, BR-REQ-036-02). The owner, 2026-09-26: "în mail să îți afișez
+ * înscrierile și să zic «confirm că înscriu altă persoană», dar trebuie să verific că numele e
+ * diferit (ignorând whitespace) și data nașterii e complet diferită".
  *
- * The public form sent again with a registered address and another name answers exactly as any
- * submission does, and creates nothing; the address receives the message with a single-use link to
- * the form for the other person, the address fixed; that form registers the second person, who then
- * confirms and signs alone; "Înscrierile mele" lists both.
+ * The public form sent again from a registered address for a different person answers exactly as
+ * any submission does and registers nobody; the address receives «Înscrii încă o persoană?» — who
+ * it holds, the person the form named, one button; the button's page registers that person, who
+ * goes straight to their declaration; "Înscrierile mele" lists both. The same name with another
+ * birth date is a slip: nothing registered, the existing registration's email re-sent with one
+ * sentence on how to register somebody else.
  *
- * The links the emails would carry are minted in the database (`support/action-link.ts`): captured
- * messages live in the server's memory, on purpose. The whole journey needs the contract release
- * (`family-gate.ts`); before it, the first case below holds as today's behaviour and the second is
- * skipped, saying why.
+ * The emails are read where the server captured them, on `/devs` → «Emailuri» (local and test
+ * only): its real link, its real words. The whole journey needs the contract release
+ * (`family-gate.ts`); before it, the first case holds as the older behaviour and the rest skip.
  */
-test.describe("§389 a family on one address", () => {
-  test.describe.configure({ timeout: 150_000 });
+test.describe("§389 §NNN a family on one address", () => {
+  test.describe.configure({ timeout: 180_000 });
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
 
-  async function fillPerson(page: Page, person: { firstName: string; lastName: string; birthDate: string }, email?: string) {
+  type Person = { firstName: string; lastName: string; birthDate: string };
+
+  async function fillPerson(page: Page, person: Person, email: string) {
     const values: Record<string, string> = {
       firstName: person.firstName,
       lastName: person.lastName,
       birthDate: person.birthDate,
       city: "Brașov",
+      email,
+      phone: "+40711111111",
       emergencyContactName: "Ion Popescu",
       emergencyContactPhone: "+40722222222",
     };
-    if (email) {
-      values.email = email;
-      values.phone = "+40711111111";
-    }
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
-    if (email) await page.locator('[name="emailConfirm"]').fill(email);
+    await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
     // The club's terms, accepted expressly (§421).
     await page.locator('[name="termsAccepted"]').check();
-    if (email) {
-      await page.locator('[name="fitnessDeclared"]').check();
-    } else {
-      /*
-        The family form for another adult (§421): no health note, no socials, no list tick and no
-        first-person fitness statement — those are the person's own to give — and the address
-        holder's acknowledgement in the statement's place.
-      */
-      await expect(page.locator('[name="stravaUrl"]')).toHaveCount(0);
-      await expect(page.locator('[name="healthNotes"]')).toBeHidden();
-      await expect(page.locator('[name="fitnessDeclared"]')).toBeHidden();
-      await page.locator('[name="fitnessAcknowledged"]').check();
-    }
+    await page.locator('[name="fitnessDeclared"]').check();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page).toHaveURL(/submitted=1/, { timeout: 30_000 });
   }
 
-  async function publicSubmission(page: Page, firstName: string, lastName: string, email: string): Promise<string> {
+  async function publicSubmission(page: Page, person: Person, email: string): Promise<string> {
     await page.goto(registerPath);
     await hydrated(page);
-    await fillPerson(page, { firstName, lastName, birthDate: "1985-03-02" }, email);
+    await fillPerson(page, person, email);
     // What the browser is shown: the one screen every submission gets (§39).
-    return (await page.locator("main").innerText()).replaceAll(firstName, "<name>");
+    return (await page.locator("main").innerText()).replaceAll(person.firstName, "<name>");
   }
 
-  async function confirmAndSign(page: Page, registration: RegistrationRow) {
-    await page.goto(`/ro/inregistrari/confirmare/${await mintActionLink(registration, "VERIFY_REGISTRATION_EMAIL")}`);
-    await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
-    expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
-    await page.goto(`/ro/inregistrari/declaratie/${await mintActionLink(registration, "COMPLETE_DECLARATION")}`);
-    await hydrated(page);
-    await page.locator('[name="accepted"]').check();
-    const idDocument = page.locator('[name="idDocument"]');
-    if (await idDocument.count()) await idDocument.fill("BV 123456");
-    await page.locator('[name="typedName"]').fill(registration.registeredName);
-    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
-    await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
-    expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
+  /**
+   * The newest message the server captured for this address whose words contain `needle`, as
+   * `/devs` → «Emailuri» shows it: its words and its links. The outbox drains after the response
+   * that queued it, so it is waited for.
+   */
+  async function capturedEmail(page: Page, email: string, needle: string): Promise<{ text: string; links: string[] }> {
+    let found: { text: string; links: string[] } | undefined;
+    await expect(async () => {
+      await page.goto("/ro/devs?panel=email");
+      const boxes = page.getByTestId("captured-email").filter({ hasText: email });
+      const all = await boxes.evaluateAll((elements) =>
+        elements.map((element) => ({
+          text: element.querySelector('[data-testid="captured-text"]')?.textContent ?? "",
+          links: Array.from(element.querySelectorAll("a")).map((anchor) => anchor.href),
+        })),
+      );
+      found = all.find((message) => message.text.includes(needle));
+      expect(found).toBeTruthy();
+    }).toPass({ timeout: 45_000 });
+    return found!;
   }
 
-  test("the form sent again with another name answers as any submission does, and creates nothing", async ({ page }) => {
+  test("the form sent again for a different person answers as any submission does, and registers nobody", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const registered = `e2e-family-a-${suffix}@test.invalid`;
     const fresh = `e2e-family-b-${suffix}@test.invalid`;
+    const lastName = `Pop ${suffix}`;
 
-    await publicSubmission(page, "Ana", `Pop ${suffix}`, registered);
-    const again = await publicSubmission(page, "Maria", `Pop ${suffix}`, registered);
-    const first = await publicSubmission(page, "Maria", `Pop ${suffix}`, fresh);
+    await publicSubmission(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, registered);
+    const again = await publicSubmission(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, registered);
+    const first = await publicSubmission(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, fresh);
 
     // The same screen, word for word, but for the address it names — which is the one just typed.
     expect(again.replaceAll(registered, "<address>")).toBe(first.replaceAll(fresh, "<address>"));
     const rows = await registrationsByEmail(registered);
-    expect(rows.map((row) => row.registeredName)).toEqual([`Ana Pop ${suffix}`]);
+    expect(rows.map((row) => row.registeredName)).toEqual([`Ana ${lastName}`]);
     // Only the inbox learns which case it was — once the flow is open.
     const offers = await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON");
     expect(offers).toHaveLength((await familyFlowOpen()) ? 1 : 0);
   });
 
-  test("the emailed link registers the other person on the same address; each confirms and signs alone", async ({ page }) => {
+  test("the email lists the address and names the person; one confirmation registers them, straight to the declaration", async ({ page }) => {
     test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -120,47 +117,60 @@ test.describe("§389 a family on one address", () => {
     const email = `e2e-family-${suffix}@test.invalid`;
     const lastName = `Pop ${suffix}`;
 
-    await publicSubmission(page, "Ana", lastName, email);
-    await publicSubmission(page, "Maria", lastName, email);
+    await publicSubmission(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
+    await publicSubmission(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, email);
     const [ana] = await registrationsByEmail(email);
-    expect(await queuedPayloads(ana.id, "REGISTER_ANOTHER_PERSON")).toEqual([{ atCap: false, registrationsPerAddress: expect.any(Number) }]);
+    expect(await queuedPayloads(ana.id, "REGISTER_ANOTHER_PERSON")).toEqual([
+      { atCap: false, registrationsPerAddress: expect.any(Number), familyEntryId: expect.any(String) },
+    ]);
 
-    // The link in the email: the event's own form, the address fixed and read-only, no second box.
-    const secret = await mintActionLink(ana, "REGISTER_ANOTHER_PERSON");
-    await page.goto(`${registerPath}?another=${secret}`);
+    // The captured email: who the address holds, the person the form named, one button.
+    const offer = await capturedEmail(page, email, "Înscriși deja cu această adresă");
+    expect(offer.text).toContain("Înscriși deja cu această adresă: Ana P.");
+    expect(offer.text).toContain(`Persoana din formular: Maria ${lastName}, data nașterii 11.07.1990.`);
+    expect(offer.text).toContain("Confirm că înscriu altă persoană");
+    const link = offer.links.find((href) => href.includes("/inregistrari/familie/"));
+    expect(link).toBeTruthy();
+
+    // The page the button opens: the same facts, and nothing registered by opening it (GET never mutates).
+    await page.goto(link!);
     await hydrated(page);
-    await expect(page.getByTestId("another-person-notice")).toContainText(email);
-    const fixed = page.getByTestId("another-person-email");
-    await expect(fixed).toHaveValue(email);
-    await expect(fixed).toHaveAttribute("readonly", /.*/);
-    await expect(page.locator('[name="email"]')).toHaveCount(0);
-    await expect(page.locator('[name="emailConfirm"]')).toHaveCount(0);
-    // The runner's own telephone is optional here — a child often has none.
-    await expect(page.locator('[name="phone"]')).not.toHaveAttribute("required", /.*/);
-    // The page never scrolls sideways at 320 pixels, in its family shape too.
+    await expect(page.getByTestId("family-registered")).toContainText("Ana P.");
+    await expect(page.getByTestId("family-person")).toContainText(`Maria ${lastName}`);
+    await expect(page.getByTestId("family-person")).toContainText("11.07.1990");
+    expect(await registrationsByEmail(email)).toHaveLength(1);
+    // The page never scrolls sideways at 320 pixels, and the button is a thumb's target.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    // A minor's parent consents for the child (§421): the statement and the health note come back
-    // with a birth date under eighteen, and the acknowledgement for an adult goes.
-    await page.locator('[name="birthDate"]').fill("2013-04-02");
-    await expect(page.locator('[name="fitnessDeclared"]')).toBeVisible();
-    await expect(page.locator('[name="fitnessAcknowledged"]')).toBeHidden();
+    // The shared send button inside its wrapper (§371): the press is held while the first is in flight.
+    const confirm = page.getByTestId("family-confirm").getByRole("button");
+    expect((await confirm.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    await fillPerson(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" });
-    await expect(page.getByRole("heading", { name: "Aproape gata, Maria!" })).toBeVisible();
+    // Another adult: the address holder acknowledges that the person declares their own fitness (§421).
+    await page.locator('[name="fitnessAcknowledged"]').check();
+    await confirm.click();
+    await expect(page).toHaveURL(/done=declare/, { timeout: 30_000 });
+    await expect(page.getByTestId("family-confirmed")).toBeVisible();
 
     const [first, second] = await registrationsByEmail(email);
     expect([first.registeredName, second.registeredName]).toEqual([`Ana ${lastName}`, `Maria ${lastName}`]);
     expect(second.participantId).toBe(first.participantId);
-    expect(second.status).toBe("PENDING_EMAIL_CONFIRMATION");
+    // Confirmed from the inbox: no second confirmation link, straight to the declaration.
+    expect(await registrationStatus(second.id)).toBe("PENDING_DECLARATION");
 
-    // Spent: the same link again is the plain form, with one sentence saying the link is gone.
-    await page.goto(`${registerPath}?another=${secret}`);
-    await expect(page.getByTestId("another-person-link-gone")).toBeVisible();
-    await expect(page.locator('[name="emailConfirm"]')).toHaveCount(1);
+    // Spent: the same link again is the one generic notice.
+    await page.goto(link!);
+    await expect(page.getByTestId("family-confirm")).toHaveCount(0);
 
-    // Everybody signs alone.
-    await confirmAndSign(page, first);
-    await confirmAndSign(page, second);
+    // She signs her own declaration, alone.
+    await page.goto(`/ro/inregistrari/declaratie/${await mintActionLink(second, "COMPLETE_DECLARATION")}`);
+    await hydrated(page);
+    await page.locator('[name="accepted"]').check();
+    const idDocument = page.locator('[name="idDocument"]');
+    if (await idDocument.count()) await idDocument.fill("BV 123456");
+    await page.locator('[name="typedName"]').fill(second.registeredName);
+    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
+    expect(await registrationStatus(second.id)).toBe("CONFIRMED");
 
     // "Înscrierile mele" lists both, each by name (§77).
     await page.goto(`/ro/inscrieri/ale-mele/${await mintProfileLink(first.participantId)}`);
@@ -168,6 +178,34 @@ test.describe("§389 a family on one address", () => {
     await expect(names).toHaveCount(2);
     await expect(names.filter({ hasText: `Ana ${lastName}` })).toHaveCount(1);
     await expect(names.filter({ hasText: `Maria ${lastName}` })).toHaveCount(1);
+  });
+
+  test("the registered name with another birth date registers nobody, and the re-send says how to register somebody else", async ({ page }) => {
+    test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const email = `e2e-family-slip-${suffix}@test.invalid`;
+    const lastName = `Pop ${suffix}`;
+
+    await publicSubmission(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
+    await publicSubmission(page, { firstName: "Ana", lastName, birthDate: "1999-01-01" }, email);
+
+    const rows = await registrationsByEmail(email);
+    expect(rows).toHaveLength(1);
+    expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([]);
+    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{}, { anotherPersonHint: true }]);
+
+    // The re-sent email, as captured: the sentence, in both halves.
+    const resent = await capturedEmail(page, email, "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.");
+    expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
+  });
+
+  test("a link from an older email that opened the form for another person says it is no longer used", async ({ page }) => {
+    await page.goto(`${registerPath}?another=an-older-emails-link`);
+    await expect(page.getByTestId("another-person-link-gone")).toBeVisible();
+    // The ordinary form, the address asked twice as always.
+    await expect(page.locator('[name="emailConfirm"]')).toHaveCount(1);
   });
 });
 

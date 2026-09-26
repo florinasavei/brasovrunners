@@ -66,11 +66,11 @@ describe("§389 the five steps say how a family registers on one address", () =>
     gate.open = false;
   });
 
-  it("says to send the form again, and that the next step comes by email — once the schema allows it", async () => {
+  it("says to send the form again with the person's name and birth date, and to confirm from the email — once the schema allows it (§NNN)", async () => {
     gate.open = true;
     const html = await render({});
     expect(html).toContain("Înscrii pe altcineva cu aceeași adresă?");
-    expect(html).toContain("Trimite din nou formularul — primești un email cu pasul următor.");
+    expect(html).toContain("Trimite din nou formularul cu numele complet și data nașterii persoanei — primești un email în care confirmi cu un buton.");
     expect(html).toContain('data-testid="steps-family"');
   });
 

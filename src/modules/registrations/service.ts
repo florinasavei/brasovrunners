@@ -43,8 +43,9 @@ import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { DEFAULT_ADDRESS_CAP } from "./domain/address-cap";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
-import { registrationNameKey, sameRunner } from "./domain/name-key";
+import { registrationNameKey } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
+import { familyEntryFields, insertFamilyEntry } from "./family-entries";
 import { familyRegistrationOpen } from "./family-gate";
 import {
   anotherPersonFitnessRule,
@@ -796,7 +797,9 @@ export type SubmitRegistrationResult = {
   /**
    * The registration a **staff** entry created or restarted (§420), so the desk confirms that row
    * and no other — never re-read by address, which on a family's address (§389) can find another
-   * runner's row. Absent on every public answer, which stays the same for everybody (§39).
+   * runner's row. Also to the confirmation of another person from the email (§NNN), which then
+   * confirms that row. Absent on every answer the public form gives, which stays the same for
+   * everybody (§39).
    */
   registrationId?: string;
 };
@@ -832,13 +835,19 @@ export type RegistrationOrigin = {
   /** Whether the club has the hidden field switched on (§282). */
   honeypotOn?: boolean;
   /**
-   * This public submission came through the link emailed to an address that is already registered
-   * at the event (§389, `REGISTER_ANOTHER_PERSON`): the form for another person on that address.
-   * The caller has spent the token in the same transaction and names the participant it was issued
-   * to; the address is that participant's, never one typed into the form. It changes three things:
-   * the per-identity throttle is not spent (the token's own throttle bounds this door, §39); the
-   * decision is the link's (`domain/family.ts`) — create, or refuse out loud, behind the token —
-   * and the registrations-per-address limit is enforced here, under the event's lock.
+   * This public submission is another person's registration, confirmed from the email sent to an
+   * address that is already registered at the event (§389, §NNN, `REGISTER_ANOTHER_PERSON`): the
+   * fields the public form posted and `family-entries.ts` kept, pressed through by the address's
+   * owner. The caller has spent the token in the same transaction and names the participant it was
+   * issued to; the address is that participant's, never one typed into the form. It changes:
+   * - the throttle's bucket (`registration-link-submit`, §389);
+   * - the anti-bot checks, skipped — the submission that kept these fields passed them, and a
+   *   press behind a token only the inbox holds is not a form a machine timed;
+   * - the decision, the link's (`domain/family.ts`) — create, or refuse out loud, behind the token
+   *   — with the registrations-per-address limit enforced here, under the event's lock;
+   * - no verification email: the press proved the inbox, so the caller confirms the address in the
+   *   same transaction (`confirmEmail`) and the new registration goes straight to its place, or to
+   *   the waiting list, with its own declaration email. The registration's id comes back for that.
    */
   anotherPerson?: { participantId: string };
 };
@@ -851,6 +860,8 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   participant: Participant,
   registration: Registration,
   now: Date,
+  /** What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§NNN). */
+  payload: Record<string, unknown> = {},
 ): Promise<OutboxRow | null> {
   return enqueueEmail(db, {
     participantId: participant.id,
@@ -858,7 +869,7 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
     messageType: "VERIFY_REGISTRATION_EMAIL",
     locale: registration.locale,
     recipientEmail: participant.deliveryEmail,
-    payload: {},
+    payload,
     idempotencyKey: `registration:${registration.id}:verify-requested:${now.toISOString()}`,
     now,
   });
@@ -1026,7 +1037,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // Only the public form is defended this way. A staff-entered registration has no rendered
   // page behind it to have timed and no hidden field for a bot to fill, and the person typing
   // it has already been authenticated and authorized as an Administrator.
-  if (origin.source === "PUBLIC") {
+  // Nor is another person's registration confirmed from the email (§NNN): the submission that kept
+  // its fields passed these checks, and the press is behind a token only the inbox holds.
+  if (origin.source === "PUBLIC" && !origin.anotherPerson) {
     const verdict = classifySubmission(input, now);
     /*
       Neither defence is answered with silence any more (§217, amending §194 and
@@ -1264,12 +1277,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const via = origin.anotherPerson ? "link" : origin.source === "STAFF" ? "staff" : "form";
     /*
       Whether the schema lets a second runner onto the address yet (`family-gate.ts`). Asked only
-      when the answer can change the decision: a first registration and the same runner again are
-      decided the same way either way, and cost no catalogue read.
+      when the answer can change the decision: a first registration on an empty address is decided
+      the same way either way, and costs no catalogue read. The same person again is asked too since
+      §NNN — whether the re-send may say how to register somebody else depends on it.
     */
-    const sameAndActive = rows.some((row) => isActiveStatus(row.status) && sameRunner(row.registeredName, legalName));
-    const familyOpen = via === "link" || (rows.length > 0 && !sameAndActive) ? await familyRegistrationOpen(tx) : false;
-    const decision = decideSubmission({ rows, legalName, via, familyOpen, cap });
+    const familyOpen = via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
+    // The name and the birth date both decide who this is (§NNN): the owner's rule, `domain/family.ts`.
+    const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, via, familyOpen, cap });
 
     /*
       Behind the emailed link only (§389): whoever holds it has read the address's inbox, so the
@@ -1301,19 +1315,36 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     if (decision.kind === "offerAnother") {
       /*
-        Another runner, on an address that is registered here (§389; the owner: "people must have
-        this in the flow via email, like 'you are already registered, register for another
-        person?'").
+        A different person, on an address that is registered here (§389, §NNN; the owner,
+        2026-09-26: "în mail să îți afișez înscrierile și să zic «confirm că înscriu altă persoană»").
 
-        Nothing is created. The screen is the one every submission gets — byte for byte, since the
-        action cannot tell this return from any other — because saying anything else would tell a
-        stranger which addresses are registered (§39, AGENTS.md §19.4). The answer goes to the
-        address: one message with a single-use link to the form for the other person, the address
-        fixed on it — or, when the address already carries the club's limit, the sentence that says
-        so and no link. The token is minted at send time and hashed at rest (§12.8, §14.5), scoped to
-        the registration the address holds here, so it names the event and the participant and
-        nothing a stranger typed.
+        No registration is created. The screen is the one every submission gets — byte for byte,
+        since the action cannot tell this return from any other — because saying anything else would
+        tell a stranger which addresses are registered (§39, AGENTS.md §19.4). The answer goes to the
+        address: one message listing who the address already holds here and naming the person just
+        typed, with one button to confirm them — or, when the address already carries the club's
+        limit, the sentence that says so and no button.
+
+        The posted form is kept for that button (`family-entries.ts`): the person's fields, without
+        the address and without another adult's own consents (§421), until the club's email-link
+        window closes; the maintenance job deletes it then, and the confirmation deletes it when it
+        creates the registration. Nothing is kept at the limit — there is nothing to confirm. The
+        token is minted at send time and hashed at rest (§12.8, §14.5), scoped to the registration
+        the address holds here, and the renderer ties it to this entry, so it names the event, the
+        participant and this one person, and nothing a stranger typed can reach another inbox.
       */
+      const entry = decision.atCap
+        ? null
+        : await insertFamilyEntry(tx, {
+            eventId: event.id,
+            participantId: participant.id,
+            registrationId: decision.about.id,
+            locale: input.locale,
+            fields: familyEntryFields(input as unknown as Record<string, unknown>, now),
+            expiresAt: emailLinkExpiresAt(now, settings),
+            now,
+          });
+      if (entry) createdDeadlines = [entry.expiresAt];
       const queued = await enqueueEmail(tx, {
         participantId: participant.id,
         registrationId: decision.about.id,
@@ -1322,8 +1353,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         locale: input.locale,
         recipientEmail: participant.deliveryEmail,
         // What was decided now, not what the setting says when the message renders: the email and
-        // the decision must agree, and the link's page asks the limit again under the lock anyway.
-        payload: { atCap: decision.atCap, registrationsPerAddress: cap.registrationsPerAddress },
+        // the decision must agree, and the confirmation asks the limit again under the lock anyway.
+        // The entry by its id alone — never a name or a date in the outbox (§12.12).
+        payload: entry
+          ? { atCap: false, registrationsPerAddress: cap.registrationsPerAddress, familyEntryId: entry.id }
+          : { atCap: decision.atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
         now,
       });
@@ -1388,8 +1422,14 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // Whether a row was actually queued, for the club's record below: a key already used — two
       // presses in the same millisecond — queues nothing, and the record must not say otherwise.
       let queued: OutboxRow | null = null;
+      /*
+        Only one of the name and the birth date matched (§NNN): the owner's rule reads it as a slip,
+        so nothing was created — and the message, in the one place it may be said, adds how to
+        register somebody else: the form again, with that person's full name and birth date.
+      */
+      const hint = decision.kind === "resend" && decision.notAnotherPerson === true ? { anotherPersonHint: true } : {};
       if (messageType === "VERIFY_REGISTRATION_EMAIL") {
-        queued = await enqueueVerificationEmail(tx, participant, existing, now);
+        queued = await enqueueVerificationEmail(tx, participant, existing, now, hint);
       } else if (messageType) {
         queued = await enqueueEmail(tx, {
           participantId: participant.id,
@@ -1400,7 +1440,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           recipientEmail: participant.deliveryEmail,
           // Says, in the one place it may be said, that this is the registration they already
           // have rather than a new one (§235). The screen stays generic for everybody (§19.4).
-          payload: { alreadyRegistered: true },
+          payload: { alreadyRegistered: true, ...hint },
           // Per submission, so two genuine attempts an hour apart are two messages; the throttle
           // bounds them rather than a key collision silently swallowing the second.
           idempotencyKey: `registration:${existing.id}:resubmitted:${now.toISOString()}`,
@@ -1489,7 +1529,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           changes: { ...carriedFields, emailLinkExpiresAt: linkExpiresAt },
           now,
         });
-        if (restarted && !atTheDesk) await enqueueVerificationEmail(tx, participant, restarted, now);
+        // Not for another person confirmed from the email (§NNN): the caller confirms the address itself.
+        if (restarted && !atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, restarted, now);
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
         return;
@@ -1562,7 +1603,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
-    if (!atTheDesk) await enqueueVerificationEmail(tx, participant, created, now);
+    // Nor another person confirmed from the email (§NNN): the press proved the inbox, and the
+    // caller confirms the address in this same transaction (`family-confirm.ts`).
+    if (!atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, created, now);
     createdDeadlines = [linkExpiresAt];
     written = created.id;
   });
@@ -1570,8 +1613,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   if (createdDeadlines !== undefined) wakeMaintenance(event, now, settings, ...createdDeadlines);
 
-  // To a staff caller only (§420): the public answer stays byte for byte the same for everybody (§39).
-  return origin.source === "STAFF" && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
+  // To a staff caller (§420), and to the confirmation from the email (§NNN), which confirms that row
+  // and no other: the public form's answer stays byte for byte the same for everybody (§39).
+  return (origin.source === "STAFF" || origin.anotherPerson) && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
 }
 
 // --- §15.2 Email confirmation ------------------------------------------------------------------

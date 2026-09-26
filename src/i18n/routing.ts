@@ -75,6 +75,15 @@ export const routing = defineRouting({
       en: "/registrations/list/[token]",
     },
     /**
+     * Another person on a registered address, confirmed from the inbox (§NNN, amending §389): the
+     * page a `REGISTER_ANOTHER_PERSON` token opens — who the address holds, the person the form
+     * named, one button that registers them.
+     */
+    "/registrations/family/[token]": {
+      ro: "/inregistrari/familie/[token]",
+      en: "/registrations/family/[token]",
+    },
+    /**
      * "Send me that link again" (§19.4's second surface). No token in the path — this is the
      * route somebody reaches precisely because they have no token, so it takes an address and
      * answers the same way whatever that address turns out to mean.

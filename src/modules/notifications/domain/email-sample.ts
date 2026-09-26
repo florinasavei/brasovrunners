@@ -224,6 +224,17 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
 export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
 
 /**
+ * The preview's family on one address (§NNN): who the sample address holds — the sample runner, as
+ * the email names a registered person, first name and initial — and the person the form named.
+ * Machinery lines of the message, never fields of the closed set: no club text can hold them.
+ */
+export const EMAIL_SAMPLE_FAMILY = {
+  registered: ["Ana P."],
+  personName: "Mihai Popescu",
+  personBirthDate: "12.03.2012",
+} as const;
+
+/**
  * The sample's value for a field of the closed set, in one language — every field has one since
  * §373 (email follow-up), so the preview and the legend under the editor show each of them.
  */

@@ -206,7 +206,7 @@ export default function SubmitButton({
     const measure = () => {
       const controls = Array.from(form.elements) as WatchedControl[];
       // `isRefused` skips a control that will not validate: one in a disabled fieldset
-      // (`ShownForMinor`) is not the browser's to refuse, and must not be listed as missing.
+      // (`HiddenForMinor`) is not the browser's to refuse, and must not be listed as missing.
       // The whole scan only where a list is drawn; elsewhere the first refusal is all that is said,
       // and the event editor's few hundred boxes stop at it (§371).
       const invalid = lists ? controls.filter(isRefused) : [];

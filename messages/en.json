@@ -3413,7 +3413,7 @@
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
-        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only from the link sent by email; at the limit, the email says so and carries no link. Each person confirms and signs their own registration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
+        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only by confirming from the email sent to the address; at the limit, the email says so and carries no button. Each person signs their own declaration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
         "field": "Registrations per address (per event)",
         "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
         "value": "One address may register at most {people} for an event.",
@@ -3455,8 +3455,35 @@
       "intro": "Every task has its own numbered steps. What is written «like this», in bold, is exactly what the button or the screen says — look for those words. Your role's sections come first and open; press a task to see its steps. If a button is missing, you do not have the role for it: ask a superadministrator for it, or ask someone who has that role.",
       "sections": [
         {
-          "title": "First steps",
-          "who": "For everyone: sign in, find your way, confirm what you press.",
+          "title": "Volunteer at the number pickup desk",
+          "who": "Role: Volunteer (or any role). On a phone.",
+          "steps": [
+            "Open the site and press “Sign in” (at the bottom, or at /admin). Use the account the organizer gave you.",
+            "Press “Race day” in the top bar. Pick today's event from the list.",
+            "The participant shows the QR code from their email. Press “Scan” (Android) or open the phone's Camera app, point it at the code and tap the link that appears — the person's page opens.",
+            "Check the name, press “Here” and hand over the race number from the sheet (the number is shown large, left of the name).",
+            "No QR, or they cannot find the email: type part of the name in the search box and press “Search”. Same page, same buttons.",
+            "It says “pending” or “unconfirmed”: give them the paper declaration, they sign it, you press “Confirm here”, then “Here”.",
+            "No number: type it in the box and press “Save”. A number already given to somebody else is refused.",
+            "Never registered: press “Add somebody”, fill in name and email, “Add registration”. They sign the paper declaration, then “Here”. If the event is full they join the waiting list — “Give a place” only works once somebody withdrew.",
+            "Pressed the wrong thing: “Undo”. Everything you press stays in the history with your name — nothing is lost.",
+            "What you cannot do from here (and that is fine): cancel or erase registrations, see email addresses, export lists. For those, call an administrator."
+          ],
+          "roles": [
+            "CONTRIBUTOR"
+          ]
+        },
+        {
+          "title": "Participant — what it looks like from their side",
+          "who": "No account. Everything by email.",
+          "steps": [
+            "They register from the event page and get a verification email; they press the link and the place is held ({hold}, or until the confirmation deadline for an event further away than its window). The deadline applies only if somebody is waiting for a place by then; otherwise the place stays theirs until the start.",
+            "They read and sign the declaration online, typing their name — or on paper, at the desk, on race day, before picking up their number. The registration becomes “confirmed” and they get the confirmation email with the QR code.",
+            "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from {checkin} before the start, press “I have arrived”.",
+            "Event full: they join the waiting list and get an email when a place frees up, with {offer} to sign the declaration.",
+            "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot.",
+            "In their calendar: every event has “Google Calendar” and “Add to calendar (.ics)”; on the events page, “Subscribe” puts the club's whole calendar on the phone and it updates by itself when you publish something new."
+          ],
           "roles": [
             "CONTRIBUTOR",
             "COPYWRITER",
@@ -3464,634 +3491,20 @@
             "DEV",
             "ADMIN",
             "SUPERADMIN"
-          ],
-          "tasks": [
-            {
-              "title": "Sign in to the backoffice",
-              "steps": [
-                "The first time: open the invitation email the club sent you and choose your password from it.",
-                "Open the club's site and add /en/admin at the end of the address.",
-                "On the «Staff sign-in» page press «Sign in» and use the email address the invitation came to and your password.",
-                "The top says «Signed in as» with your name and role. If the role is not the one you expected, tell a superadministrator.",
-                "On a computer that is not yours, press «Sign out» when you finish."
-              ]
-            },
-            {
-              "title": "The top bar: what each tab holds",
-              "steps": [
-                "You see only your role's tabs; the rest do not exist for you, and that is fine.",
-                "«Events»: every club event; «New event» and «Edit» are here.",
-                "«Race day»: the number pickup desk, on a phone.",
-                "«Registrations»: who signed up, with filters, the export and each registration's page.",
-                "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
-                "«Emails»: what participants receive, the Mailgun plan and «Deadlines».",
-                "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
-                "«Pages», «Gallery», «Staff», «Configuration» and «Guide» (this page)."
-              ]
-            },
-            {
-              "title": "The question before an important press",
-              "steps": [
-                "Whatever publishes, cancels, erases or sends emails asks first, in a window. Read it: it says what happens and how many participants get an email.",
-                "To go ahead, press the button with the same name in the window. To stop, «Never mind».",
-                "Once it worked, a message at the bottom says for a few seconds what was done.",
-                "If something is missing, a red box at the top names each gap as a link: tap it, fill it in, press again. What you typed stays."
-              ]
-            },
-            {
-              "title": "What each role can do",
-              "steps": [
-                "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in. Sees a name, a state and a number, never an email address.",
-                "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
-                "The Organizer: reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants. Does not write the texts, publish, cancel or erase a registration, resend emails or assign numbers.",
-                "The Tehnic role: the platform's configuration page, for troubleshooting; may correct an event's settings. Does not see the registrations.",
-                "The Administrator: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines» and the Mailgun plan. Reads the legal documents but does not write or approve them, and does not see «Staff».",
-                "The Superadministrator: everything the Administrator does, plus the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access). A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it or to give it to you."
-              ]
-            },
-            {
-              "title": "What cannot be done",
-              "steps": [
-                "Nobody changes a participant's confirmed email address, not even an Administrator.",
-                "Nobody merges two registrations into one.",
-                "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
-                "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
-                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free."
-              ]
-            }
-          ]
-        },
-        {
-          "title": "Race day — the number pickup desk",
-          "who": "Volunteer, Organizer and every other role. On a phone.",
-          "roles": [
-            "CONTRIBUTOR",
-            "COPYWRITER",
-            "MODERATOR",
-            "DEV",
-            "ADMIN",
-            "SUPERADMIN"
-          ],
-          "tasks": [
-            {
-              "title": "Open the desk",
-              "steps": [
-                "Sign in (see “First steps”). A Volunteer lands on the desk; everyone else presses «Race day» in the top bar.",
-                "Under «Event» pick today's race, then press «Search».",
-                "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures."
-              ]
-            },
-            {
-              "title": "A participant with the QR code",
-              "steps": [
-                "The participant shows you the QR code from the confirmation email.",
-                "Press «Scan» and hold the code in the frame (it works on Android). On an iPhone: open the Camera app, point it at the code and tap the link that appears.",
-                "The person's row opens: check the name with them.",
-                "Press «Mark present». It asks nothing; a message appears at the bottom.",
-                "Hand over the race number from the pile — the number is shown large on the row. To see the number drawn: «Show the race number (BID)».",
-                "For the next one: «Back to the desk»."
-              ]
-            },
-            {
-              "title": "No QR: search by name",
-              "steps": [
-                "In the «Name, number or code» box type part of the name, the race number or the code from the email.",
-                "Press «Search».",
-                "On the right row: «Mark present», then hand over the number."
-              ]
-            },
-            {
-              "title": "They have not signed the declaration",
-              "steps": [
-                "The row says «Așteaptă semnarea declarației» (awaiting the declaration) or «Așteaptă confirmarea emailului» (awaiting the email confirmation).",
-                "Give them the printed declaration form. They read it and sign it themselves. A minor: the parent or guardian signs too, each with their own document.",
-                "Press «Confirm on paper», then «Confirm on paper» again in the window.",
-                "Then «Mark present» and the number. Keep the signed sheet for the organizer."
-              ]
-            },
-            {
-              "title": "No race number",
-              "steps": [
-                "In the «Race number (BIB)» box on their row type a free number.",
-                "Press «Save no.» and confirm in the window. A number somebody else already has is refused — pick another."
-              ]
-            },
-            {
-              "title": "Never registered",
-              "steps": [
-                "Press «Add somebody».",
-                "Fill in the first name, the last name, the birth date, the phone and «Participant email address».",
-                "The «This person is at the desk…» tick is already set — leave it.",
-                "Tick «I confirm this person asked me to register them…».",
-                "Press «Add the registration» and confirm in the window.",
-                "Give them the paper declaration to sign, then «Mark present» and the number.",
-                "Event full? They join the waiting list, like anyone. «Give a place» works only once a place has freed up."
-              ]
-            },
-            {
-              "title": "Pressed the wrong thing",
-              "steps": [
-                "On the same row press «Undo».",
-                "Everything you press stays in the registration's history, with your name. Nothing is lost."
-              ]
-            },
-            {
-              "title": "A red box: cancelled or expired registration",
-              "steps": [
-                "The person no longer has a place, even with the email in hand: give no number and do not mark them present.",
-                "If it says the number was printed, pull that bib from the pile — numbers are never reused.",
-                "Call an organizer. If places are left, you register them again with «Add somebody»."
-              ]
-            },
-            {
-              "title": "What you do not do at the desk (and that is fine)",
-              "steps": [
-                "You see no email addresses, and you do not cancel, erase or export lists. For those, call an Administrator."
-              ]
-            }
-          ]
-        },
-        {
-          "title": "Copywriter — the events' texts and the pages",
-          "who": "Role: Copywriter (Redactor). You write; you do not configure or publish.",
-          "roles": [
-            "COPYWRITER"
-          ],
-          "tasks": [
-            {
-              "title": "Correct an event's text",
-              "steps": [
-                "«Events» → «Edit» on the event's row.",
-                "Open the card with the text: «Title and summary», «Event description», «The day's programme and what to bring» or «Rules».",
-                "Write in the «Română» tab and in the «English» tab.",
-                "At the bottom, on a published event, tick «I understand that I am editing published content.».",
-                "Press «Save». It is on the site at once, in both languages."
-              ]
-            },
-            {
-              "title": "Put a picture in the text",
-              "steps": [
-                "In the text editor put the cursor where the picture goes.",
-                "Press «Picture» in the editor's toolbar.",
-                "Under «Quality» leave «Medium (recommended)».",
-                "Press «Choose the picture» and pick the file. A picture already uploaded comes from «From gallery».",
-                "Write «What the picture shows (alt text)», then «Done».",
-                "Press «Save»."
-              ]
-            },
-            {
-              "title": "Add a YouTube film",
-              "steps": [
-                "In the editor press «YouTube».",
-                "Paste the address into «The film's address (YouTube)» and press «Add the film».",
-                "Press the film to write its «Caption (under the film)».",
-                "Press «Save». On the page the film loads only when the reader presses it."
-              ]
-            },
-            {
-              "title": "Write a page of the site",
-              "steps": [
-                "«Pages» → «New page».",
-                "Write the title and the text in Romanian and in English, then press «New page».",
-                "On its page, after every change, «Save».",
-                "When it is ready, «Trimite spre verificare» (submit for review). The Administrator publishes it."
-              ]
-            },
-            {
-              "title": "The two-languages rule",
-              "steps": [
-                "An event is not published without a title and a summary in Romanian and in English.",
-                "An optional text (the description, the rules, the programme's notes, the SEO fields) is written in both languages or neither: the save refuses one language only and points at the empty box, with everything you typed kept.",
-                "If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning only."
-              ]
-            },
-            {
-              "title": "What is not yours",
-              "steps": [
-                "The event's settings (date, place, places, registration), publishing, the gallery and the registrations. If a text depends on a wrong setting, tell the Organizer or the Administrator."
-              ]
-            }
-          ]
-        },
-        {
-          "title": "Organizer — registrations, numbers, messages",
-          "who": "Role: Organizer (Organizator). You see everything and change the event's settings; you do not publish, cancel or erase registrations.",
-          "roles": [
-            "MODERATOR"
-          ],
-          "tasks": [
-            {
-              "title": "See who registered",
-              "steps": [
-                "Press «Registrations» in the top bar.",
-                "Under «Events» pick the event (or «All events»), under «Status» what you need, then «Filter».",
-                "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
-                "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
-                "The top says once what you cannot change here. The Tehnic role does not see registrations at all."
-              ]
-            },
-            {
-              "title": "Download the list (Excel or CSV)",
-              "steps": [
-                "«Registrations» → pick the event → «Filter».",
-                "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
-                "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
-              ]
-            },
-            {
-              "title": "Add a registration for someone who asked",
-              "steps": [
-                "«Registrations» → «Add a registration».",
-                "Under «Event» pick the event.",
-                "Fill in the person's details, «Participant email address» and «Language we write to them in».",
-                "Tick «I confirm this person asked me to register them…».",
-                "The person is not in front of you? Leave «This person is at the desk…» unticked: they get the email and sign their own declaration.",
-                "Press «Add the registration» and confirm in the window.",
-                "Refused because the address already has a registration: the family's second person registers from the public form (see “A family on one address”)."
-              ]
-            },
-            {
-              "title": "Download and print the race numbers",
-              "steps": [
-                "«Events» → «Edit» on the race.",
-                "Open the «Taking part and registration» card, then «Allocate and print».",
-                "«See the bibs» to check them on screen.",
-                "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
-                "Print at actual size (100%) and cut on the line.",
-                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's."
-              ]
-            },
-            {
-              "title": "A chosen number for someone",
-              "steps": [
-                "«Registrations» → open the person's registration.",
-                "Press «Change the number»; the free numbers are listed under the box. No such button? The number is already final and is not changed from here.",
-                "Type the number, press «Save no.» and confirm. The person gets the number by email. A number somebody else already wears is refused."
-              ]
-            },
-            {
-              "title": "Send a message to the participants",
-              "steps": [
-                "«Events» → «Edit» → the «Registrations received» card → «Send a message to participants».",
-                "Under «Who receives it» pick the group (everyone, «Only the confirmed», the waiting list or those without a declaration) and see how many they are.",
-                "Write the «Subject» and the «Message», in Romanian and in English.",
-                "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
-                "Press «Send the message», then «Send» in the window. The message stays under «Messages sent».",
-                "About this event only: no advertising, no sponsors' offers, no other events."
-              ]
-            },
-            {
-              "title": "Write to the newsletter subscribers",
-              "steps": [
-                "Press «Newsletter» in the top bar. See how many confirmed subscribers there are, per topic, and what was sent; no address appears, only the numbers.",
-                "Under «Write to the subscribers» pick the topic under «What it is about» and see how many receive it.",
-                "Write «Subject (Romanian)», «Subject (English)», «Text (Romanian)» and «Text (English)».",
-                "Under «How it looks» read the email in both languages.",
-                "Press «Send the newsletter» and confirm. The message stays under «Sent». The new-event announcements go by themselves."
-              ]
-            },
-            {
-              "title": "Get race day ready",
-              "steps": [
-                "Print the numbers (see above).",
-                "«Events» → «Edit» → «Registrations received»: print a few «Paper declaration form (PDF)» and, if it is there, «Paper declaration form for a minor (PDF)».",
-                "There too, «Emergency sheet»: the phones and emergency contacts of everyone confirmed, on one page. Take it to the race and destroy it afterwards.",
-                "Volunteers: ask a superadministrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
-                "On race day: «Race day» in the top bar."
-              ]
-            },
-            {
-              "title": "Change a setting of the event",
-              "steps": [
-                "«Events» → «Edit».",
-                "Open the card: «Date and time», «The place», «The course», «Cost» or «Taking part and registration». Change what is needed.",
-                "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
-                "Must the participants know? Tick «Tell participants about the change» and write the note in both languages.",
-                "Press «Save». The texts (the title, the description) are not yours to save: tell the Administrator what is wrong."
-              ]
-            },
-            {
-              "title": "The signed declarations",
-              "steps": [
-                "All of an event's: «Events» → «Edit» → «Registrations received» → «Signed declarations (PDF)».",
-                "One person's: open the registration → «Signed declaration (PDF)».",
-                "They carry identity documents: keep them only in the club's archive."
-              ]
-            },
-            {
-              "title": "What the Administrator does, not you",
-              "steps": [
-                "Creating and publishing events, cancelling or erasing registrations, resending emails, «Assign numbers», marking numbers printed and sending the thank-you. Tell them what needs doing."
-              ]
-            }
-          ]
-        },
-        {
-          "title": "Administrator — events, registrations, emails",
-          "who": "Role: Administrator or Superadministrator.",
-          "roles": [
-            "ADMIN",
-            "SUPERADMIN"
-          ],
-          "tasks": [
-            {
-              "title": "Create an event",
-              "steps": [
-                "«Events» → «New event».",
-                "Each card is a part of the public page, in the site's order. The map at the top, «The page, top to bottom», takes you to each card.",
-                "«What kind of event» → «Event type» (Race, Group run and the others).",
-                "«Title and summary»: «Title» and «Summary», in the «Română» tab and in the «English» tab.",
-                "«Date and time», then «The place»: the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
-                "The other cards as needed: «Event description», «The course», «Cost», «Taking part and registration», «The day's programme and what to bring», «Rules».",
-                "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
-                "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
-                "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."
-              ]
-            },
-            {
-              "title": "Edit an event",
-              "steps": [
-                "«Events» → «Edit» on its row.",
-                "A closed card says on its line what is missing, per language. Open the card and change what is needed.",
-                "Write in «Română» and in «English»: an optional text is written in both languages or neither.",
-                "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
-                "A date of a series: under «Save for:» pick «This date only», «This and the following dates» or «All dates of the series».",
-                "Press «Save». It is on the site at once, in both languages.",
-                "The usual mistake: picking «This date only» when you meant the whole series (or the other way round) — check the message under «Save for:» before you press «Save»."
-              ]
-            },
-            {
-              "title": "Put a picture in the summary or the description",
-              "steps": [
-                "Open the card («Title and summary» or «Event description») and put the cursor where the picture goes.",
-                "Press «Picture» in the editor's toolbar.",
-                "Under «Quality» leave «Medium (recommended)».",
-                "Press «Choose the picture» and pick the file. A picture already uploaded comes from «From gallery».",
-                "Write «What the picture shows (alt text)», then «Done».",
-                "Press «Save». To replace a picture: press it, «Remove the picture», then put in the new one."
-              ]
-            },
-            {
-              "title": "Publish an event, or take it off the site",
-              "steps": [
-                "«Events» → «Edit» → the «Publication» card.",
-                "A draft: press «Trimite spre verificare» (submit for review), then «Publică» (publish).",
-                "In the window press «Publică» again. Both languages go live together.",
-                "Something missing? «Cannot publish yet» appears with the list: fill it in, «Save», then «Publică».",
-                "Several at once: on the «Events» list tick them and press «Publish the ticked ones».",
-                "To take it off the site: «Mută în ciornă» (back to draft). Once it has happened: «Arhivează» (archive)."
-              ]
-            },
-            {
-              "title": "Repeat an event (a weekly series)",
-              "steps": [
-                "«Events» → «Edit» → the «Recurrence» card.",
-                "Tick «Repeat this event», pick the days and until when.",
-                "Press «Create the dates» and confirm.",
-                "The platform creates the new dates by itself, {horizon} ahead. Those created as drafts show on the «Events» list with «Publish» on the row; «Publish automatically from now on» publishes them by themselves from now on.",
-                "A copy, not a series: on the list, «More actions» (⋮) → «Duplicate». The copy is a draft."
-              ]
-            },
-            {
-              "title": "Open registration for a race",
-              "steps": [
-                "«Events» → «Edit» → the «Taking part and registration» card.",
-                "«Registration mode» → «Înscrieri pe site» (registration on the site).",
-                "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list).",
-                "«Registration period»: «Registration opens» and «Registration closes».",
-                "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
-                "«Who may enter and what they sign»: «Declaration a participant signs» and «Minimum age (years)» (14 unless you change it, 0 for none).",
-                "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
-                "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
-              ]
-            },
-            {
-              "title": "Tell the participants about a change",
-              "steps": [
-                "Change the place, the time or the programme in their card.",
-                "In the «Save» card tick «Tell participants about the change».",
-                "Write «What changed (optional)» in Romanian and in English.",
-                "Press «Save». The window says how many get an email; press «Save» again.",
-                "The email goes only if the place, the start or the programme changed, or if you wrote a note."
-              ]
-            },
-            {
-              "title": "Cancel an event",
-              "steps": [
-                "«Events» → «Edit» → the «Event status» card (at the bottom, among the cards that are not on the page).",
-                "Under «Event status» pick «Anulat» (cancelled).",
-                "The «Save» card shows «You are cancelling the event»: write «Why the event is cancelled» in Romanian and in English.",
-                "Tick «Tell the participants that the event is cancelled». Without the tick no email goes out.",
-                "Press «Save». The red window says how many get an email; press «Save» again."
-              ]
-            },
-            {
-              "title": "Correct, cancel or erase a registration",
-              "steps": [
-                "«Registrations» → find the person → press their name.",
-                "Wrong name: under «Correct the name» type the right one → «Save the name».",
-                "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the waiting list.",
-                "The email never arrived: «Resend email».",
-                "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
-                "Several at once: tick the rows on the list → «Cancel the ticked ones»."
-              ]
-            },
-            {
-              "title": "Assign the numbers and mark them printed",
-              "steps": [
-                "«Events» → «Edit» → «Taking part and registration» → «Allocate and print».",
-                "Press «Assign numbers» and confirm: every confirmed registration without a number gets the next free one; numbers already given stay.",
-                "«Registrations» → pick the race → «Filter». On the same page you download the unprinted numbers, print them, then press the button that marks them printed.",
-                "The numbers for printing are two A5 on each A4 sheet (see “Download and print the race numbers” under Organizer)."
-              ]
-            },
-            {
-              "title": "The Mailgun plan, before and after a race",
-              "steps": [
-                "First pay for the plan in the Mailgun account.",
-                "«Emails» → «The Mailgun plan, and how much we can still send».",
-                "Under «The plan the Mailgun account is on» pick Basic; under «Note (why, until when)» write why and until when.",
-                "Press «Save the plan» and confirm. The figures on «Tasks» and the «Send now» button follow it.",
-                "After the race: cancel in Mailgun, then put Free back here and «Save the plan»."
-              ]
-            },
-            {
-              "title": "Remove an address from the newsletter",
-              "steps": [
-                "When someone asks in writing to stop receiving the news: «Newsletter» → «Remove an address at someone's request».",
-                "Type the address under «Email address», press «Remove from the newsletter» and confirm. The address is deleted, with its topics."
-              ]
-            },
-            {
-              "title": "The club's deadlines",
-              "steps": [
-                "«Emails» → «Deadlines».",
-                "Change the numbers (the email link, the held place, the waiting-list offer, the reminder, check-in, the series).",
-                "Press «Save the deadlines» and confirm. Only what is given from now on takes the new deadlines."
-              ]
-            },
-            {
-              "title": "The thank-you after a race",
-              "steps": [
-                "«Events» → «Edit» → «Registrations received» → «Thank-you after the race».",
-                "Under «Link (optional)» put the address of the photos or the results.",
-                "Press «Send the thank-you» and confirm. It goes once, to everyone marked present."
-              ]
-            },
-            {
-              "title": "Pages and the gallery",
-              "steps": [
-                "A page: «Pages» → «New page» (or an existing one) → write in both languages → «Save». On the pages list, the ⋮ menu on its row → «Publish».",
-                "An album: «Gallery» → «New album» → the date, the event, the title in both languages → «New album».",
-                "On the album's page: «Upload photos», with «Quality» «Medium (recommended)»; pick a «Cover».",
-                "On the albums list, the ⋮ menu on its row → «Publish the album». An album with no photos is not published."
-              ]
-            },
-            {
-              "title": "What the club still has to do",
-              "steps": [
-                "«Tasks» → the «Club» tab: every row is read from the system, with the steps under it. A green row is done.",
-                "«Costs»: what the club pays and the database's limits."
-              ]
-            },
-            {
-              "title": "Accounts for volunteers and colleagues (Superadministrator)",
-              "steps": [
-                "Role needed: Superadministrator. «Staff» shows only for one; an Administrator does not see it and asks them.",
-                "«Staff» → «Add someone»: «Email address», «Name», «Role» (Voluntar for the desk), «Preferred language».",
-                "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
-                "It never arrived: on their row, «Resend the invitation».",
-                "Another role: «Change role». Left the team: «Revoke access»."
-              ]
-            }
-          ]
-        },
-        {
-          "title": "Legal documents and personal data (GDPR)",
-          "who": "Role: an Administrator reads; writing, approving, withdrawing and deleting the texts need a Superadministrator. Read once, before the first race with registrations.",
-          "roles": [
-            "ADMIN",
-            "SUPERADMIN"
-          ],
-          "tasks": [
-            {
-              "title": "Approve a new version of a legal text",
-              "steps": [
-                "Role needed: Superadministrator. Only they see «New version» and approve; an Administrator reads the texts and the PDFs but does not write, approve or withdraw a version.",
-                "«Legal documents» → «New version».",
-                "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
-                "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
-                "Read all of it and press «Save draft».",
-                "On the draft's page: «Download PDF» to read it on paper or give it to a lawyer.",
-                "Under «Approve this version» tick «I confirm the club has approved this text and it may become public», press «Approve and publish» and confirm.",
-                "An approved text never changes. A correction is the next version: «Start the next version from this one»."
-              ]
-            },
-            {
-              "title": "The five texts, before the race is published",
-              "steps": [
-                "Role needed: Superadministrator. In one sitting, each from «Start from the platform's text»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
-                "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
-                "Until you approve the new notice, the public participant list shows the confirmed only."
-              ]
-            },
-            {
-              "title": "How the declaration is signed",
-              "steps": [
-                "The participant reads the text filled in with their name and the event, types their identity document's series and number (no ID picture is ever uploaded) and signs with a finger or the mouse.",
-                "A minor aged 14 or over signs with the parent's consent; under 14 only the parent or guardian signs — as the approved declaration says.",
-                "Kept: the names, the documents, the text's version, its fingerprint, the moment and the method. It is a simple electronic signature.",
-                "Right after, they get the signed declaration by email, as a PDF. At the desk, the kit is handed over against the document written in the declaration.",
-                "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original."
-              ]
-            },
-            {
-              "title": "Minors and the minimum age",
-              "steps": [
-                "A participant under 18 is registered by a parent or guardian, who writes their name in the form's section for minors; the desk and the export show “Minor — parent/guardian”.",
-                "The minimum age is each event's own: «Minimum age (years)», under «Taking part and registration». It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff."
-              ]
-            },
-            {
-              "title": "Where the data lives and how long it is kept",
-              "steps": [
-                "Declarations are records in the database, not files; the PDF is made on request, identically.",
-                "Registrations and declarations are kept 3 years from the event, then deleted by themselves. The emergency contact and the health note are deleted 7 days after the event.",
-                "Downloaded exports and PDFs that carry identity documents are yours to delete, within 7 days of the event.",
-                "The privacy notice says exactly this."
-              ]
-            },
-            {
-              "title": "A GDPR request: access, withdrawal, erasure",
-              "steps": [
-                "«Registrations» → find the person → open the registration.",
-                "What we hold about them: «Everything held about this person».",
-                "Withdraw a consent (the health note, the socials, the public results): «Withdraw consent» → tick what they withdraw → «Reason» → «Withdraw».",
-                "Erasure: «Delete permanently» (see “Correct, cancel or erase a registration”). The history keeps who erased and why, never the person's data."
-              ]
-            }
-          ]
-        },
-        {
-          "title": "The participant — their steps, and how to test them",
-          "who": "No account. Everything by email. Walk them once on the test site (QA), with your own address.",
-          "roles": [
-            "CONTRIBUTOR",
-            "COPYWRITER",
-            "MODERATOR",
-            "DEV",
-            "ADMIN",
-            "SUPERADMIN"
-          ],
-          "tasks": [
-            {
-              "title": "Registering, from the form to the QR code",
-              "steps": [
-                "On the event page press «Register for this event».",
-                "Fill in the form. For a race: «Read the race conditions», scroll to the end, then «I have read them and I agree». Tick the terms too.",
-                "Press «Submit registration». If something is missing, «Still missing:» appears above the button with each item — tap one and it takes you there.",
-                "In the email press «Confirm your email». The link is valid for {confirmation}.",
-                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign and confirm».",
-                "They get the confirmation with the QR code and the race number, plus the signed declaration as a PDF.",
-                "Check in the backoffice: «Registrations» → search the name → the status «Confirmată» (confirmed)."
-              ]
-            },
-            {
-              "title": "Their place and deadlines",
-              "steps": [
-                "Once the address is confirmed, the place is held for {hold} (or until the confirmation deadline, for an event further away than its window). The deadline matters only if somebody is waiting for a place; otherwise the place stays theirs until the start.",
-                "Event full: they join the waiting list. When a place frees up they get an email and have {offer} to sign the declaration.",
-                "From {checkin} before the start, from «Manage your registration» they can press «I have arrived — mark me as here». They still pick up the number at the desk."
-              ]
-            },
-            {
-              "title": "They withdraw or cannot come any more",
-              "steps": [
-                "From the confirmation email: «Manage your registration» → «Cancel registration».",
-                "From the reminder: «I can't come — cancel my registration».",
-                "Any time: «My registrations», on the site, with their address. The place goes to the waiting list at once."
-              ]
-            },
-            {
-              "title": "No email arrived",
-              "steps": [
-                "On the site, «Send the registration link again» → the address → «Send the link».",
-                "Or they come to the desk and a volunteer confirms them there, on paper."
-              ]
-            },
-            {
-              "title": "Events in their calendar",
-              "steps": [
-                "Every event has Google Calendar and the calendar file (.ics).",
-                "On the events page they can subscribe to the club's whole calendar; it updates by itself when you publish something new."
-              ]
-            }
           ]
         },
         {
           "key": "family",
           "title": "A family on one address",
           "who": "For every role. How several people register with the same email.",
+          "steps": [
+            "One person registers as usual. If the form is sent again with the same address for a different person — another name and another birth date than every person already registered —, nobody is registered yet: the screen shows the same “check your email” as always (so nobody can learn from the form who is registered), and the address gets the email “Registering one more person?”, with who is already registered and the person from the form.",
+            "The email has one button, “I confirm I am registering another person”. The page it opens shows the details again; for an adult it asks one tick (the person declares their own health when they sign). The confirmation registers them straight away — no second confirmation link. The link is valid for {confirmation} and works once; unconfirmed details are deleted by themselves after that. If only the name or only the birth date differs, nobody is registered: the address gets the existing registration's email, with one sentence on how to register someone else.",
+            "One address may register at most {people} for an event. An administrator changes the number in “Emails” → “Deadlines”. At the limit, the email says so and carries no button.",
+            "Each person signs their own declaration (their own email with the declaration) — an adult never signs for another adult; a minor signs as usual. Each has their own place, their own race number and, if it comes to it, their own place on the waiting list.",
+            "The address receives one QR code for each confirmed person, in separate emails — up to {people}. At the desk you scan each code in turn: each opens that person's own page.",
+            "In the registrations list, at the desk and in the export each person is a row of their own, with the same address. “My registrations” lists every registration of the address, each with its name. Cancelling or erasing one leaves the others alone. Reminders and thank-yous come one per person."
+          ],
           "roles": [
             "CONTRIBUTOR",
             "COPYWRITER",
@@ -4099,77 +3512,81 @@
             "DEV",
             "ADMIN",
             "SUPERADMIN"
-          ],
-          "tasks": [
-            {
-              "title": "Register a second person on the same address",
-              "steps": [
-                "The first person registers as usual.",
-                "The form is sent again, with the same address and another person's name. No registration is created: the screen shows the same “check your email” as always, so nobody learns from the form who is registered.",
-                "The address gets the email “You are already registered — do you want to register someone else with the same address?”, with the «Register another person» button.",
-                "The button opens the form with the address filled in and locked. The other person's details go in → «Submit registration». The link is valid for {confirmation} and works once.",
-                "One address may register at most {people} for an event. At the limit, the email says so and carries no button."
-              ]
-            },
-            {
-              "title": "What follows for each person",
-              "steps": [
-                "Each confirms and signs their own declaration — an adult never signs for another adult; a minor signs as usual.",
-                "The address receives one QR code for each confirmed person, in separate emails.",
-                "At the desk you scan each code in turn: each opens that person's own row."
-              ]
-            },
-            {
-              "title": "What you see in the backoffice",
-              "steps": [
-                "In «Registrations», at the desk and in the export, each person is a row of their own, with the same address.",
-                "«My registrations» lists every registration of the address, each with its name. Cancelling or erasing one leaves the others alone."
-              ]
-            },
-            {
-              "title": "Change the limit per address (Administrator)",
-              "steps": [
-                "«Emails» → «Deadlines» → «Registrations per address (per event)».",
-                "Type the number, press «Save the limit» and confirm."
-              ]
-            }
           ]
         },
         {
-          "title": "When something goes wrong",
-          "who": "For everyone. What to check, and who to write to.",
+          "title": "Copywriter — the events' texts and the pages",
+          "who": "Role: Copywriter. You write; you do not configure or publish.",
           "roles": [
-            "CONTRIBUTOR",
-            "COPYWRITER",
+            "COPYWRITER"
+          ],
+          "steps": [
+            "“Events” → pick the event → the Romanian tab and the English tab: the title, the short description, the description, the rules, the programme and the SEO fields. One save writes both languages.",
+            "A published event: what you save is on the site at once — tick “I know I am changing a published page”. The page's address does not change after publication.",
+            "A YouTube film: in the editor, the “YouTube” button → paste the film's address → “Add the film”. Click the film to give it a caption. On the page it appears closed, “Watch the film”; it loads only when the reader presses.",
+            "“Pages”: the site's standing pages. Create a draft, write in the editor (headings, lists, links, pictures), submit it for review; the Administrator publishes it.",
+            "Not yours, and not needed: the event's settings (date, places, registration), publishing, the gallery, the registrations. If a text depends on a wrong setting, tell the Organizer.",
+            "Both languages count: an event cannot be published without complete text in Romanian and in English, and the English page keeps its old text until you correct that too. An optional text — the description, the rules, the programme's notes, what to bring, the SEO fields, on events and on pages — is written in both languages or neither: the save refuses one language only and points at the box left empty, with everything you typed kept. If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning, it blocks nothing."
+          ]
+        },
+        {
+          "title": "Organizer — events and numbers",
+          "who": "Role: Organizer or above.",
+          "steps": [
+            "The Administrator creates the event (“New event”, “Duplicate”, “Repeat”). You open it from “Events” and look after the Settings: the type, the date, the gun time, the duration, the meeting point, the address, the map link, the distance, the route, the difficulty, the cost. When you cancel the event or tell the participants about a change, you write the reason or the note in Romanian and in English: each participant gets it in the language they registered in.",
+            "Registrations: in Settings choose “Local registration”, set the capacity and the window, the participation window (how many days before a confirmation is asked, and when it expires), the bib band and the approved declaration.",
+            "The words — the title, the summary, the description, the rules, the programme — are the Redactor's or the Administrator's. You can read them and cannot save them; if a text is wrong, tell the Administrator.",
+            "Publishing: you press “Submit for review”. “Publish” is the Administrator's, as are taking a live event down and archiving one. Both languages go live together; an incomplete language blocks publishing.",
+            "Registrations (Organizer, not Tehnic): you see the whole list, each registration with its history, the export (Excel or CSV), the race numbers and the signed declarations. You cannot cancel, erase, rename or resend an email — those are the Administrator's.",
+            "A message to the participants (Organizer, not Tehnic): the event's page → “Registrations received” → “Send a message to participants” — bad weather, a last-minute change, a cancellation. You choose who receives it (everyone registered, only the confirmed, the waiting list or those who have not signed the declaration) and see how many they are; you write the subject and the message in Romanian and in English; you see the email exactly as it goes out, for someone registered in Romanian and for someone registered in English; you confirm. It goes through the email queue, to each in their own language; under the form stay the “Messages sent”, with the date, the subject, the group, how many and who sent it.",
+            "Race numbers: “Assign numbers”, on the event page, is the Administrator's. The sheet is yours to download: “Download the sheet (PDF)” — two per A4, with the logo — from the event page or from “Registrations”. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
+            "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
+            "Race numbers: at confirmation everyone gets one at random. A preferential number: the registration's page → “Race number” — the free numbers are listed beside the field, type one, save; the participant gets the number by email, with the QR code. A number somebody else already wears is refused.",
+            "Afterwards: archiving a published event is the Administrator's. The photos are yours: “Gallery” — new album, upload from the phone, publish."
+          ],
+          "roles": [
             "MODERATOR",
-            "DEV",
+            "DEV"
+          ]
+        },
+        {
+          "title": "Administrator — registrations, legal texts, staff",
+          "who": "Role: Administrator or Superadministrator.",
+          "steps": [
+            "“Registrations”: the full list, filters, name search, CSV export, each registration's page with its history. From there: correct a name, cancel (the place is released), erase on request, resend the email.",
+            "A name search with no event chosen looks in every event. “Registered again ×2” on a row means the person sent the form twice more with the same address; the registration's timeline says when, what state it was in and which email we re-sent. They learn from that email that they were already registered — the form's screen says nothing, so that nobody can use it to find out who is registered.",
+            "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
+            "“Staff” (Superadministrator): add people by email and role. “Add” also creates their sign-in account and sends them the invitation to choose a password — you no longer go into Zitadel. If somebody does not get it, “Resend the invitation” on their row.",
+            "Volunteer accounts: in “Staff”, “Add” with the Volunteer role — the account and the invitation go out from there. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
+            "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
+            "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
+            "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
+            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
+            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
+          ],
+          "roles": [
             "ADMIN",
             "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Declarations of own responsibility and personal data (GDPR)",
+          "who": "Role: Administrator. Read once, before the first event with registrations.",
+          "steps": [
+            "The declaration's text is a legal document under “Legal documents”. Start from the platform's text (the “Declaration” link under “New version”): it is the club's declaration with its blanks as tokens — {{participant}} and {{participantIdDocument}} (the participant and their document), {{guardian}} and {{guardianIdDocument}} (a minor's parent or guardian and their document; a dash for an adult), {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — filled in automatically for each person and event. A text approved earlier, with {{idDocument}} (the declarant's document), still works. One approved text serves every event. The minor signs too, with their own document, only when the approved declaration contains {{participantIdDocument}}; under a text without it only the parent or guardian signs, with their own document, as before. That is why the new declaration is approved together with the new privacy notice and terms, which describe the minor's document.",
+            "When signing, the participant reads the text filled in with their name and the event, types the series and number of their identity document (no photo or scan of an ID is ever uploaded) and writes their name as the signature; for a minor the parent or guardian signs, and under a declaration with {{participantIdDocument}} both sign at the one press, the minor and the parent or guardian, each with their own document and name. Recorded: the names, the documents, the text's version, its fingerprint (SHA-256), the moment and the method. That is a simple electronic signature (eIDAS and Law 214/2024).",
+            "Right after signing, the participant receives the signed declaration by email as an attached PDF (“Your signed declaration”), plus a link to it from their registration page. At the desk, the kit is handed out against the identity document written in the declaration — it shows on the “Race day” row and in the CSV.",
+            "Whoever cannot sign from the email signs on paper: on the event page, “Paper declaration form (PDF)” prints the form with the event filled in. Under a declaration with {{participantIdDocument}}, for a minor it is “Paper declaration form for a minor (PDF)”: both sign, the minor and the parent or guardian, each with their own document. At the desk, “Confirm on paper” records the signature — for a minor, under such a declaration, both — under the volunteer's name; the club keeps the signed original.",
+            "Where the declarations live: in the database (Neon, Frankfurt), as records — not as files. The PDF is generated from them on request, any time, identically. After the event, from the event page: “Signed declarations (PDF)” — all in one file, one per page (200 declarations ≈ 2 MB, a few seconds) — and the CSV export. Keep them in the club's own archive, with restricted access (they carry names and identity documents).",
+            "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
+            "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
+            "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document.",
+            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”.",
+            "Minimum age: each event has its own, in the event's “Registration” panel — “Minimum age (years)”, 14 unless you change it, 0 for none. It is counted on the day of the event, at every door (the form, the desk, a registration you enter, test data); the form, the event page and the date picker say the event's number, and the staff form shows it beside each event's name (“16+”)."
           ],
-          "tasks": [
-            {
-              "title": "Check whether the platform is working",
-              "steps": [
-                "Open /api/health in a new tab and read only the first word after \"status\", at the very start of the text: ok means the platform is working, degraded or down means a problem, even if ok appears further down.",
-                "Not sure what you see? Send the text to the club's owner."
-              ]
-            },
-            {
-              "title": "Write to someone when something is wrong",
-              "steps": [
-                "A page shows an error, a button does nothing, or a press never finishes? Take a screenshot of what it says.",
-                "Write to the club's owner or a superadministrator: what you pressed, on what page, and the screenshot.",
-                "Do not wait for it to fix itself: an email that never sent or a stuck registration matters to someone waiting."
-              ]
-            },
-            {
-              "title": "A save fails from an office laptop",
-              "steps": [
-                "An office network sometimes blocks the request to the server, especially a company one.",
-                "Try again after turning on your phone's hotspot and connecting the laptop to it.",
-                "Works over the hotspot but not the office network? Tell someone at the office — it is the network's problem, not the platform's."
-              ]
-            }
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
           ]
         }
       ],
@@ -4566,7 +3983,7 @@
       },
       "family": {
         "title": "Registering someone else on the same address?",
-        "body": "Send the form again — you get an email with the next step."
+        "body": "Send the form again with the person's full name and birth date — you get an email where you confirm with one button."
       }
     },
     "journey": {
@@ -4642,19 +4059,7 @@
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
     "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {
-      "title": "Registering another person with the same address",
-      "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event. For an adult you do not fill in the health information, the public list or Strava and Instagram: these need the person's own consent.",
-      "emailFixed": "The address the link was sent to. It cannot be changed here: for another address, use the ordinary form.",
-      "phoneOptional": "Optional for this person — a child without a phone, for instance. The emergency contact below is still required.",
-      "alreadyOnAddress": "This person is already registered with this address. Nothing was created. For someone else, change the name and send again — the link still works.",
-      "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address.",
-      "linkGone": "The link for another person no longer works — it was used, it expired, or it is for another event. Send the form below again with your address and the person's name: you get a new email with the next step.",
-      "people": {
-        "one": "one person",
-        "few": "{count} people",
-        "other": "{count} people"
-      },
-      "fitnessAcknowledged": "I know that the person I am registering declares themselves, when they sign their declaration, that their health allows the effort."
+      "linkGone": "This link for another person is no longer used. Send the form below again with your address and the person's full name and birth date: you get an email where you confirm their registration with one button."
     },
     "terms": {
       "accept": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
@@ -4852,6 +4257,34 @@
         "title": "This registration is no longer active",
         "body": "This link has already been used, and the registration has lapsed since — either the deadline passed or the event started."
       }
+    },
+    "family": {
+      "title": "Registering one more person",
+      "intro": "The registration form for {event} was sent again from the address {email}, for another person. We have not registered them yet: check the details below and confirm.",
+      "registered": "Already registered with this address",
+      "nobody": "Nobody at the moment.",
+      "person": "The person you are registering",
+      "birthDate": "Birth date: {date}",
+      "next": "Once confirmed, the person has their own place and receives at {email} their own email with the declaration to sign, then their own QR code. One address may register at most {people} for an event.",
+      "consent": "Register someone only with their agreement, and tell them that their details come to us and how we use them: see the privacy notice. The messages about their registration come to this address.",
+      "privacy": "The privacy notice",
+      "adultNote": "For an adult we keep none of the health information, the public-list choice or the Strava and Instagram from the form: these need the person's own consent.",
+      "fitnessAcknowledged": "I know that the person I am registering declares themselves, when they sign their declaration, that their health allows the effort.",
+      "action": "I confirm I am registering another person",
+      "actionPending": "Registering…",
+      "wrongData": "Are the details wrong? Do not confirm: send the form again with the correct full name and birth date. This link expires by itself, and the details sent are deleted.",
+      "doneTitle": "The person is registered",
+      "done": "Done. The email with the declaration to sign for this person comes to your address: each person signs their own declaration and gets their own QR code.",
+      "doneWaitlist": "The person is on the waiting list. When a place frees up, an email comes to your address.",
+      "alreadyOnAddress": "We did not register them: a person with the same name or the same birth date is already registered with this address. For someone else, send the form again with that person's full name and birth date.",
+      "atCap": "We did not register them: one email address may register at most {people} for an event, and this address already has. For one more person, use their own email address. This link still works if a place on the address frees up.",
+      "fitnessMissing": "First tick that the person declares their own health when they sign.",
+      "refused": "We could not register the person with the details sent (the terms may have changed in the meantime, or the age is not allowed, for instance). Send the registration form again; this link was not used.",
+      "people": {
+        "one": "one person",
+        "few": "{count} people",
+        "other": "{count} people"
+      }
     }
   },
   "Devs": {
@@ -4859,7 +4292,8 @@
       "title": "Emails captured on this machine",
       "intro": "Locally nothing leaves the machine: every message the platform would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
       "empty": "Nothing captured yet. Register for an event and come back.",
-      "contact": "Through the contact form — would have reached the club’s mailbox:"
+      "contact": "Through the contact form — would have reached the club’s mailbox:",
+      "text": "The message text"
     },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",

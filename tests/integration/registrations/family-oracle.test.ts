@@ -89,14 +89,17 @@ async function createEvent() {
   return event;
 }
 
-function form(firstName: string): FormData {
+const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Ion: "1987-02-14", Maria: "1990-07-11" };
+
+function form(firstName: string, birthDate?: string): FormData {
   const data = new FormData();
   const fields: Record<string, string> = {
     locale: "ro",
     slug: SLUG,
     firstName,
     lastName: "Pop",
-    birthDate: "1985-03-02",
+    // Each person their own birth date (§NNN): a different person differs in both.
+    birthDate: birthDate ?? BIRTH_DATES[firstName] ?? "1980-01-01",
     sex: "UNSPECIFIED",
     email: EMAIL,
     emailConfirm: EMAIL,
@@ -107,8 +110,6 @@ function form(firstName: string): FormData {
     nationality: "RO",
     emergencyContactPhoneCountry: "RO",
     fitnessDeclared: "on",
-    // The family form's tick for another adult (§421); the ordinary form ignores it.
-    fitnessAcknowledged: "on",
     rulesAcknowledged: "on",
     termsAccepted: "on",
     privacyAcknowledged: "on",
@@ -120,11 +121,11 @@ function form(firstName: string): FormData {
 }
 
 /** One press of the real action: where the browser is sent, and every cookie it is given, opened. */
-async function press(firstName: string): Promise<string> {
+async function press(firstName: string, birthDate?: string): Promise<string> {
   jar.length = 0;
   let redirectTo = "";
   try {
-    await submitRegistrationAction(form(firstName));
+    await submitRegistrationAction(form(firstName, birthDate));
   } catch (error) {
     redirectTo = (error as { redirectTo?: string }).redirectTo ?? `threw: ${(error as Error).message}`;
   }
@@ -132,29 +133,18 @@ async function press(firstName: string): Promise<string> {
   return JSON.stringify({ redirectTo, cookies });
 }
 
-/** Registrations already on the address, made through the same action and the emailed link's service. */
+/** Registrations already on the address, made through the same action and the emailed confirmation (§NNN). */
 async function registered(names: string[]) {
   const event = await createEvent();
-  const { consumeAndRegisterAnotherPerson } = await import("@/modules/registrations/token-actions");
+  const { confirmFamilyEntry } = await import("@/modules/registrations/family-confirm");
   const { renderOutboxMessage } = await import("@/modules/notifications/render");
   for (const [index, name] of names.entries()) {
     await press(name);
     if (index === 0) continue;
     const offer = (await db.select().from(emailOutbox)).filter((row) => row.messageType === "REGISTER_ANOTHER_PERSON").at(-1)!;
     const message = await renderOutboxMessage({ ...offer, status: "PROCESSING", attemptCount: 1, lockedAt: new Date() }, db, new Date());
-    const secret = /\?another=([A-Za-z0-9_-]+)/.exec(message.text)![1];
-    const { readRegistrationForm } = await import("@/modules/registrations/form-mapping");
-    // The family form posts no address: the link fixes it.
-    const posted = form(name);
-    posted.delete("email");
-    posted.delete("emailConfirm");
-    await consumeAndRegisterAnotherPerson(
-      secret,
-      { id: event.id, eventStatus: event.eventStatus, registrationMode: "INTERNAL", startsAt: event.startsAt, registrationOpensAt: null, registrationClosesAt: null, capacity: event.capacity, raceId: null, publishedAt: event.publishedAt },
-      readRegistrationForm(posted, "ro"),
-      {},
-      new Date(),
-    );
+    const secret = /\/inregistrari\/familie\/([A-Za-z0-9_-]+)/.exec(message.text)![1];
+    await confirmFamilyEntry(db, secret, { fitnessAcknowledged: true }, new Date());
   }
   jar.length = 0;
   return event;
@@ -198,6 +188,17 @@ describe("§389 §39 the public form answers the same whatever the address holds
     const again = await press("Maria");
     expect(again).toBe(first);
     expect(await db.select().from(registrations)).toHaveLength(1);
+  });
+
+  it("is the same response for a slip — the registered name with another birth date — which registers nobody (§NNN)", async () => {
+    await registered([]);
+    const first = await press("Maria");
+    const slip = await press("Maria", "2001-01-01");
+    expect(slip).toBe(first);
+    expect(await db.select().from(registrations)).toHaveLength(1);
+    // Only the inbox learns it: the re-send, with the sentence on registering somebody else.
+    const resent = (await db.select().from(emailOutbox)).filter((row) => row.messageType === "VERIFY_REGISTRATION_EMAIL").at(-1)!;
+    expect(resent.payloadJson).toEqual({ anotherPersonHint: true });
   });
 });
 
