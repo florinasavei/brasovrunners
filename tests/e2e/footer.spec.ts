@@ -329,21 +329,32 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             const terms = fold.getByRole("link", { name: /termeni|racing tos/i });
             await terms.click({ trial: true });
 
-            // Condensed (§385): every link and the stamp a 44px target, the lines 44px apart with
-            // no margin between them, "Scrie-ne" once, and the whole panel shorter than the 188px
-            // it was at 360 in Romanian (with the club's address configured) before the change.
-            const panelControls = panelContent(fold).locator("a, [role=button]");
-            // Compact since §NNN: a link is the bar's own target (24, 28 from 360, 44 from `sm`),
-            // the stamp keeps its 44px long-press box.
-            for (let i = 0; i < (await panelControls.count()); i++) {
-              const box = await boxOf(panelControls.nth(i), `the panel's control ${i}`);
-              expect(box.height, `the panel's control ${i} is a target at ${width}px`).toBeGreaterThanOrEqual(targetAt(width) - 0.5);
+            // Condensed (§385), then compact (§NNN, amending §385): every link keeps a 44px hit
+            // area (BR-REQ-041-01 criterion 6) — its own box from `sm`, its `::before` on a
+            // phone, where the line is 24px — and the stamp its 44px box; "Scrie-ne" once.
+            const panelLinks = panelContent(fold).locator("a");
+            const tops: number[] = [];
+            for (let i = 0; i < (await panelLinks.count()); i++) {
+              const link = panelLinks.nth(i);
+              const box = await boxOf(link, `the panel's link ${i}`);
+              const hit = await link.evaluate((el) => Math.max(el.getBoundingClientRect().height, parseFloat(getComputedStyle(el, "::before").height) || 0));
+              expect(hit, `the panel's link ${i} has a 44px hit area at ${width}px`).toBeGreaterThanOrEqual(43.5);
+              expect(box.height, `the panel's link ${i} is a ${width >= SM ? 44 : 24}px line at ${width}px`).toBeGreaterThanOrEqual((width >= SM ? 44 : 24) - 0.5);
+              tops.push(Math.round(box.y));
             }
-            expect(panel.height, `the panel is shorter than §385's 136px at ${width}px`).toBeLessThan(width >= SM ? 188 : 136);
+            const stamp = await boxOf(panelContent(fold).getByTestId("footer-build-badge-panel"), "the stamp");
+            expect(stamp.height, `the stamp's long-press box is 44px at ${width}px`).toBeGreaterThanOrEqual(43.5);
+            // The terms and "my registrations" share the first line.
+            expect(Math.abs(tops[0]! - tops[1]!), `the first two links share a line at ${width}px`).toBeLessThanOrEqual(1);
+            // Measured on the real render: two 24px lines (three with a wrapped address) and the
+            // credit's line with the 44px stamp — 116px at most, against §385's 136px at 360.
+            if (width < SM) expect(panel.height, `the compact panel's height at ${width}px`).toBeLessThanOrEqual(117);
+            else expect(panel.height, `the panel's height at ${width}px`).toBeLessThan(188);
             const panelText = await panelContent(fold).evaluate((el) => el.textContent ?? "");
             expect(panelText.match(/Scrie-ne|Write to us/g), `"Scrie-ne" once at ${width}px`).toHaveLength(1);
             // The stamp, a chip, is the panel's last item.
-            await expect(panelContent(fold).locator(":scope > *").last()).toHaveAttribute("data-testid", "footer-build-badge-panel");
+            await expect(panelContent(fold).locator(":scope > *").last()).toHaveAttribute("data-testid", "footer-panel-meta");
+            await expect(panelContent(fold).getByTestId("footer-panel-meta").locator(":scope > *").last()).toHaveAttribute("data-testid", "footer-build-badge-panel");
           }
 
           const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
