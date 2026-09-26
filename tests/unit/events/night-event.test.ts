@@ -376,17 +376,18 @@ describe("§394 the listing card and the hero", () => {
     expect(day).not.toContain("ModeNightIcon");
   });
 
-  it("the hero's route line says it after the climb and before the cost, with its glyph", async () => {
+  it("the hero's route pills say it after the climb and before the cost, with its glyph — the card's own pills (§NNN)", async () => {
     const html = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW })));
     const route = text(rows(html).find((row) => row.label === "Traseu")!.dd);
-    expect(route.indexOf("250 m diferență de nivel")).toBeLessThan(route.indexOf("Noapte"));
+    expect(route.indexOf("250 m D+")).toBeGreaterThan(-1);
+    expect(route.indexOf("250 m D+")).toBeLessThan(route.indexOf("Noapte"));
     expect(route.indexOf("Noapte")).toBeLessThan(route.indexOf("Gratuit"));
     expect(html).toContain('data-testid="ModeNightIcon"');
     const day = text(rows(withoutStyles(renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW })))).find((row) => row.label === "Traseu")!.dd);
     expect(day).not.toContain("Noapte");
   });
 
-  it("the hero's bare «Noapte» carries the sunset too, in a visually hidden span — it opens no tooltip of its own to hear it from (§428)", async () => {
+  it("the hero's «Noapte» pill carries the sunset too, in a visually hidden span — heard without opening its tooltip (§428, a pill since §NNN)", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
     const route = rows(withoutStyles(html)).find((row) => row.label === "Traseu")!.dd;
     // «Noapte» itself stays visible, in front of the hidden sentence — the same order and the

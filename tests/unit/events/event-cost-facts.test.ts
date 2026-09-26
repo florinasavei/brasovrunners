@@ -197,21 +197,24 @@ describe("an EXTERNAL-registration PAID event's cost row (§394)", () => {
   });
 });
 
-describe("the cost facts, featured hero (§343; the EXTERNAL + PAID wording since §394)", () => {
-  it("keeps «Taxă: 50 lei» and «plata pe {host}» for a club-run PAID event, among the route's pieces", async () => {
+describe("the cost facts, featured hero (§343; the EXTERNAL + PAID wording since §394; the card's pills since §NNN)", () => {
+  it("wears the card's «Cu taxă» pill, then «Taxă: 50 lei» and «plata pe {host}» as words under the pills", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }), now: NOW }),
     );
+    // The listing card's own set, in its order: surface, distance, cost's closed-set word.
+    expect(pillLabels(html)).toEqual(["Asfalt", "10 km", "Cu taxă"]);
     expect(html).toContain("Taxă: 50 lei");
     expect(html).toContain("plata pe revolut.me");
-    expect(pillLabels(html)).toEqual([]);
   });
 
-  it("keeps the whole «Donație: pe {host}» phrase as the link", async () => {
+  it("wears the «Donație» pill and links «Donează pe {host}» under it — never «Donație» twice (§356)", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "DONATION", costAmount: "50 lei", costUrl: "https://www.wingsforlifeworldrun.com/en/donate" }), now: NOW }),
     );
-    expect(/<a [^>]*>([^<]*)<\/a>/.exec(html)?.[1]).toBe("Donație: pe wingsforlifeworldrun.com");
+    expect(pillLabels(html)).toContain("Donație");
+    expect(/<a [^>]*>([^<]*)<\/a>/.exec(html)?.[1]).toBe("Donează pe wingsforlifeworldrun.com");
+    expect(html).not.toContain("Donație: pe");
     expect(html).toContain("sugerat 50 lei");
   });
 

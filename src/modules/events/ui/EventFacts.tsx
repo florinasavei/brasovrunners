@@ -23,7 +23,7 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
-import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
+import { hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEvent } from "../repository";
@@ -31,7 +31,7 @@ import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import CardRegistration, { cardRegistrationLine } from "./CardRegistration";
 import { readRegistrationDoor } from "./registration-door";
 import CoHostLinkGlyph from "./co-host-glyphs";
-import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
+import { GLYPHS, type Glyph } from "./glyphs";
 import { buildRoutePills, orderRoutePills, routePillParts, type Pill } from "./route-pills";
 import RoutePills from "./RoutePills";
 import { DENSITY } from "@/theme/density";
@@ -155,7 +155,9 @@ const SR_ONLY_SX = {
  *   with the page's row glyph in front of it, the place as its map link, then the route and the
  *   cost as the page's pills, then the state of registration (§366);
  * - **the listing's featured hero** (the default): the `<dl>`, each row one line of short
- *   pieces separated by a middle dot — a summary above the fold, with a button to reach;
+ *   pieces separated by a middle dot — a summary above the fold, with a button to reach — except
+ *   the route, which is the listing card's own row of pills, its cost details and links on a line
+ *   under them (§NNN);
  * - **the event page and its preview** (`stacked`): the `<dl>` grouped again and restyled
  *   (§356) — "când" one line, the place with its address under it, the route as one row of
  *   pills, the cost its own row with its own pill, and every row's glyph the same.
@@ -229,7 +231,6 @@ export default async function EventFacts({
   const locale = (await getLocale()) as "ro" | "en";
   const compact = variant === "compact";
 
-  const distance = distanceInKm(event.distanceMeters);
   const state = registrationState(event, now);
 
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
@@ -662,8 +663,8 @@ export default async function EventFacts({
     /*
       The listing's featured hero: one line per question, the pieces separated by middle dots,
       and its partners as one sentence (`coHostSentence`, below) — a summary above the fold with
-      a button to reach, so neither a column of every partner's links nor the page's pills (§169,
-      §356).
+      a button to reach, so never a column of every partner's links (§169, §356). The route alone
+      is the card's row of pills (§NNN), the one shape the owner reads the route in on the listing.
 
       Its pieces are built here, in its own branch, because nothing else draws them (§366): the
       card and the page draw the place, the route and the cost in shapes of their own, and neither
@@ -684,82 +685,52 @@ export default async function EventFacts({
       where.push(outLink(event.mapUrl, t("openMap")));
     }
 
-    /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
-       cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2).
-       This is the hero's line; the event page (§356) and the listing card (§366) draw pills.
-
-       Same order as `orderRoutePills` (§366, amended §375 — the owner, 2026-09-24, of "8 km · 250 m
-       D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
-       elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
-       beside the event's type already says it, so difficulty leads here, before distance and
-       elevation. Difficulty carries its own glyph (§412: a gauge, its needle at one of five
-       positions, replacing §399's scale of weights); distance and elevation do not, on the hero as
-       before. */
-    const route: ReactNode[] = [];
-    if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
-    if (distance !== null) {
-      // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.
-      route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
-    }
-    if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-    // The night event (§394, where §382 put the headlamp), with the pill's own crescent (§428) like
-    // the pill it is on the card and the page, before the cost — the same pill's words, from the
-    // same function. The card and the page hear the sunset through a hovered or focused tooltip
-    // (`GlyphChip`'s `srSuffix`); the hero's bare word never opens one — it is a line, not a
-    // chip — so the same sentence rides along as a visually hidden span, read unconditionally
-    // (§428, matching `GlyphChip`'s own technique, `SR_ONLY_SX`).
-    if (headlampPill)
-      route.push(
-        withGlyph(
-          GLYPHS.night,
-          <>
-            {headlampPill.label}
-            {headlampPill.srSuffix && <Box component="span" sx={SR_ONLY_SX}>{` — ${headlampPill.srSuffix}`}</Box>}
-          </>,
-        ),
-      );
-    // The coin for the cost, below, is the closed set's other glyph (§112).
+    /* The route as the listing card's own pills (§NNN; the owner, 2026-09-26, of the hero's
+       «Traseu» line above the cards: "astea de sus trebuie sa fie tot pills ca si in cardurile de
+       mai jos"): `buildRoutePills`, the one function the card and the backoffice's list call
+       (§388), so the hero cannot read the route in another order, another set or other words —
+       surface, difficulty, distance, elevation, night, then the cost's closed-set word (§375,
+       §394, §428). The surface is said here, once, as on the cards: the chip beside the type no
+       longer carries it (`FeaturedEventHero`). The night pill's sunset rides in its `srSuffix`, as
+       on the card. A pill only for what the club stated; null is unstated, not free (AGENTS.md §1.2). */
+    const heroPills: Pill[] = buildRoutePills(event, t, format);
     /*
-      The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its
-      pill (§366). The hero says more, the way the meeting point becomes its own map link: a paid
-      event's amount, with "plata pe {host}" as a second, separate link when the club gave one; a
-      donation's whole phrase is the link to give at, with the suggested amount after it when the
-      club stated one. Never a raw URL, only the host a runner recognises (`costUrlHost`), the same
-      rule "Linkuri și fișiere" follows (§332).
+      What a pill cannot hold stays the hero's, as words and links on a line under the pills — a
+      pill is a fact, a link is a link (§356): the cost's details (§343) and the route's links.
+
+      - A club-run paid event: its amount ("Taxă: 50 lei") and "plata pe {host}" when the club gave
+        where to pay.
+      - A paid event entered at the organizer's (§394, §395): "Cu taxă, la organizator" with the
+        amount when stated — the pill's short word says "Cu taxă" to the eye, and who is paid
+        matters — and the club's own discount note with its tag glyph; `costUrl` is never linked,
+        the club's own address is not where this fee goes.
+      - A donation: "Donează pe {host}" as the link to give at — the page's words (§356), never
+        "Donație: pe …" beside a «Donație» pill, the same word twice — and "sugerat {amount}".
+      - The route, the Strava event, the Facebook event (§144).
+
+      Never a raw URL, only the host a runner recognises (`costUrlHost`, §332).
     */
+    const routeExtras: ReactNode[] = [];
     if (event.costType === "PAID" && costPaidToExternalOrganizer(event)) {
-      // An `EXTERNAL`-registration, `PAID` event is entered — and paid — at the organizer's own
-      // form, not the club's (`DECISIONS.md` §394): the hero says so plainly, the same wording
-      // the page's cost row uses, and never links `costUrl` — the club's own address is not where
-      // this fee goes. The club's own discount, if any, follows on its own piece.
-      route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal")));
-      if (event.discountNote) route.push(withGlyph(GLYPHS.discount, event.discountNote));
+      routeExtras.push(event.costAmount ? t("costPaidExternalAmount", { amount: event.costAmount }) : t("costPaidExternal"));
+      if (event.discountNote) routeExtras.push(withGlyph(GLYPHS.discount, event.discountNote));
     } else if (event.costType === "PAID") {
-      route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
+      if (event.costAmount) routeExtras.push(t("costPaidAmount", { amount: event.costAmount }));
       const host = event.costUrl ? costUrlHost(event.costUrl) : null;
       if (event.costUrl && host) {
-        route.push(links ? outLink(event.costUrl, t("costPaidWhere", { host })) : t("costPaidWhere", { host }));
+        routeExtras.push(links ? outLink(event.costUrl, t("costPaidWhere", { host })) : t("costPaidWhere", { host }));
       }
     } else if (event.costType === "DONATION") {
       const host = event.costUrl ? costUrlHost(event.costUrl) : null;
-      route.push(
-        withGlyph(
-          COST_GLYPH.DONATION,
-          event.costUrl && host
-            ? links
-              ? outLink(event.costUrl, t("costDonation", { host }))
-              : t("costDonation", { host })
-            : t("costValues.DONATION"),
-        ),
-      );
-      if (event.costAmount) route.push(t("costDonationSuggested", { amount: event.costAmount }));
-    } else if (event.costType) {
-      route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
+      if (event.costUrl && host) {
+        routeExtras.push(links ? outLink(event.costUrl, t("costDonateOn", { host })) : t("costDonateOn", { host }));
+      }
+      if (event.costAmount) routeExtras.push(t("costDonationSuggested", { amount: event.costAmount }));
     }
-    if (links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
-    if (links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
+    if (links && event.routeUrl) routeExtras.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+    if (links && event.stravaEventUrl) routeExtras.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
     // The Facebook event (§144): where the club's people say "going".
-    if (links && event.facebookEventUrl) route.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
+    if (links && event.facebookEventUrl) routeExtras.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
 
     /**
      * The organizations the event is held with (§168), as one sentence: "Împreună cu A, B și C",
@@ -789,13 +760,36 @@ export default async function EventFacts({
     };
 
     // The clock in the hero's own glyph size, like the calendar and the pin beside it (§366).
-    const lines: Array<{ label: string; icon: Glyph; value: ReactNode[]; testId?: string }> = [
+    // `value` is a line of pieces, middle dots between them; `node` is an answer drawn in its own
+    // shape — the route's pills with its words under them (§NNN).
+    const lines: Array<{ label: string; icon: Glyph; value: ReactNode[]; node?: ReactNode; testId?: string }> = [
       { label: t("when"), icon: CalendarMonthIcon, value: whenPieces(HERO_GLYPH_SX) },
     ];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
     // Held with other organizations (§121, §168).
     if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: GLYPHS.partner, value: [coHostSentence()] });
-    if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
+    if (heroPills.length > 0 || routeExtras.length > 0) {
+      lines.push({
+        label: t("route"),
+        icon: RouteIcon,
+        value: [],
+        // The card's own row (`data-fact="pills"`, §366), then the words a pill cannot hold.
+        node: (
+          <>
+            {heroPills.length > 0 && (
+              <Box data-fact="pills">
+                <RoutePills pills={heroPills} />
+              </Box>
+            )}
+            {routeExtras.length > 0 && (
+              <Box data-fact="route-extras" sx={{ mt: heroPills.length > 0 ? 0.5 : 0 }}>
+                {pieces(routeExtras)}
+              </Box>
+            )}
+          </>
+        ),
+      });
+    }
     /*
       The weather at the start, on the hero too (§416; the owner, 2026-09-25: "aș vrea să văd vremea
       și pe cardul principal"): «Vremea» with the forecast's own glyph, then the pieces the page's
@@ -845,7 +839,7 @@ export default async function EventFacts({
               {line.label}
             </Typography>
             <Typography component="dd" variant="body1" sx={{ m: 0 }} data-testid={line.testId}>
-              {pieces(line.value)}
+              {line.node ?? pieces(line.value)}
             </Typography>
           </Fragment>
         ))}
