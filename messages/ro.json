@@ -475,7 +475,9 @@
       "checkin": "Ziua cursei",
       "emails": "Emailuri",
       "guide": "Ghid",
-      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează",
+      "registeredHint": "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
+      "registeredEvent": "{title}: {count}",
+      "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
     "outbox": {
@@ -715,7 +717,7 @@
       "filtersInUse": "filtre active",
       "summaryScopeEvent": "la {event}",
       "summaryScopeAll": "toate evenimentele",
-      "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat; cifra de pe tabul „Înscrieri” numără toate evenimentele care urmează.",
+      "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat.",
       "summaryScopeAllLink": "Arată toate evenimentele",
       "bulkEraseTitle": "Șterge definitiv înscrierile bifate",
       "bulkEraseHelp": "Se șterg din evidență, locurile se eliberează și nu se mai poate reveni. Rămâne doar o urmă în jurnal: cine a șters și de ce, niciodată pe cine.",
@@ -2839,7 +2841,8 @@
       "tableCaption": "Imaginile încărcate, cele mai noi primele",
       "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
       "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți.",
-      "usedInTeam": "Pe pagina Echipa: {title}"
+      "usedInTeam": "Pe pagina Echipa: {title}",
+      "usedInTeamIntro": "Pe pagina Echipa: introducerea"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -4534,7 +4537,7 @@
       "roleHelp": "De exemplu „Antrenor” și „Coach”. Opțional.",
       "bioRo": "Câteva cuvinte (Română)",
       "bioEn": "Câteva cuvinte (English)",
-      "bioHelp": "Opțional, cel mult {max} de caractere.",
+      "bioHelp": "Opțional, în ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: paragrafe, liste, un link în text, o poză — fără tabele, cardul e prea îngust.",
       "bothOrNeither": "Scrie în ambele limbi sau în niciuna.",
       "photo": "Fotografia",
       "photoChoose": "Alege o fotografie",
@@ -4559,9 +4562,22 @@
       "introFold": "Introducerea paginii",
       "introRo": "Introducerea (Română)",
       "introEn": "Introducerea (English)",
-      "introHelp": "Opțional, cel mult {max} de caractere. Goală, pagina folosește textul platformei.",
-      "link": "Legătura (opțional)",
-      "linkHelp": "O singură adresă https://, de exemplu profilul de Strava sau de Instagram. Aceeași în ambele limbi."
+      "introHelp": "Opțional, în ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un film, un tabel. Goală, pagina folosește textul platformei.",
+      "textEmpty": "(gol)",
+      "links": "Linkuri",
+      "linksHelp": "Cel mult {max}: Strava, Instagram, Facebook, un site al persoanei sau altceva. Adresa începe cu https://. Eticheta e opțională, în ambele limbi sau în niciuna; fără ea, cardul arată numele rețelei.",
+      "linkCount": "Linkuri: {count}",
+      "linkRows": {
+        "kind": "Ce este",
+        "url": "Adresa (https://)",
+        "labelRo": "Eticheta (Română)",
+        "labelEn": "Eticheta (English)",
+        "add": "Adaugă un link",
+        "remove": "Șterge linkul",
+        "moveUp": "Mută mai sus linkul",
+        "moveDown": "Mută mai jos linkul",
+        "row": "Linkul"
+      }
     }
   },
   "NotFound": {
@@ -5524,6 +5540,7 @@
     "rainLikely": "ploaie probabilă",
     "rainLikelyChance": "ploaie probabilă {percent} %",
     "wind": "vânt {speed} km/h",
+    "help": "Prognoză orientativă, poate varia până la start. Date furnizate de {source}.",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
     "feelsLike": "se simte ca {degrees} °C",
@@ -5915,6 +5932,14 @@
     "lead": "Oamenii care țin {club} în mișcare: cine organizează, cine antrenează, cine te întâmpină la start.",
     "empty": "Echipa clubului apare aici în curând.",
     "listLabel": "Oamenii echipei",
+    "linksLabel": "Linkuri: {name}",
+    "linkKinds": {
+      "STRAVA": "Strava",
+      "INSTAGRAM": "Instagram",
+      "FACEBOOK": "Facebook",
+      "WEBSITE": "Site personal",
+      "OTHER": "Link"
+    },
     "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
   },
   "Translate": {

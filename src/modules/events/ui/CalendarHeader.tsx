@@ -25,6 +25,33 @@ import type { CalendarLayout, CalendarView } from "./EventCalendar";
  * the one island (a select cannot navigate on change without JavaScript), and they go only
  * where a link could.
  */
+/**
+ * Where the two arrows go: the period before and the period after, keeping every filter and the
+ * layout. One function, because the swipe on a touch screen (`CalendarSwipe`, §475) must go
+ * exactly where the arrows go.
+ */
+export function calendarStepHrefs({
+  view,
+  query,
+  locale,
+  pathname,
+}: {
+  view: CalendarView;
+  query: Record<string, string | string[]>;
+  locale: "ro" | "en";
+  pathname: "/calendar" | "/events";
+}): { previous: string; next: string } {
+  const step = (by: -1 | 1) =>
+    getPathname({
+      locale,
+      href: {
+        pathname,
+        query: { ...query, ...(view.kind === "month" ? { month: monthParam(shiftMonth(view.month, by)) } : { year: String(view.year + by) }) },
+      },
+    });
+  return { previous: step(-1), next: step(1) };
+}
+
 export default async function CalendarHeader({
   view,
   now,
@@ -56,8 +83,7 @@ export default async function CalendarHeader({
     if (drop) delete merged[drop];
     return getPathname({ locale, href: { pathname, query: merged } });
   };
-  const previousHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, -1)) }) : href({ year: String(view.year - 1) });
-  const nextHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, 1)) }) : href({ year: String(view.year + 1) });
+  const { previous: previousHref, next: nextHref } = calendarStepHrefs({ view, query, locale, pathname });
 
   // The months from any year, in the reader's language.
   const monthNames = Array.from({ length: 12 }, (_, i) =>
