@@ -104,7 +104,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
     // The public-results consent is not asked (§322): there are no results to consent to.
     await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
-    // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§NNN).
+    // Citizenship is required and starts on Romania, so a Romanian runner leaves it (§432).
     await expect(page.locator('input[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('input[name="nationality"]')).toHaveAttribute("required", "");
     // The city is optional and on the optional side, open (§322).
@@ -995,7 +995,7 @@ async function createRulesEvent(page: Page, lines: number): Promise<{ slug: stri
   await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
   await page.getByRole("option", { name: "Înscrieri pe site" }).click();
   await field("event.capacity").fill("50");
-  // The declaration is chosen under «Regulamentul» since §NNN.
+  // The declaration is chosen under «Regulamentul» since §448.
   await openEditorBox(page, "Declarația pe propria răspundere");
   await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
   await page.getByRole("option").nth(1).click();

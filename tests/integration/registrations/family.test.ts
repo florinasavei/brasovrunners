@@ -16,7 +16,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §389, amended by §NNN — a family on one address, confirmed from the inbox (BR-REQ-032-03,
+ * §389, amended by §446 — a family on one address, confirmed from the inbox (BR-REQ-032-03,
  * BR-REQ-034-02, BR-REQ-036-02, BR-REQ-031-01 criterion 3).
  *
  * The owner, 2026-09-26: "înscrierea altei persoane trebuie să fie mai simplă: în mail să îți
@@ -183,7 +183,7 @@ async function signFor(event: EventInput, registrationId: string, typedName: str
   return signDeclaration(db, event, registrationId, { accepted: true, typedName, idDocument: "BV 123456", documentId: document!.id, contentSha256: document!.contentSha256 }, now);
 }
 
-describe("§NNN the form sent again from a registered address for a different person", () => {
+describe("§446 the form sent again from a registered address for a different person", () => {
   it("registers nobody, keeps the posted form without the address, and queues one email naming the kept form", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
@@ -285,7 +285,7 @@ describe("§NNN the form sent again from a registered address for a different pe
   });
 });
 
-describe("§NNN the confirmation registers the person, and everybody signs alone", () => {
+describe("§446 the confirmation registers the person, and everybody signs alone", () => {
   it("opening the page reads the link and changes nothing (GET never mutates, §12.8)", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);

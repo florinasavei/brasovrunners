@@ -78,7 +78,7 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   // A press of the older pictures' button (§430): how many got their ladder, and how many are left.
   picturesLaddered: { count: "count", values: { left: "left" } },
   picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
-  // The desk's spares a print reserved (§NNN): how many, and the first and last number.
+  // The desk's spares a print reserved (§444): how many, and the first and last number.
   sparesReserved: { count: "count", values: { from: "from", to: "to" } },
 };
 
@@ -117,9 +117,9 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "interestNotFound",
   "participantMessageDuplicate",
   "neonLimitsSame",
-  // «Salvează» on a club to-do line whose words, owner and day were already these (§NNN).
+  // «Salvează» on a club to-do line whose words, owner and day were already these (§438).
   "clubTodoUnchanged",
-  // The newsletter (§NNN): the same form pressed twice, and an address that was not on the list.
+  // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
   "newsletterDuplicate",
   "newsletterNotFound",
 ]);

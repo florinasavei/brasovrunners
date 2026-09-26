@@ -4,7 +4,7 @@ import { sameRunner } from "./name-key";
 import { isActiveStatus } from "./state-machine";
 
 /**
- * What one submission does on an address that may carry a family (§389, §NNN) — the decision, apart
+ * What one submission does on an address that may carry a family (§389, §446) — the decision, apart
  * from the writing of it, so every branch is a unit test and the service reads as the rule.
  *
  * Three doors reach it:
@@ -32,7 +32,7 @@ export const ADDRESS_AT_CAP = "addressAtCap";
 /** The link itself can no longer be used — spent, lapsed, or for another event — or the flow is not open yet. */
 export const ANOTHER_LINK_INVALID = "anotherLink";
 /**
- * The query parameter of the link §389 emailed before §NNN: the event's registration form opened
+ * The query parameter of the link §389 emailed before §446: the event's registration form opened
  * for another person on the same address. Retired — the email now carries one confirmation
  * (`/registrations/family/[token]`) — and read only so a link from an older email says that it no
  * longer works and what to do instead, never to open the old form.
@@ -45,7 +45,7 @@ export type FamilyRow = { id: string; status: RegistrationStatus; registeredName
 export type PostedPerson = { legalName: string; birthDate?: string | null };
 
 /**
- * How the posted person compares with one registration on the address (§NNN; the owner,
+ * How the posted person compares with one registration on the address (§446; the owner,
  * 2026-09-26: "trebuie să verific că numele e diferit (ignorând whitespace) și data nașterii e
  * complet diferită — asta înseamnă că a înscris altă persoană intenționat").
  *
@@ -81,13 +81,13 @@ export function isDifferentPerson(posted: PostedPerson, rows: readonly Pick<Fami
 export type SubmissionDecision<R extends FamilyRow> =
   /**
    * The same person again, still registered: re-send what the state offers, create nothing (§199,
-   * §235). `notAnotherPerson` when only one of the name and the birth date matched (§NNN): the
+   * §235). `notAnotherPerson` when only one of the name and the birth date matched (§446): the
    * re-sent message then says how to register somebody else — in the inbox, never on the screen.
    */
   | { kind: "resend"; registration: R; notAnotherPerson?: true }
   /**
    * Another person on a registered address, from the public form: nothing registered; the posted
-   * form is kept for the address to confirm from its inbox (§NNN), or — at the club's limit — the
+   * form is kept for the address to confirm from its inbox (§446), or — at the club's limit — the
    * address is told so (§389).
    */
   | { kind: "offerAnother"; about: R; atCap: boolean }
@@ -137,7 +137,7 @@ export function decideSubmission<R extends FamilyRow>(input: {
 
   if (via === "link") {
     /*
-      Under the lock, where the registration is created (§NNN): the address confirmed a different
+      Under the lock, where the registration is created (§446): the address confirmed a different
       person when the email was rendered, and the address may have changed since — another link of
       the same family pressed first, or the same person entered twice. Somebody who is not a
       different person from everybody registered here now is refused, and the limit is counted here,
@@ -155,7 +155,7 @@ export function decideSubmission<R extends FamilyRow>(input: {
   if (exact) return { kind: "resend", registration: exact };
 
   /*
-    One of the two matches a registration and the other does not (§NNN): the same name with another
+    One of the two matches a registration and the other does not (§446): the same name with another
     birth date, or another name with somebody's birth date. The owner's rule reads that as a slip,
     not as a second person — nothing is created, and the registration it resembles is re-sent, the
     name before the date. The message says how to register somebody else; the screen, as always,
@@ -166,7 +166,7 @@ export function decideSubmission<R extends FamilyRow>(input: {
 
   if (via === "form") {
     /*
-      A different person on an address that is registered (§389, §NNN). The public form registers
+      A different person on an address that is registered (§389, §446). The public form registers
       nobody — a second registration from a form anybody can type an address into would be a way to
       fill an event from one inbox — and says nothing different on screen; the posted form is kept
       and the address is asked to confirm it, with a link only its owner can press. A cancelled

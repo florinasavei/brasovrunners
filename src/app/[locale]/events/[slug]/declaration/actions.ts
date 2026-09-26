@@ -36,7 +36,7 @@ export async function signGroupRunDeclarationAction(form: FormData): Promise<voi
   try {
     await signOrRefuse(form, locale, path);
   } catch (error) {
-    // The database is away (§NNN): nothing was signed; the boxes come back filled, and one
+    // The database is away (§447): nothing was signed; the boxes come back filled, and one
     // sentence says to try again. `redirect()` throws too, and is not an away-error.
     if (!isDatabaseAwayError(error)) throw error;
     console.error("[declaration] the database is away; the form goes back with its answers", error);
@@ -77,7 +77,7 @@ async function signOrRefuse(form: FormData, locale: Locale, path: string): Promi
         accepted: form.get("accepted") === "on",
         typedName: text(form, "typedName"),
         idDocument,
-        // Counted against the run's minimum age and dropped (§NNN); absent when the run has none.
+        // Counted against the run's minimum age and dropped (§440); absent when the run has none.
         birthDate: text(form, "birthDate") || undefined,
         email: text(form, "email"),
         locale: signingLocale,

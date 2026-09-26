@@ -12,7 +12,7 @@ function pagePath(locale: Locale, token: string): string {
 }
 
 /**
- * The topics as ticked (§NNN). The link pressed is spent and the page moves to its successor
+ * The topics as ticked (§445). The link pressed is spent and the page moves to its successor
  * (`updateNewsletterTopics`), so a second change on the same visit still works and the old
  * address in the history opens nothing. None ticked is refused before anything is spent — that
  * is the other button.
@@ -31,7 +31,7 @@ export async function updateNewsletterTopicsAction(form: FormData): Promise<void
   redirect(successor ? `${pagePath(locale, successor)}?saved=1` : `${path}?invalid=1`);
 }
 
-/** "Unsubscribe from everything" (§NNN): the link spent, the subscription and the address deleted, at once. */
+/** "Unsubscribe from everything" (§445): the link spent, the subscription and the address deleted, at once. */
 export async function unsubscribeNewsletterAction(form: FormData): Promise<void> {
   const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
   const token = String(form.get("token") ?? "");

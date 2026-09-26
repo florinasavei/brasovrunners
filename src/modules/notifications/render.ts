@@ -80,7 +80,7 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
-  // Another person on the same address, confirmed from the inbox (§389, §NNN) — only while the
+  // Another person on the same address, confirmed from the inbox (§389, §446) — only while the
   // address has room and the posted form is still kept; at the club's limit the message carries no
   // link, and nothing is minted for it.
   REGISTER_ANOTHER_PERSON: "REGISTER_ANOTHER_PERSON",
@@ -88,7 +88,7 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
 
 /**
  * Where each purpose's link opens: a page of its own, the secret in its path. Another person on one
- * address (§389, §NNN) opens `/registrations/family/[token]`, built below once the kept form is
+ * address (§389, §446) opens `/registrations/family/[token]`, built below once the kept form is
  * found — it is minted only then.
  */
 const ROUTE_BY_PURPOSE: Record<
@@ -134,7 +134,7 @@ export type EventRowsReader = (db: RendererDb, eventId: string) => Promise<reado
  *
  * `readEventRows` is the seam a test counts reads through; the send path passes nothing.
  *
- * `replyTo` is the Reply-To the sender sets (§NNN, «Adresa de contact afișată»), so the line
+ * `replyTo` is the Reply-To the sender sets (§442, «Adresa de contact afișată»), so the line
  * "or reply to this email" is there exactly when a reply reaches somebody. Absent, `EMAIL_REPLY_TO`.
  */
 export function createOutboxRenderer(options: { readEventRows?: EventRowsReader; replyTo?: string } = {}): EmailRenderer {
@@ -169,7 +169,7 @@ async function renderRow(
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
     return renderGroupRunDeclarationRow(row, db, now, eventRows, replyTo);
   }
-  // The newsletter (§NNN) is about a subscriber, never a registration: its own path too.
+  // The newsletter (§445) is about a subscriber, never a registration: its own path too.
   if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
     return renderNewsletterRow(row, db, now, eventRows, replyTo);
   }
@@ -256,7 +256,7 @@ async function renderRow(
     // The other language's own words, for the bilingual message's second half — never the first
     // half's language repeated under the other language's sentence (§373, email follow-up).
     currentStatusOther: registration ? registrationStatusWords(registration.status, otherLocale(locale)) : undefined,
-    // The footer line is there whenever somebody can answer (§81) — the Reply-To in force (§NNN).
+    // The footer line is there whenever somebody can answer (§81) — the Reply-To in force (§442).
     replyTo,
     // The event's own page, for the deep link every message carries (§96).
     eventUrl: eventDetails?.slug
@@ -521,7 +521,7 @@ async function renderRow(
   if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
     data.alreadyRegistered = true;
   }
-  // …re-sent for a slip (§NNN): the name or the birth date matched a registration, not both — so the
+  // …re-sent for a slip (§446): the name or the birth date matched a registration, not both — so the
   // message says how to register somebody else. Never on a club copy: it is advice to the address.
   if ((row.payloadJson as { anotherPersonHint?: unknown } | null)?.anotherPersonHint === true && !clubCopy) {
     data.anotherPersonHint = true;
@@ -588,7 +588,7 @@ async function renderRow(
   }
 
   /*
-    Another person on one address (§389, §NNN): what the submission decided, from the row — the
+    Another person on one address (§389, §446): what the submission decided, from the row — the
     club's limit as it stood then, whether the address had reached it, and the kept form by its id.
     At the limit the message is the sentence that says so, and no token is minted for a link it does
     not carry. Otherwise the message names who the address holds here now — its own active
@@ -610,7 +610,7 @@ async function renderRow(
       data.familyRegistered = await registeredOnAddress(db, kept.eventId, kept.participantId);
     } else if (!data.addressAtCap) {
       // Confirmed, or lapsed and purged — deferred past the window (§40) or sent again after the
-      // press: the lapsed shape, which promises no button (§NNN).
+      // press: the lapsed shape, which promises no button (§446).
       data.familyEntryGone = true;
     }
   }

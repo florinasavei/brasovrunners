@@ -108,7 +108,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // What they typed before the rejection (§142) — and, after a send, the address alone, so
   // the confirmation can name where the answer goes without the address touching the URL.
   /*
-    The newsletter's pop-up (§NNN): offered only while the privacy notice in force describes it —
+    The newsletter's pop-up (§445): offered only while the privacy notice in force describes it —
     tolerant of an outage like every read on this page, and then simply not offered. A refusal
     comes back with the pop-up open and what was typed in the same sealed draft (its own keys).
   */
@@ -118,7 +118,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const draft = error || sent || newsletterRefused ? await readFormDraft() : null;
   const typed = (name: string) => (error || sent ? draft?.[name] : undefined);
 
-  // The address the club chose to show (§NNN): the mailbox, its Gmail, or both, «… sau …».
+  // The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …».
   const writeTo = await cachedShownContactAddresses();
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, finding (3) of the fix round on `feat/neon-budget-governor`: the backoffice layout reads
+ * §447, finding (3) of the fix round on `feat/neon-budget-governor`: the backoffice layout reads
  * the signed-in staff member from the database on every page, and an error thrown in a layout is
  * not caught by the same segment's `error.tsx` — staff met the framework's error page. The layout
  * now catches the away-error itself and renders the resting notice with the sign-out button; any
@@ -42,7 +42,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the backoffice layout while the database is away", () => {
+describe("§447 the backoffice layout while the database is away", () => {
   it("renders the resting notice with the sign-out button instead of the framework's error page", async () => {
     state.failure = Object.assign(new Error("Failed query: select … from staff_users"), {
       cause: new Error("Your project has exceeded the compute time quota. Upgrade your plan to increase limits."),

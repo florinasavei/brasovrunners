@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * §NNN — the month's budget on the screens, on an environment with no Neon key.
+ * §447 — the month's budget on the screens, on an environment with no Neon key.
  *
  * The suite never reaches Neon (`E2E_DISABLE_NEON`, `playwright.config.ts`), so the governor reads
  * `unknown` and changes nothing — which is exactly what an environment without a key must do: a
@@ -12,7 +12,7 @@ import { signIn } from "./support/featured-event";
  * cannot see — that Costuri and `/devs` carry the card and say so in words, and that the public
  * health answer names the level without a figure. Read-only, so it runs on both projects.
  */
-test.describe("§NNN the month's budget", () => {
+test.describe("§447 the month's budget", () => {
   test("Costuri says the budget is unknown and the platform does nothing extra", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/tasks?panel=costs");

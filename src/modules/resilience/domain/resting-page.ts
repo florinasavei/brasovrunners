@@ -1,5 +1,5 @@
 /**
- * The short resting page (§NNN): where a public page sends its reader when the month's budget is
+ * The short resting page (§447): where a public page sends its reader when the month's budget is
  * red, its read missed the data cache, and no last good copy stood behind it — «Pagina se
  * reîncarcă în câteva minute». Pure: the path, the header, the wait and the one check on the
  * address to come back to.

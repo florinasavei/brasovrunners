@@ -536,7 +536,7 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
-      // The event's own minimum age (§329), for a declaration's `{{minimumAge}}` (§NNN).
+      // The event's own minimum age (§329), for a declaration's `{{minimumAge}}` (§440).
       minAge: events.minAge,
       // The night override (§394): with the start and the zone, whether the reminder says to bring a light.
       nightOverride: events.nightOverride,

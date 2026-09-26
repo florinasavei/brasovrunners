@@ -57,7 +57,7 @@ export type EmailHealth = {
   /** The provider's last sanitized reason on a deferred or failed row; never a body or a token. */
   lastError: string | null;
   /**
-   * The club's Gmail road (§NNN): recipients it reached in the last day against the club's cap,
+   * The club's Gmail road (§443): recipients it reached in the last day against the club's cap,
    * and its last failure. Reported beside the counts, never a status of its own: a Gmail failure
    * falls back to Mailgun or is retried by the outbox, whose own counts above turn a real stall
    * into the 503 (§98), unchanged.
@@ -66,7 +66,7 @@ export type EmailHealth = {
 };
 
 /**
- * `governorFloorMinutes` is the budget governor's minimum interval in force now (§NNN): time the
+ * `governorFloorMinutes` is the budget governor's minimum interval in force now (§447): time the
  * outbox job may leave a retry waiting, added exactly like the Administrator's own interval — the
  * longer of the two, and of the interval the outbox's last run planned under, which its cached
  * slot remembers after the governor's level has dropped.
@@ -100,7 +100,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
 
   /*
     A newsletter or a new-event alert waiting for the allowance to come back is the reserve doing
-    its job (§NNN, `domain/bulk.ts`), not a stalled outbox: it is neither deferred nor overdue here.
+    its job (§445, `domain/bulk.ts`), not a stalled outbox: it is neither deferred nor overdue here.
     It still counts as waiting, and a transactional message that stalls still says so.
   */
   const pending = and(eq(emailOutbox.status, "PENDING"), not(inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES])));

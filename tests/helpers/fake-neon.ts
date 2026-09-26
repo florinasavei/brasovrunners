@@ -15,7 +15,7 @@ export type FakeNeonState = {
   };
   endpoints: Array<Record<string, unknown> & { id: string }>;
   /**
-   * The operations log (§NNN), newest first, or absent for a Neon that refuses to show it — the
+   * The operations log (§447), newest first, or absent for a Neon that refuses to show it — the
    * default, so the tests of the brakes read the project row's own counter as they always did.
    */
   operations?: Array<{ action: string; status: string; created_at: string; updated_at?: string }>;

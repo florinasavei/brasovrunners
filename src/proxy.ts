@@ -54,7 +54,7 @@ export default function proxy(request: NextRequest) {
   }
 
   /*
-    The visited address, handed to the page as a request header (§NNN): a public page that has
+    The visited address, handed to the page as a request header (§447): a public page that has
     nothing to show while the month's budget is red sends its reader to the short resting page,
     and this is how that page knows where to bring them back. Always overwritten here, so a caller
     cannot choose it; and only ever read as a path on this site (`safeBackPath`).

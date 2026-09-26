@@ -46,7 +46,7 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * "here is your race number" when registration closes (§214), and "registration is open" to the
  * addresses left on the event's page (§146).
  *
- * **And what already waits for the subscribers** (§NNN): a newsletter or a new-event alert that
+ * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
  * is queued and not yet sent — the reserve (`domain/bulk.ts`) may hold it until the allowance
  * comes back, a day or a month — one line per send and release instant, with how many subscribers
  * it goes to. Listed whatever the horizon: it is in the outbox already, and a month's wait is
@@ -71,7 +71,7 @@ export type AutomaticSend =
   | "nextInLine"
   | "bibs"
   | "registrationOpened"
-  // The subscribers' sends, already queued (§NNN).
+  // The subscribers' sends, already queued (§445).
   | "newsletter"
   | "newEventAlert";
 
@@ -94,7 +94,7 @@ export type ForecastRow = {
   testRecipients: number;
   /** The registrations it would go to, real and test, when it goes to registrations. */
   registrationIds: string[];
-  /** A subscribers' send (§NNN): its id, a newsletter's subject, and whether the reserve holds it until `at`. */
+  /** A subscribers' send (§445): its id, a newsletter's subject, and whether the reserve holds it until `at`. */
   sendId?: string;
   subject?: { ro: string; en: string } | null;
   held?: boolean;
@@ -397,7 +397,7 @@ type SubscriberSend = {
 };
 
 /**
- * The newsletters and new-event alerts in the outbox and not yet sent (§NNN), one line per send and
+ * The newsletters and new-event alerts in the outbox and not yet sent (§445), one line per send and
  * release instant: when the reserve lets them go (`next_attempt_at`, the allowance's reset for a
  * held row; the job's next run for one never tried), and how many subscribers — the club's own copy
  * of the send is not a subscriber and is left out of the count.

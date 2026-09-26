@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 /**
- * The contact page's one newsletter island (§NNN): it draws nothing. It gives the server-drawn
+ * The contact page's one newsletter island (§445): it draws nothing. It gives the server-drawn
  * button — a plain link to `?newsletter=open` — its script, once the script is here: a press then
  * opens the server-drawn `<dialog>` with `showModal()`, a real modal with the browser's own focus
  * trap, Escape and backdrop. And it squares the dialog with each answer the page arrives with:

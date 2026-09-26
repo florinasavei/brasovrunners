@@ -26,7 +26,7 @@ import {
 import { messagesPerCompletedRegistration } from "@/modules/notifications/volume";
 
 /**
- * §NNN — every email picks its road, Mailgun or the club's Gmail, by the club's setting per group,
+ * §443 — every email picks its road, Mailgun or the club's Gmail, by the club's setting per group,
  * with Gmail's daily cap (in recipients), its jittered pace and the choice at the cap. The pure
  * half: the groups, the setting, the admission; then the sender's routing with fake adapters, a
  * fake clock, a fake sleep and a fake random.
@@ -41,7 +41,7 @@ const usage = (over: Partial<GmailUsage> = {}): GmailUsage => ({
   ...over,
 });
 
-describe("§NNN the message groups and the setting", () => {
+describe("§443 the message groups and the setting", () => {
   it("puts every message type in exactly one group, and the newsletter's own three in the newsletter group", () => {
     for (const type of emailMessageType.enumValues) expect(EMAIL_GROUP_OF[type]).toBeDefined();
     expect(Object.keys(EMAIL_GROUP_OF).sort()).toEqual([...emailMessageType.enumValues].sort());
@@ -114,7 +114,7 @@ describe("§NNN the message groups and the setting", () => {
   });
 });
 
-describe("§NNN the plan's forecast sentence agrees with its figure", () => {
+describe("§443 the plan's forecast sentence agrees with its figure", () => {
   const base = { participantBccCount: 2, copiedMessagesPerRegistration: 4 };
 
   it("counts the hidden copies in Mailgun's cost while they go through Mailgun", () => {
@@ -133,7 +133,7 @@ describe("§NNN the plan's forecast sentence agrees with its figure", () => {
   });
 });
 
-describe("§NNN Gmail's admission", () => {
+describe("§443 Gmail's admission", () => {
   const setting = { gmailDailyCap: 3, gmailPaceSeconds: 5 };
 
   it("takes nothing while unconfigured, nothing past the cap in recipients, and never a message larger than the cap", () => {
@@ -155,7 +155,7 @@ describe("§NNN Gmail's admission", () => {
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() - 2_000) }), setting, NOW)).toEqual({ admitted: true, waitMs: 3_000 });
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() - 2_000) }), setting, NOW, 1, 700)).toEqual({ admitted: true, waitMs: 3_700 });
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() - 9_000) }), setting, NOW, 1, 700)).toEqual({ admitted: true, waitMs: 0 });
-    // A slot another sender holds two seconds ahead: the pace runs from that slot (§NNN review).
+    // A slot another sender holds two seconds ahead: the pace runs from that slot (§443 review).
     expect(gmailAdmission(usage({ sentLastDay: 1, lastSentAt: new Date(NOW.getTime() + 2_000) }), setting, NOW)).toEqual({ admitted: true, waitMs: 7_000 });
   });
 
@@ -166,7 +166,7 @@ describe("§NNN Gmail's admission", () => {
   });
 });
 
-describe("§NNN a Gmail failure that may have been accepted is not sent again by Mailgun", () => {
+describe("§443 a Gmail failure that may have been accepted is not sent again by Mailgun", () => {
   it("reroutes only what failed before Gmail could have taken the message", () => {
     for (const code of ["ECONNECTION", "EAUTH", "EDNS", "ETLS", "EENVELOPE", "EMESSAGE"]) {
       expect(gmailFailureIsBeforeAcceptance(Object.assign(new Error("x"), { code }))).toBe(true);
@@ -263,7 +263,7 @@ function setup(overrides: Partial<GmailRoad> = {}, mode: "live" | "allowlist" | 
   return { sender, mailgun, gmail, capture, slept, failures };
 }
 
-describe("§NNN the sender's road", () => {
+describe("§443 the sender's road", () => {
   it("sends a Gmail group through Gmail and everything else through Mailgun, and says which and to how many", async () => {
     const { sender, mailgun, gmail } = setup();
     expect(await sender.send(message("gmail", "a@example.ro", { bcc: ["club@example.org", "org@example.org"] }))).toMatchObject({
@@ -381,7 +381,7 @@ describe("§NNN the sender's road", () => {
   });
 });
 
-describe("§NNN review — Gmail's rows are claimed apart, as many as the pace lets one batch send", () => {
+describe("§443 review — Gmail's rows are claimed apart, as many as the pace lets one batch send", () => {
   it("names the same rows the route sends through Gmail", () => {
     const rows = gmailRoadRows(DEFAULT_EMAIL_TRANSPORT);
     expect(rows.clubCopies).toBe(true);

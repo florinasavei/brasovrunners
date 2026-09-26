@@ -295,7 +295,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
   const [details, otherDetails, replyTo] = await Promise.all([
     findEventNotificationDetails(db, input.eventId, locale),
     findEventNotificationDetails(db, input.eventId, other),
-    // The Reply-To the send sets (§NNN), so the preview's reply line matches the sent message.
+    // The Reply-To the send sets (§442), so the preview's reply line matches the sent message.
     replyToInForce(db),
   ]);
   if (!details) throw new DomainError("NOT_FOUND", "no such event");

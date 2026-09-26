@@ -202,7 +202,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMe
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
   "REGISTRATION_OPENED",
-  // The newsletter (§NNN) goes to a subscriber, not a participant, about no registration.
+  // The newsletter (§445) goes to a subscriber, not a participant, about no registration.
   "NEWSLETTER_CONFIRM",
   "NEWSLETTER",
   "NEW_EVENT_ALERT",

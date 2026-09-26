@@ -15,7 +15,7 @@ import { eventFieldsSchema } from "@/modules/content/events/fields";
 import { eventFormFieldName } from "@/modules/content/events/form-names";
 
 /**
- * «Durata» as hours and minutes (§NNN, amending §71's single minutes box): the editor asks two
+ * «Durata» as hours and minutes (§433, amending §71's single minutes box): the editor asks two
  * numbers, the action joins them into the minutes `fields.ts` has always read, the closed box
  * line says "3 h 30 min", and a refusal of the total points at the hours box.
  */
@@ -24,7 +24,7 @@ const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf
 /** The duration field alone, through the event schema's own rule. */
 const durationRule = eventFieldsSchema.shape.durationMinutes;
 
-describe("§NNN the duration's two boxes, joined into minutes", () => {
+describe("§433 the duration's two boxes, joined into minutes", () => {
   it("joins hours and minutes into the total, either box alone included", () => {
     expect(joinDuration("3", "30")).toBe("210");
     expect(joinDuration("1", "30")).toBe("90");
@@ -92,7 +92,7 @@ describe("§NNN the duration's two boxes, joined into minutes", () => {
   });
 });
 
-describe("§NNN the editor asks two boxes and the action joins them", () => {
+describe("§433 the editor asks two boxes and the action joins them", () => {
   it("the Data și ora box posts the hours and the minutes, never the old single box", () => {
     const box = read("src/modules/content/events/ui/boxes/WhenBox.tsx");
     expect(box).toContain('name="event.durationHours"');

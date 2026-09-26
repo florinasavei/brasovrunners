@@ -188,12 +188,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const internal = event.registrationMode === "INTERNAL";
   // How many numbers this event has, and how many wait for the printer, for the bib card.
   const bibCounts = canReadRegistrations(staffUser.role) && internal ? await countBibs(db, event.id) : null;
-  // The desk's spares (§NNN): what is reserved, how much of it is free, where the next print starts.
+  // The desk's spares (§444): what is reserved, how much of it is free, where the next print starts.
   const spareState = bibCounts ? await spareCardState(db, event.id) : null;
   const spares = spareState
     ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
     : null;
-  // The range the print just reserved, for its banner (§NNN) — only two real numbers from the address.
+  // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
@@ -523,7 +523,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 : t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
             </Alert>
           )}
-          {/* The spares just reserved (§NNN): the sheet of exactly those numbers, blank, one press away. */}
+          {/* The spares just reserved (§444): the sheet of exactly those numbers, blank, one press away. */}
           {reservedRange && (
             <Alert
               severity="success"
@@ -835,7 +835,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <StartListBox {...box} heading={flow.headings.startList} />
 
                   {/* What makes the page without being a section of it: the marks, the address. The
-                      status is in the first card since §NNN (a notice over the title only once
+                      status is in the first card since §448 (a notice over the title only once
                       cancelled or finished). */}
                   <EditorGroup label={t("editor.groups.offPage")} />
                   <PromotionBox {...box} />

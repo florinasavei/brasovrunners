@@ -66,7 +66,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     }
   });
 
-  it("gives the course and the links a box each, out of the first box, and the status a card inside it, on both pages (§406, §NNN)", () => {
+  it("gives the course and the links a box each, out of the first box, and the status a card inside it, on both pages (§406, §448)", () => {
     const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
     for (const [page, source] of [
       ["edit", EDIT],
@@ -80,7 +80,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
     }
-    // The status: a level-3 card inside the first box, with the id it always had (§NNN).
+    // The status: a level-3 card inside the first box, with the id it always had (§448).
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     expect(status).toMatch(/const card = \{\s+id: "box-status",\s+level: 3/);
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event, risk, notice })");
@@ -144,7 +144,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
-    // The first box holds the status again (§NNN) and wears the mark for it; the course, the
+    // The first box holds the status again (§448) and wears the mark for it; the course, the
     // links, the partners, the promotion, the film and the list reach nobody.
     for (const box of ["<CourseBox", "<CostBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
       const start = at(EDIT, box);

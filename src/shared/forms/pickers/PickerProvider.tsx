@@ -15,7 +15,7 @@ const ROMANIAN = roRO.components.MuiLocalizationProvider.defaultProps.localeText
  * The date picker's one provider, mounted once, by the backoffice's layout (`DECISIONS.md`
  * §345) — and nowhere a visitor goes: no public page asks for a date the club types, and
  * `tests/unit/shared/pickers-backoffice-only.test.ts` fails if one ever reaches this.
- * `TimeField` no longer needs it: since §400 and §NNN it is a typed 24-hour text box, but stays
+ * `TimeField` no longer needs it: since §400 and §439 it is a typed 24-hour text box, but stays
  * under `shared/forms/pickers` beside `DateField`, the box it
  * still pairs with (`WallTimeField`).
  *

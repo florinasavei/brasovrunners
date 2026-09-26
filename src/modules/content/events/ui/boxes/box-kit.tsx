@@ -24,7 +24,7 @@ export type BoxProps = {
   /**
    * The approved group-run declaration in force for each surface, or null (§393): the rules card's
    * "Declarație opțională" is disabled for a surface without one, and names the version of one that
-   * has it (§NNN). Absent: none.
+   * has it (§448). Absent: none.
    */
   groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", { version: number } | null>;
   /**

@@ -1,7 +1,7 @@
 import { isDatabaseAwayError } from "./domain/database-away";
 
 /**
- * No storms (§NNN): once a public read has found the database away, this instance stops asking it
+ * No storms (§447): once a public read has found the database away, this instance stops asking it
  * for a while and every public read goes straight to its last good copy.
  *
  * Without it an outage costs every page view a failed connection — each one up to the driver's
@@ -29,13 +29,13 @@ export const BREAKER_MAX_MS = 5 * 60_000;
  */
 export class DatabaseRestingError extends Error {
   constructor(cause?: unknown) {
-    super("the database is resting; the breaker is open (§NNN)", cause === undefined ? undefined : { cause });
+    super("the database is resting; the breaker is open (§447)", cause === undefined ? undefined : { cause });
     this.name = "DatabaseRestingError";
   }
 }
 
 /**
- * Thrown by a public read that missed the data cache while the month's budget is red (§NNN,
+ * Thrown by a public read that missed the data cache while the month's budget is red (§447,
  * `GOVERNOR_EFFECTS.publicMissRefreshMinutes`): the database was deliberately not asked, and no
  * last good copy stood behind the read. A `DatabaseRestingError`, so every reader that already
  * knows what to do when the database is away — serve a copy, drop an optional part of the page —
@@ -45,7 +45,7 @@ export class DatabaseRestingError extends Error {
 export class ColdMissError extends DatabaseRestingError {
   constructor() {
     super();
-    this.message = "the database is resting; a red month answers a cache miss without it (§NNN)";
+    this.message = "the database is resting; a red month answers a cache miss without it (§447)";
     this.name = "ColdMissError";
   }
 }

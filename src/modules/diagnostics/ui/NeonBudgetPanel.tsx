@@ -33,7 +33,7 @@ const SEVERITY: Record<NeonBudgetLevel, "success" | "info" | "warning" | "error"
 
 /**
  * "Bugetul lunii" — the month's Neon budget as the platform reads it, and what it is doing about
- * it (§NNN). On `/admin/tasks` → Costuri beside the brakes it is read against, with the two
+ * it (§447). On `/admin/tasks` → Costuri beside the brakes it is read against, with the two
  * thresholds the Administrator may move, and on `/devs` read-only, for the Tehnic role.
  *
  * In the order a reader asks: where the month stands (the level, the spend against the quota and

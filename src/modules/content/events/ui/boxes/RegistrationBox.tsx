@@ -268,7 +268,7 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/* 8.2 — who may enter. What they sign at confirmation is chosen under «Regulamentul»
-                      since §NNN (`DeclarationCard`): one place for declarations, under the rules. */}
+                      since §448 (`DeclarationCard`): one place for declarations, under the rules. */}
                   <Panel collapsible level={3} id="box-conditions" title={t("editor.boxes.conditions.title")} aside={conditionsSummary(words, minAge)}>
                     <Stack spacing={2}>
                       {/* Years reached by the event's day (§329), never below fourteen (§321). */}

@@ -3881,7 +3881,7 @@
                 "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
-                "«Who may enter and what they sign»: «Declaration a participant signs» and «Minimum age (years)» (14 unless you change it, 0 for none).",
+                "«Who may enter»: «Declaration a participant signs» and «Minimum age (years)» (14 unless you change it, 0 for none).",
                 "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
                 "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
               ]

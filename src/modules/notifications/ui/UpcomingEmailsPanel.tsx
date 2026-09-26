@@ -25,7 +25,7 @@ type Props = {
    */
   clubCopies: string[] | null;
   /**
-   * The road each message type would take now (§NNN): the club's choice for its group, Mailgun
+   * The road each message type would take now (§443): the club's choice for its group, Mailgun
    * wherever Gmail is not configured. Absent, no road is said.
    */
   roads?: Readonly<Record<EmailMessageType, EmailTransport>>;
@@ -40,7 +40,7 @@ const TAP = { display: "inline-flex", alignItems: "center", minHeight: 44 } as c
  * its own in the coming days, sorted by the moment it becomes due — the event (a link to its
  * editor), the moment with its weekday in the event's own zone (§349), the message (a link to its
  * preview card further down this page) and how many runners the job would pick if it ran now.
- * Last, the subscribers' sends already queued (§NNN): a newsletter by its subject, an alert by its
+ * Last, the subscribers' sends already queued (§445): a newsletter by its subject, an alert by its
  * event, when the reserve lets them go and how many subscribers they reach.
  *
  * A Server Component and a closed fold (§336), directly above "Emailurile trimise participanților",

@@ -42,7 +42,7 @@ const PARTICIPANT_FIELDS = ["participantEmail", "registeredName", "deliveryEmail
 
 /*
   The one Client Component the tree may hold, because Next requires it to be one: the backoffice's
-  error boundary (§NNN), which handles a save a network refused and a database that is away, and
+  error boundary (§436, §447), which handles a save a network refused and a database that is away, and
   throws every other error on to `[locale]/error.tsx`. It is handed an error and nothing else — no
   row, no participant — and the test below holds it to importing no data at all.
 */
@@ -99,7 +99,7 @@ describe("AGENTS.md §14.5 the backoffice renders participant rows on the server
     for (const name of NEXT_REQUIRED_CLIENT_FILES) {
       const source = await readFile(join(ROOT, ...name.split("/")), "utf8");
       /*
-        Nothing from `@/db`, and from `@/modules` only what cannot read a row (§NNN, the merge of
+        Nothing from `@/db`, and from `@/modules` only what cannot read a row (§436, §447, the merge of
         the save fallback with the budget governor, whose resting page the boundary also draws): a
         module's `domain/` — pure rules, AGENTS.md §5 — and a module's `ui/` Client
         Component that itself imports nothing from either tree.

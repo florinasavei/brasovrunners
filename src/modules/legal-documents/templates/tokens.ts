@@ -85,7 +85,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
       formatDay(TOKEN_EXAMPLE_SIGNED_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
     ),
   },
-  // The event's own minimum age (§329, §NNN), with its unit; a run with none leaves its sentence out.
+  // The event's own minimum age (§329, §440), with its unit; a run with none leaves its sentence out.
   {
     token: `{{${MINIMUM_AGE_MERGE_FIELD}}}`,
     messageKey: MINIMUM_AGE_MERGE_FIELD,
@@ -106,7 +106,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
   },
-  // The privacy notice's marker for the newsletter (§NNN): filled with the pop-up's topics, and the
+  // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).
   {
     token: `{{${NEWSLETTER_MERGE_FIELD}}}`,

@@ -154,7 +154,7 @@ export type PruneCounts = {
   /** A group run's self-declarations, gone seven days after the run (§393). */
   groupRunDeclarations: number;
   auditLogs: number;
-  /** Newsletter addresses never confirmed, and the newsletter's links nobody can use any more (§NNN). */
+  /** Newsletter addresses never confirmed, and the newsletter's links nobody can use any more (§445). */
   newsletter: number;
 };
 
@@ -469,7 +469,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /**
-   * The newsletter (§NNN): an address never confirmed is gone once its confirmation link can no
+   * The newsletter (§445): an address never confirmed is gone once its confirmation link can no
    * longer work — the club's email-link window («Termene», `confirmationHours`, §377), counted
    * from the last time the form was sent with it, and no live link left (one minted under a longer
    * window before the club shortened it still runs its course). Somebody else may have typed it;

@@ -7,13 +7,13 @@ import { adultOnTheFamilyForm, withoutAnotherAdultsConsents } from "./fields";
 import { composeLegalName } from "./names";
 
 /**
- * Another person's registration waiting for the address's confirmation (§NNN, amending §389):
+ * Another person's registration waiting for the address's confirmation (§446, amending §389):
  * where it is kept, read and let go. The table's own comment (`db/schema/family-entries.ts`) says
  * what a row is and is not; this module is every query on it.
  */
 
 /**
- * What of a validated public submission is kept for the confirmation (§NNN): the form as posted,
+ * What of a validated public submission is kept for the confirmation (§446): the form as posted,
  * which `submitRegistration` reads again under the same schema when the address confirms — minus
  * what is not the other person's:
  *
@@ -51,7 +51,7 @@ export function personOfEntry(entry: Pick<PendingFamilyEntry, "fields">): { lega
 }
 
 /**
- * A registered runner as the email and the confirmation page name them to the address (§NNN): the
+ * A registered runner as the email and the confirmation page name them to the address (§446): the
  * first name and the last name's initial — "Ana P." — enough for a family to know who is meant,
  * and no more of a name than a public list would show. The display name when the parts are missing.
  */
@@ -116,7 +116,7 @@ export async function deleteFamilyEntry<T extends Record<string, unknown>>(db: D
 }
 
 /**
- * The entries nobody confirmed in time, deleted with the personal data they hold (§NNN): run by the
+ * The entries nobody confirmed in time, deleted with the personal data they hold (§446): run by the
  * registration maintenance job (`maintenance.ts`), which the submission wakes for the instant
  * (`wakeMaintenance`). Returns how many went.
  */
@@ -138,7 +138,7 @@ export async function nextFamilyEntryLapse<T extends Record<string, unknown>>(db
 }
 
 /**
- * Who the address holds at the event now, as the email and the confirmation page list them (§NNN):
+ * Who the address holds at the event now, as the email and the confirmation page list them (§446):
  * its **active** registrations only, oldest first, each by first name and initial. Only this
  * address's own rows — the participant is the address — so nothing about anybody else's inbox is
  * ever said to this one.

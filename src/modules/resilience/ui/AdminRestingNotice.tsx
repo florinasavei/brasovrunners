@@ -10,7 +10,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
  * What the backoffice shows when its layout could not read the signed-in staff member because the
- * database is away (§NNN) — a compute that could not start, or Neon refusing for the rest of the
+ * database is away (§447) — a compute that could not start, or Neon refusing for the rest of the
  * month on its quota.
  *
  * The layout reads the staff row on every page, and an error thrown there is not caught by the same

@@ -97,7 +97,7 @@ describe("§393 the two templates", () => {
   */
   it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§418)", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
-      // `minimumAge` since §NNN: the run's own minimum, in a sentence of its own.
+      // `minimumAge` since §440: the run's own minimum, in a sentence of its own.
       expect([...mergeFieldsIn(body)].sort()).toEqual(["event", "eventDate", "eventLocation", "minimumAge", "participant", "signedAt"]);
       expect(asksForIdDocument(body)).toBe(false);
       // Adults only for now: no minor's second signature is asked (§330 is the race's flow).

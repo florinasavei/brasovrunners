@@ -4,7 +4,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, finding (4) of the fix round on `feat/neon-budget-governor`: a red month's cache miss with
+ * §447, finding (4) of the fix round on `feat/neon-budget-governor`: a red month's cache miss with
  * no last good copy sends the reader to the short resting page — «Pagina se reîncarcă în câteva
  * minute» — which answers 200 with `Retry-After`, in both languages, reading nothing, and brings the
  * reader back to the address they were on (a path on this site, never anywhere else).
@@ -42,7 +42,7 @@ beforeEach(() => {
   request.path = null;
 });
 
-describe("§NNN the way to the resting page", () => {
+describe("§447 the way to the resting page", () => {
   it("sends a red month's miss with no copy there, naming the address it was on", async () => {
     request.path = "/ro/evenimente/crosul-de-toamna?lista=2";
     await expect(readWithLastGood("event:ro:crosul-de-toamna", coldMiss, NOW)).rejects.toMatchObject({
@@ -69,7 +69,7 @@ describe("§NNN the way to the resting page", () => {
   });
 });
 
-describe("§NNN the resting page", () => {
+describe("§447 the resting page", () => {
   it("answers 200 with Retry-After, in both languages, and goes back by itself", async () => {
     const response = await GET(new Request(`https://example.test/api/resting?back=${encodeURIComponent("/en/events?type=race")}`));
     expect(response.status).toBe(200);

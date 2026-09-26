@@ -28,7 +28,7 @@ type Props = {
 };
 
 /**
- * «Adresa de contact afișată» (§NNN; the owner, 2026-09-26: "configure the default mail shown…
+ * «Adresa de contact afișată» (§442; the owner, 2026-09-26: "configure the default mail shown…
  * switch and show the club's Gmail, or show both").
  *
  * The contact recipients' shape (§164): a Server Component, one form, three radios and a box for

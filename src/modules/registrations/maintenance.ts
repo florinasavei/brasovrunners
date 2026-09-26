@@ -49,7 +49,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   interestsNotified: number;
   /** Race numbers settled by a registration window closing in this run (§214). */
   bibsSettled: number;
-  /** Another person's kept forms nobody confirmed in time, deleted this run (§NNN). */
+  /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
   familyEntriesPurged: number;
   /**
    * The failures the very next run could repair — an event's queue work, a reminder, a
@@ -73,7 +73,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now, settings);
 
   /*
-    Another person's form, kept for the address to confirm from its inbox (§NNN), deleted with the
+    Another person's form, kept for the address to confirm from its inbox (§446), deleted with the
     personal data it holds once the club's email-link window has passed unconfirmed. Event-blind,
     like the lapse above; a failure here is a row that lives until the next run, and it is counted
     as retryable so that run is the next ping, not the next hour (§334).
@@ -233,7 +233,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     errorCount += 1;
     retryableErrorCount += 1;
   }
-  // "A new event is on the calendar" (§NNN): once per event first published within the window, to
+  // "A new event is on the calendar" (§445): once per event first published within the window, to
   // the newsletter's subscribers of its topics. A publication wakes this job (§334), so the alert
   // goes minutes after the press; a failure is a late alert, not a failed run.
   let eventAlertsQueued = 0;

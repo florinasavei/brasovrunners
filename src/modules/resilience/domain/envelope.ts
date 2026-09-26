@@ -119,7 +119,7 @@ export const SNAPSHOT_MAX_AGE_HOURS = 12;
 
 /**
  * How old a snapshot may be while Neon has suspended the project for the rest of its billing
- * period (§NNN): a whole period and a day. Nothing is written while the database is suspended, so
+ * period (§447): a whole period and a day. Nothing is written while the database is suspended, so
  * the copy is the newest truth there is, and the page says so and until when.
  */
 export const SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS = 32 * 24;

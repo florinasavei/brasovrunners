@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import type { PublicAlbumSummary } from "@/modules/content/gallery/repository";
 
 /**
- * BR-REQ-054-01, §NNN: the public gallery lists event albums and free albums in one list. An
+ * BR-REQ-054-01, §434: the public gallery lists event albums and free albums in one list. An
  * event album's card names its event on a bold line; a free album's card has no such line and
  * is named by its date alone. Both cards keep the date and the photo count.
  */
@@ -38,7 +38,7 @@ function album(overrides: Partial<PublicAlbumSummary>): PublicAlbumSummary {
   };
 }
 
-describe("the gallery's album cards (§NNN)", () => {
+describe("the gallery's album cards (§434)", () => {
   it("names the event only on an event album's card, and dates and counts both", async () => {
     const html = renderToStaticMarkup(
       await AlbumGrid({

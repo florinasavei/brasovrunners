@@ -13,7 +13,7 @@ import { renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 
 /**
- * §NNN (amending §393) — the owner, 2026-09-26: "la declarațiile pentru alergările de grup trebuie
+ * §440 (amending §393) — the owner, 2026-09-26: "la declarațiile pentru alergările de grup trebuie
  * să configurez vârsta minimă, și să apară în declarație". The run's minimum is the event's own
  * (§329), stated through `{{minimumAge}}` in both surfaces and both languages, the sentence left out
  * whole at zero, and the signing page refuses a birth date under it by the race's one rule.
@@ -29,7 +29,7 @@ const TEXTS = [
 const SENTENCE = { ro: "Declar că am cel puțin {{minimumAge}}.", en: "I declare that I am at least {{minimumAge}} old." } as const;
 const paragraphs = (body: LegalDocumentBody) => body.sections.flatMap((section) => [...section.paragraphs]);
 
-describe("§NNN {{minimumAge}} in the group-run templates", () => {
+describe("§440 {{minimumAge}} in the group-run templates", () => {
   it("is a sentence of its own, right after the opening, in both surfaces and both languages", () => {
     for (const { name, body, locale } of TEXTS) {
       expect(paragraphs(body)[1], name).toBe(SENTENCE[locale]);
@@ -70,7 +70,7 @@ describe("§NNN {{minimumAge}} in the group-run templates", () => {
   });
 });
 
-describe("§NNN the signed PDF with and without the sentence", () => {
+describe("§440 the signed PDF with and without the sentence", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("draws the sentence at sixteen and leaves it out at zero, in both surfaces", async () => {
@@ -110,7 +110,7 @@ describe("§NNN the signed PDF with and without the sentence", () => {
   });
 });
 
-describe("§NNN the age gate: one rule, the race's", () => {
+describe("§440 the age gate: one rule, the race's", () => {
   // The run starts at 19:00 in Brașov on 7 October 2026. Twenty-one: only a minimum above the
   // adults-only text's eighteen binds anyone (`groupRunMinimumAge`).
   const run = { minAge: 21, startsAt: new Date("2026-10-07T16:00:00Z"), timezone: "Europe/Bucharest" };

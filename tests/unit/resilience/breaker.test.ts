@@ -10,11 +10,11 @@ import {
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 
 /**
- * §NNN — no storms. Once a public read finds the database away, this instance serves copies for a
+ * §447 — no storms. Once a public read finds the database away, this instance serves copies for a
  * while instead of meeting a refused connection on every page view; a query that is merely wrong
  * never opens it.
  */
-describe("§NNN which errors mean the database is away", () => {
+describe("§447 which errors mean the database is away", () => {
   it("reads the driver's socket codes, PostgreSQL's connection states and Neon's refusals, through Drizzle's wrapping", () => {
     expect(isDatabaseAwayError(Object.assign(new Error("connect ECONNREFUSED 10.0.0.1:5432"), { code: "ECONNREFUSED" }))).toBe(true);
     expect(isDatabaseAwayError(Object.assign(new Error("terminating connection"), { code: "57P01" }))).toBe(true);
@@ -40,7 +40,7 @@ describe("§NNN which errors mean the database is away", () => {
   });
 });
 
-describe("§NNN the breaker", () => {
+describe("§447 the breaker", () => {
   const away = () => Promise.reject(Object.assign(new Error("connect ECONNREFUSED"), { code: "ECONNREFUSED" }));
   let clock = 1_000_000;
   const now = () => clock;

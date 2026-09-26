@@ -7,7 +7,7 @@ import { PLAN_GRACE_MINUTES } from "@/modules/jobs/schedule";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the job pings under the month's budget, end to end through the route handlers, with the
+ * §447 — the job pings under the month's budget, end to end through the route handlers, with the
  * data cache in memory and a pool that refuses to open when a case says the database must not be
  * touched (`job-sleep.test.ts`'s harness). The budget reading is stubbed: it is Neon's API, and
  * `diagnostics/neon-budget.test.ts` covers how it is read.
@@ -108,9 +108,9 @@ beforeEach(async () => {
   vi.setSystemTime(NOW);
 });
 
-describe("§NNN a job ping under the month's budget", () => {
+describe("§447 a job ping under the month's budget", () => {
   /*
-    The platform's own estimate never stops a job (§NNN): an estimate that ran ahead of the
+    The platform's own estimate never stops a job (§447): an estimate that ran ahead of the
     counter Neon enforces would leave emails unsent for days while the database answered (§40).
     At 100% it only plans under red's two hours; the jobs rest on Neon's refusal alone.
   */

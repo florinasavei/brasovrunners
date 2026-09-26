@@ -557,7 +557,7 @@ export const eventFieldsSchema = z
      * Either an end on the wall clock (the old field, still accepted) or a duration in minutes
      * (`DECISIONS.md` §71: "instead of an end date I should just have a duration"). A week is
      * the ceiling; a typo's extra digit is refused, a multi-day camp is not. The editor asks it as
-     * hours and minutes and the action joins them into this one number (`duration.ts`, §NNN).
+     * hours and minutes and the action joins them into this one number (`duration.ts`, §433).
      */
     endsAtWallTime: z.string().trim().optional().default(""),
     durationMinutes: z

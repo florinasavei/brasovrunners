@@ -7,7 +7,7 @@ import { registrations } from "./registrations";
 
 /**
  * Another person's registration, typed into the public form on an address that is registered at
- * the event already, waiting for the address to confirm it from its inbox (§NNN, amending §389).
+ * the event already, waiting for the address to confirm it from its inbox (§446, amending §389).
  *
  * The owner, 2026-09-26: "înscrierea altei persoane trebuie să fie mai simplă: în mail să îți
  * afișez înscrierile și să zic «confirm că înscriu altă persoană»". Until then the second

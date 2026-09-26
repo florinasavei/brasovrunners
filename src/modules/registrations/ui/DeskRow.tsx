@@ -84,7 +84,7 @@ export default async function DeskRow({
    */
   minorSigns: Readonly<Record<Locale, boolean>>;
   /**
-   * Where the event's desk spares stand (§NNN), read once by the page: the next free one is
+   * Where the event's desk spares stand (§444), read once by the page: the next free one is
    * suggested in the number box of a runner who has no settled number — beside "Confirmă aici" and
    * in the number given by hand — so the volunteer hands the pre-printed bib and the screen agrees.
    * `out` leaves the box empty and says so; `none` (no spares reserved) is the row as it always was.
@@ -311,7 +311,7 @@ export default async function DeskRow({
               {hidden}
               <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                 {/*
-                  The bib handed with the paper (§NNN): the next desk spare, suggested, for a walk-in —
+                  The bib handed with the paper (§444): the next desk spare, suggested, for a walk-in —
                   a staff entry with no settled number and no printed bib (`handsSpareAtConfirm`) —
                   so they get a pre-printed spare, never a number nobody printed. An online runner's
                   provisional number, shown at the head of the row, stays theirs: no box, and the
@@ -336,7 +336,7 @@ export default async function DeskRow({
               </Stack>
             </ActionForm>
           )}
-          {/* Every spare given (§NNN): the box above suggests nothing, and this says why. */}
+          {/* Every spare given (§444): the box above suggests nothing, and this says why. */}
           {!readOnly && sparesOut && handsSpareAtConfirm(row) && (canConfirm || row.status === "CONFIRMED") && (
             <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }} data-testid="desk-spares-out">
               {t("desk.sparesOut")}
@@ -404,7 +404,7 @@ export default async function DeskRow({
                 >
                   {hidden}
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-                    {/* The next desk spare, suggested (§NNN): the bib the volunteer is about to hand. */}
+                    {/* The next desk spare, suggested (§444): the bib the volunteer is about to hand. */}
                     <RecallField
                       name="bibNumber"
                       type="number"

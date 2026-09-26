@@ -75,7 +75,7 @@ export const routing = defineRouting({
       en: "/registrations/list/[token]",
     },
     /**
-     * Another person on a registered address, confirmed from the inbox (§NNN, amending §389): the
+     * Another person on a registered address, confirmed from the inbox (§446, amending §389): the
      * page a `REGISTER_ANOTHER_PERSON` token opens — who the address holds, the person the form
      * named, one button that registers them.
      */
@@ -116,7 +116,7 @@ export const routing = defineRouting({
      */
     "/contact": "/contact",
     /**
-     * The newsletter's two link pages (§NNN): the double opt-in's confirmation, and the subscriber's
+     * The newsletter's two link pages (§445): the double opt-in's confirmation, and the subscriber's
      * own page — the topics and "unsubscribe" — that every newsletter links to. The secret in the
      * path, like every emailed link; nothing about the person.
      */
@@ -177,12 +177,12 @@ export const routing = defineRouting({
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
-    /** What a staff member's network lets through, and what to ask IT to allow (§NNN). */
+    /** What a staff member's network lets through, and what to ask IT to allow (§436). */
     "/admin/network": "/admin/network",
     /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91). */
     "/admin/emails": "/admin/emails",
     /**
-     * «Newsletter» (§NNN): the subscribers as numbers and the composer that writes to them — the
+     * «Newsletter» (§445): the subscribers as numbers and the composer that writes to them — the
      * backoffice's own entry, after «Emailuri» (the owner, 2026-09-26: "un meniu suplimentar în
      * backoffice cu «Newsletter»"). One spelling in both locales, a backoffice address.
      */

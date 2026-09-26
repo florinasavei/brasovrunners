@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * Another person on a registered address, confirmed from the inbox (§NNN, amending §389; the
+ * Another person on a registered address, confirmed from the inbox (§446, amending §389; the
  * owner, 2026-09-26: "în mail să îți afișez înscrierile și să zic «confirm că înscriu altă
  * persoană»").
  *

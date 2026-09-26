@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
       import("@/modules/notifications/render"),
       import("@/modules/notifications/outbox-sender"),
     ]);
-    // The club's road per group and the Reply-To it chose to show, read once for the batch (§NNN);
+    // The club's road per group and the Reply-To it chose to show, read once for the batch (§442);
     // Gmail's cap and pace from the database before each Gmail message.
     const { sender, route, roads, replyTo } = await createOutboxSender(db);
     // One renderer per batch: each event's words are read once for it (§373, email follow-up).

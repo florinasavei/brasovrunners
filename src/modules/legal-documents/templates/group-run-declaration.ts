@@ -40,7 +40,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * statement that they are 18 or older, and the signing page's consent box repeats it: a minor cannot
  * give this declaration alone, so the archive must not hold one that looks as if they did.
  *
- * **The run's own minimum age (§NNN).** The owner, 2026-09-26: the group run's minimum age is set
+ * **The run's own minimum age (§440).** The owner, 2026-09-26: the group run's minimum age is set
  * on the event and appears in the declaration. It is the event's `min_age` (§329), stated in its
  * own sentence through `{{minimumAge}}` ("16 ani" / "16 years", unit included), and the signing
  * page refuses a birth date under it on the run's day (`isUnderMinimumAge`, the race's rule). On a
@@ -56,14 +56,14 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 /** What both surfaces open with: who, which run, that it is optional and not a race. */
 const openingRo = [
   "Subsemnatul/a {{participant}}, declar pe propria răspundere că am împlinit 18 ani, că particip la alergarea de grup {{event}}, din data de {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
-  // The run's own minimum age (§329, §NNN), left out whole on a run with none (`dropsParagraph`).
+  // The run's own minimum age (§329, §440), left out whole on a run with none (`dropsParagraph`).
   "Declar că am cel puțin {{minimumAge}}.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",
 ];
 
 const openingEn = [
   "I, {{participant}}, declare on my own responsibility that I am 18 or older, that I take part in the group run {{event}}, on {{eventDate}}, starting from {{eventLocation}}, and that I have read its details on the event's page on the club's website.",
-  // The run's own minimum age (§329, §NNN), left out whole on a run with none (`dropsParagraph`).
+  // The run's own minimum age (§329, §440), left out whole on a run with none (`dropsParagraph`).
   "I declare that I am at least {{minimumAge}} old.",
   "I know that a group run is neither a competition nor a guided tour: it has no registration, no timing and no safety crew on the course, and the organiser* announces the time, the place and the route and runs together with the participants. Signing this declaration is optional and is not a condition of running with the group.",
 ];

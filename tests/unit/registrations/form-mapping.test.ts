@@ -94,7 +94,7 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
   });
 
   /**
-   * §NNN — citizenship is required on the public form (reversing §322's optional), optional for
+   * §432 — citizenship is required on the public form (reversing §322's optional), optional for
    * a staff entry; the city stays optional. Blank is absent, never an empty string.
    */
   it("refuses the public form without a citizenship, and a staff entry does not need one", () => {

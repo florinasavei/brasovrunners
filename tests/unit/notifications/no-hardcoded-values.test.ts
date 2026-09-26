@@ -202,7 +202,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.registrations.clubMemberLabel",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",
-          // The network check's report heading (§NNN).
+          // The network check's report heading (§436).
           "Network.page.report.heading",
           "Registration.clubMemberDeclared",
           "Registration.disclosure.race",

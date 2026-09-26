@@ -48,7 +48,7 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
     expect(outcome.after).toMatchObject({ computes: [{ id: "ep-rw-main", minCu: 0.25, maxCu: 0.5 }], defaults: { minCu: 0.25, maxCu: 0.5 }, quotaCuHours: 50 });
     // Read, write the project, write the compute, read back.
     expect(neon.calls.filter((call) => call.method === "PATCH")).toHaveLength(2);
-    // Two reads of the brakes, before and after; the operations log beside each is the meter's (§NNN).
+    // Two reads of the brakes, before and after; the operations log beside each is the meter's (§447).
     expect(neon.calls.filter((call) => call.method === "GET" && !call.path.endsWith("/operations"))).toHaveLength(4);
 
     const [row] = await audits();

@@ -18,7 +18,7 @@ type Props = {
 };
 
 /**
- * The composer's preview (§NNN, "previewed" in the brief): two buttons — the Romanian subscriber's
+ * The composer's preview (§445, "previewed" in the brief): two buttons — the Romanian subscriber's
  * copy, the English one — that ask the server to render the four boxes as they stand through the
  * template the outbox sends with, and show it sandboxed like every `/admin/emails` preview (§91).
  * It reads the boxes of the form it sits in by name, so the composer stays a Server Component and

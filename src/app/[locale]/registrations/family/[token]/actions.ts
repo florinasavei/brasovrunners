@@ -12,7 +12,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const NAMED_REFUSALS = [ALREADY_ON_ADDRESS, ADDRESS_AT_CAP, "fitnessAcknowledged"] as const;
 
 /**
- * The press on the confirmation page (§NNN, amending §389): the token spent, the other person
+ * The press on the confirmation page (§446, amending §389): the token spent, the other person
  * registered from the kept form and the address confirmed, in one transaction
  * (`family-confirm.ts`). Lands on the same page:
  *

@@ -27,7 +27,7 @@ import { LanguageTabs } from "./TextBoxes";
 /**
  * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
  * route's pills in the facts and, further down, the route section under `#route` (§387). The
- * group run's declaration offer (§393) was here; since §NNN it is under «Regulamentul», with the
+ * group run's declaration offer (§393) was here; since §448 it is under «Regulamentul», with the
  * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
@@ -178,9 +178,9 @@ export default async function CourseBox({
           />
           <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
-        {/* The group run's optional self-declaration (§393) is under «Regulamentul» since §NNN
+        {/* The group run's optional self-declaration (§393) is under «Regulamentul» since §448
             (`DeclarationCard`): it still follows the surface chosen here. */}
-        {/* The group run's minimum age (§329, §NNN), beside the declaration it is stated in: the
+        {/* The group run's minimum age (§329, §440), beside the declaration it is stated in: the
             event's own `min_age`, which the registration card holds for a race and hides for a group
             run (§111). Its own name, so the hidden race box cannot answer for it — the reader picks
             this one for a group run (`admin/actions.ts`). */}

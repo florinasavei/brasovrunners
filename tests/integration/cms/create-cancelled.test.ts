@@ -9,7 +9,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-01 — an event created already cancelled, or already over (`DECISIONS.md` §NNN).
+ * BR-REQ-050-01 — an event created already cancelled, or already over (`DECISIONS.md` §448).
  *
  * The owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start" — an event
  * called off before the club recorded it (copied from Facebook for the record, say). The create
@@ -53,7 +53,7 @@ const FIELDS = {
 
 const REASON = { ro: "Organizatorul a anulat cursa.", en: "The organizer called the race off." };
 
-describe("BR-REQ-050-01 an event created cancelled or completed (§NNN)", () => {
+describe("BR-REQ-050-01 an event created cancelled or completed (§448)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

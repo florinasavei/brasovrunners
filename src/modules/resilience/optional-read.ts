@@ -2,7 +2,7 @@ import { unstable_rethrow } from "next/navigation";
 import { isDatabaseAwayError } from "./domain/database-away";
 
 /**
- * A read a page can do without while the database is away (§NNN): its answer, or `whileAway` when
+ * A read a page can do without while the database is away (§447): its answer, or `whileAway` when
  * the database is away — an outage, Neon's quota refusal, or a red month's cache miss with no copy
  * (`ColdMissError`). Any other error is a bug and still throws, and Next's own throws (`notFound`,
  * `redirect`) pass straight through.

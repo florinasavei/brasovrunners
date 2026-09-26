@@ -10,7 +10,7 @@ import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { clubFactsFromEnv, fillClubFacts } from "@/modules/legal-documents/templates/club-facts";
 
 /**
- * §NNN — «Adresa de contact afișată»: the mailbox on the Mailgun domain (the default, from the
+ * §442 — «Adresa de contact afișată»: the mailbox on the Mailgun domain (the default, from the
  * environment), the club's Gmail, or both; one list shown on the site, written into the legal
  * prefill and set as every email's Reply-To, while the sender stays on the Mailgun domain.
  */
@@ -94,7 +94,7 @@ describe("the Reply-To every email carries", () => {
       EMAIL_FROM_ADDRESS: undefined,
       EMAIL_FROM_NAME: "Club",
       EMAIL_REPLY_TO: MAILBOX,
-      // No Gmail account: every message takes Mailgun's road (§NNN, the transport setting).
+      // No Gmail account: every message takes Mailgun's road (§443, the transport setting).
       CONTACT_SMTP_HOST: "smtp.gmail.com",
       CONTACT_SMTP_PORT: 465,
       CONTACT_SMTP_USER: undefined,

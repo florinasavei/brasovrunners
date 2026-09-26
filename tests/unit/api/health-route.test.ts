@@ -178,7 +178,7 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
 
 /**
  * The Neon project's monthly compute-time quota (§335): once this period's spend turns the month's
- * budget red (85% of it by default, §NNN), health degrades before Neon suspends the database at 100% — the club's one warning
+ * budget red (85% of it by default, §447), health degrades before Neon suspends the database at 100% — the club's one warning
  * through a channel that still works once email is among what has stopped.
  *
  * `checkNeonQuotaHealth` is mocked here (it is unit-tested on its own account against a fake
@@ -286,11 +286,11 @@ describe("DECISIONS.md §98, §340 /api/health asks the database on every call",
 });
 
 /**
- * §NNN — the domain's renewal. Thirty days or fewer before the expiry, or past it, the answer is
+ * §435 — the domain's renewal. Thirty days or fewer before the expiry, or past it, the answer is
  * `degraded` and a 503, so the monitor that watches this endpoint tells the owner in time. The
  * arithmetic is `diagnostics/domain-renewal.test.ts`; these assert what the route does with it.
  */
-describe("§NNN /api/health warns 30 days before the domain expires", () => {
+describe("§435 /api/health warns 30 days before the domain expires", () => {
   it("stays ok and 200 with more than 30 days left, and publishes the day", async () => {
     domainRenewal.mockReturnValue({ status: "soon", expiresOn: "2027-09-16", daysLeft: 45 });
     const response = await GET();

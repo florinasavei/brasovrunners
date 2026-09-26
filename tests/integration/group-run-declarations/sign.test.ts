@@ -133,7 +133,7 @@ async function input(eventId: string, overrides: Partial<GroupRunSigningInput> =
     accepted: true,
     typedName: "Ana Popescu",
     idDocument: ID,
-    // The run's minimum age is asked at the door since §NNN (the column's default fourteen).
+    // The run's minimum age is asked at the door since §440 (the column's default fourteen).
     birthDate: "1990-05-17",
     email: "ana@example.ro",
     locale: "ro",
@@ -436,11 +436,11 @@ describe("§393 retention: the declaration goes seven days after the run", () =>
 });
 
 /**
- * §NNN (amending §393) — the run's own minimum age: the event's `min_age` (§329), stated in the
+ * §440 (amending §393) — the run's own minimum age: the event's `min_age` (§329), stated in the
  * declaration through `{{minimumAge}}` and asked at the signing page's door by the race's rule
  * (`isUnderMinimumAge`), on the run's day in the run's zone. The run starts on 7 October 2026.
  */
-describe("§NNN a group run's minimum age at the signing door", () => {
+describe("§440 a group run's minimum age at the signing door", () => {
   it("refuses a signer who turns twenty-one the day after the run, naming the birth date and the age, and writes nothing", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun({ minAge: 21 });

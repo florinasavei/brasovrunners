@@ -54,7 +54,7 @@ import SiteNav from "./SiteNav";
  */
 async function navigationPages(locale: Locale) {
   try {
-    // With its last good copy behind it (§NNN): an outage keeps the menu the site had rather
+    // With its last good copy behind it (§447): an outage keeps the menu the site had rather
     // than dropping the standing pages from every page's header.
     return (await readWithLastGood(`nav:pages:${locale}`, () => cachedPublishedPages(locale))).value;
   } catch {
@@ -125,7 +125,7 @@ export default async function SiteHeader() {
     Boolean(env.EMAIL_REPLY_TO) ||
     contactFormReaches(env, null) ||
     (await cachedContactFormReaches()) ||
-    // The club's Gmail alone is an address to write to as well (§NNN).
+    // The club's Gmail alone is an address to write to as well (§442).
     (await cachedShownContactAddresses()).length > 0;
 
   return (

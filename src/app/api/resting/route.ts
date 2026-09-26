@@ -3,7 +3,7 @@ import { routing } from "@/i18n/routing";
 import { RESTING_RETRY_SECONDS, safeBackPath } from "@/modules/resilience/domain/resting-page";
 
 /**
- * The short resting page (§NNN) — «Pagina se reîncarcă în câteva minute».
+ * The short resting page (§447) — «Pagina se reîncarcă în câteva minute».
  *
  * Where a public page sends its reader while the month's budget is red, when its read missed the
  * data cache and no last good copy stood behind it: the database was not asked, on purpose, and

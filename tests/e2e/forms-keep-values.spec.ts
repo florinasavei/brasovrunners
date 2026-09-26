@@ -131,7 +131,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
   §315 and the editor's boxes (§350): a refusal whose field sits in a card three folds deep. An
   internal registration needs an approved declaration — a rule only the server can judge (the
   select has no `required`: the mode decides) — and the declaration is in "Regulamentul" ›
-  "Declarația pe propria răspundere" since §NNN, both shut on arrival. The refusal must open both,
+  "Declarația pe propria răspundere" since §448, both shut on arrival. The refusal must open both,
   name the card in its summary, and keep everything typed.
 */
 test.describe("§315 a refusal inside a closed card opens it", () => {
@@ -178,11 +178,11 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 
 /*
   §406: the course and the links are boxes of their own again (§358 had them inside "Ce fel de
-  eveniment"), each where the page draws it; the status is a card inside the first box (§NNN). A link's label in one language only is a
+  eveniment"), each where the page draws it; the status is a card inside the first box (§448). A link's label in one language only is a
   refusal only the server makes (§352, both or neither), and it names the empty box — inside
   "Linkuri și fișiere". The box is shut before the press, so the refusal is what has to open it,
   and every box keeps what was typed. On the way, the create page's status card: the editor's own
-  select, at "Programat" (§NNN).
+  select, at "Programat" (§448).
 */
 test.describe("§406 a refusal inside the links box opens it", () => {
   // Built from parts: no hostname literal (`AGENTS.md` §8).
@@ -195,7 +195,7 @@ test.describe("§406 a refusal inside the links box opens it", () => {
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    // The status card is on the create page too, inside the first box (§NNN), so the two pages
+    // The status card is on the create page too, inside the first box (§448), so the two pages
     // look the same — the same select, at "Programat", and no cancellation block until "Anulat".
     const status = await openEditorBox(page, "Starea evenimentului");
     await expect(editorBox(page, "Ce fel de eveniment")).toHaveAttribute("open", "");

@@ -58,7 +58,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
   };
 });
 
-// «Adresa de contact afișată» (§NNN): the list the footer reads, the environment's mailbox by
+// «Adresa de contact afișată» (§442): the list the footer reads, the environment's mailbox by
 // default; one test switches it to "both" to see the Gmail first and «sau» between them.
 let shownAddresses: string[] = ["contact@example.org"];
 vi.mock("@/modules/public-cache/reads", () => ({
@@ -386,7 +386,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(markup.split("contact@example.org").length - 1, "the address once in the footer, as the mail link").toBe(2);
   });
 
-  it("shows the club's Gmail and the mailbox, «… sau …», when the club chose both (§NNN)", async () => {
+  it("shows the club's Gmail and the mailbox, «… sau …», when the club chose both (§442)", async () => {
     shownAddresses = ["club@gmail.example.test", "contact@example.org"];
     try {
       const markup = markupOnly(await renderFooter());

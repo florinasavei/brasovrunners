@@ -243,7 +243,7 @@ export async function consumeAndSignDeclaration(
 }
 
 /**
- * Another person on a registered address, confirmed from the inbox (§NNN, amending §389): the page
+ * Another person on a registered address, confirmed from the inbox (§446, amending §389): the page
  * behind the emailed button reads the link (`readFamilyEntryLink`, one throttled attempt, a
  * read-only transaction — GET never mutates) and the press spends it (`confirmFamilyEntry`, the
  * registration created and the address confirmed in the same transaction). Both live in

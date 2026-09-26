@@ -4,7 +4,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 /*
   What `DateField` needs from a picker (`DECISIONS.md` §345): when it takes over from the
   scriptless box, and how it behaves like the native input it replaced in front of the rest of
-  the form. `TimeField` no longer shares this — since §400 and §NNN it is a typed 24-hour text
+  the form. `TimeField` no longer shares this — since §400 and §439 it is a typed 24-hour text
   box, with no island to swap in.
 */
 

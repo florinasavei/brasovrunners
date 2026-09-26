@@ -1,5 +1,5 @@
 /**
- * A save that a corporate network refused, sent again as a plain browser form (§NNN).
+ * A save that a corporate network refused, sent again as a plain browser form (§436).
  *
  * The owner, 2026-09-26: "Amalia is still having trouble on her Siemens laptop, but just on some
  * pages, performing some actions in the back-office like saving stuff". Her pages load; her saves
@@ -332,7 +332,7 @@ export function forgetSubmission(): void {
 }
 
 /**
- * Whether the admin boundary takes an error for a blocked save (§NNN, the review's second
+ * Whether the admin boundary takes an error for a blocked save (§436, the review's second
  * finding). The boundary sees every client render error in the backoffice, so the error alone is
  * not enough: there must be a press the guard remembered within `RECENT_PRESS_MS`, and the error
  * must be one of the transport's own (`transportFailureOf` — the browser's fetch-failure words or

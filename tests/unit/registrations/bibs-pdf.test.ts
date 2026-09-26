@@ -264,7 +264,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
   });
 
   /**
-   * §NNN — a desk spare: the number, and an empty line where the name goes for the marker at the
+   * §444 — a desk spare: the number, and an empty line where the name goes for the marker at the
    * desk. Drawn in the name's own strip, centred, at the name's baseline, and nowhere when the
    * club prints no names at all.
    */

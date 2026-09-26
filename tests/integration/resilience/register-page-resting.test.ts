@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, finding (2) of the fix round on `feat/neon-budget-governor`: the registration page while
+ * §447, finding (2) of the fix round on `feat/neon-budget-governor`: the registration page while
  * the database is away. It read the event and the bot-check key straight from the database, so a
  * visitor met the error page instead of the resting notice the brief asked for («forms show the
  * notice and lose nothing»). Now the event comes with its last good copy behind it, and while the
@@ -124,7 +124,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the registration page while the database is away", () => {
+describe("§447 the registration page while the database is away", () => {
   it("serves the event's last good copy with the resting notice and the form disabled, reading nothing else", async () => {
     // A visit while the database answered keeps the copy.
     const live = await render();

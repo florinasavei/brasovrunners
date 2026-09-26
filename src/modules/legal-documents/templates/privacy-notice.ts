@@ -32,7 +32,7 @@
  * force names it (`describesListStates`), the way §330's declaration switches the minor's
  * signature on.
  *
- * `{{newsletterTopics}}` in section 5 is the same two-in-one for the newsletter (§NNN): the topics
+ * `{{newsletterTopics}}` in section 5 is the same two-in-one for the newsletter (§445): the topics
  * the contact page's pop-up offers, filled from the catalogue when the notice is shown, and the
  * switch — the pop-up appears, and the service takes an address, only while the notice in force in
  * every language names it (`describesNewsletter`). Section 7 carries the subscriber's retention.

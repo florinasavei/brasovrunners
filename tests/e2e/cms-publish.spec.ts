@@ -117,7 +117,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     // The cost, the links and the public list are boxes of their own since §406, where the page
     // draws them, and for this reader each is its heading and its line, nothing to open, the
     // sentence said once above (§358). The status is not a card for this reader: the first box's
-    // line says it beside the type (§NNN). The course keeps a fold: its route description is words,
+    // line says it beside the type (§448). The course keeps a fold: its route description is words,
     // and the words are theirs (§387).
     await expect(kind.locator(":scope > summary")).toContainText("·");
     await expect(page.locator("#box-status")).toHaveCount(0);
@@ -452,11 +452,11 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 });
 
 /*
-  §NNN — the owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". The
+  §448 — the owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". The
   create page's status card is the editor's select: "Anulat" asks why in both languages and has no
   "tell them" box (nobody is registered), and the event goes live saying it is cancelled.
 */
-test.describe("§NNN an event created already cancelled", () => {
+test.describe("§448 an event created already cancelled", () => {
   test("creates and publishes it as Anulat, with its reason, and the page says it is cancelled", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `deja-anulat-${suffix}`;
@@ -906,7 +906,7 @@ test.describe("BR-REQ-050-02 a saved programme row reaches the public page and t
   unnamed input carries as its value ("30.09.2027") beside the hidden one the form posts
   ("2027-09-30").
 
-  The time box is a typed text box since §NNN (the browser's own time control of §400 drew
+  The time box is a typed text box since §439 (the browser's own time control of §400 drew
   "07:00 PM" on an English-language browser), so what it shows is its value: asserting the value
   "19:00" on a text box asserts the display and the post at once.
 */
@@ -928,7 +928,7 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
     await fillDateField(page, "Începutul evenimentului", "2027-09-30");
     await fillTimeField(page, "Ora", "19:00");
     // Typed by hand, key by key, the box keeps every keystroke as typed — no colon of its own
-    // (the review of §NNN: an auto-colon made «19:00» into «19::0») — and reads «1930» as 19:30
+    // (the review of §439: an auto-colon made «19:00» into «19::0») — and reads «1930» as 19:30
     // on leaving it.
     const timeBox = field("event.startsAtTime");
     await timeBox.fill("");
@@ -959,7 +959,7 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
       // What the form posts is still the service's shape, untouched by what either box shows.
       await expect(field("event.startsAtDate")).toHaveValue("2027-09-30");
       await expect(field("event.startsAtTime")).toHaveValue("19:00");
-      // A text box shows exactly its value: 19:00, never the browser's "07:00 PM" (§NNN).
+      // A text box shows exactly its value: 19:00, never the browser's "07:00 PM" (§439).
       await expect(field("event.startsAtTime")).toHaveAttribute("type", "text");
     };
 

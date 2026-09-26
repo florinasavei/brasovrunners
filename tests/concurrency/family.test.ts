@@ -116,7 +116,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
     return { id: event.id, eventStatus: event.eventStatus, registrationMode: "INTERNAL", startsAt: event.startsAt, registrationOpensAt: null, registrationClosesAt: null, capacity: event.capacity, raceId: null, publishedAt: NOW };
   }
 
-  // Each person a birth date of their own (§NNN): a different person differs in both facts.
+  // Each person a birth date of their own (§446): a different person differs in both facts.
   const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Maria: "1990-07-11", Ion: "1987-02-14", Dan: "1988-05-20", Eva: "1991-11-30", Radu: "1989-09-09" };
   const submission = (email: string, firstName: string) => ({
     firstName,
@@ -189,7 +189,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
     expect(rows).toHaveLength(2);
   });
 
-  it("the emailed confirmations pressed together cannot pass the club's limit per address (§NNN)", async () => {
+  it("the emailed confirmations pressed together cannot pass the club's limit per address (§446)", async () => {
     // The contract release, as in the case above (it has run by now whatever the database was).
     expect(await familyRegistrationOpen(db)).toBe(true);
     await db

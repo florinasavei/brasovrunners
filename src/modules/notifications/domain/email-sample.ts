@@ -140,7 +140,7 @@ export type EmailSampleValues = {
    */
   organizerSubject: string;
   organizerBody: string;
-  /** A sample newsletter (§NNN), written per send like the organizer's message, so its card previews one. */
+  /** A sample newsletter (§445), written per send like the organizer's message, so its card previews one. */
   newsletterSubject: string;
   newsletterBody: string;
 };
@@ -224,7 +224,7 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
 export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
 
 /**
- * The preview's family on one address (§NNN): who the sample address holds — the sample runner, as
+ * The preview's family on one address (§446): who the sample address holds — the sample runner, as
  * the email names a registered person, first name and initial — and the person the form named.
  * Machinery lines of the message, never fields of the closed set: no club text can hold them.
  */

@@ -107,7 +107,7 @@ describe("BR-REQ-090-07 the database's consumption", () => {
  * that is total, and the one thing the club cannot be emailed about once it has happened.
  *
  * This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the
- * quota case only (`DECISIONS.md` §335); the plan half of that criterion is unchanged. Since §NNN
+ * quota case only (`DECISIONS.md` §335); the plan half of that criterion is unchanged. Since §447
  * the answer also names the month's budget level, and the spend is the meter's.
  */
 describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for the monthly compute quota", () => {

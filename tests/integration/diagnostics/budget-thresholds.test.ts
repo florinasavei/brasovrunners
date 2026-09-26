@@ -6,7 +6,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the two shares of the Neon quota that turn the month's budget amber and red: the
+ * §447 — the two shares of the Neon quota that turn the month's budget amber and red: the
  * Administrator's, asserted on the server, audited from and to, a value this code cannot read
  * falling back to the defaults (60 and 85), and red always after amber.
  */
@@ -43,7 +43,7 @@ async function refusal(promise: Promise<unknown>): Promise<string> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN the budget thresholds", () => {
+describe("§447 the budget thresholds", () => {
   it("are 60 and 85 when nobody has set them, and when the value cannot be read", async () => {
     expect(await readBudgetThresholds(db)).toEqual({ amberPercent: 60, redPercent: 85, updatedAt: null });
     await db.insert(platformSettings).values({ key: BUDGET_THRESHOLDS_SETTING_KEY, value: { amberPercent: 90, redPercent: 50 }, updatedAt: NOW });

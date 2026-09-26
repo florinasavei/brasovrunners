@@ -178,7 +178,7 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
 }
 
 /**
- * "Regulamentul", and under its tabs the named card «Declarația pe propria răspundere» (§NNN): one
+ * "Regulamentul", and under its tabs the named card «Declarația pe propria răspundere» (§448): one
  * place for what a runner signs — a group run's optional self-declaration (§393) or a race's
  * declaration (§39) — because a declaration is read with the rules. The closed line says both:
  * «RO: completat · EN: completat · declarația v3». Opens itself while a saved event that registers

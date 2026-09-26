@@ -70,7 +70,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   // regression that asks for one under these texts would go unnoticed by a lenient check —
   // the field is asked exactly when the text names it, never otherwise.
   await expect(page.getByLabel(words.document, { exact: false })).toHaveCount(0);
-  // The run's own minimum age (§NNN): the editor's default fourteen binds nobody the adults-only
+  // The run's own minimum age (§440): the editor's default fourteen binds nobody the adults-only
   // text does not already bind, so the sentence is left out and no birth date is asked.
   await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "Declar că am cel puțin" : "I declare that I am at least");
   await expect(page.locator('input[name="birthDate"]')).toHaveCount(0);
@@ -217,7 +217,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await languageTab(page, "title", "en").click();
     await excerpt("en", "Up the mountain.");
 
-    // «Regulamentul» › «Declarația pe propria răspundere» (§NNN): the declaration box follows the
+    // «Regulamentul» › «Declarația pe propria răspundere» (§448): the declaration box follows the
     // surface chosen in «Traseul» — unticked while none is chosen.
     await openEditorBox(page, "Declarația pe propria răspundere");
     const box = page.getByRole("checkbox", { name: "Declarație opțională pe propria răspundere" });

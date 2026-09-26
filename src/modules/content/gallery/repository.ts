@@ -45,7 +45,7 @@ export type PublicAlbumSummary = {
   coverHeight: number | null;
   /**
    * The event the photos are from, titled in this locale, when the album is linked to one and
-   * that event is published here; null for a free album (§NNN) — which the listing names by
+   * that event is published here; null for a free album (§434) — which the listing names by
    * its date alone.
    */
   eventTitle: string | null;
@@ -94,7 +94,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     )
     .leftJoin(mediaAssets, eq(mediaAssets.id, galleryAlbums.coverMediaAssetId))
     .where(eq(galleryAlbums.editorialStatus, "PUBLISHED"))
-    // Newest first, both kinds in one list (§NNN): an event's album and a free one are ordered
+    // Newest first, both kinds in one list (§434): an event's album and a free one are ordered
     // by the day the photos were taken, never grouped apart; the id breaks a same-day tie so
     // the order does not change between two reads.
     .orderBy(desc(galleryAlbums.takenOn), desc(galleryAlbums.publishedAt), asc(galleryAlbums.id));
@@ -115,7 +115,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
 /**
  * The linked event's title in `locale`, only while that event is published there — a draft
  * event's name never reaches a public page through its album (BR-REQ-040-02). Null for a free
- * album (§NNN).
+ * album (§434).
  */
 function publishedEventTitle(locale: Locale) {
   return sql<string | null>`(
@@ -217,13 +217,13 @@ export type AlbumListRow = {
   takenOn: Date;
   title: string;
   photoCount: number;
-  /** The linked event, or null for a free album (§NNN). */
+  /** The linked event, or null for a free album (§434). */
   eventId: string | null;
   /** That event's title in the backoffice's locale, whatever its status; null when it has none there. */
   eventTitle: string | null;
 };
 
-/** Which of the backoffice list's two groups an album sits in (§NNN): linked to an event, or free. */
+/** Which of the backoffice list's two groups an album sits in (§434): linked to an event, or free. */
 export type AlbumKind = "event" | "free";
 
 export function albumKind(row: { eventId: string | null }): AlbumKind {

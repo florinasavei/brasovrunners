@@ -24,7 +24,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.goto("/ro/admin/gallery/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
-    // The event is optional (§NNN): left unchosen, the album is a free one.
+    // The event is optional (§434): left unchosen, the album is a free one.
     await expect(field("eventId")).toHaveValue("");
     await fillDateField(page, "Data fotografiilor", "2026-09-13");
     await field("translations.ro.title").fill(`Alergarea de duminică ${suffix}`);
@@ -43,7 +43,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     // Not publishable yet: no photo.
     await expect(page.getByText("Albumul nu are nicio fotografie")).toBeVisible();
 
-    // The quality beside the button (§414, four levels since §NNN): the recommendation until
+    // The quality beside the button (§414, four levels since §437): the recommendation until
     // somebody chooses, then the choice — a thumb's target, like every control here.
     const quality = page.getByTestId("image-quality");
     const normal = quality.getByRole("radio", { name: "Medie (recomandat)" });
@@ -60,9 +60,9 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await expect(page.getByText("1 fotografii încărcate.")).toBeVisible({ timeout: 20_000 });
     // What the photo became, in words: its size and the quality it was stored at.
     await expect(page.getByTestId("photo-stored")).toContainText("1600 × 1200 px, calitate mare");
-    // And the widest smaller copy, what a laptop at 2× loads (§NNN): 1280 under a 1600 master.
+    // And the widest smaller copy, what a laptop at 2× loads (§437): 1280 under a 1600 master.
     await expect(page.getByTestId("photo-stored")).toContainText("Cea mai mare copie micșorată: 1280 px lățime");
-    // And what was chosen, before it went up (§NNN): the file's own pixels and weight.
+    // And what was chosen, before it went up (§437): the file's own pixels and weight.
     await expect(page.getByTestId("photo-chosen")).toContainText("Fotografia aleasă: IMG_0042.jpg, 1600 × 1200 px");
     // Remembered for the session: the page comes back with the same choice.
     await page.reload();
@@ -77,7 +77,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
-    // A free album (§NNN): no event chosen, so the list puts it in its own group.
+    // A free album (§434): no event chosen, so the list puts it in its own group.
     await page.goto("/ro/admin/gallery");
     const free = page.getByRole("region", { name: /Albume libere/ });
     await expect(free.getByRole("link", { name: new RegExp(`Alergarea de duminică ${suffix}`) })).toBeVisible();

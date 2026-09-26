@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
  *
  * `canOpenTasks` (`modules/diagnostics/domain/task-panels.ts`, `DECISIONS.md` §397) is wider
  * than the old `canManageRegistrations` alone, since 2026-09-25: Tehnic may open this page too,
- * for the "Aplicația" panel, and since §NNN every role from the Redactor up, for the club's
+ * for the "Aplicația" panel, and since §438 every role from the Redactor up, for the club's
  * checklist «De făcut» — the page itself asserts which panel each role may reach. The volunteer
  * still meets a real 404 here.
  */

@@ -27,7 +27,7 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { consumeNewsletterToken, issueNewsletterToken, readNewsletterToken } from "./tokens";
 
 /**
- * The club's newsletter (§NNN; the owner, 2026-09-26: "the registration needs to be on the contact
+ * The club's newsletter (§445; the owner, 2026-09-26: "the registration needs to be on the contact
  * page, a button for a pop-up and people can opt in on what to receive"), built as §80 said a
  * newsletter would have to be: a message type, a consent, a manage and unsubscribe link, a
  * privacy-notice paragraph — on the outbox, under the plan's allowance.
@@ -50,7 +50,7 @@ const subscribeSchema = z.object({
   topics: z.array(z.string().max(40)).max(NEWSLETTER_TOPICS.length * 2),
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
-  /** The pop-up's one consent tick, naming the privacy notice (§NNN): the person's own act, required. */
+  /** The pop-up's one consent tick, naming the privacy notice (§445): the person's own act, required. */
   consent: z.literal(true),
 });
 
@@ -589,7 +589,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
       }
       if (recipients.length > 0) {
         await tx.update(newsletterSends).set({ recipients: recipients.length }).where(eq(newsletterSends.id, send.id));
-        // The club's one copy of the announcement, with the count (§NNN, as for a newsletter above).
+        // The club's one copy of the announcement, with the count (§445, as for a newsletter above).
         await enqueueBulkClubCopies(tx, {
           messageType: "NEW_EVENT_ALERT",
           eventId: event.id,

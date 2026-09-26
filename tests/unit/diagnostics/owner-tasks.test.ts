@@ -114,7 +114,7 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, staffCount: 2 }, "inviteStaff")).toBe("done");
   });
 
-  it("§NNN the domain's renewal: green, amber at 90 days, red at 30 and past, never blocking", () => {
+  it("§435 the domain's renewal: green, amber at 90 days, red at 30 and past, never blocking", () => {
     const row = (domainRenewal: OwnerTaskInputs["domainRenewal"]) =>
       ownerTasks({ ...LAUNCHED, domainRenewal }).find((task) => task.id === "domainRenewal");
     expect(row({ status: "ok", expiresOn: "2027-09-16", daysLeft: 91 })).toMatchObject({ state: "done", owner: "club" });
@@ -131,7 +131,7 @@ describe("owner tasks", () => {
     expect(ownerTasks(LAUNCHED).map((task) => task.id)).not.toContain("roDomain");
   });
 
-  it("§NNN the renewal row's sentences exist in both catalogues and fill the expiry", () => {
+  it("§435 the renewal row's sentences exist in both catalogues and fill the expiry", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.domainRenewal;
       for (const key of ["todo", "done", "expired"] as const) expect(item[key]).toContain("{domainExpiresOn}");

@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 /**
  * `roles`: whose section this is; the signed-in role's come first and open (§103). `key`: the one
  * section this page adds to, "family" (§389) — a last line while the flow is not switched on yet.
- * `tasks`: one job each, as numbered steps (§NNN) — "every task as numbered steps with the exact
+ * `tasks`: one job each, as numbered steps (§441) — "every task as numbered steps with the exact
  * button words", for the colleagues who run the backoffice while the owner is away.
  */
 type GuideTask = { title: string; steps: string[] };
@@ -101,7 +101,7 @@ export default async function GuidePage({ params }: Props) {
         <Link href={{ pathname: "/admin/emails", hash: "participant-emails" }}>{t("emails.link")}</Link>
       </Typography>
       {/*
-        Troubleshooting (§NNN): a save that fails only on an office laptop is the office network,
+        Troubleshooting (§436): a save that fails only on an office laptop is the office network,
         and the check names what to ask IT to allow.
       */}
       <Typography variant="body2" data-testid="guide-network">

@@ -115,7 +115,7 @@ export type EmailSender = {
  * it genuinely tries to reach a real inbox.
  */
 /**
- * The Gmail road, as the sender needs it for one batch (§NNN): the adapter (built on demand, like
+ * The Gmail road, as the sender needs it for one batch (§443): the adapter (built on demand, like
  * Mailgun's), the club's cap, pace and choice at the cap, whether Mailgun's spent allowance spills
  * over, and the ledger Gmail's usage is read from before every message — shared by every sender, so
  * the cap (in recipients, as Google counts them) and the pace hold across drains and instances.
@@ -161,7 +161,7 @@ export function createEmailSender(config: {
   allowlist: readonly string[];
   capture: EmailAdapter;
   live: () => EmailAdapter;
-  /** The club's Gmail (§NNN). Absent — local, test, a deployment without the account — every message takes Mailgun's road. */
+  /** The club's Gmail (§443). Absent — local, test, a deployment without the account — every message takes Mailgun's road. */
   gmail?: GmailRoad;
 }): EmailSender {
   const gmail = config.gmail;
@@ -192,7 +192,7 @@ export function createEmailSender(config: {
     const recipients = recipientsOf(message);
     const jitterMs = Math.floor(random() * gmailJitterCeilingMs(gmail.paceSeconds));
     /*
-      Read afresh before every message, never from what this sender counted (§NNN review): another
+      Read afresh before every message, never from what this sender counted (§443 review): another
       drain or instance may have sent a second ago, and an admission that fits the batch's waiting
       holds its slot for all of them.
     */
@@ -288,7 +288,7 @@ export function createEmailSender(config: {
       const outgoing: OutgoingEmail = { ...marked, ...copies };
 
       /*
-        The road (§NNN). The environment's decision above is untouched and comes first: a captured
+        The road (§443). The environment's decision above is untouched and comes first: a captured
         message is captured whichever road it would have taken, and the allowlist judges a Gmail
         message exactly as it judges a Mailgun one — QA reaches a stranger by neither.
 

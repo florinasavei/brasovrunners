@@ -41,7 +41,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     await submitRegistrationOrRefuse(form);
   } catch (error) {
     /*
-      The database is away (§NNN) — a compute that could not start, or Neon refusing on the month's
+      The database is away (§447) — a compute that could not start, or Neon refusing on the month's
       quota. Not a bug and nothing the person did: what they typed goes back with them in the
       draft cookie, and the form says so politely instead of the error page eating twenty fields.
       `redirect()` and `notFound()` throw too; they are not away-errors and pass straight through.

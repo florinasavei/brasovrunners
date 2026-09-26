@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * The subscriber's own page (§NNN): the link under every newsletter and every new-event alert.
+ * The subscriber's own page (§445): the link under every newsletter and every new-event alert.
  *
  * The GET shows the address and the topics as they stand, and changes nothing. Two forms: the
  * topics, saved as ticked; and "unsubscribe from everything", which deletes the subscription and

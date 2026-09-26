@@ -44,7 +44,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("10");
-    // The declaration is chosen under «Regulamentul» since §NNN.
+    // The declaration is chosen under «Regulamentul» since §448.
     await openEditorBox(page, "Declarația pe propria răspundere");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();

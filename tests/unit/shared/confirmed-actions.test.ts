@@ -63,11 +63,11 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
   assignBibNumbersAction: ["assignAction"],
-  // The desk's spares reserved by a print (§NNN): handed to the bib card's forms as `sparesAction`.
+  // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],
-  // The newsletter (§NNN): the send asks per topic, naming how many receive it; removing an
+  // The newsletter (§445): the send asks per topic, naming how many receive it; removing an
   // address at someone's request asks too, and cannot be undone.
   sendNewsletterAction: [],
   withdrawNewsletterAddressAction: [],
@@ -113,10 +113,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   revokeStaffAction: [],
   // Settings that face outward.
   updateEmailPlanAction: [],
-  // Mailgun or the club's Gmail, per group (§NNN): every email from now on takes the new road.
+  // Mailgun or the club's Gmail, per group (§443): every email from now on takes the new road.
   updateEmailTransportAction: [],
   updateContactRecipientsAction: [],
-  // What the site shows and every email's Reply-To (§NNN).
+  // What the site shows and every email's Reply-To (§442).
   updateShownContactAddressAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
@@ -125,14 +125,14 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateNeonPlanAction: [],
   updateBotCheckAction: [],
   updateJobCadenceAction: [],
-  // The month's budget thresholds (§NNN): how early the platform throttles itself.
+  // The month's budget thresholds (§447): how early the platform throttles itself.
   updateBudgetThresholdsAction: [],
   updateNeonLimitsAction: [],
   // "Termene" (§377): every hold, offer and link given from now on takes the new numbers.
   updateDeadlinesAction: [],
   // "Maxim de înscrieri pe o adresă" (§389): a limit every public submission meets from now on.
   updateAddressCapAction: [],
-  // A line of the club's checklist deleted (§NNN): gone for the whole team, with no undo.
+  // A line of the club's checklist deleted (§438): gone for the whole team, with no undo.
   deleteClubTodoAction: [],
 };
 
@@ -157,12 +157,12 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
   previewParticipantMessageAction: "a preview; sends nothing",
-  previewNewsletterAction: "the newsletter composer's preview (§NNN); sends nothing, stores nothing",
+  previewNewsletterAction: "the newsletter composer's preview (§445); sends nothing, stores nothing",
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",
-  probeSaveAction: "the network check's probe (§NNN): answers ok, changes nothing",
-  addClubTodoAction: "a line on the club's own checklist (§NNN): emails nobody, removed by a delete that asks",
+  probeSaveAction: "the network check's probe (§436): answers ok, changes nothing",
+  addClubTodoAction: "a line on the club's own checklist (§438): emails nobody, removed by a delete that asks",
   editClubTodoAction: "an editorial save of a checklist line, like a page's; its delete asks",
   setClubTodoDoneAction: "a tick on the club's checklist, undone by the same box — a dialog per tick would double the taps",
   moveClubTodoAction: "reorders the checklist, undone by moving back",

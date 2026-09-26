@@ -3881,7 +3881,7 @@
                 "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Condiții de participare și declarația»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
+                "«Condiții de participare»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]

@@ -98,7 +98,7 @@ function form(firstName: string, birthDate?: string): FormData {
     slug: SLUG,
     firstName,
     lastName: "Pop",
-    // Each person their own birth date (§NNN): a different person differs in both.
+    // Each person their own birth date (§446): a different person differs in both.
     birthDate: birthDate ?? BIRTH_DATES[firstName] ?? "1980-01-01",
     sex: "UNSPECIFIED",
     email: EMAIL,
@@ -133,7 +133,7 @@ async function press(firstName: string, birthDate?: string): Promise<string> {
   return JSON.stringify({ redirectTo, cookies });
 }
 
-/** Registrations already on the address, made through the same action and the emailed confirmation (§NNN). */
+/** Registrations already on the address, made through the same action and the emailed confirmation (§446). */
 async function registered(names: string[]) {
   const event = await createEvent();
   const { confirmFamilyEntry } = await import("@/modules/registrations/family-confirm");
@@ -190,7 +190,7 @@ describe("§389 §39 the public form answers the same whatever the address holds
     expect(await db.select().from(registrations)).toHaveLength(1);
   });
 
-  it("is the same response for a slip — the registered name with another birth date — which registers nobody (§NNN)", async () => {
+  it("is the same response for a slip — the registered name with another birth date — which registers nobody (§446)", async () => {
     await registered([]);
     const first = await press("Maria");
     const slip = await press("Maria", "2001-01-01");

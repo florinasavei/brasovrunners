@@ -1,5 +1,5 @@
 /**
- * The network check on `/admin/network` (§NNN): four things a staff member's browser has to reach,
+ * The network check on `/admin/network` (§436): four things a staff member's browser has to reach,
  * each tried from that browser, each with the one line to hand the company's IT.
  *
  * - `saves` — a Server Action call, the request every backoffice save sends with JavaScript on: a

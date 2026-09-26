@@ -72,7 +72,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageUploading: rt("imageUploading"),
     imageFailed: rt("imageFailed"),
     // The quality beside the upload and what the picture became (§414).
-    // Four levels since §NNN.
+    // Four levels since §437.
     imageQuality: {
       legend: rt("imageQualityLegend"),
       low: rt("imageQualityLow"),
@@ -87,7 +87,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       }),
     },
     imageChoose: rt("imageChoose"),
-    // Raw, with their placeholders: the island says the chosen file's pixels and weight (§NNN).
+    // Raw, with their placeholders: the island says the chosen file's pixels and weight (§437).
     imageChosen: {
       chosen: rt.raw("imageChosen") as string,
       sent: rt.raw("imageSent") as string,

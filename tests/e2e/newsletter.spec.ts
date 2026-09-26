@@ -4,13 +4,13 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 import { mintNewsletterLink, newsletterMessagesTo, newsletterSubscription, seedConfirmedSubscriber } from "./support/newsletter";
 
 /**
- * §NNN — the backoffice's «Newsletter» entry (the owner, 2026-09-26: "un meniu suplimentar în
+ * §445 — the backoffice's «Newsletter» entry (the owner, 2026-09-26: "un meniu suplimentar în
  * backoffice cu «Newsletter»"): numbers only, the topic chosen, both languages, the question that
  * names how many, and the send's banner and history line; `/admin/emails` keeps one line pointing
  * here; a role that may not send is offered no tab and gets a 404. Desktop only: one outbox, and
  * the history is the page's newest sends.
  */
-test.describe("§NNN the newsletter's own backoffice page", () => {
+test.describe("§445 the newsletter's own backoffice page", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one outbox and one history, shared by both projects");
   });
@@ -70,14 +70,14 @@ test.describe("§NNN the newsletter's own backoffice page", () => {
 });
 
 /**
- * §NNN — the newsletter, through the browser, at 320px and on a desktop: the button on the contact
+ * §445 — the newsletter, through the browser, at 320px and on a desktop: the button on the contact
  * page, the pop-up and its refusal, the "check your inbox" answer, the double opt-in's page and the
  * subscriber's own page with its two buttons. The seeded privacy notice is the platform's template,
  * which names `{{newsletterTopics}}`, so the page offers the pop-up. Its absence under a notice that
  * does not name it is proved on the real page in `tests/integration/newsletter/contact-page-gate.test.ts`:
  * here the notice is the shared database's, and the public cache (§333) would keep the old one.
  */
-test.describe("§NNN the newsletter pop-up on the contact page", () => {
+test.describe("§445 the newsletter pop-up on the contact page", () => {
   const address = () => `e2e-news-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
 
   test("opens a pop-up from a 44-pixel button, every topic a thumb's row, nothing wider than the phone", async ({ page }) => {

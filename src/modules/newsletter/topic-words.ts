@@ -4,7 +4,7 @@ import ro from "../../../messages/ro.json";
 import { NEWSLETTER_TOPICS } from "./domain/topics";
 
 /**
- * The topics' names outside a request (§NNN): for the privacy notice's `{{newsletterTopics}}`, the
+ * The topics' names outside a request (§445): for the privacy notice's `{{newsletterTopics}}`, the
  * emails the outbox renders and the legal editor's token legend, where no translator is at hand.
  *
  * Read from `Newsletter.topics` rather than typed again here, so the approved notice, the pop-up's

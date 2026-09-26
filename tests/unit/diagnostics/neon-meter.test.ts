@@ -4,7 +4,7 @@ import { forgetNeonConsumptionRefusals, NEON_CONSUMPTION_REFUSAL_MS, readNeonCon
 import { FAKE_PROJECT_ID, fakeNeon, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
- * BR-REQ-090-07 (§NNN) — the one reader: what Neon meters for the period, three ways.
+ * BR-REQ-090-07 (§447) — the one reader: what Neon meters for the period, three ways.
  *
  * The re-measure of 2026-09-26 found every screen reading the project row's `compute_time_seconds`,
  * frozen since 2026-09-24 (9.03 CU-hours shown against 16.48 metered on production), so §335's
@@ -15,7 +15,7 @@ const PERIOD_START = new Date("2026-09-22T07:00:00.000Z");
 const NOW = new Date("2026-09-26T07:30:00.000Z");
 const op = (action: string, at: string, status = "finished") => ({ action, status, created_at: at, updated_at: at });
 
-describe("§NNN awake time from the operations log", () => {
+describe("§447 awake time from the operations log", () => {
   it("adds up every start-to-suspend inside the period, and counts a compute still up to now", () => {
     const operations = [
       op("start_compute", "2026-09-26T07:00:00Z"), // still up at NOW: 30 minutes
@@ -50,7 +50,7 @@ describe("§NNN awake time from the operations log", () => {
   });
 });
 
-describe("§NNN the metered figure from the consumption endpoint", () => {
+describe("§447 the metered figure from the consumption endpoint", () => {
   const body = {
     projects: [
       {
@@ -82,7 +82,7 @@ describe("§NNN the metered figure from the consumption endpoint", () => {
   });
 });
 
-describe("§NNN awake time per compute", () => {
+describe("§447 awake time per compute", () => {
   it("sums each endpoint's own timeline, so two computes awake at once are not merged into one", () => {
     const at = (iso: string, action: string, endpoint: string) => ({ ...op(action, iso), endpoint_id: endpoint });
     const operations = [
@@ -96,7 +96,7 @@ describe("§NNN awake time per compute", () => {
   });
 });
 
-describe("§NNN which reading the pages use", () => {
+describe("§447 which reading the pages use", () => {
   it("takes the larger of the two live sources that answered, and says which", () => {
     // Production on 2026-09-26: the frozen counter at 9.03 against 16.48 metered.
     expect(pickMeterReading({ metered: 16.48, operations: 16.2, legacy: 9.03 })).toEqual({ usedCuHours: 16.48, source: "metered" });
@@ -115,7 +115,7 @@ describe("§NNN which reading the pages use", () => {
   });
 });
 
-describe("§NNN readNeonMeter — the one reader", () => {
+describe("§447 readNeonMeter — the one reader", () => {
   beforeEach(() => forgetNeonConsumptionRefusals());
 
   it("remembers a project-scoped key's refusal of the consumption endpoint, for the shared reading only", async () => {

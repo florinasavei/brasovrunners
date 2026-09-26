@@ -72,7 +72,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // link to the form for the other person (the address fixed) — or, at the club's limit of
   // registrations per address, the sentence that says so and no link.
   "REGISTER_ANOTHER_PERSON",
-  // The newsletter (§NNN), three types, none about a registration and none with a participant:
+  // The newsletter (§445), three types, none about a registration and none with a participant:
   // the double opt-in's one message to an address left in the contact page's pop-up — the link
   // that confirms the subscription, or, for an address already subscribed, the link to its own
   // page; nothing else is ever sent to an unconfirmed address.
@@ -153,7 +153,7 @@ export const emailOutbox = pgTable(
 
     providerMessageId: text("provider_message_id"),
     /**
-     * Which road the message left by (§NNN): `mailgun`, or `gmail` — the club's own account over
+     * Which road the message left by (§443): `mailgun`, or `gmail` — the club's own account over
      * SMTP. Written with `sent_at`; null on a row not sent yet and on every row sent before the
      * column existed, and a null is read as Mailgun, which is what carried all of those. It is
      * what the Mailgun allowance is counted from (`volume.ts`) and what Gmail's own daily cap is
@@ -161,7 +161,7 @@ export const emailOutbox = pgTable(
      */
     transport: text("transport", { enum: ["mailgun", "gmail"] }),
     /**
-     * How many recipients the send actually reached (§NNN): the address plus every copy the
+     * How many recipients the send actually reached (§443): the address plus every copy the
      * environment let through, and 0 for a captured message that reached nobody. Google counts
      * recipients, not messages, so Gmail's rolling-day cap sums this; null on rows sent before it.
      */
@@ -198,7 +198,7 @@ export const emailOutbox = pgTable(
       t.createdAt,
     ),
     index("email_outbox_registration_created_idx").on(t.registrationId, t.createdAt),
-    // Gmail's rolling day and its last send, read before every Gmail message (§NNN review).
+    // Gmail's rolling day and its last send, read before every Gmail message (§443 review).
     index("email_outbox_transport_sent_idx").on(t.transport, t.sentAt),
   ],
 );

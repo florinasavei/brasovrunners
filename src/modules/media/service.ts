@@ -20,7 +20,7 @@ export type StoredImageFacts = {
   bytes: number;
   files: number;
   totalBytes: number;
-  /** The widest rung below the master (§NNN): what a laptop at 2× loads; `null` without one. */
+  /** The widest rung below the master (§437): what a laptop at 2× loads; `null` without one. */
   topRung: { width: number; bytes: number } | null;
 };
 
@@ -111,7 +111,7 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
 }
 
 /**
- * The small picture of the newest stored asset, for the network check (§NNN): a real object on the
+ * The small picture of the newest stored asset, for the network check (§436): a real object on the
  * host pictures are read from, so a browser that can load it can load the gallery. `null` when no
  * picture is stored yet, or the store is not configured here.
  */

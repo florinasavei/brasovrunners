@@ -23,13 +23,13 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
   const inBox = (box: string, label: string) => `${t(`editor.boxes.${box}.title`)} › ${label}`;
-  // The status is a card inside the first box since §NNN: its fields are named by both.
+  // The status is a card inside the first box since §448: its fields are named by both.
   const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
 
   const labels: Record<string, string> = {
     "event.type": inBox("kind", t("editor.type")),
     "event.surface": inBox("course", t("editor.surface")),
-    // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§NNN).
+    // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§448).
     "event.eventStatus": inStatus(t("editor.boxes.status.completedRefused")),
     "event.timezone": inBox("when", t("editor.timezone")),
     "event.startsAtDate": inBox("when", t("editor.startsAt")),
@@ -38,7 +38,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.endsAtTime": inBox("when", t("editor.endsAt")),
     "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
     "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
-    // «Durata» as hours and minutes (§NNN); a refusal of the total names the hours box.
+    // «Durata» as hours and minutes (§433); a refusal of the total names the hours box.
     "event.durationHours": inBox("when", `${t("editor.duration")} › ${t("editor.durationHours")}`),
     "event.durationMinutesPart": inBox("when", `${t("editor.duration")} › ${t("editor.durationMinutesPart")}`),
     // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.

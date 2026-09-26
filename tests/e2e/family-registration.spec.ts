@@ -12,7 +12,7 @@ import { confirmDialog } from "./support/confirm";
 import { openFold } from "./support/fold";
 
 /**
- * §389, amended by §NNN — a family on one address, confirmed from the inbox (BR-REQ-032-03,
+ * §389, amended by §446 — a family on one address, confirmed from the inbox (BR-REQ-032-03,
  * BR-REQ-031-01 criterion 3, BR-REQ-036-02). The owner, 2026-09-26: "în mail să îți afișez
  * înscrierile și să zic «confirm că înscriu altă persoană», dar trebuie să verific că numele e
  * diferit (ignorând whitespace) și data nașterii e complet diferită".
@@ -28,7 +28,7 @@ import { openFold } from "./support/fold";
  * only): its real link, its real words. The whole journey needs the contract release
  * (`family-gate.ts`); before it, the first case holds as the older behaviour and the rest skip.
  */
-test.describe("§389 §NNN a family on one address", () => {
+test.describe("§389 §446 a family on one address", () => {
   test.describe.configure({ timeout: 180_000 });
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
@@ -246,7 +246,7 @@ test.describe("§389 the limit per address, set and stated", () => {
 
     await page.goto("/ro/admin/guide");
     // The section by its own summary: other sections name it in their steps, and its jobs are
-    // folds of their own inside it (§NNN).
+    // folds of their own inside it (§441).
     const summary = page.locator("summary", { hasText: "O familie pe o singură adresă" });
     const section = summary.locator("xpath=..");
     await summary.click();

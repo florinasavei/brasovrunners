@@ -37,7 +37,7 @@ type Props = {
 };
 
 /**
- * "Prin ce pleacă emailurile" (§NNN): per group of messages, Mailgun or the club's Gmail; Gmail's
+ * "Prin ce pleacă emailurile" (§443): per group of messages, Mailgun or the club's Gmail; Gmail's
  * cap per 24 hours and its pause between messages; whether Mailgun's spent day spills over into
  * Gmail. A Server Component with one form, beside the Mailgun plan it spends less of — the same
  * shape as `EmailPlanPanel`: native selects and numbers that post as ordinary fields, the service
@@ -84,7 +84,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
           {t("emails.transport.unconfigured")}
         </Alert>
       )}
-      {/* A Gmail failure falls back to Mailgun or waits for a retry; said here, or nobody would know (§NNN). */}
+      {/* A Gmail failure falls back to Mailgun or waits for a retry; said here, or nobody would know (§443). */}
       {volume.gmailLastFailure && (
         <Alert severity={recentFailure ? "warning" : "info"} sx={{ mt: 1 }} data-testid="email-transport-failure">
           {t("emails.transport.lastFailure", {

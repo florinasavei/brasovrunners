@@ -9,7 +9,7 @@ import ImageQualityChoice, { type ImageQualityLabels } from "@/modules/media/ui/
 
 /**
  * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414, four levels since
- * §NNN) — «Calitate» beside every upload: four choices, smallest first, «Medie» where a new tab
+ * §437) — «Calitate» beside every upload: four choices, smallest first, «Medie» where a new tab
  * starts, and the help that says what each keeps. Rendered as the server sends it, with the
  * catalogue's own words, so a missing or reordered level fails here and not only in the browser.
  */
@@ -33,7 +33,7 @@ function labelsOf(catalogue: typeof ro): ImageQualityLabels {
 const render = (labels: ImageQualityLabels) =>
   renderToStaticMarkup(createElement(ImageQualityChoice, { value: DEFAULT_IMAGE_QUALITY, onChange: () => {}, labels }));
 
-describe("§NNN «Calitate» with four levels", () => {
+describe("§437 «Calitate» with four levels", () => {
   it("offers four radios, Minimă, Medie, Mare, Originală, in that order, with Medie checked", () => {
     const html = render(labelsOf(ro));
     const radios = [...html.matchAll(/<input[^>]*type="radio"[^>]*>/g)].map((match) => match[0]);

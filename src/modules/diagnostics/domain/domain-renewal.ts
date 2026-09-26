@@ -1,5 +1,5 @@
 /**
- * When the club's domain expires, and how loudly to say so (§NNN).
+ * When the club's domain expires, and how loudly to say so (§435).
  *
  * The owner, 2026-09-26: the `.ro` is dropped (search engines would see two addresses for one
  * site), the `.com` stays, and "we must remember to renew it for several years". Nothing the

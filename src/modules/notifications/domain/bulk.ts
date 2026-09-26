@@ -1,7 +1,7 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * Mail that goes to many people at once and waits for none of them (§NNN): the newsletter and the
+ * Mail that goes to many people at once and waits for none of them (§445): the newsletter and the
  * new-event alert. §80's rule for the day a newsletter existed was "it will have to fit under the
  * same number" — the plan's allowance (§100) — and the one thing that must never happen is that a
  * newsletter to three hundred addresses spends the allowance a registration's confirmation link

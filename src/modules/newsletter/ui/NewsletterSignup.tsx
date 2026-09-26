@@ -46,7 +46,7 @@ type Props = {
 };
 
 /**
- * "Noutățile clubului" on the contact page (§NNN; the owner: "a button for a pop-up and people can
+ * "Noutățile clubului" on the contact page (§445; the owner: "a button for a pop-up and people can
  * opt in on what to receive").
  *
  * A Server Component: a heading, one sentence, the button, and the pop-up — a native `<dialog>`

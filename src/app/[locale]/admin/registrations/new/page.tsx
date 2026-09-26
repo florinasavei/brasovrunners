@@ -91,7 +91,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
-  // The next free desk spare per event (§NNN), suggested only to the desk — a person on the
+  // The next free desk spare per event (§444), suggested only to the desk — a person on the
   // telephone, entered from the list, is not standing at a table with a bib.
   const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
 
@@ -256,7 +256,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary">
                 {t("desk.fastTrackHelp")}
               </Typography>
-              {/* The bib handed with the paper (§NNN): the next desk spare, suggested from the desk. */}
+              {/* The bib handed with the paper (§444): the next desk spare, suggested from the desk. */}
               <Box sx={{ mt: 1.5 }}>
                 <StaffHandedBibField
                   label={t("desk.handedBib")}

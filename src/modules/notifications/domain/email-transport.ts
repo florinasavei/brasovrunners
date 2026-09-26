@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * Which road each email leaves by — Mailgun, or the club's own Gmail over SMTP (§NNN).
+ * Which road each email leaves by — Mailgun, or the club's own Gmail over SMTP (§443).
  *
  * The owner, 2026-09-26: "we must keep Mailgun's cost down, so the club's Gmail should carry as
  * much as it can and Mailgun only what it must — but that has to be a setting; Google blocks an
@@ -32,7 +32,7 @@ export type EmailTransport = (typeof EMAIL_TRANSPORTS)[number];
  *   cancelled, an offer that lapsed, a number given, the signed copy.
  * - **club** (D) — mail to the club's own mailboxes: the club's copies, the declaration archive,
  *   "somebody confirmed", a colleague's invitation. To people who know the sender: Gmail's case.
- * - **newsletter** (E) — the newsletter's own mail (§NNN): the subscription's confirmation link,
+ * - **newsletter** (E) — the newsletter's own mail (§445): the subscription's confirmation link,
  *   a newsletter the club writes on `/admin/newsletter`, and the new-event alert — to people who
  *   asked for the club's news, never about a registration.
  */
@@ -84,7 +84,7 @@ export function emailGroupOf(messageType: EmailMessageType, clubCopy: boolean): 
 /**
  * Google's own ceiling for a personal Gmail account: "more than 500 recipients in a single email
  * and or more than 500 emails sent in a day" gets the account's sending suspended — Gmail Help,
- * "Limits for sending & getting mail" (article 22839; the address is in the §NNN decision, read
+ * "Limits for sending & getting mail" (article 22839; the address is in the §443 decision, read
  * 2026-09-26). Google counts **recipients** in a rolling day, so the cap here counts recipients too
  * (the address and every copy: `email_outbox.recipient_count`). The club's people send from the
  * same account by hand, and QA and production share it (one `CONTACT_SMTP_USER`), so the setting
@@ -258,7 +258,7 @@ export function gmailAdmission(
 }
 
 /**
- * What one sender asks Gmail's ledger before a message (§NNN): the message's recipients, the
+ * What one sender asks Gmail's ledger before a message (§443): the message's recipients, the
  * sender's clock — read by the ledger once it has its turn, not before — the jitter drawn for it,
  * the club's cap and pace, and how long the sender may still wait on the pace in this batch.
  */
@@ -272,7 +272,7 @@ export type GmailSlotRequest = {
 };
 
 /**
- * Gmail's usage as every sender shares it (§NNN review) — the drain after a response, the pinger's
+ * Gmail's usage as every sender shares it (§443 review) — the drain after a response, the pinger's
  * job and "Trimite acum", in one instance or several.
  *
  * - `admit` reads the usage afresh and decides in one step; an admission whose wait fits
@@ -288,7 +288,7 @@ export type GmailLedger = {
 };
 
 /**
- * The outbox rows the club sends through Gmail, as the claim can select them (§NNN review): the
+ * The outbox rows the club sends through Gmail, as the claim can select them (§443 review): the
  * message types whose group the club put on Gmail, and whether the club's copies are Gmail's too.
  * The same answer `preferredTransport` gives row by row, so the claim and the route cannot differ.
  */
@@ -300,7 +300,7 @@ export function gmailRoadRows(setting: EmailTransportSetting): { messageTypes: E
 }
 
 /**
- * How many Gmail-road rows one batch claims (§NNN review): what the pace lets one sender send in
+ * How many Gmail-road rows one batch claims (§443 review): what the pace lets one sender send in
  * the waiting it may spend — the first at once, then one per pace — never more than the batch.
  * Claimed apart from the Mailgun rows, so a queue of club copies waiting on Gmail's pace never
  * stands in front of a runner's link.
@@ -343,7 +343,7 @@ export function mailgunMessagesPerCompletedRegistration(
  * The sentence under the Mailgun plan's forecast about the club's copies (§320), which must agree
  * with the figure beside it: the hidden copies counted in Mailgun's cost while the club's mail goes
  * through Mailgun, or the messages Gmail carries instead once any group goes through Gmail — never
- * "8 of 5 are copies" (§NNN review).
+ * "8 of 5 are copies" (§443 review).
  */
 export function forecastCopiesNote(input: {
   participantBccCount: number;

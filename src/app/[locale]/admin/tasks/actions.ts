@@ -139,7 +139,7 @@ export async function giveOlderPicturesLadderAction(_previous: FormOutcome | nul
 }
 
 /**
- * The month's budget thresholds (§NNN), from "Bugetul lunii" on the costs panel: the shares of the
+ * The month's budget thresholds (§447), from "Bugetul lunii" on the costs panel: the shares of the
  * Neon quota that turn the governor amber and red. The same door and shape as the interval above —
  * Administrator at the door, the service asserting the role again and writing the audit row — and
  * a refusal handed back as the form's state (§315).
@@ -202,7 +202,7 @@ export async function updateNeonLimitsAction(_previous: FormOutcome | null, form
 }
 
 // -------------------------------------------------------------------------------------------------
-// «De făcut» — the club's own checklist (§NNN)
+// «De făcut» — the club's own checklist (§438)
 // -------------------------------------------------------------------------------------------------
 
 function field(form: FormData, name: string): string {

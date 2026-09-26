@@ -1,5 +1,5 @@
 /**
- * Whether an error means "the database is not there" — as opposed to "this query is wrong" (§NNN).
+ * Whether an error means "the database is not there" — as opposed to "this query is wrong" (§447).
  *
  * The difference decides what the public site does next. A database that is away — Neon suspended
  * for the month, a compute that cannot start, a network that does not reach it — is the same for

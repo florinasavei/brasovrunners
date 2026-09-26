@@ -309,7 +309,7 @@ export function renderBilingual(
     // The organizer's message (§364): its own subject and body in the second half's language.
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
-    // The newsletter's own words and topics in the second half's language (§NNN).
+    // The newsletter's own words and topics in the second half's language (§445).
     ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
     ...(data.newsletterBodyOther ? { newsletterBody: data.newsletterBodyOther } : {}),
     ...(data.newsletterTopicsOther ? { newsletterTopics: data.newsletterTopicsOther } : {}),
@@ -594,7 +594,7 @@ export type TemplateData = {
   addressCap?: number;
   addressAtCap?: boolean;
   /**
-   * Another person on the address, confirmed from the inbox (§NNN): who the address holds at the
+   * Another person on the address, confirmed from the inbox (§446): who the address holds at the
    * event now, as "Ana P." — its own active registrations, never anybody else's — and the person
    * the form named, in full, with the birth date as "12.03.2012". Read from the kept form at send
    * time; absent at the limit or once the form is gone, and then there is no button either.
@@ -604,11 +604,11 @@ export type TemplateData = {
   familyPersonBirthDate?: string;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
-   * both (§NNN): one sentence says how to register somebody else. Only ever in the inbox.
+   * both (§446): one sentence says how to register somebody else. Only ever in the inbox.
    */
   anotherPersonHint?: boolean;
   /**
-   * The kept form behind the message is gone (§NNN): confirmed already, or lapsed and purged —
+   * The kept form behind the message is gone (§446): confirmed already, or lapsed and purged —
    * a row the outbox deferred past the window (§40), or sent again after the press. There is no
    * button and no person to name, so the message says the request lapsed and how to start again.
    */
@@ -635,7 +635,7 @@ export type TemplateData = {
    */
   idDocumentMasked?: boolean;
   /**
-   * The newsletter (§NNN). The topics this subscriber chose, as a phrase in this half's language —
+   * The newsletter (§445). The topics this subscriber chose, as a phrase in this half's language —
    * "„Evenimente mari” și „Coduri de reducere”" — and in the other half's.
    */
   newsletterTopics?: string;
@@ -644,7 +644,7 @@ export type TemplateData = {
   newsletterAlready?: boolean;
   /** The subscriber's own page — the topics and "unsubscribe" — on every newsletter message; never on anything else. */
   newsletterManageUrl?: string;
-  /** A newsletter's own words (§NNN): this half's subject and body, and the other half's. */
+  /** A newsletter's own words (§445): this half's subject and body, and the other half's. */
   newsletterSubject?: string;
   newsletterSubjectOther?: string;
   newsletterBody?: string;
@@ -1028,7 +1028,7 @@ const T = {
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
     /**
-     * The form sent again from a registered address, for a different person (§389, §NNN): nobody
+     * The form sent again from a registered address, for a different person (§389, §446): nobody
      * was registered yet, and this is the address's answer. Two shapes: the question, with one
      * button that confirms the person the form named — who the address holds and who that person
      * is are lines the platform adds before these words (`familyLines`); or, when the address
@@ -1067,7 +1067,7 @@ const T = {
       action: "Confirm că înscriu altă persoană",
     },
     /**
-     * The newsletter's one message to an address left in the contact page's pop-up (§NNN): the
+     * The newsletter's one message to an address left in the contact page's pop-up (§445): the
      * double opt-in's link, or — for an address already subscribed — the link to its own page, and
      * nothing changed. To an address, not a person: the greeting names nobody.
      */
@@ -1086,13 +1086,13 @@ const T = {
             ],
       action: (d: TemplateData) => (d.newsletterAlready ? "Vezi abonamentul" : "Confirmă abonarea"),
     },
-    /** A newsletter the club wrote (§NNN): its own subject and body, the link to choose topics or unsubscribe. */
+    /** A newsletter the club wrote (§445): its own subject and body, the link to choose topics or unsubscribe. */
     newsletter: {
       subject: (d: TemplateData) => d.newsletterSubject ?? `Noutăți de la ${CLUB_NAME}`,
       greeting: () => "Salut,",
       body: () => [],
     },
-    /** "A new event is on the calendar" (§NNN), from the maintenance job, to the subscribers of its topics. */
+    /** "A new event is on the calendar" (§445), from the maintenance job, to the subscribers of its topics. */
     newEventAlert: {
       subject: (d: TemplateData) => (d.eventTitle ? `Eveniment nou în calendar: ${d.eventTitle}` : "Un eveniment nou în calendarul clubului"),
       greeting: () => "Salut,",
@@ -1102,7 +1102,7 @@ const T = {
       ],
       action: "Vezi evenimentul",
     },
-    /** The newsletter's own lines (§NNN), which the platform adds whoever wrote the words above them. */
+    /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
       topics: (topics: string) => `Primești noutățile clubului despre: ${topics}.`,
       link: (lifetime: string) => `Linkul este valabil ${lifetime} și se poate folosi o singură dată. Dacă nu tu ai cerut, ignoră acest mesaj.`,
@@ -1157,14 +1157,14 @@ const T = {
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
     /**
-     * Before the body of the confirmation for another person (§NNN): who the address holds at the
+     * Before the body of the confirmation for another person (§446): who the address holds at the
      * event, and who the form named — facts of this send, whoever wrote the words around them.
      */
     familyLines: (registered: readonly string[], name: string, birthDate: string) => [
       `Înscriși deja cu această adresă: ${registered.length > 0 ? endSentence(registered.join(", ")) : "nimeni în acest moment."}`,
       `Persoana din formular: ${name}${birthDate ? `, data nașterii ${birthDate}` : ""}.`,
     ],
-    /** Under "you are already registered", on a re-send for a slip (§NNN): the one way to register somebody else. */
+    /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
@@ -1174,7 +1174,7 @@ const T = {
       /** A bulk send's one copy (§419): how many received it, and nobody's name. */
       bulkNote: (count: number) =>
         `Copie pentru club a mesajului trimis la ${participantsPhrase("ro", count)}, fiecăruia în limba înscrierii lui. Numele destinatarilor nu apar aici, iar legăturile personale au fost scoase.`,
-      /** A newsletter's or a new-event alert's one copy (§NNN): how many subscribers, and no address. */
+      /** A newsletter's or a new-event alert's one copy (§445): how many subscribers, and no address. */
       subscribersNote: (count: number) =>
         `Copie pentru club a mesajului trimis la ${subscribersPhrase("ro", count)} la noutăți, fiecăruia în limba aleasă. Adresele destinatarilor nu apar aici, iar linkul personal de dezabonare a fost scos.`,
     },
@@ -1202,7 +1202,7 @@ const T = {
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
-    /** The same for the newsletter (§NNN): a consent the person gave, withdrawn from the link above. */
+    /** The same for the newsletter (§445): a consent the person gave, withdrawn from the link above. */
     privacyFooterNewsletter: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut noutățile clubului pe această adresă. Te dezabonezi oricând din linkul de mai sus. Cum folosim datele tale:`,
   },
@@ -1477,7 +1477,7 @@ const T = {
       action: "I confirm I am registering another person",
     },
     /**
-     * The newsletter's one message to an address left in the contact page's pop-up (§NNN): the
+     * The newsletter's one message to an address left in the contact page's pop-up (§445): the
      * double opt-in's link, or — for an address already subscribed — the link to its own page, and
      * nothing changed. To an address, not a person: the greeting names nobody.
      */
@@ -1496,13 +1496,13 @@ const T = {
             ],
       action: (d: TemplateData) => (d.newsletterAlready ? "See my subscription" : "Confirm my subscription"),
     },
-    /** A newsletter the club wrote (§NNN): its own subject and body, the link to choose topics or unsubscribe. */
+    /** A newsletter the club wrote (§445): its own subject and body, the link to choose topics or unsubscribe. */
     newsletter: {
       subject: (d: TemplateData) => d.newsletterSubject ?? `News from ${CLUB_NAME}`,
       greeting: () => "Hello,",
       body: () => [],
     },
-    /** "A new event is on the calendar" (§NNN), from the maintenance job, to the subscribers of its topics. */
+    /** "A new event is on the calendar" (§445), from the maintenance job, to the subscribers of its topics. */
     newEventAlert: {
       subject: (d: TemplateData) => (d.eventTitle ? `New on the calendar: ${d.eventTitle}` : "A new event on the club's calendar"),
       greeting: () => "Hello,",
@@ -1512,7 +1512,7 @@ const T = {
       ],
       action: "See the event",
     },
-    /** The newsletter's own lines (§NNN), which the platform adds whoever wrote the words above them. */
+    /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
       topics: (topics: string) => `You receive the club's news about: ${topics}.`,
       link: (lifetime: string) => `The link is valid for ${lifetime} and can be used once. If you did not ask for this, ignore this message.`,
@@ -1561,7 +1561,7 @@ const T = {
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
       bulkNote: (count: number) =>
         `Club copy of the message sent to ${participantsPhrase("en", count)}, each in the language of their registration. The recipients' names are not included, and the personal links have been removed.`,
-      /** A newsletter's or a new-event alert's one copy (§NNN): how many subscribers, and no address. */
+      /** A newsletter's or a new-event alert's one copy (§445): how many subscribers, and no address. */
       subscribersNote: (count: number) =>
         `Club copy of the message sent to ${subscribersPhrase("en", count)} to the news, each in the language they chose. The recipients' addresses are not included, and the personal unsubscribe link has been removed.`,
     },
@@ -1612,11 +1612,11 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   NEW_EVENT_ALERT: "newEventAlert",
 };
 
-/** The newsletter's three messages (§NNN): to an address, never about a registration. */
+/** The newsletter's three messages (§445): to an address, never about a registration. */
 const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_CONFIRM", "NEWSLETTER", "NEW_EVENT_ALERT"]);
 
 /**
- * A newsletter's own words (§NNN), as the organizer's message's are (§364): the body as typed, a
+ * A newsletter's own words (§445), as the organizer's message's are (§364): the body as typed, a
  * blank line starting a paragraph and a single break kept, escaped, no emphasis read inside it. No
  * placeholder is filled — the service refuses any.
  */
@@ -1630,7 +1630,7 @@ function newsletterParts(messageType: EmailMessageType, data: TemplateData): Ema
 }
 
 /**
- * The lines the platform adds to a newsletter message whoever wrote its words (§NNN): what the
+ * The lines the platform adds to a newsletter message whoever wrote its words (§445): what the
  * subscriber chose, on the confirmation and on an alert; how long the confirmation link lives. The
  * link to choose topics or unsubscribe is under the button, on every one of them.
  */
@@ -1664,14 +1664,14 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
   return form === "one" ? "one participant" : `${count} participants`;
 }
 
-/** "12 abonați", "un abonat" / "12 subscribers", "one subscriber" — a newsletter copy's count (§NNN). */
+/** "12 abonați", "un abonat" / "12 subscribers", "one subscriber" — a newsletter copy's count (§445). */
 function subscribersPhrase(locale: EmailLocale, count: number): string {
   const form = countForm(count, locale);
   if (locale === "ro") return form === "one" ? "un abonat" : form === "few" ? `${count} abonați` : `${count} de abonați`;
   return form === "one" ? "one subscriber" : `${count} subscribers`;
 }
 
-/** A sentence that already ends in a full stop — "Ana P." — takes no second one (§NNN). */
+/** A sentence that already ends in a full stop — "Ana P." — takes no second one (§446). */
 function endSentence(text: string): string {
   return text.endsWith(".") ? text : `${text}.`;
 }
@@ -1791,7 +1791,7 @@ export function buildTemplateContent(
   */
   const atAddressCap = messageType === "REGISTER_ANOTHER_PERSON" && data.addressAtCap === true;
   /*
-    …and so is the one whose kept form is gone (§NNN): the club's words promise a button this send
+    …and so is the one whose kept form is gone (§446): the club's words promise a button this send
     cannot carry, so the platform's lapsed shape says what happened and how to start again.
   */
   const familyGone = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyEntryGone === true;
@@ -1803,7 +1803,7 @@ export function buildTemplateContent(
   */
   const lapsedOffer = messageType === "WAITLIST_SPOT_OFFER" && !data.holdExpiresAtFormatted;
   /*
-    The newsletter (§NNN) is written per send, like the organizer's message; and the confirmation
+    The newsletter (§445) is written per send, like the organizer's message; and the confirmation
     that went to an address already subscribed is the platform's sentence alone — a statement about
     the address's state, like the limit above: the club's words for this message ask to confirm.
   */
@@ -1893,10 +1893,10 @@ export function buildTemplateContent(
       // The number when the message carries one: a settled number, or the provisional one the
       // desk gave, whichever this registration actually has (§286).
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
-      // …and, on a re-send for a slip (§NNN), how to register somebody else — the inbox's alone.
+      // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [copy.anotherPersonHint] : []),
       /*
-        Another person on the address (§NNN): who the address holds and who the form named, before
+        Another person on the address (§446): who the address holds and who the form named, before
         the question — facts of this send, like "you were already registered" above, so a club that
         rewrote the words still says them. Only with the kept form in hand, as the button.
       */
@@ -1956,7 +1956,7 @@ export function buildTemplateContent(
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
       ...organizerMessageParts(messageType, data, locale, bulkCopy),
-      // A newsletter's own words, and what the platform says around every newsletter message (§NNN).
+      // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),
       ...newsletterLines(messageType, locale, data),
       // After the body, not before it: the number is in the body already, and this only
@@ -1976,7 +1976,7 @@ export function buildTemplateContent(
     links: (() => {
       const own = [
         ...(entry.links?.(linkData) ?? []),
-        // Every newsletter message's way out (§NNN; Legea 506/2004 art. 12(2)): the subscriber's own page.
+        // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.
         ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl
           ? [{ label: copy.newsletterWords.manage, url: data.newsletterManageUrl }]
           : []),
@@ -1996,7 +1996,7 @@ export function buildTemplateContent(
       ? undefined
       : {
           // The confirmation answers a request, as "registration is open" does; the newsletter
-          // itself and its alerts name the way out that sits under their button (§NNN).
+          // itself and its alerts name the way out that sits under their button (§445).
           text: (messageType === "REGISTRATION_OPENED" || messageType === "NEWSLETTER_CONFIRM"
             ? copy.privacyFooterInterest
             : messageType === "GROUP_RUN_DECLARATION_SIGNED"
@@ -2057,7 +2057,7 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
  * The messages that carry the event's facts block (§392): the confirmation, the reminder, and the
  * declaration request — which, for a race with a participation window, is the participation
  * confirmation itself (§104), sent at once and again when the window opens. And the newsletter's
- * new-event alert (§NNN): a subscriber deciding whether to come reads the same when, where,
+ * new-event alert (§445): a subscriber deciding whether to come reads the same when, where,
  * programme, route, cost and links as a runner who registered, from the same function.
  */
 const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION", "NEW_EVENT_ALERT"]);

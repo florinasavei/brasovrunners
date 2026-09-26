@@ -55,7 +55,7 @@ export type Resilient<T> = {
   takenAt: Date;
   /**
    * When the copy is served because Neon has suspended the project for the rest of its billing
-   * period (§NNN): the period's end, when the database is back. Null otherwise — live, or away for
+   * period (§447): the period's end, when the database is back. Null otherwise — live, or away for
    * any other reason, when nobody knows for how long.
    */
   restingUntil: Date | null;
@@ -157,7 +157,7 @@ export async function readWithLastGood<T>(
     const maxAgeHours = restingUntil ? SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS : SNAPSHOT_MAX_AGE_HOURS;
     if (!envelope || isSnapshotTooOld(envelope, now, maxAgeHours)) {
       /*
-        A red month's cache miss with nothing to show (§NNN): the database was not asked on
+        A red month's cache miss with nothing to show (§447): the database was not asked on
         purpose, so this is not trouble — the reader goes to the short resting page (200,
         `Retry-After`), which comes back here by itself once the background refresh has run.
       */
@@ -175,7 +175,7 @@ export async function readWithLastGood<T>(
 }
 
 /**
- * Whether the database is away because Neon suspended the project for the month (§NNN) — asked
+ * Whether the database is away because Neon suspended the project for the month (§447) — asked
  * only on this failure path, only for an error that says the database is away, and of Neon's API
  * through the governor's shared reading, never of the database. The period's end when it is, so
  * the page can say when the site is whole again; null for every other outage, whose length nobody
@@ -208,7 +208,7 @@ async function restingSince(error: unknown, now: Date): Promise<Date | null> {
 
 /**
  * Keep `value` as the last good copy under `key` — this instance's memory, and the object store at
- * most once every ten minutes per key. The public cache keeps one of every read it loads (§NNN), so a
+ * most once every ten minutes per key. The public cache keeps one of every read it loads (§447), so a
  * red month's miss can be answered without the database.
  */
 export function keepCopy<T>(key: string, value: T, now: Date = new Date()): void {
@@ -222,7 +222,7 @@ export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours
 }
 
 /**
- * Send the reader to the short resting page (§NNN), naming the address they were on — which the
+ * Send the reader to the short resting page (§447), naming the address they were on — which the
  * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
  * a request (a test, a script) there is no header, and the way back is the site's root.
  */

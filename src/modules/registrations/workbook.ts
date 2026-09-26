@@ -57,7 +57,7 @@ export type RegistrationSheetRow = Omit<
 const bold = (value: string) => ({ value, fontWeight: "bold" as const });
 
 /**
- * A timestamp as the club's clock reads it (§NNN). An Excel date cell has no zone: the writer
+ * A timestamp as the club's clock reads it (§439). An Excel date cell has no zone: the writer
  * turns a `Date` into a serial from its UTC fields, so 19:00 in Brașov opened as 16:00. The cell
  * is handed the club's own wall clock instead, and the format `dd.mm.yyyy hh:mm` shows it on the
  * 24-hour clock — Excel's `hh` is 24-hour whenever the format has no `AM/PM`.

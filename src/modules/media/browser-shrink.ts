@@ -27,7 +27,7 @@ import { BROWSER_SEND_BYTES, HIGH_WEB_MAX, MAX_DIMENSION, MAX_UPLOAD_BYTES, ORIG
  * browser sends that much: capping it at 3000 here was the half of "high is no sharper" the
  * server could not undo.
  *
- * «Minimă» (§NNN) keeps 1280 on the server, so it sends 1600 with the same headroom, and a
+ * «Minimă» (§437) keeps 1280 on the server, so it sends 1600 with the same headroom, and a
  * phone's photograph goes up in a fraction of the time. «Originală» sends up to
  * `ORIGINAL_WEB_MAX` (6000) when a file is too heavy to send as it is — and as it is otherwise.
  */
@@ -36,11 +36,11 @@ const MAX_EDGE: Record<ImageQuality, number> = { low: 1600, normal: 3000, high: 
 /** The choices whose file is sent as it is whenever it fits the send limit, whatever its pixels. */
 const SENT_AS_IT_IS: ReadonlySet<ImageQuality> = new Set(["high", "original"]);
 
-/** A picture's pixels and weight: the file chosen, or what the browser sends of it (§NNN). */
+/** A picture's pixels and weight: the file chosen, or what the browser sends of it (§437). */
 export type ImageFileFacts = { width: number; height: number; bytes: number };
 
 /**
- * What an upload is about to send, and what it was chosen from (§NNN; the owner: "aș vrea să
+ * What an upload is about to send, and what it was chosen from (§437; the owner: "aș vrea să
  * afișez și dimensiunea imaginilor în editor, să știu ce încarc"). `sent` equals `chosen` when
  * the file goes up untouched; `reencoded` says the browser encoded a new file to send, and
  * `resized` that the new file also has fewer pixels — a file that is only too heavy is re-encoded
@@ -62,7 +62,7 @@ export async function shrinkImageInBrowser(file: File, quality: ImageQuality = D
 }
 
 /**
- * The same shrink, with the facts around it (§NNN): the chosen file's pixels and weight, told to
+ * The same shrink, with the facts around it (§437): the chosen file's pixels and weight, told to
  * `onChosen` as soon as the picture is decoded — before anything is encoded or sent, so the page
  * can say what is going up while it goes — and what is actually sent.
  */
@@ -87,7 +87,7 @@ export async function prepareImageUpload(
     JPEG re-encoded here at 0.95 measured larger than the JPEG itself — 4.85 MB from 2.37 MB for
     a leaf-covered hillside, over the send limit, so it would have been stepped down to 3200 and
     the choice lost. «Normală» keeps its edge: the server keeps 2400 of it either way. «Originală»
-    (§NNN) is sent as it is on the same terms as «Mare»; «Minimă» keeps its edge like «Medie».
+    (§437) is sent as it is on the same terms as «Mare»; «Minimă» keeps its edge like «Medie».
 
     `imageOrientation: "from-image"` above is the one thing the canvas was also doing for us; the
     server rotates with `sharp(...).rotate()`, which reads the same EXIF, so nothing is lost.
@@ -126,7 +126,7 @@ export async function prepareImageUpload(
   return sentAs(fitted.blob, chosen, fitted.width, fitted.height);
 }
 
-/** A re-encoded file's facts; `resized` only when its pixels are not the chosen file's (§NNN). */
+/** A re-encoded file's facts; `resized` only when its pixels are not the chosen file's (§437). */
 function sentAs(blob: Blob, chosen: ImageFileFacts, width: number, height: number): PreparedUpload {
   const resized = width !== chosen.width || height !== chosen.height;
   return { blob, chosen, sent: { width, height, bytes: blob.size }, resized, reencoded: true };

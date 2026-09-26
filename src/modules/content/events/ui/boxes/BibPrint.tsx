@@ -11,7 +11,7 @@ import Panel from "@/shared/ui/Panel";
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
 export const BIB_ASSIGN_FORM = "bib-assign";
 export const BIB_DOWNLOAD_FORM = "bib-download";
-/** The print of the desk's spares (§NNN): a POST that reserves them, then the sheet. */
+/** The print of the desk's spares (§444): a POST that reserves them, then the sheet. */
 export const BIB_SPARES_FORM = "bib-spares";
 
 type Props = {
@@ -26,13 +26,13 @@ type Props = {
   /** Open by itself: numbers waiting for the printer in race week (§311). */
   attention: boolean;
   /**
-   * The desk's spares (§NNN): what is reserved already and how much of it is free, and the first
+   * The desk's spares (§444): what is reserved already and how much of it is free, and the first
    * number the next print would reserve — the number the confirmation names.
    */
   spares?: SpareCard | null;
 };
 
-/** What the spares' section shows (§NNN), read by the page from `bibs.ts#spareCardState`. */
+/** What the spares' section shows (§444), read by the page from `bibs.ts#spareCardState`. */
 export type SpareCard = {
   /** The reservation so far, both ends included, and how many of it nobody holds; null before the first print. */
   band: { from: number; to: number } | null;
@@ -44,7 +44,7 @@ export type SpareCard = {
 };
 
 /**
- * «Numere de rezervă pentru înscrierile de la fața locului» (§NNN, amending §338): the club types
+ * «Numere de rezervă pentru înscrierile de la fața locului» (§444, amending §338): the club types
  * how many and presses «Tipărește». The press is a POST (`BIB_SPARES_FORM`, asked first, §384)
  * that reserves the numbers under the event's lock and comes back with the sheet's link for exactly
  * that range; the reprint of the free ones already reserved is the sheet's own GET. The Organizer
@@ -213,7 +213,7 @@ export async function BibPrintForms({
   mayAssign: boolean;
   /** `assignBibNumbersAction`, handed down by the page that owns the actions. */
   assignAction: ActionFormAction;
-  /** `reserveSpareBibsAction` (§NNN), with the first number the question names; absent, no form. */
+  /** `reserveSpareBibsAction` (§444), with the first number the question names; absent, no form. */
   sparesAction?: ActionFormAction;
   sparesFrom?: number | null;
   cancelLabel: string;

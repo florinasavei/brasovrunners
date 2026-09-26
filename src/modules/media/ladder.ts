@@ -25,7 +25,7 @@ import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "./limits";
  */
 
 /**
- * The four choices beside every upload, smallest first (§NNN; §414 had two): «Minimă» (`low`),
+ * The four choices beside every upload, smallest first (§437; §414 had two): «Minimă» (`low`),
  * «Medie» (`normal`), «Mare» (`high`) and «Originală» (`original`). The two words §414 sent keep
  * their meaning — `normal` is still the default and what an old client sends, `high` still keeps
  * 4000 pixels — so a request from a tab opened before this change stores exactly what it did.
@@ -60,7 +60,7 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
  * the same 2400 file a «Normală» picture's master is, and only a screen wider than that takes
  * the whole master.
  *
- * 3200 is a rung only under a master wider than `HIGH_WEB_MAX` (§NNN) — that is, only under an
+ * 3200 is a rung only under a master wider than `HIGH_WEB_MAX` (§437) — that is, only under an
  * «Originală», which is the one choice that can store more than 4000 pixels. Without it the event
  * page's widest column on a laptop at 2× (2976 physical pixels) skipped from the 2400 rung
  * straight to a 6000-pixel master of several megabytes. A «Mare» master of 3556–4000 pixels does
@@ -70,7 +70,7 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
  */
 export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920, 2400, 3200] as const;
 
-/** The rung that exists only under an «Originală» master (§NNN). */
+/** The rung that exists only under an «Originală» master (§437). */
 const ORIGINAL_ONLY_RUNG = 3200;
 
 const MASTER_MAX_EDGE: Record<ImageQuality, number> = {
@@ -80,7 +80,7 @@ const MASTER_MAX_EDGE: Record<ImageQuality, number> = {
   original: ORIGINAL_WEB_MAX,
 };
 
-/** The master's long side for a choice (§414, §NNN): what `images.ts` resizes to. */
+/** The master's long side for a choice (§414, §437): what `images.ts` resizes to. */
 export function masterMaxEdge(quality: ImageQuality): number {
   return MASTER_MAX_EDGE[quality];
 }

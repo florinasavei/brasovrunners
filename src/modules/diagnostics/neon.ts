@@ -157,11 +157,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 const cuOrNull = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
 
-// --- The one reader (§NNN) --------------------------------------------------------------------
+// --- The one reader (§447) --------------------------------------------------------------------
 
 /**
  * This billing period as Neon meters it — the one reading `/api/health`, `/devs`, Costuri, the
- * limits card and the governor all start from (§NNN, replacing the two copies §335 had already
+ * limits card and the governor all start from (§447, replacing the two copies §335 had already
  * merged into one request).
  *
  * `usedCuHours` is the figure every page prints and every rule compares: the largest of the three
@@ -376,7 +376,7 @@ export async function readNeonMeter(
 
 /**
  * The database's consumption this billing period, as `/devs` and the task board have always read
- * it (BR-REQ-090-07) — now the meter's figure rather than the frozen counter (§NNN).
+ * it (BR-REQ-090-07) — now the meter's figure rather than the frozen counter (§447).
  *
  * What the figure means depends on the plan (`domain/neon-plan.ts`): on Free it is counted against
  * 100 CU-hours a month per project and the compute is *suspended* when they run out; on Launch
@@ -435,11 +435,11 @@ export async function readNeonConsumption(
 }
 
 /**
- * `/api/health`'s early warning for a project's monthly compute-time quota (§335, since §NNN the
+ * `/api/health`'s early warning for a project's monthly compute-time quota (§335, since §447 the
  * governor's level): the status is `near-limit` — health degrades, the monitor rings — once the
  * month's budget is red (85% of the quota by default, the Administrator's to move), before Neon
  * suspends the database at 100%. Amber stays `ok`: the platform slowing itself down is its own
- * business and pages nobody. Since §NNN the spend is the meter's, so the warning can fire at all:
+ * business and pages nobody. Since §447 the spend is the meter's, so the warning can fire at all:
  * the counter it read before stopped on 2026-09-24 and ran about 45% under the month.
  *
  * The shared reading (fifteen minutes in Next's data cache), never a query against the database
@@ -509,7 +509,7 @@ export type NeonLimitsSnapshot = {
  * The project's brakes as Neon holds them (§335): the read-write computes' autoscaling range
  * (`GET /projects/{id}/endpoints`), the project's defaults for a compute created again and its
  * compute-time quota (`GET /projects/{id}`), both afresh, because a write starts from them. The
- * spend beside them is the meter's (§NNN) — the shared reading of the operations log and the
+ * spend beside them is the meter's (§447) — the shared reading of the operations log and the
  * metered consumption, which never blocks the card: when neither answers, the row's own counter
  * stands in, as it always did.
  */

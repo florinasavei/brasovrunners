@@ -1,5 +1,5 @@
 /**
- * The contact page's newsletter pop-up (§NNN): its ids, and the outcome the action's redirect puts
+ * The contact page's newsletter pop-up (§445): its ids, and the outcome the action's redirect puts
  * in `?newsletter=` — kept out of the action's module because a "use server" file may export only
  * async functions, and out of the component so the action and the page read one list.
  */

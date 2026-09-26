@@ -96,7 +96,7 @@ function sentenceFor(template: string, values: Readonly<Record<string, string>> 
  * the answer painted (§371); an action that redirects flashes its notice instead (`flash.ts`).
  * A refusal is never a toast — it is the summary below.
  *
- * ## A save a network refused (§NNN)
+ * ## A save a network refused (§436)
  *
  * On the server this renders the Server Action itself, so React writes the hidden fields of the
  * no-JavaScript form. In the browser the action is wrapped: a failure of the *transport* — the call
@@ -144,13 +144,13 @@ export default function ActionFormIsland({
   "data-testid"?: string;
 }) {
   const form = useRef<HTMLFormElement>(null);
-  // The button behind the last submit: «Trimite pe calea simplă» sends it again with the form (§NNN).
+  // The button behind the last submit: «Trimite pe calea simplă» sends it again with the form (§436).
   const lastSubmitter = useRef<HTMLElement | null>(null);
-  // The network refused the save; the simple way is offered, never taken on its own (§NNN).
+  // The network refused the save; the simple way is offered, never taken on its own (§436).
   const [blocked, setBlocked] = useState(false);
 
   /*
-    The action as the browser runs it (§NNN). A transport failure is caught here, before React
+    The action as the browser runs it (§436). A transport failure is caught here, before React
     would throw it into the error boundary and take the form — and everything typed in it — off the
     page. It sends nothing: it returns the state as it was and draws the notice, whose button is the
     person's decision to send the form again (`sendSimple`).
@@ -290,7 +290,7 @@ export default function ActionFormIsland({
   };
 
   return (
-    // `data-action-key` and `data-action-form` are `ACTION_KEY_ATTRIBUTE` and `ACTION_FORM_ATTRIBUTE` (§NNN).
+    // `data-action-key` and `data-action-form` are `ACTION_KEY_ATTRIBUTE` and `ACTION_FORM_ATTRIBUTE` (§436).
     <form ref={form} action={formAction} {...formProps} data-action-key={actionKey} data-action-form="" onInvalidCapture={onInvalidCapture} onSubmit={onSubmit}>
       <RecallProvider value={recall}>
         {blocked && <SaveBlockedNotice onSend={sendSimple} />}

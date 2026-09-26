@@ -77,7 +77,7 @@ function retentionFailed(run: { errorCount: number; lastError: string | null }):
 }
 
 /**
- * `governorFloorMinutes` is the budget governor's minimum interval in force now (§NNN,
+ * `governorFloorMinutes` is the budget governor's minimum interval in force now (§447,
  * `diagnostics/domain/neon-budget.ts`), which the caller read once for every check it makes. A
  * real run is allowed that long too, exactly like the Administrator's own interval — and so is the
  * interval the last run actually planned under, which its cached slot remembers: a level that

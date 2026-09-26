@@ -27,7 +27,7 @@ type Actor = Pick<StaffUser, "id" | "role">;
 
 /**
  * The event's band as the draws need it: where its numbers start and which numbers are the desk's
- * spares (§173, §NNN). One read, by the primary key, on every draw — the spares are the reason it
+ * spares (§173, §444). One read, by the primary key, on every draw — the spares are the reason it
  * is read even when the caller already knows the start: a draw that forgot them would hand a
  * pre-printed spare to somebody who registered online.
  */
@@ -46,7 +46,7 @@ async function bandOf<T extends Record<string, unknown>>(
 
 /**
  * Every number this event has on somebody — settled, provisional, and erased (§214, §311) — and
- * every number a print stepped over (§NNN, `skippedSpareNumbers`), as one set, for the checks that
+ * every number a print stepped over (§444, `skippedSpareNumbers`), as one set, for the checks that
  * ask "is this one free" rather than "which is the next".
  */
 async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Set<number>> {
@@ -65,7 +65,7 @@ async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, 
 }
 
 /**
- * The numbers inside the desk's reservation that were never printed blank (§NNN): an extension
+ * The numbers inside the desk's reservation that were never printed blank (§444): an extension
  * reached past them while a runner held them, so the print stepped over them and wrote them in its
  * audit row (`planSpareReservation`, `skipped`). Such a number stays its runner's — the close keeps
  * it — and when it is released (a hold that lapsed) it is nobody's: inside the band, so no draw
@@ -210,7 +210,7 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
   // The caller inside a transaction that already holds the event row usually passes the start;
-  // it is read when it did not, and the desk's spares always are (§NNN): never drawn here.
+  // it is read when it did not, and the desk's spares always are (§444): never drawn here.
   const { start, spare } = await bandOf(tx, eventId, startNumber);
 
   const ceiling = ceilingFor(start);
@@ -257,7 +257,7 @@ export async function pickProvisionalBibNumber<T extends Record<string, unknown>
   // after the erasure would be promoted to a final 27 the moment its holder confirmed.
   for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
-  // Nor a spare (§NNN): a provisional number becomes the final one at the close or at the
+  // Nor a spare (§444): a provisional number becomes the final one at the close or at the
   // confirmation after it, so a spare drawn here would be a spare on an online runner's bib.
   const { start, spare } = await bandOf(tx, eventId, startNumber);
 
@@ -434,12 +434,12 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
   // Erased registrations' numbers too (§311): the recompaction runs from the band's start, so
   // it is the one pass certain to reach an erased 27 if nothing said it was taken.
   const taken = new Set([...worn.map((row) => row.number as number), ...(await erasedBibNumbers(tx, input.eventId))]);
-  // And the desk's spares (§NNN): the run closes around them, as around a number typed by hand —
+  // And the desk's spares (§444): the run closes around them, as around a number typed by hand —
   // a spare is printed blank for a walk-in, and the settled sequence is printed with names.
   const { spare } = await bandOf(tx, input.eventId, input.bibStartNumber);
 
   /*
-    A provisional number inside the desk's reservation is its holder's for good (§NNN): an extension
+    A provisional number inside the desk's reservation is its holder's for good (§444): an extension
     of the reservation reached past it while they held it, and the print stepped over it, so no
     blank bib carries it. Moved out of the band here, it would be counted a free spare nobody
     printed — the desk would suggest it. So it becomes the final number as it is, taken before the
@@ -535,7 +535,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
         anywhere the club could see it. The promotion is the fix: the number they were told is
         the number they keep.
       */
-      // A provisional number is always its holder's, inside the desk's reservation too (§NNN):
+      // A provisional number is always its holder's, inside the desk's reservation too (§444):
       // the print reserves only numbers nobody has, so one there was held before the print.
       const number =
         row.provisional ?? (await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber));
@@ -621,7 +621,7 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
   for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
   // From the event's own band unless the caller asked from somewhere (§173): suggesting 1, 2, 3
   // at a race whose numbers start at 500 offers numbers nobody would print. Never a desk spare
-  // (§NNN): a preferential number is printed with a name, and a spare is printed without one —
+  // (§444): a preferential number is printed with a name, and a spare is printed without one —
   // the desk suggests those itself, from `freeSpareBibNumbers`.
   const { start, spare } = await bandOf(db, eventId, from);
   const free: number[] = [];
@@ -632,7 +632,7 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
 }
 
 /**
- * The desk's spares still free at this event, lowest first (§NNN): what the spares sheet prints
+ * The desk's spares still free at this event, lowest first (§444): what the spares sheet prints
  * blank and what the desk offers a walk-in — the band's numbers nobody wears, holds or wore.
  * `band` is null when the club set none, and then there is nothing to suggest.
  */
@@ -647,7 +647,7 @@ export async function freeSpareBibNumbers<T extends Record<string, unknown>>(
 }
 
 /**
- * Where the desk's spares stand at each of these events (§NNN): none reserved, the next free one
+ * Where the desk's spares stand at each of these events (§444): none reserved, the next free one
  * to suggest, or every one given — which the desk says in words. One call per event on a page
  * that shows one or two of them; the desk never shows more.
  */
@@ -666,7 +666,7 @@ export async function spareStates<T extends Record<string, unknown>>(
 }
 
 /**
- * What the printing card needs about the spares (§NNN): the reservation and how many of it are
+ * What the printing card needs about the spares (§444): the reservation and how many of it are
  * free, and the numbers the next print would reserve — up to `SPARE_BIBS_PER_PRINT`, from the same
  * `nextSpareCandidates` the write uses — so the confirmation names the exact range of whatever
  * count the club types. Read without a lock; the write re-reads under one and refuses when the
@@ -686,7 +686,7 @@ export async function spareCardState<T extends Record<string, unknown>>(
 }
 
 /**
- * Reserve `count` spares for the desk (§NNN) — what «Tipărește» does before the sheet is drawn.
+ * Reserve `count` spares for the desk (§444) — what «Tipărește» does before the sheet is drawn.
  *
  * Under the event row's lock, the lock every draw of a number at this event takes through the
  * allocator's transaction (`service.ts`), so no online runner is handed one of these numbers in
@@ -749,7 +749,7 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether a number typed at the desk is somebody's already (§NNN): settled or provisional on
+ * Whether a number typed at the desk is somebody's already (§444): settled or provisional on
  * another registration of this event, or worn by one that was erased (§311). The unique index
  * catches only the settled column; a provisional number somebody is looking at would otherwise be
  * given away by hand and collide when its holder is confirmed and adopts it (§220).
@@ -774,7 +774,7 @@ export async function bibNumberInUse<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether this number is one of the event's desk spares (§NNN) — what decides that a number given
+ * Whether this number is one of the event's desk spares (§444) — what decides that a number given
  * at the desk is already on paper (`admin-service.ts#setBibNumberByStaff`, the walk-in's box).
  */
 export async function isEventSpareNumber<T extends Record<string, unknown>>(
@@ -783,7 +783,7 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
   number: number,
 ): Promise<boolean> {
   if (!isSpareNumber((await bandOf(db, eventId)).spare, number)) return false;
-  // Inside the band but stepped over by a print (§NNN): no blank bib carries it.
+  // Inside the band but stepped over by a print (§444): no blank bib carries it.
   return !(await skippedSpareNumbers(db, eventId)).includes(number);
 }
 

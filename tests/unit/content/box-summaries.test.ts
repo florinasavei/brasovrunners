@@ -95,7 +95,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(whenSummary(wordsEn, event as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · race start 09:30 · 3 h");
     // A gun time is a race's alone (§71).
     expect(whenSummary(words, { ...event, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 3 h");
-    // The duration in hours and minutes (§NNN): 90 minutes is «1 h 30 min», under an hour stays minutes.
+    // The duration in hours and minutes (§433): 90 minutes is «1 h 30 min», under an hour stays minutes.
     const ninety = { ...event, endsAt: new Date("2026-11-21T08:30:00Z") };
     expect(whenSummary(words, { ...ninety, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 1 h 30 min");
     const fortyFive = { ...event, endsAt: new Date("2026-11-21T07:45:00Z") };
@@ -225,7 +225,7 @@ describe("§350 each box's summary, empty and filled", () => {
         "ro",
       ),
     ).toBe("Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59");
-    // §NNN: the declaration is chosen under «Regulamentul»; this card says the age alone.
+    // §448: the declaration is chosen under «Regulamentul»; this card says the age alone.
     expect(conditionsSummary(words, 14)).toBe("de la 14 ani");
     expect(conditionsSummary(words, 16)).toBe("de la 16 ani");
     expect(confirmationSummary(words, 7, 2)).toBe("Cerută cu 7 zile înainte, termen cu 2 zile înainte");
@@ -236,7 +236,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(confirmationSummary(words, 2, 3)).toBe(words.confirmation.off);
     expect(bibsSummary(words, 100, "Verde", { allocated: 42, unprinted: 2 })).toBe("De la 100 · Verde · alocate: 42, de tipărit: 2");
     expect(bibsSummary(words, 1, null, null)).toBe("De la 1 · culoarea clubului");
-    // §NNN: the desk's spares, when the club set a band.
+    // §444: the desk's spares, when the club set a band.
     expect(bibsSummary(words, 1, null, null, { from: 900, to: 949 })).toBe("De la 1 · culoarea clubului · rezervă 900–949");
     expect(bibsSummary(wordsEn, 1, null, null, { from: 900, to: 949 })).toMatch(/spares 900–949$/);
     expect(startListSummary(words, "HIDDEN")).toBe("Ascunsă");
@@ -361,7 +361,7 @@ describe("§350 every summary template, in both catalogues, fills without a stra
   });
 });
 
-describe("§NNN the declaration card under «Regulamentul» says what a runner signs", () => {
+describe("§448 the declaration card under «Regulamentul» says what a runner signs", () => {
   const groupRun = { takesRegistrations: false, declarationVersion: null, surface: "Trail" } as const;
   const race = { takesRegistrations: true, declarationVersion: 3, surface: null } as const;
   it("names a group run's offered self-declaration by its surface, or says there is none", () => {

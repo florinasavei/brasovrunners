@@ -9,7 +9,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, finding (7) of the fix round on `feat/newsletter-topics`: the page-level gate. The service
+ * §445, finding (7) of the fix round on `feat/newsletter-topics`: the page-level gate. The service
  * refuses a subscription while the privacy notice in force does not describe the newsletter
  * (`newsletter.test.ts`); this proves the contact page does not even offer it — the real
  * `cachedNewsletterOffered` over real PostgreSQL (outside a Next server the public cache reads
@@ -40,7 +40,7 @@ const { default: ContactPage } = await import("@/app/[locale]/contact/page");
 
 const NOW = new Date();
 
-describe("§NNN the contact page offers the newsletter only under a notice that describes it", () => {
+describe("§445 the contact page offers the newsletter only under a notice that describes it", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

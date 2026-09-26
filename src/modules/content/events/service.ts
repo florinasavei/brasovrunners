@@ -2197,7 +2197,7 @@ export type CreateEventInput = {
   /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
   fetchImpl?: typeof fetch;
   /**
-   * Why an event created already cancelled is cancelled (§NNN): required, in both languages,
+   * Why an event created already cancelled is cancelled (§448): required, in both languages,
    * when the status posted is `CANCELLED`, and ignored otherwise. Its "tell them" is ignored — a
    * new event has nobody registered to tell.
    */
@@ -2210,12 +2210,12 @@ type PreparedEventCreate = {
   posterColumns: Awaited<ReturnType<typeof resolveEventVideoPoster>>;
   translationColumns: { ro: ReturnType<typeof translationColumnsFrom>; en: ReturnType<typeof translationColumnsFrom> };
   names: PlaceNames;
-  /** The reason of an event created cancelled (§NNN), for its audit row; null for any other status. */
+  /** The reason of an event created cancelled (§448), for its audit row; null for any other status. */
   cancelledBecause: BilingualText | null;
 };
 
 /**
- * The status a new event is created with (§NNN; the owner, 2026-09-26: "ar trebui să pot crea un
+ * The status a new event is created with (§448; the owner, 2026-09-26: "ar trebui să pot crea un
  * eveniment deja anulat din start" — one copied from Facebook for the record, say).
  *
  * - `SCHEDULED` — as every new event was.
@@ -2264,7 +2264,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
-  // Created cancelled or completed (§NNN): judged before any fetch, like every other refusal here.
+  // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
   const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);
   // A film pasted straight into any of a new event's five rich texts, in either language, gets
   // the club's own poster too (`DECISIONS.md` §403), before any transaction opens.
@@ -2336,7 +2336,7 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
   );
 
   /*
-    Created already cancelled (§NNN): the audit row a cancellation in the editor writes (§331) —
+    Created already cancelled (§448): the audit row a cancellation in the editor writes (§331) —
     who and why — marked as told to nobody, since nobody can have registered for an event that did
     not exist a moment ago. No `EVENT_CANCELLED` email is queued, ever, from a create.
   */

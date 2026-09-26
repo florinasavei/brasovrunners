@@ -57,7 +57,7 @@ export async function answerJobPing(
   }
 
   /*
-    The month's budget (§NNN), from Neon's API and never the database, and only for a ping that
+    The month's budget (§447), from Neon's API and never the database, and only for a ping that
     is about to run: the ones answered from the cache above never ask. It only ever widens the
     interval a run plans under (red's two hours); it never stops a job on its own. The platform's
     estimate is not the counter Neon enforces, and an estimate that ran ahead of Neon would leave
@@ -92,7 +92,7 @@ export async function answerJobPing(
   } catch (error) {
     /*
       The database is away — Neon's quota refusal (the only thing that rests the jobs, whatever
-      the governor reads), a compute that cannot start, a network that does not reach it (§NNN). Answering 500 on every
+      the governor reads), a compute that cannot start, a network that does not reach it (§447). Answering 500 on every
       ping of an outage is how cron-job.org switches a monitor off (§98), and the scheduler would
       then stay off after the database is back. So an away-error answers 200 with the reason and
       records the ping; any other error is a bug and still fails loudly. Nothing is lost: a job
@@ -115,7 +115,7 @@ export async function answerJobPing(
   let plan: QuietPlan | null = null;
   try {
     const cadence = await readJobCadence(db);
-    // The governor's floor rides the Administrator's interval (§NNN): the longer wins, and it is
+    // The governor's floor rides the Administrator's interval (§447): the longer wins, and it is
     // the one the floor slots carry, so the pings after this run honour it from the cache.
     const cadenceMinutes = governedCadence(cadence.minutes, budget.effects.jobFloorMinutes);
     plan = planQuiet({ ranAt: now, nextWorkAt: await nextWork(db, job, now), cadenceMinutes, failed: outcome.failed });

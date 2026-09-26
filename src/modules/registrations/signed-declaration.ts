@@ -195,8 +195,8 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
       // The event's own minimum age (§329) with its unit — "16 ani", "20 de ani" — for the group-run
-      // declarations' sentence (§NNN); "" when the event has none, which leaves the sentence out.
-      // A group run's only above eighteen, which its adults-only text already says (§NNN).
+      // declarations' sentence (§440); "" when the event has none, which leaves the sentence out.
+      // A group run's only above eighteen, which its adults-only text already says (§440).
       minimumAge: minimumAgeMergeValue(event.type === "GROUP_RUN" ? groupRunMinimumAge(event.minAge) : event.minAge, locale),
       // The club's deadlines, should the declaration name one (§377): read when the PDF is drawn,
       // like the event's facts above — from the instance's memo, once per batch of PDFs.

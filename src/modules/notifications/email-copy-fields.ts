@@ -136,7 +136,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     organizerSubjectOther: other.organizerSubject,
     organizerBody: sample.organizerBody,
     organizerBodyOther: other.organizerBody,
-    // The newsletter (§NNN): a sample subscriber's topics, a sample newsletter and its way out —
+    // The newsletter (§445): a sample subscriber's topics, a sample newsletter and its way out —
     // read only by the newsletter's three templates.
     newsletterTopics: topicsPhrase(locale, EMAIL_SAMPLE_NEWSLETTER_TOPICS),
     newsletterTopicsOther: topicsPhrase(OTHER[locale], EMAIL_SAMPLE_NEWSLETTER_TOPICS),
@@ -148,7 +148,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
   };
 }
 
-/** The sample subscriber's topics (§NNN): two of them, so the preview reads a list. */
+/** The sample subscriber's topics (§445): two of them, so the preview reads a list. */
 const EMAIL_SAMPLE_NEWSLETTER_TOPICS = ["BIG_EVENTS", "DISCOUNTS"] as const;
 
 /**
@@ -211,7 +211,7 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  * - **the declaration's first wording is the club's hold's (§377)**, as the preview shows it; a
  *   saved text replaces both wordings, as it always has (§247);
  * - **the reply line of the cancellation follows the Reply-To in force**, as the send does: the page
- *   passes the one «Adresa de contact afișată» resolves to (§NNN); absent, the deployment's.
+ *   passes the one «Adresa de contact afișată» resolves to (§442); absent, the deployment's.
  */
 function fieldsData(replyTo: string | undefined = env.EMAIL_REPLY_TO ?? undefined): TemplateData {
   const field = (name: EmailCopyPlaceholder) => `{${name}}`;
@@ -278,7 +278,7 @@ function ownParagraphsOf(paragraph: string): string[] {
 
 /**
  * The editor's starting text for one message and language: the platform's words, with the fields.
- * `replyTo` is the Reply-To in force (§NNN); absent, `EMAIL_REPLY_TO`.
+ * `replyTo` is the Reply-To in force (§442); absent, `EMAIL_REPLY_TO`.
  */
 export function emailCopyPrefill(
   messageType: EmailMessageType,
@@ -302,7 +302,7 @@ export function placeholdersUsedBy(messageType: EmailMessageType, locale: EmailL
  * another person on a registered address (§389) — it answers whoever filled the form, often a parent,
  * so it greets nobody and names no runner.
  */
-// The newsletter's three messages (§NNN) go to an address too, never to a named person.
+// The newsletter's three messages (§445) go to an address too, never to a named person.
 const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
   "REGISTRATION_OPENED",
   "REGISTER_ANOTHER_PERSON",
@@ -312,7 +312,7 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
 ]);
 /**
  * Messages about no event: "my registrations" is about a person (§77), the invitation about the team
- * (§141), the newsletter's confirmation and a newsletter about the club (§NNN) — the new-event
+ * (§141), the newsletter's confirmation and a newsletter about the club (§445) — the new-event
  * alert, the newsletter's third, is about its event.
  */
 const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION", "NEWSLETTER_CONFIRM", "NEWSLETTER"]);
@@ -324,7 +324,7 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "REGISTRATION_OPENED",
   "GROUP_RUN_DECLARATION_SIGNED",
   "GROUP_RUN_DECLARATION_ARCHIVE",
-  // The newsletter's (§NNN): a subscription, never a registration.
+  // The newsletter's (§445): a subscription, never a registration.
   "NEWSLETTER_CONFIRM",
   "NEWSLETTER",
   "NEW_EVENT_ALERT",
@@ -368,7 +368,7 @@ export function placeholdersFilledBy(messageType: EmailMessageType): EmailCopyPl
     const organizerSet = new Set<EmailCopyPlaceholder>(ORGANIZER_MESSAGE_PLACEHOLDERS);
     return EMAIL_COPY_PLACEHOLDERS.filter((name) => organizerSet.has(name));
   }
-  // A newsletter is written per send and fills no field at all (§NNN): its composer refuses one.
+  // A newsletter is written per send and fills no field at all (§445): its composer refuses one.
   if (messageType === "NEWSLETTER") return [];
   return EMAIL_COPY_PLACEHOLDERS.filter((name) => {
     const only = ONLY_IN[name];

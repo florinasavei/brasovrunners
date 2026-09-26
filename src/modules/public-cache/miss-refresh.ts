@@ -1,7 +1,7 @@
 import { after } from "next/server";
 
 /**
- * The background refresh of a red month's cache misses (§NNN).
+ * The background refresh of a red month's cache misses (§447).
  *
  * At red a public read that misses the data cache does not ask the database in the request
  * (`cache.ts`); it is answered from its last good copy, and the read is queued here to be refreshed

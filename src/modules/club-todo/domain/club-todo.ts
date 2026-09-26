@@ -2,7 +2,7 @@ import { z } from "zod";
 import { atLeast, type StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * «De făcut» / "To do" — the club's own checklist on `/admin/tasks` (§NNN; the owner, 2026-09-26:
+ * «De făcut» / "To do" — the club's own checklist on `/admin/tasks` (§438; the owner, 2026-09-26:
  * "I need another folder — a list for Amalia (the club's to-do)", and "vreau aceste to-do-uri și
  * pe site").
  *

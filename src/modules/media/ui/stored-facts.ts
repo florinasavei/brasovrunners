@@ -18,7 +18,7 @@ export type StoredFacts = {
   files: number;
   totalBytes: number;
   /**
-   * The widest smaller copy (§NNN): the file a laptop at 2× takes in place of the master, or
+   * The widest smaller copy (§437): the file a laptop at 2× takes in place of the master, or
    * `null` when the picture is too small to have one.
    */
   topRung: { width: number; bytes: number } | null;
@@ -27,7 +27,7 @@ export type StoredFacts = {
 export type StoredFactsLabels = {
   /** With `{width}`, `{height}`, `{quality}`, `{size}`, `{files}` and `{total}`. */
   template: string;
-  /** Appended when there is a smaller copy, with `{width}` and `{size}` (§NNN). */
+  /** Appended when there is a smaller copy, with `{width}` and `{size}` (§437). */
   topRung: string;
   low: string;
   normal: string;
@@ -35,13 +35,13 @@ export type StoredFactsLabels = {
   original: string;
   /**
    * «Mare» or «Originală» that came out near-lossless — a poster, a screenshot, lettering — with
-   * `{quality}` for the choice's own words (§NNN; it named only «Înaltă» when that was the one).
+   * `{quality}` for the choice's own words (§437; it named only «Înaltă» when that was the one).
    */
   nearLossless: string;
 };
 
 /**
- * What the person is about to upload (§NNN; the owner: "aș vrea să afișez și dimensiunea
+ * What the person is about to upload (§437; the owner: "aș vrea să afișez și dimensiunea
  * imaginilor în editor, să știu ce încarc"): the chosen file's pixels and weight, and — only when
  * the browser drew it smaller to send it — what goes up instead.
  */

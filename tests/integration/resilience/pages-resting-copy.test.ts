@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, finding (5) of the review of `feat/neon-budget-governor`: the listing and an event page,
+ * §447, finding (5) of the review of `feat/neon-budget-governor`: the listing and an event page,
  * under a database whose every query Neon refuses for the month, serve their last good copy and
  * say so — with the governor still reading under 100%, which is what a project-scoped key reads
  * once Neon has cut the project off (the operations log stops growing).
@@ -43,7 +43,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the listing and an event page while Neon refuses the month's queries", () => {
+describe("§447 the listing and an event page while Neon refuses the month's queries", () => {
   it.each([
     ["ro", "events:ro", "copie salvată", "1 nov. 2026"],
     ["en", "events:en", "saved copy", "1 Nov 2026"],

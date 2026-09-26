@@ -20,7 +20,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 
 /**
- * The newsletter's pop-up (§NNN), on the same page: the contact form's defences — Turnstile first,
+ * The newsletter's pop-up (§445), on the same page: the contact form's defences — Turnstile first,
  * then the honeypot and the timing check in the service — and one answer whatever the address
  * turned out to be, so the pop-up cannot say whether somebody is subscribed (BR-REQ-031-01 c3).
  *
@@ -35,7 +35,7 @@ export async function submitNewsletterAction(form: FormData): Promise<void> {
   const topics = form.getAll("topics").filter((value): value is string => typeof value === "string");
   const renderedAt = text(form, "renderedAt");
   // What was typed comes back sealed, so a refusal never costs the address or the ticks (§142).
-  // The consent tick is the person's own act: posted as "on" only when ticked (§NNN).
+  // The consent tick is the person's own act: posted as "on" only when ticked (§445).
   const consent = form.get("consent") === "on";
   const keepTyped = () =>
     stashDraftValues(
@@ -105,7 +105,7 @@ export async function submitContactAction(form: FormData): Promise<void> {
     await sendOrRefuse(form, locale, path);
   } catch (error) {
     /*
-      The database is away (§NNN): the bot-check switch, the throttle and the stored message all
+      The database is away (§447): the bot-check switch, the throttle and the stored message all
       need it. The page's own `UNAVAILABLE` sentence says the message did not leave, and the draft
       cookie keeps what was typed. `redirect()` throws too, and is not an away-error.
     */

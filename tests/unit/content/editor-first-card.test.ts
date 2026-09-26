@@ -12,12 +12,12 @@ import type { FoldNode } from "@/shared/ui/fold";
  *
  * §358 (2026-09-24) nested "Starea evenimentului", "Traseul" and "Linkuri și fișiere" inside "Ce fel
  * de eveniment". §406 (2026-09-25) laid the editor out as the page instead and moved all three out.
- * §NNN (2026-09-26; the owner: "starea evenimentului ar trebui să apară pe primul card «Ce fel de
+ * §448 (2026-09-26; the owner: "starea evenimentului ar trebui să apară pe primul card «Ce fel de
  * eveniment»") brings the status back into the first box as a named card — whole: the same field,
  * the same name, the same id — and the first box's closed line says it beside the type: «Alergare de
  * grup · Programat». The course and the links stay boxes of their own, where the page draws them.
  *
- * The create page's status is no longer read-only (§NNN, the owner's second message of 2026-09-26:
+ * The create page's status is no longer read-only (§448, the owner's second message of 2026-09-26:
  * "ar trebui să pot crea un eveniment deja anulat din start"): the editor's same select, starting
  * at "Programat", with the reason's two boxes while "Anulat" is chosen and no "tell them" box.
  *
@@ -166,7 +166,7 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
   return { node: { tagName: "INPUT", parentElement: parent, dispatchEvent: () => true }, details };
 }
 
-describe("§NNN the first box holds the type and the status, and its line says both", () => {
+describe("§448 the first box holds the type and the status, and its line says both", () => {
   it("holds the status as a named card inside it — and neither the course nor the links", async () => {
     const { kind } = await boxes(EVENT);
     expect(namedFolds(kind)).toEqual(["box-kind", "box-status"]);
@@ -207,7 +207,7 @@ describe("§NNN the first box holds the type and the status, and its line says b
     expect(en.kind).toMatch(/<h3[^>]*>Event status<span/);
   });
 
-  it("posts the same names as before, each from its own box — and no declaration from «Traseul» (§NNN)", async () => {
+  it("posts the same names as before, each from its own box — and no declaration from «Traseul» (§448)", async () => {
     const drawn = await boxes(EVENT);
     for (const name of ["event.surface", "event.difficulty", "event.distanceMeters", "event.elevationGainMeters", "event.routeUrl"]) expect(drawn.course, name).toContain(`name="${name}"`);
     expect(drawn.course).not.toContain("group-run-declaration-field");
@@ -221,7 +221,7 @@ describe("§NNN the first box holds the type and the status, and its line says b
   });
 });
 
-describe("§NNN with people registered, the status card says so, and the first box wears the outline", () => {
+describe("§448 with people registered, the status card says so, and the first box wears the outline", () => {
   it("draws the sentence inside the status card, never the count, and nothing on the course or the links", async () => {
     const drawn = await boxes(EVENT, { risk: RISK });
     expect(drawn.kind).toContain('data-testid="risk-line"');
@@ -268,7 +268,7 @@ describe("§358 a role that may only read the settings", () => {
   });
 });
 
-describe("§NNN the create page's status is the editor's select", () => {
+describe("§448 the create page's status is the editor's select", () => {
   it("opens the type's box and draws the status select in its card, at «Programat», posting SCHEDULED, with the line that says what the others do", async () => {
     const drawn = await boxes(null);
     expect(isOpen(foldTags(drawn.kind)[0])).toBe(true);

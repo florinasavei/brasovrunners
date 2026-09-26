@@ -17,7 +17,7 @@ import type { Resilient } from "../last-good";
  *
  * Nothing is rendered while the page is live, which is almost always.
  *
- * While Neon has suspended the project for the rest of its billing period (§NNN) the sentence is a
+ * While Neon has suspended the project for the rest of its billing period (§447) the sentence is a
  * different one, and a calmer one: the site is not "having trouble", it is resting on purpose, the
  * page is the copy saved on a named day, registration and the forms wait, and the date they are
  * back is known — so it is said. An `info`, not a `warning`: nothing is wrong that a reader could

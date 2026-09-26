@@ -134,7 +134,7 @@ describe("§333 publicRead", () => {
       expect(call.keyParts.slice(1)).toEqual(["places.available", "event-1", "after-last"]);
     });
 
-    it("stretches the day's ceiling as the month's budget runs ahead (§NNN): twice at amber, four times at red", async () => {
+    it("stretches the day's ceiling as the month's budget runs ahead (§447): twice at amber, four times at red", async () => {
       for (const [level, factor] of [["green", 1], ["amber", 2], ["red", 4]] as const) {
         budget.level = level;
         cacheState.options.length = 0;
@@ -160,12 +160,12 @@ describe("§333 publicRead", () => {
 });
 
 /*
-  Finding (4) of the fix round (§NNN): at red, anonymous traffic is served from the cache only. A
+  Finding (4) of the fix round (§447): at red, anonymous traffic is served from the cache only. A
   miss never asks the database in the request — it is answered from the read's last good copy, or
   throws `ColdMissError` for the page to send its reader to the resting page — and the read is
   refreshed in the background at the next allowed moment.
 */
-describe("§NNN publicRead while the month's budget is red", () => {
+describe("§447 publicRead while the month's budget is red", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.stubEnv("NODE_ENV", "production");

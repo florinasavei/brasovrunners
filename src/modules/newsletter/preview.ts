@@ -12,7 +12,7 @@ export type NewsletterPreview = { subject: string; html: string };
 
 /**
  * The newsletter as a subscriber in `locale` would receive it, from the composer's boxes as they
- * stand (§NNN) — the same template the outbox sends with (`renderBilingual`), the club's own
+ * stand (§445) — the same template the outbox sends with (`renderBilingual`), the club's own
  * wording applied, over the made-up subscriber every `/admin/emails` preview is addressed to
  * (`emailSampleFor`, only the fields a newsletter carries: her topics, and a manage link with `EXAMPLE` where the token would be).
  * Nothing is queued and no token exists, so nothing in it can be acted on. Asserted on the server

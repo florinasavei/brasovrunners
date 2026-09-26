@@ -130,7 +130,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const now = new Date();
   /*
-    The event, with its last good copy behind it (§NNN). While the database is away — an outage,
+    The event, with its last good copy behind it (§447). While the database is away — an outage,
     or Neon refusing on the month's quota — the page is served from that copy: the resting notice
     says so, the form is drawn disabled so nothing can be sent, and what a person typed before a
     refused press comes back from the draft cookie. Every read below that needs the database is
@@ -160,7 +160,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another } = await searchParams;
   /*
-    A link from an email sent before §NNN, which opened this form for another person on the address
+    A link from an email sent before §446, which opened this form for another person on the address
     (§389). Retired: the email now carries one confirmation of the person the form named
     (`/registrations/family/[token]`), so this is the ordinary form, and one sentence above it says
     what to do instead. Nothing is read, and nothing is spent.
@@ -202,7 +202,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const throttled = (fields ?? "").split(",").includes("throttled");
   /**
-   * The database was away when the form was sent (§NNN): a compute that could not start, or Neon
+   * The database was away when the form was sent (§447): a compute that could not start, or Neon
    * refusing on its monthly quota. About nothing the person typed, like the three above; the
    * draft cookie brought their answers back, and nothing was registered or sent.
    */
@@ -317,7 +317,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * message is announced with the field instead of having to be hunted for.
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
-  // While resting too (§NNN): a press the database refused left the answers in the draft cookie.
+  // While resting too (§447): a press the database refused left the answers in the draft cookie.
   const draft = error || resting ? await readFormDraft() : null;
   /*
   What was typed before a rejected submission (§142), by field name.
@@ -449,7 +449,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         on production, where the mode is `live` (`delivery-notice.ts`). Above the journey strip
         so it is the first thing read on the form and on the check-your-email screen alike.
       */}
-      {/* Served from the last good copy (§NNN): when, and — on a month Neon has paused — until when. */}
+      {/* Served from the last good copy (§447): when, and — on a month Neon has paused — until when. */}
       <LastGoodNotice read={eventRead} />
 
       <EmailDeliveryNotice />
@@ -498,7 +498,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             Each rejected field is a link to its own anchor, which is the one pattern that needs
             no JavaScript: following it moves focus to the input itself.
           */}
-          {/* The form cannot be sent while resting (§NNN); what was typed stays in the boxes below. */}
+          {/* The form cannot be sent while resting (§447); what was typed stays in the boxes below. */}
           {resting && !submitted && (
             <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-resting">
               {t("restingForm")}
@@ -605,7 +605,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          {/* A link from an older email for another person (§389), opened: one sentence, then the ordinary form (§NNN). */}
+          {/* A link from an older email for another person (§389), opened: one sentence, then the ordinary form (§446). */}
           {anotherLinkGone && !error && (
             <Alert severity="warning" sx={{ mb: 2 }} data-testid="another-person-link-gone">
               {t("another.linkGone")}
@@ -691,7 +691,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
             )}
             {/*
-              Disabled as one while resting (§NNN): a disabled fieldset turns off every control inside
+              Disabled as one while resting (§447): a disabled fieldset turns off every control inside
               it — nothing can be typed, pressed or sent — and still shows what the draft brought back.
             */}
             <Box component="fieldset" disabled={resting} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
@@ -836,7 +836,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   </MenuItem>
                 </TextField>
                 {/*
-                  Citizenship, required and pre-chosen on Romania (§NNN; the owner, 2026-09-26:
+                  Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
                   "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
                   are, so a Romanian runner just leaves it. It was optional in the fold on the
                   right (§322); the server now refuses a public form without it.
@@ -1057,7 +1057,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/*
                 The runner's city (§322): optional, and on this side of the form for that reason.
-                Citizenship left this fold for the required half beside the birth date (§NNN).
+                Citizenship left this fold for the required half beside the birth date (§432).
               */}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
@@ -1106,7 +1106,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   (§323): gone once the birth date says under eighteen — disabled as well as
                   hidden, so neither box is validated or posted — and never stored for a minor
                   whatever is posted. A rejection naming either box shows it whatever the date.
-                  Another adult's, sent from an address registered already (§421, §NNN), are that
+                  Another adult's, sent from an address registered already (§421, §446), are that
                   adult's to give: the service keeps none of them for the confirmation. */}
               <HiddenForMinor
                 birthDateId={fieldId("birthDate")}
@@ -1154,7 +1154,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 consents; this is the optional note for the person who wants the medical team
                 to know something, and it says so.
 
-                For another adult sent from an address registered already (§421, §NNN), the health
+                For another adult sent from an address registered already (§421, §446), the health
                 note is art. 9 data only that adult can consent to: the service keeps none of it.
               */}
               {(() => {

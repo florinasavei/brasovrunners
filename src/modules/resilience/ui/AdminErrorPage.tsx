@@ -10,7 +10,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * What a staff member sees when a backoffice page throws (§NNN) — most often because the database
+ * What a staff member sees when a backoffice page throws (§447) — most often because the database
  * is away: a compute that could not start, or Neon refusing for the rest of the month on its
  * quota. The public boundary (`[locale]/error.tsx`) says "go back to the first page", which is
  * the wrong door for a volunteer at the desk; this one says that nothing on the screen was saved

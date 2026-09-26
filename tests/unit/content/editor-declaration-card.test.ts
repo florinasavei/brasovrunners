@@ -7,7 +7,7 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import type { SummaryWords } from "@/modules/content/events/ui/box-summaries";
 
 /**
- * §NNN — one place for declarations, under «Regulamentul» (the owner, 2026-09-26: "declarația la
+ * §448 — one place for declarations, under «Regulamentul» (the owner, 2026-09-26: "declarația la
  * alergările de grup ar trebui să apară sub secțiunea «Regulament»; momentan nu văd unde selectez
  * declarația"). The rules box holds a named card, «Declarația pe propria răspundere»: a group run's
  * optional self-declaration (§393) — the surface it reads from «Traseul», the tick, the approved
@@ -76,7 +76,7 @@ async function rules(event: EditableEvent | null, options: { mayEditSettings?: b
   return markup(renderToStaticMarkup(element as ReactElement));
 }
 
-describe("§NNN the declaration card sits under «Regulamentul»", () => {
+describe("§448 the declaration card sits under «Regulamentul»", () => {
   it("is a named level-3 card, on the create page too, drawn inside the rules box after its tabs", async () => {
     for (const event of [TRAIL_RUN, RACE, null]) {
       const html = await rules(event);

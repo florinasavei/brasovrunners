@@ -1,5 +1,5 @@
 /**
- * What Neon meters for this project's billing period, read three ways and kept apart (§NNN) —
+ * What Neon meters for this project's billing period, read three ways and kept apart (§447) —
  * pure, so the arithmetic is a test rather than a hope.
  *
  * The re-measure of 2026-09-26 (`docs/QUEUE.md`, "Neon: re-measure after the first quiet night")

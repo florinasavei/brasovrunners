@@ -37,7 +37,7 @@ function announce(input: HTMLInputElement) {
 
 /**
  * A time of day in the backoffice, on the 24-hour clock — **shown** that way as well as posted
- * (`DECISIONS.md` §NNN, amending §400; the owner, 2026-09-26: "iar ai făcut ora cu AM și PM… am
+ * (`DECISIONS.md` §439, amending §400; the owner, 2026-09-26: "iar ai făcut ora cu AM și PM… am
  * zis că vreau 24H format!").
  *
  * **Why a text box and not the browser's time input (`type=time`).** §400 swapped MUI's wheel picker for the

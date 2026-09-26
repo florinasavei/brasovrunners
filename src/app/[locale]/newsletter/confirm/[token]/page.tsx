@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * The newsletter's double opt-in (§NNN): the page the confirmation link opens.
+ * The newsletter's double opt-in (§445): the page the confirmation link opens.
  *
  * The GET changes nothing (AGENTS.md §12.8: a link scanner's prefetch must not subscribe anybody);
  * it names the address and the topics and shows one button. The POST spends the link and turns the

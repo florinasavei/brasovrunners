@@ -368,7 +368,7 @@ export function canMessageParticipants(role: StaffRole): boolean {
 }
 
 /**
- * **Sending the newsletter (§NNN)** — a message the club writes to every subscriber of one topic.
+ * **Sending the newsletter (§445)** — a message the club writes to every subscriber of one topic.
  * The same people who may write to an event's participants (§364): the Organizer, the
  * Administrator and the Superadministrator — it is the club speaking to people who asked to hear
  * from it, the organizer's own kind of act. Nobody reads an address on the way: the page shows
@@ -467,11 +467,11 @@ export function canManageStaff(role: StaffRole): boolean {
  *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
  *                                             «Club», «Anti-robot», «Costuri» canManageRegistrations,
  *                                             «Aplicația» canSeeDiagnostics (§397), «De făcut»
- *                                             canReadClubTodo (§NNN)
+ *                                             canReadClubTodo (§438)
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
  *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
- *                                             composer (§NNN); withdrawing an address asks
+ *                                             composer (§445); withdrawing an address asks
  *                                             `canManageRegistrations` for itself
  *     staff          canManageStaff           `admin/staff/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
@@ -512,7 +512,7 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * It stops at the club's **content**. What the club still owes as the system reads it —
  * `/admin/tasks`'s «Club» — stays behind `canManageRegistrations`, because it is the
  * Administrator's own worklist; the club's typed checklist «De făcut» beside it is read by every
- * role from the copywriter up and written by the Organizer and the Administrators (§NNN).
+ * role from the copywriter up and written by the Organizer and the Administrators (§438).
  *
  * **The participant list is no longer on this side of the line (§289).** It was, on the reasoning
  * that "vede cam tot" is not an instruction to hand somebody four hundred addresses — and the
@@ -541,7 +541,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
     ...(canReadRegistrations(role) ? (["registrations"] as const) : []),
     // «Sarcini»: what the *club* still owes, read from the system, for the role that answers for
-    // it (BR-REQ-060-01); the «Aplicația» panel for a Tehnic (§397); and since §NNN the club's own
+    // it (BR-REQ-060-01); the «Aplicația» panel for a Tehnic (§397); and since §438 the club's own
     // checklist «De făcut», which every role that reads the club's content opens — so the whole
     // section is offered from the copywriter up, and each panel asserts its own gate
     // (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`). Written as the threshold
@@ -563,7 +563,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     */
     ...(canReadContent(role) ? (["emails"] as const) : []),
     /*
-      «Newsletter» (§NNN; the owner, 2026-09-26: "pentru newsletter o să fie un meniu suplimentar
+      «Newsletter» (§445; the owner, 2026-09-26: "pentru newsletter o să fie un meniu suplimentar
       în backoffice cu «Newsletter»"): the subscribers as numbers and the composer, for whoever may
       write to them — the Organizer, the Administrator and the Superadministrator. Not the Tehnic,
       who writes to nobody (§38), which is the ladder's second deliberate hole beside the list.

@@ -195,7 +195,7 @@ export function formatDayRange(from: Date, until: Date, options: DayOptions): st
 }
 
 /**
- * A length of time in hours and minutes, the one formula for it (§NNN): "3 h 30 min", "2 h",
+ * A length of time in hours and minutes, the one formula for it (§433): "3 h 30 min", "2 h",
  * "45 min". No locale: "h" and "min" are the units' symbols in Romanian and in English alike.
  */
 export function durationShort(totalMinutes: number): string {

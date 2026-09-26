@@ -226,7 +226,7 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
     The provisional column is emptied in the same statement, so one runner is left holding
     exactly one number, which is the invariant the settle keeps too.
   */
-  // Inside the desk's reservation too (§NNN): the print reserves only numbers nobody holds, so a
+  // Inside the desk's reservation too (§444): the print reserves only numbers nobody holds, so a
   // provisional number there was this runner's before the print, and stays theirs.
   if (current.provisionalBibNumber !== null) {
     return { bibNumber: current.provisionalBibNumber, provisionalBibNumber: null };
@@ -235,7 +235,7 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
 }
 
 /**
- * The number the desk handed with the paper (§NNN): a pre-printed spare, or any free number the
+ * The number the desk handed with the paper (§444): a pre-printed spare, or any free number the
  * volunteer typed, written as the settled one at the moment the place is certain — whatever the
  * window says, because the bib is already in the runner's hand. The provisional number goes with
  * it: one runner, one number (§230). A spare is on paper already, so it is marked printed — the
@@ -258,7 +258,7 @@ async function handedBibAtConfirmation<T extends Record<string, unknown>>(
   if (current.bibNumber !== null) {
     throw new DomainError("VALIDATION_ERROR", "this registration already has a race number; it cannot be changed", ["bibNumber"]);
   }
-  // Only a walk-in (§NNN): an online runner keeps the provisional number they were shown, and a
+  // Only a walk-in (§444): an online runner keeps the provisional number they were shown, and a
   // printed bib stays the one in the pile. The same rule the desk's box is drawn by, under the lock.
   if (!handsSpareAtConfirm(current)) {
     throw new DomainError("VALIDATION_ERROR", "a number is handed at the desk only to a walk-in with no printed bib", ["bibNumber"]);
@@ -797,7 +797,7 @@ export type SubmitRegistrationResult = {
   /**
    * The registration a **staff** entry created or restarted (§420), so the desk confirms that row
    * and no other — never re-read by address, which on a family's address (§389) can find another
-   * runner's row. Also to the confirmation of another person from the email (§NNN), which then
+   * runner's row. Also to the confirmation of another person from the email (§446), which then
    * confirms that row. Absent on every answer the public form gives, which stays the same for
    * everybody (§39).
    */
@@ -836,7 +836,7 @@ export type RegistrationOrigin = {
   honeypotOn?: boolean;
   /**
    * This public submission is another person's registration, confirmed from the email sent to an
-   * address that is already registered at the event (§389, §NNN, `REGISTER_ANOTHER_PERSON`): the
+   * address that is already registered at the event (§389, §446, `REGISTER_ANOTHER_PERSON`): the
    * fields the public form posted and `family-entries.ts` kept, pressed through by the address's
    * owner. The caller has spent the token in the same transaction and names the participant it was
    * issued to; the address is that participant's, never one typed into the form. It changes:
@@ -860,7 +860,7 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   participant: Participant,
   registration: Registration,
   now: Date,
-  /** What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§NNN). */
+  /** What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§446). */
   payload: Record<string, unknown> = {},
 ): Promise<OutboxRow | null> {
   return enqueueEmail(db, {
@@ -1037,7 +1037,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // Only the public form is defended this way. A staff-entered registration has no rendered
   // page behind it to have timed and no hidden field for a bot to fill, and the person typing
   // it has already been authenticated and authorized as an Administrator.
-  // Nor is another person's registration confirmed from the email (§NNN): the submission that kept
+  // Nor is another person's registration confirmed from the email (§446): the submission that kept
   // its fields passed these checks, and the press is behind a token only the inbox holds.
   if (origin.source === "PUBLIC" && !origin.anotherPerson) {
     const verdict = classifySubmission(input, now);
@@ -1279,10 +1279,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       Whether the schema lets a second runner onto the address yet (`family-gate.ts`). Asked only
       when the answer can change the decision: a first registration on an empty address is decided
       the same way either way, and costs no catalogue read. The same person again is asked too since
-      §NNN — whether the re-send may say how to register somebody else depends on it.
+      §446 — whether the re-send may say how to register somebody else depends on it.
     */
     const familyOpen = via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
-    // The name and the birth date both decide who this is (§NNN): the owner's rule, `domain/family.ts`.
+    // The name and the birth date both decide who this is (§446): the owner's rule, `domain/family.ts`.
     const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, via, familyOpen, cap });
 
     /*
@@ -1315,7 +1315,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     if (decision.kind === "offerAnother") {
       /*
-        A different person, on an address that is registered here (§389, §NNN; the owner,
+        A different person, on an address that is registered here (§389, §446; the owner,
         2026-09-26: "în mail să îți afișez înscrierile și să zic «confirm că înscriu altă persoană»").
 
         No registration is created. The screen is the one every submission gets — byte for byte,
@@ -1423,7 +1423,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // presses in the same millisecond — queues nothing, and the record must not say otherwise.
       let queued: OutboxRow | null = null;
       /*
-        Only one of the name and the birth date matched (§NNN): the owner's rule reads it as a slip,
+        Only one of the name and the birth date matched (§446): the owner's rule reads it as a slip,
         so nothing was created — and the message, in the one place it may be said, adds how to
         register somebody else: the form again, with that person's full name and birth date.
       */
@@ -1529,7 +1529,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           changes: { ...carriedFields, emailLinkExpiresAt: linkExpiresAt },
           now,
         });
-        // Not for another person confirmed from the email (§NNN): the caller confirms the address itself.
+        // Not for another person confirmed from the email (§446): the caller confirms the address itself.
         if (restarted && !atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, restarted, now);
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
@@ -1603,7 +1603,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
-    // Nor another person confirmed from the email (§NNN): the press proved the inbox, and the
+    // Nor another person confirmed from the email (§446): the press proved the inbox, and the
     // caller confirms the address in this same transaction (`family-confirm.ts`).
     if (!atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, created, now);
     createdDeadlines = [linkExpiresAt];
@@ -1613,7 +1613,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   if (createdDeadlines !== undefined) wakeMaintenance(event, now, settings, ...createdDeadlines);
 
-  // To a staff caller (§420), and to the confirmation from the email (§NNN), which confirms that row
+  // To a staff caller (§420), and to the confirmation from the email (§446), which confirms that row
   // and no other: the public form's answer stays byte for byte the same for everybody (§39).
   return (origin.source === "STAFF" || origin.anotherPerson) && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
 }
@@ -2002,7 +2002,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   current: Registration,
   actor: StaffActor,
   now: Date,
-  /** The number the desk handed with the paper (§NNN), when it handed one. */
+  /** The number the desk handed with the paper (§444), when it handed one. */
   handedBib?: number,
 ): Promise<Registration> {
   const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", current.locale, now);
@@ -2042,7 +2042,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       checkinCode: current.checkinCode ?? newCheckinCode(),
       // As in `signDeclaration` (§214): nothing while the window is open, the next free
       // number once it has shut — unless the desk handed one with the paper, a spare above all
-      // (§NNN), which is this runner's from now on whatever the window says.
+      // (§444), which is this runner's from now on whatever the window says.
       ...(handedBib !== undefined
         ? await handedBibAtConfirmation(tx, current, handedBib, now)
         : await finalBibAtConfirmation(tx, event, current, now)),
@@ -2091,7 +2091,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
   actor: StaffActor,
   now: Date,
   /**
-   * The number handed with the paper (§NNN): a desk spare or any free number the volunteer typed.
+   * The number handed with the paper (§444): a desk spare or any free number the volunteer typed.
    * Written only if the registration ends CONFIRMED here — a walk-in the allocator puts on the
    * waiting list takes no number, and the spare stays in the box for the next person.
    */

@@ -2,7 +2,7 @@ import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
 
 /**
- * «Adresa de contact afișată» — which address readers are shown and reply to (§NNN; the owner,
+ * «Adresa de contact afișată» — which address readers are shown and reply to (§442; the owner,
  * 2026-09-26: "I want to be able to switch and show the club's Gmail, or show both").
  *
  * Pure: no database, no environment. Three modes:

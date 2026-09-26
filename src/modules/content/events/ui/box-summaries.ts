@@ -68,7 +68,7 @@ export type SummaryWords = {
   };
   window: { range: string; fromPublication: string; untilStart: string };
   conditions: { noDeclaration: string };
-  /** A group run's optional self-declaration, under «Regulamentul» (§NNN). */
+  /** A group run's optional self-declaration, under «Regulamentul» (§448). */
   declaration: { offered: string; notOffered: string; notAsked: string };
   confirmation: { sentence: string; atStart: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
@@ -249,7 +249,7 @@ export function rulesSummary(words: SummaryWords, translations: readonly Summary
 
 type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone">;
 
-/** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` — the duration in hours and minutes (§NNN). */
+/** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` — the duration in hours and minutes (§433). */
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
   const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
@@ -384,7 +384,7 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
   return fillIn(words.window.range, { from, to });
 }
 
-/** Sub-card 8.2: `de la 14 ani` — the declaration is chosen under «Regulamentul» since §NNN. */
+/** Sub-card 8.2: `de la 14 ani` — the declaration is chosen under «Regulamentul» since §448. */
 export function conditionsSummary(words: SummaryWords, minAge: number): string {
   return join(words, [fillIn(words.registration.minAge, { age: minAge })]);
 }
@@ -392,7 +392,7 @@ export function conditionsSummary(words: SummaryWords, minAge: number): string {
 type DeclarationEvent = Pick<EditableEvent, "registrationMode" | "offersGroupRunDeclaration">;
 
 /**
- * The «Declarația pe propria răspundere» card under «Regulamentul» (§NNN), and the part of the
+ * The «Declarația pe propria răspundere» card under «Regulamentul» (§448), and the part of the
  * rules card's closed line it adds: a group run's optional self-declaration — `declarație trail` or
  * `fără declarație` — or a race's, when it registers on the site — `declarația v3`, or the missing
  * one named as the gap it is. Null when the event asks for no declaration at all (a race registering
@@ -431,7 +431,7 @@ export function bibsSummary(
   start: number,
   colourLabel: string | null,
   counts: { allocated: number; unprinted: number } | null,
-  /** The desk's spares (§NNN), when the club set a band. */
+  /** The desk's spares (§444), when the club set a band. */
   spare: { from: number; to: number } | null = null,
 ): string {
   return join(words, [

@@ -219,7 +219,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     return [opensAt && opensAt > now ? opensAt : null, closesAt && closesAt > now ? closesAt : null];
   });
 
-  // `purgeLapsedFamilyEntries` (§NNN): another person's kept form, deleted once its window passes.
+  // `purgeLapsedFamilyEntries` (§446): another person's kept form, deleted once its window passes.
   const familyLapse = await nextFamilyEntryLapse(db, now);
 
   return earliest([emailLapses, toDate(holds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse]);

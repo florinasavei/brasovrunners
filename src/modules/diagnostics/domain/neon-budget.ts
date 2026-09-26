@@ -2,7 +2,7 @@ import type { JobCadenceMinutes } from "@/modules/jobs/schedule";
 import { neonQuotaRatio } from "./neon-limits";
 
 /**
- * The month's budget as one of three colours, and what the platform does at each (§NNN) — pure:
+ * The month's budget as one of three colours, and what the platform does at each (§447) — pure:
  * no request, no database, no clock of its own.
  *
  * The owner capped both Neon projects (§327: production 100 CU-hours a month, QA 30) knowing that

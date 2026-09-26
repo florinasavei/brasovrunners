@@ -78,7 +78,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   const fromTemplate = template && isLegalDocumentKey(template) ? LEGAL_TEMPLATES[template] : undefined;
   // The facts the deployment knows are written in before the club reads (§132): the legal
   // name, the CIF and the seat from the environment, the contact address every email names.
-  // The contact address as the club chose to show it (§NNN), «a sau b» when both.
+  // The contact address as the club chose to show it (§442), «a sau b» when both.
   const facts = clubFactsFromEnv(env, await shownContactAddresses(getDb()));
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }

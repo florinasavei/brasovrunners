@@ -16,7 +16,7 @@ const SURFACES: readonly string[] = ["ASPHALT", "TRAIL"];
 
 /**
  * "Declarație opțională pe propria răspundere" (§393): whether this group run's page offers the
- * self-declaration of its surface. Since §NNN it sits under «Regulamentul», in the named card
+ * self-declaration of its surface. Since §448 it sits under «Regulamentul», in the named card
  * «Declarația pe propria răspundere» (`DeclarationCard`) — one place for declarations, under the
  * rules (the owner, 2026-09-26: "momentan nu văd unde selectez declarația") — and says the surface
  * it reads from «Traseul» and which approved text is in force for it.
@@ -54,7 +54,7 @@ export default function GroupRunDeclarationField({
     help: string;
     notGroupSurface: string;
     missing: Record<DeclarationSurface, string>;
-    /** "Textul în vigoare pentru trail: …, v2." — only for a surface with an approved text (§NNN). */
+    /** "Textul în vigoare pentru trail: …, v2." — only for a surface with an approved text (§448). */
     inForce: Partial<Record<DeclarationSurface, string>>;
     /** "Suprafața, din cardul «Traseul»: Trail" — one line per value of the surface select, blank included. */
     surfaceLines: Record<string, string>;

@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of routing.locales) {
-    // Each read with its last good copy behind it (§NNN): a crawler that arrives during an outage
+    // Each read with its last good copy behind it (§447): a crawler that arrives during an outage
     // is told the addresses the site had, not a 500 that makes it drop them.
     const events = (await readWithLastGood(`sitemap:events:${locale}`, () => cachedSitemapEvents(locale), now)).value;
 

@@ -15,7 +15,7 @@ import { createRegistrationByStaff, handedBibRefusalCode } from "@/modules/regis
 import { reserveSpareBibs } from "@/modules/registrations/bibs";
 
 /**
- * §NNN × BR-REQ-037-07 — two volunteers handing the same desk spare at once, on two connections.
+ * §444 × BR-REQ-037-07 — two volunteers handing the same desk spare at once, on two connections.
  *
  * The desk checks the number before the entry is written, outside the event's lock, so two walk-ins
  * entered together with the same spare both pass that check. The confirmation that writes the
@@ -34,7 +34,7 @@ import { reserveSpareBibs } from "@/modules/registrations/bibs";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN BR-REQ-037-07 two volunteers handing one spare, on two connections", () => {
+describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date("2026-09-26T08:00:00.000Z");

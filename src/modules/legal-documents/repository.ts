@@ -110,7 +110,7 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
 /**
  * Whether the club has an approved group-run declaration in force for each surface (§393) — what
  * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked —
- * and, since §NNN, the version it names as the text in force, or null for none. Asked in Romanian:
+ * and, since §448, the version it names as the text in force, or null for none. Asked in Romanian:
  * both languages are required before a version can be approved (§46).
  */
 export async function groupRunDeclarationsInForce<T extends Record<string, unknown>>(
@@ -148,7 +148,7 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 }
 
 /**
- * Whether the privacy notice in force describes the newsletter (§NNN, `describesNewsletter`) — in
+ * Whether the privacy notice in force describes the newsletter (§445, `describesNewsletter`) — in
  * **every** language, because one pop-up serves both and a subscriber in either was told only what
  * their language's notice says. False while no notice is approved. The backoffice's and the
  * service's read; the contact page asks through the public cache (`cachedNewsletterOffered`).

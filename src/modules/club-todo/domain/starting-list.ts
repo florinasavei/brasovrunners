@@ -1,7 +1,7 @@
 import type { ClubTodoItem } from "./club-todo";
 
 /**
- * The list «De făcut» starts from, until somebody first changes it (§NNN).
+ * The list «De făcut» starts from, until somebody first changes it (§438).
  *
  * The owner's two messages of 2026-09-26 to the two people who run the club while he is away —
  * the Administrator's twelve steps and the Organizer's seven — in their order, each line as he

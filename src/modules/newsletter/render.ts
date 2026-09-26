@@ -23,7 +23,7 @@ import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS } from "./tokens";
 type RendererDb = Parameters<EmailRenderer>[1];
 
 /**
- * The newsletter's three messages as they leave (§NNN): `render.ts` hands every row of these types
+ * The newsletter's three messages as they leave (§445): `render.ts` hands every row of these types
  * here. None is about a registration and none has a participant: the row names its subscriber —
  * and the send, and the event — by id in the payload, and the links are minted now, at send time,
  * like every link (§14.5): a fresh one per message, the secret in this message alone.
@@ -39,7 +39,7 @@ type RendererDb = Parameters<EmailRenderer>[1];
  * The club's one copy of a send (`clubCopy`, §419's shape) has no subscriber: the same words, the
  * count, no topics line and no link of anybody's.
  *
- * `replyTo` is the Reply-To in force (§NNN, «Adresa de contact afișată»), the one the outbox's
+ * `replyTo` is the Reply-To in force (§442, «Adresa de contact afișată»), the one the outbox's
  * renderer hands every message; absent, `EMAIL_REPLY_TO`.
  */
 export async function renderNewsletterRow(

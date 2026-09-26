@@ -11,7 +11,7 @@ import SaveBlockedNotice from "@/shared/forms/SaveBlockedNotice";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * The backoffice's own boundary, for two kinds of failure only (§NNN): a save the network refused,
+ * The backoffice's own boundary, for two kinds of failure only (§436, §447): a save the network refused,
  * and a database that is away. Next requires an `error` file to be a Client Component; this one
  * takes no data — only the error and `reset` — and `tests/privacy/admin-client-boundary.test.ts`
  * holds it to importing nothing that reads any.

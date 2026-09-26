@@ -102,7 +102,7 @@ export type NeonLimitsReading = {
   activeHours: number;
   periodEnd: Date;
   reportedPlan: NeonPlanId | null;
-  /** Which of Neon's readings `usedCuHours` is (§NNN, `neon-meter.ts`); absent is the project row's own counter. */
+  /** Which of Neon's readings `usedCuHours` is (§447, `neon-meter.ts`); absent is the project row's own counter. */
   usedSource?: NeonMeterSource;
 };
 

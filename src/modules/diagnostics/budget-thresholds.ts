@@ -12,7 +12,7 @@ import { type BudgetThresholds, DEFAULT_BUDGET_THRESHOLDS } from "./domain/neon-
 import { forgetNeonBudget } from "./neon-budget";
 
 /**
- * The two shares of the Neon quota that turn the month's budget amber and red (§NNN) — the
+ * The two shares of the Neon quota that turn the month's budget amber and red (§447) — the
  * Administrator's to move on `/admin/tasks` → Costuri, built like §334's interval beside it: one
  * `platform_settings` row, a strict schema, the role asserted here and not only by the hidden
  * form, and an audit row naming who changed them from what to what. No migration: a new key in

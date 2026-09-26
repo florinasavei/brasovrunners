@@ -5,7 +5,7 @@ import type { Database } from "@/db/types";
 import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 
 /**
- * The newsletter's links (§NNN) — the same secret and the same stored hash as every email action
+ * The newsletter's links (§445) — the same secret and the same stored hash as every email action
  * link (AGENTS.md §12.8, §13.2; `action-tokens/domain/token-secret.ts`), in a table of their own
  * because they belong to a subscriber, who is not a participant.
  *

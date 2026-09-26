@@ -19,7 +19,7 @@ function localeOf(form: FormData): Locale {
 }
 
 /**
- * "Trimite newsletterul" (§NNN): the composer on `/admin/newsletter`, the backoffice's own
+ * "Trimite newsletterul" (§445): the composer on `/admin/newsletter`, the backoffice's own
  * «Newsletter» entry. The service asserts who may send (`canSendNewsletter`) whatever the page
  * showed, and checks the words again; a refusal comes back as the form's state with every box as
  * typed (§315). The form's own id makes a second press queue nothing, and the page's banner and
@@ -54,7 +54,7 @@ export async function sendNewsletterAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * The composer's preview (§NNN): the four boxes as they stand, rendered for a subscriber of one
+ * The composer's preview (§445): the four boxes as they stand, rendered for a subscriber of one
  * language. Asserted on the server like the send; every field read as a bounded string, whatever
  * the network sent. Null for anybody the service refuses — the island says "no preview".
  */
@@ -85,7 +85,7 @@ export async function previewNewsletterAction(input: {
 }
 
 /**
- * Remove one address from the newsletter at the person's written request (§NNN). Administrator
+ * Remove one address from the newsletter at the person's written request (§445). Administrator
  * only — the service asserts it again — and it says whether the address was there, because the
  * person asking is staff.
  */

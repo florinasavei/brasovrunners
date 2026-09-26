@@ -55,7 +55,7 @@ const submissionFields = z.object({
   /**
    * ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists.
    *
-   * Required on the public form again since §NNN (the owner, 2026-09-26: "cetățenia ar trebui să
+   * Required on the public form again since §432 (the owner, 2026-09-26: "cetățenia ar trebui să
    * fie obligatorie; by default pune Român"), reversing §322's optional: the form asks it beside
    * the birth date, pre-chosen on `RO`, so a Romanian runner leaves it. Optional for a staff entry
    * (paper), relaxed below; older rows without it stay blank. The city stays optional (§322).
@@ -292,7 +292,7 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * the person, and refusing the row for a detail nobody was told would lose the registration,
  * which is the rule that criterion keeps. A malformed date is left to the schema's own message
  * (`ageOn` answers null), so the summary never gives a second, untrue reason. The comparison is
- * `isUnderMinimumAge`, the one a group run's self-declaration asks too (§NNN).
+ * `isUnderMinimumAge`, the one a group run's self-declaration asks too (§440).
  *
  * Counted against the day of the event, where the guardian rule above counts against today:
  * the minimum is about the day somebody runs; eighteen is about who fills the form in.
@@ -418,7 +418,7 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .partial({
     birthDate: true,
     sex: true,
-    // Citizenship is required on the public form only (§NNN): a paper entry may not have it.
+    // Citizenship is required on the public form only (§432): a paper entry may not have it.
     nationality: true,
     phone: true,
     emergencyContactName: true,
@@ -438,7 +438,7 @@ export const staffRegistrationSubmissionSchema = submissionFields
 
 /**
  * Another person on an address that is registered already (§389), as the press on the emailed
- * confirmation reads the kept form again (§NNN, `family-confirm.ts`). Everything the public form
+ * confirmation reads the kept form again (§446, `family-confirm.ts`). Everything the public form
  * asks, but the runner's own telephone — kept optional from §389's family form, where the second
  * person was often a child with none; the emergency contact is still required. The address itself
  * is never read from the kept form: the caller fixes it from the token.
@@ -457,7 +457,7 @@ export const anotherPersonSubmissionSchema = submissionFields
  * Whether the runner on the family form is an adult (§421): eighteen or over today, by the same
  * calendar rule as the guardian check. False for a date that cannot be read — the schema refuses
  * that on its own, and nothing is taken away from a form it is about to refuse. The confirmation
- * page of §NNN asks the adult's acknowledgement by the same rule (`family-entries.ts`).
+ * page of §446 asks the adult's acknowledgement by the same rule (`family-entries.ts`).
  */
 export function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
   if (typeof birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return false;

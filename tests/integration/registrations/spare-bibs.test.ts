@@ -31,7 +31,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — spare bibs for on-the-spot entries: numbers the club prints ahead with an empty name line,
+ * §444 — spare bibs for on-the-spot entries: numbers the club prints ahead with an empty name line,
  * reserved by the print, which the allocator never hands to anybody who registered online, and
  * which the desk hands to a walk-in — suggested, the next free one.
  *
@@ -152,7 +152,7 @@ async function refusalOf(operation: Promise<unknown>): Promise<{ code: string; f
   }
 }
 
-describe("§NNN the print reserves the spares", () => {
+describe("§444 the print reserves the spares", () => {
   it("reserves after the highest number anybody has, prints them blank, and extends on a second print", async () => {
     const event = await createRace({ spare: null });
     await enter(event, "a@example.org");
@@ -229,7 +229,7 @@ describe("§NNN the print reserves the spares", () => {
   });
 });
 
-describe("§NNN BR-REQ-038-01 the allocator never draws a desk spare", () => {
+describe("§444 BR-REQ-038-01 the allocator never draws a desk spare", () => {
   it("gives an online registration a number outside the reservation, after a print", async () => {
     const event = await createRace({ spare: null });
     const a = await enter(event, "a@example.org");
@@ -348,7 +348,7 @@ describe("§NNN BR-REQ-038-01 the allocator never draws a desk spare", () => {
   });
 });
 
-describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
+describe("§444 BR-REQ-037-07 the desk hands a spare", () => {
   it("suggests the first spare to the walk-in, nothing where none are reserved, and says when they ran out", async () => {
     const event = await createRace({ spare: null });
     await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 2, now: NOW });
@@ -510,7 +510,7 @@ describe("§NNN BR-REQ-037-07 the desk hands a spare", () => {
   });
 });
 
-describe("§NNN the reservation itself", () => {
+describe("§444 the reservation itself", () => {
   it("is a start and a count or neither, the count from 1 to 500, within five digits, at the database", async () => {
     const insert = (walkInBibStart: number | null, walkInBibCount: number | null) =>
       db.insert(events).values({ type: "RACE", startsAt: NOW, registrationMode: "INTERNAL", capacity: 10, walkInBibStart, walkInBibCount });

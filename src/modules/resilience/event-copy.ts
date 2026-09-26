@@ -6,7 +6,7 @@ import { throughBreaker } from "./breaker";
 import { readWithLastGood, type Resilient } from "./last-good";
 
 /**
- * One published event by its slug, with its last good copy behind it (§NNN) — for the surfaces
+ * One published event by its slug, with its last good copy behind it (§447) — for the surfaces
  * that carry an event without being its page: the `.ics` file, the Open Graph picture a link
  * preview draws, the picture to save for Instagram. Each used to answer 500 while the database
  * was away, which is exactly when a runner re-shares the race or re-adds it to a calendar; now
@@ -31,7 +31,7 @@ export async function eventBySlugWithLastGood(locale: Locale, slug: string, now:
 export type RegistrationEvent = NonNullable<Awaited<ReturnType<typeof findPublishedEventBySlug>>>;
 
 /**
- * The event the registration form is for, with its last good copy behind it (§NNN).
+ * The event the registration form is for, with its last good copy behind it (§447).
  *
  * Read from the database itself, as the form always was — it decides whether the form is offered,
  * so it is not answered from the public cache — but through the breaker, so a database this

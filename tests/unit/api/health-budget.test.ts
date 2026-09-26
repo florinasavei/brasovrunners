@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — `/api/health` under the month's budget. The level comes with the quota reading; what the
+ * §447 — `/api/health` under the month's budget. The level comes with the quota reading; what the
  * route does with it is asserted here, with Next's data cache kept in memory
  * (`helpers/next-cache.ts`) so that "answered from a recent answer" is something a test can see.
  *
@@ -56,7 +56,7 @@ afterAll(() => {
   vi.useRealTimers();
 });
 
-describe("§NNN /api/health reads the month's budget", () => {
+describe("§447 /api/health reads the month's budget", () => {
   it("says the level, and hands the governor's floor to both health checks", async () => {
     answering("amber");
     const response = await GET();

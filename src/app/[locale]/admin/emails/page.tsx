@@ -67,7 +67,7 @@ const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
  * it and no sample-value warning over it.
  */
 function perSend(messageType: EmailMessageType): boolean {
-  // The newsletter too (§NNN): written in its own composer, on the backoffice's «Newsletter» page.
+  // The newsletter too (§445): written in its own composer, on the backoffice's «Newsletter» page.
   return messageType === "ORGANIZER_MESSAGE" || messageType === "NEWSLETTER";
 }
 
@@ -135,7 +135,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const deadlinesRead = readDeadlines(db);
   const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress] = await Promise.all([
     readEmailPlan(db),
-    // Which road each group takes, Gmail's cap and pace (§NNN), beside the plan it spends less of.
+    // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -159,7 +159,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
     // How many registrations one address may carry at an event (§389), straight through like the deadlines.
     readAddressCap(db),
-    // «Adresa de contact afișată» (§NNN): what the site shows and every email's Reply-To.
+    // «Adresa de contact afișată» (§442): what the site shows and every email's Reply-To.
     readShownContactAddress(db),
   ]);
   const t = await getTranslations("Admin");
@@ -201,7 +201,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     confirmationOpensDays: DEFAULT_CONFIRMATION_OPENS_DAYS,
   };
   const actionUrl = emailSampleActionUrl(emailLocale);
-  // The Reply-To the send sets (§NNN): the preview's "or reply to this email" line follows it, never the env alone.
+  // The Reply-To the send sets (§442): the preview's "or reply to this email" line follows it, never the env alone.
   const replyTo = replyToHeader(resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO));
   const mayWrite = canEditTexts(staff.role);
 
@@ -217,7 +217,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     sample.timings = timings;
     sample.replyTo = replyTo;
     // And the club's limit per address, on the message that states it (§389): the link's shape —
-    // with who the sample address holds and the person its form named (§NNN).
+    // with who the sample address holds and the person its form named (§446).
     if (messageType === "REGISTER_ANOTHER_PERSON") {
       sample.addressCap = perAddress;
       sample.familyRegistered = [...EMAIL_SAMPLE_FAMILY.registered];
@@ -276,7 +276,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       */}
       <EmailPlanPanel locale={locale} plan={plan} volume={volume} mayEdit={mayEditEmail} openWhen={{ saved: saved === "emailPlan" }} />
 
-      {/* Mailgun or the club's Gmail, per group (§NNN): what spends the plan above, and what does not. */}
+      {/* Mailgun or the club's Gmail, per group (§443): what spends the plan above, and what does not. */}
       <EmailTransportPanel
         locale={locale}
         setting={transport}
@@ -317,7 +317,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "contactRecipients" }}
       />
 
-      {/* «Adresa de contact afișată» (§NNN), beside who receives the form: both are "where the club is written to". */}
+      {/* «Adresa de contact afișată» (§442), beside who receives the form: both are "where the club is written to". */}
       <ShownAddressPanel
         locale={locale}
         state={shownAddress}
@@ -327,7 +327,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "shownContactAddress" }}
       />
       {/*
-        The newsletter (§NNN) has its own page in the menu since the owner's 2026-09-26 "un meniu
+        The newsletter (§445) has its own page in the menu since the owner's 2026-09-26 "un meniu
         suplimentar în backoffice cu «Newsletter»": one line here pointing at it, for the roles that
         may open it — the page answers 404 to anybody else, so nobody is offered a door that refuses.
       */}

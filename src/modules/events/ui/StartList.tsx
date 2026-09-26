@@ -76,7 +76,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  *
  * ## While the database is away
  *
- * Nothing, rather than the event page's error (§NNN): the list is never served from a copy — a
+ * Nothing, rather than the event page's error (§447): the list is never served from a copy — a
  * stale list would show a name its owner withdrew — so an outage, or a red month's cache miss
  * (`ColdMissError`), leaves the section out and the page stands.
  */

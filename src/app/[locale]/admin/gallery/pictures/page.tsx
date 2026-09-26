@@ -136,7 +136,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
             {t("pictures.size", { width: row.width, height: row.height, kb: Math.round(row.byteSize / 1024) })}
           </Typography>
           {/*
-            The widest smaller copy (§NNN), what a laptop at 2× loads in place of the master — only
+            The widest smaller copy (§437), what a laptop at 2× loads in place of the master — only
             for a picture stored with a ladder; its weight is not recorded, so the width alone.
           */}
           {topRungLine(row)}

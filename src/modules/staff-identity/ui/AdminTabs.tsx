@@ -50,7 +50,7 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   tasks: ChecklistIcon,
   legal: GavelIcon,
   emails: ForwardToInboxIcon,
-  // The club's news to the people who asked for it (§NNN): a paper, not an envelope — «Emailuri» is the envelope.
+  // The club's news to the people who asked for it (§445): a paper, not an envelope — «Emailuri» is the envelope.
   newsletter: NewspaperIcon,
   staff: GroupIcon,
   devs: SettingsIcon,

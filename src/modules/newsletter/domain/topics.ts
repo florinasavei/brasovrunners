@@ -1,7 +1,7 @@
 import { newsletterTopic, type NewsletterTopic } from "@/db/schema/newsletter";
 
 /**
- * The newsletter's topics (§NNN), in the order the pop-up lists them — the owner's list, 2026-09-26:
+ * The newsletter's topics (§445), in the order the pop-up lists them — the owner's list, 2026-09-26:
  * "every update, big events (such as the anniversary cross), discount codes, shoe testing, special
  * events, you think of it" — plus new events on the calendar, calls for volunteers and the club's
  * news. `ALL` is "everything", today's topics and any the club adds later.

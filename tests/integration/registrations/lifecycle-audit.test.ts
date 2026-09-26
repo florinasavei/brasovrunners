@@ -135,7 +135,7 @@ async function createEvent(options: { capacity?: number | null; closesAt?: Date 
   };
 }
 
-/** Each member of a family a birth date of their own (§NNN): a different person differs in both. */
+/** Each member of a family a birth date of their own (§446): a different person differs in both. */
 const BIRTH_DATES: Record<string, string> = { Maria: "1990-07-11", Ioana: "1993-08-08", Elena: "1992-04-04" };
 
 const submission = (firstName: string, email: string, when: Date = NOW) => ({
@@ -224,7 +224,7 @@ async function secretOf(row: typeof emailOutbox.$inferSelect, when: Date): Promi
 
 describe("§420 §389 BR-REQ-036-02 every 'register another person' email keeps its own link", () => {
   const EMAIL = "ana@example.ro";
-  // The press on the emailed confirmation (§NNN); an adult's acknowledges the fitness statement (§421).
+  // The press on the emailed confirmation (§446); an adult's acknowledges the fitness statement (§421).
   const confirm = (secret: string, when: Date) => confirmFamilyEntry(db, secret, { fitnessAcknowledged: true }, when);
 
   it("a parent who fills the form for each child, then opens the inbox, finds every link working", async () => {

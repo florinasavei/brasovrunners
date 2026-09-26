@@ -84,11 +84,11 @@ describe("the create page is the editor's page", () => {
     }
   });
 
-  it("offers the status on create as the editor does — Programat by default, Anulat with its reason, Încheiat (§NNN)", () => {
+  it("offers the status on create as the editor does — Programat by default, Anulat with its reason, Încheiat (§448)", () => {
     // The owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat din start". No hidden
     // SCHEDULED any more: the card's own select posts.
     expect(CREATE).not.toContain('name="event.eventStatus"');
-    // The card is there, inside the first box (§NNN), so the two pages look the same (§358).
+    // The card is there, inside the first box (§448), so the two pages look the same (§358).
     expect(CREATE).toContain("<KindBox {...box} heading={flow.headings.kind} />");
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event: null })");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
@@ -175,7 +175,7 @@ describe("no film box", () => {
 describe("the time is a typed box, shown and posted on the 24-hour clock", () => {
   const TIME_FIELD = read("src/shared/forms/pickers/TimeField.tsx");
 
-  it("makes every time box a 24-hour text box, never the browser's AM/PM time control (§400, §NNN)", () => {
+  it("makes every time box a 24-hour text box, never the browser's AM/PM time control (§400, §439)", () => {
     // §345's MUI wheel picker went on 2026-09-25 — "I simply hate this time picker" — for the
     // browser's `type="time"`, which an English-language browser draws as "07:00 PM"; the owner,
     // 2026-09-26: "am zis că vreau 24H format!". The box is now text showing what it posts.

@@ -58,11 +58,11 @@ function secretIn(message: OutgoingEmail, page: "confirm" | "manage"): string {
 }
 
 /**
- * The newsletter (§NNN), end to end on real PostgreSQL: the pop-up's gate and its one answer, the
+ * The newsletter (§445), end to end on real PostgreSQL: the pop-up's gate and its one answer, the
  * double opt-in, the subscriber's own page, the send to one topic, the new-event alert once per
  * event, the reserve the outbox keeps for registrations, and the retention sweep.
  */
-describe("§NNN the newsletter: consent, links, sends and the allowance", () => {
+describe("§445 the newsletter: consent, links, sends and the allowance", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
@@ -377,7 +377,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(english.text).toContain("See the event");
     });
 
-    it("§NNN carries §392's facts block — Când, Unde, Program, Traseu, Cost, Linkuri — each half in its own language, as the confirmed email does", async () => {
+    it("§445 carries §392's facts block — Când, Unde, Program, Traseu, Cost, Linkuri — each half in its own language, as the confirmed email does", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("big@example.org", ["BIG_EVENTS"]);
       await confirmationsSent();
@@ -490,7 +490,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(order.map((row) => (row.payloadJson as { eventId: string }).eventId)).toEqual([first.id, second.id]);
     });
 
-    it("§NNN files each kind of event under the brief's topic: a race, a group run, a special date of the weekly run, a partnered or external event, a gear test, and the rest under all the news", async () => {
+    it("§445 files each kind of event under the brief's topic: a race, a group run, a special date of the weekly run, a partnered or external event, a gear test, and the rest under all the news", async () => {
       await approveNotice({ describesNewsletter: true });
       // Nobody subscribed: every event is marked seen in one run, so each send's topics can be read at once.
       const race = await seedEvent();
@@ -515,7 +515,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(topicsOf(coffee.id)).toEqual(["ALL"]);
     });
 
-    it("§NNN sends an external event to special events and never to a topic it is not", async () => {
+    it("§445 sends an external event to special events and never to a topic it is not", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("special@example.org", ["SPECIAL_EVENTS"]);
       await subscribed("big@example.org", ["BIG_EVENTS"]);
@@ -525,7 +525,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(rows.map((row) => [row.recipientEmail, (row.payloadJson as { eventId: string }).eventId])).toEqual([["special@example.org", external.id]]);
     });
 
-    it("§NNN sends nothing for an event cancelled or taken down while its alert waited for the allowance, and raises no alarm", async () => {
+    it("§445 sends nothing for an event cancelled or taken down while its alert waited for the allowance, and raises no alarm", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("all@example.org", ["ALL"]);
       await subscribed("both@example.org", ["ALL"], "en");
@@ -560,7 +560,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect((await checkEmailHealth(db, later)).status).toBe("ok");
     });
 
-    it("§NNN sends nothing for an event that started while its alert waited", async () => {
+    it("§445 sends nothing for an event that started while its alert waited", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("all@example.org", ["ALL"]);
       await confirmationsSent();
@@ -638,7 +638,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
     });
   });
 
-  describe("§NNN the club's copy of a send, and what the panel says waits", () => {
+  describe("§445 the club's copy of a send, and what the panel says waits", () => {
     it("gives the club one copy of a newsletter and of an alert, with the count and no link of anybody's", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("ana@example.org", ["DISCOUNTS"]);

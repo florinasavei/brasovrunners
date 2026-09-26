@@ -154,7 +154,7 @@ const BAR_HEIGHT = 44;
  * that way, and Safari is where this was reported from.
  *
  * The contact line renders only when an address is in force — `EMAIL_REPLY_TO`, the club's Gmail,
- * or both, as «Adresa de contact afișată» on `/admin/emails` says (§NNN) — and the marks only when
+ * or both, as «Adresa de contact afișată» on `/admin/emails` says (§442) — and the marks only when
  * configured. Nothing here invents an address.
  *
  * ## Open-Meteo's credit, once for the whole site (§429)
@@ -339,7 +339,7 @@ export default async function SiteFooter() {
                 sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, minWidth: 0, maxWidth: "100%" }}
               >
                 <Link href="/contact">{contacts.length > 0 ? footer("about.contact") : footer("contactPage")}</Link>
-                {/* The address the club chose to show (§NNN): the mailbox, its Gmail, or both, «… sau …». */}
+                {/* The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …». */}
                 {contacts.map((address, index) => (
                   <Box key={address} component="span" sx={{ display: "inline-flex", columnGap: 0.5, minWidth: 0 }}>
                     {index > 0 && <span>{footer("about.or")}</span>}

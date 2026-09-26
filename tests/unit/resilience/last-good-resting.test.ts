@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — when Neon has suspended the project for the rest of its billing period, a public page
+ * §447 — when Neon has suspended the project for the rest of its billing period, a public page
  * serves its last good copy however old (up to a period), and says until when. For any other
  * outage §281's twelve hours still stand, and a query that is merely wrong never asks Neon.
  */
@@ -33,7 +33,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the last good copy while the database rests for the month", () => {
+describe("§447 the last good copy while the database rests for the month", () => {
   it("serves a copy days old, and names the period's end, while Neon has suspended the project", async () => {
     budget.reading = { level: "red", budget: { spent: true }, meter: { periodEnd: PERIOD_END } };
     await readWithLastGood("events:ro", async () => ["Crosul de toamnă"], TAKEN);
@@ -78,7 +78,7 @@ describe("§NNN the last good copy while the database rests for the month", () =
   });
 
   /*
-    The realistic case (the review of §NNN): a project-scoped key reads the level off the
+    The realistic case (the review of §447): a project-scoped key reads the level off the
     operations log, which stops growing once Neon suspends the project — so it may read under 100%
     while every query is refused. The refusal itself is what says the database rests.
   */

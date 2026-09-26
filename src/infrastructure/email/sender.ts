@@ -52,7 +52,7 @@ export function capturedEmails(): readonly CapturedEmail[] {
 }
 
 /**
- * The club's choice about the Gmail road for this batch (§NNN) and the ledger Gmail's usage is read
+ * The club's choice about the Gmail road for this batch (§443) and the ledger Gmail's usage is read
  * from before every message — the database's, built by the caller (`notifications/outbox-sender.ts`);
  * this file reads none.
  */
@@ -62,7 +62,7 @@ export type GmailRouting = {
   atGmailCap: GmailAtCap;
   overflowToGmail: boolean;
   ledger: GmailLedger;
-  /** Where a Gmail failure is recorded (§NNN, `notifications/email-transport.ts`). */
+  /** Where a Gmail failure is recorded (§443, `notifications/email-transport.ts`). */
   onFailure?: (error: string, at: Date) => Promise<void>;
 };
 
@@ -82,13 +82,13 @@ export function createEmailSenderForEnvironment(
     Pick<Env, "CONTACT_SMTP_HOST" | "CONTACT_SMTP_PORT" | "CONTACT_SMTP_USER" | "CONTACT_SMTP_PASSWORD">,
   options: {
     /**
-     * The Reply-To in force (§NNN): «Adresa de contact afișată» on `/admin/emails` — the mailbox,
+     * The Reply-To in force (§442): «Adresa de contact afișată» on `/admin/emails` — the mailbox,
      * the club's Gmail, or both, comma-separated. Absent, `EMAIL_REPLY_TO` as before. Only the
      * Reply-To follows the setting, on either road; the From stays the road's own — the Mailgun
      * domain on Mailgun's (a Gmail From there fails DMARC), the Gmail account on Gmail's.
      */
     replyTo?: string;
-    /** The club's routing for the Gmail road (§NNN); absent, every message takes Mailgun's. */
+    /** The club's routing for the Gmail road (§443); absent, every message takes Mailgun's. */
     gmail?: GmailRouting;
   } = {},
 ): { sender: EmailSender; capture: CaptureAdapter } {
@@ -99,7 +99,7 @@ export function createEmailSenderForEnvironment(
   /*
     The Gmail road exists only with the account and its app password — the contact form's two
     variables (§149) — and only when the caller brought the club's routing. Without either, every
-    message takes Mailgun's road, as before §NNN.
+    message takes Mailgun's road, as before §443.
   */
   const gmail =
     routing && gmailUser && gmailPassword

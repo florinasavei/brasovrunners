@@ -17,7 +17,7 @@ import { publicFormEvent } from "./public-form-event";
 import { confirmEmail, submitRegistration } from "./service";
 
 /**
- * Another person on a registered address, confirmed from the inbox (§NNN, amending §389; the
+ * Another person on a registered address, confirmed from the inbox (§446, amending §389; the
  * owner, 2026-09-26: "în mail să îți afișez înscrierile și să zic «confirm că înscriu altă
  * persoană»").
  *
@@ -106,7 +106,7 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
     const consumed = await consumeActionToken(tx, { secret, purpose: "REGISTER_ANOTHER_PERSON", now });
     if (!consumed.ok) return { ok: false as const };
     /*
-      The entry this token was minted for. None — a link from an email sent before §NNN, which opened
+      The entry this token was minted for. None — a link from an email sent before §446, which opened
       the form, or an entry the job has purged — and the link is simply one that no longer works:
       the spend stands, as it would for any link used once.
     */

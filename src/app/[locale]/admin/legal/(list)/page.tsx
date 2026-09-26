@@ -139,7 +139,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const versions = await listVersionsForBackoffice(getDb());
   // The one press (§132): offered while any of the three has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
-  // The contact address as the club chose to show it (§NNN).
+  // The contact address as the club chose to show it (§442).
   const facts = clubFactsFromEnv(env, await shownContactAddresses(getDb()));
   const now = new Date();
   const missingKeys = (
@@ -192,7 +192,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       ["CLUB_LEGAL_NAME", facts.legalName],
       ["CLUB_REGISTRATION_NUMBER", facts.registrationNumber],
       ["CLUB_REGISTERED_ADDRESS", facts.registeredAddress],
-      // Not only the variable since §NNN: «Adresa de contact afișată» on /admin/emails decides it.
+      // Not only the variable since §442: «Adresa de contact afișată» on /admin/emails decides it.
       [t("legal.platform.contactFactMissing"), facts.contactEmail],
     ] as const
   )

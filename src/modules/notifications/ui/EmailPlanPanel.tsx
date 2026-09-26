@@ -50,7 +50,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
     hidden copies the club asked for on every participant message, which is why it is said here,
     next to the list that sets them, and not only on the task board.
   */
-  // The copies sentence agrees with the figure: counted in Mailgun's cost, or carried by Gmail (§NNN).
+  // The copies sentence agrees with the figure: counted in Mailgun's cost, or carried by Gmail (§443).
   const copiesNote = forecastCopiesNote({
     participantBccCount: volume.participantBccCount,
     copiedMessagesPerRegistration: COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
@@ -95,7 +95,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           waiting: volume.waitingMessages,
         })}
       </Typography>
-      {/* The subscribers' mail in that queue (§NNN): last in line, in what the reserve leaves. */}
+      {/* The subscribers' mail in that queue (§445): last in line, in what the reserve leaves. */}
       {volume.bulkWaitingMessages > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-bulk-waiting">
           {t("emails.plan.bulkWaiting", { count: volume.bulkWaitingMessages })}

@@ -118,7 +118,7 @@ describe("BR-REQ-054-01 the photo gallery", () => {
     expect(await findPublishedAlbumSiblingSlug(db, "ro", "crosul-2026", "en")).toBe("cross-2026");
   });
 
-  it("§NNN lists a free album and an event's album together, newest first, naming only a published event", async () => {
+  it("§434 lists a free album and an event's album together, newest first, naming only a published event", async () => {
     const [event] = await db
       .insert(events)
       .values({ type: "RACE", startsAt: new Date("2026-10-11T06:00:00Z"), locationName: "Poiana" })

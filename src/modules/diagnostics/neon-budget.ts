@@ -13,7 +13,7 @@ import { type NeonDeps, type NeonMeter, readNeonMeter } from "./neon";
 
 /**
  * The governor's one question — "how is this month's budget doing, and what do I do about it?" —
- * answered without the database (§NNN).
+ * answered without the database (§447).
  *
  * Every caller that changes its behaviour on the budget asks here: a job ping deciding how long a
  * quiet to plan (`jobs/ping.ts`), `/api/health` deciding whether a stray caller may be answered
@@ -103,7 +103,7 @@ export function budgetOf(meter: NeonMeter, now: Date, thresholds: BudgetThreshol
  * The level for a meter already in hand, against the thresholds in force — the Administrator's
  * saved ones, through the same cached reader the governor uses (`cachedBudgetThresholds`). What a
  * page that read the meter itself (`/devs`) calls, so it can never show a different colour from
- * Costuri and `/api/health` (§NNN).
+ * Costuri and `/api/health` (§447).
  */
 export async function budgetOfInForce(
   meter: NeonMeter,

@@ -2,7 +2,7 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 import { createSmtpConnection, describeSmtpFailure, type SmtpAddress, type SmtpConfig } from "./smtp-adapter";
 
 /**
- * The outbox's second road: the club's own Gmail, over SMTP with its app password (§NNN).
+ * The outbox's second road: the club's own Gmail, over SMTP with its app password (§443).
  *
  * The same account and connection the contact form sends with (§149, `smtp-adapter.ts`), wearing
  * the outbox's contract — one message, its copies, its attachments, a classified outcome. What it

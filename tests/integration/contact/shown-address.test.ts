@@ -11,7 +11,7 @@ import { env } from "@/shared/config/env";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Adresa de contact afișată» on `/admin/emails`: one `platform_settings` row, the
+ * §442 — «Adresa de contact afișată» on `/admin/emails`: one `platform_settings` row, the
  * Administrator's, audited, and the list every page and email reads from it.
  */
 const NOW = new Date("2026-09-26T09:00:00.000Z");

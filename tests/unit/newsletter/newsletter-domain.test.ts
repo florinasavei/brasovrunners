@@ -22,8 +22,8 @@ import ro from "../../../messages/ro.json";
 const NOW = new Date("2026-10-01T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
 
-/** §NNN — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
-describe("§NNN the newsletter's topics", () => {
+/** §445 — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
+describe("§445 the newsletter's topics", () => {
   it("offers the brief's eight, in its order, 'all the news' first, every name and hint in both languages", () => {
     expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "DISCOUNTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
     expect(ro.Newsletter.topics).toMatchObject({
@@ -71,7 +71,7 @@ describe("§NNN the newsletter's topics", () => {
   });
 });
 
-describe("§NNN the new-event alert", () => {
+describe("§445 the new-event alert", () => {
   const race = {
     type: "RACE",
     isSpecial: false,
@@ -121,7 +121,7 @@ describe("§NNN the new-event alert", () => {
   });
 });
 
-describe("§NNN a newsletter's words", () => {
+describe("§445 a newsletter's words", () => {
   it("wants both languages of both texts, within their ceilings, with no field in braces", () => {
     const ok = checkNewsletterWords({ subject: { ro: " Știri\n", en: "News" }, body: { ro: "Salut\r\n\r\nText", en: "Hi" } });
     expect(ok.words).toEqual({ subject: { ro: "Știri", en: "News" }, body: { ro: "Salut\n\nText", en: "Hi" } });
@@ -141,7 +141,7 @@ describe("§NNN a newsletter's words", () => {
   });
 });
 
-describe("§NNN the reserve the outbox keeps for everything else", () => {
+describe("§445 the reserve the outbox keeps for everything else", () => {
   it("lets a newsletter use only what exceeds half a daily allowance, or a fifth of a monthly one", () => {
     expect(bulkBudget({ period: "day", allowance: 100, remaining: 100 })).toBe(50);
     expect(bulkBudget({ period: "day", allowance: 100, remaining: 30 })).toBe(0);
@@ -171,7 +171,7 @@ describe("§NNN the reserve the outbox keeps for everything else", () => {
   });
 });
 
-describe("§NNN the privacy notice is the switch", () => {
+describe("§445 the privacy notice is the switch", () => {
   it("is a merge field, filled in both languages, and the platform's notice names it in §5", () => {
     expect(isMergeField("newsletterTopics")).toBe(true);
     for (const [locale, notice] of [
@@ -200,7 +200,7 @@ describe("§NNN the privacy notice is the switch", () => {
   });
 });
 
-describe("§NNN the three messages", () => {
+describe("§445 the three messages", () => {
   const action = emailSampleActionUrl("ro");
 
   it("confirms with the topics and the link's life, and never offers an unsubscribe link before there is a subscription", () => {
@@ -237,7 +237,7 @@ describe("§NNN the three messages", () => {
   });
 });
 
-describe("§NNN the contact page's pop-up", () => {
+describe("§445 the contact page's pop-up", () => {
   it("reads its outcome and its boxes from the address, and opens itself only to be fixed or asked for", () => {
     expect(parseNewsletterOutcome("sent")).toBe("sent");
     expect(parseNewsletterOutcome("<script>")).toBeNull();

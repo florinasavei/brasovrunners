@@ -64,7 +64,7 @@ export const dynamic = "force-dynamic";
  * phone, and the main column's cards in the page's own order (§406), numbered and headed by
  * whether the page will show each, under the same titles, with the same field names and the same
  * Română | English tabs; then the cards that are not on the page. The status card, inside the
- * first box, is the editor's same select, starting at "Programat" (§NNN): an event already called
+ * first box, is the editor's same select, starting at "Programat" (§448): an event already called
  * off is created "Anulat" with its reason in both languages, and one that already took place
  * "Încheiat" — and neither sends an email, since nobody is registered yet. What
  * the page leaves out cannot exist before the event does: allocation and printing, the series'
@@ -243,7 +243,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <StartListBox {...box} heading={flow.headings.startList} />
 
               {/* Not a section of the page: the marks, the address. The status is in the first
-                  card since §NNN — "Programat", "Anulat" or "Încheiat", as on the editor. */}
+                  card since §448 — "Programat", "Anulat" or "Încheiat", as on the editor. */}
               <EditorGroup label={t("editor.groups.offPage")} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />

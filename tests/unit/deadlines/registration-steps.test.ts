@@ -66,7 +66,7 @@ describe("§389 the five steps say how a family registers on one address", () =>
     gate.open = false;
   });
 
-  it("says to send the form again with the person's name and birth date, and to confirm from the email — once the schema allows it (§NNN)", async () => {
+  it("says to send the form again with the person's name and birth date, and to confirm from the email — once the schema allows it (§446)", async () => {
     gate.open = true;
     const html = await render({});
     expect(html).toContain("Înscrii pe altcineva cu aceeași adresă?");

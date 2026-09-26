@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.02-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.03-2026-09-26 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.02-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.03-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1347,7 +1347,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | — | Tip eveniment | **Cursă** |
 | Când și unde | Începutul evenimentului | **21.11.2026**, and the hour the first runner is expected at the desk |
 | Când și unde | Startul cursei | the hour the gun goes — this is what the countdown and the reminder use |
-| Când și unde | Durata (minute) | how long the club will be there, start to prize-giving |
+| Când și unde | Durata (Ore / Minute) | how long the club will be there, start to prize-giving |
 | Când și unde | Fus orar | **Europe/Bucharest** (already filled in) |
 | Când și unde | Punct de întâlnire | where people gather, e.g. **Parcul Tractorul** |
 | Când și unde | Adresă | the street address, for the map and the calendar entry |
@@ -1405,7 +1405,7 @@ the internet.
 
 **When the pages open but a save does not** (the same laptop, 2026-09-26): the proxy lets pages
 through and stops the scripted save — a POST with the `Next-Action` header, answered as
-`text/x-component`. Since `DECISIONS.md` §NNN the backoffice says so where the save was pressed,
+`text/x-component`. Since `DECISIONS.md` §436 the backoffice says so where the save was pressed,
 in the order to act on it:
 
 1. The warning «Rețeaua a blocat salvarea» appears above the form; what was typed stays in it.
@@ -1414,8 +1414,8 @@ in the order to act on it:
    message sent twice happens twice.
 2. Otherwise press **«Trimite pe calea simplă»**: the same form goes as a plain form post, which
    the proxy lets through. The page it lands on says «…am încercat calea simplă.» — the save is in
-   only if the green confirmation shows as well. No confirmation, or «Nici calea simplă nu a putut
-   fi folosită», means nothing was saved: the phone, and the check below.
+   only if the green confirmation shows as well. No confirmation means the save may not have landed: check the page before
+   pressing again. «Nici calea simplă nu a putut fi folosită» means it did not leave: the phone, and the check below.
 3. Open **`/admin/network`** («Verificarea rețelei», linked from the guide and from that notice)
    on the same laptop. It tries four things from the browser — the saves, the plain form post,
    a stored picture, the anti-robot check — and prints, under each red row, the exact line for IT,

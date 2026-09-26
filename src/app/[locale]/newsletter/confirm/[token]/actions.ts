@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { confirmNewsletter } from "@/modules/newsletter/service";
 
 /**
- * The newsletter's confirmation (§NNN): spends the link (single use, AGENTS.md §12.8) and turns the
+ * The newsletter's confirmation (§445): spends the link (single use, AGENTS.md §12.8) and turns the
  * subscription on. Lands on the same page saying so, or saying the link was not live — never
  * another page, so a second press of a button already pressed reads as what it is.
  */

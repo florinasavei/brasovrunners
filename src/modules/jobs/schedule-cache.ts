@@ -168,7 +168,7 @@ export async function readPingVerdict(job: JobName, now: Date): Promise<PingVerd
 
 /**
  * The interval the last real run planned under, from the slots `now` falls in — zero when neither
- * is there. The health checks add it to what they allow (§NNN): the budget governor's floor may
+ * is there. The health checks add it to what they allow (§447): the budget governor's floor may
  * have dropped since that run (a new billing period), and the pings are still honouring the plan
  * it wrote, which is not a stalled scheduler.
  */

@@ -306,7 +306,7 @@ export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the contact page offers the newsletter (§NNN): the privacy notice in force describes it
+ * Whether the contact page offers the newsletter (§445): the privacy notice in force describes it
  * (`describesNewsletter`), in every language — the same reading as the list's states above, so an
  * approval opens the pop-up the moment the notice itself changes. `noticeDescribesNewsletter` is
  * the uncached twin the service asks again at every subscription.
@@ -364,7 +364,7 @@ export async function cachedSitemapPages(locale: Locale) {
 
 /**
  * `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation. An event album's
- * card names its event (§NNN), so an event's rename or unpublishing expires it too.
+ * card names its event (§434), so an event's rename or unpublishing expires it too.
  */
 export async function cachedPublishedAlbums(locale: Locale) {
   return publicRead(["gallery.published", locale], ["gallery", "events"], () => listPublishedAlbums(getDb(), locale));
@@ -408,7 +408,7 @@ export async function cachedSitemapAlbums(locale: Locale) {
  */
 export async function cachedContactFormReaches(): Promise<boolean> {
   try {
-    // The yes/no answer only, never the addresses (§333), with its last good copy (§NNN).
+    // The yes/no answer only, never the addresses (§333), with its last good copy (§447).
     const read = await readWithLastGood("settings:contact-reaches", () =>
       publicRead(["settings.contact-reaches"], ["settings"], async () => contactFormReaches(env, await readContactRecipients(getDb()))),
     );
@@ -419,7 +419,7 @@ export async function cachedContactFormReaches(): Promise<boolean> {
 }
 
 /**
- * The club's address as readers are shown it (§NNN): the footer, the header's "Contact" entry and
+ * The club's address as readers are shown it (§442): the footer, the header's "Contact" entry and
  * the contact page. Addresses the site prints anyway, so the list itself is cached. When the
  * database cannot answer, the environment's mailbox — what every page showed before.
  */
@@ -456,7 +456,7 @@ export async function cachedBotCheckSiteKey(): Promise<string | undefined> {
  */
 export async function cachedDeadlines(): Promise<Deadlines> {
   try {
-    // The club's own numbers from the last good copy before today's constants (§NNN): an outage
+    // The club's own numbers from the last good copy before today's constants (§447): an outage
     // must not quietly rewrite "48 hours" to a default the club may have changed.
     const read = await readWithLastGood("settings:deadlines", () => publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb())));
     return read.value.deadlines;

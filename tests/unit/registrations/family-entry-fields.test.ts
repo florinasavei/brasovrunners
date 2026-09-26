@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { birthDateText, familyEntryFields, personOfEntry, shortRunnerName } from "@/modules/registrations/family-entries";
 
 /**
- * §NNN — what of a public submission is kept for the address to confirm another person from its
+ * §446 — what of a public submission is kept for the address to confirm another person from its
  * inbox, and how the email and the confirmation page name the people (amending §389, with §421).
  */
 const NOW = new Date("2026-09-26T10:00:00.000Z");
@@ -35,7 +35,7 @@ const posted = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-describe("§NNN the kept form of another person", () => {
+describe("§446 the kept form of another person", () => {
   it("keeps neither the address nor the anti-bot fields nor an acknowledgement nobody was asked yet", () => {
     const fields = familyEntryFields(posted(), NOW);
     for (const name of ["email", "emailConfirm", "honeypot", "renderedAt", "fitnessAcknowledged"]) expect(fields).not.toHaveProperty(name);
@@ -64,7 +64,7 @@ describe("§NNN the kept form of another person", () => {
   });
 });
 
-describe("§NNN how the people are named", () => {
+describe("§446 how the people are named", () => {
   it("a registered runner is the first name and the last name's initial", () => {
     expect(shortRunnerName({ firstName: "Ana", lastName: "popescu", displayName: "Ana P." })).toBe("Ana P.");
     expect(shortRunnerName({ firstName: "Ștefan", lastName: "Ștefănescu", displayName: "x" })).toBe("Ștefan Ș.");

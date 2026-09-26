@@ -17,7 +17,7 @@ import { DATE_PATTERN, TIME_PATTERN } from "@/shared/forms/pickers/wall-values";
  * `useIslandRunning` reports `false` under `renderToStaticMarkup` the same way it does on a real
  * server render (`useSyncExternalStore`'s server snapshot), so this exercises the exact branch a
  * JavaScript-off request gets, not a stand-in for it. `TimeField` has no island to swap out any
- * more: since §400 and §NNN it renders a typed 24-hour text box the same way with or without
+ * more: since §400 and §439 it renders a typed 24-hour text box the same way with or without
  * JavaScript, so this is simply what it always renders.
  */
 const ROOT = path.resolve(__dirname, "../../..");
@@ -87,7 +87,7 @@ describe("DateField without JavaScript", () => {
   });
 });
 
-describe("TimeField, a typed box on the 24-hour clock (§NNN)", () => {
+describe("TimeField, a typed box on the 24-hour clock (§439)", () => {
   it("is a text box that shows and posts HH:mm under the field's own name — never the browser's AM/PM time control", () => {
     const html = renderField(createElement(TimeField, { name: "event.startsAtTime", label: "Ora", defaultValue: "19:00" }));
     expect(html).toContain('name="event.startsAtTime"');

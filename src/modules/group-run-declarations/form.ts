@@ -7,7 +7,7 @@ export const GROUP_RUN_FORM_FIELDS = ["idDocument", "birthDate", "email", "accep
 export type GroupRunFormField = (typeof GROUP_RUN_FORM_FIELDS)[number];
 
 /**
- * The marker beside `birthDate` when the date is under the run's minimum age (§NNN), the shape of
+ * The marker beside `birthDate` when the date is under the run's minimum age (§440), the shape of
  * the registration's `tooYoung` (§321): the field lets the summary link to the box, the marker lets
  * the page say which rule refused it — the minimum, by its number — rather than "fill it in".
  */

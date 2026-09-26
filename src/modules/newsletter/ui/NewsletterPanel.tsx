@@ -26,14 +26,14 @@ type Props = {
   audience: NewsletterAudience;
   history: readonly NewsletterSendRow[];
   volume: EmailVolumeToday;
-  /** The privacy notice in force describes the newsletter: the contact page offers the pop-up (§NNN). */
+  /** The privacy notice in force describes the newsletter: the contact page offers the pop-up (§445). */
   offered: boolean;
   /** The Administrator's: removing an address at the person's request. */
   mayWithdraw: boolean;
 };
 
 /**
- * The backoffice's «Newsletter» page (§NNN; the owner, 2026-09-26: "un meniu suplimentar în
+ * The backoffice's «Newsletter» page (§445; the owner, 2026-09-26: "un meniu suplimentar în
  * backoffice cu «Newsletter»"), as two cards. «Abonați»: who subscribed from the contact page, as
  * numbers — never an address: confirmed and pending, per topic, and the last send; what was sent;
  * and the Administrator's form for an address somebody asked, in writing, to have removed. «Scrie

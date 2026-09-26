@@ -169,7 +169,7 @@ export async function fillDateField(scope: Page | Locator, label: string, value:
 }
 
 /**
- * The time half, a typed 24-hour text box since §NNN (the browser's own time input of §400 before
+ * The time half, a typed 24-hour text box since §439 (the browser's own time input of §400 before
  * that, MUI's picker before that, which `fillDateField` above still drives for the date).
  * `.fill()` takes `HH:mm` directly; the box shows and posts exactly that.
  *
@@ -253,7 +253,7 @@ export async function ensureRegistrationIsOpen(page: Page) {
 
     // The approved declaration a participant signs, in its own card. Chosen, never written: the
     // first real option after "Niciuna" is the sample version the legal seed approved.
-    // The declaration is chosen under «Regulamentul» since §NNN.
+    // The declaration is chosen under «Regulamentul» since §448.
     await openEditorBox(page, "Declarația pe propria răspundere");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();

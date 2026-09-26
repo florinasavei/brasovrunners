@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the public forms when the database is away: Neon refusing on the month's quota, or a
+ * §447 — the public forms when the database is away: Neon refusing on the month's quota, or a
  * compute that cannot start. Each form goes back to itself with what was typed (the sealed draft
  * cookie, §142) and one polite sentence, instead of the error page eating the answers; nothing is
  * registered, signed or sent. A query that is merely wrong is still a bug and still throws.
@@ -81,7 +81,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the forms while the database is away", () => {
+describe("§447 the forms while the database is away", () => {
   it("the registration form goes back with its answers and the database-away notice", async () => {
     const to = await redirectOf(submitRegistrationAction(formOf({ locale: "ro", slug: "crosul-de-toamna", firstName: "Ana", lastName: "Pop" })));
     expect(to).toMatch(/\?error=DATABASE_AWAY&fields=databaseAway#registration-errors$/);

@@ -39,7 +39,7 @@ import { env } from "@/shared/config/env";
  * symptom was a broken landing page with nothing to point at (`DECISIONS.md` §31).
  *
  * It also carries the Neon project's own early warning (§335): once this billing period's
- * compute turns the month's budget red (85% of the monthly quota by default, §NNN), this answers `degraded` before
+ * compute turns the month's budget red (85% of the monthly quota by default, §447), this answers `degraded` before
  * Neon suspends the database at 100% — a suspension that is total, and the one the club cannot
  * be emailed about once it has happened. `checkNeonQuotaHealth` is cached for fifteen minutes and
  * never fails this endpoint on its own account, so a missing key or an unreachable Neon reads as
@@ -68,7 +68,7 @@ async function askTheDatabase(
     const [schema, jobs, email] = await Promise.all([
       checkSchemaVersion(db),
       // The budget governor's floor widens what a real run is allowed, as the Administrator's own
-      // interval always has (§NNN): the platform's own throttle must never page the owner.
+      // interval always has (§447): the platform's own throttle must never page the owner.
       Promise.all(JOB_NAMES.map((jobName) => checkJobHealth(db, jobName, now, governorFloorMinutes))),
       // Whether the club can still send email (§98): deferred by the allowance, overdue, or failed.
       checkEmailHealth(db, now, governorFloorMinutes),
@@ -106,7 +106,7 @@ class NotStored extends Error {}
 
 /**
  * The database half of the answer, from an answer at most `minutes` old — only while the month's
- * budget is `red` (§NNN, `GOVERNOR_EFFECTS.healthReuseMinutes`).
+ * budget is `red` (§447, `GOVERNOR_EFFECTS.healthReuseMinutes`).
  *
  * The endpoint is public, and the re-measure of 2026-09-26 counted stray wakes it could not name,
  * `/api/health` from something other than the monitor among the suspects. Each one that reaches
@@ -148,7 +148,7 @@ async function reuseDatabaseHalf(
 
 const share = (part: number | null, whole: number | null) => (part === null || !whole ? null : Math.round((part / whole) * 100));
 
-/** What the governor is doing, in a line a monitor's log can show (§NNN). */
+/** What the governor is doing, in a line a monitor's log can show (§447). */
 const BUDGET_NOTE: Record<NeonQuotaHealth["level"], string | null> = {
   unknown: null,
   green: null,
@@ -156,7 +156,7 @@ const BUDGET_NOTE: Record<NeonQuotaHealth["level"], string | null> = {
   red: "near the quota: the jobs run at most every two hours, health reuses a ten-minute answer, public pages are served from the cache only",
 };
 
-/** How long the route waits for the month's budget before probing without it (§NNN). */
+/** How long the route waits for the month's budget before probing without it (§447). */
 const HEALTH_BUDGET_WAIT_MS = 2_500;
 
 
@@ -181,7 +181,7 @@ export async function GET(): Promise<Response> {
   // half). `not_configured` and `unreachable` are silently `ok`-shaped; only `misconfigured` is
   // something a human needs to act on.
   //
-  // The quota reading comes first since §NNN because it also says the month's budget level, and
+  // The quota reading comes first since §447 because it also says the month's budget level, and
   // the level decides whether the database half may be a recent answer rather than a fresh one.
   //
   // The quota reading waits `HEALTH_BUDGET_WAIT_MS` at most before the probe goes ahead without
@@ -224,7 +224,7 @@ export async function GET(): Promise<Response> {
     reported as `down` rather than as an `ok` database with mysteriously absent figures.
   */
   /*
-    `suspended` (§NNN): Neon has cut the project off for the rest of its billing period — its
+    `suspended` (§447): Neon has cut the project off for the rest of its billing period — its
     refusal says so ("exceeded the compute time quota"), or the governor reads the quota spent.
     Nothing is broken that a deploy could fix, the public pages serve their last good copies with
     the date the site is whole again, and the jobs answer 200 when refused; so the status is
@@ -250,7 +250,7 @@ export async function GET(): Promise<Response> {
   const schemaDegraded = schema?.status === "ahead";
 
   /*
-    The domain's renewal (§NNN): thirty days or fewer before the expiry — or past it — is
+    The domain's renewal (§435): thirty days or fewer before the expiry — or past it — is
     `degraded`, so the monitor's 503 reaches the owner while there is still a month to renew.
     Configuration and the clock only, never a query or a registrar's WHOIS; unset dates are
     `unknown` and change nothing.
@@ -284,7 +284,7 @@ export async function GET(): Promise<Response> {
       database,
       schema,
       jobs,
-      // With its `gmail` block since §NNN: recipients against the cap and the last failure, no status of its own.
+      // With its `gmail` block since §443: recipients against the cap and the last failure, no status of its own.
       email,
       // The monthly compute quota's early warning (§335): `percent: null` means nothing was
       // asked (no key, or Neon did not answer within the timeout) rather than "there is no
@@ -293,7 +293,7 @@ export async function GET(): Promise<Response> {
       // the 503 and a monitor need (the status and the share of the quota spent) is published
       // here. `/admin/tasks` and `/devs` are where the full figures belong.
       neon: { status: neonQuota.status, percent: neonQuota.percent },
-      // The month's budget as the governor reads it (§NNN): `green`, `amber`, `red` or `unknown`,
+      // The month's budget as the governor reads it (§447): `green`, `amber`, `red` or `unknown`,
       // the metered spend and the pro-rated line as whole percents of the quota — shares, not
       // CU-hours, for the reason §335 gives above — and a note saying what is throttled. Only
       // `red` degrades the status (it is `neon.status: near-limit`); `amber` stays `ok` with the
@@ -309,7 +309,7 @@ export async function GET(): Promise<Response> {
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
       // endpoint reports; only `misconfigured` is.
       turnstile: { status: turnstile },
-      // The domain's expiry (§NNN) is public at any registrar, so the day and the days left are
+      // The domain's expiry (§435) is public at any registrar, so the day and the days left are
       // published; the domain's name is not repeated — it is the host this answer came from.
       domain:
         domain.status === "unknown"
@@ -317,7 +317,7 @@ export async function GET(): Promise<Response> {
           : { status: domain.status, expiresOn: domain.expiresOn, daysLeft: domain.daysLeft },
       checkedAt: now.toISOString(),
       // When the database half was asked: `checkedAt` itself, or the start of the window whose
-      // answer this one reuses while the budget is red (§NNN).
+      // answer this one reuses while the budget is red (§447).
       databaseCheckedAt: answer.askedAt.toISOString(),
     },
     { status: status === "ok" ? 200 : 503 },

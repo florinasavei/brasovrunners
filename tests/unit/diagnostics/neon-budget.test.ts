@@ -9,7 +9,7 @@ import {
 import { MAX_QUIET_MINUTES } from "@/modules/jobs/schedule";
 
 /**
- * §NNN — the month's budget as green, amber or red, and what the platform does at each. Pure: the
+ * §447 — the month's budget as green, amber or red, and what the platform does at each. Pure: the
  * level is a function of the spend, the limit, the period and the instant, and the effects are a
  * table. The re-measure of 2026-09-26 is the case these are written against: production at 4.4
  * CU-hours a day reaches its 100 around the 23rd of a month, four weeks before the race.
@@ -18,7 +18,7 @@ const OCTOBER = { periodStart: new Date("2026-10-01T00:00:00.000Z"), periodEnd: 
 const on = (day: number, hour = 12) => new Date(Date.UTC(2026, 9, day, hour));
 const DEFAULTS = async () => ({ amberPercent: 60, redPercent: 85 });
 
-describe("§NNN budgetLevel — green, amber, red against the month's line", () => {
+describe("§447 budgetLevel — green, amber, red against the month's line", () => {
   const level = (used: number, day: number, thresholds?: { amberPercent: number; redPercent: number }) =>
     budgetLevel(used, 100, OCTOBER.periodStart, OCTOBER.periodEnd, on(day), thresholds);
 
@@ -69,7 +69,7 @@ describe("§NNN budgetLevel — green, amber, red against the month's line", () 
   });
 });
 
-describe("§NNN the governor's rulebook", () => {
+describe("§447 the governor's rulebook", () => {
   it("changes nothing when it knows nothing or while the month is green", () => {
     for (const level of ["unknown", "green"] as const) {
       expect(GOVERNOR_EFFECTS[level]).toEqual({ jobFloorMinutes: 0, healthReuseMinutes: 0, cacheCeilingFactor: 1, publicMissRefreshMinutes: 0 });
@@ -89,7 +89,7 @@ describe("§NNN the governor's rulebook", () => {
   });
 });
 
-describe("§NNN readNeonBudget — without the database, and never a storm on Neon", () => {
+describe("§447 readNeonBudget — without the database, and never a storm on Neon", () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -153,7 +153,7 @@ describe("§NNN readNeonBudget — without the database, and never a storm on Ne
   });
 });
 
-describe("§NNN readNeonBudget — the Administrator's thresholds", () => {
+describe("§447 readNeonBudget — the Administrator's thresholds", () => {
   it("reads the level by the thresholds in force", async () => {
     vi.resetModules();
     vi.doMock("@/shared/config/env", async (importOriginal) => {
@@ -182,12 +182,12 @@ describe("§NNN readNeonBudget — the Administrator's thresholds", () => {
 });
 
 /*
-  Finding (5) of the fix round (§NNN): `/devs` read the meter itself and coloured it with the
+  Finding (5) of the fix round (§447): `/devs` read the meter itself and coloured it with the
   defaults, so with the Administrator's own thresholds saved it could show another level than
   Costuri and `/api/health`. It now asks `budgetOfInForce`, which reads the thresholds through the
   governor's own cached reader.
 */
-describe("§NNN budgetOfInForce — a meter in hand, against the saved thresholds", () => {
+describe("§447 budgetOfInForce — a meter in hand, against the saved thresholds", () => {
   it("reads the thresholds through the governor's cached reader, not the defaults", async () => {
     vi.resetModules();
     vi.doMock("@/modules/diagnostics/budget-thresholds", () => ({ cachedBudgetThresholds: async () => ({ amberPercent: 50, redPercent: 65 }) }));

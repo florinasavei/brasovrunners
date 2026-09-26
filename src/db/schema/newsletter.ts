@@ -5,7 +5,7 @@ import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
 /**
- * The club's newsletter (§NNN; the owner, 2026-09-26: "the registration needs to be on the contact
+ * The club's newsletter (§445; the owner, 2026-09-26: "the registration needs to be on the contact
  * page, a button for a pop-up and people can opt in on what to receive"). §80 named what a
  * newsletter is before one existed — "a message type, a consent, an unsubscribe link and a
  * privacy-notice paragraph, not a button" — and these three tables are the consent and the link.

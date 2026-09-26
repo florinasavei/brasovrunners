@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   */
   const from = now.getTime() - 30 * DAY;
   const to = now.getTime() + 365 * DAY;
-  // With its last good copy behind it (§NNN): a subscribed calendar that refreshes during an
+  // With its last good copy behind it (§447): a subscribed calendar that refreshes during an
   // outage keeps the club's events rather than being told the feed is gone. One copy per
   // language — the key names the feed, not the day, so the store holds one object, not one a day.
   const days = (

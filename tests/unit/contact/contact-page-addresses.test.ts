@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — «Adresa de contact afișată» on the contact page: on a deployment where the form has no
+ * §442 — «Adresa de contact afișată» on the contact page: on a deployment where the form has no
  * way out, the page shows every address in force as its own `mailto:` link, the Gmail first and
  * «sau» between them — the setting's list, not `EMAIL_REPLY_TO` alone.
  *
@@ -59,7 +59,7 @@ async function renderContactPage(): Promise<string> {
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
 }
 
-describe("§NNN the contact page shows the addresses in force", () => {
+describe("§442 the contact page shows the addresses in force", () => {
   it("links each address with mailto:, the Gmail first and «sau» between them", async () => {
     const html = await renderContactPage();
     const gmailAt = html.indexOf(`href="mailto:${GMAIL}"`);

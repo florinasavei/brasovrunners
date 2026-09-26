@@ -20,7 +20,7 @@ type Props = { params: Promise<{ locale: string }> };
 export const dynamic = "force-dynamic";
 
 /**
- * "Verificarea rețelei" (§NNN): what a staff member's network lets through, tried from their own
+ * "Verificarea rețelei" (§436): what a staff member's network lets through, tried from their own
  * browser, and the line to hand the company's IT for whatever it does not.
  *
  * Every staff role — the person on a locked-down office laptop can be a volunteer as easily as the

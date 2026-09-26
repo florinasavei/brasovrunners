@@ -94,7 +94,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(declarationAcceptances);
   // A group run's self-declarations (§393) reference the event and the legal version: before both.
   await db.delete(groupRunDeclarations);
-  // Another person waiting for the address's confirmation (§NNN): it points at a token and a registration.
+  // Another person waiting for the address's confirmation (§446): it points at a token and a registration.
   await db.delete(pendingFamilyEntries);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
@@ -111,7 +111,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // The "tell me when registration opens" addresses (§146) cascade from their event; deleted
   // first for the same reason as the translations above.
   await db.delete(registrationInterests);
-  // The newsletter (§NNN): its sends reference events and staff (both ON DELETE SET NULL), its links
+  // The newsletter (§445): its sends reference events and staff (both ON DELETE SET NULL), its links
   // cascade from the subscriber — all three emptied before the rows they name.
   await db.delete(newsletterSends);
   await db.delete(newsletterTokens);

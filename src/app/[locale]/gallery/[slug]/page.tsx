@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
-  // The head says nothing rather than failing the page while the database is away (§NNN): the
+  // The head says nothing rather than failing the page while the database is away (§447): the
   // body's own read decides between its last good copy and the resting page.
   const album = await readOrWhileAway(() => cachedPublishedAlbumBySlug(locale, slug), undefined);
   if (!album) return {};

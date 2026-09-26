@@ -72,7 +72,7 @@ describe("§389 the club's limit of registrations per address", () => {
   });
 });
 
-describe("§NNN the different-person rule: the name and the birth date, both", () => {
+describe("§446 the different-person rule: the name and the birth date, both", () => {
   const ana = { registeredName: "Ana Pop", birthDate: "1985-03-02" };
   const ion = { registeredName: "Ion Pop", birthDate: "2012-06-01" };
 
@@ -110,7 +110,7 @@ describe("§NNN the different-person rule: the name and the birth date, both", (
   });
 });
 
-describe("§389 §NNN what one submission does on an address", () => {
+describe("§389 §446 what one submission does on an address", () => {
   let id = 0;
   const row = (registeredName: string, status: RegistrationStatus = "CONFIRMED", birthDate: string | null = null): FamilyRow => {
     id += 1;
@@ -176,7 +176,7 @@ describe("§389 §NNN what one submission does on an address", () => {
   it("from the confirmation: somebody not different from everybody registered, or the address at the limit, is refused out loud", () => {
     const rows = [row("Ana Pop", "CONFIRMED", "1985-03-02"), row("Ion Pop"), row("Dan Pop")];
     expect(decide(rows.slice(0, 1), "ana pop", "link")).toEqual({ kind: "refuseAlreadyRegistered" });
-    // The same birth date as a registered person, under another name: refused as well (§NNN).
+    // The same birth date as a registered person, under another name: refused as well (§446).
     expect(decide(rows.slice(0, 1), "Maria Pop", "link", true, "1985-03-02")).toEqual({ kind: "refuseAlreadyRegistered" });
     expect(decide(rows, "Maria Pop", "link")).toEqual({ kind: "refuseAtCap" });
   });

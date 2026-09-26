@@ -17,7 +17,7 @@ import {
 } from "./domain/shown-address";
 
 /**
- * «Adresa de contact afișată» (§NNN): the contact-recipients setting's shape (§164) — one
+ * «Adresa de contact afișată» (§442): the contact-recipients setting's shape (§164) — one
  * `platform_settings` row, written by an Administrator on `/admin/emails`, audited, read by
  * everything that shows the club's address or sets an email's Reply-To.
  */
@@ -47,7 +47,7 @@ export async function readShownContactAddress<T extends Record<string, unknown>>
 /**
  * The addresses in force, straight from the database, for a caller that already holds one — the
  * outbox's senders, the legal prefill. A database that cannot answer gives the environment's
- * mailbox: the Reply-To every email carried before §NNN.
+ * mailbox: the Reply-To every email carried before §442.
  */
 export async function shownContactAddresses<T extends Record<string, unknown>>(db: Database<T>): Promise<string[]> {
   try {

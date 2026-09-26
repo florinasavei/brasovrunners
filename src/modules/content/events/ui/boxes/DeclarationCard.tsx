@@ -37,7 +37,7 @@ export async function declarationLine(
 }
 
 /**
- * «Declarația pe propria răspundere» (§NNN) — a named card inside «Regulamentul», the one place in
+ * «Declarația pe propria răspundere» (§448) — a named card inside «Regulamentul», the one place in
  * the editor where an organizer chooses what a runner signs (the owner, 2026-09-26: "declarația la
  * alergările de grup ar trebui să apară sub secțiunea «Regulament»; momentan nu văd unde selectez
  * declarația"). Both declarations were elsewhere: a group run's optional self-declaration was a

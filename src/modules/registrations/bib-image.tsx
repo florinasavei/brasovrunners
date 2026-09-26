@@ -67,7 +67,7 @@ export const BIB_IMAGE_FOOTER = { width: FOOTER_LINE, size: FOOTER_LINE / BIB_FO
 
 type BibImageInput = {
   bibNumber: number;
-  /** Null draws a desk spare (§NNN): the empty line the name is written on, as the sheet prints it. */
+  /** Null draws a desk spare (§444): the empty line the name is written on, as the sheet prints it. */
   registeredName: string | null;
   eventTitle: string;
   eventDate: string;
@@ -78,7 +78,7 @@ type BibImageInput = {
   siteUrl?: string | null;
   /** What the club decided this bib shows (§249); absent is the platform's own design. */
   design?: BibDesign;
-  /** The small words under a desk spare's empty line (§NNN), as the sheet prints them. */
+  /** The small words under a desk spare's empty line (§444), as the sheet prints them. */
   blankMark?: string;
 };
 
@@ -148,7 +148,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
       }}
     >
       {input.registeredName === null ? (
-        // A desk spare (§NNN): the sheet's rule, at the sheet's point in the strip — `nameTop` is
+        // A desk spare (§444): the sheet's rule, at the sheet's point in the strip — `nameTop` is
         // the strip's padding here, so the rule sits `blankLineTop − nameTop` below it — and the
         // small mark under it, its top `blankMarkTop` into the strip as on the paper.
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>

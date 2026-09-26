@@ -1,7 +1,7 @@
 import type { HtmlConstraints } from "@/shared/forms/constraints";
 
 /**
- * «Durata» as two boxes, hours and minutes (§NNN, amending §71's single minutes box).
+ * «Durata» as two boxes, hours and minutes (§433, amending §71's single minutes box).
  *
  * §71 asked how long an event takes, in minutes — "90, say". Nobody counts a trail race or a
  * camp in minutes: "3 hours 30" is how the club says it, and 210 is arithmetic the organizer had

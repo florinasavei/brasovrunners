@@ -127,7 +127,7 @@ describe("§389 if the legacy constraint were ever restored: one registration pe
       expiresAt: new Date(NOW.getTime() + 48 * 3_600_000),
       now: NOW,
     });
-    // A kept form for the person (§NNN), as the public form would have kept it while the flow was open.
+    // A kept form for the person (§446), as the public form would have kept it while the flow was open.
     const entry = await insertFamilyEntry(db, {
       eventId: event.id,
       participantId: ana.participantId,

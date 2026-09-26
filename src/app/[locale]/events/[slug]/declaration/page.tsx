@@ -127,7 +127,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: tDeclare(`declare.idDocumentTypes.${kind}`) }));
   const fieldLabel = (field: (typeof GROUP_RUN_FORM_FIELDS)[number]) => t(`groupRunDeclaration.page.fields.${field}`);
   /*
-    The run's own minimum age (§329, §NNN): the birth date is asked only while it has one, counted
+    The run's own minimum age (§329, §440): the birth date is asked only while it has one, counted
     on the run's day in its zone — the picker's bound is the arithmetic the service refuses with
     (`latestBirthDateFor`, `isUnderMinimumAge`), today a bound as well. A refusal for age says the
     number, in the summary and under the box, rather than "fill it in" (§47, as the race's §321).
@@ -161,7 +161,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       <LegalDocumentBody
         body={document.body}
         values={{
-          // The run's facts, its minimum age among them (§NNN): "" on a run with none drops that sentence.
+          // The run's facts, its minimum age among them (§440): "" on a run with none drops that sentence.
           ...(facts?.values ?? {}),
           guardian: "—",
           guardianIdDocument: "—",
@@ -179,7 +179,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {t("groupRunDeclaration.page.limited")}
         </Alert>
       )}
-      {/* The database was away when it was sent (§NNN): nothing signed, the boxes filled again. */}
+      {/* The database was away when it was sent (§447): nothing signed, the boxes filled again. */}
       {away && (
         <Alert severity="warning" role="alert" sx={{ mb: 3 }} data-testid="group-run-declaration-away">
           {t("groupRunDeclaration.page.away")}

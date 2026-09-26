@@ -241,7 +241,7 @@ async function publishOpenRace(page: Page, created: Created): Promise<{ ro: stri
   await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
   await page.getByRole("option", { name: "Înscrieri pe site" }).click();
   await field("event.capacity").fill("12");
-  // The declaration is chosen under «Regulamentul» since §NNN.
+  // The declaration is chosen under «Regulamentul» since §448.
   await openEditorBox(page, "Declarația pe propria răspundere");
   await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
   await page.getByRole("option").nth(1).click();

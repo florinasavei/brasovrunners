@@ -1,7 +1,7 @@
 import type { NewsletterTopic } from "@/db/schema/newsletter";
 
 /**
- * "A new event is on the calendar" (§NNN): which events the platform announces by itself, and to
+ * "A new event is on the calendar" (§445): which events the platform announces by itself, and to
  * which topics. Pure, so the job and its test read one rule.
  */
 

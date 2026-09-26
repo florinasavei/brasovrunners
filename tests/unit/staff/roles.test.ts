@@ -287,7 +287,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // "emails" joins them in §253: the messages and the words in them are the Redactor's work
     // (§247), and the panels behind that page ask their own questions — the queue and the
     // club's copies are read only for a role that may see a participant's address (§243, §244).
-    // "tasks" joins them in §NNN: «Sarcini» → «De făcut», the club's own checklist, is read by
+    // "tasks" joins them in §438: «Sarcini» → «De făcut», the club's own checklist, is read by
     // every role from the copywriter up — only the Organizer and the Administrators write it,
     // and the panels read from the system stay the Administrator's (`task-panels.test.ts`).
     expect(visibleAdminSections("COPYWRITER")).toEqual([
@@ -304,7 +304,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // sa vad cine s-a inscris!" — and gained no verb on them. What that section offers this role
     // is the list, the export and the race numbers; `rowVerbsFor` and the panels on the page are
     // where the absence of cancel, erase and resend is asserted.
-    // «Newsletter» (§NNN): the Organizer writes to the subscribers as they write to an event's
+    // «Newsletter» (§445): the Organizer writes to the subscribers as they write to an event's
     // participants (§364) — the page's own entry since the owner's 2026-09-26 "un meniu suplimentar".
     expect(visibleAdminSections("MODERATOR")).toEqual([
       "events",
@@ -325,14 +325,14 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
 
     expect(sections).toContain("devs");
     // Since §397, DEV (Tehnic) is also offered `tasks` — the «Aplicația» panel of it, and since
-    // §NNN «De făcut» read-only; the page itself refuses the club's ops panels to this role
+    // §438 «De făcut» read-only; the page itself refuses the club's ops panels to this role
     // (`task-panels.test.ts`).
     expect(sections).toContain("tasks");
     // The line that carries the weight (§38): DEV helps with the platform and never sees the
     // people who registered.
     expect(sections).not.toContain("registrations");
     expect(sections).not.toContain("staff");
-    // Nor writes to anybody: the newsletter is the club speaking, never the platform's helper (§NNN).
+    // Nor writes to anybody: the newsletter is the club speaking, never the platform's helper (§445).
     expect(sections).not.toContain("newsletter");
   });
 
@@ -362,12 +362,12 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   });
 
   /*
-    **The one row where the table is deliberately not monotone (§289, §NNN).**
+    **The one row where the table is deliberately not monotone (§289, §445).**
 
     DEV outranks MODERATOR, and since the Organizer was given the registrations it is offered one
     section DEV is not. That is the point of DEV rather than an oversight — it is the role the
     club hands somebody helping with the platform, and §38 and the test above both promise such a
-    person never receives the participant list. «Newsletter» (§NNN) is the second cell of the same
+    person never receives the participant list. «Newsletter» (§445) is the second cell of the same
     row: the Organizer writes to the subscribers as they write to an event's participants (§364,
     `canSendNewsletter` is `canMessageParticipants`), and the platform's helper writes to nobody.
 

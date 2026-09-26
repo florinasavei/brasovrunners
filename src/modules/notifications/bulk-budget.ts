@@ -6,13 +6,13 @@ import { emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
 
 /**
- * How many newsletter and new-event messages this batch may claim (§NNN, `domain/bulk.ts`), or
+ * How many newsletter and new-event messages this batch may claim (§445, `domain/bulk.ts`), or
  * `null` for "no limit to apply" — nothing of the kind is due, or the plan sets no ceiling.
  *
  * One cheap query on the ordinary path: whether any bulk message is due at all. Only when one is
  * are the plan and the day's and the month's sent counts read — the same figures `/admin/emails`
  * shows (`readEmailVolumeToday`), counted the same way, from the same UTC boundaries: what Mailgun
- * carried, never the club's Gmail's rows (§NNN), which cost the allowance nothing.
+ * carried, never the club's Gmail's rows (§443), which cost the allowance nothing.
  *
  * `road` narrows "any due" to Mailgun's road when Gmail carries some of the mail (`outbox.ts`):
  * a newsletter going by Gmail is not held to Mailgun's reserve.

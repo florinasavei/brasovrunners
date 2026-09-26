@@ -145,7 +145,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "CLUB_CONFIRMATION_NOTICE",
       "STAFF_INVITATION",
       "REGISTRATION_OPENED",
-      // The newsletter's three (§NNN): to a subscriber, never about a registration.
+      // The newsletter's three (§445): to a subscriber, never about a registration.
       "NEWSLETTER_CONFIRM",
       "NEWSLETTER",
       "NEW_EVENT_ALERT",

@@ -100,7 +100,7 @@ export type EnqueueEmailParams = {
   now: Date;
   /**
    * Whether this row schedules the after-response drain itself (`drain.ts`), as every row did —
-   * `false` for a send that queues hundreds of rows at once (the newsletter, §NNN) and schedules
+   * `false` for a send that queues hundreds of rows at once (the newsletter, §445) and schedules
    * the one drain itself once they are all written, rather than one per row.
    */
   drainAfter?: boolean;
@@ -248,7 +248,7 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
 export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   params: {
-    /** The organizer's message and the update notice (§419), and the newsletter's two sends (§NNN). */
+    /** The organizer's message and the update notice (§419), and the newsletter's two sends (§445). */
     messageType: BulkClubCopyMessage | (typeof BULK_MESSAGE_TYPES)[number];
     /** The event the send is about; null for a newsletter, which is about none. */
     eventId: string | null;
@@ -300,7 +300,7 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
 export const OUTBOX_BATCH_SIZE = 20;
 
 /**
- * Which rows the club sends through Gmail, and how many of them one batch takes (§NNN review) —
+ * Which rows the club sends through Gmail, and how many of them one batch takes (§443 review) —
  * built from the club's setting by `outbox-sender.ts`, the same answer its `route` gives row by row.
  */
 export type OutboxRoads = {
@@ -324,7 +324,7 @@ function onGmailRoad(row: OutboxRow, roads: OutboxRoads): boolean {
 }
 
 /**
- * A renderer's answer that a message has nothing left to say (§NNN): a new-event alert whose event
+ * A renderer's answer that a message has nothing left to say (§445): a new-event alert whose event
  * was cancelled, taken down or has started while the row waited for the allowance
  * (`holdBulkUntilReset`), which may be a day or a month. §331's rule — a cancelled event goes
  * quiet — at the moment of sending, not only at the moment of queueing. The batch deletes the
@@ -365,7 +365,7 @@ export async function claimOutboxBatch(
     batchSize: number;
     roads?: OutboxRoads;
     /**
-     * The most newsletter and new-event messages this batch may take on Mailgun's road (§NNN,
+     * The most newsletter and new-event messages this batch may take on Mailgun's road (§445,
      * `domain/bulk.ts`); `null` or absent is no limit. Either way they come last on each road: every
      * other due message is claimed first, and bulk ones only fill the room left. The limit is
      * Mailgun's allowance less its reserve, so Gmail's road is not held to it — Gmail's pace sizes
@@ -405,7 +405,7 @@ export async function claimOutboxBatch(
     };
 
     // One road's claim: everything that is not a newsletter first, oldest first; then the
-    // newsletter, in the room left and at most `bulkCap` of it (§NNN).
+    // newsletter, in the room left and at most `bulkCap` of it (§445).
     const claimRoad = async (road: SQL | undefined, limit: number, bulkCap: number | null) => {
       const first = await claim(and(due, not(bulk), road), limit);
       const room = limit - first.length;
@@ -414,7 +414,7 @@ export async function claimOutboxBatch(
     };
 
     /*
-      One claim per road when Gmail carries anything (§NNN review). Gmail's rows wait on its pace
+      One claim per road when Gmail carries anything (§443 review). Gmail's rows wait on its pace
       and its cap, and a single oldest-first claim let twenty of them — club copies pile up fast on
       a busy day — stand in front of a runner's link to confirm the address, batch after batch. So
       Mailgun's rows are claimed as if Gmail's were not there, and Gmail's apart, as many as its pace
@@ -435,7 +435,7 @@ export async function claimOutboxBatch(
 }
 
 /**
- * The newsletter rows this batch had no room for under the reserve (§NNN, `domain/bulk.ts`), put
+ * The newsletter rows this batch had no room for under the reserve (§445, `domain/bulk.ts`), put
  * off until the allowance comes back: no attempt spent, nothing sent, and the job's plan sees the
  * reset as their next turn (`nextOutboxWork`) rather than "due now" on every ping. Only Mailgun's
  * road (`road`) when Gmail carries some of the mail: the reserve is Mailgun's allowance.
@@ -496,12 +496,12 @@ export async function processOutboxBatch(
     now: Date;
     batchSize?: number;
     /**
-     * The road each row asks for (§NNN, `outbox-sender.ts`): the club's setting for the row's
+     * The road each row asks for (§443, `outbox-sender.ts`): the club's setting for the row's
      * group. Absent — a test's own sender — every message asks for Mailgun, as before.
      */
     route?: (row: OutboxRow) => EmailTransportName;
     /**
-     * Which rows are Gmail's, claimed apart from Mailgun's (§NNN review, `outbox-sender.ts`).
+     * Which rows are Gmail's, claimed apart from Mailgun's (§443 review, `outbox-sender.ts`).
      * Absent — no Gmail account, or a test's own sender — one claim, oldest first, as before.
      */
     roads?: OutboxRoads;
@@ -511,7 +511,7 @@ export async function processOutboxBatch(
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
 
-  // The newsletter's share of what Mailgun's plan has left (§NNN): read only when one is due on
+  // The newsletter's share of what Mailgun's plan has left (§445): read only when one is due on
   // Mailgun's road — Gmail's rows cost the allowance nothing.
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
   const bulkLimit = await readBulkLimit(db, now, mailgunRoad);
@@ -560,12 +560,12 @@ export async function processOutboxBatch(
         .update(emailOutbox)
         .set({
           status: "SENT",
-          // The moment Gmail took it when it did (§NNN review): the pace runs from here in every sender.
+          // The moment Gmail took it when it did (§443 review): the pace runs from here in every sender.
           sentAt: result.acceptedAt ?? now,
           providerMessageId: result.providerMessageId,
-          // Which road carried it (§NNN): Gmail's cap and Mailgun's allowance are counted from this.
+          // Which road carried it (§443): Gmail's cap and Mailgun's allowance are counted from this.
           transport: result.transport ?? "mailgun",
-          // What Google counts against the day (§NNN): the address and every copy that left; 0 when captured.
+          // What Google counts against the day (§443): the address and every copy that left; 0 when captured.
           recipientCount: result.recipients ?? null,
           lockedAt: null,
           nextAttemptAt: null,
@@ -589,7 +589,7 @@ export async function processOutboxBatch(
      * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
      */
     /*
-      Held back by Gmail's pace, not refused (§NNN): nothing was tried, so the attempt the claim
+      Held back by Gmail's pace, not refused (§443): nothing was tried, so the attempt the claim
       counted is given back, and the row is due again in the few seconds the pace asks for — the
       next drain or job run takes it. Counted as a retry: the mechanism working, not the plan's limit.
     */

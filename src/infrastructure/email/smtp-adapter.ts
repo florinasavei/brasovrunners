@@ -19,7 +19,7 @@ import nodemailer from "nodemailer";
  * contact message has several recipients, no row to retry from and no queue; a failure is
  * told to the visitor on the spot with the club's address to write to instead. Two narrow
  * types instead of one wide one, and nothing here is reachable from `createEmailSender`.
- * Since §NNN the outbox has a Gmail road of its own — `gmail-adapter.ts`, a real `EmailAdapter`
+ * Since §443 the outbox has a Gmail road of its own — `gmail-adapter.ts`, a real `EmailAdapter`
  * over the same connection (`createSmtpConnection`) — and this contract is still the contact form's.
  *
  * Nodemailer 10 ships its own types, and is the one SMTP client the ecosystem uses; Node has
@@ -85,7 +85,7 @@ export function describeSmtpFailure(error: unknown): string {
 }
 
 /**
- * The connection every SMTP send here opens — the contact form's and, since §NNN, the outbox's
+ * The connection every SMTP send here opens — the contact form's and, since §443, the outbox's
  * Gmail road (`gmail-adapter.ts`) — so both keep the same TLS rule and the same bounded waits.
  */
 export function createSmtpConnection(config: SmtpConfig) {

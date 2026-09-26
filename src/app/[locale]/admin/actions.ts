@@ -207,7 +207,7 @@ function eventFieldsFrom(form: FormData) {
     timezone: value("timezone"),
     startsAtWallTime: wallTime("startsAt"),
     endsAtWallTime: wallTime("endsAt"),
-    // «Durata» as hours and minutes (§NNN), joined into the minutes the service has read since §71.
+    // «Durata» as hours and minutes (§433), joined into the minutes the service has read since §71.
     durationMinutes: joinDuration(value("durationHours"), value("durationMinutesPart")),
     raceStartsAtWallTime: wallTime("raceStartsAt"),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
@@ -276,7 +276,7 @@ function eventFieldsFrom(form: FormData) {
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). A group
-    // run's is its own box in "Traseul", beside the declaration that states it (§NNN): the race box
+    // run's is its own box in "Traseul", beside the declaration that states it (§440): the race box
     // is hidden for a group run but still posts, so the type decides which one answers.
     minAge: value("type") === "GROUP_RUN" && form.has("event.groupRunMinAge") ? value("groupRunMinAge") : value("minAge"),
     // The event's own reminder lead (§377), only when the form carried its select: the empty
@@ -642,7 +642,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
           en: translationInputFrom(form, "en"),
         },
       },
-      // An event created already cancelled says why, in both languages (§NNN, §331): the service
+      // An event created already cancelled says why, in both languages (§448, §331): the service
       // requires it for `CANCELLED` and ignores it otherwise; nobody is told — nobody is registered.
       cancellation:
         form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
@@ -811,7 +811,7 @@ export async function assignBibNumbersAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Tipărește» on the spares' section (§NNN): reserve that many numbers for the desk, under the
+ * «Tipărește» on the spares' section (§444): reserve that many numbers for the desk, under the
  * event's lock, and come back to the editor with the range — the page's banner carries the link
  * to the sheet of exactly those numbers. Behind the confirmation that names the first number;
  * `expectFrom` is that number, and a registration that moved it since is refused (CONFLICT) and

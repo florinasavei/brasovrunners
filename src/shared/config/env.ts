@@ -157,7 +157,7 @@ export const envSchema = z
     VERCEL_TEAM_ID: z.string().min(1).optional(),
 
     /**
-     * The club's domain's renewal reminder (§NNN): the day it was registered, `YYYY-MM-DD`, and
+     * The club's domain's renewal reminder (§435): the day it was registered, `YYYY-MM-DD`, and
      * how many years have been paid from that day **in total** — renewing for three more years
      * after the first is `4`. Their sum is the expiry `/admin/tasks` counts down to (amber at 90
      * days, red at 30) and `/api/health` warns about at 30. Not secrets and not the domain's

@@ -91,7 +91,7 @@ export function deadlineMergeValues(
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
- * The event's own minimum age (§329) as a merge field (§NNN, amending §393): "16 ani" / "16
+ * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
  * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
  * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
  * cel puțin {{minimumAge}}." — filled from the event at signing and in the PDF.
@@ -127,7 +127,7 @@ export function dropsParagraph(paragraph: string, values: MergeValues): boolean 
 }
 
 /**
- * The privacy notice's marker for the newsletter (§NNN), the same two-in-one as the list's states
+ * The privacy notice's marker for the newsletter (§445), the same two-in-one as the list's states
  * above: filled, when the notice is shown, with the topics a subscriber may choose — the pop-up's
  * own words, from the same catalogue (`newsletter/topic-words.ts`) — and the switch. The contact
  * page offers the newsletter only while the notice in force, in every language, names it
@@ -308,7 +308,7 @@ export function describesListStates(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the newsletter (§NNN): it names `{{newsletterTopics}}`. The
+ * Whether a privacy notice describes the newsletter (§445): it names `{{newsletterTopics}}`. The
  * gate for the contact page's pop-up and for every subscription the service takes — the club's
  * approval of such a text is the switch, as for the list's states (§396).
  */

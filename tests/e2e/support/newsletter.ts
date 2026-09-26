@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import pg from "pg";
 
 /**
- * A newsletter link for a spec that has to walk past the inbox (§NNN) — the shape of
+ * A newsletter link for a spec that has to walk past the inbox (§445) — the shape of
  * `action-link.ts`: the captured message lives in the server's memory, so the spec stores the
  * SHA-256 of a fresh secret as the platform would at send time and keeps the secret. The pages
  * then read, throttle and spend it exactly as a real link; only the inbox is skipped.

@@ -11,12 +11,12 @@ import { type BoxProps, SettingsReadOnly } from "./box-kit";
 import StatusCard, { type StatusNotice } from "./StatusBox";
 
 /**
- * Card 1, "Ce fel de eveniment" (§350, §406, §NNN): the type, which the page's overline says first
+ * Card 1, "Ce fel de eveniment" (§350, §406, §448): the type, which the page's overline says first
  * — and which switches other cards' fields on and off: a group run has no registration and no
  * programme (§111), only a race has a gun time (§71) — and, as a named card inside it, the event's
  * status (`StatusCard`).
  *
- * **The status is here again since §NNN** (the owner, 2026-09-26: "starea evenimentului ar trebui
+ * **The status is here again since §448** (the owner, 2026-09-26: "starea evenimentului ar trebui
  * să apară pe primul card «Ce fel de eveniment»"). §358 had put the status, the course and the
  * links inside this box; §406 moved all three out — the course and the links to where the page
  * draws them, the status to the cards that are not on the page. The course and the links stay
@@ -101,7 +101,7 @@ export default async function KindBox({
               {t("editor.typeHelp")}
             </Typography>
           </Panel>
-          {/* 1.1 — the status (§NNN): the same select on the create page, starting at "Programat". */}
+          {/* 1.1 — the status (§448): the same select on the create page, starting at "Programat". */}
           {status}
         </Stack>
       ) : (

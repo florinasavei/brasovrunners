@@ -23,7 +23,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Newsletter» (§NNN): the backoffice's own entry, after «Emailuri» — the owner, 2026-09-26:
+ * «Newsletter» (§445): the backoffice's own entry, after «Emailuri» — the owner, 2026-09-26:
  * "pentru newsletter o să fie un meniu suplimentar în backoffice cu «Newsletter»". The subscribers
  * as numbers and the composer that writes to them, which `/admin/emails` held before; that page
  * keeps one line pointing here.

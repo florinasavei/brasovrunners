@@ -11,7 +11,7 @@ import { eventFactsBlock } from "@/modules/notifications/domain/event-facts";
 import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields";
 
 /**
- * §NNN — every time a person reads is on the 24-hour clock, in Romanian and in English (the
+ * §439 — every time a person reads is on the 24-hour clock, in Romanian and in English (the
  * owner, 2026-09-26: "iar ai făcut ora cu AM și PM… am zis că vreau 24H format!").
  *
  * Two halves. What the helper writes, in both languages, on an evening hour (a morning one reads
@@ -43,7 +43,7 @@ const DATE_TO_LOCALE_STRING = /\b(?:\w*(?:[Dd]ate|[Aa]t|[Tt]ime|[Ww]hen|now)|new
 
 const EVENING = new Date("2027-01-16T17:05:00.000Z"); // 19:05 in Bucharest, winter time
 
-describe("BR-REQ-050-02 every time reads 24-hour, in both languages (§349, §NNN)", () => {
+describe("BR-REQ-050-02 every time reads 24-hour, in both languages (§349, §439)", () => {
   it("writes 19:05, never 7:05 pm, in Romanian and in English", () => {
     for (const locale of ["ro", "en"]) {
       const time = formatTime(EVENING, { locale, timeZone: "Europe/Bucharest" });
@@ -102,7 +102,7 @@ describe("BR-REQ-050-02 every time reads 24-hour, in both languages (§349, §NN
  * calendar file's text (§107, §404) and the editor's night line (§394). An hour before 13:00
  * reads the same on either clock, so every one is asked about an evening.
  */
-describe("BR-REQ-050-02 the surfaces write 19:05, never AM/PM, in both languages (§NNN)", () => {
+describe("BR-REQ-050-02 the surfaces write 19:05, never AM/PM, in both languages (§439)", () => {
   const AM_PM = /\b[AaPp]\.?\s?[Mm]\.?(?![a-zăâîșț])/;
 
   it("the email's facts block: when, and the programme", () => {

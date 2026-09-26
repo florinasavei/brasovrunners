@@ -162,7 +162,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
   const db = getDb();
   const schema = await checkSchemaVersion(db);
-  // The month's budget as the governor reads it (§NNN), from the same meter as the Neon block below
+  // The month's budget as the governor reads it (§447), from the same meter as the Neon block below
   // and against the Administrator's saved thresholds — the governor's own cached reader — so the
   // colour here is the one Costuri and `/api/health` show.
   const budget = neon.ok ? await budgetOfInForce(neon.consumption.meter, now) : await readNeonBudget(now);
@@ -264,7 +264,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                         </MuiLink>
                       ))}
                     </Stack>
-                    {/* The words themselves, folded (§NNN): what a journey walked by hand, or an end-to-end spec, reads. */}
+                    {/* The words themselves, folded (§446): what a journey walked by hand, or an end-to-end spec, reads. */}
                     <Box component="details" sx={{ mt: 0.5 }}>
                       <Typography component="summary" variant="caption" sx={{ cursor: "pointer", minHeight: 32, display: "flex", alignItems: "center" }}>
                         {t("captured.text")}
@@ -627,7 +627,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
               )}
             </Stack>
           )}
-          {/* The month's budget, the governor's level and effect, and which of Neon's readings the figure above is (§NNN). */}
+          {/* The month's budget, the governor's level and effect, and which of Neon's readings the figure above is (§447). */}
           <Box sx={{ mt: 2 }}>
             <NeonBudgetPanel locale={locale} reading={budget} />
           </Box>
