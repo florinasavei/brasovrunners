@@ -3,7 +3,7 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
-import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing } from "@/i18n/routing";
@@ -11,7 +11,6 @@ import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { forecastForEvent, forecastsForEvents } from "@/modules/weather/source";
-import WeatherCredit from "@/modules/weather/ui/WeatherCredit";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections } from "@/modules/events/domain/listing";
 import {
@@ -436,13 +435,14 @@ async function ListingBody({
     The weather at each card's start (§416; the owner: "aș vrea să văd vremea și pe cardul
     principal"): read once for every card — a series by its next date, the one whose facts it shows —
     each at its own place, one request per rounded place and none outside the seven days
-    (`forecastsForEvents`). Open-Meteo is credited once, under the cards, when any card carries one.
+    (`forecastsForEvents`). Open-Meteo's credit is not repeated here any more (the owner, 2026-09-26:
+    "nu vreau footer cu open-weather pe main page") — it lives in the site footer's fold instead
+    (`SiteFooter`), said once for the whole site, and the event page keeps its own (`EventFacts`).
   */
   const forecasts = await forecastsForEvents(
     cards.map((series) => series.members[0]),
     now,
   );
-  const locale = (await getLocale()) as "ro" | "en";
   const card = (series: (typeof cards)[number], index: number) => {
     const weather = forecasts.get(series.members[0].id)?.start ?? null;
     return series.members.length > 1 ? (
@@ -451,7 +451,6 @@ async function ListingBody({
       <EventCard key={series.key} event={series.members[0]} index={index} now={now} weather={weather} />
     );
   };
-  const credit = forecasts.size > 0 ? <WeatherCredit locale={locale} /> : null;
 
   if (featured) {
     if (listed.length === 0) return null;
@@ -497,7 +496,6 @@ async function ListingBody({
           }}>
           {cards.map(card)}
         </Box>
-        {credit}
       </Box>
     );
   }
@@ -520,7 +518,6 @@ async function ListingBody({
           }}>
         {cards.map(card)}
       </Box>
-      {credit}
     </>
   );
 }

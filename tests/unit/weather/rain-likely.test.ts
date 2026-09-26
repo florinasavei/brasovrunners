@@ -34,7 +34,7 @@ describe("BR-REQ-041-01 rain is likely at the start (§NNN)", () => {
     }
   });
 
-  it("says the chance as a phrase in both languages, and nothing without one", () => {
+  it("says the chance as a phrase in both languages, and nothing without one, among the details", () => {
     const reading = {
       hourAt: 0,
       code: 2,
@@ -49,8 +49,10 @@ describe("BR-REQ-041-01 rain is likely at the start (§NNN)", () => {
       humidity: null,
       uvIndex: null,
     } as const;
-    expect(weatherWords(reading, "ro").rain).toBe("60% șanse de ploaie");
-    expect(weatherWords(reading, "en").rain).toBe(weatherWords(reading, "en").details[1]);
-    expect(weatherWords({ ...reading, precipitationProbability: null }, "ro").rain).toBeNull();
+    // The rain phrase is `details[1]` here (temperature first): no field of its own on
+    // `WeatherWords` carries it — `rainShort` is the number alone, `rainLikely` the fixed phrase.
+    expect(weatherWords(reading, "ro").details[1]).toBe("60% șanse de ploaie");
+    expect(weatherWords(reading, "en").details[1]).toBe("60% chance of rain");
+    expect(weatherWords({ ...reading, precipitationProbability: null }, "ro").details).not.toContain("șanse de ploaie");
   });
 });

@@ -515,6 +515,24 @@ export default async function EventFacts({
   );
 
   /*
+    A forecast's summary pieces, the umbrella spliced in right after the rain phrase rather than
+    appended after the wind (review finding, §NNN): «Parțial noros, 14 °C, [☂] 60% șanse de
+    ploaie, vânt 11 km/h», never «…, vânt 11 km/h, [☂] 60% șanse de ploaie». Shared by the hero and
+    the page, the only two places that draw this line — the card's own pill (`CardWeather`) never
+    shows the rain phrase at all. `words.details` is built in this fixed order (temperature, rain,
+    wind, each only when the hour has it), so the umbrella's place is the count of whichever of
+    the first two are actually there.
+  */
+  const forecastSummaryPieces = (words: ReturnType<typeof weatherWords>, reading: WeatherReading, umbrella: ReactNode): ReactNode[] => {
+    const pieces: ReactNode[] = [words.summary, ...words.details];
+    if (rainLikely(reading)) {
+      const afterRain = 1 + (reading.temperatureC !== null ? 1 : 0) + (reading.precipitationProbability !== null ? 1 : 0);
+      pieces.splice(afterRain, 0, umbrella);
+    }
+    return pieces;
+  };
+
+  /*
     The route's numbers as pills — surface, difficulty, distance, elevation, in that order (§366,
     amended §375 — the owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this
     should be: terrain type, difficulty, distance, elevation") — each with its glyph (§112), a pill
@@ -773,23 +791,19 @@ export default async function EventFacts({
     */
     if (weather) {
       const words = weatherWords(weather.start, locale);
-      const wet = rainLikely(weather.start);
+      // No `mr` on this glyph (review finding, §NNN): the wrapping `Box` already gives it a
+      // 0.5 gap from the word beside it, and `HERO_GLYPH_SX`'s own `mr` doubled that space —
+      // the one glyph on the hero not seated beside a label, where the margin belongs instead.
+      const umbrella = rainLikely(weather.start) ? (
+        <Box key="rain-likely" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+          <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+          {words.rainLikely}
+        </Box>
+      ) : null;
       lines.push({
         label: words.label,
         icon: WEATHER_GLYPH[weather.start.glyph],
-        value: [
-          words.summary,
-          ...words.details,
-          ...(wet
-            ? [
-                <Box key="rain-likely" component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                  <UmbrellaIcon aria-hidden="true" sx={HERO_GLYPH_SX} />
-                  {words.rainLikely}
-                </Box>,
-              ]
-            : []),
-          links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit,
-        ],
+        value: [...forecastSummaryPieces(words, weather.start, umbrella), links ? outLink(OPEN_METEO_SITE, words.credit) : words.credit],
         testId: "hero-weather",
       });
     }
@@ -1022,25 +1036,19 @@ export default async function EventFacts({
     const words = weatherWords(weather.start, locale);
     const list = weatherListWords(locale);
     const hours = weather.hours.map((hour) => ({ hour, words: weatherWords(hour, locale) }));
-    const wet = rainLikely(weather.start);
+    const umbrella = rainLikely(weather.start) ? (
+      <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+        <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+        {words.rainLikely}
+      </Box>
+    ) : null;
     rows.push({
       key: "weather",
       label: words.label,
       icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow([
-            words.summary,
-            ...words.details,
-            ...(wet
-              ? [
-                  <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                    <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
-                    {words.rainLikely}
-                  </Box>,
-                ]
-              : []),
-          ])}
+          {flow(forecastSummaryPieces(words, weather.start, umbrella))}
           {words.extras.length > 0 && (
             <Typography component="div" variant="body2" color="text.secondary" data-testid="weather-details">
               {flow(words.extras)}

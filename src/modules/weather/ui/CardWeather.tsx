@@ -13,10 +13,12 @@ import { WEATHER_GLYPH } from "./glyphs";
  * Where (§NNN, amending §416): the **last pill of the route's row** (`RoutePills`' trailing slot,
  * from `EventFacts`' compact form), after the cost — what the day will be like beside what the
  * route is, no longer among the marks above the title (type, partner, cancelled), which say what
- * the event is. And when rain is likely at the start (`rainLikely`: 50% or more, and the sky's own
- * glyph is not snow, frost or the storm), the umbrella sits **beside** the sky's own glyph — «🌧 ☂
- * 9 °C» — never replacing it, so a showers hour still reads as showers and the umbrella says
- * something on its own; a screen reader hears «ploaie probabilă» / "rain likely" after the degrees.
+ * the event is. And when rain is likely at the start (`rainLikely`: a chance of 50% or more, *or*
+ * a forecast amount of 0.5 mm or more already falling in the hour even at a lower chance — a
+ * showery hour of 45% with 2 mm still earns it — unless the sky's own glyph says more: snow, frost
+ * or the storm), the umbrella sits **beside** the sky's own glyph — «🌧 ☂ 9 °C» — never replacing
+ * it, so a showers hour still reads as showers and the umbrella says something on its own; a
+ * screen reader hears «ploaie probabilă» / "rain likely" after the degrees.
  *
  * The glyph is a Material icon made here, in a Server Component, and never handed to a client
  * component as an element (§370): the pill is a plain `<span>`, not MUI's `Chip`, whose `icon` prop

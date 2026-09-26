@@ -1,8 +1,10 @@
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
+import { weatherListWords } from "@/modules/weather/words";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
@@ -150,10 +152,20 @@ const BAR_HEIGHT = 44;
  *
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
  * reads (§8) — and the marks only when configured. Nothing here invents an address.
+ *
+ * ## Open-Meteo's credit, once for the whole site (§NNN)
+ *
+ * The listing used to repeat it under its own cards (§416); the owner, 2026-09-26: "nu vreau
+ * footer cu open-weather pe main page" — no such strip on the listing. Its licence (CC BY) still
+ * asks for the credit somewhere on the site, so it moved here, into the fold's panel, said once
+ * regardless of how many cards on the page happen to carry a forecast; the event page keeps its
+ * own, next to the forecast it shows (`EventFacts`).
  */
 export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
   const footer = await getTranslations("Footer");
+  const locale = (await getLocale()) as "ro" | "en";
+  const weatherCredit = weatherListWords(locale).credit;
   const contact = env.EMAIL_REPLY_TO;
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
@@ -326,6 +338,11 @@ export default async function SiteFooter() {
                   </Box>
                 )}
               </Box>
+              {/* Open-Meteo's credit (its licence's own ask), once for the whole site rather than
+                  once per public page (§NNN, removed from the listing's own cards). */}
+              <MuiLink href={OPEN_METEO_SITE} target="_blank" rel="noopener noreferrer" data-testid="footer-weather-credit">
+                {weatherCredit}
+              </MuiLink>
               {/* The build stamp and the staff entrance (§34), a chip since §385: below `md` this
                   is the only place it shows, opened on purpose, and the panel's last item. From
                   `md` a second copy is pinned to the bar's own corner (below), so this one steps

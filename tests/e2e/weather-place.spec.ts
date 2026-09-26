@@ -167,7 +167,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   // process, so that test also takes `withFeaturedEventLock`, the advisory lock the two share).
   test.describe.configure({ mode: "serial" });
 
-  test("a card within seven days of its start wears the glyph and the degrees; the listing credits Open-Meteo once", async ({ page }) => {
+  test("a card within seven days of its start wears the glyph and the degrees; Open-Meteo's credit is the footer's, not the listing's", async ({ page }) => {
     await page.goto("/ro/evenimente");
     const main = page.locator("#main");
     await expect(main.locator("ul > li h2").first()).toBeAttached();
@@ -196,9 +196,12 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     const cardBox = await card.boundingBox();
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((cardBox?.x ?? 0) + (cardBox?.width ?? 0) + 0.5);
 
-    const credit = main.getByTestId("listing-weather-credit").getByRole("link", { name: "Prognoză: Open-Meteo" });
-    await expect(credit).toHaveCount(1);
-    expect((await credit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // No credit strip under the listing's cards any more (the owner, 2026-09-26: "nu vreau footer
+    // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead.
+    await expect(main.getByTestId("listing-weather-credit")).toHaveCount(0);
+    const footerCredit = page.getByTestId("footer-weather-credit");
+    await page.getByTestId("footer-about-fold").locator("summary").click();
+    await expect(footerCredit).toHaveText("Prognoză: Open-Meteo");
     await noSidewaysScroll(page);
   });
 

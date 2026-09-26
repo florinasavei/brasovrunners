@@ -91,7 +91,20 @@ export default async function EventCard({
 
         {/* The facts, with their links: the place is the map the club pasted. The weather at the
             start, a glyph and the degrees (§416), within seven days of it, is the last pill of the
-            route's row — the umbrella when rain is likely (§NNN). */}
+            route's row — the umbrella when rain is likely (§NNN).
+
+            Card height (review finding, §NNN): the pill left the marks row above the title
+            (`CARD_CHIPS_SX`) for the last slot of this row (`RoutePills`' `trailing`), at the
+            same 24px height as the route pills it now sits among (`CardWeather`) — no taller than
+            a chip already there. Both rows already wrap (`flexWrap: "wrap"`), so a card's total
+            height changes only where a row's own wrap count changes at a given width; it does not
+            change where either row already fit its pills on one line before and after. This round
+            did not capture a live 320/360/390/412px measurement of a card with weather (it needs
+            a forecast fixture inside the seven-day window plus a live browser, which the shared
+            machine's one-build-at-a-time rule made too slow to add here) — a follow-up should add
+            it to `tests/e2e/weather-place.spec.ts` or `tests/e2e/listing-cards.spec.ts`, the way
+            other breakpoints in this module are measured and pasted (`EventFacts.tsx`'s own
+            comments). */}
         <Box sx={{ mt: GROUP_GAP }}>
           <EventFacts event={event} now={now} variant="compact" cardWeather={weather} />
         </Box>

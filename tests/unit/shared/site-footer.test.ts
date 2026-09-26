@@ -442,6 +442,8 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Temă întunecată"')), ["min-height", "min-width"], "the switch");
     expectBarTarget(rulesOf(css, emotionClassOf(markup, "<summary")), ["min-height", "line-height"], "the summary");
     // The three marks render because the social URLs are stubbed above; carry the bar's target.
-    expectBarTarget(rulesOf(css, emotionClassOf(markup, 'target="_blank"')), ["width", "height"], "a mark");
+    // By its own `aria-label`, not `target="_blank"` (§NNN gave the fold's Open-Meteo credit that
+    // attribute too, and it comes first in the markup, inside the fold, ahead of the bar's marks).
+    expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Facebook"')), ["width", "height"], "a mark");
   });
 });
