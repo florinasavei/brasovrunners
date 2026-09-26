@@ -942,7 +942,9 @@
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field the platform can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
-      "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place."
+      "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
+      "BIB_NUMBER_TAKEN": "That number is already somebody's at this event (given, held, or worn by an erased registration). Pick another number from the box and try again.",
+      "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1574,7 +1576,8 @@
             "from": "From {number}",
             "clubColour": "the club's colour",
             "allocated": "allocated: {count}",
-            "toPrint": "to print: {count}"
+            "toPrint": "to print: {count}",
+            "spares": "spares {from}–{to}"
           },
           "bibDesign": {
             "parts": "{parts}",
@@ -1684,7 +1687,10 @@
         "title": "Cannot publish yet",
         "intro": "Publication needs these fields, in every language:",
         "introSaved": "Publication needs these fields, in every language, filled in and saved:"
-      }
+      },
+      "bibSpareFrom": "Spare numbers, on the spot — from",
+      "bibSpareTo": "Spare numbers — to",
+      "bibSparesHelp": "For people who register at the pickup desk: the numbers between the two are printed in advance with an empty name line, and the name is written on with a marker. The platform never gives them to anyone who registered online; at the desk, the form suggests the next free one. At most {max}. Leave both empty for no spares."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -2734,7 +2740,10 @@
       "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
       "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
       "downloadAll": "Download every number ({count}) — a PDF to print",
-      "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one."
+      "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one.",
+      "downloadSpares": "The spare numbers, no names (PDF)",
+      "sparesFree": "Spare numbers {from}–{to}: {free} of {total} still free. The sheet prints only the free ones, with an empty name line.",
+      "sparesNone": "The spare numbers {from}–{to} have all been given."
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -2839,7 +2848,12 @@
       "bibAlt": "Race number (BID) {number}",
       "voidCancelled": "Registration cancelled on {date}",
       "voidExpired": "Registration expired on {date}",
-      "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused."
+      "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused.",
+      "handedBib": "Number given now",
+      "handedBibHelp": "Suggested: the next free spare number. Change it if you hand out another number from the box; leave it empty and the platform picks one.",
+      "handedBibNoSpares": "Type the number you hand them, or leave it empty and the platform picks one.",
+      "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
+      "nextSpare": "Next spare: {number}"
     },
     "emails": {
       "title": "The emails participants receive",

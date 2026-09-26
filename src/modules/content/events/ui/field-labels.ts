@@ -56,6 +56,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.reminderHoursBefore": inBox("reminder", t("editor.reminder.label")),
     "event.bibStartNumber": inBox("bibs", t("editor.bibStartNumber")),
     "event.bibColour": inBox("bibs", t("editor.bibColour")),
+    // The desk's spares (§NNN): `spareRule` names the box it is about.
+    "event.bibSpareFrom": inBox("bibs", t("editor.bibSpareFrom")),
+    "event.bibSpareTo": inBox("bibs", t("editor.bibSpareTo")),
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
     "event.declarationDocumentId": inBox("conditions", t("editor.declarationDocument")),
     "event.participantListVisibility": inBox("startList", t("editor.participantList")),

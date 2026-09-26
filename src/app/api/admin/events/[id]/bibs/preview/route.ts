@@ -79,7 +79,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (sample) {
     const image = await renderBibImage({
       bibNumber: bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber,
-      registeredName: SAMPLE_NAME,
+      // `blank=1` draws a desk spare (§NNN): the empty line the name is written on at the desk.
+      registeredName: url.searchParams.get("blank") === "1" ? null : SAMPLE_NAME,
       eventTitle: event.title,
       eventDate,
       // As the form holds it, not as the row does: the preview follows the unsaved select too.

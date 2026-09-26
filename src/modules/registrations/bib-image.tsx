@@ -67,7 +67,8 @@ export const BIB_IMAGE_FOOTER = { width: FOOTER_LINE, size: FOOTER_LINE / BIB_FO
 
 type BibImageInput = {
   bibNumber: number;
-  registeredName: string;
+  /** Null draws a desk spare (§NNN): the empty line the name is written on, as the sheet prints it. */
+  registeredName: string | null;
   eventTitle: string;
   eventDate: string;
   bandColour?: string | null;
@@ -144,7 +145,21 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         justifyContent: "center",
       }}
     >
-      <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
+      {input.registeredName === null ? (
+        // A desk spare (§NNN): the sheet's rule, at the sheet's point in the strip — `nameTop` is
+        // the strip's padding here, so the rule sits `blankLineTop − nameTop` below it.
+        <div
+          style={{
+            display: "flex",
+            marginTop: px(L.blankLineTop - L.nameTop) - px(L.blankLineWeight) / 2,
+            width: px(L.blankLineWidth),
+            height: px(L.blankLineWeight),
+            background: COLOR.ink,
+          }}
+        />
+      ) : (
+        <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
+      )}
     </div>
   ) : null;
   return new ImageResponse(

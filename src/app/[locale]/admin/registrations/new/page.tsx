@@ -16,7 +16,9 @@ import {
   StaffEventScope,
   StaffEventSelect,
   StaffGuardian,
+  StaffHandedBibField,
 } from "@/modules/registrations/ui/StaffEventBirthDate";
+import { nextSpareBibNumbers } from "@/modules/registrations/bibs";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -89,6 +91,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  // The next free desk spare per event (§NNN), suggested only to the desk — a person on the
+  // telephone, entered from the list, is not standing at a table with a bib.
+  const spareSuggestions = fromDesk ? await nextSpareBibNumbers(getDb(), events.map((event) => event.id)) : {};
 
   return (
     <Stack spacing={3}>
@@ -132,6 +137,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             email: t("registrations.participantEmail"),
             participantLocale: t("registrations.participantLocale"),
             relayedByParticipantRequest: t("registrations.relayConfirmation"),
+            fastTrack: t("desk.fastTrack"),
+            bibNumber: t("desk.handedBib"),
           })}
           // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
           confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
@@ -249,6 +256,15 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary">
                 {t("desk.fastTrackHelp")}
               </Typography>
+              {/* The bib handed with the paper (§NNN): the next desk spare, suggested from the desk. */}
+              <Box sx={{ mt: 1.5 }}>
+                <StaffHandedBibField
+                  label={t("desk.handedBib")}
+                  spareHelp={`${t("desk.handedBibHelp")} ${t("desk.handedBibFastTrackOnly")}`}
+                  noSpareHelp={`${t("desk.handedBibNoSpares")} ${t("desk.handedBibFastTrackOnly")}`}
+                  suggestions={spareSuggestions}
+                />
+              </Box>
             </Box>
 
             <Box>

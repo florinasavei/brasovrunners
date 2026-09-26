@@ -88,7 +88,8 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
-import { countBibs } from "@/modules/registrations/bibs";
+import { countBibs, freeSpareBibNumbers } from "@/modules/registrations/bibs";
+import { spareCountOf } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
@@ -187,6 +188,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const internal = event.registrationMode === "INTERNAL";
   // How many numbers this event has, and how many wait for the printer, for the bib card.
   const bibCounts = canReadRegistrations(staffUser.role) && internal ? await countBibs(db, event.id) : null;
+  // The desk's spares and how many are still free (§NNN), for the same card; nothing without a band.
+  const spareState = bibCounts ? await freeSpareBibNumbers(db, event.id) : null;
+  const spares = spareState?.band ? { ...spareState.band, free: spareState.free.length, total: spareCountOf(spareState.band) } : null;
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
@@ -791,6 +795,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           mayAssign={canManageRegistrations(staffUser.role)}
                           onlyTest={registered.total > 0 && registered.test === registered.total}
                           attention={bibCounts.unprinted > 0 && withinRaceWeek(event, now, deadlines)}
+                          spares={spares}
                         />
                       ) : null
                     }

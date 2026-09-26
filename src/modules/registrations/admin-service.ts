@@ -22,7 +22,8 @@ import {
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
-import { erasedBibNumbers } from "./bibs";
+import { bibNumberInUse, erasedBibNumbers, isEventSpareNumber } from "./bibs";
+import { BIB_NUMBER_MAX } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
@@ -259,7 +260,42 @@ export type CreateRegistrationByStaffInput = {
    * waiting list if the event is full, exactly as anyone else's would.
    */
   fastTrack?: boolean;
+  /**
+   * The number handed to the walk-in with the paper (§NNN): the desk's next spare, which the form
+   * suggests, or any free number the volunteer typed. Only with the fast track — a person who
+   * finishes from their own email is not standing at the table holding a bib — and written only
+   * if the confirmation gives them a place.
+   */
+  bibNumber?: number;
 };
+
+/**
+ * The marker on the walk-in's refusal when the row was entered and the number handed with it was
+ * given to somebody else in the moment between the desk's check and the confirmation (§NNN) —
+ * two volunteers, one spare. Like `WALK_IN_LEFT_UNCONFIRMED`, something was written: the entry
+ * stands unconfirmed, and the desk confirms it on paper with another spare.
+ */
+export const WALK_IN_BIB_TAKEN = "walkInBibTaken";
+
+/**
+ * The desk's word for a refused handed number (§NNN): `BIB_NUMBER_TAKEN` when the box itself was
+ * refused and nothing was written, `WALK_IN_BIB_TAKEN` when the walk-in was entered first. Null for
+ * any other error, which keeps its own code.
+ */
+export function handedBibRefusalCode(error: unknown): "BIB_NUMBER_TAKEN" | "WALK_IN_BIB_TAKEN" | null {
+  if (!isDomainError(error)) return null;
+  if (error.fields.includes(WALK_IN_BIB_TAKEN)) return "WALK_IN_BIB_TAKEN";
+  if (error.code === "CONFLICT" && error.fields.includes("bibNumber")) return "BIB_NUMBER_TAKEN";
+  return null;
+}
+
+/** A number typed at the desk is a whole number a bib can carry, or it is refused naming its box. */
+function assertHandedBibNumber(bibNumber: number | undefined): void {
+  if (bibNumber === undefined) return;
+  if (!Number.isInteger(bibNumber) || bibNumber < 1 || bibNumber > BIB_NUMBER_MAX) {
+    throw new DomainError("VALIDATION_ERROR", "a race number is a whole number from 1 to 99999", ["bibNumber"]);
+  }
+}
 
 /**
  * Enter a registration for somebody who asked in person, on the phone, or after a run
@@ -293,6 +329,22 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   }
 
   const event = await eventForRegistration(db, input.eventId);
+
+  /*
+    The number handed with the paper (§NNN), checked before anything is written: a box that is
+    refused leaves no entry behind. Only on the fast track — without it the person finishes from
+    their own email, and nobody at a table is holding a bib for them. Checked again under the event
+    lock by the confirmation below; this is what makes the ordinary refusal cost nothing.
+  */
+  assertHandedBibNumber(input.bibNumber);
+  if (input.bibNumber !== undefined) {
+    if (!input.fastTrack) {
+      throw new DomainError("VALIDATION_ERROR", "a race number is handed only to a person confirmed at the desk", ["bibNumber", "fastTrack"]);
+    }
+    if (await bibNumberInUse(db, { eventId: event.id, number: input.bibNumber })) {
+      throw new DomainError("CONFLICT", `number ${input.bibNumber} is already somebody's at this event`, ["bibNumber"]);
+    }
+  }
 
   /**
    * The public form answers a duplicate with the same generic success it gives everyone
@@ -361,8 +413,13 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
 
   if (input.fastTrack && created) {
     try {
-      await confirmRegistrationByStaff(db, actor, created.id, now);
+      await confirmRegistrationByStaff(db, actor, created.id, now, { bibNumber: input.bibNumber });
     } catch (error) {
+      // The spare went to somebody else between the check above and this lock (§NNN): the entry
+      // stands, unconfirmed and emailed nothing, and the desk is told to confirm it with another.
+      if (handedBibRefusalCode(error) === "BIB_NUMBER_TAKEN") {
+        throw new DomainError("CONFLICT", `${(error as Error).message} (the walk-in was entered and left unconfirmed)`, [WALK_IN_BIB_TAKEN]);
+      }
       /*
         The last place and the last slot in the line taken between the entry above and this
         confirmation (§348) — two transactions, so a window, however small. The entry stands,
@@ -386,20 +443,25 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
   now: Date,
+  /** The number handed with the paper (§NNN): a desk spare, or a free number typed at the table. */
+  options: { bibNumber?: number } = {},
 ): Promise<Registration> {
   assertDesk(actor);
+  assertHandedBibNumber(options.bibNumber);
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
 
-  const result = await confirmByStaff(db, event, registrationId, actor, now);
+  const result = await confirmByStaff(db, event, registrationId, actor, now, { bibNumber: options.bibNumber });
+  const handed = options.bibNumber !== undefined && result.status === "CONFIRMED" && result.bibNumber === options.bibNumber;
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
     participantId: current.participantId,
     action: "registration.confirmed_by_staff",
     entityType: "registration",
     entityId: registrationId,
-    metadata: { from: current.status, to: result.status },
+    // The number handed with the paper, when one was (§NNN): the audit says a bib left the box.
+    metadata: { from: current.status, to: result.status, ...(handed ? { bibNumber: options.bibNumber } : {}) },
     now,
   });
   return result;
@@ -493,6 +555,21 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   let updated: Registration;
   try {
     updated = await db.transaction(async (tx) => {
+      /*
+        Not a number somebody else is holding provisionally (§NNN, found while adding the spares):
+        the unique index covers the settled column only, so 57 typed here while another runner is
+        looking at a provisional 57 went through — and failed on the index the moment that runner
+        was confirmed and adopted it (§220), on the desk, in front of them.
+      */
+      if (bibNumber !== null && (await bibNumberInUse(tx, { eventId: current.eventId, number: bibNumber, exceptRegistrationId: registrationId }))) {
+        throw new DomainError("CONFLICT", `number ${bibNumber} is already somebody's at this event`, ["bibNumber"]);
+      }
+      /*
+        A desk spare is on paper already (§NNN): printed blank and handed out with the name written
+        on. Marked printed, so the next "unprinted" sheet does not print a second one with the name,
+        and a cancellation lists it among the bibs that exist (§311).
+      */
+      const spare = bibNumber !== null && (await isEventSpareNumber(tx, current.eventId, bibNumber));
       const [row] = await tx
         .update(registrations)
         /*
@@ -504,7 +581,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
           sequence, which is the exact failure §220 fixed in the bulk sweeps. One runner, one
           number, whichever verb produced it.
         */
-        .set({ bibNumber, provisionalBibNumber: null, updatedAt: now })
+        .set({ bibNumber, provisionalBibNumber: null, updatedAt: now, ...(spare ? { bibPrintedAt: now } : {}) })
         /*
           The two refusals above, again, in the write itself (§311): `current` was read before
           this transaction, so a registration cancelled or expired — or a number printed — in

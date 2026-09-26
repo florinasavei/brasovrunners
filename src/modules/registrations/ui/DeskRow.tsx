@@ -65,6 +65,7 @@ export default async function DeskRow({
   showEvent = false,
   readOnly = false,
   minorSigns,
+  spareSuggestion = null,
 }: {
   row: DeskRegistration;
   locale: Locale;
@@ -81,6 +82,13 @@ export default async function DeskRow({
    * row's own language — the translation "Confirmă pe hârtie" binds to.
    */
   minorSigns: Readonly<Record<Locale, boolean>>;
+  /**
+   * The event's next free desk spare (§NNN), read once by the page: suggested in the number box of
+   * a runner who has no settled number — beside "Confirmă aici" and in the number given by hand —
+   * so the volunteer hands the pre-printed bib and the screen agrees. Null when the club set no
+   * spares or every one is out: the row then behaves as it always did.
+   */
+  spareSuggestion?: number | null;
 }) {
   const t = await getTranslations("Admin");
   // Every desk verb asks first and says who is emailed (§384); the service decides, as before.
@@ -298,9 +306,28 @@ export default async function DeskRow({
               data-testid="desk-confirm-form"
             >
               {hidden}
-              <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
-                {t("desk.confirmHere")}
-              </GlyphButton>
+              <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                {/*
+                  The bib handed with the paper (§NNN): the next desk spare, suggested, for a runner
+                  with no settled number — the settle's numbers are printed with names, so a walk-in
+                  or a late paper gets a pre-printed spare, never a number nobody printed. Emptied,
+                  the platform draws one as before. Only where the club set spares.
+                */}
+                {spareSuggestion !== null && row.bibNumber === null && row.kind === "REAL" && (
+                  <RecallField
+                    name="bibNumber"
+                    type="number"
+                    size="small"
+                    label={t("desk.handedBib")}
+                    defaultValue={spareSuggestion}
+                    slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
+                    sx={{ width: 140, "& .MuiInputBase-root": { minHeight: 44 } }}
+                  />
+                )}
+                <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
+                  {t("desk.confirmHere")}
+                </GlyphButton>
+              </Stack>
             </ActionForm>
           )}
           {/*
@@ -365,11 +392,14 @@ export default async function DeskRow({
                 >
                   {hidden}
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                    {/* The next desk spare, suggested (§NNN): the bib the volunteer is about to hand. */}
                     <RecallField
                       name="bibNumber"
                       type="number"
                       size="small"
                       label={t("desk.bibField")}
+                      defaultValue={spareSuggestion ?? undefined}
+                      title={spareSuggestion !== null ? t("desk.nextSpare", { number: spareSuggestion }) : undefined}
                       slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
                       sx={{ width: 120 }}
                     />

@@ -23,6 +23,8 @@ type Props = {
   onlyTest: boolean;
   /** Open by itself: numbers waiting for the printer in race week (§311). */
   attention: boolean;
+  /** The desk's spares (§NNN): the band and how many of it are still free; null when the club set none. */
+  spares?: { from: number; to: number; free: number; total: number } | null;
 };
 
 /**
@@ -37,7 +39,7 @@ type Props = {
  * form, as its siblings (`BibPrintForms`). "Salvează" never posts them, and they never post the
  * event. The line at the top says so.
  */
-export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention }: Props) {
+export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null }: Props) {
   const t = await getTranslations("Admin");
   return (
     <Panel
@@ -94,6 +96,27 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
             </Stack>
           )}
         </Stack>
+        {/*
+          The desk's spares (§NNN): the free ones printed blank, a name line for the marker. The
+          same GET form as the sheet, one more submit button naming what it asks for — so the
+          "from"/"to" boxes above narrow it too, when they are shown.
+        */}
+        {spares && (
+          <Stack spacing={1} data-testid="bib-spares">
+            <Typography variant="body2" color="text.secondary">
+              {spares.free > 0
+                ? t("bibs.sparesFree", { from: spares.from, to: spares.to, free: spares.free, total: spares.total })
+                : t("bibs.sparesNone", { from: spares.from, to: spares.to })}
+            </Typography>
+            {spares.free > 0 && (
+              <Box>
+                <GlyphButton icon="pdf" type="submit" form={BIB_DOWNLOAD_FORM} name="spares" value="1" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                  {t("bibs.downloadSpares")}
+                </GlyphButton>
+              </Box>
+            )}
+          </Stack>
+        )}
         {/* Every bib as it will print, on its own page (§94): drawn on request. */}
         {total > 0 && (
           <Box>

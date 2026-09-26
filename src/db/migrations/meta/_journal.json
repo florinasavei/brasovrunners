@@ -575,6 +575,13 @@
       "when": 1790369923669,
       "tag": "0081_terms_acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1790401998292,
+      "tag": "0082_bib_spare_band",
+      "breakpoints": true
     }
   ]
 }

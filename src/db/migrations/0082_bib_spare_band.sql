@@ -1,0 +1,3 @@
+ALTER TABLE "events" ADD COLUMN "bib_spare_from" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD COLUMN "bib_spare_to" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_bib_spare_band" CHECK (("events"."bib_spare_from" IS NULL AND "events"."bib_spare_to" IS NULL) OR ("events"."bib_spare_from" IS NOT NULL AND "events"."bib_spare_to" IS NOT NULL AND "events"."bib_spare_from" >= 1 AND "events"."bib_spare_to" <= 99999 AND "events"."bib_spare_from" <= "events"."bib_spare_to" AND "events"."bib_spare_to" - "events"."bib_spare_from" < 500));

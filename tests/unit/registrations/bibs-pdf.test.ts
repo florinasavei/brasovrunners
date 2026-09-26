@@ -4,7 +4,7 @@ import { inflateSync } from "node:zlib";
 import PDFDocument from "pdfkit";
 import { describe, expect, it, vi } from "vitest";
 import { BIB_BAND_FALLBACK, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
-import { A4_PAGE, BIB_PAPER } from "@/modules/registrations/bib-geometry";
+import { A4_PAGE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER } from "@/modules/registrations/bib-geometry";
 import { BIB_SHEET_CUT, BIB_SHEET_FOOTER, bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
@@ -259,6 +259,43 @@ describe("BR-REQ-038-01 the bib sheet", () => {
         expect(Number(x) + width / 2).toBeCloseTo(595.28 / 2, 6);
       }
     } finally {
+      text.mockRestore();
+    }
+  });
+
+  /**
+   * §NNN — a desk spare: the number, and an empty line where the name goes for the marker at the
+   * desk. Drawn in the name's own strip, centred, at the name's baseline, and nowhere when the
+   * club prints no names at all.
+   */
+  it("prints a spare with an empty name line in the name's strip, and no name", async () => {
+    const moveTo = vi.spyOn(PDFDocument.prototype, "moveTo");
+    const lineTo = vi.spyOn(PDFDocument.prototype, "lineTo");
+    const text = vi.spyOn(PDFDocument.prototype, "text");
+    try {
+      await sheet(0, "one", {
+        rows: [{ bibNumber: 901, registeredName: null }],
+        design: { ...DEFAULT_BIB_DESIGN, showName: true, namePosition: "above" },
+      });
+      const top = (A4_PAGE.height - BIB_PAPER.height) / 2 + BIB_MARGIN;
+      const y = top + BIB_LAYOUT.bandHeight + BIB_LAYOUT.blankLineTop;
+      const left = (A4_PAGE.width - BIB_LAYOUT.blankLineWidth) / 2;
+      const starts = moveTo.mock.calls.map(([x, at]) => [Number(x), Number(at)]);
+      const ends = lineTo.mock.calls.map(([x, at]) => [Number(x), Number(at)]);
+      expect(starts.some(([x, at]) => Math.abs(x - left) < 1e-6 && Math.abs(at - y) < 1e-6)).toBe(true);
+      expect(ends.some(([x, at]) => Math.abs(x - (left + BIB_LAYOUT.blankLineWidth)) < 1e-6 && Math.abs(at - y) < 1e-6)).toBe(true);
+      // The number is printed; no name is — there is none to print.
+      const strings = text.mock.calls.map(([string]) => String(string));
+      expect(strings).toContain("901");
+      expect(strings).not.toContain("null");
+
+      moveTo.mockClear();
+      await sheet(0, "one", { rows: [{ bibNumber: 902, registeredName: null }], design: { ...DEFAULT_BIB_DESIGN, showName: false } });
+      const nameLine = moveTo.mock.calls.filter(([x]) => Math.abs(Number(x) - left) < 1e-6);
+      expect(nameLine).toHaveLength(0);
+    } finally {
+      moveTo.mockRestore();
+      lineTo.mockRestore();
       text.mockRestore();
     }
   });

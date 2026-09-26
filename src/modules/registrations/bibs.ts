@@ -10,9 +10,47 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { freeSpareNumbers, isSpareNumber, type SpareBand, spareBandOf } from "./domain/spare-bibs";
 import { holdsAPlace, TERMINAL_STATUSES } from "./domain/state-machine";
 
 type Actor = Pick<StaffUser, "id" | "role">;
+
+/**
+ * The event's band as the draws need it: where its numbers start and which numbers are the desk's
+ * spares (§173, §NNN). One read, by the primary key, on every draw — the spares are the reason it
+ * is read even when the caller already knows the start: a draw that forgot them would hand a
+ * pre-printed spare to somebody who registered online.
+ */
+async function bandOf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  startNumber?: number,
+): Promise<{ start: number; spare: SpareBand | null }> {
+  const [row] = await db
+    .select({ start: events.bibStartNumber, bibSpareFrom: events.bibSpareFrom, bibSpareTo: events.bibSpareTo })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  return { start: startNumber ?? row?.start ?? 1, spare: row ? spareBandOf(row) : null };
+}
+
+/**
+ * Every number this event has on somebody — settled, provisional, and erased (§214, §311) — as one
+ * set, for the checks that ask "is this one free" rather than "which is the next".
+ */
+async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Set<number>> {
+  const rows = await db
+    .select({ number: registrations.bibNumber, provisional: registrations.provisionalBibNumber })
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId));
+  const taken = new Set<number>();
+  for (const row of rows) {
+    if (row.number !== null) taken.add(row.number);
+    if (row.provisional !== null) taken.add(row.provisional);
+  }
+  for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
+  return taken;
+}
 
 /**
  * Race numbers (BR-REQ-038-01, `DECISIONS.md` §65, §173).
@@ -137,15 +175,12 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
   // The caller inside a transaction that already holds the event row usually passes the start;
-  // read it when it did not, so nothing has to remember to.
-  const start =
-    startNumber ??
-    (await tx.select({ start: events.bibStartNumber }).from(events).where(eq(events.id, eventId)).limit(1))[0]?.start ??
-    1;
+  // it is read when it did not, and the desk's spares always are (§NNN): never drawn here.
+  const { start, spare } = await bandOf(tx, eventId, startNumber);
 
   const ceiling = ceilingFor(start);
   for (let candidate = start; candidate <= ceiling; candidate += 1) {
-    if (!taken.has(candidate)) {
+    if (!taken.has(candidate) && !isSpareNumber(spare, candidate)) {
       taken.add(candidate);
       return candidate;
     }
@@ -187,14 +222,13 @@ export async function pickProvisionalBibNumber<T extends Record<string, unknown>
   // after the erasure would be promoted to a final 27 the moment its holder confirmed.
   for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
-  const start =
-    startNumber ??
-    (await tx.select({ start: events.bibStartNumber }).from(events).where(eq(events.id, eventId)).limit(1))[0]?.start ??
-    1;
+  // Nor a spare (§NNN): a provisional number becomes the final one at the close or at the
+  // confirmation after it, so a spare drawn here would be a spare on an online runner's bib.
+  const { start, spare } = await bandOf(tx, eventId, startNumber);
 
   const ceiling = ceilingFor(start);
   for (let candidate = start; candidate <= ceiling; candidate += 1) {
-    if (!taken.has(candidate)) {
+    if (!taken.has(candidate) && !isSpareNumber(spare, candidate)) {
       taken.add(candidate);
       return candidate;
     }
@@ -365,11 +399,14 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
   // Erased registrations' numbers too (§311): the recompaction runs from the band's start, so
   // it is the one pass certain to reach an erased 27 if nothing said it was taken.
   const taken = new Set([...worn.map((row) => row.number as number), ...(await erasedBibNumbers(tx, input.eventId))]);
+  // And the desk's spares (§NNN): the run closes around them, as around a number typed by hand —
+  // a spare is printed blank for a walk-in, and the settled sequence is printed with names.
+  const { spare } = await bandOf(tx, input.eventId, input.bibStartNumber);
 
   const settled: SettledBib[] = [];
   let candidate = input.bibStartNumber;
   for (const row of waiting) {
-    while (taken.has(candidate)) candidate += 1;
+    while (taken.has(candidate) || isSpareNumber(spare, candidate)) candidate += 1;
     taken.add(candidate);
     await tx
       .update(registrations)
@@ -403,7 +440,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     // The band this race counts from (§173), read once under the same lock.
     const [event] = await tx
-      .select({ id: events.id, bibStartNumber: events.bibStartNumber })
+      .select({ id: events.id, bibStartNumber: events.bibStartNumber, bibSpareFrom: events.bibSpareFrom, bibSpareTo: events.bibSpareTo })
       .from(events)
       .where(eq(events.id, input.eventId))
       .for("update");
@@ -441,8 +478,10 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
         anywhere the club could see it. The promotion is the fix: the number they were told is
         the number they keep.
       */
-      const number =
-        row.provisional ?? (await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber));
+      // Except a provisional number inside the desk's spares (§NNN) — one drawn before the club
+      // set the band — which is not kept: it would put a spare on an online runner's bib.
+      const keep = row.provisional !== null && !isSpareNumber(spareBandOf(event), row.provisional);
+      const number = keep ? (row.provisional as number) : await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber);
       taken.add(number);
       given.push(number);
       await tx
@@ -524,16 +563,83 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
   // Nor an erased registration's number (§311): offering it would be offering a refusal.
   for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
   // From the event's own band unless the caller asked from somewhere (§173): suggesting 1, 2, 3
-  // at a race whose numbers start at 500 offers numbers nobody would print.
-  const start =
-    from ??
-    (await db.select({ start: events.bibStartNumber }).from(events).where(eq(events.id, eventId)).limit(1))[0]?.start ??
-    1;
+  // at a race whose numbers start at 500 offers numbers nobody would print. Never a desk spare
+  // (§NNN): a preferential number is printed with a name, and a spare is printed without one —
+  // the desk suggests those itself, from `freeSpareBibNumbers`.
+  const { start, spare } = await bandOf(db, eventId, from);
   const free: number[] = [];
   for (let n = Math.max(1, start); free.length < count && n <= 99_999; n += 1) {
-    if (!taken.has(n)) free.push(n);
+    if (!taken.has(n) && !isSpareNumber(spare, n)) free.push(n);
   }
   return free;
+}
+
+/**
+ * The desk's spares still free at this event, lowest first (§NNN): what the spares sheet prints
+ * blank and what the desk offers a walk-in — the band's numbers nobody wears, holds or wore.
+ * `band` is null when the club set none, and then there is nothing to suggest.
+ */
+export async function freeSpareBibNumbers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ band: SpareBand | null; free: number[] }> {
+  const { spare } = await bandOf(db, eventId);
+  if (!spare) return { band: null, free: [] };
+  // The rows first, then the erased numbers (§311), as every draw here reads them.
+  return { band: spare, free: freeSpareNumbers(spare, await numbersInUse(db, eventId)) };
+}
+
+/**
+ * The spare the desk suggests next at each of these events (§NNN): the lowest free one, or null
+ * where the club set no band or every spare is out. One call per event on a page that shows one or
+ * two of them; the desk never shows more.
+ */
+export async function nextSpareBibNumbers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventIds: readonly string[],
+): Promise<Record<string, number | null>> {
+  const unique = [...new Set(eventIds)];
+  const entries = await Promise.all(
+    unique.map(async (eventId) => [eventId, (await freeSpareBibNumbers(db, eventId)).free[0] ?? null] as const),
+  );
+  return Object.fromEntries(entries);
+}
+
+/**
+ * Whether a number typed at the desk is somebody's already (§NNN): settled or provisional on
+ * another registration of this event, or worn by one that was erased (§311). The unique index
+ * catches only the settled column; a provisional number somebody is looking at would otherwise be
+ * given away by hand and collide when its holder is confirmed and adopts it (§220).
+ */
+export async function bibNumberInUse<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { eventId: string; number: number; exceptRegistrationId?: string },
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: registrations.id })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, input.eventId),
+        sql`(${registrations.bibNumber} = ${input.number} OR ${registrations.provisionalBibNumber} = ${input.number})`,
+        input.exceptRegistrationId ? sql`${registrations.id} <> ${input.exceptRegistrationId}` : undefined,
+      ),
+    )
+    .limit(1);
+  if (row) return true;
+  return (await erasedBibNumbers(db, input.eventId)).includes(input.number);
+}
+
+/**
+ * Whether this number is one of the event's desk spares (§NNN) — what decides that a number given
+ * at the desk is already on paper (`admin-service.ts#setBibNumberByStaff`, the walk-in's box).
+ */
+export async function isEventSpareNumber<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  number: number,
+): Promise<boolean> {
+  return isSpareNumber((await bandOf(db, eventId)).spare, number);
 }
 
 export type BibRow = { id: string; bibNumber: number; registeredName: string };

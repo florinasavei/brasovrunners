@@ -463,6 +463,20 @@ export const events = pgTable(
     bibColour: text("bib_colour"),
 
     /**
+     * The spare bibs for on-the-spot entries (§NNN): a band of numbers, both ends included, that
+     * the club prints ahead with an empty name line and hands to a walk-in at the desk, the name
+     * written on with a marker. Null, both of them, is no spares — every event before this.
+     *
+     * **The allocator never draws from it** (`bibs.ts`): not the provisional number at
+     * submission, not the recompaction at the close, not a confirmation after it, not the batch.
+     * A number in it reaches a runner only by a person at the desk choosing it — the walk-in's
+     * box, "Confirmă aici", the number typed by hand — and the desk suggests the lowest one still
+     * free. Numbers already worn inside the band stay their runners' and are never printed blank.
+     */
+    bibSpareFrom: integer("bib_spare_from"),
+    bibSpareTo: integer("bib_spare_to"),
+
+    /**
      * The rest of what a bib looks like (`DECISIONS.md` §249): what is printed, how large the
      * number is, where the name sits, a picture instead of the coloured band, a sponsors'
      * strip, and whether the sheet carries cut marks.
@@ -615,6 +629,13 @@ export const events = pgTable(
      */
     check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
+    // The spare band (§NNN): both ends or neither, in order, within a five-digit bib, and at most
+    // 500 numbers — a sheet somebody prints, not a second race. `domain/spare-bibs.ts` says the
+    // same in words; the `IS NOT NULL`s are needed, since half a pair makes the rest NULL.
+    check(
+      "events_bib_spare_band",
+      sql`(${t.bibSpareFrom} IS NULL AND ${t.bibSpareTo} IS NULL) OR (${t.bibSpareFrom} IS NOT NULL AND ${t.bibSpareTo} IS NOT NULL AND ${t.bibSpareFrom} >= 1 AND ${t.bibSpareTo} <= 99999 AND ${t.bibSpareFrom} <= ${t.bibSpareTo} AND ${t.bibSpareTo} - ${t.bibSpareFrom} < 500)`,
+    ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
     // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The

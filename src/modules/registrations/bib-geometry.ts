@@ -69,6 +69,13 @@ export const BIB_LAYOUT = {
   nameSize: 24,
   nameBlock: 44,
   nameTop: 10,
+  /**
+   * A spare bib's empty name line (§NNN): a rule centred in the name's strip, where the name's
+   * baseline would sit, long enough for a name written in marker and short of the card's edges.
+   */
+  blankLineWidth: 300,
+  blankLineTop: 36,
+  blankLineWeight: 1,
   /** The sponsors' strip above the small print, and the picture fitted inside it. */
   sponsorHeight: 30,
   sponsorTop: 2,

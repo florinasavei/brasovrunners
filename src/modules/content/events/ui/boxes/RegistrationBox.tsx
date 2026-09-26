@@ -10,6 +10,7 @@ import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/doma
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { SPARE_BIBS_MAX, spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
   confirmationWindow,
@@ -379,7 +380,13 @@ export default async function RegistrationBox({
                     level={3}
                     id="box-bibs"
                     title={t("editor.boxes.bibs.title")}
-                    aside={bibsSummary(words, event?.bibStartNumber ?? 1, colourLabel, bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null)}
+                    aside={bibsSummary(
+                      words,
+                      event?.bibStartNumber ?? 1,
+                      colourLabel,
+                      bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null,
+                      event ? spareBandOf(event) : null,
+                    )}
                     openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>
@@ -412,6 +419,25 @@ export default async function RegistrationBox({
                         </RecallField>
                       </Stack>
                       {event && <BoxNote>{t("editor.boxes.bibs.startChange")}</BoxNote>}
+                      {/* The desk's spares (§NNN): numbers printed blank for on-the-spot entries,
+                          which the allocator never gives to anybody who registered online. */}
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                        <RecallField
+                          name="event.bibSpareFrom"
+                          label={t("editor.bibSpareFrom")}
+                          defaultValue={event?.bibSpareFrom ?? ""}
+                          {...box("bibSpareFrom", { inputMode: "numeric" })}
+                          sx={{ width: { sm: 220 } }}
+                        />
+                        <RecallField
+                          name="event.bibSpareTo"
+                          label={t("editor.bibSpareTo")}
+                          defaultValue={event?.bibSpareTo ?? ""}
+                          {...box("bibSpareTo", { inputMode: "numeric" })}
+                          sx={{ width: { sm: 220 } }}
+                        />
+                      </Stack>
+                      <BoxNote>{t("editor.bibSparesHelp", { max: SPARE_BIBS_MAX })}</BoxNote>
                       <BibDesignPanel
                         eventId={event?.id ?? null}
                         design={design}

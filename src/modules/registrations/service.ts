@@ -14,7 +14,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
-import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
+import { bibNumberInUse, ensureProvisionalBibNumber, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -224,10 +224,43 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
     The provisional column is emptied in the same statement, so one runner is left holding
     exactly one number, which is the invariant the settle keeps too.
   */
-  if (current.provisionalBibNumber !== null) {
+  // Not a provisional number inside the desk's spares (§NNN) — one drawn before the club set the
+  // band: it is printed blank for a walk-in, so the draw gives this runner a number of the race's.
+  if (current.provisionalBibNumber !== null && !(await isEventSpareNumber(tx, current.eventId, current.provisionalBibNumber))) {
     return { bibNumber: current.provisionalBibNumber, provisionalBibNumber: null };
   }
   return { bibNumber: await pickBibNumber(tx, current.eventId), provisionalBibNumber: null };
+}
+
+/**
+ * The number the desk handed with the paper (§NNN): a pre-printed spare, or any free number the
+ * volunteer typed, written as the settled one at the moment the place is certain — whatever the
+ * window says, because the bib is already in the runner's hand. The provisional number goes with
+ * it: one runner, one number (§230). A spare is on paper already, so it is marked printed — the
+ * next "unprinted" sheet must not print a second 901 with the name on it, and a cancellation later
+ * lists it among the bibs that exist (§311).
+ *
+ * Checked here, under the event lock the confirmation holds, as well as by the desk before the
+ * entry: another volunteer may have given the same spare a moment ago. A runner who already has a
+ * settled number keeps it (§173) and the typed one is refused rather than silently ignored.
+ */
+async function handedBibAtConfirmation<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  current: Registration,
+  handed: number,
+  now: Date,
+): Promise<{ bibNumber: number; provisionalBibNumber: null; bibPrintedAt?: Date }> {
+  if (current.kind !== "REAL") {
+    throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number", ["bibNumber"]);
+  }
+  if (current.bibNumber !== null && current.bibNumber !== handed) {
+    throw new DomainError("VALIDATION_ERROR", "this registration already has a race number; it cannot be changed", ["bibNumber"]);
+  }
+  if (await bibNumberInUse(tx, { eventId: current.eventId, number: handed, exceptRegistrationId: current.id })) {
+    throw new DomainError("CONFLICT", `number ${handed} is already somebody's at this event`, ["bibNumber"]);
+  }
+  const spare = await isEventSpareNumber(tx, current.eventId, handed);
+  return { bibNumber: handed, provisionalBibNumber: null, ...(spare ? { bibPrintedAt: current.bibPrintedAt ?? now } : {}) };
 }
 
 /**
@@ -1919,6 +1952,8 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   current: Registration,
   actor: StaffActor,
   now: Date,
+  /** The number the desk handed with the paper (§NNN), when it handed one. */
+  handedBib?: number,
 ): Promise<Registration> {
   const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", current.locale, now);
   if (!document) {
@@ -1956,8 +1991,11 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       holdExpiresAt: null,
       checkinCode: current.checkinCode ?? newCheckinCode(),
       // As in `signDeclaration` (§214): nothing while the window is open, the next free
-      // number once it has shut — which is every walk-in confirmed at the desk on race day.
-      ...(await finalBibAtConfirmation(tx, event, current, now)),
+      // number once it has shut — unless the desk handed one with the paper, a spare above all
+      // (§NNN), which is this runner's from now on whatever the window says.
+      ...(handedBib !== undefined
+        ? await handedBibAtConfirmation(tx, current, handedBib, now)
+        : await finalBibAtConfirmation(tx, event, current, now)),
     },
     now,
   });
@@ -2002,6 +2040,12 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
   registrationId: string,
   actor: StaffActor,
   now: Date,
+  /**
+   * The number handed with the paper (§NNN): a desk spare or any free number the volunteer typed.
+   * Written only if the registration ends CONFIRMED here — a walk-in the allocator puts on the
+   * waiting list takes no number, and the spare stays in the box for the next person.
+   */
+  options: { bibNumber?: number } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
@@ -2031,7 +2075,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
       current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
     }
     if (current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED") {
-      return acceptDeclarationOnPaper(tx, withLockedRow(event, lockedEvent), current, actor, now);
+      return acceptDeclarationOnPaper(tx, withLockedRow(event, lockedEvent), current, actor, now, options.bibNumber);
     }
     if (current.status === "WAITLISTED") return current;
     throw new DomainError("CONFLICT", `a registration in status ${current.status} cannot be confirmed`);
