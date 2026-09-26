@@ -15,13 +15,12 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| Create and publish offered the same way on every new event, whatever its type or series | `fix/create-publish-consistent` | queued |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.00` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.02` |
 
 ## Next, queued
 
@@ -44,19 +43,12 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 ## Later
 
-- The newsletter and mailing alerts (the owner's weekend item).
-- Neon: re-measure after the first quiet night (the operations log, `SETUP.md` §40).
-- `yarn test:e2e:dev` (the `next dev` walk of every page, minutes) is on demand; say if it should also run nightly on qa.
-- The public site's own toasts: the contact form's sent state, self-unregistration, the participation confirmation (after `feat/toasts-and-confirms`).
-- The reminder email's checklist could say «Frontală necesară» for a marked event, through a template placeholder (the `.ics` attached to the confirmation and reminder emails already carries the line) — say if you want it.
-- The public site's own toasts (the contact form's sent state, self-unregistration, the participation confirmation) — say if you want them.
-- `yarn ship` waits until no check is pending before judging; `docs:land` refuses a blank fix report (the tooling chores found tonight). `docs:land` also never takes a round's `changelogLine` for the CHANGELOG bullet, never accepts a blank `decisionsTitle`, and never lands a fixer's "carry forward" or "no edit made" text (the three defects V1.91's landing had).
-- `yarn migrations:check` classifies `DROP CONSTRAINT` and `DROP INDEX` as contracts (migration `0073` passed as neither and carries its `-- contract:` note by hand).
 
 ## Released
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.02` | «Publică» on a draft's own editor in one press, as «Creează și publică» does (§423) · the «Filtre» button and its boxes are small 24-px chips inside their 44-px tap targets (§424) · the registration's page and the export say which terms version was accepted and when; a staff entry says «pe hârtie» (§425) · `yarn ship` judges settled checks, `docs:land` refuses blanks and a fixer's housekeeping, dropped indexes and constraints are contracts, the `next dev` walk runs nightly on qa (§426) · the contact form, self-unregistration and the signed declaration say their outcome in a toast through §384's flash, mounted only where a flow lands (§427) · the night pill says «Noapte» with a crescent, the sunset proven to the minute against reference times (§428) · the card's weather pill sits last among the route pills, with an umbrella when rain is likely (§429) · an Administrator button gives the pictures uploaded before §414 their ladder, in batches, idempotent (§430) |
 | `BR-V2.01` | the registration form's race-rules box sits inside the read button and is required, a live «Mai lipsesc:» list above the send button names every missing thing with a link to it, the read-to-the-end gate re-measures itself, one asterisk on the repeat-email label — the owner's QA morning, 2026-09-26 (§422) |
 | `BR-V2.00` | the five legal templates, the paper form and the signing page rewritten per the counsel review — informed acceptance of risk within the law (Codul civil art. 1355), the family flow allowed, minors split at 14, no identity number on a group-run declaration, accurate processors and retention, «un părinte sau tutore» (§418) · the emails per the review — the data's source and the link's life on a family registration, the offer's deadline, masked identity numbers, a guardian's greeting, a way to withdraw in the update notice, two club copies fewer (§419) · the registration audit's fixes — offers never past their deadline after the close, provisional numbers swept and drawn where the rules say, no settled number for an unverified address, the verification link's true life, a closed registration's declaration link never crashes, the restart keeps the participation window, a misconfigured Turnstile fails open with a health warning, the family link stays live for its window, the desk's counts real only (§420) — migration `0080` (every family link stays live; stale provisional numbers cleared) · an express terms tick that records the accepted version (migration `0081`), an adult on a family link keeps their own consents, the public list's states only under the notice that names them and for a club-set period, emergency contacts purged at seven days (§421) |
 | `BR-V1.99` | the difficulty has five levels — foarte ușor, ușor, mediu, greu, foarte greu — drawn as one gauge glyph with the needle at one of five positions, the dumbbells of §399 gone, migration `0078` (§412) · pictures are stored as a ladder of sizes per kind, WebP, never upscaled, and served with `srcSet` + `sizes`; «Calitate: Normală / Înaltă» beside every upload, the stored facts shown after it (§414) · the weather reads the event's own place — the map link's coordinates, else the typed «Coordonate», else the club's — the featured card carries the row and the small cards a glyph with the degrees, the page three hours and the start hour's details (§416) · the listing's filters are one «Filtre» button, collapsed by default, opening checkbox groups — type, surface, difficulty, distance, cost, night, collaboration, registration open — only the values on the calendar, the state in the address, working without JavaScript (§413) · the night pill's tooltip says only the sunset — «Soarele apune la 19:00» — (the sunrise on a pre-dawn start); the calendar entry, the .ics and the reminder keep §404's full sentence (§415) · a picture in the short description is on the listing card whatever the length of the words — the three-line clamp of §366 holds the words alone, never a picture (§417) |

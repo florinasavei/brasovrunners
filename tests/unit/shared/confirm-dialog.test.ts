@@ -65,21 +65,26 @@ describe("§384 ConfirmDialog", () => {
 
 describe("§384 ToastProvider", () => {
   const source = read("src/shared/feedback/ToastProvider.tsx");
+  // The drawing itself, shared with the public site's toast since §427.
+  const region = read("src/shared/feedback/ToastRegion.tsx");
   const messages = JSON.parse(readFileSync(path.join(ROOT, "messages/ro.json"), "utf8")) as { Feedback: Record<string, unknown> };
 
   it("is a polite status region with a close button, one Snackbar at a time, that a click elsewhere never dismisses", () => {
-    expect(source).toContain('role="status"');
+    expect(region).toContain('role="status"');
     // Its own 44-pixel close button, named for a screen reader; MUI's is 28 px.
-    expect(source).toMatch(/<IconButton aria-label=\{t\("close"\)\}[\s\S]*?sx=\{\{ minWidth: 44, minHeight: 44 \}\}>/);
-    expect(source).toMatch(/if \(reason === "clickaway"\) return;/);
-    expect(source).toContain("autoHideDuration={TOAST_AUTO_HIDE_MS}");
+    expect(region).toMatch(/<IconButton aria-label=\{closeLabel\}[\s\S]*?sx=\{\{ minWidth: 44, minHeight: 44 \}\}>/);
+    expect(source).toContain('closeLabel={t("close")}');
+    expect(region).toMatch(/if \(reason === "clickaway"\) return;/);
+    expect(region).toContain("autoHideDuration={TOAST_AUTO_HIDE_MS}");
     // And the clock runs even while another window has the focus.
-    expect(source).toContain("disableWindowBlurListener");
-    expect(source).toMatch(/\{current && \(\s*<Snackbar/);
+    expect(region).toContain("disableWindowBlurListener");
+    expect(region).toMatch(/\{toast && \(\s*<Snackbar/);
+    // One at a time: the provider hands the region the queue's current toast, never the queue.
+    expect(source).toMatch(/<ToastRegion\s+toast=\{current \?/);
   });
 
   it("sits above the phone footer's two lines and the editor's sticky save row", () => {
-    expect(source).toMatch(/bottom: \{ xs: 112, sm: 64 \}/);
+    expect(region).toMatch(/bottom: \{ xs: 112, sm: 64 \}/);
   });
 
   it("shows the flash once and clears its cookie in the browser, from an effect and never in a press", () => {

@@ -13,6 +13,7 @@ import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-error
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { consumeAndSignDeclaration } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashPublic } from "@/shared/feedback/flash";
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
 
 export async function signDeclarationAction(form: FormData): Promise<void> {
@@ -61,6 +62,8 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     */
     const event = await findEventForRegistrationById(getDb(), result.registration.eventId);
     const reminder = event ? reminderHoursFor(event, await currentDeadlines(getDb())) : null;
+    // The participation confirmation, said in a toast too (§427): the key names the outcome and nothing else.
+    await flashPublic(result.registration.status === "WAITLISTED" ? "declarationWaitlisted" : "declarationConfirmed");
     redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlisted" : "confirmed"}${reminder === null ? "" : `&reminder=${reminder}`}`);
   } catch (error) {
     /*

@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, not, sql } from "drizzle-orm";
+import { and, desc, eq, lt, not, type SQL, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
@@ -43,26 +43,42 @@ const TOUCH_INTERVAL_HOURS = 1;
 const keyPrefixNeedle = sql`'%' || REPLACE(${mediaAssets.keyPrefix}, '_', '\\_') || '%'`;
 
 /**
+ * The address a picture had before the older pictures' button moved it (§430), as a needle: for
+ * a version-8 prefix the same UUID with its version digit back at 4 (`formerKeyPrefixOf`), and
+ * for any other prefix NULL, which matches nothing. A text saved with the old address after the
+ * move — a new page's or a new event's form open since before the press, which has no version to
+ * be refused on — still names the picture, whose old files are kept for exactly that; without
+ * this the sweep or a delete would take the picture, and those files with it. A UUID cannot occur
+ * in a body by accident, and for a picture uploaded with its ladder the former address was never
+ * written anywhere.
+ */
+const formerKeyPrefixNeedle = sql`CASE WHEN ${mediaAssets.keyPrefix} ~ '^[0-9a-f]{8}-[0-9a-f]{4}-8' THEN '%' || overlay(${mediaAssets.keyPrefix} placing '4' from 15 for 1) || '%' END`;
+
+/** Whether a text names the asset, at its address or at its former one (§430). */
+const names = (text: SQL): SQL =>
+  sql`(${text} LIKE ${keyPrefixNeedle} ESCAPE '\\' OR ${text} LIKE ${formerKeyPrefixNeedle})`;
+
+/**
  * Whether one event translation carries the asset in any of its rich texts. Every text the editor
  * lets a picture into is here — the summary, the description, the rules, the programme's notes and
  * the route description (§387) — because a text left out is a picture the sweep deletes from a
  * page that shows it. The rules and the programme's notes were missing until §387.
  */
-const inEventTranslation = sql`(${eventTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
-    OR ${eventTranslations.excerptJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
-    OR ${eventTranslations.rulesJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
-    OR ${eventTranslations.scheduleJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'
-    OR ${eventTranslations.routeDescriptionJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\')`;
+const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`)}
+    OR ${names(sql`${eventTranslations.excerptJson}::text`)}
+    OR ${names(sql`${eventTranslations.rulesJson}::text`)}
+    OR ${names(sql`${eventTranslations.scheduleJson}::text`)}
+    OR ${names(sql`${eventTranslations.routeDescriptionJson}::text`)})`;
 
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
-  OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${pageTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\')
+  OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${names(sql`${pageTranslations.bodyJson}::text`)})
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
   -- An event's own film poster (DECISIONS.md §403): the address is stored on the event row
   -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
   -- the same substring check every other body uses.
-  OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.videoPosterUrl} LIKE ${keyPrefixNeedle} ESCAPE '\\')
+  OR EXISTS (SELECT 1 FROM ${events} WHERE ${names(sql`${events.videoPosterUrl}`)})
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -200,7 +216,9 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const inPages = await db
     .select({ assetId: mediaAssets.id, id: pageTranslations.pageId, title: pageTranslations.title, locale: pageTranslations.locale })
     .from(mediaAssets)
-    .innerJoin(pageTranslations, sql`${pageTranslations.bodyJson}::text LIKE ${keyPrefixNeedle} ESCAPE '\\'`);
+    // At the address or the former one (§430), as the check that refuses a delete reads it: a
+    // picture the list shows as used nowhere must not be one the delete then refuses.
+    .innerJoin(pageTranslations, names(sql`${pageTranslations.bodyJson}::text`));
 
   const inEvents = await db
     .select({ assetId: mediaAssets.id, id: eventTranslations.eventId, title: eventTranslations.title, locale: eventTranslations.locale })

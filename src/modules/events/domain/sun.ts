@@ -1,9 +1,9 @@
 import { toWallTimeInput } from "./zoned-time";
 
 /**
- * When the sun sets over the club's place, and whether a start is in the dark (§394; the owner,
- * 2026-09-25: "«Necesită frontală» ar trebui să fie cumva «eveniment de noapte» setat automat în
- * funcție de ora de start și când apune soarele").
+ * When the sun sets over a place — the event's own since §428, the club's when it names none — and
+ * whether a start is in the dark (§394; the owner, 2026-09-25: "«Necesită frontală» ar trebui să
+ * fie cumva «eveniment de noapte» setat automat în funcție de ora de start și când apune soarele").
  *
  * **The algorithm** is NOAA's solar position calculator (the Global Monitoring Laboratory's
  * spreadsheet and web calculator, after Jean Meeus, *Astronomical Algorithms*): the sun's
@@ -12,7 +12,9 @@ import { toWallTimeInput } from "./zoned-time";
  * with the atmosphere's refraction — and 96° is civil dawn and civil dusk, the sun six degrees
  * under, the moment a runner can no longer see the path without a light. Each instant is solved
  * twice, the second time with the sun's position at the first answer's instant, which takes the
- * spreadsheet's own error (under a minute at mid-latitudes) down to seconds. No dependency: forty
+ * spreadsheet's own error (under a minute at mid-latitudes) down to seconds — checked against the
+ * US Naval Observatory's published times (`tests/unit/events/sun-reference.test.ts`, §428): every
+ * instant within five seconds of theirs, and printed to the nearest minute. No dependency: forty
  * lines of arithmetic, pure, so a client island (the editor's line) runs the very same code as the
  * server that draws the pill.
  *
@@ -118,11 +120,20 @@ export type SunTimes = {
 /**
  * Sunrise, sunset, civil dawn and civil dusk of a calendar day (`YYYY-MM-DD`) at a place — the
  * day as the event's wall clock names it. Null for a string that is not a day.
+ *
+ * **To the nearest minute** (§428), as every published table prints it — unless `precision` is
+ * `"exact"`, which only the reference test asks for. The wall clock (`wallClockTime`) prints
+ * "HH:MM" by cutting the seconds off, so an instant left at 19:07:51 printed "19:07" where the US
+ * Naval Observatory, NOAA's calculator and meteogram.org all say 19:08: every time whose seconds
+ * were 30 or more read a minute early — about half of them. Rounding the instant itself, not only
+ * its print, keeps the verdict and the words on one minute: a start "at or after civil dusk" is at
+ * or after the very dusk the sentence names.
  */
-export function sunTimes(ymd: string, place: Coordinates): SunTimes | null {
+export function sunTimes(ymd: string, place: Coordinates, precision: "minute" | "exact" = "minute"): SunTimes | null {
   const start = utcDayStart(ymd);
   if (start === null) return null;
-  const at = (value: Date | "above" | "below") => (value instanceof Date ? value : null);
+  const at = (value: Date | "above" | "below") =>
+    value instanceof Date ? (precision === "exact" ? value : new Date(Math.round(value.getTime() / 60_000) * 60_000)) : null;
   const dawn = crossing(start, place, ZENITH_CIVIL, true);
   const dusk = crossing(start, place, ZENITH_CIVIL, false);
   return {

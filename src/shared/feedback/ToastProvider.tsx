@@ -1,14 +1,11 @@
 "use client";
 
-import CloseIcon from "@mui/icons-material/Close";
-import Alert from "@mui/material/Alert";
-import IconButton from "@mui/material/IconButton";
-import Snackbar from "@mui/material/Snackbar";
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { countForm } from "@/i18n/count-form";
-import { EMPTY_TOAST_QUEUE, FLASH_COOKIE, type FormNotice, TOAST_AUTO_HIDE_MS, toastQueueReducer } from "./notice";
+import { EMPTY_TOAST_QUEUE, FLASH_COOKIE, type FormNotice, toastQueueReducer } from "./notice";
 import { type ToastApi, ToastContext } from "./toast-context";
+import ToastRegion from "./ToastRegion";
 
 /**
  * The backoffice's toasts (`DECISIONS.md` §384; the owner: "I need more toasts and confirmation
@@ -53,6 +50,7 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
   const locale = useLocale();
 
   const show = useCallback((notice: FormNotice) => dispatch({ type: "show", notice }), []);
+  const dismiss = useCallback(() => dispatch({ type: "dismiss" }), []);
   const api = useMemo<ToastApi>(() => ({ show }), [show]);
 
   // Once per flash object: the layout hands the same object until the next server render, and a
@@ -87,44 +85,11 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
     <ToastContext.Provider value={api}>
       {children}
       {/* The live region, always here and empty between toasts; the toast is drawn inside it. */}
-      <div role="status" aria-live="polite" data-testid="toast-live">
-      {current && (
-        <Snackbar
-          key={current.id}
-          open
-          autoHideDuration={TOAST_AUTO_HIDE_MS}
-          // The clock runs whether or not this window has the focus: a volunteer who glanced at
-          // another app must not come back to a stale "it worked" from five minutes ago.
-          disableWindowBlurListener
-          onClose={(_event, reason) => {
-            if (reason === "clickaway") return;
-            dispatch({ type: "dismiss" });
-          }}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          // Above the footer's two lines on a phone and the editor's sticky save row; above the
-          // footer's one line elsewhere.
-          sx={{ bottom: { xs: 112, sm: 64 } }}
-          data-testid="toast"
-        >
-          <Alert
-            // Not a live region of its own: the one around it announces the sentence, once.
-            role="presentation"
-            severity={current.kind}
-            variant="filled"
-            // The close button drawn here rather than through `onClose`: MUI's own is 28 px, and a
-            // thumb's target is 44 (BR-REQ-041-01 criterion 6).
-            action={
-              <IconButton aria-label={t("close")} color="inherit" onClick={() => dispatch({ type: "dismiss" })} sx={{ minWidth: 44, minHeight: 44 }}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            }
-            sx={{ width: "100%", alignItems: "center", boxShadow: 6, "& .MuiAlert-action": { pt: 0, alignSelf: "center" } }}
-          >
-            {sentence(current)}
-          </Alert>
-        </Snackbar>
-      )}
-      </div>
+      <ToastRegion
+        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current) } : null}
+        closeLabel={t("close")}
+        onDismiss={dismiss}
+      />
     </ToastContext.Provider>
   );
 }

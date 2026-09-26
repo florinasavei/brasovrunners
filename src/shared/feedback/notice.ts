@@ -75,6 +75,9 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   eventCancelled: { count: "queued" },
   eventSeriesNotified: { count: "queued", values: { dates: "applied" } },
   eventSeriesCancelled: { count: "queued", values: { dates: "applied" } },
+  // A press of the older pictures' button (§430): how many got their ladder, and how many are left.
+  picturesLaddered: { count: "count", values: { left: "left" } },
+  picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
 };
 
 /**

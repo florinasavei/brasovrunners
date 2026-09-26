@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import {
   coverMagnification,
+  FORMER_KEY_PREFIX_PATTERN,
+  formerKeyPrefixOf,
   isLadderKeyPrefix,
   LADDER_WIDTHS,
   ladderKeyPrefixOf,
@@ -12,6 +14,7 @@ import {
   pictureSizes,
   pictureSrcSet,
 } from "@/modules/media/ladder";
+import { assetObjectKeys } from "@/modules/media/storage";
 import { describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
 
 /**
@@ -65,6 +68,35 @@ describe("§414 the ladder", () => {
     expect(isLadderKeyPrefix(OLD_PREFIX)).toBe(false);
     expect(isLadderKeyPrefix(crypto.randomUUID())).toBe(false);
     expect(isLadderKeyPrefix(ladderKeyPrefixOf(crypto.randomUUID()))).toBe(true);
+  });
+});
+
+describe("§430 an older picture's prefix, before and after its ladder", () => {
+  const older = new RegExp(FORMER_KEY_PREFIX_PATTERN);
+
+  it("reads a version-4 UUID as an older picture, and neither a ladder nor a YouTube poster", () => {
+    expect(older.test(OLD_PREFIX)).toBe(true);
+    for (let index = 0; index < 20; index += 1) expect(older.test(crypto.randomUUID())).toBe(true);
+    expect(older.test(LADDER_PREFIX)).toBe(false);
+    expect(older.test("yt-dQw4w9WgXcQ")).toBe(false);
+    expect(older.test(`${OLD_PREFIX}x`)).toBe(false);
+  });
+
+  it("derives the old address from the new one and back, so the old files need no column", () => {
+    for (let index = 0; index < 20; index += 1) {
+      const uuid = crypto.randomUUID();
+      expect(formerKeyPrefixOf(ladderKeyPrefixOf(uuid))).toBe(uuid);
+    }
+    expect(formerKeyPrefixOf(LADDER_PREFIX)).toBe("3f2a1b4c-0000-4abc-8def-000000000001");
+  });
+
+  it("names a laddered picture's old two files among its own, and nothing more for an older one", () => {
+    const keys = assetObjectKeys(LADDER_PREFIX).map((key) => key.split("/").slice(-2).join("/"));
+    const former = formerKeyPrefixOf(LADDER_PREFIX);
+    expect(keys).toContain(`${former}/web.webp`);
+    expect(keys).toContain(`${former}/thumb.webp`);
+    expect(keys).toHaveLength(2 + LADDER_WIDTHS.length + 2);
+    expect(assetObjectKeys(OLD_PREFIX).map((key) => key.split("/").pop())).toEqual(["web.webp", "thumb.webp"]);
   });
 });
 

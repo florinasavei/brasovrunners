@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.01-2026-09-26 -->
+<!-- PROJECT_BASELINE: BR-V2.02-2026-09-26 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.01-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.02-2026-09-26`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -86,9 +86,12 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/bind-domain.mjs`](./scripts/bind-domain.mjs) | `yarn domain:bind <qa\|production> <domain> [--alias-of <canonical>] [--apply]` — the scriptable half of `docs/RUNBOOKS.md` § Domain binding, through `vercel api`: adds the hostnames to that environment's own Vercel project, redirects `www` to the apex, sets `APP_BASE_URL` for a canonical domain or a permanent redirect for a second one, prints the DNS records to create and the consoles a machine must not touch. Dry run unless `--apply` |
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/ship.mjs`](./scripts/ship.mjs) | `yarn ship <batch PR> <new baseline> <previous baseline> "<title>"` — one small release end to end: merges the batch PR into `qa` when green, opens and merges the `qa → main` PR, approves the gated migration run, and waits for production's `/api/health` to name the new baseline. Production's origin comes from `SHIP_PRODUCTION_URL` in the environment or `.env.local` (`docs/DISPATCHER.md`, `DECISIONS.md` §368) |
+| [`scripts/ship-checks.mjs`](./scripts/ship-checks.mjs) | How `yarn ship` reads a pull request's checks: nothing is judged while one is pending, and the same checks with none pending must be read twice, 30 s apart, before a PR is called green or red (`docs/DISPATCHER.md`, `DECISIONS.md` §426) |
 | [`scripts/land-batch.mjs`](./scripts/land-batch.mjs) | `yarn docs:land <manifest.json> [--apply]` — lands a batch's documentation from the chains' structured results: bumps the baseline, numbers the decisions, numbers each decision placeholder in the code by the commit that wrote it, appends DECISIONS.md and CHANGELOG.md, adds the SPECS.md criteria. A dry run without `--apply` (`docs/DISPATCHER.md`, `DECISIONS.md` §368) |
+| [`scripts/land-entry.mjs`](./scripts/land-entry.mjs) | What `yarn docs:land` makes of one item's saved results — its DECISIONS title and body, its CHANGELOG bullet, its SPECS criteria — kept apart from `land-batch.mjs`, which writes files on import, so the rules are testable (`docs/DISPATCHER.md`, `DECISIONS.md` §426) |
 | [`scripts/wait-for-migration.mjs`](./scripts/wait-for-migration.mjs) | First step of `yarn build`: on a Vercel production deployment, waits until the environment's database has applied the migration the build was compiled against, so new code never goes live against an old schema. Applies nothing (`AGENTS.md` §7.6, `DECISIONS.md` §62) |
-| [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; runs in `yarn check` (`AGENTS.md` §7.6) |
+| [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; a leading `-- expand:` / `-- contract:` note overrides the classification; runs in `yarn check` (`AGENTS.md` §7.6, `DECISIONS.md` §426) |
+| [`.github/workflows/e2e-dev-nightly.yml`](./.github/workflows/e2e-dev-nightly.yml) | Once a night on `qa`: the `next dev` walk of every backoffice and public route (`yarn test:e2e:dev`, §370) — minutes, so it is not on every pull request; a red run emails whoever last changed the schedule (`DECISIONS.md` §426) |
 | [`scripts/brand-assets.mjs`](./scripts/brand-assets.mjs) | `node scripts/brand-assets.mjs` — rasterises the club's lockup from `public/brand/*.svg` into the two places that cannot take an SVG: the PDFs (flat, no alpha — an alpha channel reaches a PDF as a soft mask and prints as an outline) and the email header. Outputs are committed; run it after changing the source (`DECISIONS.md` §174) |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/secrets-check.mjs`](./scripts/secrets-check.mjs) | Refuses a commit carrying a provider credential — the repository is public; runs in `yarn check` and CI (`DECISIONS.md` §98) |

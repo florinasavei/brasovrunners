@@ -1428,7 +1428,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   ...Object.fromEntries(REGISTRATION_FORM_FIELDS.map((name) => [name, t(`fieldNames.${name}`)])),
                   // Not only what is missing but what to do about it: the box does not tick on a
                   // press, so "Condițiile concursului" alone sent people to press it (§422).
-                  rulesAcknowledged: t("rules.missing"),
+                  // Only when the panel is actually the read-and-tick one — an event with no
+                  // rules of its own shows a plain box linking to its page, where the field's
+                  // own name is the right thing to list (review finding 1).
+                  ...(hasRules ? { rulesAcknowledged: t("rules.missing") } : {}),
                 }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the

@@ -11,6 +11,7 @@ import {
   consumeAndCancelFromMyRegistrations,
 } from "@/modules/registrations/my-registrations";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashPublic } from "@/shared/feedback/flash";
 
 function pagePath(locale: Locale, token: string): string {
   return getPathname({ locale, href: { pathname: "/registrations/mine/[token]", params: { token } } });
@@ -25,6 +26,8 @@ export async function cancelFromMyRegistrationsAction(form: FormData): Promise<v
 
   try {
     const result = await consumeAndCancelFromMyRegistrations(getDb(), token, registrationId, new Date());
+    // The toast on the page it lands on (§427); a refused link says so on the page, never in a toast.
+    if (result.ok) await flashPublic("unregistered");
     redirect(result.ok ? `${path}?done=1` : `${path}?invalid=1`);
   } catch (error) {
     // "This event has already started" — the one VALIDATION_ERROR unregister raises.

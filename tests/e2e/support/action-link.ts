@@ -126,19 +126,22 @@ export async function latestAcceptance(registrationId: string): Promise<{
  * `REGISTER_ANOTHER_PERSON` is the exception (§389, §420): every such link stays live beside the
  * others, as `issueActionToken` leaves them — the partial unique index no longer covers that
  * purpose — so minting one here supersedes nothing, exactly as the real send does not.
+ *
+ * `MANAGE_REGISTRATION` rides on several messages rather than one of its own name (the confirmed
+ * email, the reminder…), so for it the wait is for every message of the registration to leave.
  */
 export async function mintActionLink(
   registration: Pick<RegistrationRow, "id" | "participantId">,
-  purpose: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION" | "REGISTER_ANOTHER_PERSON",
+  purpose: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION" | "REGISTER_ANOTHER_PERSON" | "MANAGE_REGISTRATION",
 ): Promise<string> {
   return withDatabase(async (client) => {
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const { rows } = await client.query<{ n: string }>(
         `SELECT count(*) AS n FROM email_outbox
-          WHERE registration_id = $1 AND message_type = $2 AND status IN ('PENDING', 'PROCESSING')
+          WHERE registration_id = $1 AND ($2::text IS NULL OR message_type::text = $2) AND status IN ('PENDING', 'PROCESSING')
             AND (next_attempt_at IS NULL OR next_attempt_at <= now())`,
-        // The message type and the purpose share their name for all three.
-        [registration.id, purpose],
+        // The message type and the purpose share their name for the first three.
+        [registration.id, purpose === "MANAGE_REGISTRATION" ? null : purpose],
       );
       if (Number(rows[0].n) === 0) break;
       await new Promise((resolve) => setTimeout(resolve, 250));

@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import type { ReactNode } from "react";
 import GlyphChip from "./GlyphChip";
 import type { Pill } from "./route-pills";
 
@@ -22,14 +23,20 @@ const PILL_SX = { height: "auto", minHeight: 24, maxWidth: "100%", "& .MuiChip-l
  * small icons for the event types, trail, distance, etc. on the back-office cards as well,
  * people will get used to them"), so neither surface can read the route pills differently from
  * the other. Nothing at all when there is nothing to draw.
+ *
+ * `trailing` is drawn after the last pill, in the same wrapping row: the listing card's weather at
+ * the start (`CardWeather`, §429), which is not a route pill — its glyph is the forecast's, made in
+ * a Server Component, never a `GlyphChip` name — but sits beside them as the row's last. A node
+ * made by the Server Component that calls this one, never handed to a client component.
  */
-export default function RoutePills({ pills }: { pills: Pill[] }) {
-  if (pills.length === 0) return null;
+export default function RoutePills({ pills, trailing }: { pills: Pill[]; trailing?: ReactNode }) {
+  if (pills.length === 0 && !trailing) return null;
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
       {pills.map((item) => (
         <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} tooltip={item.tooltip} srSuffix={item.srSuffix} variant="outlined" sx={PILL_SX} />
       ))}
+      {trailing}
     </Box>
   );
 }

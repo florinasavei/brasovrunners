@@ -8,6 +8,7 @@ import { isSelfServiceField, withdrawFromManageLink } from "@/modules/registrati
 import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
 import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashPublic } from "@/shared/feedback/flash";
 
 export async function cancelRegistrationAction(form: FormData): Promise<void> {
   const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
@@ -16,6 +17,8 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
 
   try {
     const result = await consumeAndCancel(token, new Date());
+    // The toast on the page it lands on (§427); a refused link says so on the page, never in a toast.
+    if (result.ok) await flashPublic("unregistered");
     redirect(result.ok ? `${path}?done=1` : `${path}?invalid=1`);
   } catch (error) {
     // "This event has already started" (§10.5 rule 9) — the only VALIDATION_ERROR unregister

@@ -888,6 +888,8 @@ function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): Ema
     locationName: row.locationName,
     locationAddress: row.locationAddress,
     mapUrl: row.mapUrl,
+    latitude: row.latitude,
+    longitude: row.longitude,
     scheduleItems: row.scheduleItems,
     surface: row.surface,
     difficulty: row.difficulty,
