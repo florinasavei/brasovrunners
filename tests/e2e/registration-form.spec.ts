@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Locator, test, type Page } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -50,12 +50,13 @@ async function fillRequired(page: Page, omit?: string) {
     "I have read the race conditions" (§195), required on the public form.
 
     The seeded events carry no rules of their own, so this is the plain-checkbox branch. An event
-    that *has* rules gets the panel instead — a button, the text, a scroll to the end, and only
-    then a tick — and its hidden input is deliberately `readOnly`, so a spec for that branch has
-    to press through the panel rather than check the box. Worth knowing before somebody adds
-    rules to the seed and wonders why this stops working.
+    that *has* rules gets the box inside the read button instead (§NNN) — a press on the box opens
+    the text, and only a scroll to the end and "Am citit și sunt de acord" tick it — so `.check()`
+    fails there by design. Worth knowing before somebody adds rules to the seed and wonders why
+    this stops working. A spec on an event with rules passes `"rulesAcknowledged"` as `omit` and
+    walks the panel itself (the last describe below).
   */
-  await page.locator('[name="rulesAcknowledged"]').check();
+  if (omit !== "rulesAcknowledged") await page.locator('[name="rulesAcknowledged"]').check();
   await page.locator('[name="termsAccepted"]').check();
   // "Declar că sunt apt medical să particip" (§171): required on the public form, like the
   // privacy acknowledgment beside it.
@@ -872,6 +873,204 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     } finally {
       // Off the site again — pass or fail — so no run leaves one more card on the listing that
       // other specs count.
+      await page.goto(editorUrl);
+      await hydrated(page);
+      await page.getByRole("button", { name: "Mută în ciornă" }).click();
+      await confirmDialog(page);
+      await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+    }
+  });
+});
+
+/** The largest box from an input up to its label, four steps at most: where a thumb lands (see the 44-pixel test above). */
+async function thumbBox(input: Locator): Promise<{ x: number; y: number; width: number; height: number }> {
+  return input.evaluate((node) => {
+    let current: HTMLElement | null = node as HTMLElement;
+    let best = { x: 0, y: 0, width: 0, height: 0 };
+    for (let step = 0; step < 4 && current; step += 1) {
+      const rect = current.getBoundingClientRect();
+      if (rect.width * rect.height > best.width * best.height) best = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      if (current.tagName === "LABEL") break;
+      current = current.parentElement;
+    }
+    return best;
+  });
+}
+
+test.describe("BR-REQ-041-01 what is still missing is listed above the send button (§NNN)", () => {
+  test("names every required field still empty, shrinks as they are filled, reaches each one, and a label wears one asterisk", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    /*
+      The doubled asterisk: the second address box is `required`, so MUI draws the asterisk — and
+      the catalogue's label carried one of its own, "Scrie adresa încă o dată * *".
+    */
+    const confirmLabel = (await page.locator('label[for="f-emailConfirm"]').textContent()) ?? "";
+    expect(confirmLabel.match(/\*/g)?.length ?? 0, confirmLabel).toBe(1);
+
+    const submit = page.getByRole("button", { name: "Trimite înscrierea" });
+    const missing = page.getByTestId("form-missing");
+    await expect(missing).toBeVisible();
+    // Above the button, where somebody about to press it is already looking.
+    const listBox = await missing.boundingBox();
+    const buttonBox = await submit.boundingBox();
+    expect((listBox?.y ?? 0) + (listBox?.height ?? 0)).toBeLessThanOrEqual((buttonBox?.y ?? 0) + 1);
+    for (const name of [
+      "Prenume",
+      "Nume de familie",
+      "Data nașterii",
+      "Adresa scrisă a doua oară",
+      "Declarația că ești apt medical",
+      "Nota de confidențialitate",
+      "Condițiile concursului",
+      "Acceptarea termenilor și condițiilor",
+    ]) {
+      const item = missing.getByRole("link", { name, exact: true });
+      await expect(item, name).toBeVisible();
+      // A thumb's target (BR-REQ-041-01 criterion 6).
+      expect((await item.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);
+    }
+
+    // Live: a first name typed leaves the list at once, without pressing anything.
+    await page.locator('[name="firstName"]').fill("Ana");
+    await expect(missing.getByRole("link", { name: "Prenume", exact: true })).toHaveCount(0);
+    await expect(missing.getByRole("link", { name: "Nume de familie", exact: true })).toBeVisible();
+
+    // Each item reaches its field: a tick far up the page is focused, ready for the space bar.
+    await missing.getByRole("link", { name: "Nota de confidențialitate", exact: true }).click();
+    await expect(page.locator('[name="privacyAcknowledged"]')).toBeFocused();
+
+    // Everything filled in: nothing listed, and the button no longer dimmed.
+    await fillRequired(page);
+    await expect(missing).toHaveCount(0);
+    await expect(submit).toHaveCSS("opacity", "1");
+  });
+});
+
+test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read button (§195, §NNN)", () => {
+  test("the box and the button are one row; the box opens the text; reading to the end ticks it; a refusal keeps it; the entry goes through", async ({ page }) => {
+    // An event of its own, per project and per run: the featured race carries no rules, and every
+    // other spec here ticks its plain box — rules on it would change their branch under them.
+    test.setTimeout(test.info().timeout + 120_000);
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `cros-cu-regulament-${suffix}`;
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const day = new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10);
+    const richText = async (strip: "title" | "rules", locale: "ro" | "en", name: string, lines: string[]) => {
+      const panel = languagePanel(page, strip, locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.${name}"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.${name}"] [data-field]`).click();
+      for (const [index, line] of lines.entries()) {
+        if (index > 0) await page.keyboard.press("Enter");
+        await page.keyboard.insertText(line);
+      }
+    };
+    // Long enough to scroll in the panel at either viewport: the gate is the scroll to the end.
+    const rules = (word: string) =>
+      Array.from({ length: 28 }, (_, index) => `${word} ${index + 1}. Alergătorul respectă traseul marcat, arbitrii și ceilalți participanți.`);
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await fillDateField(page, "Începutul evenimentului", day);
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
+    await openEditorBox(page, "Participare și înscrieri");
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+    await field("event.capacity").fill("50");
+    await openEditorBox(page, "Condiții de participare și declarația");
+    await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
+    await page.getByRole("option").nth(1).click();
+    await field("translations.ro.title").fill(`Cros cu regulament ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await richText("title", "ro", "excerptBody", ["Un concurs cu regulamentul lui."]);
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Cross with rules ${suffix}`);
+    await languageTab(page, "address", "en").click();
+    await field("translations.en.slug").fill(`cross-with-rules-${suffix}`);
+    await richText("title", "en", "excerptBody", ["A race with its own rules."]);
+    // The race's own conditions, both languages (the owner's rule: both or neither).
+    await openEditorBox(page, "Regulamentul");
+    await richText("rules", "ro", "rules", rules("Regula"));
+    await languageTab(page, "rules", "en").click();
+    await richText("rules", "en", "rules", rules("Rule"));
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+    const editorUrl = page.url().split("?")[0];
+
+    try {
+      await page.goto(`/ro/evenimente/${slug}/inscriere`);
+      await hydrated(page);
+
+      const tick = field("rulesAcknowledged");
+      const read = page.getByRole("button", { name: "Citește condițiile concursului" });
+      await expect(read).toBeVisible();
+      await expect(tick).not.toBeChecked();
+      await expect(tick).toHaveAttribute("required", /.*/);
+
+      /*
+        One row: the box is drawn inside the button's own band, both a thumb's size. Before, the
+        required input was a transparent pixel under the sentence, so the browser's "tick this box"
+        pointed at nothing anybody could see, and a press on it went nowhere.
+      */
+      const tickBox = await thumbBox(tick);
+      const readBox = await read.boundingBox();
+      expect(tickBox.height).toBeGreaterThanOrEqual(44);
+      expect(tickBox.width).toBeGreaterThanOrEqual(44);
+      expect(readBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // The box's own middle (the input fills MUI's box), inside the button's band, to a pixel.
+      const own = await tick.boundingBox();
+      const tickMiddle = (own?.y ?? 0) + (own?.height ?? 0) / 2;
+      expect(tickMiddle).toBeGreaterThanOrEqual((readBox?.y ?? 0) - 1);
+      expect(tickMiddle).toBeLessThanOrEqual((readBox?.y ?? 0) + (readBox?.height ?? 0) + 1);
+      // Side by side, the box first: one row, not a box stacked over a button.
+      expect((own?.x ?? 0) + (own?.width ?? 0)).toBeLessThanOrEqual((readBox?.x ?? 0) + 1);
+
+      // Named in the list above the send button while it is not ticked.
+      const missing = page.getByTestId("form-missing");
+      await expect(missing.getByRole("link", { name: "Condițiile concursului", exact: true })).toBeVisible();
+
+      // A press on the box opens the text rather than ticking it: the box is where a person presses.
+      await tick.click();
+      const dialog = page.getByRole("dialog", { name: /Condițiile concursului/ });
+      await expect(dialog).toBeVisible();
+      await expect(tick).not.toBeChecked();
+      const agree = dialog.getByRole("button", { name: "Am citit și sunt de acord" });
+      await expect(agree).toBeDisabled();
+
+      // To the end of the text, and the panel's own button opens.
+      await dialog.getByTestId("rules-text").evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+      await expect(agree).toBeEnabled();
+      await agree.click();
+      await expect(dialog).toBeHidden();
+      await expect(tick).toBeChecked();
+      await expect(missing.getByRole("link", { name: "Condițiile concursului", exact: true })).toHaveCount(0);
+
+      /*
+        A refusal about something else keeps the tick (§286: "vreau să persist inclusiv bifele"):
+        the draft brings the box back ticked, not the panel back unread. The too-fast check is the
+        refusal nobody has to type anything wrong for.
+      */
+      await fillRequired(page, "rulesAcknowledged");
+      await field("renderedAt").evaluate((node) => ((node as HTMLInputElement).value = new Date().toISOString()));
+      await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+      await expect(page).toHaveURL(/tooFast/);
+      await hydrated(page);
+      await expect(tick).toBeChecked();
+      await expect(page.getByTestId("form-missing")).toHaveCount(0);
+
+      await page.waitForTimeout(HUMAN_PAUSE_MS);
+      await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+      await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+    } finally {
       await page.goto(editorUrl);
       await hydrated(page);
       await page.getByRole("button", { name: "Mută în ciornă" }).click();
