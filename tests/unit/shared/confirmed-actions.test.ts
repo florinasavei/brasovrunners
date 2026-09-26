@@ -118,6 +118,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateDeadlinesAction: [],
   // "Maxim de înscrieri pe o adresă" (§389): a limit every public submission meets from now on.
   updateAddressCapAction: [],
+  // A line of the club's checklist deleted (§NNN): gone for the whole team, with no undo.
+  deleteClubTodoAction: [],
 };
 
 /**
@@ -144,6 +146,10 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",
+  addClubTodoAction: "a line on the club's own checklist (§NNN): emails nobody, removed by a delete that asks",
+  editClubTodoAction: "an editorial save of a checklist line, like a page's; its delete asks",
+  setClubTodoDoneAction: "a tick on the club's checklist, undone by the same box — a dialog per tick would double the taps",
+  moveClubTodoAction: "reorders the checklist, undone by moving back",
 };
 
 type Site = { file: string; line: number; expression: string; verdict: "asks" | "bare"; why: string };

@@ -434,8 +434,10 @@ export function canManageStaff(role: StaffRole): boolean {
  *     registrations  canReadRegistrations     `admin/registrations/page.tsx` — the verbs on it
  *                                             ask `canManageRegistrations` one by one (§289)
  *     pages          isEditorial              `admin/pages/page.tsx`
- *     tasks          canManageRegistrations   `admin/tasks/page.tsx` — or `canSeeDiagnostics`,
- *                    or canSeeDiagnostics      for the «Aplicația» panel alone (§397)
+ *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
+ *                                             «Club», «Anti-robot», «Costuri» canManageRegistrations,
+ *                                             «Aplicația» canSeeDiagnostics (§397), «De făcut»
+ *                                             canReadClubTodo (§NNN)
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
  *     staff          canManageStaff           `admin/staff/page.tsx`
@@ -473,8 +475,10 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * pages, the gallery and the legal texts, and they ask the Administrator for every change. A
  * person who cannot see what the club publishes cannot tell her which line is wrong.
  *
- * It stops at the club's **content**. What the club still owes — `/admin/tasks` — stays behind
- * `canManageRegistrations`, because it is the Administrator's own worklist.
+ * It stops at the club's **content**. What the club still owes as the system reads it —
+ * `/admin/tasks`'s «Club» — stays behind `canManageRegistrations`, because it is the
+ * Administrator's own worklist; the club's typed checklist «De făcut» beside it is read by every
+ * role from the copywriter up and written by the Organizer and the Administrators (§NNN).
  *
  * **The participant list is no longer on this side of the line (§289).** It was, on the reasoning
  * that "vede cam tot" is not an instruction to hand somebody four hundred addresses — and the
@@ -502,12 +506,13 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // Who signed up, for the roles that may read it (§289). Every verb on that screen asks
     // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
     ...(canReadRegistrations(role) ? (["registrations"] as const) : []),
-    // What the *club* still owes, for the role that answers for it (BR-REQ-060-01) — and, since
-    // 2026-09-25, the «Aplicația» panel of the same screen for a Tehnic, who reads none of the
-    // rest of it (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`, `DECISIONS.md`
-    // §397). Written out rather than imported, because that module reads `canManageRegistrations`
-    // and `canSeeDiagnostics` from this one.
-    ...(canManageRegistrations(role) || canSeeDiagnostics(role) ? (["tasks"] as const) : []),
+    // «Sarcini»: what the *club* still owes, read from the system, for the role that answers for
+    // it (BR-REQ-060-01); the «Aplicația» panel for a Tehnic (§397); and since §NNN the club's own
+    // checklist «De făcut», which every role that reads the club's content opens — so the whole
+    // section is offered from the copywriter up, and each panel asserts its own gate
+    // (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`). Written as the threshold
+    // rather than imported, because that module reads its predicates from this one.
+    ...(canReadContent(role) ? (["tasks"] as const) : []),
     // The legal texts are readable by the roles that must know what the club published; only
     // the Administrator writes one (§46, §181, §203).
     ...(canReadContent(role) ? (["legal"] as const) : []),

@@ -287,12 +287,16 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // "emails" joins them in §253: the messages and the words in them are the Redactor's work
     // (§247), and the panels behind that page ask their own questions — the queue and the
     // club's copies are read only for a role that may see a participant's address (§243, §244).
+    // "tasks" joins them in §NNN: «Sarcini» → «De făcut», the club's own checklist, is read by
+    // every role from the copywriter up — only the Organizer and the Administrators write it,
+    // and the panels read from the system stay the Administrator's (`task-panels.test.ts`).
     expect(visibleAdminSections("COPYWRITER")).toEqual([
       "events",
       "checkin",
       "guide",
       "pages",
       "gallery",
+      "tasks",
       "legal",
       "emails",
     ]);
@@ -307,6 +311,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "pages",
       "gallery",
       "registrations",
+      "tasks",
       "legal",
       "emails",
     ]);
@@ -316,8 +321,9 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     const sections = visibleAdminSections("DEV");
 
     expect(sections).toContain("devs");
-    // Since §397, DEV (Tehnic) is also offered `tasks` — but only for the «Aplicația» panel
-    // of it; the page itself refuses the club's ops panels to this role (`task-panels.test.ts`).
+    // Since §397, DEV (Tehnic) is also offered `tasks` — the «Aplicația» panel of it, and since
+    // §NNN «De făcut» read-only; the page itself refuses the club's ops panels to this role
+    // (`task-panels.test.ts`).
     expect(sections).toContain("tasks");
     // The line that carries the weight (§38): DEV helps with the platform and never sees the
     // people who registered.
