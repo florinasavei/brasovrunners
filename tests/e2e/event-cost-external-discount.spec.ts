@@ -164,15 +164,15 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () 
   });
 
   /**
-   * The listing's featured hero (`FeaturedEventHero`) reads the same cost pill and discount note
-   * as the event page (§394) — this is the one spot that has to borrow the *shared* singleton
+   * The listing's featured card (the hero until §NNN) reads the same cost pill as every card and
+   * the organizer's door (§394, §409) — this is the one spot that has to borrow the *shared* singleton
    * event (`ensureRegistrationIsOpen`'s own `FEATURED`, `DECISIONS.md` §28: "the database refuses
    * a second [featured event]"), so the change is made and read back inside a `try`/`finally`:
    * whatever this test finds, the featured event is always left exactly as every other spec
    * expects it (`ensureRegistrationIsOpen`'s own end state, cost `FREE`), even on a failed
    * assertion.
    */
-  test("shows the same cost pill and note on the listing's featured hero", async ({ page }) => {
+  test("shows the same cost pill and the organizer's door on the listing's featured card", async ({ page }) => {
     // Two full editor saves plus the `finally` block's own recovery (`ensureRegistrationIsOpen`
     // retries up to three times) — well past the 30-second default a lighter spec fits in.
     test.setTimeout(90_000);
@@ -213,23 +213,22 @@ async function runFeaturedHeroCase(page: Page): Promise<void> {
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/[?&]saved=/);
 
-    // Unlike the event page's own cost row, the hero has no row of its own for the cost: under
-    // "Traseu" (route) the «Cu taxă» pill sits among the route's pills, and «Cu taxă, la
-    // organizator: …» plus the discount note sit on the route-extras line under them
-    // (`data-fact="route-extras"`, §449) — a "Cost" `dt` the way the stacked page has one would
-    // never be found here.
+    // The featured event is a card since §NNN, so it says the cost the way every card does: the
+    // «Cu taxă» pill with its screen-reader suffix, and the organizer's door (§409). The amount
+    // and the club's discount note are the event page's, as on every card (§343) — the hero's
+    // route-extras line (§449) went with the hero.
     await page.goto("/ro/evenimente");
     const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
     await expect(hero).toBeVisible();
-    const route = hero.locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
-    await expect(route).toContainText("Cu taxă, la organizator: 75 lei");
-    await expect(route).toContainText("40 lei pentru membri BR");
+    const chip = hero.locator(".MuiChip-root").filter({ hasText: "Cu taxă" });
+    await expect(chip).toHaveText("Cu taxă — plătit la organizator, nu la club");
+    await expect(hero.getByRole("link", { name: /Înscrie-te pe Alt Club Brașov/ })).toBeVisible();
+    await expect(hero).not.toContainText("40 lei pentru membri BR");
 
     await page.goto("/en/events");
     const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
-    const routeEn = heroEn.locator("dt", { hasText: /^Route$/ }).locator("xpath=following-sibling::dd[1]");
-    await expect(routeEn).toContainText("Paid, to the organizer: 75 lei");
-    await expect(routeEn).toContainText("40 lei for BR members");
+    await expect(heroEn.locator(".MuiChip-root").filter({ hasText: "Paid" })).toHaveText("Paid — paid to the organizer, not to the club");
+    await expect(heroEn.getByRole("link", { name: /Register on Alt Club Brașov/ })).toBeVisible();
   } finally {
     // Back to the baseline every other spec finds `FEATURED` in — free, on-site registration —
     // whether the assertions above passed or not. Cost alone, first, while the mode is still

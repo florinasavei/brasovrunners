@@ -141,10 +141,10 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
 
   test("gives every event link a tap target of at least 44 by 44 pixels", async ({ page }) => {
     await page.goto("/ro/evenimente");
-    // "Other events" folds on a phone once other specs have published a fifth event
-    // (`DECISIONS.md` §78); a link in a closed fold measures 0×0 and is not a tap target yet.
-    // Open every fold, so the links are measured as a reader would see them — every title on the
-    // page, not one by heading, so `cardOnListing` (`support/fold.ts`) does not fit.
+    // The past-events fold (§267) is closed, and a link in a closed fold measures 0×0 and is not a
+    // tap target yet ("Other events" folded too until §NNN). Open every fold, so the links are
+    // measured as a reader would see them — every title on the page, not one by heading, so
+    // `cardOnListing` (`support/fold.ts`) does not fit.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 6. Every card's title is its link (§366; no card is one whole link any more) — 44
@@ -318,26 +318,37 @@ test.describe("BR-REQ-040-02 no cross-locale fallback", () => {
  * criterion 1).
  */
 test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
-  test("shows the featured race above the list, with both of its times", async ({ page }) => {
+  test("shows the featured race as the first card, with both of its times", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
+    // A card since §NNN, still a region named by its title, and the «Evenimentul principal» chip on it.
     const hero = page.getByRole("region", { name: /Crosul aniversar/ });
     await expect(hero).toBeVisible();
+    await expect(hero.getByText("Evenimentul principal", { exact: true })).toBeVisible();
 
     const heroText = await hero.innerText();
     // A race has two times, each named: the gathering and the gun.
     expect(heroText).toContain("întâlnire la");
     expect(heroText).toContain("start la");
-    expect(heroText).toContain("Unde");
     // The seeded race is a placeholder and says so, in the text a visitor reads first.
     expect(heroText).toContain("EXEMPLU");
   });
 
-  test("does not repeat the featured event in the list below it", async ({ page }) => {
+  test("draws the featured event once, as the first card of the one grid, as wide as the others", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
     const titles = await page.locator("main ul li h2").allInnerTexts();
-    expect(titles.filter((title) => title.includes("Crosul aniversar"))).toHaveLength(0);
+    expect(titles.filter((title) => title.includes("Crosul aniversar"))).toHaveLength(1);
+    // The first `<li>` of the grid the other cards are in (§NNN; the owner: "vreau doar sa fie primul").
+    const cards = page.locator('[data-testid="listing-cards"] > li');
+    await expect(cards.first()).toHaveAttribute("data-featured", "true");
+    await expect(cards.first().locator("h2")).toContainText("Crosul aniversar");
+    // "toate cardurile trebuie sa aiba aceeasi latime": every card of the grid as wide as the lead.
+    const lead = await cards.first().boundingBox();
+    for (let i = 1; i < (await cards.count()); i += 1) {
+      const box = await cards.nth(i).boundingBox();
+      expect(Math.abs((box?.width ?? 0) - (lead?.width ?? -1)), `card ${i} width`).toBeLessThanOrEqual(1);
+    }
   });
 
   test("still fits a 320px viewport with the hero on the page", async ({ page }) => {

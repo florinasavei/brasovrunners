@@ -18,7 +18,8 @@ import { DENSITY } from "@/theme/density";
  *    is a row of `CONVERTED_SITES` — file, prop, step, the `sm` value the site had before this
  *    change (asserted: sm and up never move) and the xs value it had (the step must be smaller).
  *    A new conversion without a row, or a row whose site is gone, fails.
- * 3. The scale itself: eight positive steps, each smaller than what it replaced.
+ * 3. The scale itself: seven positive steps (eight until §NNN took the hero's), each smaller than
+ *    what it replaced.
  */
 
 const ROOT = join(__dirname, "..", "..", "..");
@@ -154,10 +155,12 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
-  { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5, count: 3 },
+  // One grid for the upcoming cards and the past fold since §NNN (`CARD_GRID_SX`) — it was three
+  // copies, one per shape `ListingBody` returned and one in the fold.
+  { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
-  { file: "src/modules/events/ui/FeaturedEventHero.tsx", prop: "p", step: "heroPad", sm: 4, xsBefore: 2.5 },
-  { file: "src/modules/events/ui/FeaturedEventHero.tsx", prop: "mb", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§NNN): the
+  // lead event is a card, with a card's padding, in the grid's gap.
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1 },
   // The calendar.
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
@@ -194,8 +197,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
 const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;
 
 describe("DECISIONS.md §380 the public pages share one phone density scale", () => {
-  it("defines eight positive steps, each tighter than every value it replaced", () => {
-    expect(Object.keys(DENSITY)).toHaveLength(8);
+  it("defines seven positive steps, each tighter than every value it replaced", () => {
+    expect(Object.keys(DENSITY)).toHaveLength(7);
     for (const [name, value] of Object.entries(DENSITY) as Array<[string, number]>) {
       expect(value, `${name} must be a positive number`).toBeGreaterThan(0);
     }

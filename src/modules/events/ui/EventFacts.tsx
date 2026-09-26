@@ -152,11 +152,12 @@ const SR_ONLY_SX = {
  * Three forms of the same facts:
  * - **the listing card** (`variant="compact"`): no labels — a line for when and one for where, each
  *   with the page's row glyph in front of it, the place as its map link, then the route and the
- *   cost as the page's pills, then the state of registration (§366);
- * - **the listing's featured hero** (the default): the `<dl>`, each row one line of short
- *   pieces separated by a middle dot — a summary above the fold, with a button to reach — except
- *   the route, which is the listing card's own row of pills, its cost details and links on a line
- *   under them (§449);
+ *   cost as the page's pills, then the state of registration (§366) — the featured event's too,
+ *   since §NNN made it the first card of the listing's grid rather than a hero above it;
+ * - **the one-line summary** (the default): the `<dl>`, each row one line of short pieces
+ *   separated by a middle dot, except the route, which is the listing card's own row of pills, its
+ *   cost details and links on a line under them (§449). It was the featured hero's; since §NNN no
+ *   page draws it, and its tests hold it until a chore removes it with them;
  * - **the event page and its preview** (`stacked`): the `<dl>` grouped again and restyled
  *   (§356) — "când" one line, the place with its address under it, the route as one row of
  *   pills, the cost its own row with its own pill, and every row's glyph the same.
@@ -177,10 +178,17 @@ export default async function EventFacts({
   whenLead,
   weather = null,
   cardWeather = null,
+  raceWeek = false,
 }: {
   event: PublicEvent;
   now: Date;
   variant?: "full" | "compact";
+  /**
+   * The featured card inside the club's race week (§78, on the card since §NNN): a closed window's
+   * line says "come to the desk with the QR from your email" (`cardRegistrationLine`). The compact
+   * form only.
+   */
+  raceWeek?: boolean;
   /**
    * The forecast for the start (§402), read by the caller (`forecastForEvent`) at the event's own
    * place (§416) — null beyond seven days, for an event not going ahead, and whenever Open-Meteo
@@ -618,7 +626,7 @@ export default async function EventFacts({
     // page's own `readRegistrationDoor` — one cached entry for an open race, nothing for any
     // other card — never a formula of this file's own.
     const registration = mentionsRegistration
-      ? cardRegistrationLine(t, locale, event, now, await readRegistrationDoor(event, now))
+      ? cardRegistrationLine(t, locale, event, now, await readRegistrationDoor(event, now), raceWeek)
       : null;
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
@@ -690,7 +698,7 @@ export default async function EventFacts({
        (§388), so the hero cannot read the route in another order, another set or other words —
        surface, difficulty, distance, elevation, night, then the cost's closed-set word (§375,
        §394, §428). The surface is said here, once, as on the cards: the chip beside the type no
-       longer carries it (`FeaturedEventHero`). The night pill's sunset rides in its `srSuffix`, as
+       longer carries it (the hero's, until §NNN). The night pill's sunset rides in its `srSuffix`, as
        on the card. A pill only for what the club stated; null is unstated, not free (AGENTS.md §1.2). */
     const heroPills: Pill[] = buildRoutePills(event, t, format);
     /*

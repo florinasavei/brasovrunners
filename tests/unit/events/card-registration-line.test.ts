@@ -84,6 +84,17 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(closed).toEqual({ lead: "Înscrierile s-au închis", detail: null, bold: false, button: null });
   });
 
+  it("sends the featured card's registered runners to the desk once the window closes in race week (§78, on the card since §NNN)", () => {
+    const closedRace = race({ registrationClosesAt: new Date(NOW.getTime() - 1) });
+    const ro = cardRegistrationLine(translator("ro"), "ro", closedRace, NOW, known({ kind: "CLOSED" }), true);
+    expect(ro).toEqual({ lead: "Înscrierile s-au închis — vino la masă cu QR-ul din email.", detail: null, bold: true, button: null });
+    const en = cardRegistrationLine(translator("en"), "en", closedRace, NOW, known({ kind: "CLOSED" }), true);
+    expect(en.lead).toBe("Registration has closed — come to the desk with the QR from your email.");
+    // Race week changes nothing but the closed sentence: an open window reads as it always did.
+    const open = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null }), true);
+    expect(open).toEqual(cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null })));
+  });
+
   it("says «soon», bold and with no button, when the opening has no date yet (§451)", () => {
     const ro = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "NOT_YET_OPEN", opensAt: null }));
     expect(ro).toEqual({ lead: "Înscrierile se deschid în curând", detail: null, bold: true, button: null });

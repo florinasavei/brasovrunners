@@ -6,7 +6,7 @@
  * "There is a bit too much padding and whitespace on mobile, the space could be used more
  * efficiently").
  *
- * Eight named steps, each an MUI spacing unit (1 = 8px), used only for the **xs** side of a
+ * Seven named steps (eight until §NNN took the hero's), each an MUI spacing unit (1 = 8px), used only for the **xs** side of a
  * breakpoint object (`{ xs: DENSITY.x, sm: <the value the page already had> }`). `sm` and up
  * are never touched — a tablet or a desktop had no complaint — so every place this is used
  * keeps its wider value from `sm` unchanged; `tests/unit/theme/density.test.ts` holds a table of
@@ -40,10 +40,11 @@ export const DENSITY = {
    * budget in `EventFacts.tsx` is unaffected.
    */
   cardPadTop: 1.5,
-  /** Between two cards in the listing's grid, on a phone. Was 1.5 (12px). */
+  /**
+   * Between two cards in the listing's grid, on a phone. Was 1.5 (12px). The featured event's own
+   * padding step, `heroPad`, went with the hero (§NNN): the lead is a card, with a card's padding.
+   */
   cardGridGap: 1,
-  /** The featured event's own padding, on a phone. Was 2.5 (20px). */
-  heroPad: 2,
   /**
    * The tightest step: between two lines of facts — the featured event's `<dl>` rows (was 1,
    * 8px) and, on an event page, under one answer before the next question (the stacked `dd`'s

@@ -27,11 +27,34 @@ import { HOVER_OK } from "./motion";
  * `backgroundImage` and never the `background` shorthand (§167). The shorthand resets
  * `background-color` to transparent, so spreading this over a `bgcolor` would silently erase
  * the flat colour the caller asked to keep underneath rather than leave it as the fallback —
- * which is exactly what `FeaturedEventHero`'s comment claimed it was doing.
+ * which is exactly what the featured hero's comment claimed it was doing.
  */
 export const heroSurface = {
   backgroundImage: SURFACE_GRADIENT.hero,
   "[data-dark] &": { backgroundImage: SURFACE_GRADIENT.heroDark },
+} as const;
+
+/**
+ * The featured event's card: the first card of the listing's grid, at the width of every other
+ * card, told apart by its frame and its background alone (§NNN; the owner, 2026-09-26: "vreau doar
+ * sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate
+ * cardurile trebuie sa aiba aceeasi latime").
+ *
+ * The frame is the hero's two pixels of the club's blue (the owner, 2026-09-18: "the main event must
+ * be more highlighted"), drawn as the card's own one-pixel border in blue plus a one-pixel ring
+ * outside it — a `box-shadow`, which takes no room — so the lead's box and the room inside it are
+ * exactly every other card's, to the pixel: a two-pixel border would have narrowed its content by
+ * two pixels against the width budget `EventFacts.tsx`'s "when" row was measured to (§366, §375).
+ * The background is the hero's gradient (`heroSurface`, §166). A plain object, like `specialCard`
+ * below, because it is `sx` handed from a Server Component to MUI's client `Card`, and the ring
+ * names the palette's CSS variable for the same reason. It replaces `specialCard` on a featured
+ * event that is also special — one frame per card; the «Ediție specială» chip still says the
+ * second thing.
+ */
+export const featuredCard = {
+  borderColor: "primary.main",
+  boxShadow: "0 0 0 1px var(--mui-palette-primary-main)",
+  ...heroSurface,
 } as const;
 
 /**

@@ -197,12 +197,10 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((cardBox?.x ?? 0) + (cardBox?.width ?? 0) + 0.5);
 
     // No credit strip under the listing's cards any more (the owner, 2026-09-26: "nu vreau footer
-    // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead.
-    // The only Open-Meteo link left in `#main` is the featured hero's own, on its «Vremea» line
-    // (BR-REQ-041-01 c.83) — none when the hero has no forecast, exactly one when it has.
-    const heroCredits = await main.getByTestId("hero-weather").locator('a[href*="open-meteo"]').count();
-    expect(heroCredits).toBeLessThanOrEqual(1);
-    await expect(main.locator('a[href*="open-meteo"]')).toHaveCount(heroCredits);
+    // cu open-weather pe main page") — Open-Meteo's credit lives in the site footer's fold instead
+    // (§455), and since §NNN there is no hero with a «Vremea» line of its own: no Open-Meteo link
+    // anywhere in `#main`.
+    await expect(main.locator('a[href*="open-meteo"]')).toHaveCount(0);
     const footerCredit = page.getByTestId("footer-weather-credit");
     await expect(footerCredit).toBeHidden();
     await page.getByTestId("footer-about-fold").locator("summary").click();
@@ -212,15 +210,18 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     await noSidewaysScroll(page);
   });
 
-  test("the anniversary race, three weeks out, carries no weather on the hero", async ({ page }) => {
+  test("the anniversary race, three weeks out, carries no weather on its featured card", async ({ page }) => {
     await page.goto("/ro/evenimente");
     await expect(page.locator("#main ul > li h2").first()).toBeAttached();
-    await expect(page.getByTestId("hero-weather")).toHaveCount(0);
+    const lead = page.locator('section[aria-labelledby="featured-event-title"]').first();
+    await expect(lead).toBeVisible();
+    await expect(lead.getByTestId("card-weather")).toHaveCount(0);
   });
 
   /**
-   * The positive case of the hero's «Vremea» row (a review finding, §416): the test above only
-   * proves it is absent three weeks out. The featured event is the shared `FEATURED` singleton
+   * The positive case of the featured card's weather (a review finding, §416; a card's pill since
+   * §NNN, the hero's «Vremea» row gone with the hero): the test above only proves it is absent
+   * three weeks out. The featured event is the shared `FEATURED` singleton
    * (`DECISIONS.md` §28: the database refuses a second), so both its gathering and its gun time —
    * `weatherInstant` reads `raceStartsAt` over `startsAt` when the event has one (`forecast.ts`),
    * and `events_race_start_within_event` requires `raceStartsAt >= startsAt` — are moved into the
@@ -233,7 +234,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
    * showing the old date, the way `event-cost-external-discount.spec.ts`'s own `FEATURED` case
    * already found for its cost row.
    */
-  test("a featured event within seven days: the hero carries the word, the degrees, the rain and the wind, both languages", async ({ page }) => {
+  test("a featured event within seven days: its card carries the cards' weather pill, both languages", async ({ page }) => {
     // Two full editor saves (the move and the `finally`'s own restore) plus four page reads —
     // past the 30-second default (`event-cost-external-discount.spec.ts`'s own featured-hero
     // case takes the same allowance for the same reason).
@@ -266,23 +267,22 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
     await moveFeaturedRaceTimes(page, gathering, "09:00", gathering, "10:00");
 
     await page.goto("/ro/evenimente");
+    // The same pill every card wears (§429): the glyph and the degrees, the word for a screen
+    // reader; the rain and the wind are the event page's.
     const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
     await expect(hero).toBeVisible();
-    const weather = hero.getByTestId("hero-weather");
+    const weather = hero.getByTestId("card-weather");
     await expect(weather).toBeVisible();
-    await expect(weather).toContainText("Parțial noros");
+    await expect(weather).toContainText("Vremea la start: Parțial noros");
     await expect(weather).toContainText("14 °C");
-    await expect(weather).toContainText("20% șanse de ploaie");
-    await expect(weather).toContainText("vânt 11 km/h");
+    await expect(weather).not.toContainText("ploaie");
 
     await page.goto("/en/events");
     const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
-    const weatherEn = heroEn.getByTestId("hero-weather");
+    const weatherEn = heroEn.getByTestId("card-weather");
     await expect(weatherEn).toBeVisible();
     await expect(weatherEn).toContainText("Partly cloudy");
     await expect(weatherEn).toContainText("14 °C");
-    await expect(weatherEn).toContainText("20% chance of rain");
-    await expect(weatherEn).toContainText("wind 11 km/h");
   } finally {
     // Whatever the assertions above found, `FEATURED` is left exactly as every other spec
     // expects it — three weeks out, the seed's own dates — even on a failed assertion.

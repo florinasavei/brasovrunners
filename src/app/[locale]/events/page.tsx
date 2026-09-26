@@ -8,9 +8,8 @@ import { hasLocale } from "next-intl";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
-import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
-import { forecastForEvent, forecastsForEvents } from "@/modules/weather/source";
+import { forecastsForEvents } from "@/modules/weather/source";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections } from "@/modules/events/domain/listing";
 import {
@@ -139,7 +138,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
     query answered. A streamed region is revealed by an inline script, though, so a browser with
     scripts off was left with the loading shapes — and the filter panel, a plain GET form meant to
     work without a script, sat inside one of them where nobody could press it. Now the panel, the
-    hero, the list and the past section are all in the first HTML the server sends: no boundary on
+    cards (the lead's included) and the past section are all in the first HTML the server sends: no boundary on
     this page waits for a script to be shown. With a script nothing is lost — a filter or a month
     change is a soft navigation that keeps the page on screen until the new one is ready.
 
@@ -180,7 +179,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
         {t("intro")}
       </Typography>
 
-      <ListingLead events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} now={now} />
+      <ListingLead events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} />
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
           front page is for "what is on next" and a grid of squares is what somebody planning a
@@ -201,15 +200,17 @@ export default async function EventsPage({ params, searchParams }: Props) {
 }
 
 /**
- * The filter panel and the lead event.
+ * The filter panel, and the notice between seasons.
  *
  * In the page's first HTML, never behind a streamed boundary (§413): the panel is a GET form that
  * has to work with scripts off, and a streamed region is only revealed by a script. A filter
  * pressed with a script is a soft navigation that keeps the panel — open, as the reader left it —
  * on screen while the new rows arrive.
  *
- * The panel sits **above** the hero since §413, because the hero follows the filters now: a
- * control under the thing it hides would jump up under the thumb that pressed it.
+ * The panel sits **above** the cards, the lead's included, because the lead follows the filters
+ * (§413): a control under the thing it hides would jump up under the thumb that pressed it. The
+ * lead event itself is no longer drawn here: since §NNN it is the first card of the grid below
+ * (`ListingBody`).
  */
 async function ListingLead({
   events,
@@ -218,7 +219,6 @@ async function ListingLead({
   facts,
   layout,
   locale,
-  now,
 }: Listing & {
   /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
@@ -226,23 +226,12 @@ async function ListingLead({
   facts: FilterFacts<PublicEvent>;
   layout: CalendarLayout;
   locale: "ro" | "en";
-  now: Date;
 }) {
   const t = await getTranslations("Events");
-  // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
-  // page is handed the club's last event so it is not blank, and that row still carries the
-  // featured flag it had when it was next. It belongs under the notice as an ordinary card.
-  // The filter decides the hero too (§413): a lead event that does not match is not shown.
-  const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, facts), hasUpcoming);
-  // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
-  const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // What the panel offers (§413, §133's rule generalised): a box only where ticking it would change
-  // what the page shows — read off every row, the hero's included, never off the filtered rows —
+  // what the page shows — read off every row, the lead's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
   const offer = offeredFilters(events, filter, facts);
-  // The hero's «Vremea» (§416 — the owner: "aș vrea să văd vremea și pe cardul principal"): at its own
-  // place, within seven days of its start, null otherwise and on any failure — never a wake (§402).
-  const featuredWeather = featured ? await forecastForEvent(featured, now) : null;
 
   return (
     <>
@@ -271,11 +260,29 @@ async function ListingLead({
           {t("noUpcoming")}
         </Alert>
       )}
-
-      {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} weather={featuredWeather} />}
     </>
   );
 }
+
+/**
+ * The listing's one grid of cards (§NNN): one column on a phone, two from `md`, three from `xl` —
+ * every card the same width, the featured one included (the owner, 2026-09-26: "nu neaparat mai lat
+ * pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile trebuie sa aiba aceeasi latime").
+ * The upcoming list and the past fold (§267) share it, so the two cannot drift apart.
+ *
+ * Every card in a row is as tall as the tallest (§275): `start` left a short card beside a tall one
+ * and a hole under it, which is what made the listing look broken. The room a short card is given
+ * is at its foot, under its door (§366, `CARD_BODY_SX`).
+ */
+const CARD_GRID_SX = {
+  listStyle: "none",
+  p: 0,
+  m: 0,
+  display: "grid",
+  gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
+  gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
+  alignItems: "stretch",
+} as const;
 
 /**
  * How many finished events the foot of the listing carries (§267).
@@ -372,21 +379,7 @@ async function PastEvents({
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
         {t("pastHelp")}
       </Typography>
-      <Box
-        component="ul"
-        sx={{
-          listStyle: "none",
-          p: 0,
-          m: 0,
-          display: "grid",
-          gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
-          gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-          // Every card in a row is as tall as the tallest (§275): `start` left a short card
-          // beside a tall one and a hole under it, which is what made the listing look broken.
-          // The room a short card is given is at its foot, under its door (§366, `CARD_BODY_SX`).
-          alignItems: "stretch",
-        }}
-      >
+      <Box component="ul" sx={CARD_GRID_SX}>
         {cards.map((series, index) =>
           series.members.length > 1 ? (
             <SeriesCard key={series.key} members={series.members} index={index} now={now} />
@@ -400,16 +393,16 @@ async function PastEvents({
 }
 
 /**
- * Everything that is not the lead event.
+ * The upcoming events, as one grid of cards — the lead event first among them (§NNN).
  *
- * Under a hero, the rest is every other event: a heading and the same cards the unfiltered
- * listing shows, summary and picture included (§251).
- *
- * On a phone the heading is a native disclosure (`DECISIONS.md` §78): open when there are
- * four or fewer, folded when there are more, so the lead event is not followed by a scroll of
- * cards. On a wide screen the same element is always open — the browser's
- * `::details-content` is told to stay visible and the marker is hidden — because a wide
- * screen has room, and a reader there cannot tell a heading from a control.
+ * §78 drew the lead as a hero across the page and the rest under a heading, «Toate evenimentele
+ * (N)», folded on a phone past four cards. The owner, 2026-09-26, of that hero beside the grid:
+ * "vreau doar sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3 carduri, dar
+ * toate cardurile trebuie sa aiba aceeasi latime". So the lead is the first `<li>` of the one grid
+ * (`CARD_GRID_SX`), at the grid's width, told apart by its frame, its background and its chip
+ * (`EventCard`'s `featured`). The heading and the phone fold went with the hero: they existed so a
+ * screen-tall hero was not followed by a scroll of cards, and a card-sized lead is followed by
+ * cards the way the listing without a lead always was — no fold there either.
  */
 async function ListingBody({
   events,
@@ -418,108 +411,56 @@ async function ListingBody({
   facts,
   now,
 }: Listing & {
-  /** The filters the address names (§413), the same the lead was given. */
+  /** The filters the address names (§413), the same the panel was given. */
   filter: ListingFilter;
   facts: FilterFacts<PublicEvent>;
   now: Date;
 }) {
   const t = await getTranslations("Events");
   const filtered = activeFilterCount(filter) > 0;
-  // The same division the lead made, and it has to be given the same arguments or the two
-  // disagree: a past event the lead refused to hero must appear in the list (§167), and a lead
-  // event the filter hides must not reappear here as a card (§413).
+  // `hasUpcoming` is what keeps a *past* race from leading (§167): between seasons the page is
+  // handed the club's last event so it is not blank, and that row still carries the featured flag
+  // it had when it was next — it is an ordinary card under the notice. The filter decides the lead
+  // too (§413): a lead event that does not match is shown nowhere, not demoted to a card.
   const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, facts), hasUpcoming);
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
-  /*
-    The weather at each card's start (§416; the owner: "aș vrea să văd vremea și pe cardul
-    principal"): read once for every card — a series by its next date, the one whose facts it shows —
-    each at its own place, one request per rounded place and none outside the seven days
-    (`forecastsForEvents`). Open-Meteo's credit is not repeated here any more (the owner, 2026-09-26:
-    "nu vreau footer cu open-weather pe main page") — it lives in the site footer's fold instead
-    (`SiteFooter`); the featured hero above the cards keeps its own on its «Vremea» line, and the
-    event page its own beside the forecast (`EventFacts`).
-  */
-  const forecasts = await forecastsForEvents(
-    cards.map((series) => series.members[0]),
-    now,
-  );
-  const card = (series: (typeof cards)[number], index: number) => {
-    const weather = forecasts.get(series.members[0].id)?.start ?? null;
-    return series.members.length > 1 ? (
-      <SeriesCard key={series.key} members={series.members} index={index} now={now} weather={weather} />
-    ) : (
-      <EventCard key={series.key} event={series.members[0]} index={index} now={now} weather={weather} />
-    );
-  };
-
-  if (featured) {
-    if (listed.length === 0) return null;
-    return (
-      <Box
-        component="details"
-        open={cards.length <= 4}
-        data-testid="other-events"
-        sx={{
-          "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
-        }}
-      >
-        {/* The shared fold affordance (§164, §167): the biggest fold on the listing had kept
-            `display: flex` for its 44 pixels, and a flex `<summary>` has no marker in Chrome
-            or Safari — so the one fold a phone most needs a triangle on was the one without
-            one. The height comes from `DISCLOSURE_SUMMARY_SX`'s padding instead. From `sm`
-            up it is always open and is not a control, which is the documented exception. */}
-        <Typography
-          component="summary"
-          variant="h2"
-          sx={{
-            ...DISCLOSURE_SUMMARY_SX,
-            fontSize: "1.25rem",
-            // The heading sits on its list, not a line above it (§252).
-            mb: 0.5,
-            cursor: { xs: "pointer", sm: "default" },
-            // Its arrow hides from sm up, where the fold is always open and not a control (§325).
-            "&::before": { display: { xs: "block", sm: "none" } },
-            pointerEvents: { xs: "auto", sm: "none" },
-          }}
-        >
-          {filtered ? t("othersCountFiltered", { count: cards.length }) : t("othersCount", { count: cards.length })}
-        </Typography>
-        <Box component="ul" sx={{
-            listStyle: "none",
-            p: 0,
-            m: 0,
-            display: "grid",
-            gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
-            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-            // As above (§275): one row, one height.
-            alignItems: "stretch",
-          }}>
-          {cards.map(card)}
-        </Box>
-      </Box>
-    );
-  }
 
   // Nothing matches the filters: say so in those words, not "nothing is published" (§413) — the
   // panel above still names every tick and "Șterge filtrele" is one press away.
-  if (listed.length === 0) return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
+  if (!featured && listed.length === 0) return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
+
+  /*
+    The weather at each card's start (§416; the owner: "aș vrea să văd vremea și pe cardul
+    principal"): read once for every card, the lead's included — a series by its next date, the one
+    whose facts it shows — each at its own place, one request per rounded place and none outside the
+    seven days (`forecastsForEvents`). The lead wears the cards' pill (§429) since it is a card
+    (§NNN); the start hour's details are the event page's. Open-Meteo's credit is the site footer's
+    (§455).
+  */
+  const forecasts = await forecastsForEvents(
+    [...(featured ? [featured] : []), ...cards.map((series) => series.members[0])],
+    now,
+  );
+  const weatherOf = (event: PublicEvent) => forecasts.get(event.id)?.start ?? null;
+  // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
+  const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
+  // The lead takes the first place in the rise-in order, so the cards after it keep theirs.
+  const offset = featured ? 1 : 0;
 
   return (
-    <>
-      <Box component="ul" sx={{
-            listStyle: "none",
-            p: 0,
-            m: 0,
-            display: "grid",
-            gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
-            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-            // As above (§275): one row, one height.
-            alignItems: "stretch",
-          }}>
-        {cards.map(card)}
-      </Box>
-    </>
+    <Box component="ul" sx={CARD_GRID_SX} data-testid="listing-cards">
+      {featured && raceWeekDays !== null && (
+        <EventCard event={featured} index={0} now={now} weather={weatherOf(featured)} featured={{ raceWeekDays }} />
+      )}
+      {cards.map((series, index) =>
+        series.members.length > 1 ? (
+          <SeriesCard key={series.key} members={series.members} index={index + offset} now={now} weather={weatherOf(series.members[0])} />
+        ) : (
+          <EventCard key={series.key} event={series.members[0]} index={index + offset} now={now} weather={weatherOf(series.members[0])} />
+        ),
+      )}
+    </Box>
   );
 }

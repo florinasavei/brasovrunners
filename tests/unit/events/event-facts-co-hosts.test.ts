@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
@@ -318,10 +318,12 @@ describe("BR-REQ-011-01 criterion 16 the featured hero's mention (§344 partners
     expect(html).toMatch(/Brașov Marathon<\/a> și Salvamont/);
   });
 
-  it("is what FeaturedEventHero asks for: the full facts, never stacked", () => {
-    const hero = readFileSync("src/modules/events/ui/FeaturedEventHero.tsx", "utf8");
-    const call = /<EventFacts\b[^>]*\/>/.exec(hero)?.[0] ?? "";
+  it("is not what the featured event asks for any more: since §NNN it is a card, with the card's compact facts", () => {
+    const card = readFileSync("src/modules/events/ui/EventCard.tsx", "utf8");
+    const call = /<EventFacts\b[^>]*\/>/.exec(card)?.[0] ?? "";
     expect(call).toContain("event={event}");
+    expect(call).toContain('variant="compact"');
     expect(call).not.toContain("stacked");
+    expect(existsSync("src/modules/events/ui/FeaturedEventHero.tsx")).toBe(false);
   });
 });
