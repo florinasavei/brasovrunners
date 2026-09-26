@@ -148,14 +148,15 @@ export default async function ListingFilterPanel({
             mt: 1,
             // Tighter on a phone (§424, amending §380's scale — the owner: "Butonul de filtre e
             // mult prea mare"): the open panel is a compact block rather than the same box a
-            // tablet gets, `p` and `gap` on the density scale like every other public site.
-            p: { xs: DENSITY.gapSm, sm: 1.5 },
+            // tablet gets, `p` and `gap` on the density scale like every other public site; one step
+            // tighter again in §NNN (the owner: "prea mult padding"), gap already on the lowest step.
+            p: { xs: DENSITY.gapXs, sm: 1 },
             border: 1,
             borderColor: "divider",
             borderRadius: 2,
             bgcolor: "background.paper",
             display: "grid",
-            gap: { xs: DENSITY.gapXs, sm: 1 },
+            gap: { xs: DENSITY.gapXs, sm: 0.5 },
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
             "&[data-enhanced] [data-apply]": { display: "none" },
           }}
@@ -163,9 +164,6 @@ export default async function ListingFilterPanel({
           {Object.entries(keep).map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />
           ))}
-          <Typography variant="body2" color="text.secondary" sx={{ gridColumn: "1 / -1" }}>
-            {t("filter.help")}
-          </Typography>
           {offer.groups.map(({ group, values }) => (
             <Box component="fieldset" key={group} sx={FIELDSET_SX}>
               <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
