@@ -19,6 +19,7 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
+  let administrator: StaffUser;
   let organizer: StaffUser;
   let tehnic: StaffUser;
 
@@ -28,7 +29,9 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
   afterAll(async () => close());
   beforeEach(async () => {
     await resetTables(db);
-    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
+    // `admin` is the Superadministrator: the limits are a platform setting since §NNN.
+    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "SUPERADMIN" }).returning();
+    [administrator] = await db.insert(staffUsers).values({ email: "administrator@dev.test", displayName: "Administrator", role: "ADMIN" }).returning();
     [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" }).returning();
     [tehnic] = await db.insert(staffUsers).values({ email: "dev@dev.test", displayName: "Tehnic", role: "DEV" }).returning();
   });
@@ -74,9 +77,9 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
     expect(row.metadataJson).toMatchObject({ from: { maxCu: 1 }, to: { maxCu: 1 }, requested: { maxCu: 4 } });
   });
 
-  it("is the Administrator's: an Organizer and Tehnic are refused before Neon is asked anything", async () => {
+  it("is the Superadministrator's: an Administrator, an Organizer and Tehnic are refused before Neon is asked anything (§NNN)", async () => {
     const neon = fakeNeon(productionLikeState());
-    for (const actor of [organizer, tehnic]) {
+    for (const actor of [administrator, organizer, tehnic]) {
       await expect(
         updateNeonLimits(db, actor, { maxCu: "0.25", quotaMode: "none" }, { env: QA, now: NOW, fetchImpl: neon.fetch }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });

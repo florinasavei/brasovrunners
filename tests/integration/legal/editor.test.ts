@@ -62,7 +62,8 @@ describe("BR-REQ-053-02 legal document editing", () => {
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
+      // An Organizer: the Administrator writes the club's legal texts since §NNN.
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
   });
 
@@ -207,10 +208,25 @@ describe("BR-REQ-053-02 legal document editing", () => {
     ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "VALIDATION_ERROR");
   });
 
-  it("refuses any role below the one that administers staff", async () => {
+  it("refuses any role below the Administrator", async () => {
     await expect(
       createDraftVersion(db, editor, { key: "TERMS", translations: translations("v1") }, NOW),
     ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "FORBIDDEN");
+  });
+
+  it("lets an Administrator write and approve a version (§NNN)", async () => {
+    // The Administrator runs the club, and its legal texts are the club's; they were the
+    // Superadministrator's until §NNN.
+    const [administrator] = await db
+      .insert(staffUsers)
+      .values({ email: "admin@dev.test", displayName: "Administrator", role: "ADMIN" })
+      .returning();
+    const id = await createDraftVersion(db, administrator, { key: "TERMS", translations: translations("v1") }, NOW);
+    await updateDraftVersion(db, administrator, id, translations("v1, corectat"), NOW);
+    await approveVersion(db, administrator, id, NOW);
+    const [row] = await db.select().from(legalDocuments).where(eq(legalDocuments.id, id));
+    expect(row.isApproved).toBe(true);
+    expect(row.approvedByStaffUserId).toBe(administrator.id);
   });
 });
 

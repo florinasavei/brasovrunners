@@ -58,7 +58,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  await requireStaffRole("SUPERADMIN");
+  // The Administrator writes the club's legal texts since §NNN (`canWriteLegalTexts`).
+  await requireStaffRole("ADMIN");
 
   const { error, from, template } = await searchParams;
   const t = await getTranslations("Admin");

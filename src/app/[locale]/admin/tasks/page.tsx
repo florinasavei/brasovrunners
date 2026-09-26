@@ -72,7 +72,7 @@ import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
+import { canManagePlatform, canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
@@ -759,26 +759,28 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
 
         {/* How often the platform may wake the database for its scheduled work (§334) — the
-            throttle the owner asked for, beside the plan that bills each wake. */}
+            throttle the owner asked for, beside the plan that bills each wake. The
+            Superadministrator's since §NNN; an Administrator reads the figures and no form. */}
         <JobCadencePanel
           locale={locale}
           cadence={jobCadence}
           jobs={jobOverviews}
-          mayEdit={canManageRegistrations(actor.role)}
+          mayEdit={canManagePlatform(actor.role)}
           emailTiming={deliveryTiming.timing}
         />
 
         {/*
           The database's brakes (§335), beside the plan they are priced against: the compute's size
           ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
-          door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
+          door as the plan, and a higher `mayEdit` since §NNN — a quota reached suspends the site,
+          so writing it is the Superadministrator's; `updateNeonLimits` asserts the role again.
         */}
         {neonLimits && (
           <NeonLimitsPanel
             locale={locale}
             reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
             appEnv={env.APP_ENV}
-            mayEdit={canManageRegistrations(actor.role)}
+            mayEdit={canManagePlatform(actor.role)}
           />
         )}
 

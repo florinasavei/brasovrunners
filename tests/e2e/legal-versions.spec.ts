@@ -60,10 +60,16 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await expect(page.getByText("Ciornă", { exact: false }).first()).toBeVisible();
   });
 
-  test("does not offer New version to an Administrator, who may only read", async ({ page }) => {
-    await signIn(page, "Dev Administrator");
+  test("does not offer New version to an Organizer, who may only read (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/legal");
     await expect(page.getByRole("link", { name: "Versiune nouă" })).toHaveCount(0);
+  });
+
+  test("offers New version to an Administrator, who runs the club's legal texts (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/legal");
+    await expect(page.getByRole("link", { name: "Versiune nouă" }).first()).toBeVisible();
   });
 
   /**

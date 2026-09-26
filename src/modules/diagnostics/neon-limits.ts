@@ -1,20 +1,21 @@
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import type { Env } from "@/shared/config/env";
 import { DomainError, type DomainErrorCode } from "@/shared/errors/domain-error";
 import { checkNeonLimits, describeNeonLimits, type NeonLimitsReading, parseNeonLimitsRequest } from "./domain/neon-limits";
 import { type NeonDeps, type NeonFailure, readNeonLimits, writeNeonLimits } from "./neon";
 
 /**
- * The database's brakes, changed by an Administrator from `/admin/tasks` → Costuri (§335): the
- * compute's size ceiling and the period's CU-hour limit, both held by Neon rather than by this
- * application — so there is no settings row here, only Neon's answer before, the change, Neon's
- * answer after, and the audit row between them.
+ * The database's brakes, changed by a Superadministrator from `/admin/tasks` → Costuri (§335,
+ * §NNN): the compute's size ceiling and the period's CU-hour limit, both held by Neon rather than
+ * by this application — so there is no settings row here, only Neon's answer before, the change,
+ * Neon's answer after, and the audit row between them.
  *
- * The same gate as the Neon plan beside it (`canManageRegistrations`, §280's follow-up),
- * asserted here, where the change is made, whatever the page showed. The rules the form states —
+ * `canManagePlatform`, asserted here, where the change is made, whatever the page showed. It was
+ * the Neon plan's gate, the Administrator's, until §NNN: a quota reached suspends the database and
+ * the site with it, which is a setting that can stop the service, not a fact the club reports. The rules the form states —
  * one of six ceilings, a new or changed limit above what is spent plus a margin, a ticked
  * confirmation for a new, changed or removed limit on production — are checked against a fresh read,
  * never against the figures the page rendered a minute ago; the limit Neon holds, posted back
@@ -97,7 +98,7 @@ export async function updateNeonLimits<T extends Record<string, unknown>>(
   rawInput: unknown,
   deps: NeonDeps & { env: Pick<Env, "NEON_API_KEY" | "NEON_PROJECT_ID" | "APP_ENV">; now: Date },
 ): Promise<NeonLimitsOutcome> {
-  if (!canManageRegistrations(actor.role)) {
+  if (!canManagePlatform(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the Neon limits`);
   }
   const parsed = parseNeonLimitsRequest(rawInput);

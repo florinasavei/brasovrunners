@@ -77,7 +77,7 @@ export async function createLegalVersionAction(_previous: FormOutcome | null, fo
 
   let created: string;
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffRole("ADMIN");
     created = await createDraftVersion(getDb(), actor, { key, translations: translationsFrom(form) }, new Date());
   } catch (error) {
     return refused(error, form);
@@ -93,7 +93,7 @@ export async function updateLegalVersionAction(_previous: FormOutcome | null, fo
   const versionId = text(form, "versionId");
 
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffRole("ADMIN");
     await updateDraftVersion(getDb(), actor, versionId, translationsFrom(form), new Date());
   } catch (error) {
     return refused(error, form);
@@ -105,13 +105,13 @@ export async function updateLegalVersionAction(_previous: FormOutcome | null, fo
   );
 }
 
-/** The three platform texts, with the club's facts, approved in one press (§132). Superadministrator. */
+/** The three platform texts, with the club's facts, approved in one press (§132). Administrator (§NNN). */
 export async function approvePlatformTemplatesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
   let outcome: { error?: string; saved?: string; approved?: string };
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffRole("ADMIN");
     const result = await approvePlatformTemplates(getDb(), actor, clubFactsFromEnv(env), new Date());
     outcome = { saved: "platformApproved", approved: String(result.approved.length) };
   } catch (error) {
@@ -127,7 +127,7 @@ export async function approveLegalVersionAction(_previous: FormOutcome | null, f
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffRole("ADMIN");
     await approveVersion(getDb(), actor, versionId, new Date());
     outcome = { saved: "legalVersionApproved" };
   } catch (error) {
@@ -190,7 +190,7 @@ export async function withdrawLegalVersionAction(_previous: FormOutcome | null, 
 /**
  * Delete an approved version outright, number and all (`DECISIONS.md` §151).
  *
- * **Superadministrator here as well as in the service**, and the two are not the same
+ * **Administrator here as well as in the service** (§NNN; it was the Superadministrator's), and the two are not the same
  * assertion: `requireStaffRole` answers "is this request from somebody with that role", and
  * `assertMayEdit` inside `deleteApprovedVersion` answers "may this actor write the club's legal
  * text" — the second is the one that would still be there if this verb were ever reached from
@@ -215,7 +215,7 @@ export async function deleteApprovedLegalVersionAction(_previous: FormOutcome | 
 
   let deleted: { key: LegalDocumentKey; version: number };
   try {
-    const actor = await requireStaffRole("SUPERADMIN");
+    const actor = await requireStaffRole("ADMIN");
     deleted = await deleteApprovedVersion(getDb(), actor, {
       versionId,
       typedConfirmation: text(form, "typedConfirmation"),

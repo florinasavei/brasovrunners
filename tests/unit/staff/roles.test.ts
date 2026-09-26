@@ -2,15 +2,20 @@ import { describe, expect, it } from "vitest";
 import type { AdminSection } from "@/modules/staff-identity/domain/roles";
 import {
   allowedTransitions,
+  assignableRoles,
+  canAssignRole,
   canCreatePage,
   canDeleteEvent,
   canEditEventFields,
   canEditTexts,
   canEditTranslation,
   canHardDeleteEvent,
+  canManageMember,
+  canManagePlatform,
   canManageRegistrations,
   canManageStaff,
   canReadRegistrations,
+  canWriteLegalTexts,
   canTransition,
   EDITORIAL_STATUSES,
   isLiveContent,
@@ -179,23 +184,65 @@ describe("BR-REQ-051-01 criterion 4 live content is content that is published", 
 });
 
 describe("BR-REQ-060-01 what each role may reach", () => {
-  it("reserves staff administration to the Superadministrator", () => {
-    // The top of the hierarchy is defined by this one capability: a role that could grant
-    // itself a higher one would make every rule above it decorative. An Administrator reads the
-    // whole participant list and still cannot change who else may.
+  it("gives the team to the Administrator and everyone above (§NNN)", () => {
+    // The owner: "administrators should manage everything". Staff administration moved down one
+    // rung; what a role could grant itself is held by `canAssignRole` and `canManageMember` below.
     expect(canManageStaff("SUPERADMIN")).toBe(true);
-    expect(canManageStaff("ADMIN")).toBe(false);
+    expect(canManageStaff("ADMIN")).toBe(true);
     expect(canManageStaff("DEV")).toBe(false);
     expect(canManageStaff("MODERATOR")).toBe(false);
     expect(canManageStaff("COPYWRITER")).toBe(false);
     expect(canManageStaff("CONTRIBUTOR")).toBe(false);
   });
 
+  it("lets only a Superadministrator make, change or remove a Superadministrator (§NNN)", () => {
+    // An Administrator gives every role up to their own, and never the top one — so no
+    // Administrator can promote a colleague (or a second account of their own) past themselves.
+    expect(assignableRoles("ADMIN")).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]);
+    expect(assignableRoles("SUPERADMIN")).toEqual([...STAFF_ROLES]);
+    expect(canAssignRole("ADMIN", "SUPERADMIN")).toBe(false);
+    expect(canAssignRole("SUPERADMIN", "SUPERADMIN")).toBe(true);
+    expect(canManageMember("ADMIN", "SUPERADMIN")).toBe(false);
+    expect(canManageMember("ADMIN", "ADMIN")).toBe(true);
+    expect(canManageMember("SUPERADMIN", "SUPERADMIN")).toBe(true);
+
+    // Below the Administrator nobody gives or touches anything, whatever the target.
+    for (const actor of STAFF_ROLES.filter((role) => !canManageStaff(role))) {
+      expect(assignableRoles(actor), actor).toEqual([]);
+      for (const target of STAFF_ROLES) expect(canManageMember(actor, target), `${actor} on ${target}`).toBe(false);
+    }
+    // And the one property that makes the ladder safe: nobody gives a role above their own.
+    const rank = (role: (typeof STAFF_ROLES)[number]) => STAFF_ROLES.indexOf(role);
+    for (const actor of STAFF_ROLES) {
+      for (const role of assignableRoles(actor)) expect(rank(role), `${actor} gives ${role}`).toBeLessThanOrEqual(rank(actor));
+    }
+  });
+
+  it("gives the club's legal texts to the Administrator (§NNN)", () => {
+    expect(canWriteLegalTexts("SUPERADMIN")).toBe(true);
+    expect(canWriteLegalTexts("ADMIN")).toBe(true);
+    // The Organizer and the Redactor read the texts (§208) and write none of them.
+    expect(canWriteLegalTexts("DEV")).toBe(false);
+    expect(canWriteLegalTexts("MODERATOR")).toBe(false);
+    expect(canWriteLegalTexts("COPYWRITER")).toBe(false);
+    expect(canWriteLegalTexts("CONTRIBUTOR")).toBe(false);
+  });
+
+  it("keeps the platform settings that can stop the service to the Superadministrator (§NNN)", () => {
+    // "superadministrator is more like administrator + platform configs that can break stuff
+    // (throttling, etc)": the one capability that tells the top two roles apart.
+    expect(canManagePlatform("SUPERADMIN")).toBe(true);
+    for (const role of STAFF_ROLES.filter((r) => r !== "SUPERADMIN")) {
+      expect(canManagePlatform(role), role).toBe(false);
+    }
+  });
+
   it("reserves the hard delete — an event and everyone on it — to the Administrator, and no higher", () => {
     // Both halves of it, because it is the conjunction of two powers: deleting club content
     // and destroying participant data. The interesting assertion is the SUPERADMIN one — the
     // temptation is to reserve the most destructive verb to the highest role, and that would be
-    // wrong: SUPERADMIN is defined by staff administration, not by danger, and an Administrator
+    // wrong: SUPERADMIN is defined by the platform's settings (§NNN), not by what destroys club
+    // data, and an Administrator
     // may already erase each of these registrations one at a time. The gate that protects the
     // data is the typed title, the reason and the audit rows, not a rank.
     expect(canHardDeleteEvent("SUPERADMIN")).toBe(true);
@@ -325,12 +372,22 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(sections).not.toContain("staff");
   });
 
-  it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
-    const sections = visibleAdminSections("ADMIN");
-
-    expect(sections).toEqual(["events", "checkin", "guide", "pages", "gallery", "registrations", "tasks", "legal", "emails", "devs"]);
-    // An Administrator reads every registration and still cannot promote themselves.
-    expect(sections).not.toContain("staff");
+  it("gives ADMIN every section, the team included (§NNN)", () => {
+    // The Administrator runs the club; what they cannot do on the team page — make or touch a
+    // Superadministrator — is refused per row and in the service, not by hiding the section.
+    expect(visibleAdminSections("ADMIN")).toEqual([
+      "events",
+      "checkin",
+      "guide",
+      "pages",
+      "gallery",
+      "registrations",
+      "tasks",
+      "legal",
+      "emails",
+      "staff",
+      "devs",
+    ]);
   });
 
   it("gives SUPERADMIN every section — the case that was broken", () => {

@@ -86,9 +86,10 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
 
 /**
  * "Cât de des verifică platforma" (§334), from the costs panel beside the Neon plan: the minimum
- * minutes between two real runs of each scheduled job. The same gate and the same shape as the
- * Neon plan — Administrator at the door, the service asserting the role again, writing the audit
- * row and forgetting every cached schedule — and a refusal handed back as the form's state (§315).
+ * minutes between two real runs of each scheduled job. The same shape as the Neon plan, and a
+ * higher door since §NNN — Superadministrator, a platform setting that can hold every job back —
+ * with the service asserting the role again, writing the audit row and forgetting every cached
+ * schedule, and a refusal handed back as the form's state (§315).
  *
  * No `revalidatePath` here, unlike its neighbours, on purpose: the service's tag invalidation
  * already refreshes the page this action answers, and a path revalidation would make every
@@ -99,7 +100,7 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
   const path = getPathname({ locale, href: "/admin/tasks" });
 
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffRole("SUPERADMIN");
     await updateJobCadence(getDb(), actor, { minutes: form.get("minutes") }, new Date());
   } catch (error) {
     return refused(error, form);
@@ -138,7 +139,8 @@ export async function giveOlderPicturesLadderAction(_previous: FormOutcome | nul
 
 /**
  * The database's brakes (§335), from the card beside the Neon plan: the compute's size ceiling
- * and the period's CU-hour limit, written to Neon itself. Administrator at the door, the service
+ * and the period's CU-hour limit, written to Neon itself. Superadministrator at the door since
+ * §NNN (a quota reached suspends the site), the service
  * asserting the role again, reading Neon fresh, checking the rules against that reading, writing,
  * reading back and auditing what Neon then says.
  *
@@ -155,7 +157,7 @@ export async function updateNeonLimitsAction(_previous: FormOutcome | null, form
 
   let changed: boolean;
   try {
-    const actor = await requireStaffRole("ADMIN");
+    const actor = await requireStaffRole("SUPERADMIN");
     const outcome = await updateNeonLimits(
       getDb(),
       actor,

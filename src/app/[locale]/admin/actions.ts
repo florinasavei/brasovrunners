@@ -47,6 +47,7 @@ import {
   setZitadelUserActive,
 } from "@/modules/staff-identity/zitadel-users";
 import {
+  assertMayManageAccount,
   changeStaffRole,
   inviteStaffUser,
   resendStaffInvitation,
@@ -1033,10 +1034,13 @@ export async function sendStaffPasswordResetAction(_previous: FormOutcome | null
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    await requireStaffRole("ADMIN");
+    const actor = await requireStaffRole("ADMIN");
+    // A colleague on the list, and one this actor may manage — never a Superadministrator's
+    // account for an Administrator (§NNN); the provider is asked for the row's own address.
+    const member = await assertMayManageAccount(getDb(), actor, text(form, "email"));
     const result =
       env.STAFF_AUTH_MODE === "provider"
-        ? await sendZitadelPasswordReset(text(form, "email"))
+        ? await sendZitadelPasswordReset(member.email)
         : ({ kind: "unconfigured" } as const);
     outcome = { saved: "passwordReset", account: result.kind, ...(result.kind === "failed" ? { reason: result.reason.slice(0, 120) } : {}) };
   } catch (error) {
@@ -1057,11 +1061,14 @@ export async function setStaffAccountActiveAction(_previous: FormOutcome | null,
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    await requireStaffRole("ADMIN");
+    const actor = await requireStaffRole("ADMIN");
     const active = form.get("active") === "1";
+    // The same question as the password link (§NNN): an Administrator who could switch the
+    // owner's account off could lock the platform's settings away from everybody.
+    const member = await assertMayManageAccount(getDb(), actor, text(form, "email"));
     const result =
       env.STAFF_AUTH_MODE === "provider"
-        ? await setZitadelUserActive(text(form, "email"), active)
+        ? await setZitadelUserActive(member.email, active)
         : ({ kind: "unconfigured" } as const);
     outcome = {
       saved: active ? "accountReactivated" : "accountDeactivated",

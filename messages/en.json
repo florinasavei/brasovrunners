@@ -1740,14 +1740,15 @@
       "deactivateAccountBody": "{name}'s account is switched off at the provider: they cannot sign in anywhere. The row in Echipa stays.",
       "revokeTitle": "Take the access away?",
       "revokeBody": "{name} can no longer open the backoffice. The provider account stays — deactivate it separately if they are leaving the club.",
+      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access.",
       "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see the desk only.",
       "roles": {
         "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
         "DEV": "plus the technical page /devs. No participant data.",
-        "ADMIN": "plus registrations, the export, the legal texts, the emails, the tasks.",
-        "SUPERADMIN": "plus the team: who has access and with which role."
+        "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
+        "SUPERADMIN": "plus the platform settings that can stop the service (how often the platform checks, the database's limits) and naming another Superadministrator."
       },
       "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
@@ -2054,7 +2055,7 @@
         "defaultsUnset": "The project has no default size for a new compute; saving gives it the one chosen below.",
         "manyComputes": "The project has {count} read-write computes: the largest size is shown, and saving changes them all.",
         "quotaActive": "Limit in force: {hours} CU-hours, of which {used} spent. When it is reached, Neon stops the database until {end}.",
-        "readOnly": "The Administrator changes the limits. The figures above are current for you too.",
+        "readOnly": "The Superadministrator changes the limits: a wrong one can stop the site. The figures above are current for you too.",
         "maxCu": "The database's maximum size",
         "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load. The minimum stays {min} CU. Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
         "choose": "— choose a size —",
@@ -2159,7 +2160,7 @@
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
           "done": "The team has accounts.",
           "how": [
-            "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
+            "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events), Administrator (runs the club: registrations, legal texts, the team, this page) or Superadministrator (the platform settings too; only another Superadministrator can give this role).",
             "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
@@ -2485,7 +2486,7 @@
         "lastPingRan": "last ping: {when}, ran",
         "lastPingSkipped": "last ping: {when}, skipped without the database",
         "updatedAt": "Set on {when}.",
-        "readOnly": "The Administrator changes the interval. The figures above are current for you too.",
+        "readOnly": "The Superadministrator changes the interval: a wrong one delays every job. The figures above are current for you too.",
         "field": "At most once every",
         "fieldHelp": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do. \"On demand\" means only the \"when something is due\" rule and the {cap}-minute safety check.",
         "option": {
@@ -3220,7 +3221,7 @@
     },
     "guide": {
       "title": "How to use the platform",
-      "intro": "Who does what, step by step. Each section says which role it needs; yours is shown at the top next to your name. If a button is missing, you do not have the role for it — ask a superadministrator.",
+      "intro": "Who does what, step by step. Each section says which role it needs; yours is shown at the top next to your name. If a button is missing, you do not have the role for it — ask an administrator.",
       "sections": [
         {
           "title": "Volunteer at the number pickup desk",
@@ -3324,16 +3325,28 @@
             "“Registrations”: the full list, filters, name search, CSV export, each registration's page with its history. From there: correct a name, cancel (the place is released), erase on request, resend the email.",
             "A name search with no event chosen looks in every event. “Registered again ×2” on a row means the person sent the form twice more with the same address; the registration's timeline says when, what state it was in and which email we re-sent. They learn from that email that they were already registered — the form's screen says nothing, so that nobody can use it to find out who is registered.",
             "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
-            "“Staff” (Superadministrator): add people by email and role. “Add” also creates their sign-in account and sends them the invitation to choose a password — you no longer go into Zitadel. If somebody does not get it, “Resend the invitation” on their row.",
+            "“Staff”: add people by email and role, change their role, take their access away. “Add” also creates their sign-in account and sends them the invitation to choose a password — you no longer go into Zitadel. If somebody does not get it, “Resend the invitation” on their row. The Superadministrator role, and a Superadministrator's row, are a Superadministrator's alone.",
             "Volunteer accounts: in “Staff”, “Add” with the Volunteer role — the account and the invitation go out from there. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
-            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
-            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
+            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment."
           ],
           "roles": [
             "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Superadministrator — the platform settings",
+          "who": "Role: Superadministrator. Everything the Administrator does, plus the settings that can stop the service.",
+          "steps": [
+            "The Administrator runs the club: the registrations, the legal texts, the team, the pages, the plans, the deadlines. The Superadministrator does all of that and, on top, changes the settings below — a wrong one can stop the site or delay every email, for everybody at once. An Administrator sees them, with current figures, and cannot change them.",
+            "“To do” → “Costs” → “How often the platform checks”: the brake on the scheduled jobs. “On demand” is the default — the platform wakes the database only when it has something to do. A longer interval lowers the Neon bill, but delays every hand-over of a waiting-list place and every email the jobs send.",
+            "“To do” → “Costs” → “The database's limits”:the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them.",
+            "“Staff”: only a Superadministrator makes somebody else a Superadministrator, changes a Superadministrator's role or takes their access away. The last Superadministrator cannot be demoted or removed — whoever takes the platform over is named first."
+          ],
+          "roles": [
             "SUPERADMIN"
           ]
         },
@@ -4084,8 +4097,8 @@
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
       "MODERATOR": "creates and configures events, publishes, the gallery",
       "DEV": "plus the configuration page. No participant data",
-      "ADMIN": "plus registrations, participants, export, legal texts, deleting an event",
-      "SUPERADMIN": "plus team administration: who has access and what they can do"
+      "ADMIN": "runs the club: plus registrations, participants, export, legal texts, the team, deleting an event",
+      "SUPERADMIN": "plus the platform settings that can stop the service, and naming another Superadministrator"
     },
     "settings": "Settings",
     "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",

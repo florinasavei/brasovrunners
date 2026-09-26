@@ -1740,14 +1740,15 @@
       "deactivateAccountBody": "Contul lui {name} se oprește la furnizor: nu se mai poate autentica nicăieri. Rândul din Echipa rămâne.",
       "revokeTitle": "Retragi accesul?",
       "revokeBody": "{name} nu mai intră în backoffice. Contul de la furnizor rămâne — dezactivează-l separat dacă pleacă din club.",
+      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator.",
       "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar masa de ridicare.",
       "roles": {
         "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
-        "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
-        "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
+        "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
+        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date) și numirea altui Superadministrator."
       },
       "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
@@ -2054,7 +2055,7 @@
         "defaultsUnset": "Proiectul nu are o mărime implicită pentru un calcul nou; la salvare o primește pe cea aleasă mai jos.",
         "manyComputes": "Proiectul are {count} calcule read-write: se arată cea mai mare mărime, iar salvarea le schimbă pe toate.",
         "quotaActive": "Limită activă: {hours} ore-CU, din care {used} consumate. Când e atinsă, Neon oprește baza de date până pe {end}.",
-        "readOnly": "Limitele le schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "readOnly": "Limitele le schimbă Superadministratorul: una greșită poate opri site-ul. Cifrele de mai sus sunt la zi și pentru tine.",
         "maxCu": "Mărimea maximă a bazei de date",
         "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare. Minimul rămâne {min} CU. Lângă fiecare mărime, cel mai rău caz la tariful Launch: o oră trează la acea mărime și o lună întreagă trează.",
         "choose": "— alege o mărime —",
@@ -2159,7 +2160,7 @@
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
           "done": "Echipa are conturi.",
           "how": [
-            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele), Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină) sau Superadministrator (și setările platformei; rolul îl dă doar alt Superadministrator).",
             "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
@@ -2485,7 +2486,7 @@
         "lastPingRan": "ultimul ping: {when}, a rulat",
         "lastPingSkipped": "ultimul ping: {when}, sărit fără bază de date",
         "updatedAt": "Setat {when}.",
-        "readOnly": "Intervalul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "readOnly": "Intervalul îl schimbă Superadministratorul: unul greșit întârzie toate joburile. Cifrele de mai sus sunt la zi și pentru tine.",
         "field": "Cel mult o dată la",
         "fieldHelp": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut. „La nevoie” înseamnă doar regula „când e ceva de făcut” și verificarea de siguranță de {cap} min.",
         "option": {
@@ -3220,7 +3221,7 @@
     },
     "guide": {
       "title": "Ghid de utilizare",
-      "intro": "Cine face ce, pas cu pas. Fiecare secțiune spune ce rol îți trebuie; rolul tău este scris sus, lângă numele tău. Dacă un buton lipsește, nu ai rolul pentru el — cere-l unui superadministrator.",
+      "intro": "Cine face ce, pas cu pas. Fiecare secțiune spune ce rol îți trebuie; rolul tău este scris sus, lângă numele tău. Dacă un buton lipsește, nu ai rolul pentru el — cere-l unui administrator.",
       "sections": [
         {
           "title": "Voluntar la masa de ridicare a numerelor",
@@ -3324,16 +3325,28 @@
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
             "Căutarea după nume, fără un eveniment ales, caută în toate evenimentele. „Reînscriere ×2” pe un rând înseamnă că persoana a mai trimis formularul de două ori cu aceeași adresă; în cronologia înscrierii vezi când, în ce stare era și ce email i-am retrimis. Ea află din email că era deja înscrisă — pe ecranul formularului nu scrie nimic, ca să nu poată afla oricine cine e înscris.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
-            "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
+            "„Echipa”: adaugi oameni după email și rol, le schimbi rolul, le retragi accesul. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei. Rolul Superadministrator și rândul unui Superadministrator sunt doar ale unui Superadministrator.",
             "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
             "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
-            "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
-            "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
+            "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy."
           ],
           "roles": [
             "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Superadministrator — setările platformei",
+          "who": "Rol: Superadministrator. Tot ce face Administratorul, plus setările care pot opri serviciul.",
+          "steps": [
+            "Administratorul conduce clubul: înscrierile, textele legale, echipa, paginile, planurile, termenele. Superadministratorul face tot asta și, în plus, schimbă setările de mai jos — una greșită poate opri site-ul sau întârzia toate emailurile, pentru toată lumea deodată. Un Administrator le vede, cu cifrele la zi, dar nu le poate schimba.",
+            "„De făcut” → „Costuri” → „Cât de des verifică platforma”: frâna joburilor programate. „La nevoie” e implicit — platforma trezește baza de date doar când are ceva de făcut. Un interval mai lung scade factura Neon, dar întârzie fiecare predare a unui loc de pe lista de așteptare și fiecare email trimis de joburi.",
+            "„De făcut” → „Costuri” → „Limitele bazei de date”:frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe.",
+            "„Echipa”: doar un Superadministrator face pe altcineva Superadministrator, îi schimbă rolul unui Superadministrator sau îi retrage accesul. Ultimul Superadministrator nu poate fi retrogradat sau scos — cine preia platforma trebuie numit întâi."
+          ],
+          "roles": [
             "SUPERADMIN"
           ]
         },
@@ -4084,8 +4097,8 @@
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
       "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
-      "ADMIN": "plus înscrieri, participanți, export, texte legale, ștergerea unui eveniment",
-      "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
+      "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
+      "SUPERADMIN": "plus setările platformei care pot opri serviciul și numirea altui Superadministrator"
     },
     "settings": "Setări",
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
