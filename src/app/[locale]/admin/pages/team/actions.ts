@@ -32,14 +32,39 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
+/**
+ * The links' rows (§NNN), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,
+ * blanks included; `fields.ts` drops the spare line and names a refused row by this same index.
+ * The editor always posts `links.present`, so a card whose every row was removed saves "no links".
+ */
+function linkRowsOf(form: FormData): Array<Record<string, string>> | undefined {
+  if (form.get("links.present") === null) return undefined;
+  const rows: Array<Record<string, string>> = [];
+  for (const [key, entry] of form.entries()) {
+    const match = /^links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
+    if (!match || typeof entry !== "string") continue;
+    const index = Number(match[1]);
+    rows[index] = { ...(rows[index] ?? {}), [match[2]]: entry };
+  }
+  // A hole (a row index nobody posted) is the spare line, not a row to refuse.
+  return Array.from(rows, (row) => row ?? {});
+}
+
+/** A rich text's JSON as the editor posts it, or absent when the form carried no editor for it. */
+function body(form: FormData, name: string): string | undefined {
+  const value = form.get(name);
+  return typeof value === "string" ? value : undefined;
+}
+
 function fieldsOf(form: FormData) {
   return {
     name: text(form, "name"),
     roleRo: text(form, "roleRo"),
     roleEn: text(form, "roleEn"),
-    bioRo: text(form, "bioRo"),
-    bioEn: text(form, "bioEn"),
-    link: text(form, "link"),
+    // The words about the person, from the rich-text editor (§NNN).
+    bioRoBody: body(form, "bioRoBody"),
+    bioEnBody: body(form, "bioEnBody"),
+    links: linkRowsOf(form),
     photoAssetId: text(form, "photoAssetId"),
   };
 }
@@ -136,7 +161,7 @@ export async function deleteTeamMemberAction(_previous: FormOutcome | null, form
 export async function saveTeamPageIntroAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   try {
     const actor = await requireStaff();
-    await saveTeamPageIntro(getDb(), { actor, fields: { introRo: text(form, "introRo"), introEn: text(form, "introEn") } });
+    await saveTeamPageIntro(getDb(), { actor, fields: { introRoBody: body(form, "introRoBody"), introEnBody: body(form, "introEnBody") } });
   } catch (error) {
     return refused(error, form);
   }

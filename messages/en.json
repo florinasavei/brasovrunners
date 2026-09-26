@@ -2839,7 +2839,8 @@
       "tableCaption": "Uploaded pictures, newest first",
       "total": "{count, plural, one {# picture} other {# pictures}} · {size} MB stored",
       "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes.",
-      "usedInTeam": "On the team page: {title}"
+      "usedInTeam": "On the team page: {title}",
+      "usedInTeamIntro": "On the team page: the introduction"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -4534,7 +4535,7 @@
       "roleHelp": "For example “Antrenor” and “Coach”. Optional.",
       "bioRo": "A few words (Română)",
       "bioEn": "A few words (English)",
-      "bioHelp": "Optional, at most {max} characters.",
+      "bioHelp": "Optional, in both languages or in neither, at most {max} characters each. As on a page: paragraphs, lists, a link in the text, a picture — no tables, the card is too narrow.",
       "bothOrNeither": "Write it in both languages or in neither.",
       "photo": "Photo",
       "photoChoose": "Choose a photo",
@@ -4559,9 +4560,22 @@
       "introFold": "The page's introduction",
       "introRo": "Introduction (Română)",
       "introEn": "Introduction (English)",
-      "introHelp": "Optional, at most {max} characters. Empty, the page uses the platform's text.",
-      "link": "Link (optional)",
-      "linkHelp": "One https:// address, for example a Strava or Instagram profile. The same in both languages."
+      "introHelp": "Optional, in both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a film, a table. Empty, the page uses the platform's text.",
+      "textEmpty": "(empty)",
+      "links": "Links",
+      "linksHelp": "At most {max}: Strava, Instagram, Facebook, the person's own site or anything else. The address starts with https://. The label is optional, in both languages or in neither; without one, the card shows the network's name.",
+      "linkCount": "Links: {count}",
+      "linkRows": {
+        "kind": "What it is",
+        "url": "Address (https://)",
+        "labelRo": "Label (Română)",
+        "labelEn": "Label (English)",
+        "add": "Add a link",
+        "remove": "Remove link",
+        "moveUp": "Move up link",
+        "moveDown": "Move down link",
+        "row": "Link"
+      }
     }
   },
   "NotFound": {
@@ -5916,6 +5930,14 @@
     "lead": "The people who keep {club} running: who organizes, who coaches, who welcomes you at the start.",
     "empty": "The club's team will be introduced here soon.",
     "listLabel": "The team's people",
+    "linksLabel": "Links: {name}",
+    "linkKinds": {
+      "STRAVA": "Strava",
+      "INSTAGRAM": "Instagram",
+      "FACEBOOK": "Facebook",
+      "WEBSITE": "Website",
+      "OTHER": "Link"
+    },
     "contact": "Want to help, or have a question for the team? <contact>Write to us</contact>."
   },
   "Translate": {

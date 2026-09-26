@@ -6,7 +6,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canEditTeamPage, canShowTeamMember } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { type TeamMemberFields, teamMemberFieldsSchema } from "./fields";
+import { type TeamMemberFields, teamFieldName, teamMemberFieldsSchema } from "./fields";
 import { mediaAssetExists } from "./repository";
 
 /**
@@ -36,8 +36,9 @@ function parseOrThrow(value: unknown): TeamMemberFields {
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
-      parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
-      [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")))],
+      parsed.error.issues.map((issue) => `${teamFieldName(issue.path)}: ${issue.message}`).join("; "),
+      // The boxes' own names — `links[1].url` for the second link's address — so the summary lands on them.
+      [...new Set(parsed.error.issues.map((issue) => teamFieldName(issue.path)))],
     );
   }
   return parsed.data;
@@ -78,7 +79,10 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         roleEn: fields.roleEn,
         bioRo: fields.bioRo,
         bioEn: fields.bioEn,
+        bioRoJson: fields.bioRoJson,
+        bioEnJson: fields.bioEnJson,
         link: fields.link,
+        links: fields.links.length > 0 ? fields.links : null,
         photoMediaAssetId: fields.photoAssetId,
         position: (last?.position ?? 0) + 1,
         visible: false,
@@ -93,7 +97,7 @@ export async function createTeamMember<T extends Record<string, unknown>>(
       action: "team_member.created",
       entityType: "team_member",
       entityId: row.id,
-      metadata: { photo: fields.photoAssetId !== null, link: fields.link !== null },
+      metadata: { photo: fields.photoAssetId !== null, links: fields.links.length },
       now,
     });
     return row;
@@ -128,7 +132,10 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
         roleEn: fields.roleEn,
         bioRo: fields.bioRo,
         bioEn: fields.bioEn,
+        bioRoJson: fields.bioRoJson,
+        bioEnJson: fields.bioEnJson,
         link: fields.link,
+        links: fields.links.length > 0 ? fields.links : null,
         photoMediaAssetId: fields.photoAssetId,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
@@ -142,7 +149,7 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
       action: "team_member.saved",
       entityType: "team_member",
       entityId: updated.id,
-      metadata: { version: updated.version, photo: fields.photoAssetId !== null, link: fields.link !== null },
+      metadata: { version: updated.version, photo: fields.photoAssetId !== null, links: fields.links.length },
       now,
     });
     return updated;
