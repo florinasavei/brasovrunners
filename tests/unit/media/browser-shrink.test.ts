@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import { prepareImageUpload, shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { BROWSER_SEND_BYTES } from "@/modules/media/limits";
 
 /**
@@ -55,6 +55,46 @@ describe("§414 the browser half of the choice", () => {
     const sent = await shrinkImageInBrowser(fileOf(9 * MB), "high");
     expect(drawn).toEqual([4000]);
     expect(sent.size).toBe(2 * MB);
+  });
+
+  it("draws a phone's photograph at 1600 for «Minimă», and sends it as it is for «Originală» (§NNN)", async () => {
+    const photo = fileOf(2.4 * MB);
+    const drawnLow = stubBrowser({ width: 4032, height: 3024 }, () => 0.5 * MB);
+    expect(await shrinkImageInBrowser(photo, "low")).not.toBe(photo);
+    expect(drawnLow).toEqual([1600]);
+
+    const drawnOriginal = stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
+    expect(await shrinkImageInBrowser(photo, "original")).toBe(photo);
+    expect(drawnOriginal).toEqual([]);
+  });
+
+  it("draws a file too heavy to send at 6000 for «Originală», then steps down until it fits (§NNN)", async () => {
+    const drawn = stubBrowser({ width: 8000, height: 6000 }, (edge) => (edge >= 6000 ? 6 * MB : 3 * MB));
+    const sent = await shrinkImageInBrowser(fileOf(9 * MB), "original");
+    expect(drawn).toEqual([6000, 4800]);
+    expect(sent.size).toBe(3 * MB);
+  });
+
+  it("tells the chosen file's pixels and weight before sending, and what is sent (§NNN)", async () => {
+    const photo = fileOf(2.5 * MB);
+    stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
+    const told: unknown[] = [];
+    const prepared = await prepareImageUpload(photo, "normal", (chosen) => told.push(chosen));
+    expect(told).toEqual([{ width: 4032, height: 3024, bytes: 2.5 * MB }]);
+    expect(prepared.chosen).toEqual({ width: 4032, height: 3024, bytes: 2.5 * MB });
+    expect(prepared.resized).toBe(true);
+    expect(prepared.sent).toEqual({ width: 3000, height: 2250, bytes: 1 * MB });
+
+    stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
+    const asItIs = await prepareImageUpload(photo, "high");
+    expect(asItIs.resized).toBe(false);
+    expect(asItIs.blob).toBe(photo);
+    expect(asItIs.sent).toEqual(asItIs.chosen);
+
+    // Stepped down to fit: the size reported is the size sent.
+    stubBrowser({ width: 2000, height: 1500 }, (edge) => (edge >= 2000 ? 5 * MB : 3 * MB));
+    const fitted = await prepareImageUpload(fileOf(5 * MB), "normal");
+    expect(fitted.sent).toEqual({ width: 1600, height: 1200, bytes: 3 * MB });
   });
 
   it("keeps every upload under the platform's request limit, not only the server's 6 MB", async () => {

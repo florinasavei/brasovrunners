@@ -5,8 +5,8 @@ import { DEFAULT_IMAGE_QUALITY, type ImageQuality, ladderWidths, masterMaxEdge }
 /**
  * What an uploaded image becomes before it is stored (AGENTS.md §17).
  *
- * One input, and since §414 a ladder of WebP files: `web`, at most 2400px on its long side (4000
- * at «Înaltă») — the master, what a wide screen draws and what every body's address names —
+ * One input, and since §414 a ladder of WebP files: `web`, at most 2400px on its long side at
+ * «Medie» (1280 at «Minimă», 4000 at «Mare», 6000 at «Originală»; §NNN) — the master, what a wide screen draws and what every body's address names —
  * `thumb`, at most 640px,
  * for the backoffice's own lists, and a rung at each of `LADDER_WIDTHS` narrower than the master
  * (`ladder.ts`), which is what a phone, a card and a gallery tile load. Nothing else is kept —
@@ -85,6 +85,21 @@ const RUNG_QUALITY = 82;
  * «Normală» — and a laptop at 2× takes the 2400 rung, 305–453 KB (1.7 MB for the hillside).
  */
 const HIGH_QUALITY = 90;
+
+/**
+ * «Minimă» (§NNN): a 1280-pixel master at 78 and its rungs at 76. A picture chosen to be light,
+ * not to be looked into — the artefacts at 78 are there, on a picture nobody magnifies.
+ */
+const LOW_QUALITY = 78;
+const LOW_RUNG_QUALITY = 76;
+
+/**
+ * «Originală» (§NNN): the file's own pixels (up to `ORIGINAL_WEB_MAX`), and lossy at 95 where
+ * «Mare» is 90 — the most WebP's lossy mode gives before its bytes climb for nothing visible —
+ * with the same per-picture near-lossless choice for lettering. The rungs stay «Mare»'s: a phone
+ * drawing a 960-pixel rung sees no difference between 90 and 95, and pays for every byte.
+ */
+const ORIGINAL_QUALITY = 95;
 const NEAR_LOSSLESS_QUALITY = 60;
 const NEAR_LOSSLESS_MAX_RATIO = 2;
 const PROBE_WIDTH = 960;
@@ -164,11 +179,8 @@ export async function processUploadedImage(
     .toBuffer({ resolveWithObject: true });
   const pixels = () => sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } });
 
-  const encoding = quality === "high" ? await highEncoding(pixels, info.width) : "lossy";
-  const masterOptions =
-    quality === "normal" ? lossy(WEB_QUALITY) : encoding === "nearLossless" ? nearLossless : lossy(HIGH_QUALITY);
-  const rungOptions =
-    quality === "normal" ? lossy(RUNG_QUALITY, RUNG_EFFORT) : encoding === "nearLossless" ? nearLossless : lossy(HIGH_QUALITY, RUNG_EFFORT);
+  const encoding = quality === "high" || quality === "original" ? await highEncoding(pixels, info.width) : "lossy";
+  const { master: masterOptions, rung: rungOptions } = encoderOptions(quality, encoding);
 
   // All at once: `sharp` runs each on libuv's pool, so a machine with more than one core uses them.
   const [web, thumb, ...rungBodies] = await Promise.all([
@@ -184,7 +196,21 @@ export async function processUploadedImage(
   return { web, thumb, rungs, width: info.width, height: info.height, quality, encoding };
 }
 
-/** "Înaltă": near-lossless when it costs at most twice lossy 90 on a probe, lossy 90 otherwise. */
+/** The master's and the rungs' encoder settings for a choice and what its probe decided. */
+function encoderOptions(quality: ImageQuality, encoding: ImageEncoding): { master: WebpOptions; rung: WebpOptions } {
+  if (quality === "low") return { master: lossy(LOW_QUALITY), rung: lossy(LOW_RUNG_QUALITY, RUNG_EFFORT) };
+  if (quality === "normal") return { master: lossy(WEB_QUALITY), rung: lossy(RUNG_QUALITY, RUNG_EFFORT) };
+  if (encoding === "nearLossless") return { master: nearLossless, rung: nearLossless };
+  return {
+    master: lossy(quality === "original" ? ORIGINAL_QUALITY : HIGH_QUALITY),
+    rung: lossy(HIGH_QUALITY, RUNG_EFFORT),
+  };
+}
+
+/**
+ * «Mare» and «Originală»: near-lossless when it costs at most twice lossy 90 on a probe, lossy
+ * otherwise (90 for «Mare», 95 for «Originală»).
+ */
 async function highEncoding(pixels: () => Sharp, masterWidth: number): Promise<ImageEncoding> {
   const probe = () => pixels().resize({ width: Math.min(PROBE_WIDTH, masterWidth) });
   const [asNearLossless, asLossy] = await Promise.all([

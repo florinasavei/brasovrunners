@@ -41,14 +41,14 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     // Not publishable yet: no photo.
     await expect(page.getByText("Albumul nu are nicio fotografie")).toBeVisible();
 
-    // The quality beside the button (§414): the recommendation until somebody chooses, then the
-    // choice — a thumb's target, like every control here.
+    // The quality beside the button (§414, four levels since §NNN): the recommendation until
+    // somebody chooses, then the choice — a thumb's target, like every control here.
     const quality = page.getByTestId("image-quality");
-    const normal = quality.getByRole("radio", { name: "Normală (recomandat)" });
-    const high = quality.getByRole("radio", { name: "Înaltă (fișier mai mare)" });
+    const normal = quality.getByRole("radio", { name: "Medie (recomandat)" });
+    const high = quality.getByRole("radio", { name: "Mare", exact: true });
     await expect(normal).toBeChecked();
     // `has` is resolved inside each label, so it names the radio alone, not the chain from the page.
-    const highLabel = quality.locator("label").filter({ has: page.getByRole("radio", { name: "Înaltă (fișier mai mare)" }) });
+    const highLabel = quality.locator("label").filter({ has: page.getByRole("radio", { name: "Mare", exact: true }) });
     expect((await highLabel.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await high.check();
 
@@ -57,10 +57,12 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.locator('input[type="file"]').setInputFiles({ name: "IMG_0042.jpg", mimeType: "image/jpeg", buffer: photo });
     await expect(page.getByText("1 fotografii încărcate.")).toBeVisible({ timeout: 20_000 });
     // What the photo became, in words: its size and the quality it was stored at.
-    await expect(page.getByTestId("photo-stored")).toContainText("1600 × 1200 px, calitate înaltă");
+    await expect(page.getByTestId("photo-stored")).toContainText("1600 × 1200 px, calitate mare");
+    // And what was chosen, before it went up (§NNN): the file's own pixels and weight.
+    await expect(page.getByTestId("photo-chosen")).toContainText("Fotografia aleasă: IMG_0042.jpg, 1600 × 1200 px");
     // Remembered for the session: the page comes back with the same choice.
     await page.reload();
-    await expect(page.getByTestId("image-quality").getByRole("radio", { name: "Înaltă (fișier mai mare)" })).toBeChecked();
+    await expect(page.getByTestId("image-quality").getByRole("radio", { name: "Mare", exact: true })).toBeChecked();
     // The page re-rendered with the photo in its grid, served from the local store.
     const thumb = page.locator("main img[src*='/api/media/']").first();
     await expect(thumb).toBeVisible({ timeout: 20_000 });

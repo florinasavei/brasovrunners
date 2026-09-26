@@ -48,9 +48,17 @@ import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
-import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import { prepareImageUpload } from "@/modules/media/browser-shrink";
 import ImageQualityChoice, { type ImageQualityLabels, readRemembered, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
-import { describeStoredImage, type StoredFacts, type StoredFactsLabels } from "@/modules/media/ui/stored-facts";
+import {
+  type ChosenFacts,
+  type ChosenFactsLabels,
+  chosenFactsOf,
+  describeChosenImage,
+  describeStoredImage,
+  type StoredFacts,
+  type StoredFactsLabels,
+} from "@/modules/media/ui/stored-facts";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ToolbarButton from "@/shared/ui/ToolbarButton";
 import {
@@ -232,6 +240,9 @@ function RichTextEditorIsland({
     /** The choice beside the upload and what the picture became (§414). */
     imageQuality: ImageQualityLabels;
     imageChoose: string;
+    imageChosen: ChosenFactsLabels;
+    /** With `{width}` and `{height}`: the selected picture's stored size (§NNN). */
+    imagePixels: string;
     imageStored: StoredFactsLabels;
     imageAlt: string;
     imageAltHelp: string;
@@ -302,10 +313,17 @@ function RichTextEditorIsland({
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
   /**
+   * The picture going up, or the last one (§NNN; the owner: "să știu ce încarc"): the chosen
+   * file's pixels and weight from the moment it is decoded, and what the browser sent of it.
+   */
+  const [chosen, setChosen] = useState<ChosenFacts | null>(null);
+  /**
    * What the last poster became (§414), with its address: shown in a film's panel only while that
    * film's poster is this one, so another film selected afterwards never shows these facts.
    */
   const [posterStored, setPosterStored] = useState<{ src: string; facts: StoredFacts } | null>(null);
+  /** The poster going up, or the last one (§NNN), the same facts as a picture's. */
+  const [posterChosen, setPosterChosen] = useState<ChosenFacts | null>(null);
   /**
    * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
    * taken once when the dialog opens rather than read on every keystroke, and `null` while it is
@@ -534,8 +552,9 @@ function RichTextEditorIsland({
     setImageState("uploading");
     setImageBarOpen(false);
     setStored(null);
+    setChosen(null);
     try {
-      const uploaded = await uploadPicture(file);
+      const uploaded = await uploadPicture(file, setChosen);
       setStored(uploaded.stored ?? null);
       // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
       // and an empty alt is what the nag under the editor counts.
@@ -564,8 +583,9 @@ function RichTextEditorIsland({
   const pickPoster = async (file: File) => {
     setPosterState("uploading");
     setPosterStored(null);
+    setPosterChosen(null);
     try {
-      const uploaded = await uploadPicture(file);
+      const uploaded = await uploadPicture(file, setPosterChosen);
       editor
         ?.chain()
         .focus()
@@ -942,6 +962,12 @@ function RichTextEditorIsland({
           </Stack>
         )}
 
+        {/* What is going up (§NNN): the chosen file's pixels and weight, and what is sent of it. */}
+        {chosen && (
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1, pt: 0.5 }} aria-live="polite" data-testid="rich-text-image-chosen">
+            {describeChosenImage(chosen, labels.imageChosen, document.documentElement.lang || "ro")}
+          </Typography>
+        )}
         {imageState !== "idle" && (
           <Typography variant="body2" color={imageState === "failed" ? "error" : "text.secondary"} sx={{ px: 1, py: 0.5 }}>
             {imageState === "failed" ? labels.imageFailed : labels.imageUploading}
@@ -1346,6 +1372,12 @@ function RichTextEditorIsland({
                 ✕
               </Button>
             </Stack>
+            {/* The picture's own size, whenever it is selected (§NNN): what was stored, not what the page draws. */}
+            {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (
+              <Typography variant="body2" color="text.secondary" data-testid="rich-text-image-pixels">
+                {labels.imagePixels.replace("{width}", String(imageAttrs.width)).replace("{height}", String(imageAttrs.height))}
+              </Typography>
+            )}
             <TextField
               size="small"
               label={labels.imageAlt}
@@ -1571,6 +1603,11 @@ function RichTextEditorIsland({
                 </Button>
               ) : null}
             </Stack>
+            {posterChosen && (posterState !== "idle" || (posterStored && videoAttrs?.poster === posterStored.src)) && (
+              <Typography variant="body2" color="text.secondary" aria-live="polite" data-testid="rich-text-poster-chosen">
+                {describeChosenImage(posterChosen, labels.imageChosen, document.documentElement.lang || "ro")}
+              </Typography>
+            )}
             {posterState === "failed" && (
               <Typography variant="body2" color="error">
                 {labels.youtubePosterFailed}
@@ -1822,10 +1859,16 @@ type StoredPicture = { id: string; src: string; thumb: string; width: number; he
  * The choice is read from the store, not from a render: a paste or a drop calls the function
  * Tiptap kept from the first render, whose `imageQuality` is the default whatever was chosen since.
  */
-async function uploadPicture(file: File): Promise<{ src: string; width: number; height: number; stored?: StoredFacts }> {
+async function uploadPicture(
+  file: File,
+  onChosen: (facts: ChosenFacts) => void,
+): Promise<{ src: string; width: number; height: number; stored?: StoredFacts }> {
   const quality = readRemembered();
   const body = new FormData();
-  body.append("file", await shrinkImageInBrowser(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
+  // The file's own pixels and weight as soon as it is decoded, then what is sent (§NNN).
+  const prepared = await prepareImageUpload(file, quality, (chosen) => onChosen({ name: file.name, chosen }));
+  onChosen(chosenFactsOf(file.name, prepared));
+  body.append("file", prepared.blob, file.name.replace(/\.[^.]+$/, "") + ".webp");
   body.append("originalFilename", file.name);
   body.append("quality", quality);
   const response = await fetch("/api/admin/media", { method: "POST", body });

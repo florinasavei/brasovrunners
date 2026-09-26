@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { MAX_UPLOAD_BYTES, processUploadedImage, storedBytes, THUMB_MAX, WEB_MAX } from "@/modules/media/images";
 import { ladderWidths, masterMaxEdge } from "@/modules/media/ladder";
-import { HIGH_WEB_MAX } from "@/modules/media/limits";
+import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX } from "@/modules/media/limits";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -86,8 +86,9 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     const high = await processUploadedImage(wide, { quality: "high" });
     expect([high.width, high.height]).toEqual([HIGH_WEB_MAX, 2667]);
     expect((await sharp(high.web).metadata()).width).toBe(HIGH_WEB_MAX);
-    expect(high.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400]);
-    expect((await sharp(high.rungs[high.rungs.length - 1].body).metadata()).width).toBe(2400);
+    // §NNN: and a 3200 rung, so a laptop at 2× on the widest column is not sent the master.
+    expect(high.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400, 3200]);
+    expect((await sharp(high.rungs[high.rungs.length - 1].body).metadata()).width).toBe(3200);
 
     const normal = await processUploadedImage(wide, { quality: "normal" });
     expect([normal.width, normal.height]).toEqual([WEB_MAX, 1600]);
@@ -97,6 +98,38 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     const small = await sharp({ create: { width: 1800, height: 1200, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
     expect((await processUploadedImage(small, { quality: "high" })).width).toBe(1800);
   });
+
+  it("keeps 1280 pixels at «Minimă» and the file's own up to 6000 at «Originală», each lighter or heavier than its neighbour (§NNN)", async () => {
+    // Noise drawn at 600 × 400 and enlarged: detail at every scale, and a JPEG under the 6 MB limit.
+    const noise = Buffer.alloc(600 * 400 * 3);
+    for (let index = 0; index < noise.length; index += 1) noise[index] = (index * 2654435761) % 251;
+    const photo = await sharp(noise, { raw: { width: 600, height: 400, channels: 3 } })
+      .resize({ width: 4800, height: 3200 })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    const low = await processUploadedImage(photo, { quality: "low" });
+    expect([low.width, low.height, low.quality, low.encoding]).toEqual([LOW_WEB_MAX, 853, "low", "lossy"]);
+    expect(low.rungs.map((rung) => rung.width)).toEqual([480, 640, 960]);
+
+    const original = await processUploadedImage(photo, { quality: "original" });
+    // Nothing resized: 4800 is under «Originală»'s 6000.
+    expect([original.width, original.height, original.quality]).toEqual([4800, 3200, "original"]);
+    expect((await sharp(original.web).metadata()).width).toBe(4800);
+    expect(original.rungs.map((rung) => rung.width)).toEqual([480, 640, 960, 1280, 1600, 1920, 2400, 3200]);
+    // Noise is no poster: lossy, at 95.
+    expect(original.encoding).toBe("lossy");
+
+    // And a picture wider than 6000 is brought down to it.
+    const huge = await sharp({ create: { width: 7000, height: 3500, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
+    expect((await processUploadedImage(huge, { quality: "original" })).width).toBe(ORIGINAL_WEB_MAX);
+
+    // The same rung is lighter at «Minimă» than at «Medie», and the master heavier at «Originală» than at «Mare».
+    const normal = await processUploadedImage(photo, { quality: "normal" });
+    expect(low.rungs[0].body.byteLength).toBeLessThan(normal.rungs[0].body.byteLength);
+    const high = await processUploadedImage(photo, { quality: "high" });
+    expect(original.web.byteLength).toBeGreaterThan(high.web.byteLength);
+  }, 60_000);
 
   it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§414)", async () => {
     // Flat colour and hard edges: what near-lossless WebP stores for almost nothing.

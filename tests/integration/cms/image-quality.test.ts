@@ -101,6 +101,17 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
     expect((await sharp(rung!.body).metadata()).width).toBe(960);
   });
 
+  it("takes «Minimă» and «Originală» as the two new words, and says which was stored (§NNN)", async () => {
+    for (const quality of ["low", "original"] as const) {
+      const response = await uploadBodyPicture(form(await photo(), "start.jpg", quality));
+      expect(response.status, quality).toBe(201);
+      const { stored } = (await response.json()) as { stored: { quality: string; files: number; width: number } };
+      expect(stored.quality).toBe(quality);
+      expect(stored.files).toBe(2 + ladderWidths(stored.width).length);
+    }
+    expect(await db.select().from(mediaAssets)).toHaveLength(2);
+  });
+
   it("reads no choice as «Normală», and refuses a value that is neither, writing nothing", async () => {
     const plain = await uploadBodyPicture(form(await photo(), "start.jpg"));
     expect(plain.status).toBe(201);
