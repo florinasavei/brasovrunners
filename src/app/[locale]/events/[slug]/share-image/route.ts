@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { eventShareImage, type ShareShape } from "@/modules/events/share-image";
-import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
+import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
 
 /**
  * The same picture as the Open Graph one, as a file to save (`DECISIONS.md` §90): square by
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   const known = routing.locales.find((candidate) => candidate === locale);
-  const event = known ? await cachedPublishedEventBySlug(known, slug) : undefined;
+  const event = known ? await eventBySlugWithLastGood(known, slug) : undefined;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const shape: ShareShape = new URL(request.url).searchParams.get("shape") === "og" ? "og" : "square";
   const t = await getTranslations({ locale: known, namespace: "Event" });

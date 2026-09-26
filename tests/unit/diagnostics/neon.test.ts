@@ -64,7 +64,7 @@ describe("BR-REQ-090-07 the database's consumption", () => {
     const down = await readNeonConsumption({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () => {
       throw new TypeError("fetch failed");
     });
-    expect(down).toEqual({ ok: false, reason: "TypeError" });
+    expect(down).toEqual({ ok: false, reason: "network" });
   });
 
   // §335: the same project row the quota card reads carries the monthly limit too, so
@@ -107,72 +107,84 @@ describe("BR-REQ-090-07 the database's consumption", () => {
  * that is total, and the one thing the club cannot be emailed about once it has happened.
  *
  * This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the
- * quota case only (`DECISIONS.md` §335); the plan half of that criterion is unchanged.
+ * quota case only (`DECISIONS.md` §335); the plan half of that criterion is unchanged. Since §NNN
+ * the answer also names the month's budget level, and the spend is the meter's.
  */
 describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for the monthly compute quota", () => {
+  const NOW = new Date("2026-10-20T10:00:00.000Z");
+  const PERIOD = { consumption_period_start: "2026-10-01T00:00:00Z", consumption_period_end: "2026-11-01T00:00:00Z" };
+
   it("reads ok with no figures without the two variables, and calls nothing", async () => {
     const result = await checkNeonQuotaHealth({ NEON_API_KEY: undefined, NEON_PROJECT_ID: "p" }, () => {
       throw new Error("must not be called");
     });
-    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" });
   });
 
-  it("asks Neon's Data Cache to keep the answer for fifteen minutes, never no-store", async () => {
-    let seenInit: RequestInit | undefined;
+  it("asks Neon's Data Cache to keep every answer for fifteen minutes, never no-store", async () => {
+    const inits: RequestInit[] = [];
     await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async (_url, init) => {
-      seenInit = init;
-      return new Response(JSON.stringify({ project: { compute_time_seconds: 0 } }), {
+      if (init) inits.push(init);
+      return new Response(JSON.stringify({ project: { compute_time_seconds: 0, ...PERIOD } }), {
         status: 200,
         headers: { "content-type": "application/json" },
       });
     });
-    expect((seenInit as { next?: { revalidate?: number } } | undefined)?.next?.revalidate).toBe(900);
-    expect((seenInit as { cache?: string } | undefined)?.cache).toBeUndefined();
+    expect(inits.length).toBeGreaterThan(0);
+    for (const init of inits) {
+      expect((init as { next?: { revalidate?: number } }).next?.revalidate).toBe(900);
+      expect((init as { cache?: string }).cache).toBeUndefined();
+    }
   });
 
-  it("reads ok under 80% of the quota, and near-limit at or past it", async () => {
+  it("reads ok under 80% of the quota, and near-limit at or past it — with the level beside it", async () => {
     const answer = (usedSeconds: number, quotaSeconds: number) => async () =>
       new Response(
         JSON.stringify({
-          project: { compute_time_seconds: usedSeconds, settings: { quota: { compute_time_seconds: quotaSeconds } } },
+          project: { compute_time_seconds: usedSeconds, settings: { quota: { compute_time_seconds: quotaSeconds } }, ...PERIOD },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
 
-    const under = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(70 * 3600, 100 * 3600));
-    expect(under).toEqual({ status: "ok", quotaCuHours: 100, usedCuHours: 70, percent: 70 });
+    // 70 of 100 by the 20th of a 31-day period: under the line, but the pace does not fit.
+    const under = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(70 * 3600, 100 * 3600), NOW);
+    expect(under).toEqual({ status: "ok", quotaCuHours: 100, usedCuHours: 70, percent: 70, level: "ahead" });
 
     // 80% exactly is already "near", the same boundary `isNeonQuotaNearLimit` uses.
-    const atLine = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(80 * 3600, 100 * 3600));
-    expect(atLine).toEqual({ status: "near-limit", quotaCuHours: 100, usedCuHours: 80, percent: 80 });
+    const atLine = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(80 * 3600, 100 * 3600), NOW);
+    expect(atLine).toEqual({ status: "near-limit", quotaCuHours: 100, usedCuHours: 80, percent: 80, level: "tight" });
 
-    const past = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(82 * 3600, 100 * 3600));
+    const past = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, answer(82 * 3600, 100 * 3600), NOW);
     expect(past.status).toBe("near-limit");
     expect(past.percent).toBe(82);
   });
 
-  it("reads ok with no figures when there is no quota to spend against", async () => {
-    const result = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () =>
-      new Response(JSON.stringify({ project: { compute_time_seconds: 12_000 } }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      }),
+  it("reads ok with no percent when there is no quota to spend against", async () => {
+    const result = await checkNeonQuotaHealth(
+      { NEON_API_KEY: "k", NEON_PROJECT_ID: "p" },
+      async () =>
+        new Response(JSON.stringify({ project: { compute_time_seconds: 12_000, ...PERIOD } }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      NOW,
     );
-    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: 12_000 / 3600, percent: null });
+    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: 12_000 / 3600, percent: null, level: "unlimited" });
   });
 
   it("never fails this endpoint on its own account: a refusal, a bad answer or a network error all read ok with no figures", async () => {
+    const nothing = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, level: "unknown" };
     const refused = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () => new Response("", { status: 403 }));
-    expect(refused).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+    expect(refused).toEqual(nothing);
 
     const threw = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () => {
       throw new TypeError("fetch failed");
     });
-    expect(threw).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+    expect(threw).toEqual(nothing);
 
     const empty = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () =>
       new Response(JSON.stringify({}), { status: 200, headers: { "content-type": "application/json" } }),
     );
-    expect(empty).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+    expect(empty).toEqual(nothing);
   });
 });

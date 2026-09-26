@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
+import { throughBreaker } from "@/modules/resilience/breaker";
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
 import { buildInfo } from "@/shared/config/build-info";
 
@@ -139,7 +140,10 @@ export async function publicRead<T>(
 ): Promise<T> {
   if (!insideNextServer() || process.env.NODE_ENV !== "production" || prerenderingAtBuild()) return load();
 
-  const cached = unstable_cache(async () => tagDates(await load()), [KEYSPACE, ...key.map(String)], {
+  // A miss asks the database through the breaker (§NNN): while this instance knows the database
+  // is away, a miss fails at once and `readWithLastGood` serves the copy, instead of every page
+  // view waiting on a connection that will be refused. A hit never gets this far.
+  const cached = unstable_cache(async () => tagDates(await throughBreaker(load)), [KEYSPACE, ...key.map(String)], {
     tags: contents.map(publicTag),
     revalidate: PUBLIC_CACHE_CEILING_SECONDS,
   });

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { AppEnvironment } from "@/shared/config/env-enums";
+import type { NeonMeterSource } from "./neon-meter";
 import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
 
 /**
@@ -101,6 +102,8 @@ export type NeonLimitsReading = {
   activeHours: number;
   periodEnd: Date;
   reportedPlan: NeonPlanId | null;
+  /** Which of Neon's readings `usedCuHours` is (§NNN, `neon-meter.ts`); absent is the project row's own counter. */
+  usedSource?: NeonMeterSource;
 };
 
 /** What one ceiling costs at worst, at Launch's rate from the one catalogue. */

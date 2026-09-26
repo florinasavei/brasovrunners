@@ -14,6 +14,17 @@ export type FakeNeonState = {
     settings?: Record<string, unknown> & { quota?: Record<string, unknown> };
   };
   endpoints: Array<Record<string, unknown> & { id: string }>;
+  /**
+   * The operations log (§NNN), newest first, or absent for a Neon that refuses to show it — the
+   * default, so the tests of the brakes read the project row's own counter as they always did.
+   */
+  operations?: Array<{ action: string; status: string; created_at: string; updated_at?: string }>;
+  /**
+   * The consumption endpoint's answer, or absent for the project-scoped key the club holds, which
+   * Neon refuses outside its project ("not allowed to perform actions outside the project this
+   * key is scoped to", 2026-09-26).
+   */
+  consumption?: unknown;
 };
 
 export type FakeNeonCall = {
@@ -81,6 +92,17 @@ export function fakeNeon(
     const project = `/projects/${FAKE_PROJECT_ID}`;
     if (call.method === "GET" && call.path === project) return json({ project: state.project });
     if (call.method === "GET" && call.path === `${project}/endpoints`) return json({ endpoints: state.endpoints });
+    if (call.method === "GET" && call.path === `${project}/operations`) {
+      if (!state.operations) return json({ message: "not found" }, 404);
+      const limit = Number(url.searchParams.get("limit") ?? 10);
+      const from = Number(url.searchParams.get("cursor") ?? 0);
+      const page = state.operations.slice(from, from + limit);
+      return json({ operations: page, pagination: { cursor: String(from + page.length) } });
+    }
+    if (call.method === "GET" && call.path === "/consumption_history/v2/projects") {
+      if (state.consumption === undefined) return json({ message: "not allowed to perform actions outside the project this key is scoped to" }, 404);
+      return json(state.consumption);
+    }
     if (call.method === "PATCH" && call.path === project) {
       const patch = (call.body as { project?: Record<string, unknown> }).project ?? {};
       if (patch.default_endpoint_settings) {

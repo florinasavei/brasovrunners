@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import type { getDb } from "@/db/client";
+import { governedCadence } from "@/modules/diagnostics/domain/neon-budget";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { isAuthorizedJobRequest } from "./auth";
 import { type JobName, planQuiet, type QuietPlan } from "./schedule";
 import { insideJobRun, readPingVerdict, recordPing, recordRealRun } from "./schedule-cache";
@@ -53,6 +55,20 @@ export async function answerJobPing(
     });
   }
 
+  /*
+    The month's budget (§NNN), from Neon's API and never the database, and only for a ping that
+    is about to run: the ones answered from the cache above never ask. At `exhausted` Neon has
+    suspended the project, so trying would only fail — and a job endpoint that answers 500 all
+    day is one cron-job.org disables (§98), which would leave the scheduler off when the period
+    resets. It answers 200 with the reason instead, and records the ping so `/api/health` still
+    sees a pinger that calls.
+  */
+  const budget = await readNeonBudget(now);
+  if (budget.effects.jobsPaused) {
+    await recordPing(job, now, false);
+    return NextResponse.json({ job, ran: false, reason: "budget", budgetLevel: budget.level, checkedAt: now.toISOString() });
+  }
+
   // The database, only now: everything above this line runs without a connection or its module.
   const [{ getDb: openDb }, { consumeRateLimit }, { readJobCadence }, { nextWork }] = await Promise.all([
     import("@/db/client"),
@@ -77,7 +93,10 @@ export async function answerJobPing(
   let plan: QuietPlan | null = null;
   try {
     const cadence = await readJobCadence(db);
-    plan = planQuiet({ ranAt: now, nextWorkAt: await nextWork(db, job, now), cadenceMinutes: cadence.minutes, failed: outcome.failed });
+    // The governor's floor rides the Administrator's interval (§NNN): the longer wins, and it is
+    // the one the floor slots carry, so the pings after this run honour it from the cache.
+    const cadenceMinutes = governedCadence(cadence.minutes, budget.effects.jobFloorMinutes);
+    plan = planQuiet({ ranAt: now, nextWorkAt: await nextWork(db, job, now), cadenceMinutes, failed: outcome.failed });
     await recordRealRun(job, plan);
   } catch (error) {
     // The work is done; only the promise to the next pings is missing, so they run for real.
@@ -92,6 +111,7 @@ export async function answerJobPing(
     nextCheckAt: plan ? plan.quietUntil.toISOString() : now.toISOString(),
     notBefore: plan?.floorUntil ? plan.floorUntil.toISOString() : null,
     cadenceMinutes: plan?.cadenceMinutes ?? null,
+    budgetLevel: budget.level,
     checkedAt: now.toISOString(),
   });
 }

@@ -4266,8 +4266,52 @@
     "emailConfirm": "Type the address once more *",
     "emailMismatch": "The two addresses are not the same — check the letters."
   },
+  "Budget": {
+    "title": "This month's budget",
+    "intro": "How much of the monthly limit the database has used, at what pace, and how the platform slows itself down when the month runs ahead.",
+    "level": {
+      "unknown": "Unknown",
+      "unlimited": "No limit",
+      "normal": "On pace",
+      "ahead": "Ahead of the calendar",
+      "tight": "Close to the limit",
+      "critical": "At the limit",
+      "exhausted": "Limit reached"
+    },
+    "meaning": {
+      "unknown": "Neon could not be read just now, so the platform runs as usual, with no extra brake.",
+      "unlimited": "The project has no monthly limit, so there is nothing to slow down for; the cost is in the table below.",
+      "normal": "At the pace so far, the month ends under the limit.",
+      "ahead": "At the pace so far, the limit is reached before the month ends, so the platform checks less often.",
+      "tight": "More than {warn}% of the limit is used; /api/health raises the alarm, and the platform checks even less often.",
+      "critical": "More than {critical}% of the limit is used: only a few hours of running are left before the stop.",
+      "exhausted": "Neon has stopped the database until the period ends. The site shows its saved copies, and registration and the forms are paused."
+    },
+    "spent": "{used} of {quota} CU-hours used ({percent}%); the period ends {end}.",
+    "spentNoLimit": "{used} CU-hours used; the period ends {end}.",
+    "pace": "Pace: {perDay} CU-hours a day; at that, the period reaches {projected} CU-hours.",
+    "paceNoLimit": "Pace: {perDay} CU-hours a day.",
+    "runsOut": "The limit would be reached on {date}.",
+    "effectLead": "What the platform does now:",
+    "effect": {
+      "none": "nothing extra — the scheduled jobs run when they have something to do.",
+      "floor": "the scheduled jobs look at the database at most once every {minutes} minutes (reminders and freed places may wait that long; no place is ever given twice).",
+      "paused": "the scheduled jobs stop trying the database until it is back; they answer the monitor without an error.",
+      "healthReuse": "The health check reuses an answer at most {minutes} minutes old, so a stray caller does not wake the database.",
+      "resting": "The public pages show their last saved copy, however old, with a polite notice saying from when and until when."
+    },
+    "source": {
+      "metered": "The figure is the one Neon bills (compute_unit_seconds).",
+      "operations": "The figure is worked out from Neon's operations log: the time awake times the database's smallest size.",
+      "legacy": "The figure is the project's old counter, which has not updated since 24 September; it may be well under the real one."
+    },
+    "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours; the largest is used.",
+    "notRead": "not read",
+    "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it."
+  },
   "Offline": {
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
+    "resting": "The site is showing a saved copy of this page, from {when}: registration and the forms are paused until {until}. Thank you for your patience!",
     "capacityUnknown": "We cannot check how many places are left right now.",
     "capacityRetry": "Try again"
   },

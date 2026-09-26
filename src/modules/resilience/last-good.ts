@@ -2,10 +2,15 @@ import { unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { DatabaseRestingError } from "./breaker";
+import { isDatabaseAwayError } from "./domain/database-away";
 import {
   type Envelope,
   isSnapshotTooOld,
   readEnvelope,
+  SNAPSHOT_MAX_AGE_HOURS,
+  SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS,
   writeEnvelope,
 } from "./domain/envelope";
 
@@ -42,7 +47,17 @@ import {
  */
 
 type Freshness = "live" | "stale";
-export type Resilient<T> = { value: T; freshness: Freshness; takenAt: Date };
+export type Resilient<T> = {
+  value: T;
+  freshness: Freshness;
+  takenAt: Date;
+  /**
+   * When the copy is served because Neon has suspended the project for the rest of its billing
+   * period (§NNN): the period's end, when the database is back. Null otherwise — live, or away for
+   * any other reason, when nobody knows for how long.
+   */
+  restingUntil: Date | null;
+};
 
 /** Long enough that a busy page writes rarely, short enough that a copy is never much behind. */
 const WRITE_EVERY_MS = 10 * 60_000;
@@ -118,11 +133,15 @@ export async function readWithLastGood<T>(
   load: () => Promise<T>,
   now: Date = new Date(),
 ): Promise<Resilient<T>> {
+  // `next build` prerendering the few static routes (the locale roots render the header): no
+  // copy is kept or looked for — the build has no business writing to the store, and no outage
+  // to survive (the public cache's `prerenderingAtBuild` says the same of the data cache).
+  if (process.env.NEXT_PHASE === "phase-production-build") return { value: await load(), freshness: "live", takenAt: now, restingUntil: null };
   try {
     const value = await load();
     const envelope = { takenAt: now, value };
     remember(key, envelope);
-    return { value, freshness: "live", takenAt: now };
+    return { value, freshness: "live", takenAt: now, restingUntil: null };
   } catch (error) {
     /*
       `notFound()` and `redirect()` work by throwing, and so does Next's own signal that a
@@ -132,15 +151,41 @@ export async function readWithLastGood<T>(
     */
     unstable_rethrow(error);
 
-    const envelope = await recall<T>(key);
-    if (!envelope || isSnapshotTooOld(envelope, now)) {
+    const [envelope, restingUntil] = await Promise.all([recall<T>(key), restingSince(error, now)]);
+    const maxAgeHours = restingUntil ? SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS : SNAPSHOT_MAX_AGE_HOURS;
+    if (!envelope || isSnapshotTooOld(envelope, now, maxAgeHours)) {
       // Nothing to show, or nothing recent enough to be honest about: the error page says the
       // site is having trouble, which is true, instead of showing last week's events as this
       // week's.
       throw error;
     }
-    console.error("[resilience] serving the last good copy of", key, error);
-    return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt };
+    // Once per outage and instance is enough for the log: the breaker makes every read after the
+    // first one fail the same way, and a line per page view would bury the first.
+    if (!(error instanceof DatabaseRestingError)) console.error("[resilience] serving the last good copy of", key, error);
+    return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt, restingUntil };
+  }
+}
+
+/**
+ * Whether the database is away because Neon suspended the project for the month (§NNN) — asked
+ * only on this failure path, only for an error that says the database is away, and of Neon's API
+ * through the governor's shared reading, never of the database. The period's end when it is, so
+ * the page can say when the site is whole again; null for every other outage, whose length nobody
+ * knows.
+ *
+ * While the project is suspended nothing can change the rows behind a copy — no write reaches a
+ * database that is not running — so a copy taken before the suspension is still the newest truth
+ * there is, and the twelve-hour limit (`SNAPSHOT_MAX_AGE_HOURS`), which exists because a newer
+ * truth may have been written since, gives way to the billing period
+ * (`SNAPSHOT_MAX_AGE_WHILE_RESTING_HOURS`).
+ */
+async function restingSince(error: unknown, now: Date): Promise<Date | null> {
+  if (!isDatabaseAwayError(error)) return null;
+  try {
+    const budget = await readNeonBudget(now);
+    return budget.effects.restingCopies && budget.meter ? budget.meter.periodEnd : null;
+  } catch {
+    return null;
   }
 }
 

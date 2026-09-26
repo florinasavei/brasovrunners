@@ -4266,8 +4266,52 @@
     "emailConfirm": "Scrie adresa încă o dată *",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
+  "Budget": {
+    "title": "Bugetul lunii",
+    "intro": "Cât a folosit baza de date din limita lunară, în ce ritm, și cum se frânează platforma singură când luna o ia înainte.",
+    "level": {
+      "unknown": "Necunoscut",
+      "unlimited": "Fără limită",
+      "normal": "În ritm",
+      "ahead": "Înaintea calendarului",
+      "tight": "Aproape de limită",
+      "critical": "La limită",
+      "exhausted": "Limita s-a atins"
+    },
+    "meaning": {
+      "unknown": "Neon nu a putut fi citit acum, așa că platforma merge ca de obicei, fără nicio frână în plus.",
+      "unlimited": "Proiectul nu are o limită lunară, deci nu are de ce să se frâneze; costul e cel din tabelul de mai jos.",
+      "normal": "În ritmul de până acum, luna se încheie sub limită.",
+      "ahead": "În ritmul de până acum, limita se atinge înainte de sfârșitul lunii, așa că platforma verifică mai rar.",
+      "tight": "S-au folosit peste {warn}% din limită; /api/health dă alarma, iar platforma verifică și mai rar.",
+      "critical": "S-au folosit peste {critical}% din limită: mai sunt doar câteva ore de funcționare până la oprire.",
+      "exhausted": "Neon a oprit baza de date până la sfârșitul perioadei. Site-ul arată copiile salvate, iar înscrierile și formularele sunt în pauză."
+    },
+    "spent": "{used} din {quota} ore-CU folosite ({percent}%), perioada se încheie {end}.",
+    "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
+    "pace": "Ritmul: {perDay} ore-CU pe zi; așa, perioada ajunge la {projected} ore-CU.",
+    "paceNoLimit": "Ritmul: {perDay} ore-CU pe zi.",
+    "runsOut": "Limita s-ar atinge pe {date}.",
+    "effectLead": "Ce face platforma acum:",
+    "effect": {
+      "none": "nimic în plus — lucrările programate rulează când au ceva de făcut.",
+      "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
+      "paused": "lucrările programate nu mai încearcă baza de date până revine; răspund monitorului fără eroare.",
+      "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
+      "resting": "Paginile publice arată ultima lor copie salvată, oricât de veche, cu un mesaj politicos care spune de când e și până când."
+    },
+    "source": {
+      "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
+      "operations": "Cifra e calculată din jurnalul de operații Neon: timpul treaz înmulțit cu mărimea minimă a bazei de date.",
+      "legacy": "Cifra e contorul vechi al proiectului, care nu se mai actualizează din 24 septembrie; poate fi mult sub cea reală."
+    },
+    "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare.",
+    "notRead": "necitit",
+    "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească."
+  },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
+    "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până pe {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou"
   },
