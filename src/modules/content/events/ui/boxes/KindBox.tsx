@@ -8,7 +8,7 @@ import { eventInputConstraints } from "../../constraints";
 import GlyphSelect from "../GlyphSelect";
 import TypeNote from "../TypeNote";
 import { type BoxProps, type LanguageEntry, SettingsReadOnly } from "./box-kit";
-import CostBox from "./CostBox";
+import CostBox, { costLine } from "./CostBox";
 import StatusCard, { type StatusNotice } from "./StatusBox";
 
 /**
@@ -31,8 +31,10 @@ import StatusCard, { type StatusNotice } from "./StatusBox";
  * §408).
  *
  * **The cost is a named card in here too since §NNN** (the owner, 2026-09-26: "cardul 7. Cost poate
- * fi inclus în cardul 1. la ce fel de eveniment"): `CostBox`, drawn after the status card with its
- * page heading «7 · Cost» and its id `box-cost`, so the map's chip and a deep link still land on it.
+ * fi inclus în cardul 1. la ce fel de eveniment"): `CostBox`, drawn after the status card under the plain
+ * title «Cost» with its id `box-cost`, so a deep link still lands on it; it has no number and no
+ * chip on the map, and the cards after it renumber. The box's closed line names it third:
+ * «Alergare de grup · Programat · Gratuit».
  * It is drawn for every role — a words-only reader may own the discount note (§394).
  *
  * A role that may only read the settings is told so, in place of the select and the status card;
@@ -46,12 +48,9 @@ export default async function KindBox({
   notice,
   registered = 0,
   languages = [],
-  costHeading,
 }: BoxProps & {
   /** Every language's row, for the cost card's discount note (§394, §NNN). */
   languages?: readonly LanguageEntry[];
-  /** The cost card's page heading, «7 · Cost — apare pe pagină» (§406). */
-  costHeading?: string;
   registered?: number;
   /** The cancellation's words (§331); the editor hands them, the create page does not. */
   notice?: StatusNotice;
@@ -63,7 +62,8 @@ export default async function KindBox({
   /** One sentence per type, for the note under the select (§170). */
   const typeNotes = Object.fromEntries(EVENT_TYPES.map((type) => [type, t(`editor.typeNotes.${type}`)]));
   const separator = (t.raw("editor.boxes.summary") as { separator: string }).separator;
-  const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"]].join(separator);
+  // The type, the status and the cost (§NNN): the three things this box asks, on its closed line.
+  const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages)].join(separator);
   // Awaited here rather than nested, so the element is ready when the box is (a string renderer
   // cannot wait for an async component inside a tree — `requiredLine` does the same).
   const status = !mayEditSettings
@@ -74,7 +74,7 @@ export default async function KindBox({
         ? await StatusCard({ event, risk, notice })
         : null;
   // The cost card (§NNN), awaited for the same reason as the status card.
-  const cost = await CostBox({ event, mayEditSettings, languages, ...(costHeading ? { heading: costHeading } : {}) });
+  const cost = await CostBox({ event, mayEditSettings, languages });
 
   return (
     <Panel

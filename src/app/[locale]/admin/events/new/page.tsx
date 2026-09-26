@@ -225,7 +225,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <PublishGapsSummary id="publish-gaps" title={t("editor.publishGaps.title")} intro={t("editor.publishGaps.intro")} labels={gapLabels} />
               {/* The page, top to bottom (§406): the editor's same cards, in the same order. */}
               <EditorGroup label={t("editor.groups.page")} />
-              <KindBox {...box} heading={flow.headings.kind} languages={languages} costHeading={flow.headings.cost} />
+              <KindBox {...box} heading={flow.headings.kind} languages={languages} />
               <TitleSummaryBox languages={languages} creating heading={flow.headings.title} />
               <DescriptionBox languages={languages} heading={flow.headings.description} />
               <WhenBox {...box} heading={flow.headings.when} />

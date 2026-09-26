@@ -200,11 +200,16 @@ describe("§406 the cards' headings and the map", () => {
     expect(flow.headings.when).toBe("4 · Data și ora — apare pe pagină");
     expect(flow.headings.place).toBe("5 · Locul — apare pe pagină");
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
-    expect(flow.headings.cost).toBe("7 · Cost — apare pe pagină");
-    expect(flow.headings.registration).toBe("8 · Participare și înscrieri — gol, nu apare pe pagină");
-    expect(flow.headings.video).toBe("13 · Filmul — gol, nu apare pe pagină");
-    expect(flow.headings.startList).toBe("14 · Lista publică a participanților — gol, nu apare pe pagină");
+    // The cost is asked inside card 1 since §NNN: no heading of its own, the cards after it renumber.
+    expect("cost" in flow.headings).toBe(false);
+    expect(flow.headings.registration).toBe("7 · Participare și înscrieri — gol, nu apare pe pagină");
+    expect(flow.headings.video).toBe("12 · Filmul — gol, nu apare pe pagină");
+    expect(flow.headings.startList).toBe("13 · Lista publică a participanților — gol, nu apare pe pagină");
     expect("share" in flow.headings).toBe(false);
+    // 1..n with no gap.
+    const numbers = Object.values(flow.headings).map((heading) => Number(heading.split(" · ")[0])).sort((a, b) => a - b);
+    expect(numbers).toEqual(Array.from({ length: numbers.length }, (_, index) => index + 1));
+    expect(Object.values(flow.headings).some((heading) => /· Cost/.test(heading))).toBe(false);
     currentLocale = "en";
     const en = await pageFlow(saved());
     expect(en.headings.when).toBe("4 · Date and time — on the page");
@@ -223,7 +228,6 @@ describe("§406 the cards' headings and the map", () => {
       "box-when",
       "box-place",
       "box-course",
-      "box-cost",
       "box-registration",
       "box-cohosts",
       "box-links",
@@ -232,6 +236,8 @@ describe("§406 the cards' headings and the map", () => {
       "box-video",
       "box-start-list",
     ]);
+    // No Cost chip (§NNN): the cost is asked inside card 1.
+    expect(flow.entries.some((entry) => entry.id === "cost")).toBe(false);
     expect(links[3][1]).toBe("4 · Când — apare pe pagină");
     expect(links[2][1]).toBe("3 · Descrierea — gol, nu apare pe pagină");
     // The map, first paint: the title card's chip is not marked with no provider's answer.
@@ -239,7 +245,7 @@ describe("§406 the cards' headings and the map", () => {
     expect(body).toContain('aria-label="Pagina, de sus în jos"');
     expect(html).toContain("min-height:44px");
     // A filled dot for a drawn section, a ring for an empty one.
-    expect(body.match(/data-drawn="true"/g)?.length).toBe(6);
+    expect(body.match(/data-drawn="true"/g)?.length).toBe(5);
   });
 });
 

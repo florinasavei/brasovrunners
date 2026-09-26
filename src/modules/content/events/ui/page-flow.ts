@@ -19,14 +19,16 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  */
 
 /** The box title each section's card already wears (`Admin.editor.boxes.<key>.title`). */
-const CARD_TITLE_KEY: Record<Exclude<PageSectionId, "share">, string> = {
+/** The sections with a numbered card of their own: not the automatic share links, not the cost (inside card 1 since §NNN). */
+type HeadedSectionId = Exclude<PageSectionId, "share" | "cost">;
+
+const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   kind: "kind",
   title: "titleSummary",
   description: "description",
   when: "when",
   place: "place",
   course: "course",
-  cost: "cost",
   registration: "registration",
   coHosts: "coHosts",
   links: "links",
@@ -41,7 +43,7 @@ const GAP_BOX: Partial<Record<PageSectionId, PublishGapBox>> = { title: "titleSu
 
 export type PageFlow = {
   /** Each card's heading, by section. */
-  headings: Record<Exclude<PageSectionId, "share">, string>;
+  headings: Record<HeadedSectionId, string>;
   /** The map's chips, in page order. */
   entries: SectionMapEntry[];
   words: SectionMapWords;
@@ -54,15 +56,16 @@ export type PageFlow = {
 export async function pageFlow(data: PageSectionData): Promise<PageFlow> {
   const t = await getTranslations("Admin");
   const states = pageSectionStates(data);
-  const headings = {} as Record<Exclude<PageSectionId, "share">, string>;
+  const headings = {} as Record<HeadedSectionId, string>;
   for (const section of states) {
-    if (section.id === "share" || section.number === null) continue;
+    if (section.id === "share" || section.id === "cost" || section.number === null) continue;
     const name = t(`editor.boxes.${CARD_TITLE_KEY[section.id]}.title`);
     headings[section.id] = t(section.isDrawn ? "editor.pageFlow.drawnHeading" : "editor.pageFlow.emptyHeading", { number: section.number, name });
   }
   return {
     headings,
-    entries: states.map((section) => ({
+    // A section asked inside another card (the cost, §NNN) has no chip: the map lists the cards.
+    entries: states.filter((section) => !section.nestedIn).map((section) => ({
       id: section.id,
       number: section.number,
       name: t(`editor.pageFlow.short.${section.id}`),

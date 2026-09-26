@@ -794,7 +794,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       it holds, numbered and headed by whether the page shows it — the order of
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
                   <EditorGroup label={t("editor.groups.page")} />
-                  <KindBox {...box} heading={flow.headings.kind} languages={languages} costHeading={flow.headings.cost} registered={realCount} risk={risk} notice={notice} />
+                  <KindBox {...box} heading={flow.headings.kind} languages={languages} registered={realCount} risk={risk} notice={notice} />
                   <TitleSummaryBox languages={languages} creating={false} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} inSeries={inSeries} heading={flow.headings.when} />
