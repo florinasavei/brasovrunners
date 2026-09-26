@@ -33,8 +33,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * The GET shows the address and the topics as they stand, and changes nothing. Two forms: the
  * topics, saved as ticked; and "unsubscribe from everything", which deletes the subscription and
  * the address with it — as easy as subscribing was (GDPR art. 7(3); Legea 506/2004 art. 12(2)).
- * The link is read, never spent, by both: a reversible choice, like the public list's switch in
- * "Înscrierile mele" (§143, §322), and the link has to work from every message ever sent.
+ * Either POST spends the link (AGENTS.md §12.8); saving the topics lands on its successor, so the
+ * page keeps working for the rest of the visit. Every message carries a fresh link of its own.
  */
 export default async function NewsletterManagePage({ params, searchParams }: Props) {
   const { locale, token } = await params;

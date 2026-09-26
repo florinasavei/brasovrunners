@@ -12,6 +12,7 @@ import { newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter"
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { RETENTION_PERIODS } from "./domain/retention-periods";
@@ -100,13 +101,6 @@ export const RETENTION = {
    * email", and keeping it three years would be keeping a stranger's typing.
    */
   unconfirmedRegistrationDays: 30,
-  /**
-   * An address left in the newsletter's pop-up and never confirmed (§NNN): gone once its link can
-   * no longer work — the longest the club's email-link window may be (168 hours, `deadlines.ts`)
-   * plus a day — counted from the last time the form was sent with it. Somebody else may have
-   * typed it; nothing was ever sent to it but the one confirmation message.
-   */
-  unconfirmedSubscriberDays: 8,
   /**
    * A registration and the declaration signed for it are kept three years from the event's
    * start — the general limitation period of Codul civil art. 2517, within which a claim
@@ -475,14 +469,38 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /**
-   * The newsletter (§NNN): an address never confirmed, once its link cannot work; and the links
-   * themselves thirty days after they stopped working, the rule of the action tokens above. A
-   * confirmed subscriber stays until they unsubscribe, which deletes them at once.
+   * The newsletter (§NNN): an address never confirmed is gone once its confirmation link can no
+   * longer work — the club's email-link window («Termene», `confirmationHours`, §377), counted
+   * from the last time the form was sent with it, and no live link left (one minted under a longer
+   * window before the club shortened it still runs its course). Somebody else may have typed it;
+   * nothing was ever sent to it but the one confirmation message. The links themselves go thirty
+   * days after they stopped working, the rule of the action tokens above. A confirmed subscriber
+   * stays until they unsubscribe, which deletes them at once.
    */
   await step("newsletter", async (tx) => {
+    const { confirmationHours } = await currentDeadlines(tx);
     const unconfirmed = await tx
       .delete(newsletterSubscribers)
-      .where(and(isNull(newsletterSubscribers.confirmedAt), lt(newsletterSubscribers.updatedAt, daysBefore(now, RETENTION.unconfirmedSubscriberDays))))
+      .where(
+        and(
+          isNull(newsletterSubscribers.confirmedAt),
+          lt(newsletterSubscribers.updatedAt, new Date(now.getTime() - confirmationHours * 60 * 60_000)),
+          notExists(
+            tx
+              .select({ id: newsletterTokens.id })
+              .from(newsletterTokens)
+              .where(
+                and(
+                  eq(newsletterTokens.subscriberId, newsletterSubscribers.id),
+                  eq(newsletterTokens.purpose, "CONFIRM"),
+                  isNull(newsletterTokens.usedAt),
+                  isNull(newsletterTokens.invalidatedAt),
+                  sql`${newsletterTokens.expiresAt} > ${now.toISOString()}::timestamptz`,
+                ),
+              ),
+          ),
+        ),
+      )
       .returning({ id: newsletterSubscribers.id });
     const tokenCutoff = daysBefore(now, RETENTION.spentTokensDays);
     const links = await tx

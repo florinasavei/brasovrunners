@@ -154,9 +154,9 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
 
     it("keeps an unconfirmed address, and sends it the confirmation link and nothing else", async () => {
       await approveNotice({ describesNewsletter: true, version: 3 });
-      expect(await subscribeToNewsletter(db, form("Ana.Pop+club@gmail.com", ["DISCOUNTS", "NEW_EVENTS"]), NOW)).toBe("done");
+      expect(await subscribeToNewsletter(db, form("Ana.Pop+club@gmail.com", ["DISCOUNTS", "BIG_EVENTS"]), NOW)).toBe("done");
       const [subscriber] = await db.select().from(newsletterSubscribers);
-      expect(subscriber).toMatchObject({ canonicalEmail: "ana.pop@gmail.com", topics: ["NEW_EVENTS", "DISCOUNTS"], confirmedAt: null, privacyNoticeVersion: 3 });
+      expect(subscriber).toMatchObject({ canonicalEmail: "ana.pop@gmail.com", topics: ["BIG_EVENTS", "DISCOUNTS"], confirmedAt: null, privacyNoticeVersion: 3 });
       const rows = await db.select().from(emailOutbox);
       expect(rows.map((row) => row.messageType)).toEqual(["NEWSLETTER_CONFIRM"]);
       // Nothing about a participant, no registration, and no club copy (§320).
@@ -164,7 +164,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
 
       const message = await renderOutboxMessage(rows[0], db, NOW);
       expect(message.subject).toContain("Confirmă abonarea");
-      expect(message.text).toContain("„Evenimente noi în calendar” și „Coduri de reducere”");
+      expect(message.text).toContain("„Evenimente mari” și „Coduri de reducere”");
       // The secret is in the message alone: only its hash is stored.
       const secret = secretIn(message, "confirm");
       const tokens = await db.select().from(newsletterTokens);
@@ -248,7 +248,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(confirmed.confirmedAt).toEqual(NOW);
     });
 
-    it("changes the topics from the page and keeps the link; refuses none; unsubscribing deletes everything", async () => {
+    it("spends the manage link on every press: a topic change lands on its successor, the old link opens nothing; refuses none; unsubscribing deletes everything", async () => {
       await approveNotice({ describesNewsletter: true });
       const subscriber = await subscribed("ana@example.org", ["DISCOUNTS"]);
       const actor = await staff("MODERATOR");
@@ -257,24 +257,39 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       const message = await renderOutboxMessage(row, db, NOW);
       const secret = secretIn(message, "manage");
 
-      expect(await updateNewsletterTopics(db, secret, ["VOLUNTEERING", "CLUB_NEWS"], NOW)).toBe(true);
-      expect((await readNewsletterSubscription(db, secret, NOW))?.topics).toEqual(["VOLUNTEERING", "CLUB_NEWS"]);
+      // Nothing ticked is refused before the link is spent: it still opens the page.
       const none = await updateNewsletterTopics(db, secret, [], NOW).catch((error: unknown) => error);
       expect(isDomainError(none) && none.fields).toEqual(["topics"]);
+      expect(await readNewsletterSubscription(db, secret, NOW)).not.toBeNull();
+
+      const successor = await updateNewsletterTopics(db, secret, ["VOLUNTEERING", "RESULTS_PHOTOS"], NOW);
+      expect(successor).toEqual(expect.any(String));
+      expect(successor).not.toBe(secret);
+      // The pressed link is spent (AGENTS.md §12.8): it reads nothing and changes nothing again.
+      expect(await readNewsletterSubscription(db, secret, NOW)).toBeNull();
+      expect(await updateNewsletterTopics(db, secret, ["ALL"], NOW)).toBeNull();
+      expect(await unsubscribeNewsletter(db, secret, NOW)).toBe(false);
+      // The successor opens the page with the new topics, and lives no longer than the link it replaced.
+      expect((await readNewsletterSubscription(db, successor!, NOW))?.topics).toEqual(["VOLUNTEERING", "RESULTS_PHOTOS"]);
+      const manageLinks = await db.select().from(newsletterTokens).where(eq(newsletterTokens.purpose, "MANAGE"));
+      const spentLink = manageLinks.find((token) => token.usedAt !== null);
+      const liveLink = manageLinks.find((token) => token.usedAt === null);
+      expect(liveLink?.expiresAt.getTime()).toBe(spentLink?.expiresAt.getTime());
 
       // A newsletter still waiting for this subscriber goes with them.
       await sendNewsletter(
         db,
         actor,
-        { topic: "CLUB_NEWS", subject: { ro: "Știri", en: "News" }, body: { ro: "Text", en: "Text" }, sendId: "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f" },
+        { topic: "RESULTS_PHOTOS", subject: { ro: "Poze", en: "Photos" }, body: { ro: "Text", en: "Text" }, sendId: "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f" },
         NOW,
       );
-      expect(await unsubscribeNewsletter(db, secret, NOW)).toBe(true);
+      expect(await unsubscribeNewsletter(db, successor!, NOW)).toBe(true);
+      expect(await unsubscribeNewsletter(db, successor!, NOW)).toBe(false);
       expect(await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriber.id))).toEqual([]);
       expect(await db.select().from(newsletterTokens)).toEqual([]);
       const waiting = (await outboxOf("NEWSLETTER")).filter((candidate) => candidate.status === "PENDING");
       expect(waiting).toEqual([]);
-      expect(await readNewsletterSubscription(db, secret, NOW)).toBeNull();
+      expect(await readNewsletterSubscription(db, successor!, NOW)).toBeNull();
     });
   });
 
@@ -284,7 +299,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       await subscribed("ana@example.org", ["ALL"]);
       for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
         const actor = await staff(role);
-        const refusal = await sendNewsletter(db, actor, { topic: "CLUB_NEWS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW).catch(
+        const refusal = await sendNewsletter(db, actor, { topic: "RESULTS_PHOTOS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW).catch(
           (error: unknown) => error,
         );
         expect(isDomainError(refusal) && refusal.code, role).toBe("FORBIDDEN");
@@ -341,74 +356,122 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
   });
 
   describe("the new-event alert", () => {
-    it("announces a race once, to new events, big events and everything — never to a topic it is not", async () => {
+    it("announces a race once, to big events and to all the news — never to a topic it is not", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribed("new@example.org", ["NEW_EVENTS"]);
+      await subscribed("weekly@example.org", ["WEEKLY_RUNS"]);
       await subscribed("big@example.org", ["BIG_EVENTS"]);
       await subscribed("all@example.org", ["ALL"], "en");
       await subscribed("disc@example.org", ["DISCOUNTS"]);
       const race = await seedEvent();
 
-      expect(await queueNewEventAlerts(db, NOW)).toBe(3);
+      expect(await queueNewEventAlerts(db, NOW)).toBe(2);
       expect(await queueNewEventAlerts(db, new Date(NOW.getTime() + 60_000))).toBe(0);
+      expect(await queueNewEventAlerts(db, new Date(NOW.getTime() + 2 * DAY))).toBe(0);
       const rows = await outboxOf("NEW_EVENT_ALERT");
-      expect(rows.map((row) => row.recipientEmail).sort()).toEqual(["all@example.org", "big@example.org", "new@example.org"]);
+      expect(rows.map((row) => row.recipientEmail).sort()).toEqual(["all@example.org", "big@example.org"]);
       const [send] = await db.select().from(newsletterSends).where(eq(newsletterSends.eventId, race.id));
-      expect(send).toMatchObject({ kind: "EVENT_ALERT", topics: ["NEW_EVENTS", "BIG_EVENTS"], recipients: 3 });
+      expect(send).toMatchObject({ kind: "EVENT_ALERT", topics: ["BIG_EVENTS"], recipients: 2 });
 
       const english = await renderOutboxMessage(rows.find((row) => row.recipientEmail === "all@example.org")!, db, NOW);
       expect(english.subject).toContain("New on the calendar: The anniversary cross");
       expect(english.text).toContain("See the event");
     });
 
-    it("never announces the weekly group run, a later date of a series, a draft, or an event published long ago", async () => {
+    it("announces a weekly series once, to the weekly runs, by its first event — never its dates, a draft, a cancelled event or one published long ago", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribed("all@example.org", ["ALL"]);
+      await subscribed("weekly@example.org", ["WEEKLY_RUNS"]);
+      await subscribed("disc@example.org", ["DISCOUNTS"]);
       const weekly = await seedEvent({ type: "GROUP_RUN", repeatRule: { cadence: "WEEKLY", weekdays: [3], until: null } });
-      await seedEvent({ type: "GROUP_RUN", repeatOf: weekly.id });
-      const source = await seedEvent({ type: "HIKE" });
-      await seedEvent({ type: "HIKE", repeatOf: source.id });
-      await seedEvent({ editorialStatus: "DRAFT" });
-      await seedEvent({ publishedAt: new Date(NOW.getTime() - 10 * DAY) });
+      // The series' later dates, published by the series itself (§341): never announced one by one.
+      const dates = [];
+      for (let week = 1; week <= 3; week += 1) {
+        dates.push(await seedEvent({ type: "GROUP_RUN", repeatOf: weekly.id, startsAt: new Date(NOW.getTime() + (30 + 7 * week) * DAY) }));
+      }
+      await seedEvent({ type: "GROUP_RUN", editorialStatus: "DRAFT" });
+      await seedEvent({ type: "GROUP_RUN", eventStatus: "CANCELLED" });
+      await seedEvent({ type: "GROUP_RUN", publishedAt: new Date(NOW.getTime() - 10 * DAY) });
+
       expect(await queueNewEventAlerts(db, NOW)).toBe(1);
-      const [row] = await outboxOf("NEW_EVENT_ALERT");
-      expect(row.payloadJson).toMatchObject({ eventId: source.id });
+      // A week of runs later: nothing more — the series was news once.
+      for (let day = 1; day <= 7; day += 1) expect(await queueNewEventAlerts(db, new Date(NOW.getTime() + day * DAY))).toBe(0);
+      const rows = await outboxOf("NEW_EVENT_ALERT");
+      expect(rows.map((row) => [row.recipientEmail, (row.payloadJson as { eventId: string }).eventId])).toEqual([["weekly@example.org", weekly.id]]);
+      const sends = await db.select().from(newsletterSends);
+      expect(sends.map((send) => send.eventId)).toEqual([weekly.id]);
+      expect(sends[0].topics).toEqual(["WEEKLY_RUNS"]);
+      for (const date of dates) expect(sends.some((send) => send.eventId === date.id)).toBe(false);
     });
 
-    it("§NNN announces a group run held once, a special date of the weekly run, and a partnered or external event to special events", async () => {
+    it("never sends two announcements in one club day: the second event waits for tomorrow, oldest first; one nobody hears of is marked at once", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribed("special@example.org", ["SPECIAL_EVENTS"]);
-      await subscribed("new@example.org", ["NEW_EVENTS"]);
+      await subscribed("gear@example.org", ["GEAR_TESTING"]);
+      await confirmationsSent();
+      // A race nobody here reads about, then two gear tests, an hour apart.
+      const race = await seedEvent({ publishedAt: new Date(NOW.getTime() - 3 * 60 * 60_000) });
+      const first = await seedEvent({ type: "GEAR_TEST", publishedAt: new Date(NOW.getTime() - 2 * 60 * 60_000) });
+      const second = await seedEvent({ type: "GEAR_TEST", publishedAt: new Date(NOW.getTime() - 60 * 60_000) });
+
+      expect(await queueNewEventAlerts(db, NOW)).toBe(1);
+      // The race, with nobody to tell, is marked seen without spending the day's one.
+      expect((await db.select().from(newsletterSends)).map((send) => send.eventId).sort()).toEqual([race.id, first.id].sort());
+      expect(await queueNewEventAlerts(db, new Date(NOW.getTime() + 60 * 60_000))).toBe(0);
+      // 10:00 UTC is 13:00 in Brașov; 20:59 UTC is still the same club day, 21:01 UTC the next one.
+      expect(await queueNewEventAlerts(db, new Date("2026-10-01T20:59:00.000Z"))).toBe(0);
+      expect(await queueNewEventAlerts(db, new Date("2026-10-01T21:01:00.000Z"))).toBe(1);
+      const order = (await outboxOf("NEW_EVENT_ALERT")).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      expect(order.map((row) => (row.payloadJson as { eventId: string }).eventId)).toEqual([first.id, second.id]);
+    });
+
+    it("§NNN files each kind of event under the brief's topic: a race, a group run, a special date of the weekly run, a partnered or external event, a gear test, and the rest under all the news", async () => {
+      await approveNotice({ describesNewsletter: true });
+      // Nobody subscribed: every event is marked seen in one run, so each send's topics can be read at once.
+      const race = await seedEvent();
       const weekly = await seedEvent({ type: "GROUP_RUN", repeatRule: { cadence: "WEEKLY", weekdays: [3], until: null } });
       const special = await seedEvent({ type: "GROUP_RUN", repeatOf: weekly.id, isSpecial: true });
       const once = await seedEvent({ type: "GROUP_RUN" });
       const partnered = await seedEvent({ type: "HIKE", coHosts: [{ name: "Magazinul de alergare", links: [] }] });
       const external = await seedEvent({ type: "EXTERNAL" });
+      const gear = await seedEvent({ type: "GEAR_TEST" });
+      const coffee = await seedEvent({ type: "COFFEE" });
 
-      await queueNewEventAlerts(db, NOW);
+      expect(await queueNewEventAlerts(db, NOW)).toBe(0);
       const sends = await db.select().from(newsletterSends);
       const topicsOf = (eventId: string) => sends.find((send) => send.eventId === eventId)?.topics;
-      expect(topicsOf(weekly.id)).toBeUndefined();
-      expect(topicsOf(special.id)).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
-      expect(topicsOf(once.id)).toEqual(["NEW_EVENTS"]);
-      expect(topicsOf(partnered.id)).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
-      expect(topicsOf(external.id)).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+      expect(topicsOf(race.id)).toEqual(["BIG_EVENTS"]);
+      expect(topicsOf(weekly.id)).toEqual(["WEEKLY_RUNS"]);
+      expect(topicsOf(special.id)).toEqual(["WEEKLY_RUNS", "SPECIAL_EVENTS"]);
+      expect(topicsOf(once.id)).toEqual(["WEEKLY_RUNS"]);
+      expect(topicsOf(partnered.id)).toEqual(["SPECIAL_EVENTS"]);
+      expect(topicsOf(external.id)).toEqual(["SPECIAL_EVENTS"]);
+      expect(topicsOf(gear.id)).toEqual(["GEAR_TESTING"]);
+      expect(topicsOf(coffee.id)).toEqual(["ALL"]);
+    });
+
+    it("§NNN sends an external event to special events and never to a topic it is not", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("special@example.org", ["SPECIAL_EVENTS"]);
+      await subscribed("big@example.org", ["BIG_EVENTS"]);
+      const external = await seedEvent({ type: "EXTERNAL" });
+      expect(await queueNewEventAlerts(db, NOW)).toBe(1);
       const rows = await outboxOf("NEW_EVENT_ALERT");
-      const toSpecial = rows.filter((row) => row.recipientEmail === "special@example.org").map((row) => (row.payloadJson as { eventId: string }).eventId);
-      expect(toSpecial.sort()).toEqual([special.id, partnered.id, external.id].sort());
+      expect(rows.map((row) => [row.recipientEmail, (row.payloadJson as { eventId: string }).eventId])).toEqual([["special@example.org", external.id]]);
     });
 
     it("§NNN sends nothing for an event cancelled or taken down while its alert waited for the allowance, and raises no alarm", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("all@example.org", ["ALL"]);
-      await subscribed("new@example.org", ["NEW_EVENTS"], "en");
+      await subscribed("both@example.org", ["ALL"], "en");
       await confirmationsSent();
-      const cancelled = await seedEvent();
-      const unpublished = await seedEvent({ type: "HIKE" });
-      const kept = await seedEvent({ type: "GEAR_TEST" });
-      expect(await queueNewEventAlerts(db, NOW)).toBe(6);
+      // Published an hour apart: one announcement a day, oldest first, so three days queue the three.
+      const cancelled = await seedEvent({ publishedAt: new Date(NOW.getTime() - 3 * 60 * 60_000) });
+      const unpublished = await seedEvent({ type: "HIKE", publishedAt: new Date(NOW.getTime() - 2 * 60 * 60_000) });
+      const kept = await seedEvent({ type: "GEAR_TEST", publishedAt: new Date(NOW.getTime() - 60 * 60_000) });
+      let queuedAll = 0;
+      for (let day = 0; day < 3; day += 1) queuedAll += await queueNewEventAlerts(db, new Date(NOW.getTime() + day * DAY));
+      expect(queuedAll).toBe(6);
+      const lastQueued = new Date(NOW.getTime() + 2 * DAY);
       // Held for the reset, as the reserve does (`holdBulkUntilReset`): the alerts wait a day.
-      const reset = nextAllowanceResetAt(NOW);
+      const reset = nextAllowanceResetAt(lastQueued);
       await db.update(emailOutbox).set({ nextAttemptAt: reset }).where(eq(emailOutbox.messageType, "NEW_EVENT_ALERT"));
 
       // Meanwhile one event is cancelled and one taken down.
@@ -422,6 +485,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       // Only the event still on the calendar is announced.
       expect(sender.calls).toHaveLength(2);
       expect(sender.calls.every((call) => call.subject.includes("Crosul aniversar") || call.subject.includes("The anniversary cross"))).toBe(true);
+      expect(sender.calls.map((call) => call.to).sort()).toEqual(["all@example.org", "both@example.org"]);
       const left = await outboxOf("NEW_EVENT_ALERT");
       expect(left.map((row) => (row.payloadJson as { eventId: string }).eventId)).toEqual([kept.id, kept.id]);
       expect(left.every((row) => row.status === "SENT")).toBe(true);
@@ -471,7 +535,7 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       // The confirmations went out as ordinary mail; clear them so the count below is the newsletter's.
       await db.update(emailOutbox).set({ status: "SENT", sentAt: new Date(NOW.getTime() - 60_000) }).where(eq(emailOutbox.messageType, "NEWSLETTER_CONFIRM"));
       const actor = await staff("MODERATOR");
-      await sendNewsletter(db, actor, { topic: "CLUB_NEWS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW);
+      await sendNewsletter(db, actor, { topic: "RESULTS_PHOTOS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW);
       // And one transactional message queued after the newsletter.
       await db.insert(emailOutbox).values({
         participantId: null,
@@ -544,11 +608,11 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
     it("lists a held newsletter and a held alert in the forecast, by send, with the subscribers and the release; counts them in the volume", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("ana@example.org", ["ALL"]);
-      await subscribed("ion@example.org", ["CLUB_NEWS"]);
+      await subscribed("ion@example.org", ["RESULTS_PHOTOS"]);
       await confirmationsSent();
       const admin = await staff("ADMIN");
       await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
-      await sendNewsletter(db, admin, { topic: "CLUB_NEWS", subject: { ro: "Știri", en: "News" }, body: { ro: "a", en: "b" }, sendId: SEND_ID }, NOW);
+      await sendNewsletter(db, admin, { topic: "RESULTS_PHOTOS", subject: { ro: "Știri", en: "News" }, body: { ro: "a", en: "b" }, sendId: SEND_ID }, NOW);
       const race = await seedEvent();
       await queueNewEventAlerts(db, NOW);
       const reset = nextAllowanceResetAt(NOW);
@@ -591,11 +655,21 @@ describe("§NNN the newsletter: consent, links, sends and the allowance", () => 
       expect(JSON.stringify(audit)).not.toContain("ana@");
     });
 
-    it("deletes an address never confirmed after eight days, and keeps a confirmed one", async () => {
+    it("deletes an address never confirmed once its link expires — the club's email-link window (§377) — and keeps a confirmed one", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("kept@example.org", ["ALL"]);
       await subscribeToNewsletter(db, form("left@example.org", ["ALL"]), NOW);
-      const result = await pruneExpiredRows(db, new Date(NOW.getTime() + 9 * DAY));
+      // The confirmation leaves, minting its link for the club's window.
+      const [row] = (await outboxOf("NEWSLETTER_CONFIRM")).filter((candidate) => candidate.recipientEmail === "left@example.org");
+      await renderOutboxMessage(row, db, NOW);
+      const windowMs = DEFAULT_DEADLINES.confirmationHours * 60 * 60_000;
+
+      // Inside the window: kept, its link still works.
+      expect((await pruneExpiredRows(db, new Date(NOW.getTime() + windowMs - 60_000))).failures).toEqual([]);
+      expect((await db.select().from(newsletterSubscribers)).map((subscriber) => subscriber.deliveryEmail).sort()).toEqual(["kept@example.org", "left@example.org"]);
+
+      // The window over: gone, with its link.
+      const result = await pruneExpiredRows(db, new Date(NOW.getTime() + windowMs + 60_000));
       expect(result.failures).toEqual([]);
       const left = await db.select({ email: newsletterSubscribers.deliveryEmail }).from(newsletterSubscribers);
       expect(left).toEqual([{ email: "kept@example.org" }]);

@@ -4531,13 +4531,13 @@
       "schema": "public",
       "values": [
         "ALL",
-        "NEW_EVENTS",
         "BIG_EVENTS",
-        "SPECIAL_EVENTS",
-        "GEAR_TESTING",
         "DISCOUNTS",
+        "GEAR_TESTING",
+        "SPECIAL_EVENTS",
+        "WEEKLY_RUNS",
         "VOLUNTEERING",
-        "CLUB_NEWS"
+        "RESULTS_PHOTOS"
       ]
     },
     "public.registration_cancellation_source": {

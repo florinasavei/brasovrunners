@@ -1,6 +1,6 @@
 CREATE TYPE "public"."newsletter_send_kind" AS ENUM('MESSAGE', 'EVENT_ALERT');--> statement-breakpoint
 CREATE TYPE "public"."newsletter_token_purpose" AS ENUM('CONFIRM', 'MANAGE');--> statement-breakpoint
-CREATE TYPE "public"."newsletter_topic" AS ENUM('ALL', 'NEW_EVENTS', 'BIG_EVENTS', 'SPECIAL_EVENTS', 'GEAR_TESTING', 'DISCOUNTS', 'VOLUNTEERING', 'CLUB_NEWS');--> statement-breakpoint
+CREATE TYPE "public"."newsletter_topic" AS ENUM('ALL', 'BIG_EVENTS', 'DISCOUNTS', 'GEAR_TESTING', 'SPECIAL_EVENTS', 'WEEKLY_RUNS', 'VOLUNTEERING', 'RESULTS_PHOTOS');--> statement-breakpoint
 ALTER TYPE "public"."email_message_type" ADD VALUE 'NEWSLETTER_CONFIRM';--> statement-breakpoint
 ALTER TYPE "public"."email_message_type" ADD VALUE 'NEWSLETTER';--> statement-breakpoint
 ALTER TYPE "public"."email_message_type" ADD VALUE 'NEW_EVENT_ALERT';--> statement-breakpoint

@@ -1,5 +1,6 @@
-import { createTranslator } from "next-intl";
-import { renderToStaticMarkup } from "react-dom/server";
+import { createTranslator, NextIntlClientProvider } from "next-intl";
+import { type ComponentProps, createElement } from "react";
+import { prerender } from "react-dom/static";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
@@ -13,7 +14,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * (`newsletter.test.ts`); this proves the contact page does not even offer it — the real
  * `cachedNewsletterOffered` over real PostgreSQL (outside a Next server the public cache reads
  * straight through, §333), and the real page rendered with it: no `newsletter-section` under a
- * notice without `{{newsletterTopics}}`, the section and its button under one that names it.
+ * notice without `{{newsletterTopics}}`, the section and its button under one that names it. The
+ * page is rendered inside the provider the locale layout gives it, since its links read the locale,
+ * and with the streaming renderer, which waits for the page's own async sections (the pop-up is one).
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown }));
 
@@ -67,8 +70,17 @@ describe("§NNN the contact page offers the newsletter only under a notice that 
     });
   }
 
-  const render = async () =>
-    renderToStaticMarkup(await ContactPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) }));
+  const render = async () => {
+    const page = await ContactPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({}) });
+    const { prelude } = await prerender(
+      createElement(
+        NextIntlClientProvider,
+        { locale: "ro", messages: ro, timeZone: "Europe/Bucharest" } as unknown as ComponentProps<typeof NextIntlClientProvider>,
+        page,
+      ),
+    );
+    return new Response(prelude).text();
+  };
 
   it("renders no section and no button while the notice in force lacks {{newsletterTopics}}", async () => {
     await approveNotice(false);
@@ -90,5 +102,7 @@ describe("§NNN the contact page offers the newsletter only under a notice that 
     expect(html).toContain('data-testid="newsletter-section"');
     expect(html).toContain('data-testid="newsletter-open"');
     expect(html).toContain('name="consent"');
+    // The section's own anchor, the address the club shares for "subscribe here".
+    expect(html).toContain('id="abonare"');
   });
 });

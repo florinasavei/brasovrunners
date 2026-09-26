@@ -2,10 +2,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { newsletterTopic } from "@/db/schema/newsletter";
-import { describesNewsletter, isMergeField, mergeText } from "@/modules/legal-documents/domain/merge-fields";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { deadlineMergeValues, describesNewsletter, isMergeField, mergeText } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
-import { EVENT_ALERT_WINDOW_DAYS, eventAlertTopics, eventAlertWanted } from "@/modules/newsletter/domain/alerts";
+import { alertDayOf, EVENT_ALERT_WINDOW_DAYS, eventAlertTopics, eventAlertWanted } from "@/modules/newsletter/domain/alerts";
 import { checkNewsletterWords, NEWSLETTER_BODY_MAX, readNewsletterWords } from "@/modules/newsletter/domain/message";
 import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
 import { newsletterMergeValues, topicsPhrase } from "@/modules/newsletter/topic-words";
@@ -23,9 +24,18 @@ const DAY = 24 * 60 * 60_000;
 
 /** §NNN — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
 describe("§NNN the newsletter's topics", () => {
-  it("offers the owner's list and more, 'everything' first, every name and hint in both languages", () => {
-    expect(NEWSLETTER_TOPICS[0]).toBe("ALL");
-    for (const topic of ["BIG_EVENTS", "DISCOUNTS", "GEAR_TESTING", "SPECIAL_EVENTS", "NEW_EVENTS"] as const) expect(NEWSLETTER_TOPICS).toContain(topic);
+  it("offers the brief's eight, in its order, 'all the news' first, every name and hint in both languages", () => {
+    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "DISCOUNTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
+    expect(ro.Newsletter.topics).toMatchObject({
+      ALL: "Toate noutățile",
+      BIG_EVENTS: "Evenimente mari",
+      DISCOUNTS: "Coduri de reducere",
+      GEAR_TESTING: "Testări de încălțăminte",
+      SPECIAL_EVENTS: "Evenimente speciale",
+      WEEKLY_RUNS: "Alergările săptămânale",
+      VOLUNTEERING: "Voluntariat",
+      RESULTS_PHOTOS: "Rezultate și poze",
+    });
     for (const catalogue of [ro, en]) {
       for (const topic of newsletterTopic.enumValues) {
         expect(catalogue.Newsletter.topics[topic], topic).toBeTruthy();
@@ -39,7 +49,7 @@ describe("§NNN the newsletter's topics", () => {
   });
 
   it("reads the ticks in the catalogue's order, once each, 'everything' alone, nothing that is not a topic", () => {
-    expect(normalizeTopics(["DISCOUNTS", "NEW_EVENTS", "DISCOUNTS", "x", 3])).toEqual(["NEW_EVENTS", "DISCOUNTS"]);
+    expect(normalizeTopics(["WEEKLY_RUNS", "DISCOUNTS", "WEEKLY_RUNS", "x", 3])).toEqual(["DISCOUNTS", "WEEKLY_RUNS"]);
     expect(normalizeTopics(["VOLUNTEERING", "ALL"])).toEqual(["ALL"]);
     expect(normalizeTopics([])).toEqual([]);
   });
@@ -47,14 +57,17 @@ describe("§NNN the newsletter's topics", () => {
   it("delivers a send to a subscriber of any of its topics, and to everything's", () => {
     expect(receives(["ALL"], ["DISCOUNTS"])).toBe(true);
     expect(receives(["DISCOUNTS"], ["DISCOUNTS"])).toBe(true);
-    expect(receives(["VOLUNTEERING"], ["NEW_EVENTS", "BIG_EVENTS"])).toBe(false);
-    expect(receives(["BIG_EVENTS"], ["NEW_EVENTS", "BIG_EVENTS"])).toBe(true);
+    expect(receives(["VOLUNTEERING"], ["SPECIAL_EVENTS", "BIG_EVENTS"])).toBe(false);
+    expect(receives(["BIG_EVENTS"], ["SPECIAL_EVENTS", "BIG_EVENTS"])).toBe(true);
+    // An event no topic describes goes to "all the news" alone.
+    expect(receives(["ALL"], ["ALL"])).toBe(true);
+    expect(receives(["DISCOUNTS", "WEEKLY_RUNS"], ["ALL"])).toBe(false);
   });
 
   it("names the topics as one quoted phrase in each language", () => {
-    expect(topicsPhrase("ro", ["NEW_EVENTS", "DISCOUNTS"])).toBe("„Evenimente noi în calendar” și „Coduri de reducere”");
-    expect(topicsPhrase("en", ["NEW_EVENTS"])).toBe("“New events on the calendar”");
-    expect(newsletterMergeValues("en").newsletterTopics).toContain("“Everything the club sends”");
+    expect(topicsPhrase("ro", ["BIG_EVENTS", "DISCOUNTS"])).toBe("„Evenimente mari” și „Coduri de reducere”");
+    expect(topicsPhrase("en", ["WEEKLY_RUNS"])).toBe("“The weekly runs”");
+    expect(newsletterMergeValues("en").newsletterTopics).toContain("“All the news”");
   });
 });
 
@@ -67,7 +80,6 @@ describe("§NNN the new-event alert", () => {
     startsAt: new Date(NOW.getTime() + 30 * DAY),
     publishedAt: new Date(NOW.getTime() - 60 * 60_000),
     repeatOf: null,
-    repeats: false,
     partnered: false,
   };
 
@@ -80,24 +92,32 @@ describe("§NNN the new-event alert", () => {
     expect(eventAlertWanted({ ...race, repeatOf: "source" }, NOW)).toBe(false);
   });
 
-  it("never announces a repeated group run, source or date; announces one held once, and any special edition", () => {
-    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeats: true }, NOW)).toBe(false);
-    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeatOf: "source" }, NOW)).toBe(false);
+  it("announces a series once, by its first event, never date by date; any special edition is news of its own", () => {
+    // The weekly run's first event (it carries the rule, `repeatOf` null) is announced; its dates never.
     expect(eventAlertWanted({ ...race, type: "GROUP_RUN" }, NOW)).toBe(true);
-    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeats: true, isSpecial: true }, NOW)).toBe(true);
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeatOf: "source" }, NOW)).toBe(false);
+    expect(eventAlertWanted({ ...race, type: "GROUP_RUN", repeatOf: "source", isSpecial: true }, NOW)).toBe(true);
     expect(eventAlertWanted({ ...race, type: "HIKE", repeatOf: "source", isSpecial: true }, NOW)).toBe(true);
     // A special edition still waits for publication and a start ahead.
     expect(eventAlertWanted({ ...race, type: "GROUP_RUN", isSpecial: true, eventStatus: "CANCELLED" }, NOW)).toBe(false);
   });
 
-  it("goes to new events always, and to the event's own topics", () => {
-    expect(eventAlertTopics({ type: "HIKE", isSpecial: false, partnered: false })).toEqual(["NEW_EVENTS"]);
-    expect(eventAlertTopics({ type: "RACE", isSpecial: true, partnered: false })).toEqual(["NEW_EVENTS", "BIG_EVENTS", "SPECIAL_EVENTS"]);
-    expect(eventAlertTopics({ type: "GEAR_TEST", isSpecial: false, partnered: false })).toEqual(["NEW_EVENTS", "GEAR_TESTING"]);
-    // "Events held with other organizers", as the topic's hint says: another organizer's, or with partners.
-    expect(eventAlertTopics({ type: "EXTERNAL", isSpecial: false, partnered: false })).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
-    expect(eventAlertTopics({ type: "HIKE", isSpecial: false, partnered: true })).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
-    expect(eventAlertTopics({ type: "GROUP_RUN", isSpecial: true, partnered: false })).toEqual(["NEW_EVENTS", "SPECIAL_EVENTS"]);
+  it("goes to the brief's topic per kind of event, and to 'all the news' alone when none fits", () => {
+    expect(eventAlertTopics({ type: "RACE", isSpecial: false, partnered: false })).toEqual(["BIG_EVENTS"]);
+    expect(eventAlertTopics({ type: "GROUP_RUN", isSpecial: false, partnered: false })).toEqual(["WEEKLY_RUNS"]);
+    expect(eventAlertTopics({ type: "EXTERNAL", isSpecial: false, partnered: false })).toEqual(["SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "GEAR_TEST", isSpecial: false, partnered: false })).toEqual(["GEAR_TESTING"]);
+    // "Events held with other organizers", as the topic's hint says, and a special edition.
+    expect(eventAlertTopics({ type: "HIKE", isSpecial: false, partnered: true })).toEqual(["SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "RACE", isSpecial: true, partnered: false })).toEqual(["BIG_EVENTS", "SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "GROUP_RUN", isSpecial: true, partnered: false })).toEqual(["WEEKLY_RUNS", "SPECIAL_EVENTS"]);
+    expect(eventAlertTopics({ type: "HIKE", isSpecial: false, partnered: false })).toEqual(["ALL"]);
+  });
+
+  it("counts the one-a-day rule in the club's own calendar day", () => {
+    // 21:30 UTC on 30 September is already 1 October in Bucharest (UTC+3).
+    expect(alertDayOf(new Date("2026-09-30T21:30:00.000Z"), "Europe/Bucharest")).toBe("2026-10-01");
+    expect(alertDayOf(new Date("2026-09-30T20:30:00.000Z"), "Europe/Bucharest")).toBe("2026-09-30");
   });
 });
 
@@ -161,12 +181,18 @@ describe("§NNN the privacy notice is the switch", () => {
       expect(describesNewsletter(notice), locale).toBe(true);
       const section = notice.sections.find((candidate) => candidate.heading?.startsWith("5."));
       const paragraph = section?.paragraphs.find((text) => text.includes("{{newsletterTopics}}")) ?? "";
-      const merged = mergeText(paragraph, newsletterMergeValues(locale));
+      const merged = mergeText(paragraph, { ...newsletterMergeValues(locale), ...deadlineMergeValues(locale, DEFAULT_DEADLINES) });
       expect(merged).not.toContain("{{");
       expect(merged).not.toContain("…………");
       expect(merged).toContain(locale === "ro" ? "6(1)(a)" : "6(1)(a)");
-      // The retention in §7, never a setting.
-      expect(notice.sections.find((candidate) => candidate.heading?.startsWith("7."))?.paragraphs.join(" ")).toContain(locale === "ro" ? "newsletter" : "newsletter");
+      // The retention in §7; the unconfirmed address's life is the club's email-link window (§377), never a number of the text's own (§357).
+      const retention = notice.sections.find((candidate) => candidate.heading?.startsWith("7."))?.paragraphs.join(" ") ?? "";
+      const at = retention.indexOf("newsletter");
+      expect(at).toBeGreaterThan(-1);
+      for (const text of [paragraph, retention.slice(at, at + 160)]) {
+        expect(text).toContain("{{confirmationHours}}");
+        expect(text).not.toMatch(/opt zile|eight days/);
+      }
     }
     expect(describesNewsletter({ sections: [{ paragraphs: ["nothing"] }] })).toBe(false);
     expect(DECLARATION_TOKENS.some((entry) => entry.token === "{{newsletterTopics}}")).toBe(true);
@@ -180,8 +206,8 @@ describe("§NNN the three messages", () => {
   it("confirms with the topics and the link's life, and never offers an unsubscribe link before there is a subscription", () => {
     const message = renderBilingual("NEWSLETTER_CONFIRM", "ro", emailSampleFor("NEWSLETTER_CONFIRM", "ro"), action);
     expect(message.subject).toContain("Confirmă abonarea");
-    expect(message.text).toContain("Primești noutățile clubului despre: „Evenimente noi în calendar” și „Coduri de reducere”.");
-    expect(message.text).toContain("You receive the club's news about: “New events on the calendar” and “Discount codes”.");
+    expect(message.text).toContain("Primești noutățile clubului despre: „Evenimente mari” și „Coduri de reducere”.");
+    expect(message.text).toContain("You receive the club's news about: “Big events” and “Discount codes”.");
     expect(message.text).toContain("Linkul este valabil");
     expect(message.text).not.toContain("dezabonează-te");
     const already = renderBilingual("NEWSLETTER_CONFIRM", "ro", { ...emailSampleFor("NEWSLETTER_CONFIRM", "ro"), newsletterAlready: true }, action);
@@ -221,11 +247,13 @@ describe("§NNN the contact page's pop-up", () => {
     expect(parseNewsletterFields("email,topics,name")).toEqual(["email", "topics"]);
   });
 
-  it("has one island, the button, and draws the form, the ticks and the notice's link on the server", () => {
+  it("has one island on the contact page, the button, and draws the form, the ticks and the notice's link on the server", () => {
     const dir = path.join(process.cwd(), "src/modules/newsletter/ui");
     const islands = readdirSync(dir).filter((file) => readFileSync(path.join(dir, file), "utf8").startsWith('"use client"'));
-    expect(islands).toEqual(["NewsletterDialogButton.tsx"]);
+    // The preview is the backoffice composer's island, never the contact page's (§353).
+    expect(islands).toEqual(["NewsletterDialogButton.tsx", "NewsletterPreview.tsx"]);
     const signup = readFileSync(path.join(dir, "NewsletterSignup.tsx"), "utf8");
+    expect(signup).not.toContain("NewsletterPreview");
     expect(signup).toContain('component="dialog"');
     expect(signup).toContain('<form method="dialog">');
     expect(signup).toContain('name="honeypot"');

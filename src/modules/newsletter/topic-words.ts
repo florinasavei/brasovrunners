@@ -21,7 +21,7 @@ export function topicWords(locale: string): Record<NewsletterTopic, string> {
 }
 
 /**
- * Topics as one phrase, quoted, in that language — „Evenimente noi în calendar”, „Coduri de reducere”
+ * Topics as one phrase, quoted, in that language — „Evenimente mari”, „Coduri de reducere”
  * și „Voluntariat” — for a message that says what somebody subscribed to, and (with every topic) for
  * the privacy notice.
  */

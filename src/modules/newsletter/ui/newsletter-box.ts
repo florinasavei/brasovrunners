@@ -3,7 +3,8 @@
  * in `?newsletter=` — kept out of the action's module because a "use server" file may export only
  * async functions, and out of the component so the action and the page read one list.
  */
-export const NEWSLETTER_SECTION_ID = "newsletter";
+/** The section's anchor, `/ro/contact#abonare` — the address the club can share for "subscribe here". */
+export const NEWSLETTER_SECTION_ID = "abonare";
 export const NEWSLETTER_DIALOG_ID = "newsletter-dialog";
 export const NEWSLETTER_TRIGGER_ID = "newsletter-open";
 export const NEWSLETTER_ERROR_SUMMARY_ID = "newsletter-errors";

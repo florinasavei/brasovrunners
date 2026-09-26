@@ -149,7 +149,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
 }
 
 /** The sample subscriber's topics (§NNN): two of them, so the preview reads a list. */
-const EMAIL_SAMPLE_NEWSLETTER_TOPICS = ["NEW_EVENTS", "DISCOUNTS"] as const;
+const EMAIL_SAMPLE_NEWSLETTER_TOPICS = ["BIG_EVENTS", "DISCOUNTS"] as const;
 
 /**
  * The sample event's facts block data in one language (§392): `EMAIL_SAMPLE_EVENT` with the sample's

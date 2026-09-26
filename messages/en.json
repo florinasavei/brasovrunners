@@ -3470,7 +3470,7 @@
       "erased": "The declaration was erased. The log keeps your name and the reason."
     },
     "newsletter": {
-      "title": "Newsletter",
+      "title": "Subscribers",
       "intro": "Who subscribed on the contact page, to which topics, and a message to them. No address appears here, only the numbers.",
       "aside": {
         "one": "{count} subscriber",
@@ -3483,7 +3483,7 @@
       "allowanceNone": "The email plan has no ceiling: the whole newsletter leaves now.",
       "allowanceDay": "At most {count} newsletter emails can leave today: half the daily allowance stays for registrations. What does not fit leaves over the next days, by itself.",
       "allowanceMonth": "At most {count} newsletter emails can leave this month: a fifth of the monthly allowance stays for registrations. What does not fit leaves after the reset, by itself.",
-      "compose": "Write a newsletter",
+      "compose": "Write to the subscribers",
       "topic": "What it is about",
       "topicHelp": "The subscribers of this topic receive it, and those who receive everything the club sends.",
       "recipients": {
@@ -3525,7 +3525,15 @@
       },
       "duplicate": "This newsletter had already been sent: nothing more was queued.",
       "withdrawn": "The address was removed from the newsletter.",
-      "notFound": "The address was not on the newsletter."
+      "notFound": "The address was not on the newsletter.",
+      "lastSend": "Last send: {when}.",
+      "lastSendNone": "Nothing sent to the subscribers yet.",
+      "previewTitle": "How it looks",
+      "previewHelp": "The message exactly as a subscriber receives it, from what the boxes hold now — with their unsubscribe link replaced by an example.",
+      "previewRo": "Preview in Romanian",
+      "previewEn": "Preview in English",
+      "previewLoading": "Preparing the preview…",
+      "previewUnavailable": "The preview is not available right now. The message can still be sent."
     }
   },
   "NotFound": {
@@ -4355,27 +4363,27 @@
   },
   "Newsletter": {
     "topics": {
-      "ALL": "Everything the club sends",
-      "NEW_EVENTS": "New events on the calendar",
-      "BIG_EVENTS": "The club's races",
-      "SPECIAL_EVENTS": "Special events and partnerships",
-      "GEAR_TESTING": "Shoe and gear testing",
+      "ALL": "All the news",
+      "BIG_EVENTS": "Big events",
       "DISCOUNTS": "Discount codes",
+      "GEAR_TESTING": "Shoe testing",
+      "SPECIAL_EVENTS": "Special events",
+      "WEEKLY_RUNS": "The weekly runs",
       "VOLUNTEERING": "Volunteering",
-      "CLUB_NEWS": "Club news"
+      "RESULTS_PHOTOS": "Results and photos"
     },
     "topicHints": {
       "ALL": "Every topic below, and any we add later.",
-      "NEW_EVENTS": "An announcement when a new event appears on the calendar (not the weekly run).",
-      "BIG_EVENTS": "The club's big days, such as the anniversary cross: the date, registration, what changes.",
-      "SPECIAL_EVENTS": "Special editions, themed runs and events held with other organizers.",
-      "GEAR_TESTING": "When a shop or a maker brings shoes and gear to try.",
+      "BIG_EVENTS": "The club's big days, such as the anniversary cross: an announcement when one appears on the calendar, then registration and what changes.",
       "DISCOUNTS": "Discounts from the club's partners, for subscribers only.",
+      "GEAR_TESTING": "When a shop or a maker brings shoes and gear to try.",
+      "SPECIAL_EVENTS": "Special editions, themed runs, events held with other organizers and other organizers' events.",
+      "WEEKLY_RUNS": "An announcement when a new series of weekly runs starts — once per series, not for every run.",
       "VOLUNTEERING": "When we need help at our races: the kit desk, the course, photographs.",
-      "CLUB_NEWS": "New galleries, results, stories from the club."
+      "RESULTS_PHOTOS": "Results and photo albums after the events."
     },
     "heading": "The club's news by email",
-    "intro": "Choose what you want to hear from us — new events, the club's races, discounts, shoe testing — and we write to you about that alone.",
+    "intro": "Choose what you want to hear from us — the big events, discounts, shoe testing, the weekly runs — and we write to you about that alone.",
     "open": "Subscribe to the news",
     "dialogTitle": "Subscribe to the club's news",
     "dialogIntro": "Tick what interests you. We email you a confirmation link; until you press it, you receive nothing else.",

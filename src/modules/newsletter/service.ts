@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
@@ -6,6 +6,7 @@ import { type NewsletterTopic, newsletterSends, newsletterSubscribers } from "@/
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
@@ -19,11 +20,11 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
+import { alertDayOf, eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
 import { checkNewsletterWords, type NewsletterIssue, readNewsletterWords } from "./domain/message";
 import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, SENDABLE_TOPICS } from "./domain/topics";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
-import { consumeConfirmToken, readNewsletterToken } from "./tokens";
+import { consumeNewsletterToken, issueNewsletterToken, readNewsletterToken } from "./tokens";
 
 /**
  * The club's newsletter (§NNN; the owner, 2026-09-26: "the registration needs to be on the contact
@@ -191,8 +192,9 @@ export async function readNewsletterConfirmation<T extends Record<string, unknow
 /** The confirmation's POST: the link spent, the subscription on. `false` for a link that was not live. */
 export async function confirmNewsletter<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<boolean> {
   return db.transaction(async (tx) => {
-    const subscriberId = await consumeConfirmToken(tx, { secret, now });
-    if (!subscriberId) return false;
+    const spent = await consumeNewsletterToken(tx, { secret, purpose: "CONFIRM", now });
+    if (!spent) return false;
+    const subscriberId = spent.subscriberId;
     await tx
       .update(newsletterSubscribers)
       .set({ confirmedAt: now, updatedAt: now })
@@ -216,48 +218,64 @@ export async function readNewsletterSubscription<T extends Record<string, unknow
 }
 
 /**
- * New topics from the subscriber's own page. The link is read, not spent (a reversible choice, like
- * the public list's switch, §143). No topic at all is refused: that is "unsubscribe", its own button.
+ * New topics from the subscriber's own page. The link is spent (AGENTS.md §12.8: single use, and
+ * a POST is what spends it) and its successor minted in the same transaction, with the spent
+ * one's expiry — never a longer life — so the page moves to the new link and the person can
+ * choose again on the same visit, while the link they pressed works no more. Returns the
+ * successor's secret, or null for a link that was not live. No topic at all is refused before
+ * anything is spent: that is "unsubscribe", its own button.
  */
 export async function updateNewsletterTopics<T extends Record<string, unknown>>(
   db: Database<T>,
   secret: string,
   rawTopics: readonly unknown[],
   now: Date,
-): Promise<boolean> {
+): Promise<string | null> {
   const topics = normalizeTopics(rawTopics);
   if (topics.length === 0) throw new DomainError("VALIDATION_ERROR", "choose at least one topic, or unsubscribe", ["topics"]);
-  const subscriber = await readNewsletterToken(db, { secret, purpose: "MANAGE", now });
-  if (!subscriber || subscriber.confirmedAt === null) return false;
-  await db.update(newsletterSubscribers).set({ topics, updatedAt: now }).where(eq(newsletterSubscribers.id, subscriber.id));
-  return true;
+  return db.transaction(async (tx) => {
+    const spent = await consumeNewsletterToken(tx, { secret, purpose: "MANAGE", now });
+    if (!spent) return null;
+    const [updated] = await tx
+      .update(newsletterSubscribers)
+      .set({ topics, updatedAt: now })
+      .where(and(eq(newsletterSubscribers.id, spent.subscriberId), isNotNull(newsletterSubscribers.confirmedAt)))
+      .returning({ id: newsletterSubscribers.id });
+    if (!updated) return null;
+    return issueNewsletterToken(tx, { subscriberId: updated.id, purpose: "MANAGE", expiresAt: spent.expiresAt, now });
+  });
 }
 
 /**
- * "Unsubscribe from everything": the subscriber deleted, every link of theirs with it (cascade),
- * and every newsletter still waiting for them in the outbox — a newsletter held back by the reserve
- * (`domain/bulk.ts`) must not reach somebody who has since said no. Nothing is kept about them.
+ * "Unsubscribe from everything": the link spent, the subscriber deleted, every link of theirs with
+ * it (cascade), and every newsletter still waiting for them in the outbox — a newsletter held back
+ * by the reserve (`domain/bulk.ts`) must not reach somebody who has since said no. Nothing is kept
+ * about them. One transaction: of two presses, one unsubscribes and the other finds no live link.
  */
 export async function unsubscribeNewsletter<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<boolean> {
-  const subscriber = await readNewsletterToken(db, { secret, purpose: "MANAGE", now });
-  if (!subscriber) return false;
-  await deleteSubscriber(db, subscriber.id);
-  return true;
+  return db.transaction(async (tx) => {
+    const spent = await consumeNewsletterToken(tx, { secret, purpose: "MANAGE", now });
+    if (!spent) return false;
+    await deleteSubscriberIn(tx, spent.subscriberId);
+    return true;
+  });
 }
 
 async function deleteSubscriber<T extends Record<string, unknown>>(db: Database<T>, subscriberId: string): Promise<void> {
-  await db.transaction(async (tx) => {
-    await tx
-      .delete(emailOutbox)
-      .where(
-        and(
-          eq(emailOutbox.status, "PENDING"),
-          inArray(emailOutbox.messageType, ["NEWSLETTER_CONFIRM", ...BULK_MESSAGE_TYPES]),
-          sql`${emailOutbox.payloadJson}->>'subscriberId' = ${subscriberId}`,
-        ),
-      );
-    await tx.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId));
-  });
+  await db.transaction(async (tx) => deleteSubscriberIn(tx, subscriberId));
+}
+
+async function deleteSubscriberIn<T extends Record<string, unknown>>(tx: Database<T>, subscriberId: string): Promise<void> {
+  await tx
+    .delete(emailOutbox)
+    .where(
+      and(
+        eq(emailOutbox.status, "PENDING"),
+        inArray(emailOutbox.messageType, ["NEWSLETTER_CONFIRM", ...BULK_MESSAGE_TYPES]),
+        sql`${emailOutbox.payloadJson}->>'subscriberId' = ${subscriberId}`,
+      ),
+    );
+  await tx.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId));
 }
 
 /**
@@ -485,6 +503,10 @@ export async function listNewsletterSends<T extends Record<string, unknown>>(db:
  * "once", by its UNIQUE event — and one `NEW_EVENT_ALERT` per confirmed subscriber of its topics.
  * An event with nobody to tell still gets its row: it has been seen, and a subscriber who joins
  * tomorrow is not told about last week's event as if it were new.
+ *
+ * **Never twice in a day** (`alertDayOf`): once an alert that reached somebody was queued on this
+ * club day, the rest wait for tomorrow's first run — oldest publication first — and an event with
+ * nobody to tell is marked seen without spending the day's one.
  */
 export async function queueNewEventAlerts<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   const since = new Date(now.getTime() - EVENT_ALERT_WINDOW_DAYS * 24 * 60 * 60_000);
@@ -498,7 +520,6 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
       startsAt: events.startsAt,
       publishedAt: events.publishedAt,
       repeatOf: events.repeatOf,
-      repeatRule: events.repeatRule,
       coHosts: events.coHosts,
       coHostName: events.coHostName,
       coHostUrl: events.coHostUrl,
@@ -512,14 +533,35 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
         eq(events.eventStatus, "SCHEDULED"),
         sql`${events.publishedAt} >= ${since.toISOString()}::timestamptz`,
       ),
+    )
+    .orderBy(asc(events.publishedAt), asc(events.id));
+
+  // Whether today's one announcement already went (`alertDayOf`): the sends of the last day and a bit, read in the club's zone.
+  const today = alertDayOf(now, CLUB_TIME_ZONE);
+  const recent = await db
+    .select({ at: newsletterSends.createdAt })
+    .from(newsletterSends)
+    .where(
+      and(
+        eq(newsletterSends.kind, "EVENT_ALERT"),
+        sql`${newsletterSends.recipients} > 0`,
+        sql`${newsletterSends.createdAt} >= ${new Date(now.getTime() - 26 * 60 * 60_000).toISOString()}::timestamptz`,
+      ),
     );
+  let announcedToday = recent.some((row) => alertDayOf(row.at, CLUB_TIME_ZONE) === today);
 
   let queued = 0;
   let drain = false;
   for (const row of candidates) {
-    const event = { ...row, repeats: row.repeatRule !== null, partnered: readCoHosts(row).length > 0 };
+    const event = { ...row, partnered: readCoHosts(row).length > 0 };
     if (!eventAlertWanted(event, now)) continue;
     const topics = eventAlertTopics(event);
+    // Somebody would be told: that waits for tomorrow once today's one went. Nobody: marked seen now.
+    const [{ audience }] = await db
+      .select({ audience: count() })
+      .from(newsletterSubscribers)
+      .where(and(isNotNull(newsletterSubscribers.confirmedAt), receivesSql(topics)));
+    if (audience > 0 && announcedToday) continue;
     await db.transaction(async (tx) => {
       const [send] = await tx
         .insert(newsletterSends)
@@ -557,6 +599,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
           now,
         });
         drain = true;
+        announcedToday = true;
       }
     });
   }

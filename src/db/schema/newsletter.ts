@@ -15,21 +15,22 @@ import { staffUsers } from "./staff-users";
  * A value is added by a migration (expand only) and never removed.
  */
 export const newsletterTopic = pgEnum("newsletter_topic", [
+  // «Toate noutățile»: every topic, today's and any added later.
   "ALL",
-  // New events on the calendar, sent by the platform itself when one is first published (never the weekly group run).
-  "NEW_EVENTS",
-  // The club's own big days: its races, the anniversary cross.
+  // The club's own big days: its races, the anniversary cross. A new race is announced here.
   "BIG_EVENTS",
-  // Special editions and partnerships (§168, §344).
-  "SPECIAL_EVENTS",
-  // Shoe and gear testing sessions (the `GEAR_TEST` event type).
-  "GEAR_TESTING",
   // Discount codes from the club's partners.
   "DISCOUNTS",
+  // Shoe and gear testing sessions (the `GEAR_TEST` event type).
+  "GEAR_TESTING",
+  // Special editions, partnerships and other organizers' events (§168, §344, `EXTERNAL`).
+  "SPECIAL_EVENTS",
+  // The weekly group runs: a new series announced once, never date by date (§111, §113).
+  "WEEKLY_RUNS",
   // Calls for volunteers at the club's races.
   "VOLUNTEERING",
-  // News from the club: the gallery, results, stories.
-  "CLUB_NEWS",
+  // Results and photo albums after an event (§66).
+  "RESULTS_PHOTOS",
 ]);
 
 export type NewsletterTopic = (typeof newsletterTopic.enumValues)[number];
@@ -93,10 +94,11 @@ export const newsletterTokenPurpose = pgEnum("newsletter_token_purpose", ["CONFI
  *
  * - `CONFIRM` is single use and superseded: a new confirmation message kills the previous link
  *   (the partial unique index below), and pressing the button spends it.
- * - `MANAGE` is read, never spent, by the page and its two buttons — the rule "Înscrierile mele"
- *   has for a reversible choice (§143, §322): an unsubscribe link has to work from every message the
- *   subscriber ever received, and choosing topics twice is not a second consent. Each message
- *   carries a fresh one; unsubscribing deletes the subscriber and every link with it.
+ * - `MANAGE` is read by the page's GET and spent by either button's POST (AGENTS.md §12.8: single
+ *   use). Saving the topics mints its successor in the same transaction and the page moves to it,
+ *   so the person can keep choosing on one visit; every message carries a fresh link of its own,
+ *   so a link from last spring still works until it is used. Unsubscribing deletes the subscriber
+ *   and every link with it.
  */
 export const newsletterTokens = pgTable(
   "newsletter_tokens",

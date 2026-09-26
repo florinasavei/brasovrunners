@@ -31,6 +31,9 @@ test.describe("§NNN the newsletter's composer on /admin/emails", () => {
     await compose.getByLabel("Subiect (engleză)").fill("A discount code");
     await compose.getByLabel("Textul (română)").fill("Codul: E2E10");
     await compose.getByLabel("Textul (engleză)").fill("The code: E2E10");
+    // The preview: the message as an English subscriber receives it, from the boxes as they stand.
+    await compose.getByRole("button", { name: "Previzualizează în engleză" }).click();
+    await expect(compose.getByTestId("newsletter-preview-subject")).toContainText(`A discount code / ${subject}`);
     await compose.getByRole("button", { name: "Trimite newsletterul" }).click();
     await confirmDialog(page, /Trimiți newsletterul/);
 
@@ -46,7 +49,9 @@ test.describe("§NNN the newsletter's composer on /admin/emails", () => {
  * §NNN — the newsletter, through the browser, at 320px and on a desktop: the button on the contact
  * page, the pop-up and its refusal, the "check your inbox" answer, the double opt-in's page and the
  * subscriber's own page with its two buttons. The seeded privacy notice is the platform's template,
- * which names `{{newsletterTopics}}`, so the page offers the pop-up.
+ * which names `{{newsletterTopics}}`, so the page offers the pop-up. Its absence under a notice that
+ * does not name it is proved on the real page in `tests/integration/newsletter/contact-page-gate.test.ts`:
+ * here the notice is the shared database's, and the public cache (§333) would keep the old one.
  */
 test.describe("§NNN the newsletter pop-up on the contact page", () => {
   const address = () => `e2e-news-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
@@ -64,11 +69,18 @@ test.describe("§NNN the newsletter pop-up on the contact page", () => {
     // A real modal: the browser's own, over the page.
     expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(true);
     await expect(dialog.getByRole("heading", { name: "Abonează-te la noutățile clubului" })).toBeVisible();
-    for (const topic of ["ALL", "NEW_EVENTS", "BIG_EVENTS", "DISCOUNTS", "GEAR_TESTING"]) {
+    for (const topic of ["ALL", "BIG_EVENTS", "DISCOUNTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]) {
       const row = dialog.getByTestId(`newsletter-topic-${topic}`);
       await expect(row).toBeVisible();
       expect((await row.boundingBox())?.height ?? 0, topic).toBeGreaterThanOrEqual(44);
     }
+    // «Toate noutățile» ticks all; unticking one unticks it.
+    const boxes = dialog.locator('input[name="topics"]');
+    await dialog.getByTestId("newsletter-topic-ALL").click();
+    expect(await boxes.evaluateAll((inputs) => inputs.every((input) => (input as HTMLInputElement).checked))).toBe(true);
+    await dialog.getByTestId("newsletter-topic-DISCOUNTS").click();
+    await expect(dialog.getByTestId("newsletter-topic-ALL").locator("input")).not.toBeChecked();
+    await expect(dialog.getByTestId("newsletter-topic-BIG_EVENTS").locator("input")).toBeChecked();
     await expect(dialog.getByRole("link", { name: "nota de confidențialitate" })).toBeVisible();
     for (const button of [dialog.getByTestId("newsletter-close"), dialog.getByRole("button", { name: "Abonează-mă" })]) {
       expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -86,33 +98,39 @@ test.describe("§NNN the newsletter pop-up on the contact page", () => {
     await page.getByTestId("newsletter-open").click();
     const dialog = page.getByTestId("newsletter-dialog");
     await dialog.locator('[name="newsletterEmail"]').fill(email);
+    // The consent is the person's own tick, required; the topics are the server's to refuse.
+    await dialog.getByTestId("newsletter-consent").click();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await dialog.getByRole("button", { name: "Abonează-mă" }).click();
 
-    await expect(page).toHaveURL(/newsletter=invalid/);
+    await expect(page).toHaveURL(/newsletter=invalid/, { timeout: 30_000 });
     await expect(dialog).toBeVisible();
     await expect(page.locator("#newsletter-errors")).toContainText("Alege cel puțin o temă.");
     await expect(dialog.locator('[name="newsletterEmail"]')).toHaveValue(email);
+    await expect(dialog.locator('[name="consent"]')).toBeChecked();
 
     await dialog.getByTestId("newsletter-topic-DISCOUNTS").click();
     await dialog.getByTestId("newsletter-topic-GEAR_TESTING").click();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await dialog.getByRole("button", { name: "Abonează-mă" }).click();
-    await expect(page).toHaveURL(/newsletter=sent/);
+    await expect(page).toHaveURL(/newsletter=sent/, { timeout: 30_000 });
     await expect(page.getByTestId("newsletter-sent")).toContainText("Verifică-ți căsuța de email");
-    expect(await newsletterSubscription(email)).toEqual({ topics: ["GEAR_TESTING", "DISCOUNTS"], confirmed: false });
+    expect(await newsletterSubscription(email)).toEqual({ topics: ["DISCOUNTS", "GEAR_TESTING"], confirmed: false });
   });
 
-  test("confirms from the link, then changes the topics and unsubscribes from the subscriber's own page", async ({ page }) => {
+  test("subscribes with two topics, confirms from the link, then changes the topics and unsubscribes from the subscriber's own page", async ({ page }) => {
     const email = address();
     await page.goto("/en/contact", { waitUntil: "networkidle" });
     await page.getByTestId("newsletter-open").click();
     const dialog = page.getByTestId("newsletter-dialog");
     await dialog.locator('[name="newsletterEmail"]').fill(email);
-    await dialog.getByTestId("newsletter-topic-NEW_EVENTS").click();
+    await dialog.getByTestId("newsletter-topic-WEEKLY_RUNS").click();
+    await dialog.getByTestId("newsletter-topic-DISCOUNTS").click();
+    await dialog.getByTestId("newsletter-consent").click();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await dialog.getByRole("button", { name: "Subscribe me" }).click();
-    await expect(page).toHaveURL(/newsletter=sent/);
+    await expect(page).toHaveURL(/newsletter=sent/, { timeout: 30_000 });
+    expect(await newsletterSubscription(email)).toEqual({ topics: ["DISCOUNTS", "WEEKLY_RUNS"], confirmed: false });
 
     // The confirmation page: the GET changes nothing, the button does.
     const confirm = await mintNewsletterLink(email, "CONFIRM");
@@ -129,10 +147,18 @@ test.describe("§NNN the newsletter pop-up on the contact page", () => {
     const manage = await mintNewsletterLink(email, "MANAGE");
     await page.goto(`/ro/noutati/abonament/${manage}`);
     await expect(page.getByText(`la ${email}`)).toBeVisible();
+    await page.getByTestId("newsletter-topics-form").locator('input[value="DISCOUNTS"]').uncheck();
     await page.getByTestId("newsletter-topics-form").locator('input[value="VOLUNTEERING"]').check();
     await page.getByRole("button", { name: "Salvează temele" }).click();
     await expect(page.getByTestId("newsletter-saved")).toBeVisible();
-    expect((await newsletterSubscription(email))?.topics).toEqual(["NEW_EVENTS", "VOLUNTEERING"]);
+    expect((await newsletterSubscription(email))?.topics).toEqual(["WEEKLY_RUNS", "VOLUNTEERING"]);
+    // Single use (AGENTS.md §12.8): the page moved to the link's successor; the pressed one opens nothing.
+    const successor = page.url();
+    expect(successor).not.toContain(manage);
+    await page.goto(`/ro/noutati/abonament/${manage}`);
+    await expect(page.getByTestId("newsletter-link-invalid")).toBeVisible();
+    await page.goto(successor);
+    await expect(page.getByText(`la ${email}`)).toBeVisible();
 
     const unsubscribe = page.getByRole("button", { name: "Dezabonează-mă de la tot" });
     expect((await unsubscribe.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);

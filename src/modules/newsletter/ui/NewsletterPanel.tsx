@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { sendNewsletterAction, withdrawNewsletterAddressAction } from "@/app/[locale]/admin/emails/actions";
+import { previewNewsletterAction, sendNewsletterAction, withdrawNewsletterAddressAction } from "@/app/[locale]/admin/emails/actions";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
@@ -20,6 +20,7 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { NEWSLETTER_BODY_MAX, NEWSLETTER_SUBJECT_MAX } from "../domain/message";
 import { SENDABLE_TOPICS } from "../domain/topics";
 import type { NewsletterAudience, NewsletterSendRow } from "../service";
+import NewsletterPreview from "./NewsletterPreview";
 
 type Props = {
   locale: Locale;
@@ -36,9 +37,11 @@ type Props = {
 };
 
 /**
- * "Newsletter" on `/admin/emails` (§NNN): who subscribed from the contact page, as numbers — never
- * an address; a composer that writes to the subscribers of one topic, in both languages; what was
- * sent; and the Administrator's form for an address somebody asked, in writing, to have removed.
+ * «Abonați» on `/admin/emails` (§NNN): who subscribed from the contact page, as numbers — never an
+ * address: confirmed and pending, per topic, and the last send; «Scrie abonaților», a composer that
+ * writes to the subscribers of one topic in both languages, with a preview of the message as it
+ * will arrive; what was sent; and the Administrator's form for an address somebody asked, in
+ * writing, to have removed.
  *
  * A Server Component around two `ActionForm`s. The composer asks first, per topic, naming how many
  * receive it (§384), and says how much of it leaves today under the reserve the outbox keeps for
@@ -52,6 +55,8 @@ export default async function NewsletterPanel({ locale, audience, history, volum
   const sendId = randomUUID();
   const when = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const topicNames = (topics: readonly string[]) => topics.map((topic) => tn(`topics.${topic}`)).join(", ");
+  // The newest send that reached somebody, a newsletter or an alert: `history` is newest first.
+  const lastMessage = history[0] ?? null;
 
   const choices = SENDABLE_TOPICS.map((topic) => {
     const count = audience.byTopic[topic];
@@ -85,6 +90,9 @@ export default async function NewsletterPanel({ locale, audience, history, volum
 
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="newsletter-counts">
         {t("newsletter.counts", { confirmed: String(audience.confirmed), unconfirmed: String(audience.unconfirmed) })}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" data-testid="newsletter-last-send">
+        {lastMessage ? t("newsletter.lastSend", { when: when(lastMessage.at) }) : t("newsletter.lastSendNone")}
       </Typography>
       <Box component="ul" sx={{ mt: 1, mb: 2, pl: 3 }}>
         {choices.map((choice) => (
@@ -176,6 +184,18 @@ export default async function NewsletterPanel({ locale, audience, history, volum
                   slotProps={{ htmlInput: { maxLength: NEWSLETTER_BODY_MAX } }}
                 />
               </Stack>
+              <NewsletterPreview
+                preview={previewNewsletterAction}
+                labels={{
+                  title: t("newsletter.previewTitle"),
+                  help: t("newsletter.previewHelp"),
+                  ro: t("newsletter.previewRo"),
+                  en: t("newsletter.previewEn"),
+                  loading: t("newsletter.previewLoading"),
+                  unavailable: t("newsletter.previewUnavailable"),
+                  subject: t("emails.subject"),
+                }}
+              />
               <Box>
                 <GlyphSubmitButton label={t("newsletter.send")} pendingLabel={t("newsletter.sending")} icon="send" />
               </Box>

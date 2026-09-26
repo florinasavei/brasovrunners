@@ -11,9 +11,10 @@ import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@
  *
  *   issueNewsletterToken    minted by the renderer, at send time (§14.5); a confirmation link
  *                           supersedes the previous one.
- *   readNewsletterToken     what a GET may do, in a read-only transaction; also what the manage
- *                           page's two buttons do, since that link is read, never spent.
- *   consumeConfirmToken     the confirmation's POST: one statement, one winner, single use.
+ *   readNewsletterToken     what a GET may do, in a read-only transaction.
+ *   consumeNewsletterToken  what a POST does — the confirmation's button, and either button of
+ *                           the subscriber's own page: one statement, one winner, single use
+ *                           (AGENTS.md §12.8).
  */
 
 /** How long the link in every newsletter opens the subscriber's own page: a year, so last spring's still unsubscribes. */
@@ -76,11 +77,15 @@ export async function readNewsletterToken<T extends Record<string, unknown>>(
   });
 }
 
-/** Spend a confirmation link: the subscriber it named, or null when it was not live. Inside the caller's transaction. */
-export async function consumeConfirmToken<T extends Record<string, unknown>>(
+/**
+ * Spend a link of `purpose`: the subscriber it named and when it would have expired, or null when
+ * it was not live. One UPDATE, so of two presses of one link exactly one wins. Inside the caller's
+ * transaction, so the spend and what it pays for commit together.
+ */
+export async function consumeNewsletterToken<T extends Record<string, unknown>>(
   db: Database<T>,
-  params: { secret: string; now: Date },
-): Promise<string | null> {
+  params: { secret: string; purpose: NewsletterTokenPurpose; now: Date },
+): Promise<{ subscriberId: string; expiresAt: Date } | null> {
   if (!isWellFormedTokenSecret(params.secret)) return null;
   const [spent] = await db
     .update(newsletterTokens)
@@ -88,12 +93,12 @@ export async function consumeConfirmToken<T extends Record<string, unknown>>(
     .where(
       and(
         eq(newsletterTokens.tokenHash, hashTokenSecret(params.secret)),
-        eq(newsletterTokens.purpose, "CONFIRM"),
+        eq(newsletterTokens.purpose, params.purpose),
         isNull(newsletterTokens.usedAt),
         isNull(newsletterTokens.invalidatedAt),
         gt(newsletterTokens.expiresAt, params.now),
       ),
     )
-    .returning({ subscriberId: newsletterTokens.subscriberId });
-  return spent?.subscriberId ?? null;
+    .returning({ subscriberId: newsletterTokens.subscriberId, expiresAt: newsletterTokens.expiresAt });
+  return spent ?? null;
 }

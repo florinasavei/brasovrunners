@@ -145,6 +145,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
   previewParticipantMessageAction: "a preview; sends nothing",
+  previewNewsletterAction: "the newsletter composer's preview (§NNN); sends nothing, stores nothing",
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",

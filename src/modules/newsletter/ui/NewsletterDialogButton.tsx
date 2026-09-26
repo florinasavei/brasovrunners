@@ -58,5 +58,31 @@ export default function NewsletterDialogButton({
     return () => trigger.removeEventListener("click", open);
   }, [dialogId, triggerId]);
 
+  /*
+    «Toate noutățile» ticks all (the brief): ticking it ticks every topic, unticking a topic unticks
+    it, and ticking the last one ticks it back. Only what the eye sees — the server reads "all"
+    alone as everything whatever else is posted (`normalizeTopics`), so without a script the form
+    means the same.
+  */
+  useEffect(() => {
+    const dialog = document.getElementById(dialogId);
+    if (!dialog) return;
+    const boxes = () => [...dialog.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="topics"]')];
+    const onChange = (event: Event) => {
+      const changed = event.target;
+      if (!(changed instanceof HTMLInputElement) || changed.name !== "topics") return;
+      const all = boxes().find((box) => box.value === "ALL");
+      const rest = boxes().filter((box) => box.value !== "ALL");
+      if (!all) return;
+      if (changed === all) {
+        for (const box of rest) box.checked = all.checked;
+      } else {
+        all.checked = rest.every((box) => box.checked);
+      }
+    };
+    dialog.addEventListener("change", onChange);
+    return () => dialog.removeEventListener("change", onChange);
+  }, [dialogId]);
+
   return null;
 }
