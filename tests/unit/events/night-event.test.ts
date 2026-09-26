@@ -57,6 +57,8 @@ const { default: CalendarEventChip } = await import("@/modules/events/ui/Calenda
 const { default: EventCalendar } = await import("@/modules/events/ui/EventCalendar");
 const { GLYPHS } = await import("@/modules/events/ui/glyphs");
 const { default: FlashlightOnIcon } = await import("@mui/icons-material/FlashlightOn");
+const { default: ModeNightIcon } = await import("@mui/icons-material/ModeNight");
+const { default: DarkModeIcon } = await import("@mui/icons-material/DarkMode");
 const { nightAutoLine } = await import("@/modules/content/events/ui/NightEventField");
 
 afterEach(() => {
@@ -85,6 +87,8 @@ describe("§394 the sun — NOAA's algorithm against published tables, within fi
     on the horizon, with refraction) for Bucharest and London, and NOAA's own Solar Calculator for
     Brașov. The brief quoted "≈ 21:03 / 05:31" for Brașov's solstice — those are Bucharest's, a
     degree and a quarter further south; Brașov's own are seven minutes later in the evening.
+    The minute-exact proof, against the US Naval Observatory's own tables, is
+    `sun-reference.test.ts` (§NNN); this block only keeps §394's first, looser check.
   */
   it.each([
     ["Bucharest, the June solstice", { latitude: 44.4268, longitude: 26.1025 }, "2026-06-21", ZONE, "05:31", "21:03"],
@@ -186,7 +190,7 @@ describe("§394 nightEvent — the override before the sun", () => {
       source: "automatic",
       start: "19:00",
       sunset: "16:44",
-      sunrise: "07:20",
+      sunrise: "07:21",
       endSource: null,
       end: null,
     });
@@ -200,7 +204,7 @@ describe("§394 nightEvent — the override before the sun", () => {
       source: "override",
       start: "19:00",
       sunset: "16:44",
-      sunrise: "07:20",
+      sunrise: "07:21",
       endSource: null,
       end: null,
     });
@@ -278,7 +282,7 @@ describe("§394 orderRoutePills — the night event where §382 put the headlamp
   const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
   const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
-  const night: Pill = { glyph: "headlamp", label: "Eveniment de noapte", tooltip: "Soarele apune la 16:44" };
+  const night: Pill = { glyph: "night", label: "Noapte", tooltip: "Soarele apune la 16:44" };
 
   it("surface, difficulty, distance, elevation, then the night event — whatever order it is handed in", () => {
     expect(orderRoutePills({ headlamp: night, elevation, distance, difficulty, surface })).toEqual([surface, difficulty, distance, elevation, night]);
@@ -289,78 +293,111 @@ describe("§394 orderRoutePills — the night event where §382 put the headlamp
     expect(orderRoutePills({ surface, elevation, headlamp: null })).toEqual([surface, elevation]);
   });
 
-  it("keeps the headlamp's glyph, one file from @mui/icons-material", () => {
-    expect(GLYPHS.headlamp).toBe(FlashlightOnIcon);
+  it("wears the crescent moon, one file from @mui/icons-material — not the torch, and not the header's light/dark switch (§NNN)", () => {
+    expect(GLYPHS.night).toBe(ModeNightIcon);
+    expect(Object.values(GLYPHS)).not.toContain(FlashlightOnIcon);
+    expect(GLYPHS.night).not.toBe(DarkModeIcon);
+    expect("headlamp" in GLYPHS).toBe(false);
   });
 });
 
 describe("§394 the event page's facts", () => {
-  // `event()` defaults to `type: "GROUP_RUN"` (§394), so its pill is «Alergare de noapte».
-  it("puts «Alergare de noapte» last in the route's pills, with the headlamp and the sunset in its tooltip", async () => {
+  // `event()` defaults to `type: "GROUP_RUN"` (§394); since §NNN the pill says «Noapte» on every type.
+  it("puts «Noapte» last in the route's pills, with the crescent and the sunset in its tooltip", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
     expect(route).toBeDefined();
-    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte"]);
+    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
-    expect(route!.dd).toContain('data-testid="FlashlightOnIcon"');
+    expect(route!.dd).toContain('data-testid="ModeNightIcon"');
+    expect(route!.dd).not.toContain("FlashlightOnIcon");
+    // The tooltip only opens on hover or focus, and the chip is not focusable, so the sunset
+    // sentence must also reach the chip's accessible name as a visually hidden `srSuffix` (§NNN).
+    expect(route!.dd).toContain("— Soarele apune la 16:44");
     expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
   });
 
-  it("says «Night run» and «The sun sets at 16:44» in English", async () => {
+  it("says «Night» and «The sun sets at 16:44» in English", async () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Route")!;
-    expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night run"]);
+    expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night"]);
     expect(tooltips(route.dd)).toEqual(["The sun sets at 16:44"]);
   });
 
-  it("says «Eveniment de noapte» on every other type", async () => {
+  it("says «Noapte» on every other type too — the type chip already says what it is (§NNN)", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ type: "RACE" }), now: NOW, stacked: true }));
-    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toContain("Eveniment de noapte");
+    const labels = pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd);
+    expect(labels).toContain("Noapte");
+    expect(labels).not.toContain("Eveniment de noapte");
   });
 
   it("makes a route row on its own when it is the only fact of the route — it is not the overline again", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ distanceMeters: null, elevationGainMeters: null, difficulty: null }), now: NOW, stacked: true }),
     );
-    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toEqual(["Trail", "Alergare de noapte"]);
+    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toEqual(["Trail", "Noapte"]);
   });
 
   it("shows nothing on the June date, and shows it on the June date the organizer said «Da» for", async () => {
     const june = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW, stacked: true }));
-    expect(june).not.toContain("Alergare de noapte");
-    expect(june).not.toContain("FlashlightOnIcon");
+    expect(pillLabels(june)).not.toContain("Noapte");
+    expect(june).not.toContain("ModeNightIcon");
     const yes = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19, nightOverride: true }), now: NOW, stacked: true }));
-    expect(pillLabels(yes)).toContain("Alergare de noapte");
+    expect(pillLabels(yes)).toContain("Noapte");
     expect(tooltips(yes)[0]).toMatch(/^Soarele apune la 21:\d\d$/);
     const no = renderToStaticMarkup(await EventFacts({ event: event({ nightOverride: false }), now: NOW, stacked: true }));
-    expect(no).not.toContain("Alergare de noapte");
+    expect(pillLabels(no)).not.toContain("Noapte");
+  });
+
+  it("reads the sun at the event's own place — a pair typed for Cluj, not the club's Brașov (§NNN, §416's rule)", async () => {
+    const cluj = renderToStaticMarkup(await EventFacts({ event: event({ latitude: 46.7712, longitude: 23.6236 }), now: NOW, stacked: true }));
+    // 18 November 2026: 16:44 over Brașov, 16:49 over Cluj.
+    expect(tooltips(cluj)).toEqual(["Soarele apune la 16:49"]);
+    // Without a pair or a pin, the club's place answers — and so while the place is to be announced.
+    expect(tooltips(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true })))).toEqual(["Soarele apune la 16:44"]);
+    const later = event({ latitude: 46.7712, longitude: 23.6236, locationToBeAnnounced: true });
+    expect(tooltips(renderToStaticMarkup(await EventFacts({ event: later, now: NOW, stacked: true })))).toEqual(["Soarele apune la 16:44"]);
   });
 });
 
 describe("§394 the listing card and the hero", () => {
-  it("the card's pills: the route, the night run, then the cost", async () => {
+  it("the card's pills: the route, the night, then the cost", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
-    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte", "Gratuit"]);
-    expect(html).toContain('data-testid="FlashlightOnIcon"');
+    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte", "Gratuit"]);
+    expect(html).toContain('data-testid="ModeNightIcon"');
   });
 
   it("the card in English, and nothing on a day date", async () => {
     currentLocale = "en";
-    expect(pillLabels(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" })))).toContain("Night run");
+    expect(pillLabels(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" })))).toContain("Night");
     const day = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW, variant: "compact" }));
-    expect(day).not.toContain("Night run");
-    expect(day).not.toContain("FlashlightOnIcon");
+    expect(pillLabels(day)).not.toContain("Night");
+    expect(day).not.toContain("ModeNightIcon");
   });
 
   it("the hero's route line says it after the climb and before the cost, with its glyph", async () => {
     const html = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW })));
     const route = text(rows(html).find((row) => row.label === "Traseu")!.dd);
-    expect(route.indexOf("250 m diferență de nivel")).toBeLessThan(route.indexOf("Alergare de noapte"));
-    expect(route.indexOf("Alergare de noapte")).toBeLessThan(route.indexOf("Gratuit"));
-    expect(html).toContain('data-testid="FlashlightOnIcon"');
-    const day = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW }));
-    expect(day).not.toContain("Alergare de noapte");
+    expect(route.indexOf("250 m diferență de nivel")).toBeLessThan(route.indexOf("Noapte"));
+    expect(route.indexOf("Noapte")).toBeLessThan(route.indexOf("Gratuit"));
+    expect(html).toContain('data-testid="ModeNightIcon"');
+    const day = text(rows(withoutStyles(renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW })))).find((row) => row.label === "Traseu")!.dd);
+    expect(day).not.toContain("Noapte");
+  });
+
+  it("the hero's bare «Noapte» carries the sunset too, in a visually hidden span — it opens no tooltip of its own to hear it from (§NNN)", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
+    const route = rows(withoutStyles(html)).find((row) => row.label === "Traseu")!.dd;
+    // «Noapte» itself stays visible, in front of the hidden sentence — the same order and the
+    // same em dash `GlyphChip`'s own `srSuffix` uses, never a bare word with the sunset lost.
+    const match = route.match(/Noapte<span class="MuiBox-root (css-[\w-]+)">\s*— Soarele apune la 16:44<\/span>/);
+    expect(match, "the hidden span sits right after the visible word").not.toBeNull();
+    const rule = html.match(new RegExp(`\\.${match![1]}\\{([^}]*)\\}`))?.[1] ?? "";
+    // Clipped to a pixel, `GlyphChip`'s own technique (`SR_ONLY_SX`) — never sized like ordinary
+    // content, which would draw the sentence for a sighted visitor too.
+    expect(rule).toContain("width:1px");
+    expect(rule).toContain("height:1px");
   });
 });
 
@@ -537,10 +574,10 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
   it("a 05:30 January start names that day's sunrise, never the evening's sunset, in both languages (§404)", () => {
     const january = { date: "2027-01-13", time: "05:30", timeZone: ZONE };
     expect(nightAutoLine(lineWords(ro, "ro"), january, BRASOV).line).toBe(
-      "Automat: pe mie., 13 ian. 2027, începe la 05:30, înainte de răsăritul de la 07:55 — eveniment de noapte",
+      "Automat: pe mie., 13 ian. 2027, începe la 05:30, înainte de răsăritul de la 07:56 — eveniment de noapte",
     );
     expect(nightAutoLine(lineWords(en, "en"), january, BRASOV).line).toBe(
-      "Automatic: on Wed, 13 Jan 2027, starts at 05:30, before sunrise at 07:55 — a night event",
+      "Automatic: on Wed, 13 Jan 2027, starts at 05:30, before sunrise at 07:56 — a night event",
     );
     // After sunrise the same morning is a day date, and the ordinary line names the sunset.
     expect(nightAutoLine(lineWords(ro, "ro"), { ...january, time: "09:00" }, BRASOV).line).toBe(
@@ -810,14 +847,14 @@ describe("§404 the night sentences name the start, the sunset and the end", () 
     // `After` shape ("after the sunset") would read backwards for this early-morning run.
     dawn: nightEvent({ nightOverride: null, timezone: ZONE }, at("2026-09-30T06:30"), BRASOV),
     // The review's own case (§404): a 05:30 group run on Wednesday 13 January 2027 at the club's
-    // place (`CLUB_COORDINATES`, through `clubNightEvent`) — sunrise 07:55, sunset 16:57. Never
+    // place (`CLUB_COORDINATES`, through `clubNightEvent`) — sunrise 07:56, sunset 16:57. Never
     // «după apusul de la 16:57»: the evening is eleven hours away.
     january: clubNightEvent({ nightOverride: null, timezone: ZONE, startsAt: at("2027-01-13T05:30") }),
   };
 
   it("a 05:30 January start at the club's place is the dawn shape, the sunrise named (§404)", () => {
-    expect(shapes.january).toEqual({ night: true, source: "automatic", start: "05:30", sunset: "16:57", sunrise: "07:55", endSource: null, end: null });
-    expect(nightShape(shapes.january)).toEqual({ suffix: "Dawn", values: { start: "05:30", sunrise: "07:55" } });
+    expect(shapes.january).toEqual({ night: true, source: "automatic", start: "05:30", sunset: "16:57", sunrise: "07:56", endSource: null, end: null });
+    expect(nightShape(shapes.january)).toEqual({ suffix: "Dawn", values: { start: "05:30", sunrise: "07:56" } });
   });
 
   it("a 07:40 January start at the club's place — after civil dawn, before sunrise — is a day verdict with the plain shape, not the dawn words (§404)", () => {
@@ -852,8 +889,8 @@ describe("§404 the night sentences name the start, the sunset and the end", () 
     ["en", "end", "The sun sets at 19:00"],
     ["en", "programme", "The sun sets at 19:00"],
     ["en", "dawn", "The sun rises at 07:14"],
-    ["ro", "january", "Soarele răsare la 07:55"],
-    ["en", "january", "The sun rises at 07:55"],
+    ["ro", "january", "Soarele răsare la 07:56"],
+    ["en", "january", "The sun rises at 07:56"],
   ] as const)("the pill's tooltip, %s, %s", (locale, shape, words) => {
     expect(nightTooltip(shapes[shape], tr(locale === "ro" ? ro : en, locale))).toBe(words);
   });
@@ -867,8 +904,8 @@ describe("§404 the night sentences name the start, the sunset and the end", () 
     ["en", "programme", "calendar", true, "Night run: starts at 19:00, sunset at 19:00, the programme's last row at 20:15"],
     ["ro", "dawn", "ics", true, "Alergare de noapte: începe la 06:30, înainte de răsăritul de la 07:14 — ia o frontală"],
     ["en", "dawn", "calendar", false, "Night event: starts at 06:30, before sunrise at 07:14"],
-    ["ro", "january", "calendar", true, "Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55"],
-    ["en", "january", "ics", true, "Night run: starts at 05:30, before sunrise at 07:55 — bring a headlamp"],
+    ["ro", "january", "calendar", true, "Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:56"],
+    ["en", "january", "ics", true, "Night run: starts at 05:30, before sunrise at 07:56 — bring a headlamp"],
   ] as const)("the calendar and .ics lines, %s, %s, %s", (locale, shape, kind, run, words) => {
     expect(nightLine(shapes[shape], tr(locale === "ro" ? ro : en, locale), run, kind)).toBe(words);
   });

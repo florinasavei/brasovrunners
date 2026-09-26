@@ -254,11 +254,11 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(night.text).toContain("Night run: starts at 19:00, after the 16:44 sunset. Bring a headlamp.");
 
     // A 05:30 group run on Wednesday 13 January 2027 (§404): night before that day's sunrise, and
-    // the line names the sunrise (07:55) — never «după apusul de la 16:57», an evening eleven hours on.
+    // the line names the sunrise (07:56) — never «după apusul de la 16:57», an evening eleven hours on.
     await db.update(events).set({ startsAt: new Date("2027-01-13T03:30:00.000Z") }).where(eq(events.id, event.id));
     const dawn = await render();
-    expect(dawn.text).toContain("Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55. Ia o frontală.");
-    expect(dawn.text).toContain("Night run: starts at 05:30, before sunrise at 07:55. Bring a headlamp.");
+    expect(dawn.text).toContain("Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:56. Ia o frontală.");
+    expect(dawn.text).toContain("Night run: starts at 05:30, before sunrise at 07:56. Bring a headlamp.");
     expect(dawn.text).not.toContain("după apusul");
     expect(dawn.text).not.toContain("after the 16:57 sunset");
     await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
@@ -284,12 +284,12 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
     // Never on another message about the same night event: the sunset and the light are the
     // reminder's line alone. The confirmation's facts block draws the page's route pills, so it
-    // names the night pill — the same `nightPill`, never the reminder's sentence.
+    // names the night pill, «Noapte» (§NNN) — the same `nightPill`, never the reminder's sentence.
     const confirmed = await renderOutboxMessage({ ...row, id: "row-nc", idempotencyKey: "test:nc", messageType: "REGISTRATION_CONFIRMED" }, db, NOW);
     expect(confirmed.text).not.toMatch(/Alergare de noapte: (începe|apusul)/);
     expect(confirmed.text).not.toContain("Ia o frontală");
     expect(confirmed.text).not.toContain("Bring a headlamp");
-    expect(confirmed.text).toContain("Traseu: Alergare de noapte");
+    expect(confirmed.text).toContain("Traseu: Noapte");
   });
 
   it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {

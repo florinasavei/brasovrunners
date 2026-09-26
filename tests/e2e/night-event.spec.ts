@@ -23,11 +23,19 @@ const MONTH = "2027-11";
 const JUNE = "2027-06-16";
 
 /**
- * The lit torch, by its drawing: a production build has no `data-testid="FlashlightOnIcon"` — MUI
- * writes that attribute only outside production — so the glyph is found by the start of its path,
- * `@mui/icons-material/FlashlightOn`'s own.
+ * The crescent moon (§NNN, replacing §382's lit torch), by its drawing: a production build has no
+ * `data-testid="ModeNightIcon"` — MUI writes that attribute only outside production — so the glyph
+ * is found by the start of its path, `@mui/icons-material/ModeNight`'s own.
  */
+const MOON = 'svg:has(path[d^="M9.5 2c-1.82 0-3.53.5-5 1.35"])';
+/** The torch it replaced, which no night pill may wear any more. */
 const TORCH = 'svg:has(path[d^="M6 2h12v3H6z"])';
+/** The pill's one word, «Noapte» / «Night», on every type (§NNN). */
+// The chip's accessible name now carries the sunset sentence as a visually hidden suffix
+// (§NNN), which `hasText` also sees, so the filter matches the leading word rather than the
+// whole string.
+const NIGHT_RO = /^Noapte\b/;
+const NIGHT_EN = /^Night\b/;
 
 let title = "";
 let englishTitle = "";
@@ -116,12 +124,13 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
-  test("the event page carries the pill in both languages, with the torch and the sunset", async ({ page }) => {
+  test("the event page carries the pill in both languages, with the crescent and the sunset", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
-    // «Alergare de noapte», not «Eveniment de noapte»: a group run is a run (§394).
-    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
+    // «Noapte», one word (§NNN): the type chip beside it already says it is a run.
+    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: NIGHT_RO });
     await expect(pill).toHaveCount(1);
-    await expect(pill.locator(TORCH)).toHaveCount(1);
+    await expect(pill.locator(MOON)).toHaveCount(1);
+    await expect(page.locator(`#main ${TORCH}`)).toHaveCount(0);
     await pill.hover();
     // The tooltip says only the sunset (§415): the owner, 2026-09-25, "pe tooltip trebuie doar să
     // zic când apune soarele" — §404's start/end shapes stay on the calendar entry and the .ics.
@@ -130,22 +139,23 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     expect(overflow).toBeLessThanOrEqual(0);
 
     await page.goto(`/en/events/${englishSlug}`);
-    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
+    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: NIGHT_EN });
     await expect(englishPill).toHaveCount(1);
-    await expect(englishPill.locator(TORCH)).toHaveCount(1);
+    await expect(englishPill.locator(MOON)).toHaveCount(1);
     await englishPill.hover();
     await expect(page.getByRole("tooltip")).toHaveText(/^The sun sets at 16:\d\d$/);
-    await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
+    await expect(page.locator("#main .MuiChip-root").filter({ hasText: NIGHT_RO })).toHaveCount(0);
   });
 
   test("the listing card and the calendar entry carry it", async ({ page }) => {
     await page.goto("/ro/evenimente");
     const roCard = await cardOnListing(page, title);
-    await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" })).toHaveCount(1);
-    await expect(roCard.locator(TORCH)).toHaveCount(1);
+    await expect(roCard.locator(".MuiChip-root").filter({ hasText: NIGHT_RO })).toHaveCount(1);
+    await expect(roCard.locator(MOON)).toHaveCount(1);
+    await expect(roCard.locator(TORCH)).toHaveCount(0);
     await page.goto("/en/events");
     const enCard = await cardOnListing(page, englishTitle);
-    await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
+    await expect(enCard.locator(".MuiChip-root").filter({ hasText: NIGHT_EN })).toHaveCount(1);
 
     await page.goto(`/ro/calendar?month=${MONTH}`);
     await expect(page.locator(`#main [role=table] a[aria-label*="${title}"]`)).toHaveAttribute(
@@ -166,11 +176,11 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
 
     await page.goto(`/ro/evenimente/${slug}`);
     await expect(page.locator("#main h1")).toContainText(title);
-    await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
-    await expect(page.locator(`#main ${TORCH}`)).toHaveCount(0);
+    await expect(page.locator("#main .MuiChip-root").filter({ hasText: NIGHT_RO })).toHaveCount(0);
+    await expect(page.locator(`#main ${MOON}`)).toHaveCount(0);
     await page.goto(`/en/events/${englishSlug}`);
     await expect(page.locator("#main h1")).toContainText(englishTitle);
-    await expect(page.locator("#main")).not.toContainText("Night run");
+    await expect(page.locator("#main .MuiChip-root").filter({ hasText: NIGHT_EN })).toHaveCount(0);
   });
 
   test("«Da» in June shows it anyway, and the closed card says «de noapte»", async ({ page }) => {
@@ -182,10 +192,10 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(page.locator("#box-course > summary")).not.toContainText("de noapte (automat)");
 
     await page.goto(`/ro/evenimente/${slug}`);
-    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
+    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: NIGHT_RO });
     await expect(pill).toHaveCount(1);
     await page.goto(`/en/events/${englishSlug}`);
-    await expect(routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
+    await expect(routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: NIGHT_EN })).toHaveCount(1);
   });
 
   test("a start in daylight that finishes after dusk is a night run too (§394)", async ({ page }) => {
@@ -205,12 +215,12 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await saveWithChoice(page, "Automat (după apus)", true);
 
     await page.goto(`/ro/evenimente/${slug}`);
-    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
+    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: NIGHT_RO });
     await expect(pill).toHaveCount(1);
     await pill.hover();
     await expect(page.getByRole("tooltip")).toHaveText(/^Soarele apune la 16:\d\d$/);
     await page.goto(`/en/events/${englishSlug}`);
-    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
+    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: NIGHT_EN });
     await englishPill.hover();
     await expect(page.getByRole("tooltip")).toHaveText(/^The sun sets at 16:\d\d$/);
   });

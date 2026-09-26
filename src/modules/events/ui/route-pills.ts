@@ -37,6 +37,12 @@ export type RouteFactsSource = Pick<
   | "timezone"
   | "costType"
   | "registrationMode"
+  // The event's own place, where its sun is read (§NNN, by §416's rule): the map link's pin, the
+  // typed pair, and whether the place is still to be announced.
+  | "mapUrl"
+  | "latitude"
+  | "longitude"
+  | "locationToBeAnnounced"
 >;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -53,9 +59,9 @@ type FormatNumber = { number(value: number, options?: { maximumFractionDigits?: 
  * The route's pills, in one fixed order (§366, amended §375 — the owner, 2026-09-24, of the
  * card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order of this should be: terrain
  * type, difficulty, distance, elevation"): **surface, difficulty, distance, elevation**, then the
- * **night event** (§394, at the place §382 gave the headlamp — it is still the headlamp's glyph,
- * what to bring for that route, after what the route is) — then the cost pill after them wherever
- * a caller adds one.
+ * **night event** (§394, at the place §382 gave the headlamp — the crescent and «Noapte» since
+ * §NNN, when the dark falls on that route, after what the route is) — then the cost pill after
+ * them wherever a caller adds one. The slot keeps its name, `headlamp`.
  *
  * One function decides the order for both surfaces that draw route pills — the listing card
  * (`EventFacts`'s compact form) and the event page (`EventFacts`'s stacked form, §356) — so
@@ -109,26 +115,38 @@ export function routePillParts(
 }
 
 /**
- * "Eveniment de noapte" / "Night event" (§394): the headlamp's glyph, the words, and the tooltip
- * "Soarele apune la 16:36" — the sunset alone (§415) — or null on a date that is not one. The
- * answer is this row's own date's (`clubNightEvent`): a series' dates are rows of their own, so
- * the listing's one line for a series, which draws its next date, says the next date's answer.
+ * «Noapte» / «Night» (§394, §NNN): the crescent moon, the one word, and the tooltip "Soarele apune
+ * la 16:36" — the sunset alone (§415) — or null on a date that is not one. The answer is this
+ * row's own date's, at the event's own place (`clubNightEvent`): a series' dates are rows of their
+ * own, so the listing's one line for a series, which draws its next date, says the next date's
+ * answer.
+ *
+ * The word is one for every type (§NNN, replacing §394's «Alergare de noapte» / «Eveniment de
+ * noapte» on the pill): a pill is a fact beside its neighbours — «Trail», «10 km», «Gratuit» — and
+ * the card's type chip already says whether it is a run, and the tooltip — which a screen reader
+ * hears as the chip's description — says the sunset. The calendar entry, the `.ics` line and the
+ * reminder keep the full label by type in their sentences (`nightLine`), where the word stands
+ * alone with no chip beside it.
  */
 export function nightPill(
-  event: Pick<RouteFactsSource, "type" | "nightOverride" | "startsAt" | "endsAt" | "scheduleItems" | "timezone">,
+  event: Pick<
+    RouteFactsSource,
+    "type" | "nightOverride" | "startsAt" | "endsAt" | "scheduleItems" | "timezone" | "mapUrl" | "latitude" | "longitude" | "locationToBeAnnounced"
+  >,
   t: Translate,
 ): Pill | null {
   const facts = clubNightEvent(event);
   if (!facts.night) return null;
-  // «Alergare de noapte» on a group run — the owner calls a run a run, not an "event" — and
-  // «Eveniment de noapte» on every other type (§394).
-  const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
-  // The tooltip names the sunset alone (§415).
+  // The tooltip names the sunset alone (§415). `GlyphChip` only opens the tooltip on hover or
+  // focus, so a chip that is itself a plain, unfocusable `div` never lets a keyboard or
+  // screen-reader user reach it (`aria-describedby` is only set while MUI's `Tooltip` is open).
+  // `srSuffix` renders the same sentence as a visually hidden span inside the chip's own
+  // accessible name instead, so it is heard unconditionally (§NNN).
   const tooltip = nightTooltip(facts, t);
   return {
-    glyph: "headlamp",
-    label,
-    ...(tooltip ? { tooltip } : {}),
+    glyph: "night",
+    label: t("night.chip"),
+    ...(tooltip ? { tooltip, srSuffix: tooltip } : {}),
   };
 }
 
