@@ -118,7 +118,7 @@ describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for
     const result = await checkNeonQuotaHealth({ NEON_API_KEY: undefined, NEON_PROJECT_ID: "p" }, () => {
       throw new Error("must not be called");
     });
-    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, projectedCuHours: null, level: "unknown" });
+    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, level: "unknown" });
   });
 
   it("asks Neon's Data Cache to keep every answer for fifteen minutes, never no-store", async () => {
@@ -173,11 +173,11 @@ describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for
         }),
       NOW,
     );
-    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: 12_000 / 3600, percent: null, lineCuHours: null, projectedCuHours: null, level: "green" });
+    expect(result).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: 12_000 / 3600, percent: null, lineCuHours: null, level: "green" });
   });
 
   it("never fails this endpoint on its own account: a refusal, a bad answer or a network error all read ok with no figures", async () => {
-    const nothing = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, projectedCuHours: null, level: "unknown" };
+    const nothing = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, level: "unknown" };
     const refused = await checkNeonQuotaHealth({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () => new Response("", { status: 403 }));
     expect(refused).toEqual(nothing);
 

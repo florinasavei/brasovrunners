@@ -298,17 +298,11 @@ export async function GET(): Promise<Response> {
       // CU-hours, for the reason §335 gives above — and a note saying what is throttled. Only
       // `red` degrades the status (it is `neon.status: near-limit`); `amber` stays `ok` with the
       // note, because the platform slowing itself down is its own business.
-      //
-      // `projectedPercent` (§479): where the period ends at the pace so far — the projection
-      // Costuri's «Luna aceasta» prints in CU-hours and dollars — as a share of the quota, for the
-      // same reason as the rest of this block: the club's bill is not published on a public URL.
-      // Above 100 is the month that will suspend the site before it ends; it degrades nothing on
-      // its own (the governor's `red` does), it is what a monitor's log can show a day early.
+      // §447: the public answer names the level, never a figure — the projection lives on Costuri (§479).
       budget: {
         level: neonQuota.level,
         meteredPercent: neonQuota.percent,
         linePercent: share(neonQuota.lineCuHours, neonQuota.quotaCuHours),
-        projectedPercent: share(neonQuota.projectedCuHours ?? null, neonQuota.quotaCuHours),
         note: BUDGET_NOTE[neonQuota.level],
       },
       // The bot check's secret, probed rather than merely read as set (§420, finding (10)): a

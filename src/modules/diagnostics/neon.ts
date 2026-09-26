@@ -512,11 +512,6 @@ export type NeonQuotaHealth = {
   percent: number | null;
   /** The pro-rated line now, in CU-hours (`domain/neon-budget.ts`), or null with no quota or no reading. */
   lineCuHours: number | null;
-  /**
-   * The period's CU-hours at its end if the pace so far holds (`neonBudget`'s projection, the one
-   * Costuri's «Luna aceasta» prints, §479), or null with no quota or no reading.
-   */
-  projectedCuHours: number | null;
   /** The month's budget as the governor reads it (`domain/neon-budget.ts`). */
   level: NeonBudgetLevel;
 };
@@ -527,7 +522,6 @@ export const QUOTA_NOT_READ: NeonQuotaHealth = {
   usedCuHours: null,
   percent: null,
   lineCuHours: null,
-  projectedCuHours: null,
   level: "unknown",
 };
 
@@ -552,7 +546,6 @@ export function quotaHealthOf(meter: NeonMeter, now: Date, thresholds: BudgetThr
     usedCuHours,
     percent: budget.ratio === null ? null : Math.round(budget.ratio * 100),
     lineCuHours: budget.lineCuHours,
-    projectedCuHours: budget.projectedCuHours,
     level: budget.level,
   };
 }

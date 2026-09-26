@@ -24,7 +24,7 @@ vi.mock("@/modules/jobs/health", () => ({ checkJobHealth: (...args: unknown[]) =
 vi.mock("@/modules/notifications/health", () => ({ checkEmailHealth: (...args: unknown[]) => checkEmailHealth(...args) }));
 vi.mock("@/modules/diagnostics/neon", () => ({
   checkNeonQuotaHealth: (...args: unknown[]) => checkNeonQuotaHealth(...args),
-  QUOTA_NOT_READ: { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, projectedCuHours: null, level: "unknown" },
+  QUOTA_NOT_READ: { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null, lineCuHours: null, level: "unknown" },
 }));
 vi.mock("@/modules/diagnostics/budget-thresholds", () => ({ cachedBudgetThresholds: async () => ({ amberPercent: 60, redPercent: 85 }) }));
 vi.mock("@/modules/registrations/turnstile", () => ({ probeTurnstileSecret: async () => "not_configured" }));
@@ -39,7 +39,7 @@ const T0 = new Date("2026-10-20T10:01:00.000Z");
 const MINUTE = 60_000;
 
 function answering(level: string, status: "ok" | "near-limit" = "ok"): void {
-  checkNeonQuotaHealth.mockResolvedValue({ status, quotaCuHours: 100, usedCuHours: 50, percent: 50, lineCuHours: 30, projectedCuHours: 120, level });
+  checkNeonQuotaHealth.mockResolvedValue({ status, quotaCuHours: 100, usedCuHours: 50, percent: 50, lineCuHours: 30, level });
 }
 
 beforeEach(() => {
@@ -66,9 +66,9 @@ describe("§447 /api/health reads the month's budget", () => {
     expect(response.status).toBe(200);
     expect(body.neon).toEqual({ status: "ok", percent: 50 });
     expect(body.budget).toMatchObject({ level: "amber", meteredPercent: 50, linePercent: 30 });
-    // §479: the period's end at the pace so far, a share of the quota — never CU-hours or dollars.
-    expect(body.budget.projectedPercent).toBe(120);
-    expect(JSON.stringify(body)).not.toMatch(/usd|cuHours/i);
+    // §447: the public answer names the level, never a figure — the projection lives on Costuri (§479).
+    expect(Object.keys(body.budget).sort()).toEqual(["level", "linePercent", "meteredPercent", "note"]);
+    expect(JSON.stringify(body)).not.toMatch(/usd|cuHours|projected/i);
     expect(body.budget.note).toMatch(/hourly/);
     // `amber` holds real runs to one an hour: the checks must allow that much, or the platform's
     // own throttle would page the owner.
@@ -155,7 +155,7 @@ describe("§447 /api/health reads the month's budget", () => {
     const body = await (await GET()).json();
     expect(body.database).toBe("ok");
     expect(body.neon).toEqual({ status: "ok", percent: null });
-    expect(body.budget).toEqual({ level: "unknown", meteredPercent: null, linePercent: null, projectedPercent: null, note: null });
+    expect(body.budget).toEqual({ level: "unknown", meteredPercent: null, linePercent: null, note: null });
     expect(execute).toHaveBeenCalledTimes(1);
   }, 10_000);
 });

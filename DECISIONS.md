@@ -18588,7 +18588,7 @@ The totals come first as sentences. The providers that bill nothing and meter no
   - the floor's change, the same way;
   - with scale to zero off, the least a month with no visitors costs.
 
-- **/api/health** gains `budget.projectedPercent`: the period's end at the pace so far, as a share of the quota. It is a share rather than CU-hours or dollars, because §335 keeps the club's billing figures off a public URL. It degrades nothing on its own; the governor's `red` still does.
+- **/api/health** gains `budget.projectedPercent`: the period's end at the pace so far, as a share of the quota. It is a share rather than CU-hours or dollars, because §335 keeps the club's billing figures off a public URL. It degrades nothing on its own; the governor's `red` still does. Before the release it was taken out again: the public answer keeps §447's rule — the level, never a figure — and the projection stayed on Costuri alone.
 
 - **Currency.** Every amount is in USD, the currency each of these vendors bills in and the cost table already prints. A converted figure would be a second estimate on top of the first.
 

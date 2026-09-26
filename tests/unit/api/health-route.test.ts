@@ -197,7 +197,7 @@ describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early
     // quota and this period's CU-hours are the club's own billing figures (§335); the full
     // reading is `/admin/tasks` and `/devs`'s to show.
     expect(body.neon).toEqual({ status: "ok", percent: 12 });
-    expect(body.budget).toEqual({ level: "green", meteredPercent: 12, linePercent: 40, projectedPercent: null, note: null });
+    expect(body.budget).toEqual({ level: "green", meteredPercent: 12, linePercent: 40, note: null });
   });
 
   it("degrades to a 503 once the reading turns near-limit", async () => {
