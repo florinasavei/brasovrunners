@@ -1022,7 +1022,7 @@ export default async function EventFacts({
     const umbrella = rainLikely(weather.start) ? (
       <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
         <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
-        {words.rainLikely}
+        {words.rainLikelyChance}
       </Box>
     ) : null;
     rows.push({

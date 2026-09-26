@@ -5449,6 +5449,7 @@
     "temperature": "{degrees} °C",
     "rain": "{percent}% șanse de ploaie",
     "rainLikely": "ploaie probabilă",
+    "rainLikelyChance": "ploaie probabilă {percent} %",
     "wind": "vânt {speed} km/h",
     "source": "Open-Meteo",
     "credit": "Prognoză: {source}",
