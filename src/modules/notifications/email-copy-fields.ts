@@ -197,9 +197,10 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  *   have no field, and the platform adds the note and the reason after the words whoever wrote them;
  * - **the declaration's first wording is the club's hold's (§377)**, as the preview shows it; a
  *   saved text replaces both wordings, as it always has (§247);
- * - **the reply line of the cancellation follows the deployment's reply address**, as the send does.
+ * - **the reply line of the cancellation follows the Reply-To in force**, as the send does: the page
+ *   passes the one «Adresa de contact afișată» resolves to (§NNN); absent, the deployment's.
  */
-function fieldsData(): TemplateData {
+function fieldsData(replyTo: string | undefined = env.EMAIL_REPLY_TO ?? undefined): TemplateData {
   const field = (name: EmailCopyPlaceholder) => `{${name}}`;
   return {
     participantName: field("participantName"),
@@ -220,7 +221,7 @@ function fieldsData(): TemplateData {
     confirmationHours: field("confirmationHours"),
     // The waiting-list offer's length (§377), which the freed place's message states (§419).
     offerHours: field("offerHours"),
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    replyTo,
   };
 }
 
@@ -262,9 +263,16 @@ function ownParagraphsOf(paragraph: string): string[] {
   return paragraphs;
 }
 
-/** The editor's starting text for one message and language: the platform's words, with the fields. */
-export function emailCopyPrefill(messageType: EmailMessageType, locale: EmailLocale): EmailCopyPrefill {
-  const words = platformWords(messageType, locale, fieldsData());
+/**
+ * The editor's starting text for one message and language: the platform's words, with the fields.
+ * `replyTo` is the Reply-To in force (§NNN); absent, `EMAIL_REPLY_TO`.
+ */
+export function emailCopyPrefill(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  replyTo: string | undefined = env.EMAIL_REPLY_TO ?? undefined,
+): EmailCopyPrefill {
+  const words = platformWords(messageType, locale, fieldsData(replyTo));
   const body = emailDocFromParagraphs(words.paragraphs.flatMap(ownParagraphsOf));
   return { subject: words.subject, paragraphs: emailBodyToParagraphs(body), body };
 }

@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { findCurrentApprovedDocument, noticeDescribesListStates } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
+import { shownContactAddresses } from "@/modules/contact/shown-address";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { env } from "@/shared/config/env";
@@ -138,7 +139,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const versions = await listVersionsForBackoffice(getDb());
   // The one press (§132): offered while any of the three has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
-  const facts = clubFactsFromEnv(env);
+  // The contact address as the club chose to show it (§NNN).
+  const facts = clubFactsFromEnv(env, await shownContactAddresses(getDb()));
   const now = new Date();
   const missingKeys = (
     await Promise.all(
@@ -190,7 +192,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       ["CLUB_LEGAL_NAME", facts.legalName],
       ["CLUB_REGISTRATION_NUMBER", facts.registrationNumber],
       ["CLUB_REGISTERED_ADDRESS", facts.registeredAddress],
-      ["EMAIL_REPLY_TO", facts.contactEmail],
+      // Not only the variable since §NNN: «Adresa de contact afișată» on /admin/emails decides it.
+      [t("legal.platform.contactFactMissing"), facts.contactEmail],
     ] as const
   )
     .filter(([, value]) => !value)

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { registrations } from "@/db/schema/registrations";
 import { routing } from "@/i18n/routing";
+import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { bibDesignFromQuery } from "@/modules/registrations/bib-design";
 import { bibNumberFromQuery } from "@/modules/registrations/bib-design-query";
 import { renderBibImage } from "@/modules/registrations/bib-image";
@@ -72,6 +73,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   // The bib's own line, in the language it is drawn for and the event's zone (§349, §317).
   const eventDate = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
+  // The first address the club shows (§NNN): one line of small print has room for one.
+  const replyTo = (await shownContactAddresses(db))[0] ?? null;
   // The same facts the sheet's footer is made of (§180, §317), so either picture is a picture of
   // the paper; which of them print is the design's to say.
   const partners = event.coHosts.map((host) => host.name);
@@ -85,7 +88,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       // As the form holds it, not as the row does: the preview follows the unsaved select too.
       bandColour: url.searchParams.get("colour") || null,
       partners,
-      replyTo: env.EMAIL_REPLY_TO,
+      replyTo,
       siteUrl: env.APP_BASE_URL,
       design: bibDesignFromQuery(url.searchParams),
     });
@@ -111,7 +114,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     eventDate,
     bandColour: event.bibColour,
     partners,
-    replyTo: env.EMAIL_REPLY_TO,
+    replyTo,
     siteUrl: env.APP_BASE_URL,
     // The club's own design (§249), or the preview stops being a preview of the paper.
     design: event.design,

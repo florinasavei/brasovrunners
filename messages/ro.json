@@ -924,7 +924,9 @@
       "neonPlanTitle": "Schimbi planul Neon?",
       "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
-      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva."
+      "olderPicturesBody": "Imaginile din acest lot primesc mărimile mai mici, iar adresa lor se schimbă în paginile și evenimentele unde apar; vechea adresă rămâne și merge în continuare. Durează până la vreo douăzeci de secunde. Cine are deschis editorul unei astfel de pagini sau al unui eveniment va fi rugat să îl reîncarce înainte de a salva.",
+      "shownAddressTitle": "Schimbi adresa de contact afișată?",
+      "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1895,8 +1897,9 @@
           "legalName": "Denumirea juridică",
           "registrationNumber": "CIF",
           "registeredAddress": "Sediul",
-          "contactEmail": "Email de contact"
+          "contactEmail": "Email de contact (adresa de contact afișată, din /admin/emails)"
         },
+        "contactFactMissing": "EMAIL_REPLY_TO (sau Gmail-ul clubului în «Adresa de contact afișată», pe /admin/emails)",
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
@@ -3299,6 +3302,27 @@
           "few": "{count} persoane",
           "other": "{count} de persoane"
         }
+      },
+      "shownAddress": {
+        "title": "Adresa de contact afișată",
+        "intro": "Ce adresă văd oamenii pe site — subsolul, pagina de contact, numerele de concurs, textele legale pornite din textul platformei — și unde ajunge un răspuns la orice email trimis de platformă. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "aside": "Pe site: {shown}",
+        "preview": "Pe site: {shown} · Răspunde la: {replyTo}",
+        "legend": "Ce adresă arătăm",
+        "modes": {
+          "mailbox": "Căsuța de pe domeniul Mailgun ({mailbox}) — implicit",
+          "gmail": "Gmail-ul clubului",
+          "both": "Amândouă (întâi Gmail-ul, apoi {mailbox})"
+        },
+        "noMailbox": "nesetată pe server",
+        "gmail": "Gmail-ul clubului",
+        "gmailHelp": "Obligatoriu pentru „Gmail-ul clubului” și „Amândouă”. Mailgun are un plafon zilnic; Gmail-ul nu.",
+        "updatedAt": "Setat {when}.",
+        "readOnly": "Adresa afișată o stabilește Administratorul; tu vezi alegerea în vigoare.",
+        "save": "Salvează adresa",
+        "saving": "Se salvează…",
+        "saved": "Adresa de contact afișată a fost salvată.",
+        "sender": "Emailurile pleacă în continuare de pe domeniul Mailgun: un expeditor Gmail trimis prin Mailgun nu trece verificarea DMARC și ajunge în spam sau e refuzat. Se schimbă doar adresa la care se răspunde (Reply-To). Formularul de contact nu se schimbă."
       }
     },
     "guide": {
@@ -4149,7 +4173,8 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
-      "contact": "Scrie-ne:"
+      "contact": "Scrie-ne:",
+      "or": "sau"
     },
     "contactPage": "Scrie-ne"
   },
@@ -4934,7 +4959,8 @@
     },
     "off": {
       "writeTo": "Scrie-ne la",
-      "none": "Formularul de contact nu este disponibil momentan."
+      "none": "Formularul de contact nu este disponibil momentan.",
+      "or": "sau"
     },
     "fieldNames": {
       "name": "Numele",
@@ -5255,7 +5281,8 @@
         "heading": "{club} — verificarea rețelei",
         "site": "Site",
         "browser": "Browser"
-      }
+      },
+      "shownContactAddress": "Adresa de contact afișată a fost salvată."
     }
   }
 }

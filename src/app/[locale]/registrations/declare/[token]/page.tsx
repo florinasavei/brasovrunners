@@ -21,7 +21,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
@@ -43,7 +43,6 @@ import {
   type SpentRegistrationLink,
 } from "@/modules/registrations/token-actions";
 import { describeMovedOnDeclarationLink, stepForSpentLink } from "@/modules/registrations/domain/link-status";
-import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
@@ -305,7 +304,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
   // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
-  const canReply = Boolean(env.EMAIL_REPLY_TO);
+  // The Reply-To in force (§NNN): the mailbox, the club's Gmail, or both.
+  const canReply = (await cachedShownContactAddresses()).length > 0;
   /*
     What the refused press had typed, brought back sealed by the action (§314) and read only for
     the refusals that keep it, a name's or a document's (§330) — a stale draft never fills a form

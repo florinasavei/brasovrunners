@@ -9,6 +9,7 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { replyToInForce } from "@/modules/contact/shown-address";
 import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { lockEventForCapacity } from "@/modules/registrations/repository";
@@ -291,9 +292,11 @@ export async function previewParticipantMessage<T extends Record<string, unknown
   if (!UUID.test(input.eventId)) throw new DomainError("NOT_FOUND", "no such event");
   const locale = input.locale;
   const other: Locale = locale === "ro" ? "en" : "ro";
-  const [details, otherDetails] = await Promise.all([
+  const [details, otherDetails, replyTo] = await Promise.all([
     findEventNotificationDetails(db, input.eventId, locale),
     findEventNotificationDetails(db, input.eventId, other),
+    // The Reply-To the send sets (§NNN), so the preview's reply line matches the sent message.
+    replyToInForce(db),
   ]);
   if (!details) throw new DomainError("NOT_FOUND", "no such event");
 
@@ -325,7 +328,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
     myRegistrationsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`,
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
+    replyTo,
     ...(words.subject[locale] ? { organizerSubject: words.subject[locale] } : {}),
     ...(words.subject[other] ? { organizerSubjectOther: words.subject[other] } : {}),
     ...(words.body[locale] ? { organizerBody: words.body[locale] } : {}),

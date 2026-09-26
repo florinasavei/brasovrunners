@@ -924,7 +924,9 @@
       "neonPlanTitle": "Change the Neon plan?",
       "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
       "olderPicturesTitle": "Make the phone sizes?",
-      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving."
+      "olderPicturesBody": "The pictures in this batch get their smaller sizes, and their address changes on the pages and events where they appear; the old address stays and keeps working. It takes up to about twenty seconds. Anyone with the editor of such a page or event open will be asked to reload it before saving.",
+      "shownAddressTitle": "Change the contact address shown?",
+      "shownAddressBody": "The site (the footer, the contact page, the race numbers) shows the chosen address from now on, and every email the platform sends takes replies there. Legal texts already approved keep the address they were approved with."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1895,8 +1897,9 @@
           "legalName": "Legal name",
           "registrationNumber": "CIF",
           "registeredAddress": "Registered seat",
-          "contactEmail": "Contact email"
+          "contactEmail": "Contact email (the contact address shown, from /admin/emails)"
         },
+        "contactFactMissing": "EMAIL_REPLY_TO (or the club's Gmail under «Contact address shown», on /admin/emails)",
         "missing": "not set",
         "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
         "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",
@@ -3299,6 +3302,27 @@
           "few": "{count} people",
           "other": "{count} people"
         }
+      },
+      "shownAddress": {
+        "title": "Contact address shown",
+        "intro": "Which address people see on the site — the footer, the contact page, the race numbers, the legal texts started from the platform's text — and where a reply to any email the platform sends goes. Mailgun has a daily cap; Gmail does not.",
+        "aside": "On the site: {shown}",
+        "preview": "On the site: {shown} · Replies to: {replyTo}",
+        "legend": "Which address we show",
+        "modes": {
+          "mailbox": "The mailbox on the Mailgun domain ({mailbox}) — default",
+          "gmail": "The club's Gmail",
+          "both": "Both (the Gmail first, then {mailbox})"
+        },
+        "noMailbox": "not set on the server",
+        "gmail": "The club's Gmail",
+        "gmailHelp": "Required for “The club's Gmail” and “Both”. Mailgun has a daily cap; Gmail does not.",
+        "updatedAt": "Set {when}.",
+        "readOnly": "The Administrator sets the address shown; you see the choice in force.",
+        "save": "Save the address",
+        "saving": "Saving…",
+        "saved": "The contact address shown was saved.",
+        "sender": "Emails still leave from the Mailgun domain: a Gmail sender sent through Mailgun fails the DMARC check and lands in spam or is refused. Only the reply address (Reply-To) changes. The contact form does not change."
       }
     },
     "guide": {
@@ -4156,7 +4180,8 @@
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
-      "contact": "Write to us:"
+      "contact": "Write to us:",
+      "or": "or"
     },
     "contactPage": "Write to us"
   },
@@ -4941,7 +4966,8 @@
     },
     "off": {
       "writeTo": "Write to us at",
-      "none": "The contact form is not available at the moment."
+      "none": "The contact form is not available at the moment.",
+      "or": "or"
     },
     "fieldNames": {
       "name": "Name",
@@ -5262,7 +5288,8 @@
         "heading": "{club} — network check",
         "site": "Site",
         "browser": "Browser"
-      }
+      },
+      "shownContactAddress": "The contact address shown was saved."
     }
   }
 }

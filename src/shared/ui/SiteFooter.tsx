@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
+import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
@@ -152,8 +153,9 @@ const BAR_HEIGHT = 44;
  * summary and the panel flex items in their own right; Safari does not render a `<details>`
  * that way, and Safari is where this was reported from.
  *
- * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
- * reads (§8) — and the marks only when configured. Nothing here invents an address.
+ * The contact line renders only when an address is in force — `EMAIL_REPLY_TO`, the club's Gmail,
+ * or both, as «Adresa de contact afișată» on `/admin/emails` says (§NNN) — and the marks only when
+ * configured. Nothing here invents an address.
  *
  * ## Open-Meteo's credit, once for the whole site (§429)
  *
@@ -171,7 +173,7 @@ export default async function SiteFooter() {
   const footer = await getTranslations("Footer");
   const locale = (await getLocale()) as "ro" | "en";
   const weatherCredit = weatherListWords(locale).credit;
-  const contact = env.EMAIL_REPLY_TO;
+  const contacts = await cachedShownContactAddresses();
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
     { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
@@ -336,12 +338,16 @@ export default async function SiteFooter() {
                 data-testid="footer-contact"
                 sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, minWidth: 0, maxWidth: "100%" }}
               >
-                <Link href="/contact">{contact ? footer("about.contact") : footer("contactPage")}</Link>
-                {contact && (
-                  <Box component="a" href={`mailto:${contact}`} sx={{ overflowWrap: "anywhere", minWidth: 0 }}>
-                    {contact}
+                <Link href="/contact">{contacts.length > 0 ? footer("about.contact") : footer("contactPage")}</Link>
+                {/* The address the club chose to show (§NNN): the mailbox, its Gmail, or both, «… sau …». */}
+                {contacts.map((address, index) => (
+                  <Box key={address} component="span" sx={{ display: "inline-flex", columnGap: 0.5, minWidth: 0 }}>
+                    {index > 0 && <span>{footer("about.or")}</span>}
+                    <Box component="a" href={`mailto:${address}`} sx={{ overflowWrap: "anywhere", minWidth: 0 }}>
+                      {address}
+                    </Box>
                   </Box>
-                )}
+                ))}
               </Box>
               {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
                   cards (§429); the event page and the featured hero keep their own beside the

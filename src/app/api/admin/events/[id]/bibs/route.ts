@@ -3,6 +3,7 @@ import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
+import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -110,7 +111,8 @@ export async function GET(
     // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
     bandColour: event.bibColour,
     partners: event.coHosts.map((host) => host.name),
-    replyTo: env.EMAIL_REPLY_TO,
+    // The first address the club shows (§NNN): one line of small print has room for one.
+    replyTo: (await shownContactAddresses(db))[0] ?? null,
     siteUrl: env.APP_BASE_URL,
     generatedAt: now,
     layout,

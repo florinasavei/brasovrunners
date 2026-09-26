@@ -16,6 +16,7 @@ import { routing } from "@/i18n/routing";
 import {
   cachedBotCheckSiteKey,
   cachedContactFormReaches,
+  cachedShownContactAddresses,
   cachedPublishedEventBySlug,
 } from "@/modules/public-cache/reads";
 import {
@@ -105,11 +106,20 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const draft = error || sent ? await readFormDraft() : null;
   const typed = (name: string) => draft?.[name];
 
-  const writeTo = env.EMAIL_REPLY_TO;
+  // The address the club chose to show (§NNN): the mailbox, its Gmail, or both, «… sau …».
+  const writeTo = await cachedShownContactAddresses();
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
   const formAvailable = await cachedContactFormReaches();
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
+  const addressLinks = writeTo.map((address, index) => (
+    <span key={address}>
+      {index > 0 && ` ${t("off.or")} `}
+      <MuiLink href={`mailto:${address}`} sx={inlineLink}>
+        {address}
+      </MuiLink>
+    </span>
+  ));
 
   /**
    * `?about=<slug>` — somebody sent here from a registration that produced no email (§205).
@@ -160,12 +170,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
       ) : !formAvailable ? (
         // No form on this deployment: the club's address, when the club has named one (§8).
         <Typography variant="body1">
-          {writeTo ? (
+          {writeTo.length > 0 ? (
             <>
-              {t("off.writeTo")}{" "}
-              <MuiLink href={`mailto:${writeTo}`} sx={inlineLink}>
-                {writeTo}
-              </MuiLink>
+              {t("off.writeTo")} {addressLinks}
             </>
           ) : (
             t("off.none")
@@ -190,12 +197,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
                 </>
               ) : error === "VALIDATION_ERROR" ? (
                 t("errors.generic")
-              ) : error === "DELIVERY" && writeTo ? (
+              ) : error === "DELIVERY" && writeTo.length > 0 ? (
                 <>
-                  {t("errors.DELIVERY")}{" "}
-                  <MuiLink href={`mailto:${writeTo}`} sx={inlineLink}>
-                    {writeTo}
-                  </MuiLink>
+                  {t("errors.DELIVERY")} {addressLinks}
                 </>
               ) : error === "DELIVERY" ? (
                 t("errors.DELIVERY_NO_ADDRESS")
