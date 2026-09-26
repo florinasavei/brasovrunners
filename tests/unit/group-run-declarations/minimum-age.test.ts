@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import PDFDocument from "pdfkit";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { GROUP_RUN_TOO_YOUNG, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
-import { birthDateRefusal } from "@/modules/group-run-declarations/domain";
+import { birthDateRefusal, groupRunMinimumAge } from "@/modules/group-run-declarations/domain";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { BLANK, dropsParagraph, mergeLegalBody, mergeTextSegments, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
@@ -70,10 +71,19 @@ describe("§NNN {{minimumAge}} in the group-run templates", () => {
 });
 
 describe("§NNN the signed PDF with and without the sentence", () => {
-  it("renders both surfaces at sixteen and at zero", async () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("draws the sentence at sixteen and leaves it out at zero, in both surfaces", async () => {
     const now = new Date("2026-10-01T08:00:00Z");
     for (const { name, body, locale } of TEXTS) {
       for (const minAge of [16, 0]) {
+        // What the PDF actually draws, not only what it is handed (`drawEntry`'s `dropsParagraph`).
+        const drawn: string[] = [];
+        const text = PDFDocument.prototype.text;
+        vi.spyOn(PDFDocument.prototype, "text").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
+          if (typeof args[0] === "string") drawn.push(args[0]);
+          return (text as (...a: unknown[]) => PDFKit.PDFDocument).apply(this, args);
+        });
         const pdf = await renderDeclarationPdf({
           entries: [
             {
@@ -90,19 +100,24 @@ describe("§NNN the signed PDF with and without the sentence", () => {
           generatedAt: now,
           labels: declarationWords(locale, now),
         });
+        vi.restoreAllMocks();
         expect(pdf.subarray(0, 5).toString(), `${name} ${minAge}`).toBe("%PDF-");
+        const all = drawn.join(" ");
+        if (minAge === 16) expect(all, name).toContain(locale === "ro" ? "16 ani" : "16 years");
+        else expect(all, name).not.toMatch(/cel puțin|at least/);
       }
     }
   });
 });
 
 describe("§NNN the age gate: one rule, the race's", () => {
-  // The run starts at 19:00 in Brașov on 7 October 2026.
-  const run = { minAge: 16, startsAt: new Date("2026-10-07T16:00:00Z"), timezone: "Europe/Bucharest" };
+  // The run starts at 19:00 in Brașov on 7 October 2026. Twenty-one: only a minimum above the
+  // adults-only text's eighteen binds anyone (`groupRunMinimumAge`).
+  const run = { minAge: 21, startsAt: new Date("2026-10-07T16:00:00Z"), timezone: "Europe/Bucharest" };
 
-  it("refuses the day before the sixteenth birthday and takes the day of it", () => {
-    expect(birthDateRefusal(run, "2010-10-08")).toEqual(["birthDate", GROUP_RUN_TOO_YOUNG]);
-    expect(birthDateRefusal(run, "2010-10-07")).toEqual([]);
+  it("refuses the day before the twenty-first birthday and takes the day of it", () => {
+    expect(birthDateRefusal(run, "2005-10-08")).toEqual(["birthDate", GROUP_RUN_TOO_YOUNG]);
+    expect(birthDateRefusal(run, "2005-10-07")).toEqual([]);
     expect(isUnderMinimumAge("2010-10-08", "2026-10-07", 16)).toBe(true);
     expect(isUnderMinimumAge("2010-10-07", "2026-10-07", 16)).toBe(false);
   });
@@ -110,8 +125,16 @@ describe("§NNN the age gate: one rule, the race's", () => {
   it("counts the day in the run's zone, not UTC's", () => {
     // 22:30 UTC on the 6th is 01:30 on the 7th in Brașov: the birthday has come.
     const late = { ...run, startsAt: new Date("2026-10-06T22:30:00Z") };
-    expect(birthDateRefusal(late, "2010-10-07")).toEqual([]);
-    expect(birthDateRefusal({ ...late, timezone: "UTC" }, "2010-10-07")).toEqual(["birthDate", GROUP_RUN_TOO_YOUNG]);
+    expect(birthDateRefusal(late, "2005-10-07")).toEqual([]);
+    expect(birthDateRefusal({ ...late, timezone: "UTC" }, "2005-10-07")).toEqual(["birthDate", GROUP_RUN_TOO_YOUNG]);
+  });
+
+  it("treats a minimum of eighteen or less as none: the adults-only text already says eighteen", () => {
+    expect([0, 14, 16, 18, 19, 21].map(groupRunMinimumAge)).toEqual([0, 0, 0, 0, 19, 21]);
+    for (const minAge of [14, 16, 18]) {
+      expect(birthDateRefusal({ ...run, minAge }, undefined), String(minAge)).toEqual([]);
+      expect(birthDateRefusal({ ...run, minAge }, "2012-01-01"), String(minAge)).toEqual([]);
+    }
   });
 
   it("names a missing or unreadable date, and asks nothing of a run with no minimum", () => {

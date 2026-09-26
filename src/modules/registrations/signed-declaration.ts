@@ -8,6 +8,7 @@ import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
+import { groupRunMinimumAge } from "@/modules/group-run-declarations/domain";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { asksForMinorSignature, deadlineMergeValues, type MergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
@@ -194,7 +195,8 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
       // The event's own minimum age (§329) with its unit — "16 ani", "20 de ani" — for the group-run
       // declarations' sentence (§NNN); "" when the event has none, which leaves the sentence out.
-      minimumAge: minimumAgeMergeValue(event.minAge, locale),
+      // A group run's only above eighteen, which its adults-only text already says (§NNN).
+      minimumAge: minimumAgeMergeValue(event.type === "GROUP_RUN" ? groupRunMinimumAge(event.minAge) : event.minAge, locale),
       // The club's deadlines, should the declaration name one (§377): read when the PDF is drawn,
       // like the event's facts above — from the instance's memo, once per batch of PDFs.
       ...deadlineMergeValues(locale, await currentDeadlines(db)),

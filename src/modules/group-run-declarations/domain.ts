@@ -2,7 +2,7 @@
  * The pure rules of a group run's optional self-declaration (§393), shared by the run's page, the
  * signing page and the service, with no database behind them.
  */
-import { ageOn, dayIn, isUnderMinimumAge } from "@/modules/registrations/domain/age";
+import { ADULT_AGE, ageOn, dayIn, isUnderMinimumAge } from "@/modules/registrations/domain/age";
 import { GROUP_RUN_TOO_YOUNG } from "./form";
 
 /** How long after the start the page still takes a signature: somebody at the meeting point, late. */
@@ -22,8 +22,22 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
 }
 
 /**
+ * The minimum age a group run's self-declaration actually states and asks for (§NNN): the event's
+ * own `min_age` (§329) only when it is above eighteen, zero otherwise. The declaration is for adults
+ * (§393, §418): its opening says "am împlinit 18 ani" and the consent box repeats it, so a minimum of
+ * eighteen or less binds nobody the text does not already bind. Stating it would read as a second,
+ * contradictory age ("am împlinit 18 ani… am cel puțin 14 ani"), and asking a birth date for it would
+ * collect data for no purpose (GDPR art. 5(1)(c), the reason §418 took the identity number off this
+ * text). The column defaults to fourteen, so on most runs this is zero: no sentence, no birth date.
+ * Admitting minors of 14–17 would change the opening and the consent box — a legal-text decision.
+ */
+export function groupRunMinimumAge(minAge: number): number {
+  return minAge > ADULT_AGE ? minAge : 0;
+}
+
+/**
  * The run's minimum age at the signing page's door (§NNN, amending §393): the event's own number
- * (§329), counted on the run's day in the run's zone by `isUnderMinimumAge` — the rule the race's
+ * (§329) as `groupRunMinimumAge` binds it, counted on the run's day in the run's zone by `isUnderMinimumAge` — the rule the race's
  * registration door asks (`minimumAgeRule`), never a second one. Nothing is asked of a run with no
  * minimum. A missing or unreadable date names the box; a date under the minimum names the box and
  * the marker, so the page says the number rather than "fill it in".
@@ -32,11 +46,12 @@ export function birthDateRefusal(
   event: { minAge: number; startsAt: Date; timezone: string },
   birthDate: string | undefined,
 ): string[] {
-  if (event.minAge <= 0) return [];
+  const minAge = groupRunMinimumAge(event.minAge);
+  if (minAge <= 0) return [];
   const day = dayIn(event.startsAt, event.timezone);
   const value = (birthDate ?? "").trim();
   if (ageOn(value, day) === null) return ["birthDate"];
-  return isUnderMinimumAge(value, day, event.minAge) ? ["birthDate", GROUP_RUN_TOO_YOUNG] : [];
+  return isUnderMinimumAge(value, day, minAge) ? ["birthDate", GROUP_RUN_TOO_YOUNG] : [];
 }
 
 /** The longest name a signature box takes, as the race's does. */

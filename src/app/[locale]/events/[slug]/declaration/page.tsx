@@ -15,7 +15,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
-import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "@/modules/group-run-declarations/domain";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
 import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
@@ -132,11 +132,13 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
     (`latestBirthDateFor`, `isUnderMinimumAge`), today a bound as well. A refusal for age says the
     number, in the summary and under the box, rather than "fill it in" (§47, as the race's §321).
   */
-  const hasMinimumAge = event.minAge > 0;
-  const minimumAge = { age: yearsPhrase(event.minAge, locale) };
+  // Only a minimum above the adults-only text's eighteen binds anyone (`groupRunMinimumAge`).
+  const minAge = groupRunMinimumAge(event.minAge);
+  const hasMinimumAge = minAge > 0;
+  const minimumAge = { age: yearsPhrase(minAge, locale) };
   const tooYoung = hasMinimumAge && refusedTooYoung(invalid);
   const today = now.toISOString().slice(0, 10);
-  const youngestAllowed = hasMinimumAge ? latestBirthDateFor(event.minAge, dayIn(event.startsAt, event.timezone)) : today;
+  const youngestAllowed = hasMinimumAge ? latestBirthDateFor(minAge, dayIn(event.startsAt, event.timezone)) : today;
   const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
 
   return (
