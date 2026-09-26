@@ -47,12 +47,25 @@ test.describe("BR-REQ-090-05 the cost half of the task board", () => {
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
 
-  test("refuses an Organizer, with the answer a missing route gives", async ({ page }) => {
-    // BR-REQ-060-01. What a club is close to exceeding is not an Organizer's business, and the
-    // refusal is a 404 rather than a message confirming the screen exists. The task board stays
-    // behind `canManageRegistrations` — §208 opened the club's *content* to a reader and
-    // deliberately not this.
+  test("keeps the costs from an Organizer, who opens only the club's checklist here", async ({ page }) => {
+    // BR-REQ-060-01. What a club is close to exceeding is not an Organizer's business. Since
+    // §NNN an Organizer opens `/admin/tasks` for «De făcut», the club's own checklist, and
+    // nothing else on it: the costs panel, asked for by name, lands back on «De făcut» with no
+    // price on the page — the same "an address nobody offered reads as nothing asked" as §397.
     await signIn(page, "Dev Moderator");
+    const response = await page.goto("/ro/admin/tasks?panel=costs");
+    expect(response?.status()).toBe(200);
+    await expect(page).toHaveURL(/panel=todo/);
+    const main = page.locator("#main");
+    await expect(main.getByTestId("club-todo-counts")).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Cât costă" })).toHaveCount(0);
+    const nav = main.getByRole("navigation", { name: "Ce mai este de făcut" });
+    await expect(nav.getByRole("link", { name: "Costuri" })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Club", exact: true })).toHaveCount(0);
+  });
+
+  test("still refuses a volunteer, with the answer a missing route gives", async ({ page }) => {
+    await signIn(page, "Dev Contributor");
     const response = await page.goto("/ro/admin/tasks");
     expect(response?.status()).toBe(404);
   });

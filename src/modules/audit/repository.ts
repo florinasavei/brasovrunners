@@ -175,6 +175,17 @@ export type AuditAction =
   | "contact_recipients.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
   | "bot_check.changed"
+  /**
+   * The club's checklist «De făcut» on `/admin/tasks` (§NNN): a line added, reworded, ticked,
+   * unticked, moved or deleted. Entity `platform_setting` `…e00b`; the metadata is the line's id,
+   * its words and its owner (an edit: from and to) — the club's own work, never a participant.
+   */
+  | "club_todo.added"
+  | "club_todo.edited"
+  | "club_todo.done"
+  | "club_todo.reopened"
+  | "club_todo.moved"
+  | "club_todo.deleted"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */

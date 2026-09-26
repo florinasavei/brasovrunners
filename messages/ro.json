@@ -465,7 +465,7 @@
       "staff": "Echipa",
       "legal": "Documente legale",
       "devs": "Configurație",
-      "tasks": "De făcut",
+      "tasks": "Sarcini",
       "pages": "Pagini",
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
@@ -1713,7 +1713,7 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare nu se creează singur — pune cheia Zitadel (To do → „Invită echipa”, SETUP.md §37) și îl creăm noi, cu link pentru parolă; până atunci creează-l din consola Zitadel. Accesul începe la prima autentificare.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare nu se creează singur — pune cheia Zitadel (Sarcini → Club → „Invită echipa”, SETUP.md §37) și îl creăm noi, cu link pentru parolă; până atunci creează-l din consola Zitadel. Accesul începe la prima autentificare.",
       "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația — cine l-a adăugat, cu ce rol, linkul de autentificare — și linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
       "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
       "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
@@ -1760,11 +1760,11 @@
       "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
       "accountReactivated": "Contul de autentificare a fost reactivat.",
       "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
-      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
+      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (Sarcini → Club → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
       "noAccount": "Fără cont de autentificare",
       "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
-      "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
+      "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; Sarcini → Club → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
       "inviting": "Se adaugă…",
@@ -1993,7 +1993,9 @@
       "noneMatch": "Niciun rând pentru acest filtru.",
       "listLabel": "Lista de sarcini",
       "panel": {
+        "club": "Club",
         "todo": "De făcut",
+        "todoCount": "De făcut ({count})",
         "botCheck": "Anti-robot",
         "costs": "Costuri",
         "system": "Sistem",
@@ -2509,6 +2511,46 @@
         }
       }
     },
+    "clubTodo": {
+      "title": "De făcut",
+      "intro": "Lista clubului: ce avem de făcut, scrisă și bifată de mână — spre deosebire de „Club”, care se citește din sistem. O vede toată echipa; o scriu Organizatorul, Administratorul și Superadministratorul.",
+      "readOnly": "Poți citi lista; o scriu Organizatorul, Administratorul și Superadministratorul. Ce vrei schimbat le spui lor.",
+      "counts": "Deschise: {open} · Terminate: {done}",
+      "listLabel": "Lista clubului",
+      "filterLabel": "Pentru cine",
+      "filterAll": "Toți",
+      "empty": "Nimic deschis pe listă.",
+      "emptyFor": "Nimic deschis pentru {owner}.",
+      "owner": "Pentru {owner}",
+      "due": "Termen: {day}",
+      "overdue": "Termen depășit: {day}",
+      "doneBy": "Bifat de {by}, {when}",
+      "tick": "Bifează: {text}",
+      "untick": "Debifează: {text}",
+      "moveUp": "Mută mai sus: {text}",
+      "moveDown": "Mută mai jos: {text}",
+      "edit": "Modifică",
+      "doneTitle": "Arată terminate ({count})",
+      "add": {
+        "title": "Adaugă un rând",
+        "save": "Adaugă",
+        "saving": "Se adaugă…"
+      },
+      "field": {
+        "text": "Ce e de făcut",
+        "textHelp": "O propoziție sau câteva: ce, unde în backoffice, până când. Fără adrese de email sau parole — lista o vede toată echipa.",
+        "owner": "Pentru cine",
+        "ownerHelp": "Un prenume — Amalia, Dani, Florin — sau gol dacă e al oricui.",
+        "due": "Termen",
+        "dueHelp": "Opțional: ziua până la care trebuie făcut."
+      },
+      "save": "Salvează",
+      "saving": "Se salvează…",
+      "delete": "Șterge",
+      "deleting": "Se șterge…",
+      "deleteTitle": "Ștergi rândul?",
+      "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi."
+    },
     "richText": {
       "bold": "Îngroșat",
       "italic": "Cursiv",
@@ -2740,6 +2782,8 @@
       "columnStatus": "Stare",
       "columnPhotos": "Fotografii",
       "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt pe pagina „De făcut”, la „Stocarea fotografiilor”.",
+      "tableCaption": "Albumele galeriei",
+      "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt în „Sarcini” → „Club”, la „Stocarea fotografiilor”.",
       "takenOnHelp": "Ziua în care au fost făcute fotografiile. După ea se ordonează albumele.",
       "eventHelp": "Opțional. Alege evenimentul și pagina albumului va trimite către el. Lasă „Niciunul” pentru un album liber — poze de grup, fără eveniment.",
       "noEvent": "Niciunul — album liber",
@@ -3359,11 +3403,11 @@
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
             "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
-            "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
+            "„Sarcini” → „Club”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat. „Sarcini” → „De făcut”: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
             "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
-            "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
-            "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
+            "„Sarcini” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
+            "„Sarcini” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
           ],
           "roles": [
             "ADMIN",
@@ -4560,7 +4604,15 @@
         "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
         "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
       },
-      "groupRunDeclarationErased": "Declarația a fost ștearsă."
+      "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "clubTodoAdded": "Adăugat pe listă.",
+      "clubTodoSaved": "Rând salvat.",
+      "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
+      "clubTodoDone": "Bifat. Rândul e la „terminate”.",
+      "clubTodoReopened": "Debifat: rândul e din nou de făcut.",
+      "clubTodoMoved": "Rând mutat.",
+      "clubTodoDeleted": "Rând șters de pe listă."
     }
   },
   "Network": {

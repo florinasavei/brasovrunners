@@ -465,7 +465,7 @@
       "staff": "Staff",
       "legal": "Legal documents",
       "devs": "Configuration",
-      "tasks": "To do",
+      "tasks": "Tasks",
       "pages": "Pages",
       "gallery": "Gallery",
       "checkin": "Race day",
@@ -1713,7 +1713,7 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "This puts the address on the team list and emails them the invitation: who added them, with which role, and the sign-in link. The sign-in account is not created on its own — set the Zitadel key (To do → “Invite the team”, SETUP.md §37) and we create it with a password link; until then create it in the Zitadel console. Access begins at their first sign-in.",
+      "inviteHelp": "This puts the address on the team list and emails them the invitation: who added them, with which role, and the sign-in link. The sign-in account is not created on its own — set the Zitadel key (Tasks → Club → “Invite the team”, SETUP.md §37) and we create it with a password link; until then create it in the Zitadel console. Access begins at their first sign-in.",
       "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation — who added them, as what, the sign-in link — and the link to choose a password. Then they sign in at /admin.",
       "inviteSent": "Added. The invitation is on its way to their mailbox, with the link to choose a password.",
       "inviteExists": "Added, the invitation is on its way. They already have a sign-in account with this address — they can sign in at /admin right away.",
@@ -1760,11 +1760,11 @@
       "accountDeactivated": "The sign-in account is deactivated: they can no longer sign in anywhere. The team row stays — to take their access away too, use “Withdraw access”.",
       "accountReactivated": "The sign-in account is active again.",
       "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the table.",
-      "accountUnconfigured": "This needs the Zitadel key (To do → “Invite the team”, SETUP.md §37). Until then, from the Zitadel console.",
+      "accountUnconfigured": "This needs the Zitadel key (Tasks → Club → “Invite the team”, SETUP.md §37). Until then, from the Zitadel console.",
       "accountFailed": "The identity provider refused ({reason}).",
       "noAccount": "No sign-in account",
       "noAccountHelp": "“No sign-in account”: the person is on the list, but Zitadel has no account with their address, so they cannot sign in — usually they were added while the invitation key could not create accounts. The fix: ⋮ → “Revoke access”, then “Add” again with the same address — this time the account is created and Zitadel sends them the password link.",
-      "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; To do → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
+      "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; Tasks → Club → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
       "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
       "inviting": "Adding…",
@@ -1993,7 +1993,9 @@
       "noneMatch": "No row matches this filter.",
       "listLabel": "The task list",
       "panel": {
+        "club": "Club",
         "todo": "To do",
+        "todoCount": "To do ({count})",
         "botCheck": "Anti-bot",
         "costs": "Costs",
         "system": "System",
@@ -2509,6 +2511,46 @@
         }
       }
     },
+    "clubTodo": {
+      "title": "To do",
+      "intro": "The club's list: what we have to do, typed and ticked by hand — unlike “Club”, which is read from the system. The whole team sees it; the Organizer, the Administrator and the Superadministrator write it.",
+      "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for a change.",
+      "counts": "Open: {open} · Done: {done}",
+      "listLabel": "The club's list",
+      "filterLabel": "For whom",
+      "filterAll": "Everyone",
+      "empty": "Nothing open on the list.",
+      "emptyFor": "Nothing open for {owner}.",
+      "owner": "For {owner}",
+      "due": "Due: {day}",
+      "overdue": "Overdue: {day}",
+      "doneBy": "Ticked by {by}, {when}",
+      "tick": "Tick: {text}",
+      "untick": "Untick: {text}",
+      "moveUp": "Move up: {text}",
+      "moveDown": "Move down: {text}",
+      "edit": "Change",
+      "doneTitle": "Show done ({count})",
+      "add": {
+        "title": "Add a line",
+        "save": "Add",
+        "saving": "Adding…"
+      },
+      "field": {
+        "text": "What to do",
+        "textHelp": "A sentence or a few: what, where in the backoffice, by when. No email addresses or passwords — the whole team sees this list.",
+        "owner": "For whom",
+        "ownerHelp": "A first name — Amalia, Dani, Florin — or empty if it is anyone's.",
+        "due": "Due",
+        "dueHelp": "Optional: the day it has to be done by."
+      },
+      "save": "Save",
+      "saving": "Saving…",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "deleteTitle": "Delete the line?",
+      "deleteBody": "“{text}” leaves the list for the whole team and cannot be undone. The log keeps who deleted it and what it said. If it is only done, tick it instead."
+    },
     "richText": {
       "bold": "Bold",
       "italic": "Italic",
@@ -2740,6 +2782,8 @@
       "columnStatus": "Status",
       "columnPhotos": "Photos",
       "storageUnconfigured": "Photo storage is not configured for this environment: the R2 variables are missing. The steps are on the “To do” page, under “Photo storage”.",
+      "tableCaption": "The gallery's albums",
+      "storageUnconfigured": "Photo storage is not configured for this environment: the R2 variables are missing. The steps are under “Tasks” → “Club”, at “Photo storage”.",
       "takenOnHelp": "The day the photos were taken. Albums are ordered by it.",
       "eventHelp": "Optional. Choose the event and the album page will link to it. Leave “None” for a free album — group photos, no event.",
       "noEvent": "None — free album",
@@ -3359,11 +3403,11 @@
             "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
             "“Staff” (Superadministrator): add people by email and role. “Add” also creates their sign-in account and sends them the invitation to choose a password — you no longer go into Zitadel. If somebody does not get it, “Resend the invitation” on their row.",
             "Volunteer accounts: in “Staff”, “Add” with the Volunteer role — the account and the invitation go out from there. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
-            "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
+            "“Tasks” → “Club”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow. “Tasks” → “To do”: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
-            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
-            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
+            "“Tasks” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
+            "“Tasks” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
           ],
           "roles": [
             "ADMIN",
@@ -4560,7 +4604,15 @@
         "few": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
         "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
       },
-      "groupRunDeclarationErased": "The declaration was erased."
+      "groupRunDeclarationErased": "The declaration was erased.",
+      "groupRunDeclarationErased": "The declaration was erased.",
+      "clubTodoAdded": "Added to the list.",
+      "clubTodoSaved": "Line saved.",
+      "clubTodoUnchanged": "The line already said this; nothing changed.",
+      "clubTodoDone": "Ticked. The line is under “done”.",
+      "clubTodoReopened": "Unticked: the line is to do again.",
+      "clubTodoMoved": "Line moved.",
+      "clubTodoDeleted": "Line deleted from the list."
     }
   },
   "Network": {
