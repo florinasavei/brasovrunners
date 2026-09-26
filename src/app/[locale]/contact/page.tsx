@@ -28,6 +28,7 @@ import { readFormDraft } from "@/modules/registrations/form-draft";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
+import PublicFlash from "@/shared/feedback/PublicFlash";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -148,10 +149,14 @@ export default async function ContactPage({ params, searchParams }: Props) {
       </Typography>
 
       {sent ? (
-        <Alert severity="success" role="status">
-          <AlertTitle>{t("sent.title")}</AlertTitle>
-          {typed("email") ? t("sent.bodyTo", { email: typed("email") ?? "" }) : t("sent.body")}
-        </Alert>
+        <>
+          <Alert severity="success" role="status">
+            <AlertTitle>{t("sent.title")}</AlertTitle>
+            {typed("email") ? t("sent.bodyTo", { email: typed("email") ?? "" }) : t("sent.body")}
+          </Alert>
+          {/* The toast the send flashed (§NNN), here and on no other state of this page. */}
+          <PublicFlash accept={["contactSent"]} />
+        </>
       ) : !formAvailable ? (
         // No form on this deployment: the club's address, when the club has named one (§8).
         <Typography variant="body1">

@@ -4310,6 +4310,12 @@
   },
   "Feedback": {
     "close": "Close",
+    "public": {
+      "contactSent": "Message sent to the club.",
+      "unregistered": "Done: your registration is cancelled.",
+      "declarationConfirmed": "Declaration signed: your registration is confirmed.",
+      "declarationWaitlisted": "Declaration signed: you are on the waiting list."
+    },
     "toast": {
       "saved": "Saved.",
       "event": "The event was saved.",

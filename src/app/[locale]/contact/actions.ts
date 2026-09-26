@@ -14,6 +14,7 @@ import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { flashPublic } from "@/shared/feedback/flash";
 
 function text(form: FormData, name: string): string {
   const value = form.get(name);
@@ -100,6 +101,8 @@ export async function submitContactAction(form: FormData): Promise<void> {
     const addressOnly = new FormData();
     addressOnly.set("email", text(form, "email").trim());
     await stashFormDraft(addressOnly, path);
+    // The toast says it too (§NNN) — the same sentence whatever the classification, as the page is.
+    await flashPublic("contactSent");
     redirect(`${path}?sent=1`);
   }
 

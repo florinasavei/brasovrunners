@@ -119,6 +119,20 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     await page.getByRole("button", { name: "Semnează și confirmă" }).click();
     await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
+    // §NNN: the participation confirmation is said in a toast too, once.
+    await expect(page.getByTestId("toast")).toHaveText("Declarație semnată: înscrierea ta e confirmată.");
+    await page.reload();
+    await expect(page.getByTestId("toast-live")).toHaveCount(0);
+
+    /*
+      §NNN: and cancelling it from the participant's own link says so in a toast — the third public
+      flow. It also gives the place back, so a run of this spec leaves the sample race as it found it.
+    */
+    await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
+    await page.getByRole("button", { name: "Anulează înscrierea" }).click();
+    await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
+    await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");
+    expect(await registrationStatus(registration.id)).toBe("CANCELLED");
   });
 
   test("without JavaScript the server refuses it, says which name beside the box, and keeps what was typed", async ({ page, browser }) => {

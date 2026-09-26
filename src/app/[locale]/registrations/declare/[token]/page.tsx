@@ -44,6 +44,7 @@ import {
 } from "@/modules/registrations/token-actions";
 import { describeMovedOnDeclarationLink, stepForSpentLink } from "@/modules/registrations/domain/link-status";
 import { env } from "@/shared/config/env";
+import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -125,6 +126,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
+        {/* The toast the signature flashed (§NNN): the one that matches this outcome, never the other. */}
+        <PublicFlash accept={[done === "waitlisted" ? "declarationWaitlisted" : "declarationConfirmed"]} />
         {/* "What is next?" — asked the first time somebody got here (§86): said in three lines. */}
         <Typography variant="h2" sx={{ fontSize: "1.125rem", mt: 3, mb: 1 }}>
           {t("declare.nextTitle")}
