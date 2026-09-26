@@ -21,6 +21,7 @@ import {
   transitionEvent,
 } from "@/modules/content/events/service";
 import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
+import { joinDuration } from "@/modules/content/events/duration";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { nightOverrideFromChoice } from "@/modules/events/domain/night";
@@ -205,7 +206,8 @@ function eventFieldsFrom(form: FormData) {
     timezone: value("timezone"),
     startsAtWallTime: wallTime("startsAt"),
     endsAtWallTime: wallTime("endsAt"),
-    durationMinutes: value("durationMinutes"),
+    // «Durata» as hours and minutes (§NNN), joined into the minutes the service has read since §71.
+    durationMinutes: joinDuration(value("durationHours"), value("durationMinutesPart")),
     raceStartsAtWallTime: wallTime("raceStartsAt"),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),

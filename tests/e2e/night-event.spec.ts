@@ -197,7 +197,9 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     // crosses it — a start in daylight that finishes after dusk (§394).
     await fillDateField(page, "Începutul evenimentului", NOVEMBER);
     await fillTimeField(page, "Ora", "16:00");
-    await page.locator('[name="event.durationMinutes"]').fill("90");
+    // «Durata» as hours and minutes (§NNN): 1 h 30 min.
+    await page.locator('[name="event.durationHours"]').fill("1");
+    await page.locator('[name="event.durationMinutesPart"]').fill("30");
     await openEditorBox(page, "Traseul");
     await expect(autoLine(page)).toHaveText(/— eveniment de noapte$/);
     // The end is named with its time and its source, «Durata» (§394, review round 3).

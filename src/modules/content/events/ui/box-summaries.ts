@@ -8,6 +8,7 @@ import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/lin
 import { placeInBox } from "@/modules/events/domain/place";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
+import { durationShort, savedDurationMinutes } from "../duration";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
 
@@ -246,16 +247,16 @@ export function rulesSummary(words: SummaryWords, translations: readonly Summary
 
 type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone">;
 
-/** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 180 min`. */
+/** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` — the duration in hours and minutes (§NNN). */
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
-  const minutes = event.endsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : null;
+  const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
   return join(words, [
     summaryDateTime(event.startsAt, event.timezone, locale),
     event.type === "RACE" && event.raceStartsAt
       ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })
       : null,
-    minutes && minutes > 0 ? fillIn(words.when.duration, { minutes }) : null,
+    minutes ? fillIn(words.when.duration, { duration: durationShort(minutes) }) : null,
   ]);
 }
 

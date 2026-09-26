@@ -14,6 +14,7 @@ import { paintedScheduler } from "@/shared/forms/after-paint";
 import { fillIn } from "@/shared/forms/fill-in";
 import { useRecall } from "@/shared/forms/recall";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import { joinDuration } from "../duration";
 
 export type NightEventWords = {
   label: string;
@@ -181,7 +182,8 @@ export default function NightEventField({
     const read = () => {
       const data = new FormData(form);
       const text = (field: string) => String(data.get(field) ?? "");
-      const duration = Number(text("event.durationMinutes"));
+      // «Durata» is two boxes, hours and minutes (§NNN), joined the way the save joins them.
+      const duration = Number(joinDuration(text("event.durationHours"), text("event.durationMinutesPart")));
       const next = {
         date: text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date),
         time: text("event.startsAtTime") || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),

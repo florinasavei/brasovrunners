@@ -90,10 +90,15 @@ describe("§350 each box's summary, empty and filled", () => {
 
   it("Data și ora", () => {
     expect(whenSummary(words, null, "ro")).toBe(words.when.none);
-    expect(whenSummary(words, event as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 180 min");
-    expect(whenSummary(wordsEn, event as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · race start 09:30 · 180 min");
+    expect(whenSummary(words, event as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h");
+    expect(whenSummary(wordsEn, event as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · race start 09:30 · 3 h");
     // A gun time is a race's alone (§71).
-    expect(whenSummary(words, { ...event, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 180 min");
+    expect(whenSummary(words, { ...event, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 3 h");
+    // The duration in hours and minutes (§NNN): 90 minutes is «1 h 30 min», under an hour stays minutes.
+    const ninety = { ...event, endsAt: new Date("2026-11-21T08:30:00Z") };
+    expect(whenSummary(words, { ...ninety, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 1 h 30 min");
+    const fortyFive = { ...event, endsAt: new Date("2026-11-21T07:45:00Z") };
+    expect(whenSummary(wordsEn, { ...fortyFive, type: "GROUP_RUN" } as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · 45 min");
   });
 
   it("Fus orar", () => {

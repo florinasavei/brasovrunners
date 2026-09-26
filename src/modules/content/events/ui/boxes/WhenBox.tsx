@@ -1,10 +1,13 @@
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
+import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, savedDurationMinutes, splitDuration } from "../../duration";
 import { summaryDateTime, timezoneSummary, whenSummary } from "../box-summaries";
 import OnlyForType from "../OnlyForType";
 import WallTimeField from "../WallTimeField";
@@ -42,6 +45,7 @@ export default async function WhenBox({ event, mayEditSettings, risk, heading, i
   const locale = await getLocale();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
+  const duration = splitDuration(savedDurationMinutes(event?.startsAt, event?.endsAt));
 
   return (
     <Panel
@@ -80,15 +84,31 @@ export default async function WhenBox({ event, mayEditSettings, risk, heading, i
               required={eventInputConstraints("raceStartsAtWallTime").required}
             />
           </OnlyForType>
-          {/* How long, not when it ends: the end is derived (§71). */}
-          <RecallField
-            name="event.durationMinutes"
-            label={t("editor.durationMinutes")}
-            helperText={t("editor.durationMinutesHelp")}
-            defaultValue={event?.endsAt && event.startsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : ""}
-            {...textFieldConstraints(eventInputConstraints("durationMinutes"), { inputMode: "numeric" })}
-            sx={{ width: 220 }}
-          />
+          {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§NNN). */}
+          <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
+            <Typography component="legend" variant="body2" sx={{ mb: 1, p: 0 }}>
+              {t("editor.duration")}
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "flex-start" }}>
+              <RecallField
+                name="event.durationHours"
+                label={t("editor.durationHours")}
+                defaultValue={duration.hours}
+                {...textFieldConstraints(DURATION_HOURS_CONSTRAINTS, { inputMode: "numeric" })}
+                sx={{ flex: "0 0 120px" }}
+              />
+              <RecallField
+                name="event.durationMinutesPart"
+                label={t("editor.durationMinutesPart")}
+                defaultValue={duration.minutes}
+                {...textFieldConstraints(DURATION_MINUTES_CONSTRAINTS, { inputMode: "numeric" })}
+                sx={{ flex: "0 0 120px" }}
+              />
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+              {t("editor.durationHelp")}
+            </Typography>
+          </Stack>
           <Panel collapsible level={3} id="box-timezone" title={t("editor.boxes.when.timezone")} aside={timezoneSummary(words, zone)}>
             <RecallField
               select
