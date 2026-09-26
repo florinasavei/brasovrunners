@@ -2,7 +2,7 @@ import { formatCalendarDay } from "@/i18n/dates";
 import { ageOn, yearsPhrase } from "../domain/age";
 
 /**
- * The line under the registration form's birth-date box (§NNN): the typed day in words and the
+ * The line under the registration form's birth-date box (§449): the typed day in words and the
  * age on the event's own day, or "" when the value is not a full, past-dated day. Pure, and kept
  * out of the island so the one date helper (`src/i18n/dates.ts`, §349) formats it; the island
  * only reads the box. A calendar day formatted at noon UTC, so no zone moves it — the island

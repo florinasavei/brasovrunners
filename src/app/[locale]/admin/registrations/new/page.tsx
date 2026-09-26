@@ -12,6 +12,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import {
+  StaffBirthDateEcho,
   StaffBirthDateField,
   StaffEventScope,
   StaffEventSelect,
@@ -172,6 +173,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           {/* Optional here too, and when it is given the server counts it (§321): under the chosen event's own minimum (§329, the "N+" beside its name) on
               the race day is refused, so the field says so before the volunteer presses. */}
           <StaffBirthDateField label={rt("birthDate")} helperText={t("registrations.birthDateMinimumAge")} />
+          <StaffBirthDateEcho locale={locale} template={rt("birthDateEcho", { date: "{date}", age: "{age}" })} />
           {/*
             The parent or guardian (§108), shown when the birth date says under eighteen today —
             the public form's own island and rule (§188), so a fourteen-to-seventeen-year-old can
