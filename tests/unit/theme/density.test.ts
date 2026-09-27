@@ -70,6 +70,21 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
     reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
   },
   {
+    file: "src/modules/events/ui/CalendarHeader.tsx",
+    line: "rowGap: { xs: 0, sm: 1 }",
+    reason: "zero on a phone: the period row and the chip row are each 44 pixels of tap target already (§NNN)",
+  },
+  {
+    file: "src/modules/events/ui/CalendarHeader.tsx",
+    line: "spacing={{ xs: 0, sm: 0.5 }}",
+    reason: "zero on a phone: ‹, «Azi» and › are adjacent 44-pixel targets, so the row fits beside the selects at 320px (§NNN)",
+  },
+  {
+    file: "src/modules/events/ui/CalendarPicker.tsx",
+    line: 'pl: { xs: 1, sm: "14px" }',
+    reason: "a select's text inset, not whitespace between elements — narrower so the month fits beside ‹ Azi › (§NNN)",
+  },
+  {
     file: "src/modules/events/ui/EventCalendar.tsx",
     line: "p: { xs: 0.25, sm: 0.5 },",
     reason: "a month-grid day cell's two pixels — already the tight end",
@@ -186,6 +201,9 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // The calendar.
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },
+  // The calendar's compact phone head (§NNN): the controls' foot, and the gap between the two selects.
+  { file: "src/modules/events/ui/CalendarHeader.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/CalendarPicker.tsx", prop: "spacing", step: "gapXs", sm: 1, xsBefore: 1 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mb", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "spacing", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "gap", step: "gapSm", sm: 2, xsBefore: 2 },
