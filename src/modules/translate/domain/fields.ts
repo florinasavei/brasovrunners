@@ -15,7 +15,9 @@
  *   "Linkuri și fișiere" row's label, a programme row's words;
  * - the organizer's note on an update, the cancellation's reason, a message to the participants;
  * - «Echipa» (§474, §482): a card's role, its words about the person and its links' labels, and
- *   the page's introduction — one form per card, each posting the same names.
+ *   the page's introduction — one form per card, each posting the same names;
+ * - «Întrebări frecvente» (§NNN): each card's question, «Categorie» and answer (`faq[<n>].…`), and
+ *   the page's introduction — the whole page one form.
  *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
  * `/admin/legal` (counsel-reviewed, §418, and the legal editor posts other names anyway); and
@@ -54,10 +56,16 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^roleEn$/,
   /^links\[\d{1,2}\]\.labelEn$/,
   /^(bio|intro)EnBody$/,
+  // «Întrebări frecvente» (§NNN): a card's question, its category and its answer.
+  /^faq\[\d{1,3}\]\.(question|category)En$/,
+  /^faq\[\d{1,3}\]\.answerEnBody$/,
 ];
 
-/** «Echipa»'s rich texts, which spell the pair `bioRoBody` / `bioEnBody` (§474). */
-const TEAM_RICH_TEXT = /^(bio|intro)EnBody$/;
+/**
+ * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
+ * (§474), and a question's answer on «Întrebări frecvente» (§NNN).
+ */
+const TEAM_RICH_TEXT = /^(?:bio|intro|faq\[\d{1,3}\]\.answer)EnBody$/;
 
 /** Whether `name` is an English box the club types words into — the whole of what may be translated. */
 export function isTranslatableEnglishField(name: string): boolean {

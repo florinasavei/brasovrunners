@@ -254,6 +254,14 @@ export type AuditAction =
   | "team_page.unpublished"
   | "team_page.intro_saved"
   /**
+   * «Întrebări frecvente» (§NNN): the page saved as one — its introduction and every question,
+   * the ids added, deleted, shown and taken off in the metadata, never the words (§12.12) — and
+   * the page published or taken off.
+   */
+  | "faq_page.saved"
+  | "faq_page.published"
+  | "faq_page.unpublished"
+  /**
    * The members' pages (§524): «Beneficiile membrilor» on or off the site, and either of its two
    * texts saved — which text, and whether it is written; never the words.
    */

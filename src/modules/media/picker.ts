@@ -52,15 +52,15 @@ export function usedHere(references: readonly { kind: string; id: string }[], sc
 }
 
 /** A reference kind from the pictures page (`MediaReference`) as the picker's chip: the team page's introduction is «Echipa». */
-// The members' pages (§524) are a page the club writes: «Pagini».
-export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "membersPage"): PictureUse {
+// «Întrebări frecvente» (§NNN) and the members' pages (§524) are pages the club writes: «Pagini».
+export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage"): PictureUse {
   if (kind === "teamIntro") return "team";
-  if (kind === "membersPage") return "page";
+  if (kind === "faq" || kind === "membersPage") return "page";
   return kind;
 }
 
 /** Each use once, in the chips' order. */
-export function pictureUses(kinds: readonly ("album" | "page" | "event" | "team" | "teamIntro" | "membersPage")[]): PictureUse[] {
+export function pictureUses(kinds: readonly ("album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage")[]): PictureUse[] {
   const present = new Set(kinds.map(pictureUseOf));
   return PICTURE_SOURCES.filter((source): source is PictureUse => source !== "all" && present.has(source));
 }

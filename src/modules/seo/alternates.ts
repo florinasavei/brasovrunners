@@ -31,7 +31,16 @@ export type HreflangLanguages = Partial<Record<Locale | "x-default", string>>;
 
 /** The public pages whose address takes no parameter, and which exist in every locale. */
 // «Beneficiile membrilor» (§524) is one; the members' zone behind the sign-in never is.
-export type StaticPublicRoute = "/events" | "/calendar" | "/gallery" | "/team" | "/members" | "/contact" | "/legal/privacy" | "/legal/terms";
+export type StaticPublicRoute =
+  | "/events"
+  | "/calendar"
+  | "/gallery"
+  | "/team"
+  | "/faq"
+  | "/members"
+  | "/contact"
+  | "/legal/privacy"
+  | "/legal/terms";
 
 /** The public pages addressed by a per-locale slug — editorial data only the database pairs. */
 export type SlugPublicRoute = "/events/[slug]" | "/pages/[slug]" | "/gallery/[slug]";

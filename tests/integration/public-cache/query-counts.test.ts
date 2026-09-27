@@ -126,6 +126,7 @@ function everyRead(raceId: string): Record<string, () => Promise<unknown>> {
     navigationPages: () => reads.cachedPublishedPages("ro"),
     albums: () => reads.cachedPublishedAlbums("ro"),
     teamPage: () => reads.cachedTeamPage("ro"),
+    faqPage: () => reads.cachedFaqPage("ro"),
     contactReaches: () => reads.cachedContactFormReaches(),
     shownContactAddresses: () => reads.cachedShownContactAddresses(),
     // The terms, the privacy notice, and what the event page and the contact page read of it.
@@ -156,6 +157,8 @@ const STATEMENTS: Record<string, number> = {
   albums: 1,
   // The page's setting alone while «Echipa» is not published; published, one more for its cards.
   teamPage: 1,
+  // «Întrebări frecvente» (§NNN), «Echipa»'s shape: the setting alone while unpublished.
+  faqPage: 1,
   contactReaches: 1,
   shownContactAddresses: 1,
   legalInForce: 2,

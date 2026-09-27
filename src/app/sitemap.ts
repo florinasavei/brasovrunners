@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
-import { cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
+import { cachedFaqPage, cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { faqPageOnSite } from "@/modules/content/faq/repository";
 import { offersMembersEntry } from "@/modules/content/members/page-settings";
 import { teamPageOnSite } from "@/modules/content/team/repository";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
@@ -120,6 +121,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/team")) },
         changeFrequency: "monthly",
         priority: 0.3,
+      });
+    }
+  }
+
+  // «Întrebări frecvente» (§NNN), once per locale — «Echipa»'s rule: published with a question on it.
+  if ((await readWithLastGood("sitemap:faq", async () => faqPageOnSite(await cachedFaqPage(routing.defaultLocale)), now)).value) {
+    for (const locale of routing.locales) {
+      entries.push({
+        url: staticRouteUrl(env.APP_BASE_URL, "/faq", locale),
+        alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/faq")) },
+        changeFrequency: "monthly",
+        priority: 0.4,
       });
     }
   }

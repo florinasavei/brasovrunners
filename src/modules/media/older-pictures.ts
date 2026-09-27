@@ -5,7 +5,9 @@ import { mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
+import { faqQuestions } from "@/db/schema/faq";
 import { teamMembers } from "@/db/schema/team";
+import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
 import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-settings";
 import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import type { Database } from "@/db/types";
@@ -280,6 +282,19 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
       .where(and(eq(platformSettings.key, TEAM_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
+    // «Întrebări frecvente» (§NNN): the answers, and the page's introduction in its platform setting.
+    await tx
+      .update(faqQuestions)
+      .set({
+        answerRoJson: sql`${swapped(faqQuestions.answerRoJson, old, next)}::jsonb`,
+        answerEnJson: sql`${swapped(faqQuestions.answerEnJson, old, next)}::jsonb`,
+        version: sql`${faqQuestions.version} + 1`,
+      })
+      .where(or(holds(faqQuestions.answerRoJson, old), holds(faqQuestions.answerEnJson, old)));
+    await tx
+      .update(platformSettings)
+      .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
+      .where(and(eq(platformSettings.key, FAQ_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
     // The members' pages (§524), in their platform setting like the team's introduction.
     await tx
       .update(platformSettings)

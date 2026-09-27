@@ -21,6 +21,7 @@ import {
   findPublishedPageTranslationsForPages,
   listPublishedPages,
 } from "@/modules/content/pages/repository";
+import { readPublicFaqPage } from "@/modules/content/faq/repository";
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
@@ -396,6 +397,15 @@ export async function cachedPublishedPageTranslations(pageId: string) {
  */
 export async function cachedTeamPage(locale: Locale) {
   return publicRead(["team.page", locale], ["pages"], () => readPublicTeamPage(getDb(), locale));
+}
+
+/**
+ * `readPublicFaqPage`: «Întrebări frecvente» (§NNN) — the page's state and its shown questions, for
+ * the page, its entry in the navigation and the sitemap. Filed under `pages`, as «Echipa» is: every
+ * write to a question or to the page's setting expires that kind (`content/faq/service.ts`).
+ */
+export async function cachedFaqPage(locale: Locale) {
+  return publicRead(["faq.page", locale], ["pages"], () => readPublicFaqPage(getDb(), locale));
 }
 
 /**
