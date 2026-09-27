@@ -157,10 +157,10 @@ describe("§393 the two templates", () => {
   it("says it is optional, that it registers nobody, and how long the platform and the archive keep it", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       expect(TEXTS[surface].ro.join(" ")).toMatch(/este opțională și nu este o condiție/);
-      expect(TEXTS[surface].ro.join(" ")).toMatch(/Platforma clubului șterge declarația la șapte zile după alergare/);
+      expect(TEXTS[surface].ro.join(" ")).toMatch(/Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului/);
       expect(TEXTS[surface].ro.join(" ")).toMatch(/copia din arhiva clubului se păstrează trei ani de la alergare/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/optional and is not a condition/);
-      expect(TEXTS[surface].en.join(" ")).toMatch(/deletes the declaration seven days after the run/);
+      expect(TEXTS[surface].en.join(" ")).toMatch(/keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/kept for three years from the run/);
     }
   });
@@ -198,11 +198,11 @@ describe("§393 the two templates", () => {
 });
 
 describe("§393 the public offer line states the retention truthfully", () => {
-  it("says the club's platform deletes it, not that the club keeps it (the archive copy is the privacy notice's three years)", () => {
-    expect(ro.Event.groupRunDeclaration.line).toMatch(/platforma clubului o șterge la \{days\} după alergare/);
-    expect(en.Event.groupRunDeclaration.line).toMatch(/the club's platform deletes it \{days\} after the run/);
-    expect(ro.Event.groupRunDeclaration.line).not.toMatch(/păstrează/);
-    expect(en.Event.groupRunDeclaration.line).not.toMatch(/keeps/);
+  it("says the club keeps it while the signer comes to the runs and deletes it when they ask (§NNN), with no number of days", () => {
+    expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp vii la alergări și o șterge când îi ceri/);
+    expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it while you keep coming to the runs and deletes it when you ask/);
+    expect(ro.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|zile/);
+    expect(en.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|days/);
   });
 
   it("offers no language select: the signature is in the page's language, the text that was read (§57)", () => {

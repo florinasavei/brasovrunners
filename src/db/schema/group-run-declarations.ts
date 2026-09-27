@@ -17,11 +17,14 @@ import { locale } from "./locale";
  *
  * **What it keeps, and for how long.** The name typed as the signature (§86, in a hand), the
  * identity document as it was typed — never a scan (§95) — the address the copy was sent to, and
- * the language of the PDF. The whole row goes seven days after the event's start
- * (`jobs/retention.ts`): the declaration exists for the run, and a runner's identity number has
- * no business outliving it here. The signer keeps the PDF that was emailed; the club's archive
- * copy leaves with the document masked (§320). Insert-only apart from that sweep and the
- * Administrator's erase, which writes an audit row naming who and why, never who was erased.
+ * the language of the PDF. The row is **kept while the signer takes part in the club's runs and
+ * deleted at their request** (§NNN, reversing §393's seven days): it is the club's evidence for
+ * the runs the signer keeps coming to, and the Administrator's erase — an
+ * audit row naming who and why, never who was erased — is how it goes. Only the identity
+ * document, which a text approved before §418 could still ask for, is cleared seven days after
+ * the event's start (`jobs/retention.ts`): a runner's identity number has no business outliving
+ * the run here. The signer keeps the PDF that was emailed; the club's archive copy leaves with the
+ * document masked (§320). Insert-only apart from that clearing and the erase.
  *
  * `event_id` cascades: an event erased outright takes its declarations with it (the event's own
  * audit row records the erase). `legal_document_id` does not: a version somebody signed is
@@ -47,7 +50,7 @@ export const groupRunDeclarations = pgTable(
     typedName: text("typed_name").notNull(),
     /** "Carte de identitate BV 123456", as typed at signing (§95, §283). Null when the text names no document. */
     idDocument: text("id_document"),
-    /** Where the signer's copy was sent. Kept only as long as the row, for the copy and its resend. */
+    /** Where the signer's copy was sent, and whom a request to delete it is checked against. Kept as long as the row. */
     email: text("email").notNull(),
 
     acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
