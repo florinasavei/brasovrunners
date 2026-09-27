@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { CLOUDFLARE_TEST_SECRET, CLOUDFLARE_TEST_SITE_KEY, TURNSTILE_E2E_PORT, TURNSTILE_E2E_URL } from "./tests/e2e/support/turnstile-server";
 
 /**
  * End-to-end tests.
@@ -28,6 +29,78 @@ import { defineConfig, devices } from "@playwright/test";
 const DEV = process.env.E2E_DEV === "1";
 const PORT = Number(process.env.E2E_PORT ?? (DEV ? 4784 : 4783));
 const baseURL = `http://localhost:${PORT}`;
+
+/**
+ * A second server over the same build and the same database, with the anti-bot check ON (§NNN).
+ *
+ * The suite's own server runs without Turnstile keys, on purpose: every form there is sent without
+ * waiting for Cloudflare, and no spec depends on a third party. But the one defect that lived in
+ * the wait itself — a press held for the token and never sent after the widget said «Success!» —
+ * cannot show where there is no widget. So this one process renders it, with Cloudflare's own
+ * published test keys (a site key that always passes and the secret that accepts only its dummy
+ * token — public values from Cloudflare's testing page, never the club's). Only
+ * `registration-turnstile.spec.ts` points at it. Not under `E2E_DEV`, which is about `next dev`.
+ * The port, the keys and the spec's stand-in script are in `tests/e2e/support/turnstile-server.ts`.
+ */
+
+/** The suite's own server: every spec but one talks to it. */
+const suiteServer = {
+  // The production server, not `next dev`: this is the artefact that gets deployed, and
+  // dev-only behaviour has hidden real bugs before. `E2E_DEV=1` is the one exception, and it
+  // exists for the reverse case — a bug only `next dev` shows (§370).
+  command: DEV ? `yarn next dev --port ${PORT}` : `yarn build && yarn start --port ${PORT}`,
+  url: `${baseURL}/ro`,
+  reuseExistingServer: !process.env.CI,
+  timeout: 180_000,
+  env: {
+    PORT: String(PORT),
+    APP_BASE_URL: baseURL,
+    /**
+     * The footer's social marks render only when the club's addresses are configured, and
+     * CI configures none — so the specs that measure the marks (`footer.spec.ts`: three 44px
+     * targets, none over another, each taking its tap) had nothing to measure there. These
+     * are placeholders on the networks' own hosts, never the club's handles; a value already
+     * in the environment wins, since Next reads `.env.local` under what is set.
+     */
+    CLUB_FACEBOOK_URL: process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
+    CLUB_INSTAGRAM_URL: process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
+    CLUB_STRAVA_URL: process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
+    /**
+     * A developer's own `.env.local` legitimately carries a real `NEON_API_KEY` and
+     * `NEON_PROJECT_ID` — this same file backs `yarn build && yarn start` above — but the
+     * suite must never call the real Neon API. `env.ts`'s `E2E_DISABLE_NEON` blanks both, the
+     * same way `CLUB_*` above wins over `.env.local`: set here, before Next loads that file.
+     */
+    E2E_DISABLE_NEON: "true",
+    /**
+     * The weather forecast (§402) the same way: the suite's server answers every forecast with
+     * one fixed hour (`weather/source.ts`, `stubForecast`) and never reaches Open-Meteo, so a
+     * spec can read the row's words and a run does not depend on somebody else's API.
+     */
+    E2E_WEATHER_STUB: "true",
+    /**
+     * A save that carries a YouTube film fetches its poster from `i.ytimg.com`
+     * (`modules/media/video-poster.ts`) — a real third party this suite's CI runner may have
+     * no route to. `env.ts`'s `E2E_STUB_YOUTUBE_POSTER` swaps that one fetch for an
+     * in-process fixture, the same shape as `E2E_DISABLE_NEON` above.
+     */
+    E2E_STUB_YOUTUBE_POSTER: "true",
+    /**
+     * Under CI's `APP_ENV=test` the server's store is a Map the specs cannot reach; this lets a
+     * miss there read `.media/` on the disk, where `older-pictures.spec.ts` writes a picture as
+     * the site stored one before §414 (`env.ts`, `E2E_FAKE_MEDIA_FROM_DISK`, §430).
+     */
+    E2E_FAKE_MEDIA_FROM_DISK: "true",
+    /**
+     * Under CI's `APP_ENV=test` the request that queues a message does not drain the outbox
+     * (`notifications/drain.ts`); this makes the suite's server drain it as every deployed
+     * environment and a laptop's `local` do, so a spec can read a sent message on `/devs` →
+     * «Emailuri» (`family-registration.spec.ts`) and a link minted by a spec is not later
+     * superseded by a send nobody expected (`env.ts`, `E2E_DRAIN_OUTBOX`).
+     */
+    E2E_DRAIN_OUTBOX: "true",
+  },
+};
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -81,61 +154,26 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    // The production server, not `next dev`: this is the artefact that gets deployed, and
-    // dev-only behaviour has hidden real bugs before. `E2E_DEV=1` is the one exception, and it
-    // exists for the reverse case — a bug only `next dev` shows (§370).
-    command: DEV ? `yarn next dev --port ${PORT}` : `yarn build && yarn start --port ${PORT}`,
-    url: `${baseURL}/ro`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    env: {
-      PORT: String(PORT),
-      APP_BASE_URL: baseURL,
-      /**
-       * The footer's social marks render only when the club's addresses are configured, and
-       * CI configures none — so the specs that measure the marks (`footer.spec.ts`: three 44px
-       * targets, none over another, each taking its tap) had nothing to measure there. These
-       * are placeholders on the networks' own hosts, never the club's handles; a value already
-       * in the environment wins, since Next reads `.env.local` under what is set.
-       */
-      CLUB_FACEBOOK_URL: process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
-      CLUB_INSTAGRAM_URL: process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
-      CLUB_STRAVA_URL: process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
-      /**
-       * A developer's own `.env.local` legitimately carries a real `NEON_API_KEY` and
-       * `NEON_PROJECT_ID` — this same file backs `yarn build && yarn start` above — but the
-       * suite must never call the real Neon API. `env.ts`'s `E2E_DISABLE_NEON` blanks both, the
-       * same way `CLUB_*` above wins over `.env.local`: set here, before Next loads that file.
-       */
-      E2E_DISABLE_NEON: "true",
-      /**
-       * The weather forecast (§402) the same way: the suite's server answers every forecast with
-       * one fixed hour (`weather/source.ts`, `stubForecast`) and never reaches Open-Meteo, so a
-       * spec can read the row's words and a run does not depend on somebody else's API.
-       */
-      E2E_WEATHER_STUB: "true",
-      /**
-       * A save that carries a YouTube film fetches its poster from `i.ytimg.com`
-       * (`modules/media/video-poster.ts`) — a real third party this suite's CI runner may have
-       * no route to. `env.ts`'s `E2E_STUB_YOUTUBE_POSTER` swaps that one fetch for an
-       * in-process fixture, the same shape as `E2E_DISABLE_NEON` above.
-       */
-      E2E_STUB_YOUTUBE_POSTER: "true",
-      /**
-       * Under CI's `APP_ENV=test` the server's store is a Map the specs cannot reach; this lets a
-       * miss there read `.media/` on the disk, where `older-pictures.spec.ts` writes a picture as
-       * the site stored one before §414 (`env.ts`, `E2E_FAKE_MEDIA_FROM_DISK`, §430).
-       */
-      E2E_FAKE_MEDIA_FROM_DISK: "true",
-      /**
-       * Under CI's `APP_ENV=test` the request that queues a message does not drain the outbox
-       * (`notifications/drain.ts`); this makes the suite's server drain it as every deployed
-       * environment and a laptop's `local` do, so a spec can read a sent message on `/devs` →
-       * «Emailuri» (`family-registration.spec.ts`) and a link minted by a spec is not later
-       * superseded by a send nobody expected (`env.ts`, `E2E_DRAIN_OUTBOX`).
-       */
-      E2E_DRAIN_OUTBOX: "true",
-    },
-  },
+  webServer: DEV
+    ? suiteServer
+    : [
+        suiteServer,
+        {
+          // After the suite's server, which builds: Playwright starts these one after the other, so
+          // this one serves the build that one just made. Locally a server already on the port is
+          // reused as it is — another worktree's, built from another branch — so a second checkout
+          // running e2e at the same time sets its own `E2E_PORT` and `E2E_TURNSTILE_PORT`.
+          command: `yarn start --port ${TURNSTILE_E2E_PORT}`,
+          url: `${TURNSTILE_E2E_URL}/ro`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 180_000,
+          env: {
+            ...suiteServer.env,
+            PORT: String(TURNSTILE_E2E_PORT),
+            APP_BASE_URL: TURNSTILE_E2E_URL,
+            TURNSTILE_SITE_KEY: CLOUDFLARE_TEST_SITE_KEY,
+            TURNSTILE_SECRET_KEY: CLOUDFLARE_TEST_SECRET,
+          },
+        },
+      ],
 });
