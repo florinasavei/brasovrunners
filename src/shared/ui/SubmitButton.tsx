@@ -280,12 +280,17 @@ export default function SubmitButton({
     survives the redirect that shows the refusal.
 
     **Now.** The press asks the form itself, at the moment of the press, whether the token is there
-    — no state that can go stale. A press without it is held, and from that press on the form is
-    watched — the hidden field, the form's own input, and the widget's success callback
-    (`TURNSTILE_TOKEN_EVENT`) — until the token is there or eight seconds have passed since *that
-    press*, whichever is first; then the form is submitted with this button as the submitter, exactly
-    as if the finger had landed now. `requestSubmit` runs the browser's own validation first, so an
-    invalid form still gets its bubble rather than a request. Nothing is said until somebody
+    — no state that can go stale. A press without it is held, and from that press on it waits for
+    the token or for eight seconds since *that press*, whichever is first. Two signals say the
+    token is there, each enough alone. The widget's success callback (`TURNSTILE_TOKEN_EVENT`) is
+    Cloudflare's documented answer and depends on nothing about the field. And a MutationObserver
+    on the `value` attribute: Cloudflare's field is `<input type="hidden">`, whose `.value` is the
+    attribute (the HTML standard's "default" value mode), so its `.value =` write is a mutation —
+    the observer would see no such write on a text box, whose `.value` is a property of its own.
+    The form's own `input` is looked at as well, for somebody typing while held. Then the form is
+    submitted with this button as the submitter, exactly as if the finger had landed now.
+    `requestSubmit` runs the browser's own validation first, so an invalid form still gets its
+    bubble rather than a request. Nothing is said until somebody
     presses (§285, amended: a warning at page load was a flicker about a problem nobody had yet),
     and the sentence goes with the held press. Every held press is its own: nothing is spent at
     the first one. A widget never drawn at all — a blocked script — is waited for only
@@ -321,10 +326,20 @@ export default function SubmitButton({
     const check = () => {
       if (!botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) send();
     };
+    // The field drawn or replaced, or its `value` attribute written — which, on Cloudflare's hidden
+    // field, is its `.value =` (see above). A field of another type would be seen only by `onToken`.
     const observer = new MutationObserver(check);
     observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
     form.addEventListener("input", check);
-    form.addEventListener(TURNSTILE_TOKEN_EVENT, check);
+    // The widget's success callback. Read on the next task, not inside Cloudflare's callback: a
+    // script that called back before writing the field would otherwise be read as still empty,
+    // and the press would wait for the valve.
+    let afterToken: ReturnType<typeof setTimeout> | undefined;
+    const onToken = () => {
+      clearTimeout(afterToken);
+      afterToken = setTimeout(check, 0);
+    };
+    form.addEventListener(TURNSTILE_TOKEN_EVENT, onToken);
     // The token may have landed between the press and this effect, with nothing yet listening.
     const late = setTimeout(check, 0);
     // The valve, per press (§285, §205): a check that never answers sends the form anyway.
@@ -333,7 +348,8 @@ export default function SubmitButton({
       over = true;
       observer.disconnect();
       form.removeEventListener("input", check);
-      form.removeEventListener(TURNSTILE_TOKEN_EVENT, check);
+      form.removeEventListener(TURNSTILE_TOKEN_EVENT, onToken);
+      clearTimeout(afterToken);
       clearTimeout(late);
       clearTimeout(valve);
     };

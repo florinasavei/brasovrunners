@@ -86,9 +86,15 @@ describe("§NNN a held press is sent whenever the check answers, every time", ()
   });
 
   it("watches the field, the form's input and the widget's success callback while a press is held", () => {
+    // The hidden field's `value` attribute, which is its `.value` on `type="hidden"`.
     expect(source).toMatch(/new MutationObserver\(check\)/);
+    expect(source).toMatch(/attributeFilter: \["value"\]/);
     expect(source).toMatch(/form\.addEventListener\("input", check\);/);
-    expect(source).toMatch(/form\.addEventListener\(TURNSTILE_TOKEN_EVENT, check\);/);
+    // The callback, whatever the field is — read on the next task, not inside the callback, so a
+    // script that called back before writing the field does not leave the press to the valve.
+    expect(source).toMatch(/form\.addEventListener\(TURNSTILE_TOKEN_EVENT, onToken\);/);
+    expect(source).toMatch(/const onToken = \(\) => \{[\s\S]*?afterToken = setTimeout\(check, 0\);/);
+    expect(source).toMatch(/clearTimeout\(afterToken\);\s*\r?\n\s*clearTimeout\(late\);/);
     // …and the widget says so, bubbling from its own element into the form.
     expect(widget).toMatch(/callback: \(\) => element\.dispatchEvent\(new Event\(TURNSTILE_TOKEN_EVENT, \{ bubbles: true \}\)\)/);
     // Never Cloudflare's error callback: handing it one changes how the widget retries.

@@ -157,7 +157,9 @@ export default defineConfig({
         suiteServer,
         {
           // After the suite's server, which builds: Playwright starts these one after the other, so
-          // this one serves the build that one just made.
+          // this one serves the build that one just made. Locally a server already on the port is
+          // reused as it is — another worktree's, built from another branch — so a second checkout
+          // running e2e at the same time sets its own `E2E_PORT` and `E2E_TURNSTILE_PORT`.
           command: `yarn start --port ${TURNSTILE_E2E_PORT}`,
           url: `${TURNSTILE_E2E_URL}/ro`,
           reuseExistingServer: !process.env.CI,

@@ -21,7 +21,7 @@ export const TURNSTILE_FIELD = "cf-turnstile-response";
  * The event `TurnstileWidget` dispatches, bubbling, from its own element when Cloudflare's success
  * callback hands it a token (§NNN). A send button held for the
  * token (`SubmitButton`'s `awaitsBotCheck`) listens for it on its form, beside watching the hidden
- * field itself: Cloudflare's documented callback is the one signal that does not depend on how
- * its script happens to write the field.
+ * field's `value` attribute: the callback is Cloudflare's documented answer, and the one signal
+ * that does not depend on the field staying `type="hidden"` (whose `.value` is the attribute).
  */
 export const TURNSTILE_TOKEN_EVENT = "br-turnstile-token";

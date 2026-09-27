@@ -64,10 +64,12 @@ export default function TurnstileWidget({
         return;
       }
       /*
-        Say so when the token arrives (§NNN). A send button held for the token watches the hidden
-        field too, but Cloudflare's success callback is its documented answer, and it bubbles to the
-        form from here — so a held press is sent the moment the check says yes, whatever the script
-        does to the field on the way. Only the success callback: handing Cloudflare an
+        Say so when the token arrives (§NNN). A send button held for the token also watches the
+        hidden field's `value` attribute, but that holds only while Cloudflare draws the field as
+        `type="hidden"`; the success callback is its documented answer. It bubbles to the form from
+        here, and the button reads the field on the next task — so a held press is sent the moment
+        the check says yes, whatever the field is and whichever order the script calls back and
+        writes it in. Only the success callback: handing Cloudflare an
         `error-callback` changes how its widget retries, and nothing here needs to know of a failure
         — a held press has its own eight-second valve.
       */
