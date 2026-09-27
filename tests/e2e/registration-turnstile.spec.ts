@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { cancelRegistrationsByEmailPrefix } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 import {
   BLIND_FIELD_FLAG,
   CLOUDFLARE_DUMMY_TOKEN,
@@ -69,6 +70,8 @@ async function fillRequired(page: Page, email: string, emailConfirm = email) {
     const box = page.locator(`[name="${name}"]`);
     if ((await box.inputValue()).replace(/\s/g, "") !== value.replace(/\s/g, "")) await box.fill(value);
   }
+  // «Sex» starts empty and is required (§NNN): without it the press is refused before it is held.
+  await chooseSex(page);
   for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     await page.locator(`[name="${name}"]`).check();
   }
@@ -151,7 +154,7 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     const pressedAt = Date.now();
     await sendButton(page).click();
     await expect(heldSentence(page)).toBeVisible();
-    // The button carries the check's state (§518): «Se verifică…», and busy while held.
+    // The button carries the check's state (§NNN): «Se verifică…», and busy while held.
     await expect(page.getByTestId("held-press-hint")).toHaveText(/^Se verifică…/);
     await expect(sendButton(page)).toHaveAttribute("aria-busy", "true");
     // Held, not sent: no request, no confirmation page.
@@ -287,7 +290,7 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     const pressedAt = Date.now();
     await sendButton(page).click();
     await expect(heldSentence(page)).toBeVisible();
-    // Nobody answers. Before the valve sends, the button says so (§518) — and the sentence is on
+    // Nobody answers. Before the valve sends, the button says so (§NNN) — and the sentence is on
     // screen before the request leaves, so it can be read.
     const posted = formPost(page);
     await expect(page.getByTestId("held-press-hint")).toHaveText("Trimitem fără verificare automată…", { timeout: 10_000 });
@@ -296,7 +299,7 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     // takes a missing token for the check not running, not for a robot (§216).
     const request = await posted;
     expect(Date.now() - saidAt, "said a beat before it went").toBeGreaterThanOrEqual(500);
-    // The valve's send names itself with the form (§518), as the submitter's word.
+    // The valve's send names itself with the form (§NNN), as the submitter's word.
     expect(request.postData() ?? "").toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 30_000 });
     expect(Date.now() - pressedAt).toBeGreaterThanOrEqual(7_500);
@@ -332,7 +335,7 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
 });
 
 /**
- * §518 — every state of the check said under the widget and on the send button, and a way out of
+ * §NNN — every state of the check said under the widget and on the send button, and a way out of
  * each one a person can be stuck in. The widget's line is `BotCheck.<state>`; «Reîncearcă
  * verificarea» is its retry; the button's held sentence (`held-press-hint`) says the same state.
  */
@@ -350,7 +353,7 @@ const askForTick = (page: Page) => standIn(page, "__askTurnstile");
 const formPost = (page: Page) =>
   page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === registerPath);
 
-test.describe("§518 the anti-bot check says every state and never strands a press", () => {
+test.describe("§NNN the anti-bot check says every state and never strands a press", () => {
   test.afterAll(async ({}, testInfo) => cancelRegistrationsByEmailPrefix(addressPrefix(testInfo.project.name)));
 
   test("thinking, a box to tick, and a pass: each said under the widget and on the held button", async ({ page }) => {
@@ -526,7 +529,7 @@ test.describe("§518 the anti-bot check says every state and never strands a pre
     await sendButton(page).click();
     const request = await posted;
     expect(Date.now() - pressedAt, "not held for a script that will not come").toBeLessThan(PROMPTLY_MS);
-    // The failure rides with the form, for the register action to count (§518): no request of its own.
+    // The failure rides with the form, for the register action to count (§NNN): no request of its own.
     expect(request.postData() ?? "").toContain("widget-failed");
     expect(request.postData() ?? "").not.toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
