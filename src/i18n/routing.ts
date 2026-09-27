@@ -129,6 +129,12 @@ export const routing = defineRouting({
      * club once wrote and called `echipa` keeps its own address.
      */
     "/team": { ro: "/echipa", en: "/team" },
+    /**
+     * «Întrebări frecvente» / "FAQ" (§NNN): the club's questions and answers, in folds. A platform
+     * page like «Echipa», so a standing page the club once called `intrebari-frecvente` keeps its
+     * own address under `/pagini/`.
+     */
+    "/faq": { ro: "/intrebari-frecvente", en: "/faq" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
@@ -221,6 +227,8 @@ export const routing = defineRouting({
     "/admin/pages/new": "/admin/pages/new",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
+    /** The questions of «Întrebări frecvente» (§NNN): a standard page, beside «Echipa». */
+    "/admin/pages/faq": "/admin/pages/faq",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",

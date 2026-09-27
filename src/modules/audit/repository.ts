@@ -254,6 +254,18 @@ export type AuditAction =
   | "team_page.unpublished"
   | "team_page.intro_saved"
   /**
+   * «Întrebări frecvente» (§NNN): a question added, written, shown or taken off, moved, or
+   * deleted, and the page published or taken off. The question's id, never its words (§12.12).
+   */
+  | "faq_item.created"
+  | "faq_item.saved"
+  | "faq_item.shown"
+  | "faq_item.hidden"
+  | "faq_item.moved"
+  | "faq_item.deleted"
+  | "faq_page.published"
+  | "faq_page.unpublished"
+  /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
    * translation budget sums these rows' `characters` since the club's midnight.
@@ -282,6 +294,8 @@ export type RecordAuditInput = {
     | "media_asset"
     | "newsletter"
     | "team_member"
+    // `faq_item` for a question of «Întrebări frecvente» (§NNN).
+    | "faq_item"
     | "content";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;

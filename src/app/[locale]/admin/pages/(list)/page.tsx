@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -9,7 +10,11 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { readFaqPageSettings } from "@/modules/content/faq/page-settings";
+import { listFaqItemsForAdmin } from "@/modules/content/faq/repository";
 import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/repository";
+import { readTeamPageSettings } from "@/modules/content/team/page-settings";
+import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -61,8 +66,39 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   const current = await searchParams;
   const { saved, error } = current;
-  const rows = await listPagesForAdmin(getDb(), locale);
+  const db = getDb();
+  const [rows, teamSettings, teamMembers, faqSettings, faqItems] = await Promise.all([
+    listPagesForAdmin(db, locale),
+    readTeamPageSettings(db),
+    listTeamMembersForAdmin(db),
+    readFaqPageSettings(db),
+    listFaqItemsForAdmin(db),
+  ]);
   const t = await getTranslations("Admin");
+  /*
+    The standard pages (§NNN): the platform's own, whose address and title the club does not
+    choose and whose contents it keeps on their own screens — «Echipa» (§459) and «Întrebări
+    frecvente». Each says whether it is published and how much of it is on the site, so the list
+    answers "what is live" for every page the club has, standard and custom alike.
+  */
+  const standard = [
+    {
+      key: "team",
+      href: "/admin/pages/team" as const,
+      title: t("pages.tabTeam"),
+      published: teamSettings.status === "PUBLISHED",
+      shown: teamMembers.filter((member) => member.visible).length,
+      total: teamMembers.length,
+    },
+    {
+      key: "faq",
+      href: "/admin/pages/faq" as const,
+      title: t("pages.tabFaq"),
+      published: faqSettings.status === "PUBLISHED",
+      shown: faqItems.filter((item) => item.visible).length,
+      total: faqItems.length,
+    },
+  ];
   const words = await confirmWords();
 
   const query = parseListQuery(current, {
@@ -114,7 +150,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* The club's own pages and «Echipa», the platform's team page (§459). */}
+      {/* The club's own pages, and the platform's standard ones: «Echipa» (§459), «Întrebări frecvente» (§NNN). */}
       <PagesSubNav locale={locale} active="pages" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
@@ -122,12 +158,45 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
       </Box>
 
+      <Stack component="section" spacing={1.5} aria-labelledby="pages-standard" data-testid="pages-standard">
+        <Typography variant="h2" id="pages-standard" sx={{ fontSize: "1.25rem" }}>
+          {t("pages.standardTitle")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("pages.standardIntro")}
+        </Typography>
+        <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {standard.map((page) => (
+            <Paper component="li" key={page.key} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
+                    {page.title}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    color={page.published ? "success" : "default"}
+                    label={EDITORIAL_STATUS_LABEL[page.published ? "PUBLISHED" : "DRAFT"]}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {t("pages.standardShown", { shown: String(page.shown), total: String(page.total) })}
+                  </Typography>
+                </Stack>
+                <GlyphButtonLink href={page.href} icon="edit" variant="outlined" sx={{ minHeight: 44 }}>
+                  {t("pages.standardOpen")}
+                </GlyphButtonLink>
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      </Stack>
+
       <Stack
         direction="row"
         sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}
       >
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
-          {t("pages.title")}
+          {t("pages.customTitle")}
         </Typography>
         {/* A reader opens this list; writing a page is the Redactor's and the Administrator's
             (§207, §208). The action refuses either way — this keeps the button off a screen

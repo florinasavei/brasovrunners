@@ -687,6 +687,13 @@
       "when": 1790530231563,
       "tag": "0100_newsletter_discounts_retired",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1790538301170,
+      "tag": "0101_faq_items",
+      "breakpoints": true
     }
   ]
 }

@@ -30,7 +30,15 @@ export type LocaleUrls = Partial<Record<Locale, string>>;
 export type HreflangLanguages = Partial<Record<Locale | "x-default", string>>;
 
 /** The public pages whose address takes no parameter, and which exist in every locale. */
-export type StaticPublicRoute = "/events" | "/calendar" | "/gallery" | "/team" | "/contact" | "/legal/privacy" | "/legal/terms";
+export type StaticPublicRoute =
+  | "/events"
+  | "/calendar"
+  | "/gallery"
+  | "/team"
+  | "/faq"
+  | "/contact"
+  | "/legal/privacy"
+  | "/legal/terms";
 
 /** The public pages addressed by a per-locale slug — editorial data only the database pairs. */
 export type SlugPublicRoute = "/events/[slug]" | "/pages/[slug]" | "/gallery/[slug]";

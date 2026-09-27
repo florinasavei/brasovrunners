@@ -3,9 +3,11 @@ import Container from "@mui/material/Container";
 import { getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
+import { faqPageOnSite } from "@/modules/content/faq/repository";
 import { teamPageOnSite } from "@/modules/content/team/repository";
 import {
   cachedContactFormReaches,
+  cachedFaqPage,
   cachedShownContactAddresses,
   cachedPublishedAlbums,
   cachedPublishedPages,
@@ -82,6 +84,15 @@ async function hasVisibleTeam(locale: Locale) {
   }
 }
 
+/** Whether «Întrebări frecvente» is offered (§NNN): the page published with a question on it — «Echipa»'s rule. */
+async function hasVisibleFaq(locale: Locale) {
+  try {
+    return (await readWithLastGood(`nav:faq:${locale}`, async () => faqPageOnSite(await cachedFaqPage(locale)))).value;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
@@ -118,6 +129,7 @@ export default async function SiteHeader() {
   const pages = await navigationPages(locale as Locale);
   const showGallery = await hasPublishedAlbum(locale as Locale);
   const showTeam = await hasVisibleTeam(locale as Locale);
+  const showFaq = await hasVisibleFaq(locale as Locale);
   /**
    * "Contact" leads to the form, or to the club's address; a deployment with neither has no
    * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
@@ -261,6 +273,7 @@ export default async function SiteHeader() {
             pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
             showGallery={showGallery}
             showTeam={showTeam}
+            showFaq={showFaq}
             showContact={showContact}
           />
         </Box>

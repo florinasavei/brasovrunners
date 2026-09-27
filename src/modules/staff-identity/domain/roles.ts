@@ -294,6 +294,23 @@ export function canShowTeamMember(role: StaffRole): boolean {
 }
 
 /**
+ * **«Întrebări frecvente» — the FAQ page's questions (§NNN).** A question and its answer are
+ * words, so writing, moving and deleting a hidden one is the Redactor's and the Administrator's,
+ * as a team card is (§459).
+ */
+export function canEditFaqPage(role: StaffRole): boolean {
+  return canEditTexts(role);
+}
+
+/**
+ * Showing a question on the site, taking it off, deleting one that is on it, and publishing the
+ * page: crossing public view, the Administrator's since §201 — «Echipa»'s threshold.
+ */
+export function canShowFaqItem(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
  * Deleting is the one editorial action that destroys rather than moves, so it starts at ADMIN.
  * Archiving is what an event that happened gets; deletion is for a row that should never have
  * existed. An event with any registration against it is refused outright by the service,

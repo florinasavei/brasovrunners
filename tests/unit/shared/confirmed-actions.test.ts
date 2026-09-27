@@ -108,6 +108,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setTeamMemberVisibleAction: [],
   deleteTeamMemberAction: [],
   setTeamPagePublishedAction: [],
+  // «Întrebări frecvente» (§NNN): «Echipa»'s three, for questions.
+  setFaqItemVisibleAction: [],
+  deleteFaqItemAction: [],
+  setFaqPagePublishedAction: [],
   // The team.
   inviteStaffAction: [],
   changeStaffRoleAction: [],
@@ -162,6 +166,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
   moveTeamMemberAction: "reorders the team's cards, undone by moving back",
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",
+  createFaqItemAction: "adds a hidden question nobody sees until an Administrator shows it, which asks",
+  saveFaqItemAction: "an editorial save of a question and its answer, like a page's; showing and deleting ask",
+  moveFaqItemAction: "reorders the questions, undone by moving back",
   createLegalVersionAction: "a draft, never in force until approved, which asks",
   updateLegalVersionAction: "a draft, never in force until approved, which asks",
   markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",

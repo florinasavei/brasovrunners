@@ -207,6 +207,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Registration.clubMemberDeclared",
           "Registration.disclosure.race",
           "Team.lead",
+          // «Întrebări frecvente» (§NNN): the page's lead and its description.
+          "Faq.lead",
         ].sort(),
       );
     }
@@ -218,8 +220,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "registrations.clubMemberLabel": 1,
       "pages.intro": 1,
       "page.report.heading": 1,
-      // «Echipa» (§459): the page and its description for search engines.
-      lead: 2,
+      // «Echipa» (§459) and «Întrebări frecvente» (§NNN): each page and its description for search engines.
+      lead: 4,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {
