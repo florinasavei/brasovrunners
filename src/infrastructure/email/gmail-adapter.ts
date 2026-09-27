@@ -74,9 +74,17 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
         */
         const refusedTo = refusalOf(message.to, info);
         if (refusedTo) {
+          // The copies Gmail took all the same: they left, and Google counts them against the day.
+          const acceptedRecipients = Array.isArray(info.accepted) ? info.accepted.length : 0;
           return gmailRefusedTheAddress(refusedTo)
-            ? { outcome: "permanent_failure", error: `gmail: the address was refused (${enhancedStatusOf(refusedTo) ?? "5xx"})` }
-            : { outcome: "transient_failure", error: "gmail: the address was refused for now", mayHaveBeenAccepted: true };
+            ? { outcome: "permanent_failure", error: `gmail: the address was refused (${enhancedStatusOf(refusedTo) ?? "5xx"})`, acceptedRecipients }
+            : {
+                outcome: "transient_failure",
+                error: "gmail: the address was refused for now",
+                mayHaveBeenAccepted: true,
+                addressRefusedForNow: true,
+                acceptedRecipients,
+              };
         }
         if (info.accepted.length === 0) return { outcome: "transient_failure", error: "gmail rejected every recipient" };
         return { outcome: "sent", providerMessageId: info.messageId, transport: "gmail" };

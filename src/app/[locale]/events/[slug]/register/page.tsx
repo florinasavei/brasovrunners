@@ -19,7 +19,7 @@ import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import { cachedCurrentApprovedDocument, cachedListStatesDisclosed, cachedPublicAvailability } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { isColdMiss } from "@/modules/resilience/breaker";
+import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -303,9 +303,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     } else if (isColdMiss(failure)) {
       /*
         A red month's miss with no copy (§NNN): this page reads its event from the database on every
-        visit, so the text in force is read there too rather than failing the form with a 500.
+        visit, so the text in force is read there too rather than failing the form with a 500 — through
+        the breaker, as the event itself is (`event-copy.ts`), so a database this instance knows is
+        away fails at once rather than waiting on a refused connection.
       */
-      termsVersion = (await findCurrentApprovedDocument(getDb(), "TERMS", locale, now))?.version ?? null;
+      termsVersion = (await throughBreaker(() => findCurrentApprovedDocument(getDb(), "TERMS", locale, now)))?.version ?? null;
     } else {
       throw failure;
     }

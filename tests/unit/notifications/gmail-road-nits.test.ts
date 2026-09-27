@@ -79,7 +79,7 @@ describe("§NNN the Gmail adapter", () => {
 
     // The copy went, the runner's address did not: never "sent".
     smtp.answer = (sent) => ({ accepted: sent.bcc ?? [], rejected: [sent.to], rejectedErrors: [refused], messageId: "<gm-2>" });
-    expect(await adapter.send(message("gone@example.ro", { bcc: ["club@example.org"] }))).toMatchObject({ outcome: "permanent_failure" });
+    expect(await adapter.send(message("gone@example.ro", { bcc: ["club@example.org"] }))).toMatchObject({ outcome: "permanent_failure", acceptedRecipients: 1 });
   });
 
   it("leaves a refusal about the account or the moment to Mailgun, and a temporary refusal of the address to the outbox", async () => {
@@ -96,7 +96,12 @@ describe("§NNN the Gmail adapter", () => {
 
     const later = Object.assign(smtpError("EENVELOPE", "450 4.2.1 Try again later."), { recipient: "a@example.ro" });
     smtp.answer = (sent) => ({ accepted: sent.bcc ?? [], rejected: [sent.to], rejectedErrors: [later], messageId: "<gm-3>" });
-    expect(await adapter.send(message("a@example.ro", { bcc: ["club@example.org"] }))).toMatchObject({ outcome: "transient_failure", mayHaveBeenAccepted: true });
+    expect(await adapter.send(message("a@example.ro", { bcc: ["club@example.org"] }))).toMatchObject({
+      outcome: "transient_failure",
+      mayHaveBeenAccepted: true,
+      addressRefusedForNow: true,
+      acceptedRecipients: 1,
+    });
   });
 
   it("reads the enhanced status without keeping the reply, and judges only the runner's own refusal", () => {
@@ -111,6 +116,9 @@ describe("§NNN the Gmail adapter", () => {
   });
 });
 
+/** What the ledger was told Gmail took: recipients per send. */
+const credited: number[] = [];
+
 /** A ledger that admits every message at once. */
 const openLedger: GmailLedger = {
   async admit(request) {
@@ -122,7 +130,9 @@ const openLedger: GmailLedger = {
       0,
     );
   },
-  async accepted() {},
+  async accepted(recipients) {
+    credited.push(recipients);
+  },
 };
 
 function fake(name: string, answers: SendResult[] = []): EmailAdapter & { sent: string[]; closed: number } {
@@ -143,6 +153,7 @@ function fake(name: string, answers: SendResult[] = []): EmailAdapter & { sent: 
 
 describe("§NNN the sender's Gmail road", () => {
   function setup(gmailAnswers: SendResult[] = []) {
+    credited.length = 0;
     const gmail = fake("gmail", gmailAnswers);
     const mailgun = fake("mailgun");
     const failures: string[] = [];
@@ -190,6 +201,30 @@ describe("§NNN the sender's Gmail road", () => {
     expect(failures).toEqual([]);
     expect(await sender.send(message("b@example.ro"))).toMatchObject({ outcome: "sent", transport: "gmail" });
     expect(gmail.sent).toEqual(["gone@example.ro", "b@example.ro"]);
+  });
+
+  it("credits the day's ledger with the club's copies Gmail took before refusing the address", async () => {
+    const { sender } = setup([{ outcome: "permanent_failure", error: "gmail: the address was refused (5.1.1)", acceptedRecipients: 2 }]);
+    expect(await sender.send(message("gone@example.ro"))).toMatchObject({ outcome: "permanent_failure" });
+    expect(credited).toEqual([2]);
+  });
+
+  it("returns an address refused for now to the outbox — Gmail not marked down, no Gmail failure, the copies counted", async () => {
+    const refusedForNow: SendResult = {
+      outcome: "transient_failure",
+      error: "gmail: the address was refused for now",
+      mayHaveBeenAccepted: true,
+      addressRefusedForNow: true,
+      acceptedRecipients: 1,
+    };
+    const { sender, gmail, mailgun, failures } = setup([refusedForNow]);
+    expect(await sender.send(message("later@example.ro"))).toEqual(refusedForNow);
+    expect(failures).toEqual([]);
+    expect(credited).toEqual([1]);
+    // The account works: the next message still leaves through Gmail, never Mailgun.
+    expect(await sender.send(message("b@example.ro"))).toMatchObject({ outcome: "sent", transport: "gmail" });
+    expect(gmail.sent).toEqual(["later@example.ro", "b@example.ro"]);
+    expect(mailgun.sent).toEqual([]);
   });
 
   it("closes nothing on a sender that never took the Gmail road", () => {

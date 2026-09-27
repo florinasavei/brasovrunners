@@ -248,7 +248,25 @@ export function createEmailSender(config: {
       failure — the account works, the next message still goes through it — and not Mailgun's to try,
       which would spend a message of the allowance to bounce the same way hours later.
     */
-    if (result.outcome === "permanent_failure") return result;
+    const addressRefused =
+      result.outcome === "permanent_failure" || (result.outcome === "transient_failure" && result.addressRefusedForNow === true);
+    if (addressRefused) {
+      /*
+        The same for a temporary refusal of the address (a 4xx to the runner while the copies went):
+        the account works, so Gmail is not marked down and no Gmail failure is recorded; the row
+        goes back to the outbox's retry, never to Mailgun, which would send the copies twice. Either
+        way the copies Gmail took left the account and count against Google's day.
+      */
+      const acceptedCopies = result.acceptedRecipients ?? 0;
+      if (acceptedCopies > 0) {
+        try {
+          await gmail.ledger.accepted(acceptedCopies, clock());
+        } catch {
+          // A ledger that could not note it must never change what happens to the message.
+        }
+      }
+      return result;
+    }
     if (result.outcome !== "sent") {
       gmailDown = true;
       const error = result.error;

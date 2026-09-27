@@ -190,7 +190,7 @@ export async function publicRead<T>(
     const memoKey = keyParts.join("\u0000");
     let stored = reads.get(memoKey);
     if (!stored) {
-      const asked = unstable_cache(loadAndKeep, keyParts, options)();
+      const asked = unstable_cache(fillEntry(loadAndKeep, false), keyParts, options)();
       stored = asked;
       reads.set(memoKey, asked);
       asked.catch(() => {
@@ -210,9 +210,7 @@ export async function publicRead<T>(
   try {
     return untagDates(
       await unstable_cache(
-        async () => {
-          throw new ColdMissError();
-        },
+        fillEntry(loadAndKeep, true),
         keyParts,
         /*
           Looked up as never stale by age (§NNN): an entry past its ceiling is served as the hit it
@@ -226,7 +224,7 @@ export async function publicRead<T>(
     ) as T;
   } catch (error) {
     if (!isColdMiss(error)) throw error;
-    scheduleMissRefresh(keyParts.join("|"), () => unstable_cache(loadAndKeep, keyParts, options)(), effects.publicMissRefreshMinutes);
+    scheduleMissRefresh(keyParts.join("|"), () => unstable_cache(fillEntry(loadAndKeep, false), keyParts, options)(), effects.publicMissRefreshMinutes);
     const copy = copyKey ? await copyOf<T>(copyKey) : null;
     if (copy) {
       // The page says it shows a saved copy, and from when (§NNN): nothing failed, but the database was not asked.
@@ -235,6 +233,24 @@ export async function publicRead<T>(
     }
     throw error;
   }
+}
+
+/**
+ * The one callback every `unstable_cache` call of `publicRead` is given — the request's read, the
+ * red month's lookup and the background refresh alike (§447).
+ *
+ * Next files an entry under the callback's **source text** as well as the key parts
+ * (`${cb.toString()}-${keyParts.join(",")}` in Next 16's `unstable-cache.js`), so a lookup made
+ * with a different function than the one that filled the entry can never find it. The red lookup
+ * used to pass its own `throw new ColdMissError()`: it never hit, and at red every public read was
+ * a cold miss served from a saved copy, however warm the cache. One function literal, returned
+ * from here, is the same text on every path; `coldOnly` is a value it closes over, not a word in it.
+ */
+function fillEntry(loadAndKeep: () => Promise<unknown>, coldOnly: boolean): () => Promise<unknown> {
+  return async () => {
+    if (coldOnly) throw new ColdMissError();
+    return loadAndKeep();
+  };
 }
 
 /**
